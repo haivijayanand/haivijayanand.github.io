@@ -1,7 +1,7 @@
 # haivijayanand.github.io
 
-Personal technical blog of **K Vijay Anand**, Sc-F  
-Centre for Aero Mechanical Technologies (CAMT), CVRDE/DRDO, Avadi, Chennai.
+Personal technical blog of **K Vijay Anand**,   
+Chennai, India.
 
 Live site: [https://haivijayanand.github.io](https://haivijayanand.github.io)
 

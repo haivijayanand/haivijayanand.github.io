@@ -6,22 +6,16 @@ icon: fas fa-info-circle
 order: 4
 ---
 
-## K Vijay Anand, Sc-F
+## K Vijay Anand, Engineer
 
-**Centre for Aero Mechanical Technologies (CAMT)**  
-CVRDE / DRDO, Avadi, Chennai 600071, India
+**Chennai, India**  
+
 
 ---
 
 ### What I Do
 
-I am a scientist working on the **LCA-AMAGB (Aircraft Mounted Accessory Gearbox)** test and development programme for the LCA Tejas fighter aircraft. My work spans:
-
-- **Test Rig Operation** — Endurance (ETR), Attitude (ATR), and Altitude (ALTR) test rigs
-- **Vibration Diagnostics** — Accelerometer arrays, Campbell diagrams, gear mesh frequency analysis
-- **Data Pipelines** — TDMS, DXD, HDF5, SQLite processing in Python
-- **Instrumentation** — NI cDAQ, PCB triaxial accelerometers, Keller pressure sensors, Rockwin flow meters
-- **Software Development** — GUI tools, automated report generators, SCADA systems
+I am a technocrat working in a R&D Lab in india.
 
 ---
 
@@ -31,7 +25,7 @@ This site hosts my **technical articles, source code, and documents** on topics 
 
 Everything here is written from hands-on experience at the test bench.
 
-**Published material does not represent the official position of DRDO/CVRDE.**
+
 
 ---
 

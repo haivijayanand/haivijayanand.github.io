@@ -7,7 +7,7 @@ tags: [python, astronomy, matplotlib, orbital-mechanics, visualisation, pdf]
 math: true
 toc: true
 image:
-  path: /assets/img/posts/earth_jupiter_dance_preview.png
+  path: /assets/posts/2026-05-07-earth-jupiter-dance/earth_jupiter_dance_preview.png
   alt: The star-shaped locus pattern formed by Earth-Jupiter connecting lines
 ---
 
@@ -136,10 +136,10 @@ All files are freely available — no login required.
 
 | File | Description |
 |------|-------------|
-| [📄 Step-by-Step PDF](/assets/files/Earth_Jupiter_Dance_StepByStep.pdf) | 15-page illustrated guide building the pattern lap by lap |
-| [📄 Pattern Overview PDF](/assets/files/Earth_Jupiter_Dance.pdf) | 3-page overview with full pattern and orbital geometry |
-| [🐍 Python Source](/assets/code/earth_jupiter_dance.py) | Full source code — generates both PDFs |
-| [📦 All Files (ZIP)](/assets/files/earth_jupiter_dance_all.zip) | Everything in one download |
+| [📄 Step-by-Step PDF](/assets/posts/2026-05-07-earth-jupiter-dance/Earth_Jupiter_Dance_StepByStep.pdf) | 15-page illustrated guide building the pattern lap by lap |
+| [📄 Pattern Overview PDF](/assets/posts/2026-05-07-earth-jupiter-dance/Earth_Jupiter_Dance.pdf) | 3-page overview with full pattern and orbital geometry |
+| [🐍 Python Source](/assets/posts/2026-05-07-earth-jupiter-dance/earth_jupiter_dance.py) | Full source code — generates both PDFs |
+| [📦 All Files (ZIP)](/assets/posts/2026-05-07-earth-jupiter-dance/earth_jupiter_dance_all.zip) | Everything in one download |
 
 ---
 

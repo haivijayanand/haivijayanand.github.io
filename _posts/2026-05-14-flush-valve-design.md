@@ -5,7 +5,7 @@ date: 2026-05-14
 tags: [mechanical-design, hard-water, materials, python, matplotlib, analysis]
 ---
 
-*K Vijay Anand, Sc-F — CAMT / CVRDE / DRDO, Avadi, Chennai 600071, India*
+*K Vijay Anand*
 
 ---
 

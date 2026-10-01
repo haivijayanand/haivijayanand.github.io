@@ -1,0 +1,2986 @@
+<!DOCTYPE html>
+<!--
+TOOL    : spring-rate-calculator.html (public copy)
+FAMILY  : SPRING
+VERSION : 3.3.0
+DATE    : 2026-10-01
+CHAT    : Compression spring rate calculator
+CHANGES : v3.3.0  public copy for haivijayanand.github.io: opens with two made-up example
+                  springs and three example struts; the working library is kept privately
+STATUS  : working; runs offline in any browser, no network
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compression spring rate</title>
+<style>
+:root{
+  --paper:#F6F8F7; --panel:#FFFFFF;
+  --ink:#15201E; --ink2:#4E5C59; --ink3:#788683;
+  --rule:#D2DAD7; --rule2:#E6EBE9;
+  --steel:#2E5F7E; --steel-w:#E8F0F5;
+  --amber:#A85B22;
+  --flag:#8E2B2B; --flag-w:#FBEFEF;
+  --good:#2C6B4F;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;
+  --sans:ui-sans-serif,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}   /* must outrank .f{display:grid} */
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
+.wrap{max-width:1440px;margin:0 auto;padding:26px 24px 72px}
+h1{font-size:25px;font-weight:600;letter-spacing:-.015em;margin:0 0 5px}
+header p{margin:0;color:var(--ink2);max-width:64ch}
+code{font-family:var(--mono);font-size:.92em;background:var(--rule2);padding:1px 4px;border-radius:3px}
+
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--rule);margin:20px 0 22px}
+.tabs button{font:inherit;font-size:14px;background:none;border:0;border-bottom:2px solid transparent;
+  padding:9px 14px;margin-bottom:-1px;color:var(--ink2);cursor:pointer;border-radius:4px 4px 0 0}
+.tabs button:hover{color:var(--ink);background:var(--rule2)}
+.tabs button[aria-selected=true]{color:var(--steel);border-bottom-color:var(--steel);font-weight:600}
+.tabs.sub{border-bottom:1px solid var(--rule2);margin:0 0 18px;gap:0}
+.tabs.sub button{font-size:13px;padding:7px 13px}
+.ends{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-top:1px solid var(--rule2)}
+@media(max-width:1000px){.ends{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.endcell{font:inherit;text-align:left;background:none;border:0;border-left:1px solid var(--rule2);
+  padding:12px 14px 14px;cursor:pointer;min-width:0}
+.endcell:first-child{border-left:0}
+.endcell:hover{background:var(--rule2)}
+.endcell.on{background:var(--steel-w);box-shadow:inset 0 2px 0 var(--steel)}
+.endcell svg{display:block;width:100%;height:auto;max-width:190px;margin:0 auto}
+.endcell h4{font-size:13px;font-weight:600;margin:8px 0 3px;color:var(--ink)}
+.endcell .f{font-family:var(--mono);font-size:11.5px;color:var(--ink3);line-height:1.5;
+  display:block;grid-template-columns:none;margin:0}
+.endcell .v{font-family:var(--mono);font-size:12.5px;color:var(--steel);margin-top:5px}
+.springbar{margin-bottom:18px;padding:14px 16px}
+.springbar .sb{display:grid;grid-template-columns:1.1fr 1.1fr 1.4fr auto;gap:12px;align-items:end}
+.springbar .sb-f label{display:block;font-size:12px;color:var(--ink2);margin-bottom:4px}
+.springbar .sb-b{display:flex;gap:8px}
+@media(max-width:900px){.springbar .sb{grid-template-columns:1fr}}
+.kbhint{margin-left:auto;align-self:center;font-size:11.5px;color:var(--ink3);padding:0 2px 6px}
+@media(max-width:900px){.kbhint{display:none}}
+[role=tabpanel][hidden]{display:none}
+
+.cols{display:grid;grid-template-columns:352px minmax(0,1fr);gap:24px;align-items:start}
+@media(max-width:940px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:6px}
+.panel + .panel{margin-top:18px}
+.panel > h2{font-size:12.5px;font-weight:600;margin:0;padding:11px 15px;border-bottom:1px solid var(--rule2);color:var(--ink2)}
+.panel .body{padding:15px}
+fieldset{border:0;margin:0 0 17px;padding:0}
+fieldset:last-child{margin-bottom:0}
+legend{font-size:12.5px;font-weight:600;color:var(--ink2);padding:0 0 8px;width:100%;
+  border-bottom:1px solid var(--rule2);margin-bottom:11px}
+.f{display:grid;grid-template-columns:1fr 112px;gap:8px;align-items:center;margin-bottom:9px}
+.f label{font-size:13.5px;line-height:1.35}
+.f .sub{display:block;font-size:11.5px;color:var(--ink3);line-height:1.3}
+.f2{grid-template-columns:1fr}
+.u{color:var(--ink3);font-weight:400}
+input[type=number],input[type=text],select{font:inherit;font-size:14px;width:100%;padding:6px 8px;
+  border:1px solid var(--rule);border-radius:4px;background:#FDFEFD;color:var(--ink);
+  font-family:var(--mono);font-variant-numeric:tabular-nums}
+select{font-family:var(--sans)}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--steel);outline-offset:1px}
+input[disabled]{background:var(--rule2);color:var(--ink3)}
+.seg{display:flex;border:1px solid var(--rule);border-radius:4px;overflow:hidden;margin-bottom:12px}
+.seg label{flex:1;position:relative}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:block;text-align:center;padding:6px 4px;font-size:13px;cursor:pointer;
+  background:#FDFEFD;color:var(--ink2);border-right:1px solid var(--rule)}
+.seg label:last-child span{border-right:0}
+.seg input:checked + span{background:var(--steel);color:#fff}
+.chk{display:flex;gap:7px;align-items:flex-start;font-size:13px;color:var(--ink2);margin:2px 0 9px}
+.chk input{width:auto;margin-top:3px}
+
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 420px}
+@media(max-width:1000px){.hero{grid-template-columns:1fr}}
+.rate{padding:18px 20px 16px}
+.rate .k{font-family:var(--mono);font-size:42px;font-weight:500;letter-spacing:-.02em;line-height:1}
+.rate .k em{font-style:normal;font-size:18px;color:var(--ink2);margin-left:6px}
+.rate .alt{color:var(--ink3);font-size:13px;font-family:var(--mono);margin-top:7px}
+.rate .cap{font-size:13px;color:var(--ink2);margin-top:12px;max-width:46ch}
+.rate .cmp{font-size:13px;margin-top:10px;max-width:46ch;padding:8px 11px;border-radius:4px;
+  border:1px solid #E4D3C2;background:#FBF4EC;color:#7A4417}
+.rate .cmp.none{border-color:var(--rule);background:var(--rule2);color:var(--ink3)}
+.rate .cmp b{font-family:var(--mono);font-weight:600}
+.draw{border-left:1px solid var(--rule2);padding:14px 16px}
+/* the two strut figures and the rate block, arranged by the layout choice */
+.figs{display:grid;align-items:start}
+.figs .fig{padding:12px 16px;min-width:0}
+.figs .fig svg{display:block;width:100%;height:auto;margin:0 auto}
+.figs .figStrut svg{max-height:560px}
+.figs .figSlot svg{max-height:420px}
+.figs .fig .cap{font-size:11.5px;color:var(--ink3);text-align:center;margin-top:6px}
+.lay-top .figs{grid-template-columns:1fr 1fr}
+.lay-top .figs .figSlot{border-left:1px solid var(--rule2)}
+.lay-top .figs .rate{grid-column:1/-1;border-top:1px solid var(--rule2)}
+.lay-side .figs{grid-template-columns:minmax(0,1fr) 430px}
+.lay-side .figs .rate{grid-column:1;grid-row:1}
+.lay-side .figs .figStrut{grid-column:2;grid-row:1;border-left:1px solid var(--rule2)}
+.lay-side .figs .figSlot{grid-column:1/-1;grid-row:2;border-top:1px solid var(--rule2)}
+.lay-side .figs .figSlot svg{max-width:560px}
+@media(max-width:1000px){
+  .lay-top .figs,.lay-side .figs{grid-template-columns:1fr}
+  .figs .figSlot{border-left:0 !important;border-top:1px solid var(--rule2) !important}
+  .lay-side .figs .rate,.lay-side .figs .figStrut,.lay-side .figs .figSlot{grid-column:1;grid-row:auto}
+}
+@media(max-width:700px){.draw{border-left:0;border-top:1px solid var(--rule2)}}
+.draw svg{display:block;width:100%;height:auto}
+.draw .cap{font-size:11.5px;color:var(--ink3);text-align:center;margin-top:4px}
+
+table.res{width:100%;border-collapse:collapse}
+table.res th,table.res td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--rule2);font-size:13.5px}
+table.res th{font-weight:400;color:var(--ink2)}
+table.res td{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+table.res td u{text-decoration:none;color:var(--ink3);font-size:12px;margin-left:3px}
+table.res tr:last-child th,table.res tr:last-child td{border-bottom:0}
+.grp{display:grid;grid-template-columns:1fr 1fr}
+@media(max-width:700px){.grp{grid-template-columns:1fr}}
+.grp > div + div{border-left:1px solid var(--rule2)}
+@media(max-width:700px){.grp > div + div{border-left:0;border-top:1px solid var(--rule2)}}
+h3.sec{font-size:12px;font-weight:600;color:var(--ink3);margin:0;padding:10px 10px 4px}
+.pass{color:var(--good)} .fail{color:var(--flag)}
+.note{font-size:13px;padding:9px 12px;border-radius:4px;margin:12px 15px 0;border:1px solid}
+.note.warn{background:var(--flag-w);border-color:#E3C6C6;color:var(--flag)}
+.note.info{background:var(--steel-w);border-color:#CBDDE8;color:#20455C}
+.note + .note{margin-top:7px}
+
+.fitcols{display:grid;grid-template-columns:302px minmax(0,1fr)}
+@media(max-width:940px){.fitcols{grid-template-columns:1fr}}
+.fitcols > div + div{border-left:1px solid var(--rule2)}
+@media(max-width:940px){.fitcols > div + div{border-left:0;border-top:1px solid var(--rule2)}}
+.pts{width:100%;border-collapse:collapse}
+.pts th{font-size:11.5px;font-weight:500;color:var(--ink3);text-align:left;padding:0 0 4px}
+.pts td{padding:0 0 5px}
+.pts td:nth-child(1),.pts td:nth-child(2){padding-right:5px}
+.pts input{padding:5px 7px;font-size:13.5px}
+.pts .del{width:26px;padding:0}
+button.b{font:inherit;cursor:pointer;border-radius:4px;border:1px solid var(--rule);
+  background:#FDFEFD;color:var(--ink);padding:5px 11px;font-size:13px}
+button.b:hover{background:var(--rule2)}
+button.x{border:0;background:none;color:var(--ink3);font-size:17px;line-height:1;padding:3px 5px;width:100%;cursor:pointer}
+button.x:hover{color:var(--flag)}
+.rowbtns{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+canvas{display:block;width:100%;height:302px}
+.legend{display:flex;gap:16px;font-size:12.5px;color:var(--ink2);padding:0 12px 10px;flex-wrap:wrap}
+.legend i{display:inline-block;width:15px;height:0;border-top-width:2px;vertical-align:middle;margin-right:5px}
+.legend .th{border-top:2px dashed var(--steel)}
+.legend .ft{border-top:2px solid var(--amber)}
+.legend .pt{width:9px;height:9px;border-radius:50%;background:var(--amber);border-top:0}
+details{margin-top:12px;font-size:13px}
+summary{cursor:pointer;color:var(--steel)}
+textarea{width:100%;height:78px;font-family:var(--mono);font-size:13px;margin-top:7px;
+  border:1px solid var(--rule);border-radius:4px;padding:7px;resize:vertical}
+.empty{color:var(--ink3);font-size:13.5px;padding:20px 12px;text-align:center;font-family:var(--sans)}
+
+.ref{max-width:78ch;padding:6px 26px 30px}
+.ref h2{font-size:19px;font-weight:600;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--rule)}
+.ref h2:first-child{margin-top:12px}
+.ref h3{font-size:15px;font-weight:600;margin:22px 0 6px}
+.ref p{margin:0 0 11px}
+.ref ul{margin:0 0 12px;padding-left:20px}
+.ref li{margin-bottom:5px}
+.eq{font-family:var(--mono);font-size:14px;background:var(--steel-w);border-left:3px solid var(--steel);
+  border-radius:0 4px 4px 0;padding:11px 14px;margin:0 0 13px;overflow-x:auto;white-space:pre;line-height:1.55}
+.sym{width:100%;border-collapse:collapse;margin:0 0 14px;font-size:13.5px}
+.sym td{padding:4px 9px;border-bottom:1px solid var(--rule2);vertical-align:top}
+.sym td:first-child{font-family:var(--mono);white-space:nowrap;width:1%;color:var(--steel)}
+.tab{width:100%;border-collapse:collapse;margin:0 0 14px;font-size:13.5px}
+.tab th{text-align:left;font-weight:600;font-size:12.5px;color:var(--ink2);border-bottom:1px solid var(--rule);padding:5px 9px}
+.tab td{padding:5px 9px;border-bottom:1px solid var(--rule2)}
+.tab td:not(:first-child){font-family:var(--mono);font-variant-numeric:tabular-nums}
+.callout{border:1px solid #CBDDE8;background:var(--steel-w);border-radius:5px;padding:12px 15px;margin:0 0 14px;font-size:14px}
+.callout p:last-child{margin-bottom:0}
+footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--rule);font-size:12.5px;color:var(--ink3);max-width:82ch}
+/* ---- printed report, A4 portrait ---- */
+#report{display:none;color:#000;font-size:9.5pt;line-height:1.35}
+#report h1{font-size:15pt;font-weight:600;margin:0 0 1mm}
+#report .meta{font-size:8.5pt;color:#444;border-bottom:1pt solid #000;padding-bottom:2mm;margin-bottom:4mm}
+#report h2{font-size:10.5pt;font-weight:600;margin:5mm 0 1.5mm;border-bottom:.5pt solid #999;padding-bottom:1mm}
+#report h3{font-size:9pt;font-weight:600;margin:0 0 1mm;color:#333}
+#report table{width:100%;border-collapse:collapse;font-size:9pt}
+#report th{text-align:left;font-weight:400;padding:.9mm 2mm;border-bottom:.4pt solid #ddd;vertical-align:top}
+#report td{text-align:right;padding:.9mm 2mm;border-bottom:.4pt solid #ddd;
+  font-family:var(--mono);white-space:nowrap;vertical-align:top}
+#report td u{text-decoration:none;color:#666;font-size:8pt;margin-left:1mm}
+#report .two{display:grid;grid-template-columns:1fr 1fr;gap:0 7mm;align-items:start}
+#report .top{display:grid;grid-template-columns:1fr 58mm;gap:0 7mm;align-items:start}
+#report .kbig{font-family:var(--mono);font-size:17pt;margin:1mm 0 0}
+#report .kcap{font-size:8.5pt;color:#333;margin:1mm 0 0}
+#report section{break-inside:avoid;page-break-inside:avoid;margin-bottom:1mm}
+#report .foot{margin-top:6mm;border-top:.5pt solid #999;padding-top:2mm;font-size:8pt;color:#444}
+#report img.chart{width:100%;border:.4pt solid #ccc}
+#report table.grid thead th{font-weight:600;border-bottom:.6pt solid #666;text-align:right}
+#report table.grid thead th:first-child{text-align:left}
+#report table.grid tbody th{font-family:var(--mono);text-align:left}
+#report .verdict{border:.5pt solid #666;padding:2mm 3mm;margin:2mm 0 0;font-size:9pt}
+#report .cmp3{display:grid;grid-template-columns:repeat(3,1fr);gap:0 4mm;border:0}
+#report .cmp3 .cmpcol{padding:0}
+#report .cmp3 .cmpcol + .cmpcol{border-left:.3pt solid #ccc;padding-left:3mm}
+#report .cmp3 svg{width:100%;height:auto}
+#report .cmp3 h3{font-size:8.5pt;margin:0 0 1mm}
+#report .cmp3 table{font-size:7.6pt}
+#report table.mat{font-size:7.4pt;min-width:0;table-layout:fixed}
+#report table.mat thead th{font-weight:600;text-align:right;border-bottom:.6pt solid #666;
+  padding:.8mm 1mm;font-size:7pt;line-height:1.15}
+#report table.mat thead th:first-child{text-align:left}
+#report table.mat td{padding:.7mm 1mm;text-align:right;border-bottom:.3pt solid #ddd}
+#report table.mat td:first-child{text-align:left;font-family:var(--sans)}
+#report table.mat tr.cur td{font-weight:700;border-top:.5pt solid #333;border-bottom:.5pt solid #333}
+#report svg{width:100%;height:auto}
+#report .nb{font-size:8.5pt;color:#333;margin:1.5mm 0 0}
+@media print{
+  @page{size:A4 portrait;margin:14mm}
+  body{background:#fff}
+  .wrap{display:none !important}
+  #report{display:block !important}
+}
+
+/* ---- library ---- */
+input[type=range]{accent-color:var(--steel);height:22px}
+#solveOut{font-size:13px;margin-top:10px;line-height:1.5}
+#solveOut table{width:100%;border-collapse:collapse;margin-top:2px}
+#solveOut th{text-align:left;font-weight:400;color:var(--ink2);padding:3px 0;font-size:12.5px}
+#solveOut td{text-align:right;font-family:var(--mono);font-size:12.5px;padding:3px 0;white-space:nowrap}
+#scompOut{font-size:12.5px;color:var(--ink2);font-family:var(--mono);margin-top:6px;line-height:1.5}
+details.fs{margin:0 0 15px;font-size:inherit}
+details.fs > summary{font-size:12.5px;font-weight:600;color:var(--ink2);padding:0 0 8px;
+  border-bottom:1px solid var(--rule2);margin-bottom:11px;cursor:pointer;
+  list-style:none;display:flex;justify-content:space-between;align-items:baseline}
+details.fs > summary::-webkit-details-marker{display:none}
+details.fs > summary::after{content:"show";font-weight:400;font-size:12px;color:var(--steel)}
+details.fs[open] > summary::after{content:"hide"}
+details.fs > summary:hover{color:var(--ink)}
+#cmpXOut{font-size:12.5px;color:var(--ink2);font-family:var(--mono);margin-top:6px}
+.share{display:flex;height:26px;border-radius:4px;overflow:hidden;margin:12px 0 7px;border:1px solid var(--rule)}
+.share i{display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11.5px;
+  color:#fff;min-width:0;overflow:hidden;white-space:nowrap}
+.share i.over{background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.25) 0 4px,transparent 4px 8px)}
+.tot{width:100%;border-collapse:collapse;font-size:13px}
+.tot th{text-align:left;font-weight:500;font-size:11.5px;color:var(--ink3);padding:4px 8px;border-bottom:1px solid var(--rule)}
+.tot th:not(:first-child){text-align:right}
+.tot td{padding:5px 8px;border-bottom:1px solid var(--rule2);text-align:right;
+  font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tot td:first-child{text-align:left;font-family:var(--sans)}
+.tot tr.sum td,.tot tr.sum th{border-top:1px solid var(--rule);border-bottom:0;font-weight:600}
+.cmp3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--rule2)}
+.cmp3 .cmpcol{padding:0 10px 12px}
+.cmp3 .cmpcol + .cmpcol{border-left:1px solid var(--rule2)}
+.cmp3 .cmpcol h3{padding-left:0}
+.cmp3 svg{display:block;width:100%;height:auto}
+.cmp3 table.res{margin-top:6px}
+.cmp3 table.res th,.cmp3 table.res td{padding:4px 0;font-size:12.5px}
+@media(max-width:860px){.cmp3{grid-template-columns:1fr}
+  .cmp3 .cmpcol + .cmpcol{border-left:0;border-top:1px solid var(--rule2);padding-top:10px}}
+.mat{width:100%;border-collapse:collapse;font-size:13px;min-width:720px}
+.mat th{text-align:right;font-size:11.5px;font-weight:600;color:var(--ink2);
+  padding:8px;border-bottom:1px solid var(--rule);white-space:nowrap}
+.mat th:first-child{text-align:left}
+.mat td{padding:6px 8px;border-bottom:1px solid var(--rule2);text-align:right;
+  font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.mat td:first-child{text-align:left;font-family:var(--sans)}
+.mat tr.cur{background:var(--steel-w)}
+.mat tr.cur td:first-child{font-weight:600}
+.mat td.ok{color:var(--good)}
+.mat td.over{color:var(--flag)}
+.lib{width:100%;border-collapse:collapse;font-size:13.5px}
+.lib th{text-align:left;font-size:11.5px;font-weight:500;color:var(--ink3);
+  padding:0 8px 5px;border-bottom:1px solid var(--rule)}
+.lib td{padding:6px 8px;border-bottom:1px solid var(--rule2);vertical-align:middle}
+.lib td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.lib td.act{text-align:right;white-space:nowrap}
+.lib td.act button{margin-left:5px}
+.lib .sub2{display:block;font-size:11.5px;color:var(--ink3)}
+.status{font-size:13px;color:var(--steel);margin-top:9px;min-height:1.2em}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Compression spring rate</h1>
+  <p>Rate, loads and stresses from geometry for round or rectangular wire, with pre-compression
+     and a least-squares fit against measured readings.</p>
+</header>
+
+<div class="tabs" role="tablist">
+  <button role="tab" id="tb1" aria-controls="pSpring" aria-selected="true">Spring</button>
+  <button role="tab" id="tb6" aria-controls="p6" aria-selected="false">Strut</button>
+  <button role="tab" id="tb7" aria-controls="p7" aria-selected="false">Compare</button>
+  <button role="tab" id="tb5" aria-controls="p5" aria-selected="false">Save &amp; print</button>
+  <button role="tab" id="tbH" aria-controls="pHelp" aria-selected="false">Help</button>
+  <span class="kbhint">Alt + &larr; &rarr; tabs &nbsp;&middot;&nbsp; &larr; &rarr; slider</span>
+</div>
+
+<!-- ==================== CALCULATOR ==================== -->
+<!-- ==================== SPRING ==================== -->
+<div role="tabpanel" id="pSpring" aria-labelledby="tb1">
+
+  <div class="panel springbar">
+    <div class="sb">
+      <div class="sb-f">
+        <label for="spName">Spring name</label>
+        <input type="text" id="spName" placeholder="e.g. Spring_A">
+      </div>
+      <div class="sb-f">
+        <label for="spLoad">Load a saved spring</label>
+        <select id="spLoad"></select>
+      </div>
+      <div class="sb-f">
+        <label for="spNote">Note</label>
+        <input type="text" id="spNote" placeholder="drawing number, batch, test date">
+      </div>
+      <div class="sb-b">
+        <button type="button" class="b" id="spSave">Save spring</button>
+        <button type="button" class="b" id="spOpen">Open master file</button>
+      </div>
+    </div>
+    <div class="status" id="spMsg"></div>
+  </div>
+
+  <div class="tabs sub" role="tablist">
+    <button role="tab" id="sub1" aria-controls="p1" aria-selected="true">Design</button>
+    <button role="tab" id="sub2" aria-controls="p2" aria-selected="false">Test data</button>
+  </div>
+<div role="tabpanel" id="p1" aria-labelledby="sub1">
+<div class="cols">
+
+<form class="panel" id="form" autocomplete="off">
+  <h2>Spring geometry</h2>
+  <div class="body">
+
+  <fieldset>
+    <legend>Units</legend>
+    <div class="seg">
+      <label><input type="radio" name="unit" value="si" checked><span>mm &middot; N</span></label>
+      <label><input type="radio" name="unit" value="kg"><span>mm &middot; kgf</span></label>
+      <label><input type="radio" name="unit" value="imp"><span>in &middot; lbf</span></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Wire</legend>
+    <div class="seg">
+      <label><input type="radio" name="sec" value="round" checked><span>Round</span></label>
+      <label><input type="radio" name="sec" value="rect"><span>Rectangular</span></label>
+    </div>
+    <div class="f" id="roundFields">
+      <label for="dia">Wire diameter d</label>
+      <input type="number" id="dia" value="3" step="any" min="0">
+    </div>
+    <div id="rectFields" hidden>
+      <div class="f">
+        <label for="ax">Wire width b, axial<span class="sub">along the spring axis</span></label>
+        <input type="number" id="ax" value="4" step="any" min="0">
+      </div>
+      <div class="f">
+        <label for="rad">Wire thickness t, radial<span class="sub">across the coil wall</span></label>
+        <input type="number" id="rad" value="2.5" step="any" min="0">
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Coil</legend>
+    <div class="f">
+      <label for="coil">Coil diameter</label>
+      <input type="number" id="coil" value="27" step="any" min="0">
+    </div>
+    <div class="seg">
+      <label><input type="radio" name="dref" value="outer" checked><span>Outside</span></label>
+      <label><input type="radio" name="dref" value="mean"><span>Mean</span></label>
+      <label><input type="radio" name="dref" value="inner"><span>Inside</span></label>
+    </div>
+    <div class="f f2">
+      <select id="endt" aria-label="End type">
+        <option value="sg" selected>Squared &amp; ground</option>
+        <option value="sq">Squared only</option>
+        <option value="pl">Open ends, plain</option>
+        <option value="pg">Open ends, ground</option>
+        <option value="cu">Custom dead coils</option>
+      </select>
+    </div>
+    <div class="f">
+      <label for="nt">Total coils N<span class="sub">counted end to end</span></label>
+      <input type="number" id="nt" value="8" step="any" min="0.5">
+    </div>
+    <div class="f" id="fInact" hidden>
+      <label for="inact">Dead coils<span class="sub">total, both ends</span></label>
+      <input type="number" id="inact" value="2" step="any" min="0">
+    </div>
+    <div class="f">
+      <label for="gapIn">Measured coil gap<span class="sub">clear space between turns, optional</span></label>
+      <input type="number" id="gapIn" value="" step="any" min="0" placeholder="blank">
+    </div>
+    <div class="f">
+      <label for="lf">Free length L0</label>
+      <input type="number" id="lf" value="80" step="any" min="0">
+    </div>
+    <label class="chk"><input type="checkbox" id="lsMan">
+      Enter a measured solid length instead of computing it from the coils</label>
+    <div class="f">
+      <label for="ls">Solid length Ls<span class="sub">fully compressed</span></label>
+      <input type="number" id="ls" value="24" step="any" min="0" disabled>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Material</legend>
+    <div class="f f2"><select id="mat" aria-label="Material"></select></div>
+    <div class="f">
+      <label for="G">Shear modulus G</label>
+      <input type="number" id="G" value="79.3" step="any" min="0">
+    </div>
+    <div class="f">
+      <label for="E">Young's modulus E<span class="sub">buckling only</span></label>
+      <input type="number" id="E" value="207" step="any" min="0">
+    </div>
+    <div class="f">
+      <label for="rho">Density<span class="sub">surge frequency only</span></label>
+      <input type="number" id="rho" value="7850" step="any" min="0">
+    </div>
+    <div class="f">
+      <label for="sut">Tensile strength Sut<span class="sub">estimated from wire size</span></label>
+      <input type="number" id="sut" step="any" disabled>
+    </div>
+    <div class="f f2">
+      <select id="endc" aria-label="Seating for buckling">
+        <option value="0.5" selected>Seated on flat parallel plates, both ends</option>
+        <option value="0.707">One end on a flat plate, one end pivoted</option>
+        <option value="1">Both ends pivoted</option>
+        <option value="2">One end fixed, one end free to tilt</option>
+      </select>
+    </div>
+  </fieldset>
+  </div>
+</form>
+
+<div>
+  <div class="panel">
+    <h2 style="display:flex;justify-content:space-between;align-items:center;gap:10px">Rate from geometry
+      <button type="button" class="b" id="btnPdfTop" style="font-size:12px;padding:3px 9px">Save as PDF</button></h2>
+    <div class="hero">
+      <div class="rate">
+        <div class="k" id="kMain">&mdash;</div>
+        <div class="alt" id="kAlt"></div>
+        <div class="cap" id="kCap"></div>
+        <div class="cmp" id="cmp"></div>
+      </div>
+      <div class="draw">
+        <svg id="svg" viewBox="0 0 320 340" role="img" aria-label="Scale drawing of the spring"></svg>
+        <div class="cap" id="drawCap"></div>
+      </div>
+    </div>
+    <div id="notes"></div>
+    <div class="grp" style="border-top:1px solid var(--rule2);margin-top:14px">
+      <div><h3 class="sec">Geometry</h3><table class="res" id="tGeom"></table></div>
+      <div><h3 class="sec">At solid</h3><table class="res" id="tLoad"></table></div>
+    </div>
+    <div style="border-top:1px solid var(--rule2)">
+      <h3 class="sec">Design checks</h3>
+      <table class="res" id="tChk"></table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>End treatment</h2>
+    <div class="body" style="padding-bottom:6px">
+      <p style="margin:0;font-size:13.5px;color:var(--ink2);max-width:86ch">
+        How the last coil is finished decides how many coils are free to twist, and so the rate.
+        Closing the end coil against its neighbour takes it out of action; grinding it flat gives
+        the seat a full bearing face and saves a wire diameter of solid height. Click a sketch to
+        choose it. The figures under each are for the wire and coil count set on the left.</p>
+    </div>
+    <div class="ends" id="endWrap"></div>
+  </div>
+
+  <form class="panel" id="pcForm" autocomplete="off">
+    <h2>Pre-compression and working stroke</h2>
+    <div class="body">
+      <p style="margin:0 0 12px;font-size:13.5px;color:var(--ink2)">
+        A spring installed shorter than its free length already pushes before the mechanism moves.
+        Set the installed condition, then the length it works down to.</p>
+      <div class="seg" style="max-width:330px">
+        <label><input type="radio" name="pcmode" value="len" checked><span>Set by length</span></label>
+        <label><input type="radio" name="pcmode" value="load"><span>Set by preload</span></label>
+      </div>
+      <div class="cols" style="grid-template-columns:1fr 1fr;gap:0 22px">
+        <div>
+          <div class="f" id="fL1">
+            <label for="L1">Installed length L1</label>
+            <input type="number" id="L1" value="75" step="any" min="0">
+          </div>
+          <div class="f" id="fF1" hidden>
+            <label for="F1in">Preload F1</label>
+            <input type="number" id="F1in" value="41.5" step="any" min="0">
+          </div>
+          <div class="f">
+            <label for="L2">Working length L2<span class="sub">most compressed</span></label>
+            <input type="number" id="L2" value="55" step="any" min="0">
+          </div>
+        </div>
+        <div><table class="res" id="tPC"></table></div>
+      </div>
+      <div id="pcNotes"></div>
+    </div>
+  </form>
+</div>
+</div>
+</div>
+<div role="tabpanel" id="p2" aria-labelledby="sub2" hidden>
+<div class="panel">
+  <h2>Measured load and length</h2>
+  <div class="fitcols">
+    <div style="padding:15px">
+      <div class="seg">
+        <label><input type="radio" name="xmode" value="len" checked><span>Compressed length</span></label>
+        <label><input type="radio" name="xmode" value="def"><span>Deflection</span></label>
+      </div>
+      <table class="pts">
+        <thead><tr><th id="hX">Length</th><th id="hY">Load</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="rowbtns">
+        <button type="button" class="b" id="addRow">Add point</button>
+        <button type="button" class="b" id="clearRows">Clear</button>
+      </div>
+      <div class="f f2" style="margin-top:12px">
+        <select id="model" aria-label="Fit model">
+          <option value="line" selected>Straight line with offset</option>
+          <option value="origin">Straight line through zero</option>
+          <option value="quad">Quadratic, for a progressive spring</option>
+        </select>
+      </div>
+      <details>
+        <summary>Paste a block of readings</summary>
+        <textarea id="bulk" placeholder="One reading per line, length then load:&#10;60 0&#10;54 67&#10;48 134"></textarea>
+        <div class="rowbtns"><button type="button" class="b" id="loadBulk">Load points</button></div>
+      </details>
+      <p style="font-size:12.5px;color:var(--ink3);margin:14px 0 0">
+        Lengths are turned into deflections using the free length on the Design sub-tab, so set the
+        geometry first. Readings follow the unit setting there too.</p>
+    </div>
+    <div>
+      <canvas id="chart"></canvas>
+      <div class="legend">
+        <span><i class="th"></i>Calculated from geometry</span>
+        <span><i class="ft"></i>Fitted to readings</span>
+        <span><i class="pt"></i>Reading</span>
+      </div>
+      <table class="res" id="tFit" style="border-top:1px solid var(--rule2)"></table>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+
+<!-- ==================== MEASURED DATA ==================== -->
+
+
+<!-- ==================== STRUT ==================== -->
+<div role="tabpanel" id="p6" aria-labelledby="tb6" hidden>
+<div class="cols">
+
+  <form class="panel" id="strutForm" autocomplete="off">
+    <h2>Strut</h2>
+    <div class="body">
+
+      <div class="seg">
+        <label><input type="radio" name="sunit" value="D1" checked><span>D1</span></label>
+        <label><input type="radio" name="sunit" value="D2"><span>D2</span></label>
+        <label><input type="radio" name="sunit" value="D3"><span>D3</span></label>
+      </div>
+      <div class="seg">
+        <label><input type="radio" name="slay" value="top" checked><span>Drawings on top</span></label>
+        <label><input type="radio" name="slay" value="side"><span>Drawings beside</span></label>
+      </div>
+
+      <fieldset>
+        <legend>Solve for a target</legend>
+        <div class="f"><label for="tgtL">Hinge to hinge wanted</label>
+          <input type="number" id="tgtL" step="any"></div>
+        <div class="f"><label for="tgtF">Spring preload wanted</label>
+          <input type="number" id="tgtF" step="any"></div>
+        <div class="rowbtns"><button type="button" class="b" id="sSolve">Solve and apply</button></div>
+        <div id="solveOut"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Spring and travel</legend>
+        <div class="f f2"><select id="sSpring" aria-label="Spring"></select></div>
+        <div class="seg" style="margin:9px 0 11px">
+          <label><input type="radio" name="smode" value="nut" checked><span>Nut, uninstalled</span></label>
+          <label><input type="radio" name="smode" value="cyl"><span>Cylinder, installed</span></label>
+        </div>
+        <div class="f">
+          <label for="sc">Nut position, as built<span class="sub">seat underside above the lower pin</span></label>
+          <input type="number" id="sc" step="any"></div>
+        <div class="f f2" style="margin-top:6px">
+          <label for="scomp">Nut travel from first contact<span class="sub" id="scompRange"></span></label></div>
+        <input type="range" id="scomp" min="0" max="50" step="0.5" style="width:100%;padding:0">
+        <div id="scompOut"></div>
+        <label class="chk" style="margin-top:8px"><input type="checkbox" id="sBind">
+          Let the slider run past the allowable stress, as far as coil bind</label>
+        <div class="rowbtns">
+          <button type="button" class="b" id="sPlay">Animate</button>
+          <button type="button" class="b" id="sNom">Back to the built setting</button></div>
+
+      </fieldset>
+
+      <div class="rowbtns" style="margin:0 0 16px">
+        <button type="button" class="b" id="sSaveFile">Save master file</button>
+        <button type="button" class="b" id="sOpenFile">Open master file</button>
+      </div>
+      <div class="status" id="sFileMsg" style="margin:-8px 0 14px"></div>
+
+      <details class="fs">
+        <summary>Strut lengths</summary>
+        <div class="f"><label for="sL">Hinge to hinge<span class="sub">pin to pin, fixed by the mounts</span></label>
+          <input type="number" id="sL" step="any"></div>
+        <div class="f"><label for="sa">Upper pin to cylinder top<span class="sub">a</span></label>
+          <input type="number" id="sa" step="any"></div>
+        <div class="f"><label for="sLc">Cylinder length<span class="sub">same on all three</span></label>
+          <input type="number" id="sLc" step="any"></div>
+      </details>
+
+      <details class="fs">
+        <summary>Cylinder and rod</summary>
+        <div class="f"><label for="scylOD">Cylinder outside diameter</label><input type="number" id="scylOD" step="any"></div>
+        <div class="f"><label for="sbore">Bore<span class="sub">must clear the spring</span></label><input type="number" id="sbore" step="any"></div>
+        <div class="f"><label for="stwT">Top end wall thickness</label><input type="number" id="stwT" step="any"></div>
+        <div class="f"><label for="stwB">Bottom end wall thickness</label><input type="number" id="stwB" step="any"></div>
+        <div class="f"><label for="srod">Rod diameter</label><input type="number" id="srod" step="any"></div>
+        <div class="f"><label for="splateOD">Seat plate diameter</label><input type="number" id="splateOD" step="any"></div>
+        <div class="f"><label for="splate">Seat plate thickness</label><input type="number" id="splate" step="any"></div>
+        <div class="f"><label for="snut">Nut height</label><input type="number" id="snut" step="any"></div>
+        <div class="f"><label for="spitch">Nut thread pitch</label><input type="number" id="spitch" step="any"></div>
+        <div class="f"><label for="spitchEye">Eyebolt thread pitch<span class="sub">turned when rotating the cylinder</span></label><input type="number" id="spitchEye" step="any"></div>
+        <div class="f"><label for="sslot">Sight slot length<span class="sub">the window cut in the cylinder</span></label><input type="number" id="sslot" step="any"></div>
+        <div class="f"><label for="sspan">Coils to span<span class="sub">counted through the slot</span></label><input type="number" id="sspan" step="1" min="2" value="3"></div>
+      </details>
+
+    </div>
+  </form>
+
+  <div>
+    <div class="panel lay-top" id="strutPanel">
+      <h2 style="display:flex;justify-content:space-between;align-items:center;gap:10px">Assembly
+        <span id="sTitle" style="font-weight:400;color:var(--ink3)"></span></h2>
+      <div class="figs">
+        <div class="fig figStrut">
+          <svg id="ssvg" viewBox="0 0 380 620" role="img" aria-label="Strut section to scale"></svg>
+          <div class="cap" id="sDrawCap"></div>
+        </div>
+        <div class="fig figSlot">
+          <svg id="slotsvg" viewBox="0 0 400 440" role="img" aria-label="What the sight slot shows"></svg>
+          <div class="cap">Through the sight slot</div>
+        </div>
+        <div class="rate">
+          <div class="k" id="sForce">&mdash;</div>
+          <div class="alt" id="sAlt"></div>
+          <div class="cap" id="sCap"></div>
+        </div>
+      </div>
+      <div id="sNotes"></div>
+      <div class="grp" style="border-top:1px solid var(--rule2);margin-top:6px">
+        <div><h3 class="sec">Assembly</h3><table class="res" id="sTabA"></table></div>
+        <div><h3 class="sec">Travel and load</h3><table class="res" id="sTabB"></table></div>
+      </div>
+      <div class="grp" style="border-top:1px solid var(--rule2)">
+        <div><h3 class="sec">Design checks</h3><table class="res" id="sChk"></table></div>
+        <div>
+          <h3 class="sec">Sight slot readings</h3>
+          <table class="res" id="sSlot"></table>
+          <p style="font-size:12px;color:var(--ink3);margin:8px 10px 12px">
+            Read across several coils rather than one gap: the span divides your
+            measurement error by the number of pitches in it.</p>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>D1, D2 and D3 side by side</h2>
+      <div style="overflow-x:auto"><table class="mat" id="sCompare"></table></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ==================== COMPARE ==================== -->
+<div role="tabpanel" id="p7" aria-labelledby="tb7" hidden>
+<div class="panel">
+  <h2>D1, D2 and D3 at their preloads</h2>
+  <div class="body" style="padding-bottom:8px">
+    <p style="margin:0;font-size:13.5px;color:var(--ink2);max-width:86ch">
+      Each unit is drawn at its own nominal length with its own spring and pre-compression,
+      as set on the Strut tab. All three share one scale, so heights and wire sizes compare
+      directly. The upper eye is the common datum; the dashed circles mark where the lower
+      eye sits with the spring free and at full compression, and the amber dimension below
+      each cylinder is the spring deflection.</p>
+  </div>
+  <div class="body" style="padding-top:0;padding-bottom:10px">
+    <div class="seg" style="max-width:360px;margin-bottom:12px">
+      <label><input type="radio" name="cmode" value="nut" checked><span>Nut, uninstalled</span></label>
+      <label><input type="radio" name="cmode" value="cyl"><span>Cylinder, installed</span></label>
+    </div>
+    <div class="f f2" style="margin-bottom:2px">
+      <label for="cmpX"><span id="cmpXLabel">Nut travel, applied to all three</span><span class="sub" id="cmpXRange"></span></label>
+    </div>
+    <input type="range" id="cmpX" min="0" max="30" step="0.1" value="0" style="width:100%;padding:0">
+    <div id="cmpXOut"></div>
+    <div class="rowbtns">
+      <button type="button" class="b" id="cmpPlay">Animate</button>
+      <button type="button" class="b" id="cmpZero">Back to nominal</button>
+    </div>
+    <div id="cmpTotals"></div>
+  </div>
+  <div class="cmp3" id="cmpWrap"></div>
+</div>
+</div>
+
+<!-- ==================== MATERIALS ==================== -->
+
+
+<!-- ==================== REFERENCE ==================== -->
+<!-- ==================== HELP ==================== -->
+<div role="tabpanel" id="pHelp" aria-labelledby="tbH" hidden>
+  <div class="tabs sub" role="tablist">
+    <button role="tab" id="sub3" aria-controls="p3" aria-selected="true">Reference</button>
+    <button role="tab" id="sub4" aria-controls="p4" aria-selected="false">Materials</button>
+  </div>
+<div role="tabpanel" id="p3" aria-labelledby="sub3">
+<div class="panel"><div class="ref">
+
+<h2>Where the rate comes from</h2>
+<p>A helical compression spring is a torsion bar wrapped into a helix. Push on the ends and the wire
+   barely bends; almost all of the deflection is the wire twisting about its own axis. Everything
+   below follows from that one idea.</p>
+<p>An axial load F acting at radius D/2 puts a torque on the wire, and the twisted length is one
+   circumference per active coil:</p>
+<div class="eq">T = F·D / 2            L = π·D·n</div>
+<p>A bar of torsion constant Kt twists through θ = T·L / (G·Kt), and the coil end travels along the
+   axis by that angle acting through the same radius, δ = θ·D/2. Substituting and collecting:</p>
+<div class="eq">δ = F·π·D³·n / (4·G·Kt)
+
+k = F/δ = 4·G·Kt / (π·D³·n)</div>
+<table class="sym">
+  <tr><td>D</td><td>mean coil diameter, wire centre to wire centre</td></tr>
+  <tr><td>n</td><td>active coils, the ones free to twist</td></tr>
+  <tr><td>G</td><td>shear modulus of the wire</td></tr>
+  <tr><td>Kt</td><td>torsion constant of the wire cross-section</td></tr>
+  <tr><td>k</td><td>spring rate, force per unit deflection</td></tr>
+</table>
+
+<h3>The torsion constant is the only thing that changes between wire shapes</h3>
+<div class="eq">Round        Kt = π·d⁴ / 32
+Rectangular  Kt = β·b·t³      b = long side, t = short side</div>
+<p>Substituting the round case gives back the textbook form, which is a useful check that the general
+   formula is being applied correctly:</p>
+<div class="eq">k = 4·G·(π·d⁴/32) / (π·D³·n) = G·d⁴ / (8·D³·n)</div>
+<p>Two consequences worth holding on to. Wire size enters to the fourth power for round wire and as
+   the short side cubed for rectangular, so a 5% error in measuring the wire is a 20% error in rate:
+   measure the wire more carefully than anything else on the part. And the coil diameter enters as a
+   cube in the denominator, so winding the same wire on a slightly larger mandrel softens the spring
+   quickly.</p>
+
+<h3>β and α for rectangular wire</h3>
+<p>A rectangle has no closed-form torsion solution, so Saint-Venant's series is used, with β for
+   stiffness and α for peak stress. Both depend only on the aspect ratio:</p>
+<div class="eq">r = t / b   (short ÷ long)
+
+β = 1/3 − 0.21·r·(1 − r⁴/12)
+α = (1/3) / (1 + 0.6095r + 0.8865r² − 1.8023r³ + 0.9100r⁴)</div>
+<table class="tab">
+  <tr><th>b / t</th><th>1.0</th><th>1.5</th><th>2.0</th><th>3.0</th><th>4.0</th><th>5.0</th><th>10</th><th>&infin;</th></tr>
+  <tr><td>β</td><td>0.141</td><td>0.196</td><td>0.229</td><td>0.263</td><td>0.281</td><td>0.291</td><td>0.312</td><td>0.333</td></tr>
+  <tr><td>α</td><td>0.208</td><td>0.231</td><td>0.246</td><td>0.267</td><td>0.282</td><td>0.291</td><td>0.312</td><td>0.333</td></tr>
+</table>
+<p>The formulas reproduce these tabulated values to within 0.3%. The rate depends only on which side
+   is longer, not on how the wire is oriented in the coil. Orientation still decides the solid height
+   and the spring index, which is why the two dimensions are entered separately.</p>
+<p>A square wire is about 11% <em>less</em> stiff than round wire of the same cross-sectional area,
+   because the circle is the most efficient torsion section. Rectangular wire is chosen for solid
+   height efficiency and energy storage in a given envelope, never for rate alone.</p>
+
+<h2>Counting coils</h2>
+<p>Total coils N is what you count on the part, end to end. Active coils n is the number free to
+   twist. Coils that are squared or ground flat bear against the seat and contribute almost nothing,
+   so they are subtracted. The end treatment also fixes the solid height and the pitch.</p>
+<table class="tab">
+  <tr><th>End type</th><th>Active n</th><th>Solid length Ls</th><th>Pitch p</th></tr>
+  <tr><td>Open, plain</td><td>N</td><td>d(N+1)</td><td>(L0 − d)/n</td></tr>
+  <tr><td>Open, ground</td><td>N − 1</td><td>d·N</td><td>L0/(n+1)</td></tr>
+  <tr><td>Squared only</td><td>N − 2</td><td>d(N+1)</td><td>(L0 − 3d)/n</td></tr>
+  <tr><td>Squared &amp; ground</td><td>N − 2</td><td>d·N</td><td>(L0 − 2d)/n</td></tr>
+</table>
+<p>For rectangular wire, substitute the axial wire width b for d. Real dead coils are rarely exactly
+   two: a ground end that is not quite flat leaves part of a coil working. That is the usual reason a
+   measured rate comes out below the calculated one, and it is what the implied-coil figure on the
+   Measured data tab is for.</p>
+<div class="eq">Helix angle   λ = arctan( p / (π·D) )</div>
+<p>Beyond about 12° the coil is steep enough that the wire carries real bending as well as torsion,
+   and the rate formula starts to over-predict stiffness.</p>
+
+<h2>Pre-compression</h2>
+<p>Pre-compression, also called preload or initial compression, means installing the spring at a
+   length L1 shorter than its free length L0. The spring is already pushing before the mechanism
+   does anything:</p>
+<div class="eq">δ1 = L0 − L1        F1 = k·δ1      preload
+δ2 = L0 − L2        F2 = k·δ2      load at the working length
+
+ΔF = F2 − F1 = k·(L1 − L2)         load change over the stroke</div>
+
+<div class="callout">
+  <p><b>Pre-compression does not change the rate.</b> The rate is fixed by wire, coil diameter and
+  active coils. Preload moves where you sit on the line; it does not tilt the line. If you need a
+  different force change over a given stroke, you have to change the spring, not the installed
+  length.</p>
+</div>
+
+<h3>What it is for</h3>
+<ul>
+  <li>Taking up backlash and clearance so nothing rattles at rest.</li>
+  <li>Guaranteeing a minimum seating force. Valve seats, seals, brushes, contacts and clutch plates
+      need force at zero stroke, not force after 5 mm of travel.</li>
+  <li>Keeping a follower against a cam through the whole cycle, so the spring never goes slack and
+      the parts never separate and slam back together.</li>
+  <li>Flattening the force variation across a stroke. The force ratio is F2/F1 = δ2/δ1, so a large
+      preload with a small working stroke gives nearly constant force. A soft spring compressed a
+      long way is how you get near-constant force; a stiff spring barely compressed gives a force
+      that swings wildly over the same travel.</li>
+</ul>
+
+<h3>What it costs</h3>
+<ul>
+  <li>Preload consumes travel. Available deflection is L0 − Ls, and the preload has already spent
+      δ1 of it before the stroke begins.</li>
+  <li>The spring sits stressed the whole time it is installed. Held at high stress, spring steel
+      takes a permanent set and loses free length, which quietly reduces the preload over months.
+      Presetting, also called scragging, at the factory stabilises this by taking the set
+      deliberately during manufacture.</li>
+  <li>Assembly has to apply and hold the preload force while fasteners go in.</li>
+</ul>
+
+<h3>Design guides</h3>
+<ul>
+  <li>Keep the working deflection below roughly 80% of the deflection to solid, so the spring never
+      reaches coil bind under tolerance stack-up, wear or thermal movement.</li>
+  <li>For cyclic duty, leave a clearance of at least 10 to 15% of the working deflection between the
+      working length and solid.</li>
+  <li>Specify preload as a force with a tolerance, not as a length. The length that produces it
+      depends on the rate, which itself carries a manufacturing tolerance of typically ±10%.</li>
+</ul>
+
+<h3>Reading it off a test</h3>
+<p>If you measure force against the travel of your mechanism rather than against the spring's own
+   deflection from free length, every reading is offset by the preload. Fitting a straight line with
+   an offset recovers both: the slope is the rate and the intercept is F1. An intercept that comes
+   out near zero or negative when you expected a preload usually means the spring is going slack at
+   the top of the stroke, which is worth knowing.</p>
+
+<h2>Stress</h2>
+<p>The wire carries torsional shear from the applied torque plus a direct transverse shear, and the
+   bore of the coil is stressed more than the outside because the wire on the inside of the helix is
+   shorter. Wahl's factor rolls both corrections into one multiplier:</p>
+<div class="eq">C  = D / d                       spring index
+Kw = (4C − 1)/(4C − 4) + 0.615/C
+
+τ = Kw · 8·F·D / (π·d³)          round wire
+τ = Kw · T / (α·b·t²)            rectangular wire</div>
+<p>Peak stress is on the coil bore, at the mid-point of the long side for rectangular wire. That is
+   where fatigue cracks start, which is why shot peening the inside of the coil matters and why a
+   drawn-in scratch there is a rejection.</p>
+<p>The index C governs how severe the correction is. At C = 4, Kw is about 1.40; at C = 12 it is
+   about 1.12. Below about 4 the wire is bent so tightly it is hard to coil and the stress
+   concentration is punishing. Above about 12 the spring is floppy, tangles in handling and buckles
+   readily. Four to twelve is the workable band, six to nine the comfortable middle.</p>
+<p>The tensile strength of spring wire rises as the wire gets thinner, following</p>
+<div class="eq">Sut = A / d^m</div>
+<p>with A and m from Shigley's Table 10-4. The allowable torsional stress for static duty is taken as
+   a fraction of that: 45% for cold-drawn carbon and music wire, 50% for hardened and tempered wire,
+   35% for austenitic stainless and non-ferrous alloys. For rectangular wire this tool converts the
+   section to an equal-area diameter before applying the size correction, which is an approximation.
+   Fatigue duty needs a Goodman or Zimmerli analysis on the alternating and mean stresses, which this
+   tool does not do.</p>
+
+<h2>Buckling</h2>
+<p>A compression spring is a column and will bow sideways if it is too slender. The criterion is
+   Shigley's, based on slenderness and seating:</p>
+<div class="eq">λ  = a_end · L0 / D
+C1 = E / (2(E − G))
+C2 = 2π²(E − G) / (2G + E)
+
+δ_crit = C1·L0·[ 1 − √(1 − C2/λ²) ]</div>
+<p>If λ² ≤ C2 the spring is stable at any deflection, which for steel means a slenderness ratio
+   L0/D under about 5.2 on flat parallel plates. The seating constant a_end is 0.5 for flat parallel
+   plates at both ends, 0.707 with one end pivoted, 1.0 with both pivoted and 2.0 with one end free
+   to tilt, so a spring that is fine between two flat faces can buckle at a quarter of that length if
+   one end sits on a ball joint. Failing this check does not make a spring unusable: run it in a bore
+   or over a rod and accept the friction and wear.</p>
+
+<h2>Surge frequency</h2>
+<p>A spring is a distributed mass on a distributed stiffness, so it has its own longitudinal
+   resonance. Excite it near that frequency and a compression wave runs up and down the coils,
+   producing loads far above the static value while the ends barely move. Between two fixed parallel
+   plates the fundamental is</p>
+<div class="eq">fn = ½·√(k / m)        m = ρ·A_wire·π·D·N</div>
+<p>Keep the fundamental at least 15 to 20 times the highest forcing frequency. Surge is what destroys
+   valve springs when an engine reaches a critical speed, and it is why such springs are given a
+   varying pitch, so that no single section of the coil has one clean resonance.</p>
+
+<h2>Fitting measured readings</h2>
+<p>The Measured data tab does an ordinary least-squares fit of load against deflection. Three models
+   are offered: through the origin, a straight line with an offset, and a quadratic for a spring that
+   stiffens as dead coils come into contact.</p>
+<p>The two inverted figures are the diagnostic. Both come from rearranging the same rate equation:</p>
+<div class="eq">Implied G = k_fit · π·D³·n / (4·Kt)
+Implied n = 4·G·Kt / (π·D³·k_fit)</div>
+<p>They cannot both be true. They are two readings of the same discrepancy, expressed once as a
+   material problem and once as a geometry problem, and geometry is the more common culprit. A
+   measured rate below calculation with a good R² usually means fewer active coils than assumed, or a
+   mean diameter larger than nominal, since D enters as a cube. A measured rate above calculation on
+   a low-index spring is often just the missing curvature correction. Scattered points with a poor R²
+   point at the test rather than the spring: friction in the fixture, a load cell not aligned with
+   the spring axis, or ends not seating flat.</p>
+
+<h2>What this tool does not cover</h2>
+<ul>
+  <li>Fatigue life, Goodman diagrams and shot-peening benefit.</li>
+  <li>Set and creep at elevated temperature. Both G and the allowable stress fall as it gets hotter.</li>
+  <li>Rate change as dead coils close up. Real springs stiffen slightly near solid.</li>
+  <li>Manufacturing tolerance. Commercial rate tolerance is typically ±10% and free length carries
+      its own, so a rate quoted to four digits is arithmetic precision, not real accuracy.</li>
+  <li>Curvature correction to the rate at low index, and bending at high helix angle.</li>
+  <li>Variable-pitch, conical and barrel springs, all of which have a non-constant rate by design.</li>
+</ul>
+
+<h2>Sources</h2>
+<ul>
+  <li>Shigley &amp; Mischke, <em>Mechanical Engineering Design</em>, mechanical springs chapter:
+      rate, Wahl factor, end-condition table, tensile strength constants, buckling and surge.</li>
+  <li>Wahl, <em>Mechanical Springs</em>: curvature correction and rectangular wire sections.</li>
+  <li>Roark, <em>Formulas for Stress and Strain</em>, torsion chapter: β and α for the rectangle.</li>
+  <li>Spring Manufacturers Institute handbook: index limits, travel allowance, presetting practice.</li>
+</ul>
+
+</div></div>
+</div>
+<div role="tabpanel" id="p4" aria-labelledby="sub4" hidden>
+<div class="panel">
+  <h2>The same spring in every material</h2>
+  <div class="body" style="padding-bottom:6px">
+    <p style="margin:0;font-size:13.5px;color:var(--ink2);max-width:82ch">
+      Geometry is held fixed at whatever is set on the Spring tab; only the material changes.
+      Rate follows G alone, so it scales directly with the shear modulus. Load capacity is a
+      separate question: it follows the tensile strength, which rises as wire gets thinner, and the
+      allowable fraction of it, which depends on the alloy class. The two do not move together, so
+      the stiffest choice is rarely the strongest.</p>
+    <div class="f" style="max-width:340px;margin-top:14px">
+      <label for="matWire">Wire diameter for this table<span class="sub">leave blank to use the Spring tab</span></label>
+      <input type="number" id="matWire" step="any" min="0">
+    </div>
+    <div id="matGeom" style="font-size:12.5px;color:var(--ink3);margin-top:6px;max-width:86ch"></div>
+  </div>
+  <div style="overflow-x:auto"><table class="mat" id="matTable"></table></div>
+  <div class="body" style="padding-top:10px">
+    <p style="margin:0;font-size:12.5px;color:var(--ink3);max-width:82ch">
+      Safe load is where peak shear reaches the static allowable. Where that exceeds the load at
+      solid, the spring can be closed fully without taking a set and the row says so. These are
+      static limits; cyclic duty needs a fatigue analysis on the alternating and mean stresses.</p>
+  </div>
+</div>
+</div>
+</div>
+
+
+<!-- ==================== SAVE AND PRINT ==================== -->
+<div role="tabpanel" id="p5" aria-labelledby="tb5" hidden>
+<div class="cols">
+
+  <div class="panel">
+    <h2>This spring</h2>
+    <div class="body">
+      <div class="f f2">
+        <label for="recName" style="margin-bottom:4px">Name</label>
+        <input type="text" id="recName" placeholder="e.g. damper spring, rev B">
+      </div>
+      <div class="f f2" style="margin-top:9px">
+        <label for="recNote" style="margin-bottom:4px">Note</label>
+        <input type="text" id="recNote" placeholder="drawing number, batch, test date">
+      </div>
+      <div class="rowbtns" style="margin-top:13px">
+        <button type="button" class="b" id="btnSave">Save to library</button>
+        <button type="button" class="b" id="btnPdf">Save as PDF</button>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink3);margin:13px 0 0" id="pdfHelp">
+        Save as PDF opens your browser's print dialogue. Choose <em>Save as PDF</em> as the
+        destination; the page is already laid out for A4 portrait, so leave the paper size alone
+        and turn off headers and footers for a clean sheet.</p>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2>Library</h2>
+      <div class="body">
+        <table class="lib">
+          <thead><tr><th>Spring</th><th style="text-align:right">Rate</th><th></th></tr></thead>
+          <tbody id="libList"></tbody>
+        </table>
+        <div class="status" id="libStatus"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Master file</h2>
+      <div class="body">
+        <p style="font-size:13.5px;color:var(--ink2);margin:0 0 12px" id="libHelp">
+          The library lives in this page only while it is open. Download it as a master file to keep
+          it, and open that file again to load every spring back.</p>
+        <div class="status" id="cloudStatus" style="margin:-4px 0 12px"></div>
+        <div class="rowbtns">
+          <button type="button" class="b" id="btnDownload">Download master file</button>
+          <button type="button" class="b" id="btnOpen">Open master file</button>
+          <input type="file" id="fileIn" accept=".json,application/json" hidden>
+        </div>
+        <details>
+          <summary>If your browser blocks downloads, copy or paste the file text here</summary>
+          <textarea id="libText" style="height:120px" placeholder="Master file text"></textarea>
+          <div class="rowbtns">
+            <button type="button" class="b" id="btnShow">Show library as text</button>
+            <button type="button" class="b" id="btnPaste">Load from text</button>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<footer id="footNote">Everything runs inside this file. No network, no data leaves the page.</footer>
+</div>
+
+<div id="report"></div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const sig = (v,n=4) => (!isFinite(v)) ? "\u2014" :
+  (Math.abs(v)>=1e6||(Math.abs(v)<1e-4&&v!==0)) ? v.toExponential(2)
+  : (+v.toPrecision(n)).toLocaleString(undefined,{maximumFractionDigits:8});
+
+/* ---------------- tabs ---------------- */
+/* an element counts as visible only if nothing above it is hidden either */
+function shown(id){ let e=$(id); while(e && e!==document.body){ if(e.hidden) return false; e=e.parentElement; } return !!e; }
+function onShow(p){
+  if(p==="p2") fit();
+  if(p==="p4") renderMats();
+  if(p==="p5") refreshLib();
+  if(p==="p6"){ writeStrut(); renderStrut(); }
+  if(p==="p7") renderCompare();
+  if(p==="pSpring") onShow(document.getElementById("sub2").getAttribute("aria-selected")==="true"?"p2":"p1");
+  if(p==="pHelp") onShow(document.getElementById("sub4").getAttribute("aria-selected")==="true"?"p4":"p3");
+}
+function wireTabs(list){
+  list.forEach(([t,p])=>$(t).addEventListener("click",()=>{
+    list.forEach(([t2,p2])=>{$(t2).setAttribute("aria-selected",t2===t);$(p2).hidden=(p2!==p);});
+    onShow(p);
+  }));
+}
+const TABS=[["tb1","pSpring"],["tb6","p6"],["tb7","p7"],["tb5","p5"],["tbH","pHelp"]];
+wireTabs(TABS);
+wireTabs([["sub1","p1"],["sub2","p2"]]);
+wireTabs([["sub3","p3"],["sub4","p4"]]);
+
+/* ---------------- units ----------------
+   internal working units are mm, N, MPa, GPa, kg/m3 throughout          */
+const IN=25.4, LBF=4.4482216152605, KSI=6.894757, KGF=9.80665, LBIN3=27679.905, PSI6=6894.757;
+let uMode="si";                    // si = mm/N,  kg = mm/kgf,  imp = inch/lbf
+const UNITS={
+  si :{L:"mm",F:"N",  K:"N/mm",  S:"MPa",         M:"GPa",          R:"kg/m\u00B3", E:"J",           T:"N\u00B7mm",  W:"g"},
+  kg :{L:"mm",F:"kgf",K:"kgf/mm",S:"kgf/mm\u00B2",M:"kgf/mm\u00B2",R:"kg/m\u00B3", E:"kgf\u00B7m", T:"kgf\u00B7mm",W:"g"},
+  imp:{L:"in",F:"lbf",K:"lbf/in",S:"ksi",         M:"Mpsi",         R:"lb/in\u00B3",E:"in\u00B7lbf",T:"in\u00B7lbf",W:"lb"}
+};
+const U=()=>UNITS[uMode];
+/* factor = internal units (mm, N, MPa, kg/m3, N.mm, kg) per one display unit */
+const facL=m=> m==="imp"?IN:1;
+const facF=m=> m==="imp"?LBF  : m==="kg"?KGF : 1;
+const facS=m=> m==="imp"?KSI  : m==="kg"?KGF : 1;
+const facM=m=> m==="imp"?PSI6 : m==="kg"?KGF : 1000;
+const facR=m=> m==="imp"?LBIN3:1;
+const facE=m=> m==="imp"?LBF*IN : m==="kg"?KGF*1000 : 1000;
+const facT=m=> m==="imp"?LBF*IN : m==="kg"?KGF : 1;
+const facW=m=> m==="imp"?0.45359237 : 0.001;
+const toL =v=> v/facL(uMode);                       // internal -> display
+const toL2=v=> v/Math.pow(facL(uMode),2);
+const toL4=v=> v/Math.pow(facL(uMode),4);
+const toF =v=> v/facF(uMode);
+const toK =v=> v*facL(uMode)/facF(uMode);           // N/mm -> display rate
+const toS =v=> v/facS(uMode);
+const toM =v=> v/facM(uMode);                       // MPa -> display modulus
+const toR =v=> v/facR(uMode);
+const toE =v=> v/facE(uMode);
+const toT =v=> v/facT(uMode);
+const toW =v=> v/facW(uMode);
+const frL =v=> v*facL(uMode);                       // display -> internal
+const frF =v=> v*facF(uMode);
+const frM =v=> v*facM(uMode);                       // display modulus -> MPa
+const frR =v=> v*facR(uMode);
+
+/* sliders move in round steps: half a millimetre, or 0.02 in when working imperial.
+   A range input snaps any value you assign it to its step, so exact settings such as
+   a solved pre-compression are written with the step momentarily released. */
+const sliderStep = () => uMode==="imp" ? 0.02 : 0.5;
+function setSlider(el,v){
+  if(!el) return;
+  const st=el.step; el.step="any"; el.value=v; el.step=st;
+}
+const LEN_IDS=["dia","ax","rad","coil","gapIn","lf","ls","L1","L2","matWire"];
+function switchUnits(nm){
+  if(nm===uMode) return;
+  const cv=(v,fac)=> v*fac(uMode)/fac(nm);
+  LEN_IDS.forEach(id=>{const v=parseFloat($(id).value); if(isFinite(v)) $(id).value=+cv(v,facL).toPrecision(6);});
+  const f1=parseFloat($("F1in").value); if(isFinite(f1)) $("F1in").value=+cv(f1,facF).toPrecision(6);
+  ["G","E"].forEach(id=>{const v=parseFloat($(id).value); if(isFinite(v)) $(id).value=+cv(v,facM).toPrecision(6);});
+  const r=parseFloat($("rho").value); if(isFinite(r)) $("rho").value=+cv(r,facR).toPrecision(6);
+  for(const tr of rows.children){
+    [0,1].forEach(i=>{
+      const el=tr.children[i].firstChild, v=parseFloat(el.value);
+      if(isFinite(v)) el.value=+cv(v, i===0?facL:facF).toPrecision(6);
+    });
+  }
+  uMode=nm; labelUnits(); run();
+  if(typeof STRUTS!=="undefined"){ writeStrut(); renderStrut(); }
+}
+function labelUnits(){
+  const u=U();
+  document.querySelectorAll("[data-u]").forEach(el=>el.textContent=u[el.dataset.u]);
+  $("hX").textContent=(document.querySelector('input[name=xmode]:checked').value==="len"
+      ? "Length, " : "Deflection, ")+u.L;
+  $("hY").textContent="Load, "+u.F;
+}
+[["dia","L"],["ax","L"],["rad","L"],["coil","L"],["gapIn","L"],["lf","L"],["ls","L"],["G","M"],["E","M"],
+ ["rho","R"],["sut","S"],["L1","L"],["L2","L"],["F1in","F"],["matWire","L"],
+ ["sa","L"],["sLc","L"],["scylOD","L"],["sbore","L"],["stwT","L"],["stwB","L"],
+ ["srod","L"],["splateOD","L"],["splate","L"],["snut","L"],["spitch","L"],["spitchEye","L"],["sslot","L"],["sL","L"],["sc","L"],
+ ["tgtL","L"],["tgtF","F"]].forEach(([id,kind])=>{
+  const lab=document.querySelector('label[for='+id+']');
+  if(!lab) return;
+  const sub=lab.querySelector(".sub");
+  const tag=document.createElement("span");
+  tag.className="u"; tag.innerHTML=' (<span data-u="'+kind+'"></span>)';
+  sub ? lab.insertBefore(tag,sub) : lab.appendChild(tag);
+});
+document.querySelectorAll('input[name=unit]').forEach(r=>
+  r.addEventListener("change",e=>switchUnits(e.target.value)));
+
+/* ---------------- materials ----------------
+   name, G GPa, E GPa, rho kg/m3, A MPa*mm^m, m, allowable shear as fraction of Sut */
+const MATS=[
+ ["Music wire, ASTM A228",       81.7,207,  7850,2211,0.145,0.45],
+ ["Hard drawn, ASTM A227",       79.3,207,  7850,1783,0.190,0.45],
+ ["Oil tempered, ASTM A229",     79.3,207,  7850,1855,0.187,0.50],
+ ["Chrome vanadium, ASTM A232",  77.2,203.4,7850,2005,0.168,0.50],
+ ["Chrome silicon, ASTM A401",   77.2,203.4,7850,1974,0.108,0.50],
+ ["Stainless 302, ASTM A313",    69.0,193,  7920,1867,0.146,0.35],
+ ["Stainless 316, ASTM A313",    69.0,193,  8000,1750,0.146,0.35],
+ ["Stainless 17-7 PH",           75.8,203.4,7810,1650,0,    0.35],
+ ["Inconel X-750",               79.3,213.7,8250,1200,0,    0.35],
+ ["Phosphor bronze, ASTM B159",  41.4,103.4,8860, 932,0.064,0.35],
+ ["Beryllium copper, ASTM B197", 44.8,128,  8250,1300,0,    0.35],
+ ["Titanium Ti-6Al-4V",          41.4,113.8,4430,1000,0,    0.35],
+ ["Spring steel BS 2S 204, Cr-V", 77.2,203.4,7850,2005,0.168,0.50],
+ ["50KhFA, GOST 14959, Cr-V",     78.5,206,  7850,2005,0.168,0.50],
+ ["12KhFA, strength not on file", 78.5,206,  7850,   0,0,    0.50],
+ ["Custom",                       0,  0,    0,      0,0,    0.45]
+];
+MATS.forEach((m,i)=>{const o=document.createElement("option");o.value=i;o.textContent=m[0];$("mat").appendChild(o);});
+$("mat").value=0;
+$("mat").addEventListener("change",e=>{
+  const m=MATS[+e.target.value];
+  if(m[1]>0){$("G").value=+toM(m[1]*1000).toPrecision(6);$("E").value=+toM(m[2]*1000).toPrecision(6);
+             $("rho").value=+toR(m[3]).toPrecision(6);}
+  run();
+});
+["G","E","rho"].forEach(id=>$(id).addEventListener("input",()=>{$("mat").value=MATS.length-1;}));
+
+/* ---------------- section coefficients ---------------- */
+const betaC =r=> 1/3 - 0.21*r*(1 - Math.pow(r,4)/12);
+const alphaC=r=> (1/3)/(1 + 0.6095*r + 0.8865*r*r - 1.8023*Math.pow(r,3) + 0.9100*Math.pow(r,4));
+
+/* ---------------- end types ---------------- */
+const ENDS={
+  sg:{dead:2, solidAdd:0, pSub:2},
+  sq:{dead:2, solidAdd:1, pSub:3},
+  pl:{dead:0, solidAdd:1, pSub:1},
+  pg:{dead:1, solidAdd:0, pSub:null},
+  cu:{dead:null, solidAdd:0, pSub:2}
+};
+
+/* ---------------- solver ---------------- */
+let S={};
+function solve(){
+  const rect=document.querySelector('input[name=sec]:checked').value==="rect";
+  const g=id=>frL(parseFloat($(id).value));
+  let ax,rad,Kt,Zt,area,secLabel,aspect=NaN;
+
+  if(rect){
+    ax=g("ax"); rad=g("rad");
+    const lng=Math.max(ax,rad), sht=Math.min(ax,rad), r=sht/lng;
+    aspect=lng/sht;
+    Kt=betaC(r)*lng*Math.pow(sht,3);
+    Zt=alphaC(r)*lng*sht*sht;
+    area=ax*rad;
+    secLabel=sig(toL(ax))+" \u00D7 "+sig(toL(rad));
+  } else {
+    const d=g("dia"); ax=rad=d;
+    Kt=Math.PI*Math.pow(d,4)/32; Zt=Math.PI*Math.pow(d,3)/16; area=Math.PI*d*d/4;
+    secLabel="\u2300 "+sig(toL(d));
+  }
+  const dEq=Math.sqrt(4*area/Math.PI);
+
+  const dref=document.querySelector('input[name=dref]:checked').value;
+  const coil=g("coil");
+  const D = dref==="mean" ? coil : dref==="outer" ? coil-rad : coil+rad;
+
+  const et=$("endt").value, EE=ENDS[et];
+  const Nt=parseFloat($("nt").value);
+  const dead = et==="cu" ? parseFloat($("inact").value) : EE.dead;
+  const na=Nt-dead;
+  const Lf=g("lf");
+  const LsCalc=(Nt+EE.solidAdd)*ax;
+  const lsMan=$("lsMan").checked;
+  const Ls= lsMan ? g("ls") : LsCalc;
+  const pitch = et==="pg" ? Lf/(na+1) : (Lf-EE.pSub*ax)/na;
+  /* pitch at any compressed length, for what the sight slot shows */
+  const pitchAt = Lq => et==="pg" ? Lq/(na+1) : (Lq-EE.pSub*ax)/na;
+  const helix = Math.atan(pitch/(Math.PI*D))*180/Math.PI;
+  const gapCalc = pitch - ax;                       // clear space between turns
+  const gapM = parseFloat($("gapIn").value);        // optional measurement
+  let ntGap = NaN;
+  if(isFinite(gapM) && gapM > 0){
+    const pM = frL(gapM) + ax;
+    ntGap = (et==="pg" ? Lf/pM - 1 : (Lf - EE.pSub*ax)/pM) + dead;
+  }
+
+  const G=frM(parseFloat($("G").value));        // display modulus -> MPa
+  const E=frM(parseFloat($("E").value));
+  const rho=frR(parseFloat($("rho").value))/1e9; // kg/m3 -> kg/mm3
+  const endc=parseFloat($("endc").value);
+
+  const M=MATS[+$("mat").value];
+  const Sut = M[4]>0 ? (M[5]>0 ? M[4]/Math.pow(dEq,M[5]) : M[4]) : NaN;
+  const tauAllow = isFinite(Sut) ? Sut*M[6] : NaN;
+
+  const k=4*G*Kt/(Math.PI*Math.pow(D,3)*na);
+  const C=D/rad, Kw=(4*C-1)/(4*C-4)+0.615/C;
+  const stroke=Lf-Ls, Fs=k*stroke, tauS=Kw*(Fs*D/2)/Zt;
+  const wireL=Math.PI*D*Nt, mass=rho*area*wireL;
+  const fn= mass>0 ? 0.5*Math.sqrt(k*1000/mass) : NaN;
+  const C1=E/(2*(E-G)), C2=2*Math.PI*Math.PI*(E-G)/(2*G+E), lam=endc*Lf/D;
+  const stable=lam*lam<=C2, yCr= stable? Infinity : C1*(1-Math.sqrt(1-C2/(lam*lam)))*Lf;
+
+  const ok=[ax,rad,D,na,Lf,G,k,Ls].every(v=>isFinite(v)&&v>0) && D>rad;
+  return {rect,ax,rad,Kt,Zt,area,dEq,secLabel,aspect,D,Nt,dead,na,Lf,Ls,LsCalc,lsMan,pitch,pitchAt,helix,gapCalc,gapM,ntGap,
+          G,E,endc,k,C,Kw,stroke,Fs,tauS,wireL,mass,fn,yCr,stable,Sut,tauAllow,ok,et,
+          load:d=>k*d, tauAt:F=>Kw*(F*D/2)/Zt};
+}
+
+/* ---------------- render ---------------- */
+const rowsHTML=a=>a.map(([n,v,u])=>"<tr><th>"+n+"</th><td>"+v+(u?"<u>"+u+"</u>":"")+"</td></tr>").join("");
+
+function run(){
+  const s=solve(); S=s; const u=U(); const bad=!s.ok;
+  $("ls").disabled=!$("lsMan").checked;
+  if(!$("lsMan").checked && isFinite(s.LsCalc)) $("ls").value=+toL(s.LsCalc).toPrecision(6);
+  $("fInact").hidden=($("endt").value!=="cu");
+  $("sut").value= isFinite(s.Sut) ? +toS(s.Sut).toPrecision(5) : "";
+
+  $("kMain").innerHTML= bad ? "\u2014" : sig(toK(s.k),4)+"<em>"+u.K+"</em>";
+  const kAlts={si:sig(s.k,4)+" N/mm", kg:sig(s.k/KGF,4)+" kgf/mm", imp:sig(s.k*IN/LBF,4)+" lbf/in"};
+  $("kAlt").textContent= bad ? "" :
+    Object.keys(kAlts).filter(m=>m!==uMode).map(m=>kAlts[m]).join("   \u00B7   ");
+  $("kCap").textContent= bad
+    ? "Check the geometry. Every dimension must be positive, the coil must be larger than the wire, and the active coil count must be above zero."
+    : "Stroke of "+sig(toL(s.stroke),4)+" "+u.L+" from free to solid needs "+sig(toF(s.Fs),4)+" "+u.F+".";
+  $("drawCap").textContent="Free and solid, to scale. Grid "+(uMode==="imp"?"0.5 in":"10 mm")+".";
+
+  $("tGeom").innerHTML= bad?"":rowsHTML([
+    ["Wire section", s.secLabel, u.L],
+    s.rect ? ["Aspect ratio b \u00F7 t", sig(s.aspect,3)]
+           : ["Section area", sig(toL2(s.area),4), u.L+"\u00B2"],
+    ["Torsion constant Kt", sig(toL4(s.Kt),4), u.L+"\u2074"],
+    ["Mean diameter", sig(toL(s.D),4), u.L],
+    ["Outside diameter", sig(toL(s.D+s.rad),4), u.L],
+    ["Inside diameter", sig(toL(s.D-s.rad),4), u.L],
+    ["Spring index C", sig(s.C,3)],
+    ["Total coils N", sig(s.Nt,4)],
+    ["Dead coils", sig(s.dead,3)],
+    ["Active coils n", sig(s.na,4)],
+    ["Pitch p", sig(toL(s.pitch),4), u.L],
+    ["Clear gap between coils", sig(toL(s.gapCalc),4), u.L],
+    ["Across 3 coils, outside to outside", sig(toL(2*s.pitch+s.ax),4), u.L],
+    ["Helix angle \u03BB", sig(s.helix,3), "\u00B0"],
+    ["Solid length"+(s.lsMan?", entered":", from coils"), sig(toL(s.Ls),4), u.L],
+    ["Wire length", sig(toL(s.wireL),4), u.L],
+    ["Mass", sig(toW(s.mass),4), u.W]
+  ]);
+
+  $("tLoad").innerHTML= bad?"":rowsHTML([
+    ["Deflection to solid", sig(toL(s.stroke),4), u.L],
+    ["Force at solid", sig(toF(s.Fs),4), u.F],
+    ["Force at solid, alternate", uMode==="kg"? sig(s.Fs,4):sig(s.Fs/KGF,4), uMode==="kg"?"N":"kgf"],
+    ["Torque on wire", sig(toT(s.Fs*s.D/2),4), u.T],
+    ["Wahl factor Kw", sig(s.Kw,3)],
+    ["Shear stress at solid", sig(toS(s.tauS),4), u.S],
+    ["Tensile strength Sut", sig(toS(s.Sut),4), u.S],
+    ["Allowable shear, static", sig(toS(s.tauAllow),4), u.S],
+    ["Stress at solid \u00F7 allowable", isFinite(s.tauAllow)? sig(s.tauS/s.tauAllow*100,3):"\u2014","%"],
+    ["Energy to solid", sig(toE(0.5*s.k*s.stroke*s.stroke),4), u.E],
+    ["Buckling onset", s.stable?"stable":sig(toL(s.yCr),4), s.stable?"":u.L],
+    ["Surge frequency fn", sig(s.fn,4), "Hz"]
+  ]);
+
+  const chk=(label,pass,txt)=>"<tr><th>"+label+"</th><td class=\""+(pass?"pass":"fail")+"\">"+
+      (pass?"pass":"check")+" <u>"+txt+"</u></td></tr>";
+  let ck="";
+  if(!bad){
+    ck+=chk("Spring index 4 to 12", s.C>=4&&s.C<=12, "C = "+sig(s.C,3));
+    ck+=chk("Helix angle under 12\u00B0", s.helix<12, "\u03BB = "+sig(s.helix,3)+"\u00B0");
+    ck+=chk("Coils fit the free length", s.pitch>s.ax, "p "+(s.pitch>s.ax?">":"<")+" "+(s.rect?"b":"d"));
+    if(isFinite(s.tauAllow))
+      ck+=chk("Stress at solid within allowable", s.tauS<=s.tauAllow, sig(s.tauS/s.tauAllow*100,3)+"% of allowable");
+    if(isFinite(s.ntGap))
+      ck+=chk("Measured gap matches coil count", Math.abs(s.ntGap-s.Nt)<=0.3,
+          "gap implies N = "+sig(s.ntGap,3));
+    ck+=chk("No buckling before solid", s.stable||s.yCr>=s.stroke,
+        s.stable? "slenderness safe" : "onset at "+sig(toL(s.yCr),3)+" "+u.L);
+    if(s.lsMan){
+      const dev=(s.Ls-s.LsCalc)/s.LsCalc*100;
+      ck+=chk("Measured solid matches coils", Math.abs(dev)<=6,
+          (dev>0?"+":"")+dev.toFixed(1)+"% vs "+sig(toL(s.LsCalc),4)+" "+u.L);
+    }
+  }
+  $("tChk").innerHTML=ck;
+
+  const N=[];
+  if(!bad){
+    if(s.Ls>=s.Lf) N.push(["warn","Solid length is not shorter than free length, so there is no stroke."]);
+    if(s.C<4) N.push(["warn","Spring index is "+sig(s.C,3)+". Below about 4 the coil is tight enough that curvature stiffens it, so the real rate runs above this figure and the wire is hard to coil."]);
+    if(s.C>12) N.push(["info","Spring index is "+sig(s.C,3)+". Springs this slack tangle in handling and buckle easily."]);
+    if(s.helix>=12) N.push(["info","Helix angle is "+sig(s.helix,3)+"\u00B0. Above about 12\u00B0 the wire carries real bending as well as torsion and the calculated rate reads high."]);
+    if(!s.stable&&s.yCr<s.stroke) N.push(["warn","It buckles before it closes: onset at "+sig(toL(s.yCr),4)+" "+u.L+" against a "+sig(toL(s.stroke),4)+" "+u.L+" stroke. Guide it in a bore or over a rod."]);
+    if(isFinite(s.ntGap)&&Math.abs(s.ntGap-s.Nt)>0.3) N.push(["info","A gap of "+sig(s.gapM,3)+" "+u.L+
+      " over a free length of "+sig(toL(s.Lf),4)+" "+u.L+" implies "+sig(s.ntGap,3)+" total coils, not "+sig(s.Nt,3)+
+      ". The geometry is over-determined, so one of the three measurements is off, or the ends are not the type selected. "+
+      "Measuring the solid length settles it: it is "+sig(toL(s.LsCalc),4)+" "+u.L+" for the end type chosen."]);
+    if(isFinite(s.tauAllow)&&s.tauS>s.tauAllow) N.push(["warn","Shear stress at solid is "+sig(s.tauS/s.tauAllow*100,3)+"% of the static allowable. The spring will take a permanent set if it is closed solid."]);
+  } else {
+    if(isFinite(s.na)&&s.na<=0) N.push(["warn","Dead coils equal or exceed the total coils, so nothing is left to deflect."]);
+  }
+  $("notes").innerHTML=N.map(x=>"<div class=\"note "+x[0]+"\">"+x[1]+"</div>").join("");
+
+  drawSpring(s); drawEndTypes(); preComp(s); fit();
+  if(shown("p4")) renderMats();
+  if(shown("p6")) renderStrut();
+  if(shown("p7")) renderCompare();
+}
+
+/* ---------------- pre-compression ---------------- */
+document.querySelectorAll('input[name=pcmode]').forEach(r=>r.addEventListener("change",()=>{
+  const byLen=document.querySelector('input[name=pcmode]:checked').value==="len";
+  $("fL1").hidden=!byLen; $("fF1").hidden=byLen; preComp(S);
+}));
+$("pcForm").addEventListener("input",()=>preComp(S));
+$("pcForm").addEventListener("submit",e=>e.preventDefault());
+
+function preComp(s){
+  const u=U(), T=$("tPC");
+  if(!s||!s.ok){T.innerHTML="";$("pcNotes").innerHTML="";return;}
+  const byLen=document.querySelector('input[name=pcmode]:checked').value==="len";
+  let L1,F1;
+  if(byLen){ L1=frL(parseFloat($("L1").value)); F1=s.load(s.Lf-L1); }
+  else { F1=frF(parseFloat($("F1in").value)); L1=s.Lf-F1/s.k;
+         if(isFinite(L1)) $("L1").value=+toL(L1).toPrecision(6); }
+  const L2=frL(parseFloat($("L2").value));
+  if(!isFinite(L1)||!isFinite(L2)){T.innerHTML="";$("pcNotes").innerHTML="";return;}
+
+  const d1=s.Lf-L1, d2=s.Lf-L2, F2=s.load(d2), dF=F2-F1;
+  const travel=L1-L2, used=d2/s.stroke*100, clear=L2-s.Ls;
+  const work=0.5*s.k*(d2*d2-d1*d1);
+
+  T.innerHTML=rowsHTML([
+    ["Pre-compression \u03B41", sig(toL(d1),4), u.L],
+    ["Preload F1", sig(toF(F1),4), u.F],
+    ["Stress at F1", sig(toS(s.tauAt(F1)),4), u.S],
+    ["Working deflection \u03B42", sig(toL(d2),4), u.L],
+    ["Load at L2, F2", sig(toF(F2),4), u.F],
+    ["Stress at F2", sig(toS(s.tauAt(F2)),4), u.S],
+    ["Working stroke L1 \u2212 L2", sig(toL(travel),4), u.L],
+    ["Load change \u0394F", sig(toF(dF),4), u.F],
+    ["Force ratio F2 \u00F7 F1", sig(F2/F1,3)],
+    ["Work over the stroke", sig(toE(work),4), u.E],
+    ["Clearance L2 to solid", sig(toL(clear),4), u.L],
+    ["Available travel used", sig(used,3), "%"]
+  ]);
+
+  const N=[];
+  if(d1<0) N.push(["warn","Installed length is longer than the free length, so the spring is not touching at rest and carries no preload."]);
+  if(L2<s.Ls) N.push(["warn","Working length is shorter than solid. The spring goes to coil bind "+sig(toL(s.Ls-L2),3)+" "+u.L+" before reaching L2, and the load there is limited only by the stiffness of the rest of the assembly."]);
+  else if(used>80) N.push(["warn","The stroke uses "+sig(used,3)+"% of the available deflection. Above about 80% there is little room for tolerance stack-up, wear or thermal movement before coil bind."]);
+  if(L2>L1) N.push(["info","Working length is longer than the installed length, so the spring extends rather than compresses over this stroke."]);
+  if(isFinite(s.tauAllow)&&s.tauAt(F2)>s.tauAllow) N.push(["warn","Stress at the working length exceeds the static allowable, so the spring will take a permanent set in service."]);
+  if(d1>0&&F2/F1>4) N.push(["info","Force swings by a factor of "+sig(F2/F1,3)+" over the stroke. More preload on a softer spring would flatten that, if the envelope allows."]);
+  $("pcNotes").innerHTML=N.map(x=>"<div class=\"note "+x[0]+"\" style=\"margin-left:0;margin-right:0\">"+x[1]+"</div>").join("");
+}
+
+/* ================= strut D1 / D2 / D3 =================
+   The upper eye screws into the cylinder top, so "a" is the adjustment.
+   The rod hangs from the lower eye, passes through the bottom end wall and
+   carries a seat plate inside. The spring is trapped between the inside face
+   of the bottom wall and the plate, so pulling the eyes apart compresses it.
+   Lengths here are internal mm; fields are written and read through the unit layer. */
+const STRUT_COMMON={Lc:172, twT:10, twB:10, cylOD:34, bore:29, rod:12,
+                    plateOD:26, plate:6, nut:10, pitch:1.75, pitchEye:1.75, span:3, slot:60};
+let STRUTS={
+  D1:Object.assign({},STRUT_COMMON,{L:300, a:50, c:138, spring:"Example_A_2.5mm", comp:20, mode:"nut"}),
+  D2:Object.assign({},STRUT_COMMON,{L:290, a:60, c:123, spring:"Example_A_2.5mm", comp:15, mode:"nut"}),
+  D3:Object.assign({},STRUT_COMMON,{L:420, a:70, c:235, spring:"Example_B_3.5mm", comp:8,  mode:"nut"})
+};
+const SFIELDS=["L","a","Lc","cylOD","bore","twT","twB","rod","plateOD","plate","nut","pitch","pitchEye","slot","c","comp"];
+const sid=k=>"s"+k;
+const curStrut=()=>document.querySelector('input[name=sunit]:checked').value;
+
+/* headless version of solve() for a stored record, so a library spring can be
+   used without disturbing the Calculator tab */
+function springCore(r){
+  const rect=(r.sec==="rect");
+  let ax,rad,Kt,Zt,area;
+  if(rect){
+    ax=r.ax; rad=r.rad;
+    const lng=Math.max(ax,rad), sht=Math.min(ax,rad), q=sht/lng;
+    Kt=betaC(q)*lng*Math.pow(sht,3); Zt=alphaC(q)*lng*sht*sht; area=ax*rad;
+  } else {
+    const d=r.dia; ax=rad=d;
+    Kt=Math.PI*Math.pow(d,4)/32; Zt=Math.PI*Math.pow(d,3)/16; area=Math.PI*d*d/4;
+  }
+  const D = r.dref==="mean"? r.coil : r.dref==="outer"? r.coil-rad : r.coil+rad;
+  const EE=ENDS[r.endt]||ENDS.sg;
+  const dead = r.endt==="cu" ? r.inact : EE.dead;
+  const na=r.nt-dead;
+  const Ls = r.lsMan ? r.ls : (r.nt+EE.solidAdd)*ax;
+  const k=4*r.G*Kt/(Math.PI*Math.pow(D,3)*na);
+  const C=D/rad, Kw=(4*C-1)/(4*C-4)+0.615/C;
+  const M=MATS[+r.mat]||MATS[0];
+  const dEq=Math.sqrt(4*area/Math.PI);
+  const Sut = M[4]>0 ? (M[5]>0 ? M[4]/Math.pow(dEq,M[5]) : M[4]) : NaN;
+  const pitchAt = Lq => (r.endt==="pg") ? Lq/(na+1) : (Lq-EE.pSub*ax)/na;
+  return {name:r.name, wire:ax, OD:D+rad, D, na, Kt, Zt, Kw, k, L0:r.lf, Ls, pitchAt,
+          tauAllow:Sut*M[6], tauAt:F=>Kw*(F*D/2)/Zt};
+}
+function currentSpringCore(){
+  return {name:"Design tab geometry", wire:S.ax, OD:S.D+S.rad, D:S.D, na:S.na, Kt:S.Kt,
+          Zt:S.Zt, Kw:S.Kw, k:S.k, L0:S.Lf, Ls:S.Ls, pitchAt:S.pitchAt,
+          tauAllow:S.tauAllow, tauAt:S.tauAt};
+}
+function springFor(name){
+  if(name==="__current") return S.ok ? currentSpringCore() : null;
+  const r=LIB.find(x=>x.name===name);
+  return r ? springCore(r) : (S.ok ? currentSpringCore() : null);
+}
+function fillSpringPicker(){
+  const sel=$("sSpring"), want=STRUTS[curStrut()].spring;
+  sel.innerHTML='<option value="__current">Design tab geometry</option>'+
+    LIB.map(r=>'<option value="'+esc(r.name)+'">'+esc(r.name)+'</option>').join("");
+  sel.value = LIB.some(r=>r.name===want) ? want : "__current";
+}
+
+function strutCalc(u,sp){
+  /* Hinge to hinge is fixed by the mounts. Two ways to compress the spring, and they
+     add: wind the nut down the rod (uninstalled), or rotate the cylinder on the eyebolt
+     thread so that "a" shortens and the cylinder rises against a stationary nut. */
+  const b0=u.L-u.a-u.Lc;                          // as built
+  const instBuilt=u.c-b0-u.twB;
+  const deltaBuilt=sp.L0-instBuilt;
+  const Fsafe=sp.tauAllow*sp.Zt/(sp.Kw*sp.D/2);
+  const bindAt=sp.L0-sp.Ls;                     // where the coils actually touch
+  const stressAt=isFinite(Fsafe)? Fsafe/sp.k : Infinity;  // where the allowable shear runs out;
+                                                 // a material with no strength on file has none
+  const dMax=Math.min(bindAt,stressAt);         // the design ceiling, the smaller of the two
+  const dLim=u.toBind ? bindAt : dMax;          // how far the slider may go
+  const comp=Math.min(Math.max(isFinite(u.comp)?u.comp:deltaBuilt,0),dLim);
+  const need=comp-deltaBuilt;                     // taken up by the active adjustment
+  const byCyl=(u.mode==="cyl");
+  const adjNut=byCyl?0:need, adjCyl=byCyl?need:0;
+  const aNow=u.a-adjCyl, bNow=b0+adjCyl, cNow=u.c-adjNut;
+  const inst=sp.L0-comp;                          // equals cNow - bNow - twB
+  const clear=u.Lc-u.twT-u.twB;
+  const cFree=bNow+u.twB+sp.L0;                   // seat at first contact, this geometry
+  const cMin=bNow+u.twB+(sp.L0-dMax);
+  const F1=sp.k*deltaBuilt, Fx=sp.k*comp, Fmax=sp.k*dMax;
+  const rodTop=cNow+u.plate+u.nut;
+  const headroom=(bNow+u.Lc-u.twT)-rodTop;
+  /* through the sight slot: coil pitch, the clear gap, and the span over m coils */
+  const m=Math.max(2,Math.round(u.span||3));
+  const pit=L=>sp.pitchAt?sp.pitchAt(L):NaN;
+  const gapOf=L=>pit(L)-sp.wire, spanOf=L=>(m-1)*pit(L)+sp.wire;
+  const pitchNow=pit(inst), gapNow=gapOf(inst), spanNow=spanOf(inst);
+  const gapFree=gapOf(sp.L0), spanFree=spanOf(sp.L0);
+  const gapMin=gapOf(sp.L0-dMax), spanMin=spanOf(sp.L0-dMax);
+  const span3=2*pitchNow+sp.wire, span5=4*pitchNow+sp.wire;
+  const slotLen=u.slot||0;
+  const slotCoils=pitchNow>0 ? Math.max(Math.floor((slotLen-sp.wire)/pitchNow)+1,0) : 0;
+  const pitch=byCyl?u.pitchEye:u.pitch;
+  const turns=pitch>0 ? comp/pitch : NaN;         // from first contact, on the active thread
+  const turnsBuilt=pitch>0 ? deltaBuilt/pitch : NaN;
+  const turnsMax=pitch>0 ? dMax/pitch : NaN;
+  const turnsFromBuilt=pitch>0 ? need/pitch : NaN;
+  return {L:u.L,b:bNow,b0,aNow,cNow,clear,comp,inst,instBuilt,deltaBuilt,c:cNow,cDes:u.c,cFree,cMin,
+          F1,Fx,Fmax,dMax,Fsafe,rodTop,headroom,turns,turnsBuilt,turnsMax,turnsFromBuilt,
+          adjNut,adjCyl,byCyl,pitch,thread:dMax,bindAt,stressAt,dLim,
+          stressLimited:stressAt<bindAt, overStress:comp>dMax+1e-9,
+          m,pitchNow,gapNow,spanNow,gapFree,spanFree,gapMin,spanMin,span3,span5,slotLen,slotCoils,
+          overBuilt:deltaBuilt>dMax+1e-9};
+}
+
+function readStrut(){
+  const u=STRUTS[curStrut()];
+  SFIELDS.forEach(k=>{const v=parseFloat($(sid(k)).value); if(isFinite(v)) u[k]=frL(v);});
+  const sv=parseFloat($("sspan").value);                 // a coil count, not a length
+  if(isFinite(sv)) u.span=Math.max(2,Math.round(sv));
+  u.toBind=$("sBind").checked;
+  u.spring=$("sSpring").value;
+  const mr=document.querySelector('input[name=smode]:checked'); if(mr) u.mode=mr.value;
+  return u;
+}
+function writeStrut(){
+  const u=STRUTS[curStrut()];
+  /* open the slider's range before writing, or the previous unit's max silently
+     clamps this one's setting and the clamped value gets read straight back in */
+  $("scomp").min=0; $("scomp").max=1e6;
+  SFIELDS.forEach(k=>{
+    const v=+toL(u[k]).toPrecision(8);
+    if(sid(k)==="scomp") setSlider($("scomp"),v); else $(sid(k)).value=v;
+  });
+  $("sspan").value=Math.max(2,Math.round(u.span||3));
+  $("sBind").checked=!!u.toBind;
+  const mr=document.querySelector('input[name=smode][value="'+(u.mode||"nut")+'"]'); if(mr) mr.checked=true;
+  fillSpringPicker();
+  const sp=springFor(u.spring);
+  $("tgtL").value=+toL(u.L).toPrecision(8);
+  if(sp){ const rr=strutCalc(u,sp); $("tgtF").value=+toF(sp.k*rr.deltaBuilt).toPrecision(5); }
+  $("solveOut").innerHTML=""; clearUndo();
+}
+
+function renderStrut(){
+  const u=readStrut(), sp=springFor(u.spring), uu=U();
+  if(!sp||!isFinite(sp.k)||sp.k<=0){
+    $("sForce").textContent="\u2014";
+    $("sCap").textContent="Pick a spring, or set a valid geometry on the Calculator tab.";
+    ["sTabA","sTabB","sChk","sCompare"].forEach(id=>$(id).innerHTML="");
+    $("ssvg").innerHTML=""; return;
+  }
+  const r=strutCalc(u,sp);
+  const route=r.byCyl?"cylinder rotation":"the nut";
+  $("sTitle").textContent=sp.name+", wire \u2300"+sig(toL(sp.wire),3)+" "+uu.L;
+  $("sForce").innerHTML=sig(toF(r.Fx),4)+"<em>"+uu.F+"</em>";
+  $("sAlt").textContent=(uMode==="kg"? sig(r.Fx,4)+" N" : sig(r.Fx/9.80665,4)+" kgf")+
+    "  \u00B7  hinge to hinge "+sig(toL(r.L),4)+" "+uu.L+", fixed";
+  $("sCap").textContent= r.byCyl
+    ? "Installed: the top bolt is slackened and the whole cylinder rotated on the eyebolt thread. "+
+      "a shortens by "+sig(toL(r.adjCyl),3)+" "+uu.L+", the cylinder rises by the same amount against "+
+      "a stationary nut, and the spring takes it up. Ceiling "+sig(toF(r.Fmax),4)+" "+uu.F+"."
+    : "Uninstalled: the nut is wound down the rod against the bottom end wall. "+
+      sig(r.turns,3)+" turns from first contact, cylinder and eyes untouched. Ceiling "+
+      sig(toF(r.Fmax),4)+" "+uu.F+".";
+  $("sDrawCap").textContent="Section to scale. Grid "+(uMode==="imp"?"0.5 in":"10 mm")+".";
+
+  $("sTabA").innerHTML=rowsHTML([
+    ["Hinge to hinge, fixed", sig(toL(r.L),4), uu.L],
+    ["a, upper pin to cylinder", sig(toL(r.aNow),4), uu.L],
+    ["a as built", sig(toL(u.a),4), uu.L],
+    ["Cylinder rise", sig(toL(r.adjCyl),4), uu.L],
+    ["Cylinder", sig(toL(u.Lc),4), uu.L],
+    ["b, lower pin to cylinder", sig(toL(r.b),4), uu.L],
+    ["Clear length inside", sig(toL(r.clear),4), uu.L],
+    ["Spring free length", sig(toL(sp.L0),4), uu.L],
+    ["Spring installed now", sig(toL(r.inst),4), uu.L],
+    ["Nut position now", sig(toL(r.cNow),4), uu.L],
+    ["Nut as built", sig(toL(r.cDes),4), uu.L],
+    ["Nut at first contact", sig(toL(r.cFree),4), uu.L],
+    ["Rod top above lower pin", sig(toL(r.rodTop),4), uu.L],
+    ["Headroom to the top wall", sig(toL(r.headroom),4), uu.L]
+  ]);
+  $("sTabB").innerHTML=rowsHTML([
+    ["Load now", sig(toF(r.Fx),4), uu.F],
+    ["Load now, alternate", uMode==="kg"? sig(r.Fx,4):sig(r.Fx/9.80665,4), uMode==="kg"?"N":"kgf"],
+    ["Adjusted by", r.byCyl?"cylinder":"nut", ""],
+    ["Turns from first contact", sig(r.turns,3), "at "+sig(toL(r.pitch),3)+" "+uu.L],
+    ["Turns from the built setting", sig(r.turnsFromBuilt,3)],
+    ["Spring compression now", sig(toL(r.comp),4), uu.L],
+    ["As built, compression", sig(toL(r.deltaBuilt),4), uu.L],
+    ["As built, preload", sig(toF(r.F1),4), uu.F],
+    ["Stress now", sig(toS(sp.tauAt(r.Fx)),4), uu.S],
+    ["Spring rate", sig(toK(sp.k),4), uu.K],
+    ["Ceiling load", sig(toF(r.Fmax),4), uu.F],
+    ["Turns to the ceiling", sig(r.turnsMax,3)]
+  ]);
+
+  const chk=(l,pass,t)=>"<tr><th>"+l+"</th><td class=\""+(pass?"pass":"fail")+"\">"+
+    (pass?"pass":"check")+" <u>"+t+"</u></td></tr>";
+  let ck="";
+  ck+=chk("Lengths close", r.b>0, "b = "+sig(toL(r.b),4)+" "+uu.L);
+  ck+=chk("Eyebolt still stands proud", r.aNow>=u.rod*1.5, "a = "+sig(toL(r.aNow),4)+" "+uu.L);
+  ck+=chk("Bore clears the spring", u.bore>sp.OD,
+      sig(toL(u.bore),4)+" vs "+sig(toL(sp.OD),4)+" "+uu.L+" spring OD");
+  ck+=chk("Seat plate fits the bore", u.plateOD<u.bore && u.plateOD>sp.OD-2*sp.wire,
+      "plate "+sig(toL(u.plateOD),4)+" "+uu.L);
+  ck+=chk("Spring and seat fit inside", r.inst+u.plate+u.nut<=r.clear,
+      sig(toL(r.inst+u.plate+u.nut),4)+" of "+sig(toL(r.clear),4)+" "+uu.L);
+  ck+=chk("Rod clears the top wall", r.headroom>0, sig(toL(r.headroom),4)+" "+uu.L);
+  ck+=chk("Built preload within the ceiling", !r.overBuilt,
+      sig(toF(r.F1),4)+" of "+sig(toF(r.Fmax),4)+" "+uu.F);
+  ck+=chk("Compression within the allowable", !r.overStress,
+      sig(toL(r.comp),3)+" of "+sig(toL(r.dMax),3)+" "+uu.L);
+  ck+=chk("Slot shows 5 coils", r.slotLen>=r.span5,
+      sig(toL(r.span5),3)+" needed, slot "+sig(toL(r.slotLen),3)+" "+uu.L);
+  $("sChk").innerHTML=ck;
+
+  const N=[];
+  if(r.b<=0) N.push(["warn","The hinge-to-hinge length is shorter than the eyebolt stand-off plus the cylinder, so the lower pin would fall inside the cylinder."]);
+  if(r.aNow<u.rod*1.5) N.push(["warn","Rotating the cylinder this far leaves only "+sig(toL(r.aNow),3)+" "+uu.L+
+    " between the upper pin and the cylinder face, too little for the eye and its thread."]);
+  if(r.stressLimited) N.push(["info","This spring reaches its allowable shear "+
+    sig(toL(r.bindAt-r.dMax),3)+" "+uu.L+" before the coils touch, so the slider stops at "+
+    sig(toL(r.dMax),3)+" "+uu.L+" and the coils still show a gap of "+sig(toL(r.gapMin),3)+" "+uu.L+
+    " there. Closing it fully would need "+sig(toF(sp.k*r.bindAt),4)+" "+uu.F+
+    " and would set the spring."]);
+  if(r.overStress) N.push(["warn","Past the allowable stress by "+sig(toL(r.comp-r.dMax),3)+" "+uu.L+
+    ". Shown for reference only: held here the spring takes a permanent set."]);
+  if(r.overBuilt) N.push(["warn","The built setting is past what this spring can take. It reaches its limit at "+
+    sig(toL(r.dMax),3)+" "+uu.L+", which is "+sig(toF(r.Fmax),4)+" "+uu.F+"."]);
+  if(r.headroom<0) N.push(["warn","The seat stack reaches above the inside of the top wall."]);
+  if(r.byCyl) N.push(["info","Rotating the cylinder moves the whole barrel up by "+sig(toL(r.adjCyl),3)+" "+uu.L+
+    ", so b grows from "+sig(toL(r.b0),4)+" to "+sig(toL(r.b),4)+" "+uu.L+" and that much more rod stands below it. "+
+    "One turn of the eyebolt thread is "+sig(toL(u.pitchEye),3)+" "+uu.L+" of compression, worth "+
+    sig(toF(sp.k*u.pitchEye),4)+" "+uu.F+"."]);
+  else N.push(["info","One turn of the nut is "+sig(toL(u.pitch),3)+" "+uu.L+" of compression, worth "+
+    sig(toF(sp.k*u.pitch),4)+" "+uu.F+". The cylinder and both eyes stay where they are."]);
+  $("sNotes").innerHTML=N.map(x=>"<div class=\"note "+x[0]+"\">"+x[1]+"</div>").join("");
+
+  $("sSlot").innerHTML=rowsHTML([
+    ["Active coils", sig(sp.na,3)],
+    ["Coil pitch now", sig(toL(r.pitchNow),4), uu.L],
+    ["Gap between coils now", sig(toL(r.gapNow),4), uu.L],
+    ["Across "+r.m+" coils now", sig(toL(r.spanNow),4), uu.L],
+    ["Gap at first contact", sig(toL(r.gapFree),4), uu.L],
+    ["Across "+r.m+" coils, free", sig(toL(r.spanFree),4), uu.L],
+    ["Gap at the ceiling", sig(toL(r.gapMin),4), uu.L],
+    ["Across "+r.m+" coils, ceiling", sig(toL(r.spanMin),4), uu.L],
+    ["Across 3 coils now", sig(toL(r.span3),4), uu.L],
+    ["Across 5 coils now", sig(toL(r.span5),4), uu.L],
+    ["Slot length", sig(toL(r.slotLen),4), uu.L],
+    ["Coils in the window", String(r.slotCoils)],
+    ["Gap closes per turn", sig(toL(r.pitch/sp.na),4), uu.L],
+    ["Span closes per turn", sig(toL(r.pitch*(r.m-1)/sp.na),4), uu.L]
+  ]);
+
+  const sl=$("scomp"), dmax=+toL(r.dLim).toPrecision(6);
+  sl.min=0; sl.max=dmax; sl.step=sliderStep();
+  $("scompRange").textContent="0 to "+sig(dmax,4)+" "+uu.L+" in steps of "+sliderStep()+
+    ", built at "+sig(toL(r.deltaBuilt),3)+
+    (r.stressLimited? "; allowable runs out at "+sig(toL(r.dMax),3)+", coils touch at "+sig(toL(r.bindAt),3) : "");
+  $("scompOut").textContent=
+    sig(toL(r.comp),4)+" "+uu.L+" compressed  \u00B7  "+sig(r.turns,3)+" turns of "+
+    (r.byCyl?"the cylinder":"the nut")+"  \u00B7  "+sig(toF(r.Fx),4)+" "+uu.F+
+    (r.byCyl ? "  \u00B7  a "+sig(toL(r.aNow),4) : "  \u00B7  seat "+sig(toL(r.cNow),4))+" "+uu.L;
+
+  drawStrut(u,sp,r); drawSlot(u,sp,r);
+  compareStruts();
+  if(shown("p7")) renderCompare();
+}
+
+let prevStrut=null;
+function clearUndo(){ prevStrut=null; const b=$("sSolve"); if(b) b.textContent="Solve and apply"; }
+
+function solveApply(){
+  const out=$("solveOut");
+  if(prevStrut){
+    Object.assign(STRUTS[curStrut()], prevStrut);
+    writeStrut(); renderStrut();
+    out.innerHTML='<div class="note info" style="margin:0">Back to the previous setting.</div>';
+    return;
+  }
+  const u=readStrut(), sp=springFor(u.spring), uu=U();
+  if(!sp){ out.textContent="Pick a spring first."; return; }
+  const Lt=frL(parseFloat($("tgtL").value)), Ft=frF(parseFloat($("tgtF").value));
+  if(!isFinite(Lt)||!isFinite(Ft)){ out.textContent="Enter both targets."; return; }
+  const byCyl=(u.mode==="cyl");
+  const rp=strutCalc(Object.assign({},u,{L:Lt}),sp);
+  const d1=Ft/sp.k, inst=sp.L0-d1;
+
+  /* nut route: hold a, move the seat. cylinder route: hold the seat, shorten a. */
+  let aNew=u.a, cNew=u.c, bNew;
+  if(byCyl){ aNew=u.L===Lt ? u.a : u.a; aNew=Lt-u.Lc-(u.c-u.twB-inst); bNew=Lt-aNew-u.Lc; }
+  else { bNew=Lt-u.a-u.Lc; cNew=bNew+u.twB+inst; }
+  const turnPitch=byCyl?u.pitchEye:u.pitch;
+  const moved=byCyl? u.a-aNew : u.c-cNew;
+  const rodTop=cNew+u.plate+u.nut, headroom=(bNew+u.Lc-u.twT)-rodTop;
+  const bad=[];
+  if(bNew<=0) bad.push("that hinge-to-hinge length leaves no rod below the cylinder");
+  if(d1<0) bad.push("preload cannot be negative");
+  if(d1>rp.dMax+1e-9) bad.push("this spring tops out at "+sig(toF(rp.Fmax),4)+" "+uu.F+
+      ", reached at "+sig(toL(rp.dMax),3)+" "+uu.L+" of compression");
+  if(aNew<u.rod*1.5) bad.push("the eyebolt would stand only "+sig(toL(aNew),3)+" "+uu.L+" proud");
+  if(headroom<0) bad.push("the seat would reach above the inside of the top wall");
+  if(inst+u.plate+u.nut>rp.clear) bad.push("the spring and seat are longer than the clear space inside");
+
+  const row=(k,v,un,note)=>"<tr><th>"+k+"</th><td>"+v+(un?" <span style=\"color:var(--ink3)\">"+un+"</span>":"")+
+    (note?" <span style=\"color:var(--ink3);font-size:11.5px\">"+note+"</span>":"")+"</td></tr>";
+  const dl=(now,then)=>Math.abs(now-then)<1e-6 ? "unchanged" : (then>now?"+":"")+sig(toL(then-now),3);
+  const table="<table>"+
+    row("Route", byCyl?"rotate the cylinder":"wind the nut","","")+
+    row("Hinge to hinge", sig(toL(Lt),4), uu.L, dl(u.L,Lt))+
+    row("a, upper pin to cylinder", sig(toL(aNew),4), uu.L, dl(u.a,aNew))+
+    row("b, lower pin to cylinder", sig(toL(bNew),4), uu.L,"")+
+    row("Nut position", sig(toL(cNew),4), uu.L, dl(u.c,cNew))+
+    row("Pre-compression", sig(toL(d1),4), uu.L,"")+
+    row("Spring installed length", sig(toL(inst),4), uu.L,"")+
+    row((byCyl?"Cylinder":"Nut")+" turns from here", sig(Math.abs(moved)/turnPitch,3),"",
+        "at "+sig(toL(turnPitch),3)+" "+uu.L+" pitch")+
+    row("Headroom to the top wall", sig(toL(headroom),4), uu.L,"")+
+    row("Ceiling of this spring", sig(toF(rp.Fmax),4), uu.F,"")+
+    "</table>";
+  if(bad.length){
+    out.innerHTML=table+'<div class="note warn" style="margin:9px 0 0">Not applied: '+bad.join(". ")+'.</div>';
+    return;
+  }
+  const cur=STRUTS[curStrut()];
+  const snap={L:cur.L, a:cur.a, c:cur.c, comp:cur.comp};
+  cur.L=Lt; cur.a=aNew; cur.c=cNew; cur.comp=d1;
+  writeStrut(); renderStrut();
+  prevStrut=snap; $("sSolve").textContent="Undo";
+  out.innerHTML=table+'<div class="note info" style="margin:9px 0 0">Applied by '+
+    (byCyl? "rotating the cylinder "+sig(Math.abs(moved)/turnPitch,3)+" turns on the eyebolt thread, which raises the barrel and leaves the nut where it is"
+          : "winding the nut "+sig(Math.abs(moved)/turnPitch,3)+" turns down the rod, leaving the cylinder and both eyes untouched")+
+    '. The hinge-to-hinge length is unchanged either way.</div>';
+}
+$("sSolve").onclick=solveApply;
+$("sSaveFile").onclick=downloadMaster;
+$("sOpenFile").onclick=()=>$("fileIn").click();
+
+let strutAnim=null;
+function stopAnim(){ if(strutAnim){clearInterval(strutAnim);strutAnim=null;$("sPlay").textContent="Animate";} }
+$("sPlay").onclick=()=>{
+  if(strutAnim){ stopAnim(); return; }
+  const sl=$("scomp");
+  let v=+sl.value, dir=1;
+  $("sPlay").textContent="Stop";
+  strutAnim=setInterval(()=>{
+    const lo=+sl.min, hi=+sl.max, step=(hi-lo)/70;
+    v+=dir*step;
+    if(v>=hi){ v=hi; dir=-1; } else if(v<=lo){ v=lo; dir=1; }
+    sl.value=v; renderStrut();
+  },45);
+};
+$("sNom").onclick=()=>{
+  stopAnim();
+  const u=STRUTS[curStrut()], sp=springFor(u.spring);
+  if(!sp) return;
+  const d=strutCalc(u,sp).deltaBuilt;
+  u.comp=d; setSlider($("scomp"),+toL(d).toPrecision(6)); renderStrut();
+};
+
+function compareStruts(){
+  const uu=U(), t=$("sCompare");
+  const head='<thead><tr><th>Unit</th><th>Spring</th><th>a<br>'+uu.L+'</th><th>b<br>'+uu.L+
+    '</th><th>Hinge to hinge<br>'+uu.L+'</th><th>Installed<br>'+uu.L+'</th><th>Preload<br>'+uu.F+
+    '</th><th>Rate<br>'+uu.K+'</th><th>Nut turns<br>of max</th><th>Ceiling<br>'+uu.F+'</th></tr></thead>';
+  const cur=curStrut();
+  const body=Object.keys(STRUTS).map(key=>{
+    const u=STRUTS[key], sp=springFor(u.spring);
+    if(!sp) return "";
+    const r=strutCalc(u,sp);
+    return '<tr class="'+(key===cur?"cur":"")+'"><td>'+key+'</td><td>'+esc(sp.name)+'</td>'+
+      '<td>'+sig(toL(u.a),4)+'</td><td>'+sig(toL(r.b),4)+'</td><td>'+sig(toL(r.L),4)+'</td>'+
+      '<td>'+sig(toL(r.instBuilt),4)+'</td><td>'+sig(toF(r.F1),4)+'</td><td>'+sig(toK(sp.k),4)+'</td>'+
+      '<td>'+sig(r.turns,3)+' of '+sig(r.turnsMax,3)+'</td><td>'+sig(toF(r.Fmax),4)+'</td></tr>';
+  }).join("");
+  t.innerHTML=head+"<tbody>"+body+"</tbody>";
+}
+
+/* ---- scale cross-section ---- */
+/* returns the section as markup so one strut or three can share a scale */
+function strutSVG(u,sp,r,opt){
+  opt=opt||{};
+  const W=opt.W||380, H=opt.H||620, pad=16;
+  const xDimL=Math.round(W*0.147), xDimR=Math.round(W*0.84), cx=(xDimL+xDimR)/2;
+  const eyeR=Math.max(u.rod*0.9,9);
+  /* nothing in the outline moves, so the frame is fixed by the hinge-to-hinge length */
+  const sc=opt.sc||Math.min((H-2*pad-14)/(r.L+2*eyeR),(xDimR-xDimL-30)/u.cylOD);
+  const yTopA=pad+eyeR*sc;
+  const Y=mm=>yTopA+(r.L-mm)*sc;                 // mm above the lower pin
+
+  const lowPin=0, cylBot=r.b, cylTop=r.b+u.Lc, upPin=r.L;
+  const hw=v=>v*sc/2, P=[];
+  const gs=(uMode==="imp"?12.7:10)*sc;
+  if(gs>3&&!opt.noGrid){
+    for(let y=H-pad;y>pad;y-=gs)
+      P.push('<line x1="'+(xDimL-6)+'" y1="'+y.toFixed(1)+'" x2="'+(xDimR+6)+'" y2="'+y.toFixed(1)+'" style="stroke:var(--rule2)"/>');
+    for(let x=xDimL;x<xDimR;x+=gs)
+      P.push('<line x1="'+x.toFixed(1)+'" y1="'+(pad-4)+'" x2="'+x.toFixed(1)+'" y2="'+(H-pad+4)+'" style="stroke:var(--rule2)"/>');
+  }
+  const st='style="fill:none;stroke:var(--steel);stroke-width:1.2"';
+  const fil='style="fill:var(--steel-w);stroke:var(--steel);stroke-width:1.2"';
+  const sol='style="fill:#C9D9E4;stroke:var(--steel);stroke-width:1.2"';
+  const gh='style="fill:none;stroke:var(--ink3);stroke-width:1;stroke-dasharray:3 2"';
+  const band=(lo,hi,w,z)=>'<rect x="'+(cx-w).toFixed(2)+'" y="'+Y(hi).toFixed(2)+
+    '" width="'+(2*w).toFixed(2)+'" height="'+Math.max((hi-lo)*sc,0.6).toFixed(2)+'" '+z+'/>';
+  const eye=yc=>'<circle cx="'+cx+'" cy="'+yc.toFixed(2)+'" r="'+(eyeR*sc).toFixed(2)+'" '+fil+'/>'+
+    '<circle cx="'+cx+'" cy="'+yc.toFixed(2)+'" r="'+Math.max(hw(u.rod)*0.55,1.5).toFixed(2)+
+    '" style="fill:#fff;stroke:var(--steel);stroke-width:1"/>';
+
+  P.push(band(cylTop, upPin, hw(u.rod), st));                       // eyebolt stem
+  P.push(band(cylTop, cylTop+u.rod*0.5, hw(u.rod*1.9), fil));       // lock nut
+  P.push(band(cylBot, cylTop, hw(u.cylOD), st));                    // cylinder
+  P.push(band(cylTop-u.twT, cylTop, hw(u.cylOD), sol));             // top end wall
+  P.push(band(cylBot, cylBot+u.twB, hw(u.cylOD), sol));             // bottom end wall
+  const mid=Y(cylBot+u.Lc/2);
+  P.push('<line x1="'+(cx-hw(u.cylOD))+'" y1="'+mid.toFixed(2)+'" x2="'+(cx+hw(u.cylOD))+'" y2="'+mid.toFixed(2)+'" style="stroke:var(--steel);stroke-width:1.2"/>');
+  P.push('<rect x="'+(cx-hw(u.cylOD*1.12))+'" y="'+(mid-3).toFixed(2)+'" width="'+(hw(u.cylOD*1.12)*2).toFixed(2)+'" height="6" '+fil+'/>');
+  P.push(band(lowPin, r.rodTop, hw(u.rod), st));                    // rod, pin to above the nut
+  /* where the cylinder bottom face sat before it was rotated up */
+  if(Math.abs(r.adjCyl)>0.3)
+    P.push('<line x1="'+(cx-hw(u.cylOD)*1.15).toFixed(2)+'" y1="'+Y(r.b0).toFixed(2)+'" x2="'+
+      (cx+hw(u.cylOD)*1.15).toFixed(2)+'" y2="'+Y(r.b0).toFixed(2)+
+      '" style="stroke:var(--ink3);stroke-width:1;stroke-dasharray:3 2"/>');
+
+  const zig=(lo,hi,w,coils,wire)=>{
+    const y0=Y(hi), y1=Y(lo), n=Math.max(coils,2), step=(y1-y0)/(n*2);
+    let d="M"+(cx-w).toFixed(2)+" "+y0.toFixed(2);
+    for(let i=0;i<n*2;i++) d+="L"+(i%2?cx-w:cx+w).toFixed(2)+" "+(y0+step*(i+1)).toFixed(2);
+    return '<path d="'+d+'" fill="none" style="stroke:var(--amber)" stroke-width="'+
+      Math.max(wire*sc,1).toFixed(2)+'" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>';
+  };
+  P.push(zig(cylBot+u.twB, r.cNow, hw(sp.OD-sp.wire), sp.na, sp.wire));
+
+  /* where the seat sits with the spring free, and where it sits at the ceiling */
+  P.push(band(r.cFree, r.cFree+u.plate, hw(u.plateOD), gh));
+  P.push(band(r.cMin,  r.cMin+u.plate,  hw(u.plateOD), gh));
+  P.push(band(r.cNow, r.cNow+u.plate, hw(u.plateOD), sol));            // seat plate
+  P.push(band(r.cNow+u.plate, r.cNow+u.plate+u.nut, hw(u.rod*1.9), fil)); // the nut that sets it
+  if(!opt.terse){
+    /* one label each side, so they never stack even when the two seats are close */
+    const lab=(mm,txt,right)=>'<text x="'+(right? cx+hw(u.plateOD)+6 : cx-hw(u.plateOD)-6).toFixed(1)+
+      '" y="'+Y(mm).toFixed(2)+'" dominant-baseline="middle"'+(right?'':' text-anchor="end"')+
+      ' font-size="11" style="fill:var(--ink3)">'+txt+'</text>';
+    P.push(lab(r.cFree,"free",false));
+    if(Math.abs(r.cMin-r.cFree)>1) P.push(lab(r.cMin,"ceiling",true));
+  }
+  P.push(eye(Y(upPin))); P.push(eye(Y(lowPin)));
+
+  const fs=opt.fontSize||12.5;
+  const dim=(x,y1,y2,txt,left,col)=>'<line x1="'+x+'" y1="'+y1.toFixed(2)+'" x2="'+x+'" y2="'+y2.toFixed(2)+'" style="stroke:'+col+'"/>'+
+    '<line x1="'+(x-3)+'" y1="'+y1.toFixed(2)+'" x2="'+(x+3)+'" y2="'+y1.toFixed(2)+'" style="stroke:'+col+'"/>'+
+    '<line x1="'+(x-3)+'" y1="'+y2.toFixed(2)+'" x2="'+(x+3)+'" y2="'+y2.toFixed(2)+'" style="stroke:'+col+'"/>'+
+    '<text x="'+(left?x-5:x+5)+'" y="'+((y1+y2)/2).toFixed(2)+'" dominant-baseline="middle"'+
+    (left?' text-anchor="end"':'')+' font-size="'+fs+'" style="font-family:var(--mono);fill:'+col+'">'+txt+'</text>';
+  P.push(dim(xDimL,Y(upPin),Y(lowPin),sig(toL(r.L),4),true,"var(--ink2)"));
+  if(!opt.terse){
+    P.push(dim(xDimR,Y(upPin),Y(cylTop),sig(toL(r.aNow),3),false,"var(--ink2)"));
+    P.push(dim(xDimR,Y(cylTop),Y(cylBot),sig(toL(u.Lc),4),false,"var(--ink2)"));
+    P.push(dim(xDimR,Y(cylBot),Y(lowPin),sig(toL(r.b),4),false,"var(--ink2)"));
+  }
+  /* nut travel from first contact: this distance is the spring compression */
+  /* the overall length sits at the far left; the compression needs its own column
+     or the two labels collide, since both are right-anchored */
+  if(r.comp>0.3) P.push(dim(xDimL+(opt.terse?34:62),Y(r.cFree),Y(r.cNow),sig(toL(r.comp),3),true,"var(--amber)"));
+  return P.join("");
+}
+function drawStrut(u,sp,r){ $("ssvg").innerHTML=strutSVG(u,sp,r,{}); }
+
+/* ---- what the sight slot actually shows: a front view of the window, the coils
+       behind it, and the three dimensions you can lay a scale across ---- */
+function drawSlot(u,sp,r){
+  const svg=$("slotsvg"); if(!svg) return;
+  const W=400,H=440,pad=14;
+  const pit=r.pitchNow, wire=sp.wire;
+  if(!isFinite(pit)||pit<=0){ svg.innerHTML=""; return; }
+  const nCoil=7;                                     // enough for a five-coil span
+  const need=Math.max((nCoil-1)*pit+wire, r.slotLen)*1.10;
+  const sc=(H-2*pad-16)/need;
+  const barX=54, barW=150, cxb=barX+barW/2;          // the cylinder, seen from the front
+  const slotW=barW*0.56, slotX=cxb-slotW/2;
+  const stack=(nCoil-1)*pit+wire;
+  const z0=(need-stack)/2;                           // centre the coils in the frame
+  const zs=(need-r.slotLen)/2;                       // and the window on them
+  const Y=mm=>pad+8+mm*sc;
+  const P=[];
+
+  P.push('<rect x="'+barX+'" y="'+Y(0).toFixed(1)+'" width="'+barW+'" height="'+(need*sc).toFixed(1)+
+    '" style="fill:#E7EDF1;stroke:var(--steel);stroke-width:1.2"/>');
+  const sy0=Y(zs), sy1=Y(zs+r.slotLen);
+  P.push('<rect x="'+slotX.toFixed(1)+'" y="'+sy0.toFixed(1)+'" width="'+slotW.toFixed(1)+
+    '" height="'+Math.max(sy1-sy0,1).toFixed(1)+'" style="fill:#fff;stroke:var(--ink2);stroke-width:1.4"/>');
+
+  /* coils: solid where the window shows them, faint where the wall hides them */
+  for(let i=0;i<nCoil;i++){
+    const zt=z0+i*pit, yt=Y(zt), hb=Math.max(wire*sc,1.4);
+    const seen = zt>=zs-1e-6 && zt+wire<=zs+r.slotLen+1e-6;
+    P.push('<rect x="'+(barX+7)+'" y="'+yt.toFixed(1)+'" width="'+(barW-14)+'" height="'+hb.toFixed(1)+
+      '" rx="'+(hb/2).toFixed(1)+'" style="fill:'+(seen?"var(--amber)":"none")+
+      ';stroke:var(--amber);stroke-width:1;opacity:'+(seen?".95":".3")+
+      (seen?'':';stroke-dasharray:3 2')+'"/>');
+  }
+
+  const dim=(x,y1,y2,txt,col,side)=>'<line x1="'+x+'" y1="'+y1.toFixed(1)+'" x2="'+x+'" y2="'+y2.toFixed(1)+
+    '" style="stroke:'+col+';stroke-width:1.2"/>'+
+    '<line x1="'+(x-4)+'" y1="'+y1.toFixed(1)+'" x2="'+(x+4)+'" y2="'+y1.toFixed(1)+'" style="stroke:'+col+'"/>'+
+    '<line x1="'+(x-4)+'" y1="'+y2.toFixed(1)+'" x2="'+(x+4)+'" y2="'+y2.toFixed(1)+'" style="stroke:'+col+'"/>'+
+    '<text x="'+(side==="l"?x-7:x+7)+'" y="'+((y1+y2)/2).toFixed(1)+'" dominant-baseline="middle"'+
+    (side==="l"?' text-anchor="end"':'')+' font-size="12.5" style="font-family:var(--mono);fill:'+col+'">'+txt+'</text>';
+  const lead=(y,x1,x2,col)=>'<line x1="'+x1+'" y1="'+y.toFixed(1)+'" x2="'+x2+'" y2="'+y.toFixed(1)+
+    '" style="stroke:'+col+';stroke-width:.8;stroke-dasharray:2 2;opacity:.7"/>';
+  const uu=U();
+  const top=i=>Y(z0+i*pit), bot=i=>Y(z0+i*pit+wire);
+  const cols=["var(--steel)","var(--amber)","var(--good)"];
+  const xs=[232,292,352];
+  /* gap: the clear space between two consecutive coils */
+  P.push(lead(bot(0),barX+barW,xs[0],cols[0]), lead(top(1),barX+barW,xs[0],cols[0]));
+  P.push(dim(xs[0],bot(0),top(1),sig(toL(r.gapNow),3),cols[0],"r"));
+  /* across three coils, outside to outside */
+  P.push(lead(top(0),barX+barW,xs[1],cols[1]), lead(bot(2),barX+barW,xs[1],cols[1]));
+  P.push(dim(xs[1],top(0),bot(2),sig(toL(r.span3),4),cols[1],"r"));
+  /* and across five */
+  P.push(lead(top(0),barX+barW,xs[2],cols[2]), lead(bot(4),barX+barW,xs[2],cols[2]));
+  P.push(dim(xs[2],top(0),bot(4),sig(toL(r.span5),4),cols[2],"r"));
+  /* the window itself, on the left */
+  P.push(dim(36,sy0,sy1,sig(toL(r.slotLen),3),"var(--ink2)","l"));
+
+  const key=(x,y,col,txt)=>'<text x="'+x+'" y="'+y+'" font-size="11" style="fill:'+col+'">'+txt+'</text>';
+  P.push(key(xs[0]-4,H-6,cols[0],"gap"));
+  P.push(key(xs[1]-12,H-6,cols[1],"3 coils"));
+  P.push(key(xs[2]-12,H-6,cols[2],"5 coils"));
+  P.push(key(16,H-6,"var(--ink3)","slot"));
+  svg.innerHTML=P.join("");
+}
+
+/* ---- D1, D2 and D3 side by side, each at its own preload, all to one scale ---- */
+function renderCompare(){
+  const uu=U(), wrap=$("cmpWrap");
+  const keys=Object.keys(STRUTS);
+  const base=keys.map(k=>{
+    const sp=springFor(STRUTS[k].spring); if(!sp) return null;
+    const u0=Object.assign({},STRUTS[k]);
+    const r0=strutCalc(u0,sp);
+    return {k,sp,u0,r0,ceiling:r0.dMax};
+  }).filter(Boolean);
+  if(!base.length){ wrap.innerHTML=""; $("cmpTotals").innerHTML=""; return; }
+
+  /* one nut travel driven across all three, each clamped at its own ceiling */
+  const maxC=Math.max.apply(null,base.map(b=>b.ceiling));
+  const sl=$("cmpX"), dmax=+toL(maxC).toPrecision(5);
+  sl.min=0; sl.max=dmax; sl.step=sliderStep();
+  if(+sl.value>dmax) sl.value=dmax;
+  const x=Math.max(frL(parseFloat(sl.value))||0,0);
+  const modes=base.map(b=>b.u0.mode||"nut");
+  const mixed=modes.some(m=>m!==modes[0]);
+  const cm=document.querySelector('input[name=cmode][value="'+modes[0]+'"]'); if(cm) cm.checked=true;
+  const byCylAll=modes[0]==="cyl";
+  $("cmpXLabel").textContent=(byCylAll?"Cylinder rotation":"Nut travel")+", applied to all three"+
+    (mixed?" (units differ, showing each one's own route)":"");
+  $("cmpXRange").textContent="0 to "+sig(dmax,4)+" "+uu.L+" in steps of "+sliderStep()+
+    ", each unit reaches its ceiling at "+
+    base.map(b=>b.k+" "+sig(toL(b.ceiling),3)).join(", ");
+
+  const items=base.map(b=>{
+    const compEff=Math.min(x,b.r0.bindAt);
+    const u=Object.assign({},b.u0,{comp:compEff});
+    const r=strutCalc(u,b.sp);
+    return Object.assign({},b,{u,r,F:b.sp.k*compEff,compEff,
+      over:x>b.ceiling+1e-9, atBind:x>=b.r0.bindAt-1e-9});
+  });
+  const total=items.reduce((a,it)=>a+it.F,0);
+
+  const W=270,H=560,pad=16;
+  const sc=Math.min.apply(null,items.map(it=>(H-2*pad-14)/(it.r.L+2*Math.max(it.u.rod*0.9,9)))
+    .concat(items.map(it=>(Math.round(W*0.84)-Math.round(W*0.147)-30)/it.u.cylOD)));
+
+  $("cmpXOut").textContent=sig(toL(x),4)+" "+uu.L+" of "+(byCylAll?"cylinder rise":"nut travel")+
+    "  \u00B7  total "+
+    sig(toF(total),4)+" "+uu.F+(uMode==="kg"? "" : "  \u00B7  "+sig(total/9.80665,4)+" kgf");
+
+  const cols=["var(--steel)","var(--amber)","var(--good)"];
+  const bar=items.map((it,i)=>{
+    const pct=total>0 ? it.F/total*100 : 100/items.length;
+    return '<i class="'+(it.over?"over":"")+'" style="width:'+pct.toFixed(2)+
+      '%;background:'+cols[i%cols.length]+'" title="'+it.k+'">'+
+      (pct>11 ? it.k+" "+pct.toFixed(0)+"%" : "")+'</i>';
+  }).join("");
+  $("cmpTotals").innerHTML='<div class="share">'+bar+'</div><table class="tot">'+
+    '<thead><tr><th>Unit</th><th>Spring</th><th>Compression, '+uu.L+
+    '</th><th>Turns</th><th>Load, '+uu.F+'</th><th>Share</th><th>State</th></tr></thead><tbody>'+
+    items.map(it=>'<tr><td>'+it.k+'</td><td>'+esc(it.sp.name)+'</td><td>'+
+      sig(toL(it.compEff),4)+'</td><td>'+(it.u.pitch>0?sig(it.compEff/it.u.pitch,3):"\u2014")+
+      '</td><td>'+sig(toF(it.F),4)+'</td><td>'+
+      (total>0?(it.F/total*100).toFixed(1):"\u2014")+'%</td><td class="'+
+      (it.over?"fail":"pass")+'">'+
+      (it.atBind?"coil bind":it.over?"past its ceiling":"within limits")+'</td></tr>').join("")+
+    '<tr class="sum"><th>Total</th><td></td><td></td><td></td><td>'+sig(toF(total),4)+
+    '</td><td>100%</td><td></td></tr></tbody></table>';
+
+  wrap.innerHTML=items.map(it=>{
+    const r=it.r, u=it.u, sp=it.sp;
+    return '<div class="cmpcol"><h3 class="sec">'+it.k+'<span style="font-weight:400;color:var(--ink3)"> \u00B7 '+
+      esc(sp.name)+'</span></h3>'+
+      '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+it.k+' section">'+
+      strutSVG(u,sp,r,{W,H,sc,terse:true,fontSize:11})+'</svg>'+
+      '<table class="res">'+rowsHTML([
+        ["Load now", sig(toF(it.F),4), uu.F],
+        ["Share of total", total>0?(it.F/total*100).toFixed(1):"\u2014", "%"],
+        ["Built preload", sig(toF(it.r0.F1),4), uu.F],
+        ["Compression now", sig(toL(it.compEff),4), uu.L],
+        ["Route", (it.u.mode==="cyl"?"cylinder":"nut"), ""],
+        ["Turns from contact", sig(r.turns,3), ""],
+        ["Gap between coils", sig(toL(r.gapNow),4), uu.L],
+        ["Across "+r.m+" coils", sig(toL(r.spanNow),4), uu.L],
+        ["Hinge to hinge", sig(toL(r.L),4), uu.L],
+        ["Rate", sig(toK(sp.k),4), uu.K],
+        ["Its own ceiling", sig(toF(it.r0.Fmax),4), uu.F],
+        ["Seat now, above lower pin", sig(toL(r.c),4), uu.L]
+      ])+'</table></div>';
+  }).join("");
+}
+
+let cmpAnim=null;
+function stopCmpAnim(){ if(cmpAnim){clearInterval(cmpAnim);cmpAnim=null;$("cmpPlay").textContent="Animate";} }
+$("cmpPlay").onclick=()=>{
+  if(cmpAnim){ stopCmpAnim(); return; }
+  const sl=$("cmpX"); let v=+sl.value, dir=1;
+  $("cmpPlay").textContent="Stop";
+  cmpAnim=setInterval(()=>{
+    const hi=+sl.max, step=hi/70;
+    v+=dir*step;
+    if(v>=hi){ v=hi; dir=-1; } else if(v<=0){ v=0; dir=1; }
+    sl.value=v; renderCompare();
+  },45);
+};
+$("cmpZero").onclick=()=>{ stopCmpAnim(); $("cmpX").value=0; renderCompare(); };
+$("cmpX").addEventListener("input",renderCompare);
+document.querySelectorAll('input[name=cmode]').forEach(b=>b.addEventListener("change",()=>{
+  Object.keys(STRUTS).forEach(k=>{ STRUTS[k].mode=b.value; });
+  if(shown("p6")){ writeStrut(); renderStrut(); }
+  renderCompare();
+}));
+
+document.querySelectorAll('input[name=sunit]').forEach(b=>b.addEventListener("change",()=>{writeStrut();renderStrut();}));
+document.querySelectorAll('input[name=slay]').forEach(b=>b.addEventListener("change",()=>{
+  const el=$("strutPanel");
+  el.classList.toggle("lay-top", b.value==="top");
+  el.classList.toggle("lay-side", b.value==="side");
+}));
+document.querySelectorAll('input[name=smode]').forEach(b=>b.addEventListener("change",()=>{
+  STRUTS[curStrut()].mode=b.value; clearUndo(); renderStrut();
+}));
+$("strutForm").addEventListener("input",e=>{
+  /* a radio click fires input before change, and by then the new unit is already
+     selected while the fields still hold the old one's numbers. Reading them here
+     would copy one unit's geometry into another, so let the change handler do it. */
+  if(e.target && e.target.name==="sunit") return;
+  if(e.target && e.target.id!=="scomp") clearUndo();
+  renderStrut();
+});
+$("strutForm").addEventListener("submit",e=>e.preventDefault());
+
+/* ---------------- material comparison ----------------
+   geometry fixed, material varied: rate follows G, capacity follows Sut */
+function renderMats(){
+  const t=$("matTable"), s=matsBase(), u=U();
+  const rect=document.querySelector('input[name=sec]:checked').value==="rect";
+  $("matWire").disabled=rect;
+  $("matWire").placeholder=rect ? "round wire only" : sig(toL(S.ax),4);
+  const own = s!==S;
+  $("matGeom").innerHTML = !s.ok ? "" :
+    "Wire "+(rect ? "b "+sig(toL(s.ax),4)+" \u00D7 t "+sig(toL(s.rad),4)
+                  : "\u2300"+sig(toL(s.ax),4))+" "+u.L+
+    (own? " <b>(set here)</b>" : "")+
+    ", mean coil "+sig(toL(s.D),4)+" "+u.L+
+    ", index "+sig(s.C,3)+
+    ", "+sig(s.na,3)+" active coils, free "+sig(toL(s.Lf),4)+
+    ", solid "+sig(toL(s.Ls),4)+", stroke "+sig(toL(s.stroke),4)+" "+u.L+
+    ". Tensile strength rises as wire gets thinner, so every allowable below belongs to this diameter.";
+  const h=matsHTML(false);
+  t.innerHTML = h || '<tr><td class="empty">Set a valid geometry on the Design tab.</td></tr>';
+}
+/* the comparison can be run at a wire size of its own: everything that depends on the
+   wire is recomputed, so the strengths quoted really belong to that diameter */
+function matsBase(){
+  const el=$("dia"), ov=frL(parseFloat($("matWire").value));
+  const rect=document.querySelector('input[name=sec]:checked').value==="rect";
+  if(rect||!isFinite(ov)||ov<=0) return S;
+  const keep=el.value;
+  el.value=+toL(ov).toPrecision(8);
+  const r=solve();
+  el.value=keep;
+  return r.ok ? r : S;
+}
+function matsHTML(mark){
+  const s=matsBase(), u=U();
+  if(!s||!s.ok) return null;
+  const cur=MATS[+$("mat").value][0];
+  const head='<thead><tr><th>Material</th><th>G<br>'+u.M+'</th><th>Rate<br>'+u.K+
+    '</th><th>Load at solid<br>'+u.F+'</th><th>Stress at solid<br>'+u.S+
+    '</th><th>Allowable<br>'+u.S+'</th><th>Of allowable</th><th>Safe load<br>'+u.F+
+    '</th><th>At length<br>'+u.L+'</th></tr></thead>';
+  const body=MATS.filter(m=>m[1]>0).map(m=>{
+    const G=m[1]*1000;
+    const Sut = m[4]>0 ? (m[5]>0 ? m[4]/Math.pow(s.dEq,m[5]) : m[4]) : NaN;
+    const allow=Sut*m[6];
+    const k=4*G*s.Kt/(Math.PI*Math.pow(s.D,3)*s.na);
+    const Fs=k*s.stroke, tau=s.Kw*(Fs*s.D/2)/s.Zt;
+    const known=isFinite(allow);
+    const Fsafe=allow*s.Zt/(s.Kw*s.D/2), dSafe=Fsafe/k, closes=known && dSafe>=s.stroke;
+    const pct=tau/allow*100;
+    return '<tr class="'+(m[0]===cur?"cur":"")+'"><td>'+esc(m[0])+'</td>'+
+      '<td>'+sig(toM(G),4)+'</td><td>'+sig(toK(k),4)+'</td><td>'+sig(toF(Fs),4)+'</td>'+
+      '<td>'+sig(toS(tau),4)+'</td><td>'+sig(toS(allow),4)+'</td>'+
+      (known ? '<td class="'+(pct<=100?"ok":"over")+'">'+sig(pct,3)+'%'+(mark&&pct>100?" *":"")+'</td>'
+             : '<td>\u2014</td>')+
+      (closes ? '<td class="ok" colspan="2">closes solid safely</td>'
+              : known ? '<td>'+sig(toF(Fsafe),4)+'</td><td>'+sig(toL(s.Lf-dSafe),4)+'</td>'
+                      : '<td colspan="2">strength not on file</td>')+
+      '</tr>';
+  }).join("");
+  return head+"<tbody>"+body+"</tbody>";
+}
+
+/* ---- the four end treatments, drawn ----
+   closed or open is about whether the last coil is pressed against its neighbour;
+   ground or not is about whether the end is machined to a flat bearing face. */
+const ENDINFO=[
+  {k:"sg", name:"Squared &amp; ground", closed:true,  ground:true,
+   f:["n = N \u2212 2","Ls = N\u00B7d","p = (L0 \u2212 2d)/n"]},
+  {k:"sq", name:"Squared only",        closed:true,  ground:false,
+   f:["n = N \u2212 2","Ls = d(N+1)","p = (L0 \u2212 3d)/n"]},
+  {k:"pl", name:"Open ends, plain",    closed:false, ground:false,
+   f:["n = N","Ls = d(N+1)","p = (L0 \u2212 d)/n"]},
+  {k:"pg", name:"Open ends, ground",   closed:false, ground:true,
+   f:["n = N \u2212 1","Ls = N\u00B7d","p = L0/(n+1)"]}
+];
+function endSVG(o){
+  const W=190,H=190, cx=W/2, half=58, t=11, pp=27, top=30;
+  const P=[];
+  /* the seat the spring bears on */
+  P.push('<rect x="'+(cx-half-12)+'" y="6" width="'+(2*half+24)+'" height="14" '+
+    'style="fill:#C9D9E4;stroke:var(--steel);stroke-width:1.2"/>');
+  const bar=(y,tip)=>{
+    if(!tip) return '<rect x="'+(cx-half)+'" y="'+y.toFixed(1)+'" width="'+(2*half)+'" height="'+t+
+      '" rx="'+(t/2)+'" style="fill:var(--amber);stroke:var(--amber);stroke-width:1;opacity:.9"/>';
+    /* an unground end: the wire tapers away, so the coil only touches on one side */
+    return '<path d="M'+(cx-half)+' '+(y+t).toFixed(1)+' L'+(cx-half)+' '+y.toFixed(1)+
+      ' L'+(cx+half*0.25).toFixed(1)+' '+y.toFixed(1)+
+      ' Q'+(cx+half).toFixed(1)+' '+(y+t*0.35).toFixed(1)+' '+(cx+half).toFixed(1)+' '+(y+t).toFixed(1)+
+      ' Z" style="fill:var(--amber);stroke:var(--amber);stroke-width:1;opacity:.9"/>';
+  };
+  let y=top;
+  P.push(bar(y,!o.ground));                       // the end coil
+  y += o.closed ? t : pp;                         // closed: hard against the next one
+  for(let i=0;i<4;i++){ P.push(bar(y,false)); y+=pp; }
+  /* what the difference costs: the gap left under an unground end */
+  if(!o.ground){
+    P.push('<path d="M'+(cx+half*0.3)+' 20 L'+(cx+half)+' 20 L'+(cx+half)+' '+(top+t*0.9).toFixed(1)+
+      ' Z" style="fill:var(--flag-w);stroke:var(--flag);stroke-width:.8;stroke-dasharray:2 2"/>');
+    P.push('<text x="'+(cx+half+4)+'" y="26" font-size="10.5" style="fill:var(--flag)">gap</text>');
+  } else {
+    P.push('<line x1="'+(cx-half)+'" y1="20.6" x2="'+(cx+half)+'" y2="20.6" '+
+      'style="stroke:var(--good);stroke-width:2.4"/>');
+    P.push('<text x="'+(cx+half+4)+'" y="26" font-size="10.5" style="fill:var(--good)">flat</text>');
+  }
+  if(o.closed){
+    P.push('<text x="'+(cx-half-6)+'" y="'+(top+t+3).toFixed(1)+'" text-anchor="end" font-size="10.5" '+
+      'style="fill:var(--ink3)">closed</text>');
+  } else {
+    P.push('<line x1="'+(cx-half-7)+'" y1="'+(top+t).toFixed(1)+'" x2="'+(cx-half-7)+'" y2="'+(top+pp).toFixed(1)+
+      '" style="stroke:var(--ink3)"/>');
+    P.push('<text x="'+(cx-half-11)+'" y="'+(top+pp*0.8).toFixed(1)+'" text-anchor="end" font-size="10.5" '+
+      'style="fill:var(--ink3)">open</text>');
+  }
+  return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+o.name.replace(/&amp;/g,"and")+'">'+
+    P.join("")+'</svg>';
+}
+function drawEndTypes(){
+  const wrap=$("endWrap"); if(!wrap) return;
+  const cur=$("endt").value, u=U();
+  const Nt=parseFloat($("nt").value);
+  const ax=S.ax, L0=S.Lf;
+  wrap.innerHTML=ENDINFO.map(o=>{
+    const E=ENDS[o.k], na=Nt-E.dead, Ls=(Nt+E.solidAdd)*ax;
+    const pit=o.k==="pg" ? L0/(na+1) : (L0-E.pSub*ax)/na;
+    const ok=isFinite(na)&&isFinite(Ls)&&na>0;
+    return '<button type="button" class="endcell'+(cur===o.k?" on":"")+'" data-et="'+o.k+'">'+
+      endSVG(o)+'<h4>'+o.name+'</h4>'+
+      '<span class="f">'+o.f.join("<br>")+'</span>'+
+      (ok? '<div class="v">n = '+sig(na,3)+' &nbsp; Ls = '+sig(toL(Ls),4)+' '+u.L+
+           '<br>p = '+sig(toL(pit),4)+' '+u.L+'</div>' : '')+
+      '</button>';
+  }).join("");
+}
+$("endWrap").addEventListener("click",e=>{
+  const b=e.target.closest(".endcell"); if(!b) return;
+  $("endt").value=b.dataset.et;
+  run();
+});
+
+/* ---------------- scale drawing ---------------- */
+function drawSpring(s){
+  const W=320,H=340,pad=22,svg=$("svg");
+  if(!s.ok||!(s.Lf>0)){svg.innerHTML="";return;}
+  const OD=s.D+s.rad, usableH=H-pad*2-14, usableW=W-pad*2;
+  const scale=Math.min(usableH/s.Lf,(usableW*0.42)/OD);
+  const coil=(cx,top,len,coils,wire)=>{
+    const w=OD*scale/2, n=Math.max(coils,0.5), step=len/(n*2);
+    let d="M"+(cx-w).toFixed(2)+" "+top.toFixed(2);
+    for(let i=0;i<n*2;i++) d+="L"+(i%2?cx-w:cx+w).toFixed(2)+" "+(top+step*(i+1)).toFixed(2);
+    return '<path d="'+d+'" fill="none" style="stroke:var(--steel)" stroke-width="'+
+      Math.max(wire*scale,1).toFixed(2)+'" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>';
+  };
+  const gs=(uMode==="imp"?12.7:10)*scale;
+  let grid="";
+  if(gs>3){
+    for(let y=H-pad;y>pad;y-=gs) grid+='<line x1="'+(pad-6)+'" y1="'+y.toFixed(1)+'" x2="'+(W-pad+6)+'" y2="'+y.toFixed(1)+'" style="stroke:var(--rule2)"/>';
+    for(let x=pad;x<W-pad;x+=gs) grid+='<line x1="'+x.toFixed(1)+'" y1="'+(pad-6)+'" x2="'+x.toFixed(1)+'" y2="'+(H-pad+6)+'" style="stroke:var(--rule2)"/>';
+  }
+  const base=H-pad, cx1=W*0.34, cx2=W*0.72;
+  const hF=s.Lf*scale, hS=Math.max(s.Ls,0)*scale;
+  const P=[grid,'<line x1="'+(pad-6)+'" y1="'+base+'" x2="'+(W-pad+6)+'" y2="'+base+'" style="stroke:var(--ink3)" stroke-width="1.2"/>'];
+  P.push(coil(cx1,base-hF,hF,s.Nt,s.ax));
+  P.push(coil(cx2,base-hS,hS,s.Nt,s.ax));
+  const x=pad-2, y1=base-hF, y2=base;
+  P.push('<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+y2+'" style="stroke:var(--ink3)"/>'+
+         '<line x1="'+(x-3)+'" y1="'+y1+'" x2="'+(x+3)+'" y2="'+y1+'" style="stroke:var(--ink3)"/>'+
+         '<line x1="'+(x-3)+'" y1="'+y2+'" x2="'+(x+3)+'" y2="'+y2+'" style="stroke:var(--ink3)"/>'+
+         '<text x="'+(x-5)+'" y="'+((y1+y2)/2)+'" text-anchor="end" dominant-baseline="middle" font-size="9.5" '+
+         'style="font-family:var(--mono);fill:var(--ink2)">'+sig(toL(s.Lf),4)+'</text>');
+  P.push('<text x="'+cx1+'" y="'+(base+12)+'" text-anchor="middle" font-size="9.5" style="fill:var(--ink3)">free</text>');
+  P.push('<text x="'+cx2+'" y="'+(base+12)+'" text-anchor="middle" font-size="9.5" style="fill:var(--ink3)">solid '+sig(toL(s.Ls),4)+'</text>');
+  if(hF-hS>6) P.push('<line x1="'+(cx2-OD*scale/2-4)+'" y1="'+(base-hF)+'" x2="'+(cx2+OD*scale/2+4)+'" y2="'+(base-hF)+
+    '" style="stroke:var(--amber)" stroke-dasharray="3 3"/><text x="'+(W-pad)+'" y="'+(base-hF-4)+
+    '" text-anchor="end" font-size="9.5" style="font-family:var(--mono);fill:var(--amber)">stroke '+sig(toL(s.stroke),4)+'</text>');
+  svg.innerHTML=P.join("");
+}
+
+/* ---------------- measured points ---------------- */
+const rows=$("rows");
+function addRow(x,y){
+  const tr=document.createElement("tr");
+  tr.innerHTML='<td><input type="number" step="any" value="'+(x!==undefined?x:"")+'" aria-label="x"></td>'+
+               '<td><input type="number" step="any" value="'+(y!==undefined?y:"")+'" aria-label="load"></td>'+
+               '<td class="del"><button type="button" class="x" aria-label="Remove point">\u00D7</button></td>';
+  tr.querySelector("button").onclick=()=>{tr.remove(); if(!rows.children.length) addRow(); fit();};
+  rows.appendChild(tr);
+}
+$("addRow").onclick=()=>{addRow(); rows.lastElementChild.querySelector("input").focus();};
+$("clearRows").onclick=()=>{rows.innerHTML=""; for(let i=0;i<3;i++) addRow(); fit();};
+$("loadBulk").onclick=()=>{
+  const pts=$("bulk").value.trim().split(/[\r\n;]+/).map(l=>l.trim().split(/[\s,\t]+/).map(Number))
+      .filter(p=>p.length>=2&&isFinite(p[0])&&isFinite(p[1]));
+  if(!pts.length) return;
+  rows.innerHTML=""; pts.forEach(p=>addRow(p[0],p[1])); fit();
+};
+rows.addEventListener("input",fit);
+document.querySelectorAll('input[name=xmode]').forEach(r=>r.addEventListener("change",()=>{labelUnits();fit();}));
+$("model").addEventListener("change",fit);
+$("matWire").addEventListener("input",renderMats);
+for(let i=0;i<3;i++) addRow();
+
+function readPts(){
+  const byLen=document.querySelector('input[name=xmode]:checked').value==="len";
+  const out=[];
+  for(const tr of rows.children){
+    const a=parseFloat(tr.children[0].firstChild.value), b=parseFloat(tr.children[1].firstChild.value);
+    if(!isFinite(a)||!isFinite(b)) continue;
+    const x=frL(a);
+    out.push({d: byLen ? (S.Lf||0)-x : x, F: frF(b)});
+  }
+  return out.sort((p,q)=>p.d-q.d);
+}
+
+/* ---------------- least squares ---------------- */
+function solve3(A,b){
+  const M=A.map((r,i)=>r.concat([b[i]]));
+  for(let i=0;i<3;i++){
+    let p=i; for(let j=i+1;j<3;j++) if(Math.abs(M[j][i])>Math.abs(M[p][i])) p=j;
+    const t=M[i]; M[i]=M[p]; M[p]=t;
+    if(Math.abs(M[i][i])<1e-12) return null;
+    for(let j=i+1;j<3;j++){const f=M[j][i]/M[i][i]; for(let c=i;c<4;c++) M[j][c]-=f*M[i][c];}
+  }
+  const x=[0,0,0];
+  for(let i=2;i>=0;i--){let t=M[i][3]; for(let c=i+1;c<3;c++) t-=M[i][c]*x[c]; x[i]=t/M[i][i];}
+  return x;
+}
+function fit(){
+  const pts=readPts(), model=$("model").value, T=$("tFit"), u=U();
+  const need= model==="quad"?3 : model==="line"?2 : 1;
+  let f=null;
+  if(pts.length>=need){
+    const n=pts.length,
+      Sx=pts.reduce((a,p)=>a+p.d,0),   Sy=pts.reduce((a,p)=>a+p.F,0),
+      Sxx=pts.reduce((a,p)=>a+p.d*p.d,0), Sxy=pts.reduce((a,p)=>a+p.d*p.F,0),
+      Sx3=pts.reduce((a,p)=>a+Math.pow(p.d,3),0), Sx4=pts.reduce((a,p)=>a+Math.pow(p.d,4),0),
+      Sx2y=pts.reduce((a,p)=>a+p.d*p.d*p.F,0);
+    if(model==="origin"){ if(Sxx>0){const k=Sxy/Sxx; f={pred:d=>k*d,k,F0:0};} }
+    else if(model==="line"){
+      const den=n*Sxx-Sx*Sx;
+      if(Math.abs(den)>1e-12){const k=(n*Sxy-Sx*Sy)/den, F0=(Sy-k*Sx)/n; f={pred:d=>k*d+F0,k:k,F0:F0};}
+    } else {
+      const x=solve3([[Sx4,Sx3,Sxx],[Sx3,Sxx,Sx],[Sxx,Sx,n]],[Sx2y,Sxy,Sy]);
+      if(x) f={pred:d=>x[0]*d*d+x[1]*d+x[2], a:x[0], k:x[1], F0:x[2], quad:true};
+    }
+    if(f){
+      const ybar=Sy/n;
+      const ssr=pts.reduce((s,p)=>s+Math.pow(p.F-f.pred(p.d),2),0);
+      const sst=pts.reduce((s,p)=>s+Math.pow(p.F-ybar,2),0);
+      f.r2= sst>0 ? 1-ssr/sst : 1;
+      f.rmse=Math.sqrt(ssr/n); f.n=n;
+    }
+  }
+  if(!f){
+    T.innerHTML='<tr><td colspan="2" class="empty">Enter at least '+need+' reading'+(need>1?"s":"")+' to fit a rate.</td></tr>';
+    showCompare(null,S.k,NaN,u);
+    drawChart(pts,null); return;
+  }
+  const kt=S.k, dev= (isFinite(kt)&&kt>0) ? (f.k-kt)/kt*100 : NaN;
+  const r=[["Calculated rate, geometry only", sig(toK(kt),4), u.K],
+           [f.quad?"Fitted rate at zero, readings only":"Fitted rate k, readings only", sig(toK(f.k),4), u.K]];
+  if(f.quad) r.push(["Progressive term", sig(f.a*Math.pow(facL(uMode),2)/facF(uMode),4), u.K+"/"+u.L]);
+  if(model!=="origin") r.push([f.quad?"Load at zero deflection":"Load offset F0", sig(toF(f.F0),4), u.F]);
+  r.push(["Against calculated", isFinite(dev)? (dev>0?"+":"")+dev.toFixed(1) : "\u2014", "%"]);
+  r.push(["R\u00B2", f.r2.toFixed(5)]);
+  r.push(["RMS residual", sig(toF(f.rmse),3), u.F]);
+  if(isFinite(f.k)&&f.k>0&&S.Kt>0){
+    const Gimp=f.k*Math.PI*Math.pow(S.D,3)*S.na/(4*S.Kt);   // MPa
+    const naImp=4*S.G*S.Kt/(Math.PI*Math.pow(S.D,3)*f.k);
+    r.push(["Implied G, coils as entered", sig(toM(Gimp),4), u.M]);
+    r.push(["Implied active coils, G as entered", sig(naImp,3)]);
+  }
+  r.push(["Points used", String(f.n)]);
+  T.innerHTML=rowsHTML(r);
+  showCompare(f,kt,dev,u);
+  drawChart(pts,f);
+}
+
+/* the hero comparison: calculation against test, side by side */
+function showCompare(f,kt,dev,u){
+  const c=$("cmp"); if(!c) return;
+  if(!f||!isFinite(kt)||kt<=0){
+    c.className="cmp none";
+    c.textContent="No measured readings yet. Enter load against length on the Measured data tab "
+      +"and the fitted rate will be compared with this one.";
+    return;
+  }
+  c.className="cmp";
+  const near=Math.abs(dev)<0.5;
+  const word= near ? "matching this calculation"
+    : (dev<0 ? sig(-dev,3)+"% below this calculation" : sig(dev,3)+"% above this calculation");
+  c.innerHTML="Measured <b>"+sig(toK(f.k),4)+" "+u.K+"</b> from "+f.n+" reading"+(f.n>1?"s":"")+", "
+    +word+". R\u00B2 "+f.r2.toFixed(4)+"."
+    +(S.na>0 ? " The test implies "+sig(4*S.G*S.Kt/(Math.PI*Math.pow(S.D,3)*f.k),3)
+        +" active coils against the "+sig(S.na,3)+" assumed." : "");
+}
+
+/* ---------------- chart ---------------- */
+function drawChart(pts,f){
+  const cv=$("chart"), dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth, H=cv.clientHeight;
+  if(!W||!H) return;
+  cv.width=W*dpr; cv.height=H*dpr;
+  const c=cv.getContext("2d"); c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,W,H);
+  const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const u=U(), L=58,R=14,Tp=14,B=34, pw=W-L-R, ph=H-Tp-B;
+  if(pw<40||ph<40) return;
+  const maxD=Math.max(S.stroke||0, ...pts.map(p=>p.d), 1e-6);
+  const kt=S.k, cand=pts.map(p=>p.F);
+  if(isFinite(kt)) cand.push(kt*maxD);
+  if(f) cand.push(f.pred(maxD), f.pred(0));
+  const maxF=Math.max(1e-6,...cand.filter(isFinite))*1.06;
+  const nice=m=>{const e=Math.pow(10,Math.floor(Math.log10(m))), q=m/e;
+    return (q<=1?1:q<=2?2:q<=2.5?2.5:q<=5?5:10)*e;};
+  const dD=toL(maxD), dF=toF(maxF), sX=nice(dD/5), sY=nice(dF/5);
+  const X=v=>L+v/dD*pw, Y=v=>Tp+ph-v/dF*ph;      // display units in, pixels out
+
+  c.font="11px "+css("--mono"); c.lineWidth=1; c.strokeStyle=css("--rule2"); c.fillStyle=css("--ink3");
+  for(let v=0;v<=dD+1e-9;v+=sX){const x=X(v);c.beginPath();c.moveTo(x,Tp);c.lineTo(x,Tp+ph);c.stroke();
+    c.textAlign="center";c.fillText(String(+v.toPrecision(4)),x,Tp+ph+15);}
+  for(let v=0;v<=dF+1e-9;v+=sY){const y=Y(v);c.beginPath();c.moveTo(L,y);c.lineTo(L+pw,y);c.stroke();
+    c.textAlign="right";c.fillText(String(+v.toPrecision(4)),L-7,y+4);}
+  c.strokeStyle=css("--ink3");c.beginPath();c.moveTo(L,Tp);c.lineTo(L,Tp+ph);c.lineTo(L+pw,Tp+ph);c.stroke();
+  c.textAlign="center";c.font="11.5px "+css("--sans");
+  c.fillText("Deflection, "+u.L, L+pw/2, H-4);
+  c.save();c.translate(13,Tp+ph/2);c.rotate(-Math.PI/2);c.fillText("Load, "+u.F,0,0);c.restore();
+
+  if(isFinite(S.stroke)&&S.stroke>0&&S.stroke<=maxD){
+    const x=X(toL(S.stroke));
+    c.setLineDash([2,3]);c.strokeStyle=css("--ink3");
+    c.beginPath();c.moveTo(x,Tp);c.lineTo(x,Tp+ph);c.stroke();c.setLineDash([]);
+    c.textAlign="right";c.font="10.5px "+css("--sans");c.fillStyle=css("--ink3");c.fillText("solid",x-4,Tp+11);
+  }
+  if(isFinite(kt)&&kt>0){
+    c.strokeStyle=css("--steel");c.lineWidth=1.8;c.setLineDash([6,4]);
+    c.beginPath();c.moveTo(X(0),Y(0));c.lineTo(X(dD),Y(toF(kt*maxD)));c.stroke();c.setLineDash([]);
+  }
+  if(f){
+    c.strokeStyle=css("--amber");c.lineWidth=1.8;c.beginPath();
+    for(let i=0;i<=60;i++){const d=maxD*i/60, x=X(toL(d)), y=Y(toF(f.pred(d))); i?c.lineTo(x,y):c.moveTo(x,y);}
+    c.stroke();
+  }
+  c.fillStyle=css("--amber");c.strokeStyle="#fff";c.lineWidth=1.5;
+  pts.forEach(p=>{c.beginPath();c.arc(X(toL(p.d)),Y(toF(p.F)),4,0,7);c.fill();c.stroke();});
+}
+
+/* ================= library: save, load, master file ================= */
+let LIB=[];
+const nOf=id=>parseFloat($(id).value);
+const radio=n=>{const el=document.querySelector('input[name='+n+']:checked'); return el?el.value:null;};
+const radioLabel=n=>{const el=document.querySelector('input[name='+n+']:checked');
+  return el&&el.nextElementSibling ? el.nextElementSibling.textContent.trim() : "";};
+const setRadio=(n,v)=>{const el=document.querySelector('input[name='+n+'][value="'+v+'"]'); if(el) el.checked=true;};
+const status=t=>{ ["libStatus","sFileMsg","spMsg"].forEach(id=>{const e=$(id); if(e) e.textContent=t;}); };
+
+/* records hold internal units (mm, N, MPa, kg/m3) so a file written in one
+   unit system opens correctly in another */
+function snapshot(){
+  const iv=id=>frL(nOf(id));
+  return {
+    v:1,
+    name:($("recName").value.trim()||"Untitled"),
+    note:$("recNote").value.trim(),
+    saved:new Date().toISOString(),
+    unit:uMode,
+    sec:radio("sec"), dref:radio("dref"),
+    endt:$("endt").value, mat:$("mat").value, endc:$("endc").value, lsMan:$("lsMan").checked,
+    dia:iv("dia"), ax:iv("ax"), rad:iv("rad"), coil:iv("coil"), lf:iv("lf"), ls:iv("ls"),
+    gap:($("gapIn").value===""?null:frL(nOf("gapIn"))),
+    nt:nOf("nt"), inact:nOf("inact"),
+    G:frM(nOf("G")), E:frM(nOf("E")), rho:frR(nOf("rho")),
+    pcmode:radio("pcmode"), L1:iv("L1"), L2:iv("L2"), F1:frF(nOf("F1in")),
+    xmode:radio("xmode"), model:$("model").value,
+    pts:Array.from(rows.children).map(tr=>[parseFloat(tr.children[0].firstChild.value),
+                                           parseFloat(tr.children[1].firstChild.value)])
+        .filter(q=>isFinite(q[0])&&isFinite(q[1])).map(q=>[frL(q[0]),frF(q[1])]),
+    rate_N_per_mm:isFinite(S.k)?+S.k.toPrecision(6):null
+  };
+}
+
+function restore(r){
+  if(!r) return;
+  uMode = UNITS[r.unit] ? r.unit : "si";
+  setRadio("unit",uMode);
+  setRadio("sec",r.sec||"round"); setRadio("dref",r.dref||"outer");
+  setRadio("pcmode",r.pcmode||"len"); setRadio("xmode",r.xmode||"len");
+  $("endt").value=r.endt||"sg"; $("mat").value=r.mat!==undefined?r.mat:0;
+  $("endc").value=r.endc||"0.5"; $("lsMan").checked=!!r.lsMan;
+  const put=(id,val)=>{ if(isFinite(val)) $(id).value=+val.toPrecision(8); };
+  put("dia",toL(r.dia)); put("ax",toL(r.ax)); put("rad",toL(r.rad)); put("coil",toL(r.coil));
+  put("lf",toL(r.lf)); put("ls",toL(r.ls)); put("nt",r.nt); put("inact",r.inact);
+  $("gapIn").value = (r.gap===null||r.gap===undefined) ? "" : +toL(r.gap).toPrecision(8);
+  put("G",toM(r.G)); put("E",toM(r.E)); put("rho",toR(r.rho));
+  put("L1",toL(r.L1)); put("L2",toL(r.L2)); put("F1in",toF(r.F1));
+  $("model").value=r.model||"line";
+  rows.innerHTML="";
+  (r.pts||[]).forEach(q=>addRow(+toL(q[0]).toPrecision(8), +toF(q[1]).toPrecision(8)));
+  if(!rows.children.length) for(let i=0;i<3;i++) addRow();
+  $("recName").value=r.name||""; $("recNote").value=r.note||"";
+  if($("spName")) $("spName").value=r.name||"";
+  if($("spNote")) $("spNote").value=r.note||"";
+  const rect=(r.sec==="rect");
+  $("rectFields").hidden=!rect; $("roundFields").hidden=rect;
+  const byLen=(r.pcmode||"len")==="len";
+  $("fL1").hidden=!byLen; $("fF1").hidden=byLen;
+  labelUnits(); run();
+}
+
+function refreshLib(){
+  const sel=$("spLoad");
+  if(sel){
+    const keep=sel.value;
+    sel.innerHTML='<option value="">\u2014 pick a saved spring \u2014</option>'+
+      LIB.map((r,i)=>'<option value="'+i+'">'+esc(r.name)+'</option>').join("");
+    if(LIB[keep]) sel.value=keep;
+  }
+  const t=$("libList");
+  if(!LIB.length){
+    t.innerHTML='<tr><td colspan="3" class="empty">Nothing saved yet. Name the current spring and save it, or open a master file.</td></tr>';
+    return;
+  }
+  t.innerHTML=LIB.map((r,i)=>{
+    const wire = r.sec==="rect" ? (+r.ax.toPrecision(4))+"\u00D7"+(+r.rad.toPrecision(4))
+                                : "\u2300"+(+r.dia.toPrecision(4));
+    const when = (r.saved||"").slice(0,10);
+    const rate = r.rate_N_per_mm!=null ? (+r.rate_N_per_mm.toPrecision(4))+" N/mm" : "\u2014";
+    return '<tr><td>'+esc(r.name)+
+      '<span class="sub2">'+wire+' mm wire, coil '+(+r.coil.toPrecision(4))+' mm, N='+r.nt+
+      (r.note?' \u00B7 '+esc(r.note):'')+(when?' \u00B7 '+when:'')+'</span></td>'+
+      '<td class="n">'+rate+'</td>'+
+      '<td class="act"><button type="button" class="b" data-load="'+i+'">Load</button>'+
+      '<button type="button" class="b" data-del="'+i+'">Delete</button></td></tr>';
+  }).join("");
+}
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+$("libList").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  if(b.dataset.load!==undefined){
+    const r=LIB[+b.dataset.load]; restore(r); status('Loaded "'+r.name+'".');
+    $("tb1").click();
+  } else if(b.dataset.del!==undefined){
+    const r=LIB.splice(+b.dataset.del,1)[0]; refreshLib(); status('Removed "'+r.name+'" from the library.'+(CLOUD?'':' Download the master file again to make that permanent.')); schedulePersist();
+  }
+});
+
+function saveCurrent(){
+  if(!S.ok){ status("Fix the geometry on the Design tab before saving."); return; }
+  const r=snapshot();
+  const i=LIB.findIndex(x=>x.name.toLowerCase()===r.name.toLowerCase());
+  if(i>=0){ LIB[i]=r; status('Replaced "'+r.name+'" in the library.'); }
+  else { LIB.push(r); status('Saved "'+r.name+'". '+LIB.length+' spring'+(LIB.length>1?"s":"")+' in the library.'); }
+  refreshLib(); schedulePersist();
+}
+$("btnSave").onclick=saveCurrent;
+$("spSave").onclick=()=>{ $("recName").value=$("spName").value; $("recNote").value=$("spNote").value; saveCurrent(); };
+$("spOpen").onclick=()=>$("fileIn").click();
+$("spLoad").addEventListener("change",e=>{
+  const i=+e.target.value;
+  if(!LIB[i]) return;
+  restore(LIB[i]);
+  status('Loaded "'+LIB[i].name+'".');
+});
+["spName","spNote"].forEach(id=>$(id).addEventListener("input",()=>{
+  $(id==="spName"?"recName":"recNote").value=$(id).value;
+}));
+
+function masterText(){
+  return JSON.stringify({format:"compression-spring-library",v:1,
+    saved:new Date().toISOString(),units:"internal: mm, N, MPa, kg/m3",
+    springs:LIB, struts:STRUTS},null,2);
+}
+function downloadMaster(){
+  if(typeof STRUTS!=="undefined" && shown("p6")) readStrut();   // catch unsaved field edits
+  if(!LIB.length){ status("The library is empty, so there is nothing to download."); return; }
+  if(DL){
+    DL.save({filename:"springs-master.json", data:masterText()}).then(()=>{
+      status("Saved springs-master.json with "+LIB.length+" spring"+(LIB.length>1?"s":"")+
+        " and "+Object.keys(STRUTS).length+" struts.");
+    }).catch(e=>{
+      if(e&&e.code==="declined") status("Download cancelled.");
+      else { $("libText").value=masterText();
+        status("The download did not go through. The file text is in the box below, ready to copy."); }
+    });
+    return;
+  }
+  try{
+    const blob=new Blob([masterText()],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url; a.download="springs-master.json";
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url); a.remove();},0);
+    status("Downloaded springs-master.json with "+LIB.length+" spring"+(LIB.length>1?"s":"")+
+      " and "+Object.keys(STRUTS).length+" struts.");
+  }catch(err){
+    $("libText").value=masterText();
+    status("The browser blocked the download. The file text is in the box below, ready to copy.");
+  }
+}
+$("btnDownload").onclick=downloadMaster;
+$("btnOpen").onclick=()=>$("fileIn").click();
+$("fileIn").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const fr=new FileReader();
+  fr.onload=()=>{ try{ merge(fr.result); }catch(err){ status("Could not read that file: "+err.message); } };
+  fr.onerror=()=>status("Could not read that file.");
+  fr.readAsText(f); e.target.value="";
+});
+$("btnShow").onclick=()=>{ $("libText").value=masterText(); status("Library shown as text below."); };
+$("btnPaste").onclick=()=>{ try{ merge($("libText").value); }catch(err){ status("Could not read that text: "+err.message); } };
+
+/* earlier versions stored a strut as a + b + delta (+ a top stopper). The model now
+   works from the fixed hinge-to-hinge length and the nut position, so translate. */
+function migrateStrut(rec){
+  const r=Object.assign({},STRUT_COMMON,rec);
+  if(!isFinite(r.Lc)) r.Lc=STRUT_COMMON.Lc;
+  const hadB=isFinite(r.b);
+  if(!isFinite(r.L) && hadB && isFinite(r.a)) r.L=r.a+r.b+r.Lc;
+  const b = hadB ? r.b : (isFinite(r.L)&&isFinite(r.a) ? r.L-r.a-r.Lc : NaN);
+  if(!isFinite(r.c) && isFinite(b)){
+    const sp=springFor(r.spring);
+    if(sp && isFinite(r.delta)) r.c=b+r.twB+(sp.L0-r.delta);
+    else if(sp) r.c=b+r.twB+sp.L0;             // no preload recorded: seat at first contact
+  }
+  if(!isFinite(r.comp)) r.comp=isFinite(r.delta)?r.delta:0;
+  if(r.mode!=="cyl") r.mode="nut";
+  delete r.b; delete r.delta; delete r.stop;
+  return r;
+}
+function merge(txt){
+  const data=JSON.parse(txt);
+  const list=Array.isArray(data)?data:(data&&data.springs);
+  if(!Array.isArray(list)||!list.length) throw new Error("no spring records found");
+  let added=0,replaced=0;
+  list.forEach(r=>{
+    if(!r||typeof r.name!=="string") return;
+    const i=LIB.findIndex(x=>x.name.toLowerCase()===r.name.toLowerCase());
+    if(i>=0){ LIB[i]=r; replaced++; } else { LIB.push(r); added++; }
+  });
+  let struts=0, migrated=0;
+  if(data && data.struts && typeof data.struts==="object"){
+    Object.keys(data.struts).forEach(kk=>{
+      const src=data.struts[kk];
+      const old=!isFinite(src.L)||!isFinite(src.c);
+      const rec=migrateStrut(src);
+      if(!isFinite(rec.L)||!isFinite(rec.c)){
+        status('Strut "'+kk+'" in that file is missing the length or the nut position and could not be read.');
+        return;
+      }
+      STRUTS[kk]=rec; struts++; if(old) migrated++;
+    });
+    if(shown("p6")){ writeStrut(); renderStrut(); }
+    if(shown("p7")) renderCompare();
+  }
+  refreshLib();
+  status(added+" added, "+replaced+" replaced. "+LIB.length+" spring"+(LIB.length!==1?"s":"")+" in the library."+
+    (struts? "  "+struts+" strut"+(struts!==1?"s":"")+" loaded"+
+      (migrated? ", "+migrated+" converted from the older a/b/pre-compression form.":"."):""));
+  schedulePersist();
+}
+
+/* ================= printed report ================= */
+function collectInputs(){
+  const u=U(), v=id=>$(id).value, out=[];
+  const rect=radio("sec")==="rect";
+  out.push(["Units", radioLabel("unit")]);
+  out.push(["Wire form", radioLabel("sec")]);
+  if(rect){ out.push(["Wire width b, axial", v("ax")+" "+u.L]);
+            out.push(["Wire thickness t, radial", v("rad")+" "+u.L]); }
+  else      out.push(["Wire diameter d", v("dia")+" "+u.L]);
+  out.push(["Coil diameter, "+radioLabel("dref").toLowerCase(), v("coil")+" "+u.L]);
+  out.push(["End type", $("endt").selectedOptions[0].text]);
+  out.push(["Total coils N", v("nt")]);
+  if(v("gapIn")!=="") out.push(["Measured coil gap", v("gapIn")+" "+u.L]);
+  if($("endt").value==="cu") out.push(["Dead coils", v("inact")]);
+  out.push(["Free length L0", v("lf")+" "+u.L]);
+  out.push(["Solid length Ls", v("ls")+" "+u.L+($("lsMan").checked?", measured":", from coils")]);
+  out.push(["Material", $("mat").selectedOptions[0].text]);
+  out.push(["Shear modulus G", v("G")+" "+u.M]);
+  out.push(["Young's modulus E", v("E")+" "+u.M]);
+  out.push(["Density", v("rho")+" "+u.R]);
+  out.push(["Seating", $("endc").selectedOptions[0].text]);
+  const byLen=radio("pcmode")==="len";
+  out.push([byLen?"Installed length L1":"Preload F1", byLen? v("L1")+" "+u.L : v("F1in")+" "+u.F]);
+  out.push(["Working length L2", v("L2")+" "+u.L]);
+  return out;
+}
+
+function buildReport(){
+  const s=S, u=U();
+  const name=$("recName").value.trim()||"Compression spring";
+  const note=$("recNote").value.trim();
+  const when=new Date().toLocaleString();
+  const inRows=collectInputs().map(r=>"<tr><th>"+esc(r[0])+"</th><td>"+esc(r[1])+"</td></tr>").join("");
+  const pts=readPts();
+  let measured="";
+  if(pts.length){
+    let img="";
+    const hid=[];                                          // canvas has no size while hidden
+    for(let e=$("p2"); e && e!==document.body; e=e.parentElement) if(e.hidden){ hid.push(e); e.hidden=false; }
+    if(hid.length) fit();
+    try{ if($("chart").clientWidth>50) img='<img class="chart" alt="Load against deflection" src="'+
+         $("chart").toDataURL("image/png")+'">'; }catch(e){}
+    hid.forEach(e=>{ e.hidden=true; });
+    /* reading by reading: what the geometry predicts against what was measured */
+    const body=pts.map(q=>{
+      const calc=s.k*q.d, err=calc!==0 ? (q.F-calc)/calc*100 : NaN;
+      return "<tr><th>"+(+toL(s.Lf-q.d).toPrecision(6))+"</th><td>"+(+toL(q.d).toPrecision(4))+
+        "</td><td>"+(+toF(q.F).toPrecision(5))+"</td><td>"+(+toF(calc).toPrecision(5))+
+        "</td><td>"+(isFinite(err)?(err>0?"+":"")+err.toFixed(1)+"%":"\u2014")+"</td></tr>";
+    }).join("");
+    const grid='<table class="grid"><thead><tr><th>Length, '+u.L+'</th><th>Deflection, '+u.L+
+      '</th><th>Measured, '+u.F+'</th><th>Calculated, '+u.F+'</th><th>Difference</th></tr></thead>'+
+      '<tbody>'+body+'</tbody></table>';
+    measured='<section><h2>Calculated against measured</h2>'+
+      '<div class="verdict">'+esc($("cmp").textContent)+'</div>'+
+      '<div class="two" style="margin-top:3mm"><div><h3>Fit</h3><table>'+$("tFit").innerHTML+'</table></div>'+
+      '<div>'+img+'</div></div></section>'+
+      '<section><h2>Readings</h2>'+grid+
+      '<div class="nb">Calculated load is the geometry rate times deflection, with no offset. '+
+      'The fitted line, which may carry an offset, is the one plotted above.</div></section>';
+  }
+  $("report").innerHTML=
+    '<h1>'+esc(name)+'</h1>'+
+    '<div class="meta">Compression spring calculation'+(note?" &middot; "+esc(note):"")+
+      " &middot; "+esc(when)+" &middot; units "+u.L+", "+u.F+'</div>'+
+    '<section class="top"><div><h2 style="margin-top:0">Inputs</h2><table>'+inRows+'</table></div>'+
+      '<div><h2 style="margin-top:0">Free and solid</h2>'+$("svg").outerHTML+
+      '<div class="nb" style="text-align:center">Grid '+(uMode==="imp"?"0.5 in":"10 mm")+'</div></div></section>'+
+    '<section><h2>Rate</h2><div class="kbig">'+sig(toK(s.k),4)+' '+u.K+'</div>'+
+      '<div class="kcap">'+esc($("kCap").textContent)+'</div></section>'+
+    '<section><h2>Results</h2><div class="two">'+
+      '<div><h3>Geometry</h3><table>'+$("tGeom").innerHTML+'</table></div>'+
+      '<div><h3>At solid</h3><table>'+$("tLoad").innerHTML+'</table></div></div></section>'+
+    '<section><h2>Design checks</h2><table>'+$("tChk").innerHTML+'</table></section>'+
+    '<section><h2>Pre-compression and working stroke</h2><table>'+$("tPC").innerHTML+'</table></section>'+
+    measured+ strutBlock() + compareBlock() + matsBlock() +
+    '<div class="foot">Rate from k = 4&middot;G&middot;Kt / (&pi;&middot;D&sup3;&middot;n), with Kt = &pi;d&#8308;/32 for round wire '+
+      'and &beta;bt&sup3; for rectangular. Peak shear includes Wahl\u2019s curvature factor. '+
+      'Estimates for preliminary design: commercial rate tolerance is typically &plusmn;10%, so verify against test. '+
+      'No fatigue, temperature or set analysis is included.</div>';
+}
+function strutBlock(){
+  if(typeof STRUTS==="undefined") return "";
+  const u=readStrut(), sp=springFor(u.spring); if(!sp) return "";
+  renderStrut();
+  return '<section style="break-before:page;page-break-before:always">'+
+    '<h2 style="margin-top:0">Strut '+curStrut()+'</h2>'+
+    '<div class="top"><div><table>'+$("sTabA").innerHTML+'</table></div>'+
+    '<div>'+$("ssvg").outerHTML+'</div></div>'+
+    '<h3 style="margin-top:3mm">Travel and load</h3><table>'+$("sTabB").innerHTML+'</table>'+
+    '<h3 style="margin-top:3mm">Design checks</h3><table>'+$("sChk").innerHTML+'</table>'+
+    '<h3 style="margin-top:3mm">D1, D2 and D3</h3><table class="mat">'+$("sCompare").innerHTML+'</table>'+
+    '<div class="nb">The spring is trapped between the inside face of the bottom end wall and '+
+    'the seat plate on the rod, so pulling the eyes apart compresses it. Usable extension is the '+
+    'smaller of coil bind and the static allowable stress.</div></section>';
+}
+function compareBlock(){
+  if(typeof STRUTS==="undefined") return "";
+  renderCompare();
+  const w=$("cmpWrap"); if(!w||!w.innerHTML) return "";
+  return '<section style="break-before:page;page-break-before:always">'+
+    '<h2 style="margin-top:0">D1, D2 and D3 at their preloads</h2>'+
+    '<div class="cmp3">'+w.innerHTML+'</div>'+
+    '<div class="nb">One common scale across the three. Dashed circles mark the lower eye '+
+    'with the spring free and at full compression; the amber dimension below each cylinder '+
+    'is the spring deflection, measured from the no-load mark on the rod.</div></section>';
+}
+function matsBlock(){
+  const h=matsHTML(true); if(!h) return "";
+  const s=S, u=U();
+  return '<section style="break-before:page;page-break-before:always">'+
+    '<h2 style="margin-top:0">The same spring in every material</h2>'+
+    '<div class="nb" style="margin:0 0 2mm">Geometry held at '+
+      (s.rect?"b "+sig(toL(s.ax),4)+" \u00D7 t "+sig(toL(s.rad),4)
+             :"wire \u2300"+sig(toL(s.ax),4))+" "+u.L+
+      ", mean coil "+sig(toL(s.D),4)+" "+u.L+", "+sig(s.na,3)+" active coils, free length "+
+      sig(toL(s.Lf),4)+" "+u.L+", solid "+sig(toL(s.Ls),4)+" "+u.L+
+      ". Only the material changes: rate follows G, capacity follows tensile strength.</div>"+
+    '<table class="mat">'+h+'</table>'+
+    '<div class="nb">* stress at solid exceeds the static allowable, so the spring must not be '+
+    'closed fully in that material; the safe load column gives the limit and the length at which '+
+    'it is reached. Static limits only, no fatigue assessment.</div></section>';
+}
+function reportDoc(title){
+  const css=Array.prototype.map.call(document.querySelectorAll("style"),s=>s.textContent).join("\n");
+  return '<!DOCTYPE html>\n<html lang="en"><head><meta charset="utf-8">'+
+    '<meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(title)+'</title><style>'+css+
+    '\nbody{background:#fff}.wrap{display:none}#report{display:block!important;max-width:182mm;margin:8mm auto;padding:0 4mm}'+
+    '.hint{font:13px system-ui,sans-serif;color:#555;max-width:182mm;margin:8mm auto 0;padding:0 4mm}'+
+    '@media print{.hint{display:none}#report{margin:0;padding:0;max-width:none}}</style></head><body>'+
+    '<p class="hint">Press Ctrl+P (\u2318P on a Mac) and choose Save as PDF. The page is set for A4 portrait.</p>'+
+    '<div id="report">'+$("report").innerHTML+'</div></body></html>';
+}
+function toPdf(){
+  if(!S.ok){
+    if(DL) status("Fix the geometry on the Design tab before saving the report.");
+    else alert("Fix the geometry on the Calculator tab before printing.");
+    return;
+  }
+  buildReport();
+  if(DL){
+    const name=$("recName").value.trim()||"compression-spring";
+    DL.save({filename:name.replace(/[^\w.-]+/g,"_")+"_report.html", data:reportDoc(name)}).then(()=>{
+      status("Report saved. Open it and print to PDF (Ctrl+P).");
+    }).catch(e=>{ if(!e||e.code!=="declined") status("The report could not be saved here ("+((e&&e.code)||"error")+")."); });
+    return;
+  }
+  window.print();
+}
+$("btnPdf").onclick=toPdf;
+$("btnPdfTop").onclick=toPdf;
+refreshLib();
+
+/* ---------------- wiring ---------------- */
+document.querySelectorAll('input[name=sec]').forEach(r=>r.addEventListener("change",e=>{
+  const rect=e.target.value==="rect";
+  $("rectFields").hidden=!rect; $("roundFields").hidden=rect; run();
+}));
+$("form").addEventListener("input",run);
+$("form").addEventListener("submit",e=>e.preventDefault());
+window.addEventListener("resize",()=>{ if(shown("p2")) fit(); });
+/* ---- two made-up example springs for the public copy ----
+   values are internal units: mm, N, MPa, kg/m3. The readings are illustrative. */
+const common={v:1, unit:"si", sec:"round", dref:"outer", endt:"pl", mat:"2", endc:"0.5",
+  lsMan:true, ax:4, rad:2.5, inact:2, G:79300, E:207000, rho:7850,
+  pcmode:"len", xmode:"len", model:"line",
+  note:""};
+const SEED=[
+  Object.assign({},common,{name:"Example_A_2.5mm",
+    note:"Example: 2.5 mm wire, OD 25, L0 70, 9 plain coils. Readings are illustrative.",
+    dia:2.5, coil:25, lf:70, ls:23, nt:9, gap:null, L1:65, L2:50, F1:20,
+    pts:[[70, 0], [66, 16.32], [62, 31.68], [58, 48.72], [54, 63.68], [50, 80.8]], saved:"2026-10-01"}),
+  Object.assign({},common,{name:"Example_B_3.5mm",
+    note:"Example: 3.5 mm wire, OD 30, L0 55, 8 plain coils. Readings are illustrative.",
+    dia:3.5, coil:30, lf:55, ls:28, nt:8, gap:null, L1:52, L2:45, F1:30,
+    pts:[[55, 0], [53, 19.7], [51, 40.4], [49, 60.0], [47, 81.6], [45, 99.0]], saved:"2026-10-01"})
+];
+LIB=SEED.map(r=>Object.assign({},r));
+/* keyboard: Alt with the arrows walks the tabs, the bare arrows drive whichever
+   slider the visible tab owns. Anything focused that handles arrows itself is left alone. */
+document.addEventListener("keydown",e=>{
+  const k=e.key;
+  if(k!=="ArrowLeft"&&k!=="ArrowRight"&&k!=="Home"&&k!=="End") return;
+  if(e.ctrlKey||e.metaKey) return;
+  if(e.altKey){
+    if(k!=="ArrowLeft"&&k!=="ArrowRight") return;
+    const btns=Array.prototype.slice.call(document.querySelectorAll(".tabs:not(.sub) button"));
+    if(!btns.length) return;
+    let i=btns.findIndex(b=>b.getAttribute("aria-selected")==="true");
+    if(i<0) i=0;
+    const j=(i+(k==="ArrowRight"?1:-1)+btns.length)%btns.length;
+    btns[j].click(); btns[j].focus();
+    e.preventDefault();
+    return;
+  }
+  const t=e.target, tag=((t&&t.tagName)||"").toLowerCase();
+  const nativeArrows=(tag==="input"&&t.type!=="checkbox")||tag==="textarea"||tag==="select"||
+                     (t&&t.isContentEditable);
+  if(nativeArrows) return;                       // typing, or a focused slider or radio group
+  const id = shown("p6") ? "scomp" : shown("p7") ? "cmpX" : null;
+  if(!id) return;
+  const sl=$(id); if(!sl) return;
+  const lo=parseFloat(sl.min)||0, hi=parseFloat(sl.max)||0, span=hi-lo;
+  if(!(span>0)) return;
+  let v=parseFloat(sl.value); if(!isFinite(v)) v=lo;
+  if(k==="Home") v=lo;
+  else if(k==="End") v=hi;
+  else {
+    const st=parseFloat(sl.step)||span/100;
+    v=Math.round(v/st)*st+(k==="ArrowRight"?1:-1)*st*(e.shiftKey?5:1);
+  }
+  sl.value=Math.min(hi,Math.max(lo,v));
+  sl.dispatchEvent(new Event("input",{bubbles:true}));
+  e.preventDefault();
+});
+
+labelUnits();
+restore(LIB[0]);
+refreshLib();
+writeStrut(); renderStrut();
+status("Two example springs are loaded. Enter your own spring, or use Load to switch between the examples.");
+
+/* ================= online copy (v3.3.0) =================
+   On the hosted page the library and the struts live in one document in the
+   page's store, readable and writable by the owner only, and save themselves a
+   moment after each change. A copy opened from disk has no window.claude, so
+   none of this runs and the page works from master files exactly as before. */
+var CLOUD=null, DL=null;
+let cloudTimer=0, cloudLast="", cloudBusy=false, cloudAgain=false, cloudRetry=0;
+const CLOUD_DOC="springs/master";
+function cloudMsg(t){ const e=$("cloudStatus"); if(e) e.textContent=t; }
+function libBody(){
+  return {format:"compression-spring-library",v:1,units:"internal: mm, N, MPa, kg/m3",springs:LIB,struts:STRUTS};
+}
+function schedulePersist(){
+  if(!CLOUD) return;
+  clearTimeout(cloudTimer); cloudTimer=setTimeout(persist,1200);
+}
+async function persist(){
+  if(!CLOUD) return;
+  if(cloudBusy){ cloudAgain=true; return; }
+  if(typeof STRUTS!=="undefined" && shown("p6")) readStrut();
+  const key=JSON.stringify(libBody());
+  if(key===cloudLast) return;                         // nothing changed since the last save
+  cloudBusy=true; cloudMsg("Saving to your online library\u2026");
+  try{
+    await CLOUD.doc(CLOUD_DOC).set(Object.assign(JSON.parse(key),{saved:new Date().toISOString()}));
+    cloudLast=key; cloudRetry=0;
+    cloudMsg("Saved online at "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})+
+      " \u00B7 "+LIB.length+" spring"+(LIB.length!==1?"s":"")+", "+Object.keys(STRUTS).length+" struts");
+  }catch(e){
+    const code=(e&&e.code)||"unavailable";
+    if(code==="unavailable" && cloudRetry<1){
+      cloudRetry++; cloudBusy=false;
+      cloudMsg("Saving online is taking a moment; trying again\u2026");
+      cloudTimer=setTimeout(persist,2000+Math.random()*2000); return;
+    }
+    if(["revoked","not_granted","capability_disabled","capability_removed","invalid_argument"].indexOf(code)>=0){
+      CLOUD=null;
+      cloudMsg("Online saving is not available on this page now. Download the master file to keep your changes.");
+    } else {
+      cloudMsg("Could not save online ("+code+"). Your changes are still on this page; download the master file to be safe.");
+    }
+  }
+  cloudBusy=false;
+  if(cloudAgain){ cloudAgain=false; schedulePersist(); }
+}
+function applyLibrary(d){
+  const list=Array.isArray(d.springs)?d.springs.filter(r=>r&&typeof r.name==="string"):[];
+  LIB=list.map(r=>Object.assign({},r));
+  if(d.struts&&typeof d.struts==="object") Object.keys(d.struts).forEach(k=>{
+    const rec=migrateStrut(d.struts[k]);
+    if(isFinite(rec.L)&&isFinite(rec.c)) STRUTS[k]=rec;
+  });
+  refreshLib();
+  if(LIB.length) restore(LIB[0]);
+  writeStrut(); renderStrut();
+  if(shown("p7")) renderCompare();
+}
+$("strutForm").addEventListener("change",schedulePersist);
+["p6","p7"].forEach(id=>{
+  $(id).addEventListener("change",schedulePersist);
+  $(id).addEventListener("click",e=>{ if(e.target.closest("button")) schedulePersist(); });
+});
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="hidden" && CLOUD){ clearTimeout(cloudTimer); persist(); }
+});
+(async()=>{
+  const C=window.claude;
+  if(!C||typeof C.use!=="function") return;              // opened from disk
+  const got=await Promise.all([C.use("db"),C.use("user"),C.use("downloads")]);
+  const db=got[0], user=got[1];
+  if(got[2]){
+    DL=got[2];
+    $("btnPdf").textContent="Save report"; $("btnPdfTop").textContent="Save report";
+    $("pdfHelp").textContent="Save report gives you the full A4 report as a page. Open it and print it to PDF; "+
+      "the layout is already A4 portrait, so leave the paper size alone and turn off headers and footers.";
+  }
+  const owner = user ? await user.isOwner() : false;
+  if(!db || !owner){
+    if(user) cloudMsg("This copy keeps springs only while it is open. Download the master file to keep them.");
+    return;
+  }
+  cloudMsg("Opening your online library\u2026");
+  try{
+    const snap=await db.doc(CLOUD_DOC).get();
+    CLOUD=db;
+    $("libHelp").textContent="Your library and the D1, D2 and D3 struts are kept in your claude.ai account and "+
+      "save themselves a moment after each change. The master file is still there for the copy on your disk.";
+    $("footNote").textContent="Calculations run in this page. Your library is saved to your claude.ai account, visible only to you.";
+    if(snap.exists){
+      const d=snap.data()||{};
+      applyLibrary(d);
+      cloudLast=JSON.stringify(libBody());
+      cloudMsg("Online library open \u00B7 "+LIB.length+" spring"+(LIB.length!==1?"s":"")+
+        (d.saved?" \u00B7 last saved "+String(d.saved).slice(0,10):""));
+      status("Opened your online library. Use Load to switch springs.");
+    } else {
+      cloudMsg("Your online library is empty. Saving a spring creates it.");
+    }
+  }catch(e){
+    cloudMsg("Could not open the online library just now. You can still work from master files.");
+  }
+})();
+</script>
+</body>
+</html>

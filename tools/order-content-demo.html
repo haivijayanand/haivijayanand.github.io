@@ -1,0 +1,2146 @@
+<!DOCTYPE html>
+<!--
+TOOL    : order_content_demo.html (public copy)
+FAMILY  : vibration
+VERSION : 1.0.0
+DATE    : 2026-10-01
+CHAT    : 1x and 2x in coupled shafts
+CHANGES : v1.0.0  public copy for haivijayanand.github.io: unbalance, misalignment and loose-foot order content demo
+STATUS  : working; runs offline in any browser, no network
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1&times; and 2&times; in coupled shafts</title>
+<style>
+:root{
+  --paper:#F7F8FA; --panel:#FFFFFF;
+  --grid:#D7DFE7; --fine:#EAEFF4;
+  --ink:#16202B; --ink2:#5C6B7A; --steel:#8A99A7;
+  --x:#E69F00; --y:#E8000B; --z:#0076BA;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper); color:var(--ink);
+  font:400 15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  background-image:linear-gradient(var(--fine) 1px,transparent 1px),linear-gradient(90deg,var(--fine) 1px,transparent 1px);
+  background-size:28px 28px;
+}
+.wrap{max-width:1240px;margin:0 auto;padding:24px 20px 60px}
+.tabs{display:flex;border-bottom:3px solid var(--ink);margin-bottom:20px;flex-wrap:wrap}
+.tabs button{font:inherit;font-size:14px;font-weight:600;background:transparent;border:1px solid var(--grid);
+  border-bottom:0;padding:10px 18px;cursor:pointer;color:var(--ink2);letter-spacing:-.01em;margin-right:4px}
+.tabs button[aria-selected="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tabs button:focus-visible{outline:2px solid var(--z);outline-offset:2px}
+.tabs span{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;display:block;font-weight:400;opacity:.75;margin-bottom:2px}
+header{padding-top:2px;margin-bottom:20px}
+.eyebrow{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--ink2);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+h1{font-size:clamp(25px,4.2vw,40px);line-height:1.05;margin:12px 0 6px;font-weight:700;letter-spacing:-.02em}
+h1 em{font-style:normal;color:var(--y)}
+h1 b{font-weight:700;color:var(--z)}
+h1 u{text-decoration:none;color:var(--x)}
+.dek{max-width:66ch;color:var(--ink2);margin:0}
+.axkey{display:flex;gap:18px;flex-wrap:wrap;margin-top:16px;font-family:ui-monospace,Menlo,Consolas,monospace;
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+.axkey i{display:inline-block;width:22px;height:3px;margin-right:7px;vertical-align:middle}
+.axkey em{font-style:normal;color:var(--steel);letter-spacing:.08em}
+.hook{margin:18px 0 0;background:var(--panel);border:1px solid var(--grid);border-left:4px solid var(--x);padding:14px 16px}
+.hook h3{margin:0 0 8px;font-size:15px;letter-spacing:-.01em}
+.hook ol{margin:0;padding-left:20px;color:var(--ink2)}
+.hook li{margin-bottom:7px;max-width:80ch}
+.hook li:last-child{margin-bottom:0}
+.hook b{color:var(--ink)}
+.cases{display:grid;grid-template-columns:repeat(auto-fit,minmax(236px,1fr));gap:10px;margin:18px 0 14px}
+.case{background:var(--panel);border:1px solid var(--grid);border-left:4px solid var(--grid);
+  padding:12px 14px;text-align:left;cursor:pointer;font:inherit;color:var(--ink2);transition:.18s}
+.case:hover{border-color:var(--steel);border-left-color:var(--steel)}
+.case .k{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.16em;
+  text-transform:uppercase;display:block;margin-bottom:3px}
+.case .n{display:block;font-weight:650;font-size:16px;color:var(--ink);letter-spacing:-.01em}
+.case[aria-pressed="true"]{background:#fff;color:var(--ink);border-color:var(--ink);border-left-color:var(--y)}
+.case[aria-pressed="true"] .k{color:var(--y)}
+.case:focus-visible{outline:2px solid var(--z);outline-offset:2px}
+.grid-main{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.18fr);gap:14px}
+.grid-sub{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px;margin-top:14px}
+.grid-b{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.panel{background:var(--panel);border:1px solid var(--grid);padding:12px 14px 14px;min-width:0}
+.panel.full{margin-top:14px}
+.panel h2{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ink2);margin:0 0 10px;font-weight:500;
+  display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.panel h2 span.t{color:var(--ink);letter-spacing:.04em}
+canvas{display:block;width:100%;height:auto}
+.seg{display:inline-flex;border:1px solid var(--grid)}
+.seg button{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;letter-spacing:.08em;
+  text-transform:uppercase;background:transparent;border:0;padding:5px 9px;cursor:pointer;color:var(--ink2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.seg button:focus-visible{outline:2px solid var(--z);outline-offset:-2px}
+.segbig{margin:0 0 14px}
+.segbig button{font-size:12px;padding:8px 16px;letter-spacing:.1em}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:1px;
+  background:var(--grid);border:1px solid var(--grid);margin-top:14px}
+.cell{background:var(--panel);padding:9px 12px}
+.cell .lbl{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--ink2)}
+.cell .val{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:18px;font-weight:600;letter-spacing:-.02em}
+.cell .val small{font-size:11px;font-weight:400;color:var(--ink2)}
+.scrub{margin-top:14px;background:var(--panel);border:1px solid var(--grid);border-left:4px solid var(--ink);
+  padding:14px 16px}
+.scrub .hd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink2);margin-bottom:8px}
+.scrub .hd b{font-size:20px;color:var(--ink);letter-spacing:-.02em}
+.scrub input[type=range]{width:100%;accent-color:var(--ink)}
+.scrub .inst{display:flex;gap:20px;flex-wrap:wrap;margin-top:8px;
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+.scrub .inst i{font-style:normal;color:var(--ink2);letter-spacing:.1em;text-transform:uppercase;font-size:10px}
+.qbtn{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  background:transparent;border:1px solid var(--grid);padding:4px 8px;cursor:pointer;color:var(--ink2)}
+.qbtn:hover{border-color:var(--steel);color:var(--ink)}
+.qbtn:focus-visible{outline:2px solid var(--z);outline-offset:2px}
+.qbtn[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:16px 22px;margin-top:14px;
+  background:var(--panel);border:1px solid var(--grid);padding:16px}
+.ctl .hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink2);margin-bottom:6px}
+.ctl .hd b{font-size:14px;color:var(--ink);letter-spacing:-.01em}
+input[type=range]{width:100%;margin:0}
+#errH,#f_off,#gap,#lf_gap{accent-color:var(--x)} #errV,#f_ang{accent-color:var(--y)}
+#rpm,#tq,#unb,#f_len,#f_draw,#f_spd,#soft,#lf_soft,#lf_amp{accent-color:var(--z)}
+.ctl.off{opacity:.32;pointer-events:none}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);cursor:pointer;margin-bottom:5px}
+.chk input{accent-color:var(--ink);width:16px;height:16px}
+.verdict{margin-top:16px;background:var(--panel);border:1px solid var(--grid);border-left:4px solid var(--y);padding:14px 16px}
+.verdict h3{margin:0 0 6px;font-size:16px;letter-spacing:-.01em}
+.verdict p{margin:0 0 8px;color:var(--ink2);max-width:82ch}
+.verdict p:last-child{margin-bottom:0}
+.verdict code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em;background:#EEF3F7;padding:1px 5px}
+.tell{color:var(--ink);font-weight:600}
+footer{margin-top:34px;padding-top:12px;border-top:1px solid var(--grid);
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink2);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+@media (max-width:900px){.grid-main,.grid-sub,.grid-b{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="tabs" role="tablist">
+  <button role="tab" id="tabA" aria-selected="true" aria-controls="paneA">
+    <span>Tab 1</span>Sensor order content</button>
+  <button role="tab" id="tabB" aria-selected="false" aria-controls="paneB">
+    <span>Tab 2</span>Where the harmonics come from</button>
+  <button role="tab" id="tabC" aria-selected="false" aria-controls="paneC">
+    <span>Tab 3</span>Three specific misalignments</button>
+</div>
+
+<!-- ==================== TAB A ==================== -->
+<section id="paneA" role="tabpanel">
+<header>
+  <div class="eyebrow">
+    <span>Order content across a coupled train</span>
+    <span>Two triaxial stations &middot; 0.55 m apart &middot; angle domain</span>
+  </div>
+  <h1>Unbalance points <em>one way</em>.<br>Misalignment points <b>two ways</b>.</h1>
+  <p class="dek">A driver motor on a 4-point mount, a driven gearbox on a 3-point mount, one coupling between them. Turn the shaft by hand and watch what each station reads.</p>
+  <div class="axkey">
+    <span><i style="background:var(--x)"></i>X &mdash; horizontal radial, <em>+ right</em></span>
+    <span><i style="background:var(--y)"></i>Y &mdash; vertical radial, <em>+ up</em></span>
+    <span><i style="background:var(--z)"></i>Z &mdash; axial, <em>+ toward driven end</em></span>
+  </div>
+</header>
+
+<div class="cases" role="group" aria-label="Fault case">
+  <button class="case" data-mode="unbalance" aria-pressed="true">
+    <span class="k">Case 1 &middot; expect 1&times;</span><span class="n">Mass unbalance</span></button>
+  <button class="case" data-mode="radial" aria-pressed="false">
+    <span class="k">Case 2 &middot; expect 2&times;</span><span class="n">Radial (offset) misalignment</span></button>
+  <button class="case" data-mode="angular" aria-pressed="false">
+    <span class="k">Case 3 &middot; expect 2&times;</span><span class="n">Face (angular) misalignment</span></button>
+  <button class="case" data-mode="loose" aria-pressed="false">
+    <span class="k">Case 4 &middot; 2&times; + harmonics</span><span class="n">Loose foot on the gearbox</span></button>
+</div>
+
+<div class="grid-main">
+  <div class="panel">
+    <h2>Mechanism
+      <span class="seg" id="viewSeg">
+        <button data-view="side" aria-pressed="true">Side Z&ndash;Y</button>
+        <button data-view="plan" aria-pressed="false">Plan Z&ndash;X</button>
+      </span>
+    </h2>
+    <canvas id="stage" width="1000" height="900"></canvas>
+  </div>
+  <div class="panel">
+    <h2>
+      <span class="seg" id="staSeg">
+        <button data-sta="driver" aria-pressed="true">Driver</button>
+        <button data-sta="driven" aria-pressed="false">Driven</button>
+        <button data-sta="both" aria-pressed="false">Both</button>
+      </span>
+      <span class="seg" id="scaleSeg">
+        <button data-scale="auto" aria-pressed="true">Autoscale</button>
+        <button data-scale="common" aria-pressed="false">Common</button>
+      </span>
+    </h2>
+    <canvas id="trace" width="1100" height="900"></canvas>
+  </div>
+</div>
+
+<div class="grid-sub">
+  <div class="panel">
+    <h2>Order spectrum
+      <span class="seg" id="chanSeg">
+        <button data-ch="X" aria-pressed="false">X</button>
+        <button data-ch="Y" aria-pressed="true">Y</button>
+        <button data-ch="Z" aria-pressed="false">Z</button>
+      </span>
+    </h2>
+    <canvas id="spec" width="1100" height="470"></canvas>
+  </div>
+  <div class="panel">
+    <h2>Shaft orbit <span class="t">X horizontal &middot; Y vertical</span></h2>
+    <canvas id="orbit" width="620" height="470"></canvas>
+  </div>
+</div>
+
+<div class="readout">
+  <div class="cell"><div class="lbl">Speed</div><div class="val"><span id="rRpm">6000</span> <small>rpm</small></div></div>
+  <div class="cell"><div class="lbl">X &mdash; 1&times; / 2&times;</div><div class="val" style="color:var(--x)"><span id="rX">0.00 / 0.00</span></div></div>
+  <div class="cell"><div class="lbl">Y &mdash; 1&times; / 2&times;</div><div class="val" style="color:var(--y)"><span id="rY">0.00 / 0.00</span></div></div>
+  <div class="cell"><div class="lbl">Z &mdash; 1&times; / 2&times;</div><div class="val" style="color:var(--z)"><span id="rZ">0.00 / 0.00</span></div></div>
+  <div class="cell"><div class="lbl">2&times; H &divide; 2&times; V</div><div class="val"><span id="rHV">&ndash;</span></div></div>
+  <div class="cell"><div class="lbl">Axial / radial</div><div class="val"><span id="rAx">0.00</span></div></div>
+  <div class="cell"><div class="lbl">3&ndash;6&times; &divide; 2&times;</div><div class="val"><span id="rHarm">&ndash;</span></div></div>
+  <div class="cell"><div class="lbl">Half orders</div><div class="val"><span id="rHalf">&ndash;</span></div></div>
+  <div class="cell"><div class="lbl">&Delta;&phi; 2&times; across</div><div class="val"><span id="rP2">&ndash;</span></div></div>
+</div>
+
+<div class="scrub">
+  <div class="hd">
+    <span>Turn the shaft by hand &mdash; wraps round at 360&deg;</span>
+    <b>&theta; = <span id="vScrub">0</span>&deg;</b>
+    <span>
+      <button class="qbtn" data-jump="0">0&deg;</button>
+      <button class="qbtn" data-jump="90">90&deg;</button>
+      <button class="qbtn" data-jump="180">180&deg;</button>
+      <button class="qbtn" data-jump="270">270&deg;</button>
+    </span>
+  </div>
+  <input type="range" id="scrubR" min="0" max="359" step="1" value="0">
+  <div class="inst">
+    <span><i>X</i> <b id="iX" style="color:var(--x)">0.000</b></span>
+    <span><i>Y</i> <b id="iY" style="color:var(--y)">0.000</b></span>
+    <span><i>Z</i> <b id="iZ" style="color:var(--z)">0.000</b></span>
+    <span><i>Foot</i> <b id="iFoot">&ndash;</b></span>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="ctl">
+    <div class="hd"><label for="rpm">Shaft speed</label><b><span id="vRpm">6000</span> rpm</b></div>
+    <input type="range" id="rpm" min="300" max="18000" step="50" value="6000">
+  </div>
+  <div class="ctl" id="ctlH">
+    <div class="hd"><label for="errH">Horizontal error</label><b><span id="vErrH">0.15</span> <span class="eu">mm</span></b></div>
+    <input type="range" id="errH" min="0" max="0.5" step="0.01" value="0.15">
+  </div>
+  <div class="ctl" id="ctlV">
+    <div class="hd"><label for="errV">Vertical error</label><b><span id="vErrV">0.00</span> <span class="eu">mm</span></b></div>
+    <input type="range" id="errV" min="0" max="0.5" step="0.01" value="0">
+  </div>
+  <div class="ctl" id="ctlCpl">
+    <div class="hd"><span>Connecting element</span></div>
+    <span class="seg" id="cplSeg" style="display:flex;width:100%">
+      <button data-cpl="gear" aria-pressed="true" style="flex:1">Gear coupling</button>
+      <button data-cpl="pto" aria-pressed="false" style="flex:1">Flexible PTO shaft</button>
+    </span>
+  </div>
+  <div class="ctl" id="ctlTq">
+    <div class="hd"><label for="tq">Transmitted torque</label><b><span id="vTq">300</span> N&middot;m</b></div>
+    <input type="range" id="tq" min="0" max="600" step="10" value="300">
+  </div>
+  <div class="ctl" id="ctlFoot">
+    <div class="hd"><span>Which bolt is loose</span></div>
+    <span class="seg" id="footSeg" style="display:flex;width:100%">
+      <button data-foot="F1" aria-pressed="true" style="flex:1">F1 near, left</button>
+      <button data-foot="F2" aria-pressed="false" style="flex:1">F2 near, right</button>
+      <button data-foot="F3" aria-pressed="false" style="flex:1">F3 far, centre</button>
+    </span>
+  </div>
+  <div class="ctl" id="ctlGap">
+    <div class="hd"><label for="gap">Bolt clearance</label><b><span id="vGap">0.20</span> mm</b></div>
+    <input type="range" id="gap" min="0" max="0.6" step="0.01" value="0.20">
+  </div>
+  <div class="ctl" id="ctlSoft">
+    <div class="hd"><label for="soft">Lifted / seated stiffness</label><b>1 : <span id="vSoft">6</span></b></div>
+    <input type="range" id="soft" min="1" max="14" step="0.5" value="6">
+  </div>
+  <div class="ctl">
+    <div class="hd"><label for="unb">Residual unbalance</label><b><span id="vUnb">30</span> %</b></div>
+    <input type="range" id="unb" min="0" max="100" step="1" value="30">
+  </div>
+  <div class="ctl">
+    <div class="hd"><span>Response detail</span></div>
+    <label class="chk"><input type="checkbox" id="nl" checked> Nonlinear bearing stiffness</label>
+    <label class="chk"><input type="checkbox" id="imp" checked> Seating impact ring</label>
+    <label class="chk"><input type="checkbox" id="rat" checked> Rattle (half orders)</label>
+  </div>
+</div>
+
+<div class="verdict" id="verdict"></div>
+</section>
+
+<!-- ==================== TAB B ==================== -->
+<section id="paneB" role="tabpanel" hidden>
+<span class="seg segbig" id="bModeSeg" role="group" aria-label="Mechanism">
+  <button data-bm="joint" aria-pressed="true">Tilted joint &mdash; squash</button>
+  <button data-bm="loose" aria-pressed="false">Loose foot &mdash; clip</button>
+</span>
+
+<header>
+  <div class="eyebrow">
+    <span id="b_eyeL">The tilted-circle construction</span>
+    <span id="b_eyeR">Pure geometry &middot; no friction, no clearance</span>
+  </div>
+  <h1 id="b_h1"></h1>
+  <p class="dek" id="b_dek"></p>
+  <div class="hook" id="b_hook"></div>
+</header>
+
+<div class="grid-b">
+  <div class="panel">
+    <h2>The construction <span class="t" id="b_c1">equal steps in, unequal steps out</span></h2>
+    <canvas id="geom" width="820" height="820"></canvas>
+  </div>
+  <div class="panel">
+    <h2 id="b_c2h">What that costs you <span class="t" id="b_c2">two revolutions</span></h2>
+    <canvas id="ripple" width="820" height="820"></canvas>
+  </div>
+</div>
+
+<div class="panel full">
+  <h2 id="b_righ">The rig it comes from
+    <span class="seg" id="f_modeSeg">
+      <button data-fm="offset" aria-pressed="true">Parallel offset</button>
+      <button data-fm="angle" aria-pressed="false">Angular</button>
+    </span>
+    <span class="seg" id="lf_footSeg" style="display:none">
+      <button data-lfoot="F1" aria-pressed="true">F1 near</button>
+      <button data-lfoot="F3" aria-pressed="false">F3 far</button>
+    </span>
+  </h2>
+  <canvas id="rig" width="1200" height="330"></canvas>
+</div>
+
+<div class="readout" id="roJoint">
+  <div class="cell"><div class="lbl">True &beta;<sub>1</sub></div><div class="val"><span id="f_b1">0.0</span><small>&deg;</small></div></div>
+  <div class="cell"><div class="lbl">True &beta;<sub>2</sub></div><div class="val"><span id="f_b2">0.0</span><small>&deg;</small></div></div>
+  <div class="cell"><div class="lbl">Peak lead/lag</div><div class="val" style="color:var(--x)">&plusmn;<span id="f_dev">0.00</span><small>&deg;</small></div></div>
+  <div class="cell"><div class="lbl">Speed ripple</div><div class="val" style="color:var(--z)">&plusmn;<span id="f_rip">0.00</span><small>%</small></div></div>
+  <div class="cell"><div class="lbl">Odd orders</div><div class="val"><span id="f_odd">none</span></div></div>
+  <div class="cell"><div class="lbl">Output uniform?</div><div class="val" style="font-size:14px"><span id="f_out">yes</span></div></div>
+</div>
+
+<div class="readout" id="roLoose" hidden>
+  <div class="cell"><div class="lbl">Lift now</div><div class="val" style="color:var(--x)"><span id="l_now">0</span><small> &micro;m</small></div></div>
+  <div class="cell"><div class="lbl">Peak lift</div><div class="val"><span id="l_pk">0</span><small> &micro;m</small></div></div>
+  <div class="cell"><div class="lbl">2&times; &divide; 1&times;</div><div class="val"><span id="l_h2">0.00</span></div></div>
+  <div class="cell"><div class="lbl">3&times; &divide; 1&times;</div><div class="val"><span id="l_h3">0.00</span></div></div>
+  <div class="cell"><div class="lbl">Odd orders 3,5,7</div><div class="val" style="color:var(--y)"><span id="l_odd">0.00</span></div></div>
+  <div class="cell"><div class="lbl">Half-turn symmetric?</div><div class="val" style="font-size:14px"><span id="l_sym">no</span></div></div>
+</div>
+
+<div class="scrub">
+  <div class="hd">
+    <span id="b_scrubL">Rotation</span>
+    <b>&theta; = <span id="f_vang">0</span>&deg;</b>
+    <span>
+      <button class="qbtn" id="f_run" aria-pressed="true">Rotating</button>
+      <button class="qbtn" data-fjump="0">0&deg;</button>
+      <button class="qbtn" data-fjump="45">45&deg;</button>
+      <button class="qbtn" data-fjump="90">90&deg;</button>
+      <button class="qbtn" data-fjump="180">180&deg;</button>
+    </span>
+  </div>
+  <input type="range" id="f_ang_manual" min="0" max="359" step="1" value="0">
+  <div class="inst">
+    <span><i id="b_i1l">Lead/lag now</i> <b id="f_now" style="color:var(--x)">+0.00&deg;</b></span>
+    <span><i id="b_i2l">Inertial torque</i> <b id="f_tq" style="color:var(--z)">0.00</b></span>
+    <span style="color:var(--ink2)" id="b_i3l">Try 0&deg; then 45&deg;: zero, then maximum.</span>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="ctl" id="f_ctlOff">
+    <div class="hd"><label for="f_off">Parallel offset</label><b><span id="f_voff">6.0</span> mm</b></div>
+    <input type="range" id="f_off" min="0" max="20" step="0.5" value="6">
+  </div>
+  <div class="ctl" id="f_ctlAng">
+    <div class="hd"><label for="f_ang">Angular error</label><b><span id="f_vang2">3.00</span>&deg;</b></div>
+    <input type="range" id="f_ang" min="0" max="12" step="0.25" value="3">
+  </div>
+  <div class="ctl" id="f_ctlLen">
+    <div class="hd"><label for="f_len">Spacer length</label><b><span id="f_vlen">220</span> mm</b></div>
+    <input type="range" id="f_len" min="80" max="600" step="10" value="220">
+  </div>
+  <div class="ctl" id="f_ctlDraw">
+    <div class="hd"><label for="f_draw">Drawing angle</label><b><span id="f_vdraw">55</span>&deg;</b></div>
+    <input type="range" id="f_draw" min="5" max="72" step="1" value="55">
+  </div>
+  <div class="ctl" id="lf_ctlGap">
+    <div class="hd"><label for="lf_gap">Bolt clearance</label><b><span id="lf_vgap">0.30</span> mm</b></div>
+    <input type="range" id="lf_gap" min="0" max="1.0" step="0.02" value="0.30">
+  </div>
+  <div class="ctl" id="lf_ctlSoft">
+    <div class="hd"><label for="lf_soft">Lifted / seated stiffness</label><b>1 : <span id="lf_vsoft">6</span></b></div>
+    <input type="range" id="lf_soft" min="1" max="14" step="0.5" value="6">
+  </div>
+  <div class="ctl" id="lf_ctlAmp">
+    <div class="hd"><label for="lf_amp">Unbalance force</label><b><span id="lf_vamp">1.00</span></b></div>
+    <input type="range" id="lf_amp" min="0" max="2" step="0.05" value="1.00">
+  </div>
+  <div class="ctl">
+    <div class="hd"><label for="f_spd">Rotation speed</label><b><span id="f_vspd">0.25</span> rev/s</b></div>
+    <input type="range" id="f_spd" min="0.05" max="1.2" step="0.05" value="0.25">
+  </div>
+</div>
+
+<div class="verdict" id="f_verdict"></div>
+</section>
+
+<!-- ==================== TAB C ==================== -->
+<section id="paneC" role="tabpanel" hidden>
+<header>
+  <div class="eyebrow">
+    <span>Three named misalignments, side by side</span>
+    <span>+X right &middot; +Y up &middot; +Z driver to driven</span>
+  </div>
+  <h1>A joint cannot tell offset from angle.<br>It only ever sees <u>an angle in a plane</u>.</h1>
+  <p class="dek">Offset gets <em>converted</em> into angle by the geometry &mdash; &delta; over the spacer length. So all three cases below reduce to the same thing: an articulation angle &beta; lying in some plane. What separates them is how big &beta; is, which plane it lies in, and how many joints are live.</p>
+</header>
+
+<div class="cases" role="group" aria-label="Case" id="c3Seg">
+  <button class="case" data-c3="Y" aria-pressed="true">
+    <span class="k">Case 1 &middot; parallel</span><span class="n">Driven raised in +Y</span></button>
+  <button class="case" data-c3="X" aria-pressed="false">
+    <span class="k">Case 2 &middot; parallel</span><span class="n">Driven moved to +X</span></button>
+  <button class="case" data-c3="A" aria-pressed="false">
+    <span class="k">Case 3 &middot; angular</span><span class="n">Driven top bent toward driver</span></button>
+</div>
+
+<div class="grid-b">
+  <div class="panel">
+    <h2>Clock face <span class="t">looking along +Z, driver toward you</span></h2>
+    <canvas id="c3clock" width="820" height="820"></canvas>
+  </div>
+  <div class="panel">
+    <h2>The rig
+      <span class="seg" id="c3ViewSeg">
+        <button data-c3v="side" aria-pressed="true">Elevation Z&ndash;Y</button>
+        <button data-c3v="plan" aria-pressed="false">Plan Z&ndash;X</button>
+      </span>
+    </h2>
+    <canvas id="c3rig" width="820" height="820"></canvas>
+  </div>
+</div>
+
+<div class="panel full">
+  <h2>Speed of the varying member <span class="t">all three cases overlaid, two revolutions</span></h2>
+  <canvas id="c3rip" width="1200" height="420"></canvas>
+</div>
+
+<div class="readout">
+  <div class="cell"><div class="lbl">&beta;<sub>1</sub> driver end</div><div class="val"><span id="c3b1">0.000</span><small>&deg;</small></div></div>
+  <div class="cell"><div class="lbl">&beta;<sub>2</sub> driven end</div><div class="val"><span id="c3b2">0.000</span><small>&deg;</small></div></div>
+  <div class="cell"><div class="lbl">Plane of the error</div><div class="val" style="font-size:14px"><span id="c3pl">vertical</span></div></div>
+  <div class="cell"><div class="lbl">Runs fast at</div><div class="val" style="font-size:14px"><span id="c3fast">12 &amp; 6</span></div></div>
+  <div class="cell"><div class="lbl">Live joints</div><div class="val"><span id="c3nj">2</span></div></div>
+  <div class="cell"><div class="lbl">Output uniform?</div><div class="val" style="font-size:14px"><span id="c3out">yes</span></div></div>
+  <div class="cell"><div class="lbl">Peak speed ripple</div><div class="val" style="color:var(--z)">&plusmn;<span id="c3rip2">0.000</span><small>%</small></div></div>
+  <div class="cell"><div class="lbl">Dominant 2&times;</div><div class="val"><span id="c3dom">Y</span></div></div>
+</div>
+
+<div class="scrub">
+  <div class="hd">
+    <span>Rotation &mdash; watch where the driving pin runs fast</span>
+    <b>&theta; = <span id="c3vang">0</span>&deg; <small id="c3clk" style="font-size:13px;color:var(--ink2)">(3 o'clock)</small></b>
+    <span>
+      <button class="qbtn" id="c3run" aria-pressed="true">Rotating</button>
+      <button class="qbtn" data-c3j="0">3 o'clock</button>
+      <button class="qbtn" data-c3j="90">12 o'clock</button>
+      <button class="qbtn" data-c3j="180">9 o'clock</button>
+      <button class="qbtn" data-c3j="270">6 o'clock</button>
+    </span>
+  </div>
+  <input type="range" id="c3ang" min="0" max="359" step="1" value="0">
+  <div class="inst">
+    <span><i>Speed ratio now</i> <b id="c3now" style="color:var(--z)">1.000</b></span>
+    <span><i>Lead / lag</i> <b id="c3lag" style="color:var(--x)">+0.000&deg;</b></span>
+    <span style="color:var(--ink2)">Step 12 &rarr; 3 &rarr; 6 &rarr; 9 and watch the needle swing twice.</span>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="ctl" id="c3ctlY">
+    <div class="hd"><label for="c3dY">Vertical offset &delta;<sub>Y</sub></label><b><span id="c3vY">0.15</span> mm</b></div>
+    <input type="range" id="c3dY" min="0" max="2" step="0.01" value="0.15">
+  </div>
+  <div class="ctl" id="c3ctlX">
+    <div class="hd"><label for="c3dX">Horizontal offset &delta;<sub>X</sub></label><b><span id="c3vX">0.15</span> mm</b></div>
+    <input type="range" id="c3dX" min="0" max="2" step="0.01" value="0.15">
+  </div>
+  <div class="ctl" id="c3ctlA">
+    <div class="hd"><label for="c3gam">Bend angle &gamma;</label><b><span id="c3vG">0.50</span>&deg;</b></div>
+    <input type="range" id="c3gam" min="0" max="3" step="0.01" value="0.50">
+  </div>
+  <div class="ctl">
+    <div class="hd"><label for="c3len">Spacer length L</label><b><span id="c3vL">220</span> mm</b></div>
+    <input type="range" id="c3len" min="60" max="800" step="10" value="220">
+  </div>
+  <div class="ctl">
+    <div class="hd"><label for="c3draw">Drawing angle</label><b><span id="c3vD">50</span>&deg;</b></div>
+    <input type="range" id="c3draw" min="5" max="70" step="1" value="50">
+  </div>
+  <div class="ctl">
+    <div class="hd"><label for="c3spd">Rotation speed</label><b><span id="c3vS">0.25</span> rev/s</b></div>
+    <input type="range" id="c3spd" min="0.05" max="1.2" step="0.05" value="0.25">
+  </div>
+</div>
+
+<div class="verdict" id="c3verdict"></div>
+</section>
+
+<footer>
+  <span>Wong CB7 palette &middot; no red/green pairing</span>
+  <span>Models are illustrative, not calibrated</span>
+</footer>
+</div>
+
+<script>
+"use strict";
+const C={ink:'#16202B',ink2:'#5C6B7A',steel:'#8A99A7',grid:'#D7DFE7',fine:'#EDF1F5',
+         x:'#E69F00',y:'#E8000B',z:'#0076BA'};
+const MONO='ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+const DEG=String.fromCharCode(176),TH=String.fromCharCode(952),MUL=String.fromCharCode(215),
+      MINUS=String.fromCharCode(8722),BETA=String.fromCharCode(946);
+const TAU=Math.PI*2;
+const RATIO={},lastW={};
+function reg(id){const cv=document.getElementById(id);RATIO[id]=cv.height/cv.width;}
+function setup(id){
+  const cv=document.getElementById(id),ctx=cv.getContext('2d');
+  const W=Math.max(240,Math.round(cv.clientWidth||600)), H=Math.round(W*RATIO[id]);
+  if(lastW[id]!==W){
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    cv.width=W*dpr; cv.height=H*dpr; cv.style.height=H+'px';
+    lastW[id]=W; cv._dpr=dpr;}
+  ctx.setTransform(cv._dpr,0,0,cv._dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  return {ctx:ctx,W:W,H:H};
+}
+function arrow(ctx,x1,y1,x2,y2,col,w,h){
+  h=h||8; if(Math.hypot(x2-x1,y2-y1)<2) return;
+  const a=Math.atan2(y2-y1,x2-x1);
+  ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=w;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2-Math.cos(a)*h*.7,y2-Math.sin(a)*h*.7);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-Math.cos(a-.42)*h,y2-Math.sin(a-.42)*h);
+  ctx.lineTo(x2-Math.cos(a+.42)*h,y2-Math.sin(a+.42)*h);
+  ctx.closePath();ctx.fill();
+}
+function tag(ctx,x,y,t,col,al,sz,wt){
+  ctx.font=(wt||500)+' '+(sz||11)+'px '+MONO; ctx.fillStyle=col||C.ink2;
+  ctx.textAlign=al||'left'; ctx.textBaseline='middle'; ctx.fillText(t,x,y);
+}
+function seg(id,attr,apply){
+  Array.prototype.forEach.call(document.getElementById(id).querySelectorAll('button'),function(b){
+    b.addEventListener('click',function(){
+      Array.prototype.forEach.call(b.parentNode.querySelectorAll('button'),function(o){
+        o.setAttribute('aria-pressed',o===b?'true':'false');});
+      apply(b.dataset[attr]);});});
+}
+
+/* ============================================================ TAB A */
+const A=(function(){
+['stage','trace','spec','orbit'].forEach(reg);
+const STA={
+  driver:{name:'DRIVER MOTOR', mount:'4-POINT MOUNT', gH:1.00,gV:0.72,gZ:0.50,sgn:+1,ua:1.00,up:0.00},
+  driven:{name:'DRIVEN GEARBOX',mount:'3-POINT MOUNT', gH:1.55,gV:0.95,gZ:1.40,sgn:-1,ua:0.55,up:0.52}
+};
+const SPAN=0.55, LEAK=0.35;
+const FOOT={
+  F1:{name:'F1  coupling end, left',  X:+0.60,Y:1.00,Z:0.20, zf:0.71, xs:-1, g:1.00, pivot:0.86},
+  F2:{name:'F2  coupling end, right', X:-0.60,Y:1.00,Z:0.20, zf:0.71, xs:+1, g:1.00, pivot:0.86},
+  F3:{name:'F3  far end, centre',     X:+0.05,Y:1.00,Z:0.62, zf:0.89, xs: 0, g:0.85, pivot:0.71}
+};
+const S={mode:'unbalance',rpm:6000,errH:0.15,errV:0,tq:300,unb:.30,
+         cpl:'gear',nonlin:true,imp:true,rat:true,foot:'F1',gap:0.20,soft:6,
+         scale:'auto',chan:'Y',sta:'driver',view:'side',scrub:0};
+const NREV=4,N=512,DTH=TAU*NREV/N;
+const bufs={driver:{X:new Float32Array(N),Y:new Float32Array(N),Z:new Float32Array(N)},
+            driven:{X:new Float32Array(N),Y:new Float32Array(N),Z:new Float32Array(N)}};
+const fsv={X:.1,Y:.1,Z:.1};
+const primary=()=>S.sta==='both'?'driver':S.sta;
+const drawnL=()=>S.sta==='both'?['driver','driven']:[S.sta];
+const w2=()=>Math.pow(S.rpm/6000,2);
+function harm(u,gear){return gear?(Math.cos(u)+0.30*Math.cos(2*u)+0.14*Math.cos(3*u))/1.44:Math.cos(u);}
+function footResp(f,gap,soft){
+  if(f<=0) return f;
+  const yy=f*soft;
+  if(yy<=gap) return yy;
+  return gap+(f-gap/soft);
+}
+function footLift(th){
+  const a1=0.9*S.unb*w2()*STA.driven.ua*2.4;
+  const d=FOOT[S.foot];
+  const gapEff=S.gap*(S.rat?(1+0.30*Math.cos(th/2)):1);
+  const drive=a1*Math.cos(th-0.4);
+  const r=footResp(drive,gapEff,S.soft);
+  return {lift:Math.max(0,r),gap:gapEff,drive:drive,dist:(r-drive),dir:d};
+}
+function signalsAt(th,skey){
+  const P=STA[skey], k=w2(), gear=(S.cpl==='gear');
+  const a1=0.9*S.unb*k*P.ua, ph=th+P.up;
+  let X=P.gH*a1*Math.cos(ph), Y=P.gV*a1*Math.sin(ph), Z=0.03*P.gZ*a1*Math.cos(ph);
+  let LH=0,LV=0;
+  if(S.mode==='radial'){
+    const d=Math.hypot(S.errH,S.errV), phi=Math.atan2(S.errV,S.errH), u=2*(th-phi);
+    const g=gear?1.15*(S.tq/600)*(0.15+2.2*d):0.90*(0.30+0.40*S.tq/600)*(d*d*12);
+    const par=g*harm(u,gear), perp=LEAK*g*harm(u+Math.PI/2,gear);
+    X+=P.sgn*P.gH*(par*Math.cos(phi)-perp*Math.sin(phi));
+    Y+=P.sgn*P.gV*(par*Math.sin(phi)+perp*Math.cos(phi));
+    Z+=P.sgn*P.gZ*(gear?0.10:0.05)*par;
+    LH=P.gH*g*Math.cos(phi); LV=P.gV*g*Math.sin(phi);
+  }
+  if(S.mode==='angular'){
+    const b=Math.hypot(S.errH,S.errV), psi=Math.atan2(S.errV,S.errH), u=2*(th-psi);
+    const gA=(gear?2.6:1.4)*b*(0.35+0.65*k);
+    Z+=P.sgn*P.gZ*gA*Math.cos(u);
+    const gK=(gear?5.0:2.1)*b*b*k;
+    const par=gK*harm(u,gear), perp=0.30*gK*harm(u+Math.PI/2,gear);
+    X+=P.sgn*P.gH*(par*Math.cos(psi)-perp*Math.sin(psi));
+    Y+=P.sgn*P.gV*(par*Math.sin(psi)+perp*Math.cos(psi));
+    LH=0.5*P.gH*gA*Math.cos(psi); LV=0.5*P.gV*gA*Math.sin(psi);
+  }
+  if(S.mode==='loose'){
+    const F=footLift(th), d=F.dir;
+    const loc=(skey==='driven')?d.g:0.10;
+    const dist=F.dist*loc*1.8;
+    X+=P.gH*d.X*dist; Y+=P.gV*d.Y*dist; Z+=P.gZ*d.Z*dist;
+    if(S.imp){
+      const seat=0.4+Math.PI/2;
+      let da=((th-seat)%TAU+TAU)%TAU;
+      const amp=Math.min(1,S.gap/0.25)*Math.min(1,S.soft/8)*loc;
+      const ring=0.16*amp*Math.exp(-da*5.5)*Math.sin(da*13);
+      X+=P.gH*d.X*ring*0.5; Y+=P.gV*d.Y*ring; Z+=P.gZ*d.Z*ring*0.6;
+    }
+    LH=0.4*Math.abs(d.X)*loc; LV=0.4*loc;
+  }
+  if(S.nonlin&&S.mode!=='unbalance'){X+=0.55*Math.abs(LH)*X*X;Y+=0.55*Math.abs(LV)*Y*Y;}
+  return {X:X,Y:Y,Z:Z};
+}
+const ORDERS=[0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6];
+function binOf(b,k){
+  const m=k*NREV; let re=0,im=0;
+  for(let i=0;i<N;i++){const v=b[i],p=-TAU*m*i/N;re+=v*Math.cos(p);im+=v*Math.sin(p);}
+  return {mag:2*Math.hypot(re,im)/N, ph:Math.atan2(im,re)};
+}
+function rms(b){let s=0;for(let i=0;i<N;i++)s+=b[i]*b[i];return Math.sqrt(s/N);}
+function pk(b){let m=0;for(let i=0;i<N;i++)m=Math.max(m,Math.abs(b[i]));return m;}
+function wrap180(d){d=(d*180/Math.PI)%360;if(d>180)d-=360;if(d<-180)d+=360;return d;}
+let mags=ORDERS.map(function(){return 0;}), peakCount={X:0,Y:0,Z:0};
+function peaks(b){
+  const m=pk(b); if(m<1e-5) return 0;
+  let mean=0; for(let i=0;i<N;i++) mean+=b[i]; mean/=N;
+  let n=0;
+  for(let i=1;i<N-1;i++){const a=b[i-1]-mean,c=b[i]-mean,d=b[i+1]-mean;
+    if(c>a&&c>=d&&c>.25*m) n++;}
+  return n/NREV;
+}
+function computeAll(){
+  ['driver','driven'].forEach(function(kk){
+    for(let i=0;i<N;i++){const s=signalsAt(i*DTH,kk);
+      bufs[kk].X[i]=s.X;bufs[kk].Y[i]=s.Y;bufs[kk].Z[i]=s.Z;}});
+  const P=primary();
+  mags=ORDERS.map(function(k){return binOf(bufs[P][S.chan],k).mag;});
+  ['X','Y','Z'].forEach(function(c){peakCount[c]=peaks(bufs[P][c]);});
+  const list=drawnL(); let common=1e-4;
+  list.forEach(function(kk){['X','Y','Z'].forEach(function(c){common=Math.max(common,pk(bufs[kk][c]));});});
+  ['X','Y','Z'].forEach(function(c){
+    let t=1e-4; list.forEach(function(kk){t=Math.max(t,pk(bufs[kk][c]));});
+    fsv[c]=(S.scale==='common')?common:t;});
+  updateReadout(); updateInstant();
+}
+function gizmo(ctx,cx,cy,R){
+  ctx.strokeStyle=C.fine;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(cx-R,cy);ctx.lineTo(cx+R,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,cy-R);ctx.lineTo(cx,cy+R);ctx.stroke();
+  tag(ctx,cx+R+4,cy,'+X',C.x,'left',11,700);
+  tag(ctx,cx,cy-R-9,'+Y',C.y,'center',11,700);
+}
+function errAxis(ctx,cx,cy,R,ang,lbl){
+  const dx=Math.cos(ang)*R, dy=-Math.sin(ang)*R;
+  ctx.setLineDash([7,5]);
+  arrow(ctx,cx,cy,cx+dx,cy+dy,C.steel,2,9);
+  arrow(ctx,cx,cy,cx-dx,cy-dy,C.steel,2,9);
+  ctx.setLineDash([]);
+  tag(ctx,cx+dx*1.14,cy+dy*1.14,lbl,C.steel,dx<0?'right':'left',10,700);
+}
+function netForce(ctx,cx,cy,R,th,skey,dashed){
+  const s=signalsAt(th,skey), m=Math.max(fsv.X,fsv.Y,1e-4);
+  const gx=cx+(s.X/m)*R, gy=cy-(s.Y/m)*R;
+  ctx.setLineDash(dashed?[5,4]:[]);
+  arrow(ctx,cx,cy,gx,gy,C.ink,dashed?2:3,dashed?9:11);
+  ctx.setLineDash([]);
+  if(!dashed){
+    ctx.beginPath();ctx.arc(gx,cy,5,0,7);ctx.fillStyle=C.x;ctx.fill();
+    ctx.beginPath();ctx.arc(cx,gy,5,0,7);ctx.fillStyle=C.y;ctx.fill();
+    ctx.setLineDash([3,4]);ctx.lineWidth=1.3;
+    ctx.strokeStyle=C.x;ctx.beginPath();ctx.moveTo(gx,gy);ctx.lineTo(gx,cy);ctx.stroke();
+    ctx.strokeStyle=C.y;ctx.beginPath();ctx.moveTo(gx,gy);ctx.lineTo(cx,gy);ctx.stroke();
+    ctx.setLineDash([]);}
+}
+function sensorBox(ctx,x,y,lbl,active){
+  ctx.fillStyle=active?C.ink:'#fff';
+  ctx.strokeStyle=active?C.ink:C.steel;ctx.lineWidth=1.6;
+  ctx.beginPath();ctx.rect(x-8,y-8,16,16);ctx.fill();ctx.stroke();
+  ctx.fillStyle=active?'#fff':C.steel;
+  ctx.font='700 9px '+MONO;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(lbl,x,y);
+}
+function drawStage(){
+  const s=setup('stage'),ctx=s.ctx,W=s.W,H=s.H,th=S.scrub;
+  endView(ctx,W,H,th);
+  if(S.view==='side') sideView(ctx,W,H,th); else planView(ctx,W,H,th);
+  tag(ctx,W-10,14,TH+' = '+Math.round(S.scrub*180/Math.PI)+DEG,C.ink,'right',11,700);
+}
+function endView(ctx,W,H,th){
+  const cx=W*.27,cy=H*.24,R=Math.min(W*.44,H*.36)*.40;
+  gizmo(ctx,cx,cy,R*1.55);
+  ctx.strokeStyle=C.grid;ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.stroke();
+  tag(ctx,cx,cy-R*1.78,'END VIEW  -  looking along +Z',C.ink2,'center');
+  const d=Math.hypot(S.errH,S.errV), ang=Math.atan2(S.errV,S.errH);
+  if(S.mode==='unbalance'||S.mode==='loose'){
+    ctx.strokeStyle=C.fine;ctx.lineWidth=1;
+    for(let i=0;i<12;i++){const a=i*Math.PI/6;
+      ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*R*.9,cy-Math.sin(a)*R*.9);
+      ctx.lineTo(cx+Math.cos(a)*R,cy-Math.sin(a)*R);ctx.stroke();}
+    const hx=cx+Math.cos(th)*R,hy=cy-Math.sin(th)*R;
+    ctx.beginPath();ctx.arc(hx,hy,10,0,7);ctx.fillStyle=C.ink;ctx.fill();
+    tag(ctx,hx,hy,'m','#fff','center',9,700);
+  }else if(d>0.001){
+    errAxis(ctx,cx,cy,R*1.42,ang,S.mode==='radial'?'2'+MUL+' acts here':'wedge opens here');
+    if(S.mode==='radial'){
+      const sc=R*1.15/0.5, ox=cx+S.errH*sc, oy=cy-S.errV*sc;
+      ctx.strokeStyle=C.steel;ctx.setLineDash([4,4]);
+      ctx.beginPath();ctx.arc(ox,oy,R,0,7);ctx.stroke();ctx.setLineDash([]);
+      arrow(ctx,cx,cy,ox,cy,C.x,2.2,8);
+      arrow(ctx,ox,cy,ox,oy,C.y,2.2,8);}
+    const hot=Math.abs(Math.cos(th-ang))>.9;
+    ctx.beginPath();ctx.arc(cx+Math.cos(th)*R,cy-Math.sin(th)*R,7,0,7);
+    ctx.fillStyle=hot?C.ink:C.steel;ctx.fill();
+  }
+  if(S.sta==='both'){
+    netForce(ctx,cx,cy,R*1.30,th,'driven',true);
+    netForce(ctx,cx,cy,R*1.30,th,'driver',false);
+    tag(ctx,W*.52,H*.06,'solid = driver,  dashed = driven',C.ink2,'left',10);
+  }else{
+    netForce(ctx,cx,cy,R*1.30,th,S.sta,false);
+    tag(ctx,W*.52,H*.06,'net radial force at '+STA[S.sta].name,C.ink,'left',10,700);}
+  if(S.mode==='loose'){
+    const F=footLift(th);
+    tag(ctx,W*.52,H*.15,'LOOSE BOLT: '+FOOT[S.foot].name,C.ink,'left',12,700);
+    tag(ctx,W*.52,H*.195,F.lift>1e-4?'foot is OFF the base':'foot is SEATED',
+      F.lift>1e-4?C.x:C.z,'left',13,700);
+    tag(ctx,W*.52,H*.245,'One smooth half, one clipped half -',C.ink2,'left',10);
+    tag(ctx,W*.52,H*.275,'that asymmetry is where the harmonics',C.ink2,'left',10);
+    tag(ctx,W*.52,H*.305,'come from. Tab 2 draws the construction.',C.ink2,'left',10);
+  }else{
+    const u=S.mode==='angular'?DEG:' mm';
+    tag(ctx,W*.52,H*.16,'H error  '+S.errH.toFixed(2)+u,C.x,'left',12,700);
+    tag(ctx,W*.52,H*.205,'V error  '+S.errV.toFixed(2)+u,C.y,'left',12,700);
+    if(S.mode==='radial'){
+      tag(ctx,W*.52,H*.26,'The 2'+MUL+' reaction acts along the offset,',C.ink2,'left',10);
+      tag(ctx,W*.52,H*.29,'so the error plane is the plane that lights up.',C.ink2,'left',10);
+    }else if(S.mode==='angular'){
+      tag(ctx,W*.52,H*.26,'Radial 2'+MUL+' follows the splay plane;',C.ink2,'left',10);
+      tag(ctx,W*.52,H*.29,'Z does not care which plane it is in.',C.ink2,'left',10);
+    }else{
+      tag(ctx,W*.52,H*.26,'One heavy spot. Its shadow on each',C.ink2,'left',10);
+      tag(ctx,W*.52,H*.29,'axis makes one signed cycle per turn.',C.ink2,'left',10);}
+  }
+  ctx.strokeStyle=C.grid;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(W*.04,H*.40);ctx.lineTo(W*.96,H*.40);ctx.stroke();
+}
+function train(ctx,W,H,axLbl,offsetPx,tilt,plan){
+  const y0=H*.62, r=H*.036, xa=W*.19, xb=W*.79, mid=(xa+xb)/2, base=y0+r*1.9;
+  const activeA=(S.sta!=='driven'), activeB=(S.sta!=='driver');
+  const loose=(S.mode==='loose');
+  const F=loose?footLift(S.scrub):null;
+  const d=loose?FOOT[S.foot]:null;
+  const liftPx=loose?Math.min(H*0.055,F.lift*H*0.14):0;
+  const pivotX=loose?W*d.pivot:0, footX=loose?W*d.zf:0;
+  const rot=loose?Math.atan2(liftPx,Math.abs(footX-pivotX)||1)*
+    ((footX<pivotX)?1:-1)*(plan?(d.xs||0.15):1):0;
+  ctx.strokeStyle=C.grid;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(W*.04,base+r*1.2);ctx.lineTo(W*.96,base+r*1.2);ctx.stroke();
+  ctx.fillStyle='#EDF2F6';ctx.strokeStyle=C.steel;ctx.lineWidth=2;
+  ctx.beginPath();ctx.rect(W*.08,y0-r*1.9,W*.26,r*3.8);ctx.fill();ctx.stroke();
+  ctx.fillStyle=C.steel;
+  [0.11,0.17,0.25,0.31].forEach(function(f){ctx.beginPath();ctx.rect(W*f-5,base,10,r*1.2);ctx.fill();});
+  tag(ctx,W*.21,y0-r*2.5,STA.driver.name,C.ink,'center',11,700);
+  tag(ctx,W*.21,base+r*2.6,STA.driver.mount,C.ink2,'center',10);
+  sensorBox(ctx,xa,y0-r*2.1,'A1',activeA);
+  ctx.save();
+  if(loose){ctx.translate(pivotX,base);ctx.rotate(rot);ctx.translate(-pivotX,-base);}
+  else ctx.translate(0,offsetPx);
+  ctx.fillStyle='#EDF2F6';ctx.strokeStyle=C.steel;ctx.lineWidth=2;
+  ctx.beginPath();ctx.rect(W*.66,y0-r*1.9,W*.26,r*3.8);ctx.fill();ctx.stroke();
+  [0.71,0.89].forEach(function(f){
+    const isLoose=loose&&(Math.abs(f-d.zf)<0.01);
+    ctx.fillStyle=isLoose?C.x:C.steel;
+    ctx.beginPath();ctx.rect(W*f-6,base,12,r*1.0);ctx.fill();
+    if(loose){
+      ctx.strokeStyle=isLoose?C.x:C.steel;ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(W*f,base-r*0.4);ctx.lineTo(W*f,base+r*2.0);ctx.stroke();
+      ctx.fillStyle=isLoose?C.x:C.steel;
+      ctx.beginPath();ctx.rect(W*f-9,base-r*0.7,18,r*0.4);ctx.fill();}
+  });
+  tag(ctx,W*.79,y0-r*2.5,STA.driven.name,C.ink,'center',11,700);
+  sensorBox(ctx,xb,y0-r*2.1,'A2',activeB);
+  ctx.restore();
+  tag(ctx,W*.79,base+r*2.6,STA.driven.mount,C.ink2,'center',10);
+  if(loose&&liftPx>0.4){
+    ctx.fillStyle='rgba(230,159,0,0.30)';
+    ctx.fillRect(footX-14,base+r*1.2-liftPx,28,liftPx);
+    ctx.strokeStyle=C.x;ctx.lineWidth=1.4;
+    ctx.strokeRect(footX-14,base+r*1.2-liftPx,28,liftPx);
+    tag(ctx,footX+20,base+r*1.2-liftPx/2,'GAP OPEN',C.x,'left',11,700);
+  }else if(loose){
+    ctx.fillStyle=C.z;
+    ctx.beginPath();ctx.arc(footX,base+r*1.6,5,0,7);ctx.fill();
+    tag(ctx,footX+12,base+r*1.6,'SEATED',C.z,'left',11,700);}
+  ctx.fillStyle='#F6F9FB';ctx.strokeStyle=C.steel;ctx.lineWidth=2;
+  ctx.beginPath();ctx.rect(W*.34,y0-r*.5,W*.08,r);ctx.fill();ctx.stroke();
+  ctx.save();ctx.translate(W*.66,y0+offsetPx);ctx.rotate(tilt);
+  ctx.beginPath();ctx.rect(-W*.08,-r*.5,W*.08,r);ctx.fill();ctx.stroke();ctx.restore();
+  if(S.cpl==='gear'){
+    ctx.fillStyle='#fff';ctx.strokeStyle=C.ink;ctx.lineWidth=2;
+    ctx.beginPath();ctx.rect(mid-W*.045,Math.min(y0,y0+offsetPx)-r*1.5,W*.09,r*3+Math.abs(offsetPx));
+    ctx.fill();ctx.stroke();
+  }else{
+    ctx.strokeStyle=C.ink;ctx.lineWidth=3.5;
+    ctx.beginPath();ctx.moveTo(W*.42,y0);
+    ctx.bezierCurveTo(W*.52,y0,W*.55,y0+offsetPx,W*.58,y0+offsetPx);ctx.stroke();}
+  const dy=base+r*4.4;
+  arrow(ctx,xa,dy,xb,dy,C.ink,1.2,7); arrow(ctx,xb,dy,xa,dy,C.ink,1.2,7);
+  ctx.fillStyle='#fff';ctx.fillRect(mid-30,dy-8,60,16);
+  tag(ctx,mid,dy,SPAN.toFixed(2)+' m',C.ink,'center',11,700);
+  arrow(ctx,W*.04,H*.455,W*.13,H*.455,C.z,2,8);
+  tag(ctx,W*.14,H*.455,'+Z',C.z,'left',11,700);
+  arrow(ctx,W*.04,H*.455,W*.04,H*.455-26,axLbl.col,2,8);
+  tag(ctx,W*.055,H*.455-32,axLbl.txt,axLbl.col,'left',11,700);
+}
+function axialArrows(ctx,W,H,th){
+  const y=H*.505, mz=Math.max(fsv.Z,1e-4), L=W*.10;
+  ['driver','driven'].forEach(function(kk,i){
+    const x=(i===0)?W*.19:W*.79, v=signalsAt(th,kk).Z/mz;
+    ctx.globalAlpha=((S.sta==='both')||(S.sta===kk))?1:0.30;
+    ctx.strokeStyle=C.grid;ctx.setLineDash([2,3]);ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x,y-11);ctx.lineTo(x,y+11);ctx.stroke();ctx.setLineDash([]);
+    arrow(ctx,x,y,x+v*L,y,C.z,2.6,10);
+    ctx.globalAlpha=1;});
+  tag(ctx,W*.50,y,'net axial force (Z) at each station',C.z,'center',10,700);
+}
+function sideView(ctx,W,H,th){
+  const sc=H*.10/0.5;
+  const off=(S.mode==='radial')?-S.errV*sc:0, tilt=(S.mode==='angular')?-S.errV*0.6:0;
+  tag(ctx,W*.04,H*.435,S.mode==='loose'
+    ?'SIDE ELEVATION  Z-Y   -   the gearbox rocks about its two good feet'
+    :'SIDE ELEVATION  Z-Y   -   shows the VERTICAL error',C.ink,'left',11,700);
+  train(ctx,W,H,{txt:'+Y',col:C.y},off,tilt,false);
+  tag(ctx,W*.04,H*.955,S.mode==='loose'
+    ?'Two feet hold, one lets go. The body pivots about the line joining the two that hold.'
+    :'Vertical error lifts the gearbox toward +Y. Horizontal error is edge-on here.',C.ink2,'left',10);
+  axialArrows(ctx,W,H,th);
+}
+function planView(ctx,W,H,th){
+  const sc=H*.10/0.5;
+  const off=(S.mode==='radial')?-S.errH*sc:0, tilt=(S.mode==='angular')?-S.errH*0.6:0;
+  tag(ctx,W*.04,H*.435,S.mode==='loose'
+    ?'PLAN VIEW  Z-X   -   which foot, and which way it rocks'
+    :'PLAN VIEW  Z-X   -   shows the HORIZONTAL error',C.ink,'left',11,700);
+  train(ctx,W,H,{txt:'+X',col:C.x},off,tilt,true);
+  const y0=H*.62,r=H*.036, loose=(S.mode==='loose');
+  ctx.fillStyle=C.steel;
+  [[0.11,-1],[0.11,1],[0.31,-1],[0.31,1]].forEach(function(p){
+    ctx.beginPath();ctx.arc(W*p[0],y0+p[1]*r*1.55,4.5,0,7);ctx.fill();});
+  const pts=[['F1',0.71,-1],['F2',0.71,1],['F3',0.89,0]];
+  pts.forEach(function(p){
+    const x=W*p[1], yy=y0+p[2]*r*1.55, isL=loose&&(p[0]===S.foot);
+    ctx.beginPath();ctx.arc(x,yy,isL?7:4.5,0,7);
+    ctx.fillStyle=isL?'#fff':C.steel;ctx.fill();
+    if(isL){ctx.strokeStyle=C.x;ctx.lineWidth=2.5;ctx.stroke();}
+    tag(ctx,x,yy-14,p[0],isL?C.x:C.steel,'center',10,700);});
+  if(loose){
+    const a=pts.filter(function(p){return p[0]!==S.foot;});
+    ctx.strokeStyle=C.z;ctx.lineWidth=2;ctx.setLineDash([6,4]);
+    ctx.beginPath();
+    ctx.moveTo(W*a[0][1],y0+a[0][2]*r*1.55);
+    ctx.lineTo(W*a[1][1],y0+a[1][2]*r*1.55);ctx.stroke();ctx.setLineDash([]);
+    tag(ctx,W*.5,y0+r*3.2,'rocking axis: the two feet that still hold',C.z,'center',10,700);}
+  tag(ctx,W*.04,H*.955,'Four mounts in a rectangle on the motor, three in a triangle on the gearbox.',C.ink2,'left',10);
+  axialArrows(ctx,W,H,th);
+}
+function drawTrace(){
+  const s=setup('trace'),ctx=s.ctx,W=s.W,H=s.H;
+  const L=64,R=W-76,T=16,B=H-38, rh=(B-T)/3;
+  const rows=[['X',C.x,'HORIZONTAL'],['Y',C.y,'VERTICAL'],['Z',C.z,'AXIAL']];
+  const list=drawnL(), m1=L+(R-L)/3, m2=L+2*(R-L)/3;
+  ctx.fillStyle='#FAFCFD';ctx.fillRect(m1,T,m2-m1,B-T);
+  ctx.strokeStyle=C.fine;ctx.lineWidth=1;
+  for(let q=1;q<4;q++){const x=m1+(m2-m1)*q/4;ctx.beginPath();ctx.moveTo(x,T);ctx.lineTo(x,B);ctx.stroke();}
+  ctx.strokeStyle=C.grid;
+  [L,m1,m2,R].forEach(function(x){ctx.beginPath();ctx.moveTo(x,T);ctx.lineTo(x,B);ctx.stroke();});
+  for(let q=0;q<=4;q++) tag(ctx,m1+(m2-m1)*q/4,B+15,(q*90)+DEG,C.ink,'center',10,700);
+  tag(ctx,(L+m1)/2,B+15,'previous rev',C.steel,'center',10);
+  tag(ctx,(m2+R)/2,B+15,'next rev',C.steel,'center',10);
+  tag(ctx,(m1+m2)/2,B+31,'THIS REVOLUTION',C.ink,'center',10,700);
+  const cxp=m1+(m2-m1)*(S.scrub/TAU);
+  ctx.strokeStyle=C.ink;ctx.lineWidth=1.5;ctx.setLineDash([2,3]);
+  ctx.beginPath();ctx.moveTo(cxp,T);ctx.lineTo(cxp,B);ctx.stroke();ctx.setLineDash([]);
+  rows.forEach(function(row,ri){
+    const key=row[0],col=row[1],lbl=row[2];
+    const mid=T+rh*(ri+.5), half=rh*.34, sc=fsv[key]*1.15;
+    ctx.strokeStyle=C.ink;ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(L,mid);ctx.lineTo(R,mid);ctx.stroke();
+    tag(ctx,L-10,mid,key,col,'right',16,700);
+    tag(ctx,L+4,mid-half-9,lbl,C.ink2,'left',10);
+    tag(ctx,R+6,mid-half,'+'+sc.toFixed(3),C.steel,'left',9);
+    tag(ctx,R+6,mid+half,MINUS+sc.toFixed(3),C.steel,'left',9);
+    list.forEach(function(kk){
+      const dash=(list.length>1&&kk==='driven');
+      ctx.strokeStyle=col;ctx.lineWidth=dash?1.8:2.4;ctx.lineJoin='round';
+      ctx.setLineDash(dash?[6,4]:[]);
+      ctx.beginPath();
+      const M=540;
+      for(let i=0;i<=M;i++){
+        const t=-TAU+3*TAU*i/M, v=signalsAt(t,kk)[key];
+        const X=L+(R-L)*i/M, Y=mid-half*(v/sc);
+        i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);}
+      ctx.stroke();ctx.setLineDash([]);
+      const vc=signalsAt(S.scrub,kk)[key];
+      ctx.beginPath();ctx.arc(cxp,mid-half*(vc/sc),dash?4.5:6,0,7);
+      ctx.fillStyle=dash?'#fff':col;ctx.fill();
+      ctx.strokeStyle=dash?col:'#fff';ctx.lineWidth=1.8;ctx.stroke();});
+    tag(ctx,R-6,mid-half+3,peakCount[key].toFixed(0)+' peaks / rev',col,'right',11,700);});
+  tag(ctx,L,T+7,S.sta==='both'?'DRIVER (solid) vs DRIVEN (dashed)'
+    :STA[S.sta].name+'  -  '+STA[S.sta].mount,C.ink,'left',10,700);
+  tag(ctx,R,T+7,S.mode==='loose'?'LOOSE FOOT  -  look at the SHAPE'
+    :(S.scale==='auto'?'AUTOSCALED PER CHANNEL':'COMMON SCALE'),C.steel,'right',10);
+}
+function drawSpec(){
+  const s=setup('spec'),ctx=s.ctx,W=s.W,H=s.H;
+  const L=46,R=W-12,T=20,B=H-30;
+  const col=S.chan==='X'?C.x:S.chan==='Y'?C.y:C.z;
+  const mx=Math.max.apply(null,mags.concat([1e-4]))*1.18;
+  ctx.strokeStyle=C.fine;ctx.lineWidth=1;
+  for(let i=1;i<=4;i++){const y=B-(B-T)*i/4;ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(R,y);ctx.stroke();}
+  ctx.strokeStyle=C.ink;ctx.beginPath();ctx.moveTo(L,B);ctx.lineTo(R,B);ctx.stroke();
+  const bw=(R-L)/ORDERS.length;
+  ORDERS.forEach(function(k,i){
+    const h=(B-T)*(mags[i]/mx),x=L+i*bw+bw*.22,w=bw*.56;
+    const isInt=Math.abs(k-Math.round(k))<1e-6;
+    ctx.fillStyle=(k===1||k===2)?col:isInt?C.steel:C.grid;
+    ctx.fillRect(x,B-h,w,h);
+    if(k===1||k===2) tag(ctx,x+w/2,B-h-9,k+MUL,col,'center',11,700);
+    if(isInt) tag(ctx,x+w/2,B+14,String(k),C.ink2,'center');});
+  tag(ctx,L,T-6,STA[primary()].name+'  -  CHANNEL '+S.chan+'   full scale '+mx.toFixed(3),col,'left',10,700);
+  tag(ctx,R,B+14,'order',C.ink2,'right');
+}
+function drawOrbit(){
+  const s=setup('orbit'),ctx=s.ctx,W=s.W,H=s.H;
+  const cx=W/2,cy=H*.47,R=Math.min(W,H)*.35, list=drawnL();
+  let m=1e-4;
+  list.forEach(function(kk){m=Math.max(m,pk(bufs[kk].X),pk(bufs[kk].Y));});
+  ctx.strokeStyle=C.fine;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(cx-R*1.2,cy);ctx.lineTo(cx+R*1.2,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,cy-R*1.2);ctx.lineTo(cx,cy+R*1.2);ctx.stroke();
+  tag(ctx,cx+R*1.24,cy,'+X',C.x,'left',12,700);
+  tag(ctx,cx,cy-R*1.28,'+Y',C.y,'center',12,700);
+  ctx.strokeStyle=C.grid;ctx.setLineDash([3,5]);
+  ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.stroke();ctx.setLineDash([]);
+  list.forEach(function(kk){
+    const dash=(list.length>1&&kk==='driven');
+    ctx.strokeStyle=C.ink;ctx.lineWidth=dash?1.5:2;ctx.lineJoin='round';
+    ctx.setLineDash(dash?[5,4]:[]);
+    ctx.beginPath();
+    for(let i=0;i<N;i++){const X=cx+R*(bufs[kk].X[i]/m),Y=cy-R*(bufs[kk].Y[i]/m);
+      i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);}
+    ctx.stroke();ctx.setLineDash([]);
+    const sv=signalsAt(S.scrub,kk);
+    ctx.beginPath();ctx.arc(cx+R*(sv.X/m),cy-R*(sv.Y/m),5,0,7);
+    ctx.fillStyle=dash?'#fff':C.ink;ctx.fill();
+    ctx.strokeStyle=C.ink;ctx.lineWidth=1.5;ctx.stroke();});
+  tag(ctx,cx,H-14,
+    S.mode==='unbalance'?'ellipse  -  pure 1'+MUL
+    :S.mode==='loose'?'truncated  -  clipped on one side'
+    :'banana / figure-of-eight  -  1'+MUL+' + 2'+MUL,C.ink2,'center');
+  tag(ctx,W-8,16,'autoscaled '+m.toFixed(3),C.steel,'right',9);
+}
+const COPY={
+ unbalance:{h:'One heavy spot, one cycle',p:[
+  'The force magnitude never changes &mdash; only its direction turns. Each sensor reads a <em>signed</em> component along its own axis, so heavy-spot-up gives a positive peak and heavy-spot-down an equal negative peak. One cycle per revolution on X and Y, 90&deg; apart.',
+  '<span class="tell">Tell:</span> amplitude scales with speed<sup>2</sup> and ignores torque.']},
+ radial:{h:'The error plane is the plane that lights up',p:[
+  'One element slides <em>out</em> on one side of the turn and <em>in</em> on the other, so its reaction peaks twice per revolution. Projected onto a fixed sensor it lands on <code>2&times;</code>, plus <code>4&times;, 6&times;</code> when the reversal is abrupt &mdash; <em>even orders only</em>.',
+  '<span class="tell">A vertical offset drives mainly Y.</span> But the response is filtered by the mounts: most machines are softer horizontally. Calibrate using the 1&times;H/1&times;V ratio from unbalance.',
+  '<span class="tell">Tell:</span> <code>&Delta;&phi; 2&times;</code> near 180&deg;, and with a gear coupling the 2&times; tracks torque.']},
+ angular:{h:'A wobble also repeats every half turn',p:[
+  'The hub faces open on one side and pinch on the other, so every rim point moves <em>along</em> the shaft. The summed reaction follows cos<sup>2</sup>&thinsp;&theta; = steady offset + a genuine 2&times;.',
+  '<em>Z barely cares which plane the splay is in.</em> The radial 2&times; does follow the plane.',
+  '<span class="tell">Tell:</span> big <em>Z</em>, and <code>&Delta;&phi; 2&times;</code> near 180&deg; on the axial channel.']},
+ loose:{h:'A loose foot clips one half of the wave',p:[
+  'Nothing here is misaligned. One hold-down bolt is not doing its job, and the only excitation is the residual unbalance you already have &mdash; wind that slider to zero and the whole signature vanishes. <span class="tell">Looseness does not create energy; it distorts what is already there.</span>',
+  'On the up-swing the foot lifts and the machine moves easily. On the down-swing the base stops it dead. One half smooth, one half clipped &mdash; and Fourier fills in <code>2&times;, 3&times;, 4&times;, 5&times;&hellip;</code>, a full harmonic family rather than the even-only family a coupling gives you. Tab 2 draws that construction next to the misalignment one.',
+  '<span class="tell">Four discriminators.</span> <b>One:</b> harmonic ratio &mdash; 3&ndash;6&times; is high here, near zero for a clean elastic coupling. <b>Two:</b> half orders, if the foot does not re-seat identically each turn. <b>Three:</b> it is <em>local</em> &mdash; switch to <em>Both</em> and the motor barely notices. <b>Four:</b> the waveform and orbit are truncated on one side.',
+  'On a 3-point mount this bites harder. Four bolts minus one still leaves three holding; three minus one leaves a hinge. Which foot is loose sets the direction: the far-centre foot pitches the box into <em>Z</em>, the coupling-end feet roll it into <em>X</em>.',
+  '<span class="tell">In the field:</span> re-torque before you chase alignment. A soft foot manufactures a 2&times; that looks like misalignment, and it corrupts the alignment reading itself.']}
+};
+function drawVerdict(){
+  const c=COPY[S.mode];
+  document.getElementById('verdict').innerHTML='<h3>'+c.h+'</h3>'+
+    c.p.map(function(t){return '<p>'+t+'</p>';}).join('');
+  const u=S.mode==='angular'?DEG:'mm';
+  Array.prototype.forEach.call(document.querySelectorAll('.eu'),function(e){e.textContent=u;});
+}
+function updateReadout(){
+  const P=primary(), a={};
+  [['X','rX'],['Y','rY'],['Z','rZ']].forEach(function(p){
+    const b1=binOf(bufs[P][p[0]],1), b2=binOf(bufs[P][p[0]],2);
+    a[p[0]]=b2.mag;
+    document.getElementById(p[1]).textContent=b1.mag.toFixed(2)+' / '+b2.mag.toFixed(2);});
+  const rad=Math.hypot(rms(bufs[P].X),rms(bufs[P].Y));
+  document.getElementById('rRpm').textContent=S.rpm;
+  document.getElementById('rHV').textContent=(a.X<1e-3&&a.Y<1e-3)?'\u2013'
+    :(a.Y<1e-4?'\u221E':(a.X/a.Y).toFixed(2));
+  document.getElementById('rAx').textContent=(rms(bufs[P].Z)/Math.max(1e-6,rad)).toFixed(2);
+  const ch=S.chan, b=bufs[P][ch];
+  const two=binOf(b,2).mag, one=binOf(b,1).mag;
+  let hs=0; [3,4,5,6].forEach(function(k){hs+=binOf(b,k).mag;});
+  let hf=0; [0.5,1.5,2.5].forEach(function(k){hf+=binOf(b,k).mag;});
+  document.getElementById('rHarm').textContent=(two<1e-3)?'\u2013':(hs/two).toFixed(2);
+  document.getElementById('rHalf').textContent=(one<1e-3)?'\u2013':(hf/one).toFixed(2);
+  const d2=binOf(bufs.driver[ch],2), n2=binOf(bufs.driven[ch],2);
+  document.getElementById('rP2').textContent=
+    (d2.mag<2e-3||n2.mag<2e-3)?'\u2013':(Math.round(wrap180(n2.ph-d2.ph))+DEG);
+}
+function updateInstant(){
+  const s=signalsAt(S.scrub,primary());
+  document.getElementById('iX').textContent=(s.X>=0?'+':'')+s.X.toFixed(3);
+  document.getElementById('iY').textContent=(s.Y>=0?'+':'')+s.Y.toFixed(3);
+  document.getElementById('iZ').textContent=(s.Z>=0?'+':'')+s.Z.toFixed(3);
+  const fe=document.getElementById('iFoot');
+  if(S.mode==='loose'){
+    const F=footLift(S.scrub);
+    fe.textContent=F.lift>1e-4?('LIFTED '+(F.lift*1000).toFixed(0)+' \u00B5m'):'seated';
+    fe.style.color=F.lift>1e-4?C.x:C.z;
+  }else{fe.textContent='\u2013';fe.style.color=C.ink2;}
+}
+let queued=false;
+function render(){
+  if(queued) return; queued=true;
+  requestAnimationFrame(function(){queued=false;
+    drawStage();drawTrace();drawSpec();drawOrbit();});
+}
+function recompute(){computeAll();render();}
+seg('scaleSeg','scale',function(v){S.scale=v;recompute();});
+seg('chanSeg','ch',function(v){S.chan=v;recompute();});
+seg('staSeg','sta',function(v){S.sta=v;recompute();});
+seg('viewSeg','view',function(v){S.view=v;render();});
+seg('cplSeg','cpl',function(v){S.cpl=v;recompute();});
+seg('footSeg','foot',function(v){S.foot=v;recompute();});
+Array.prototype.forEach.call(document.querySelectorAll('.case'),function(b){
+  b.addEventListener('click',function(){
+    Array.prototype.forEach.call(document.querySelectorAll('.case'),function(o){
+      o.setAttribute('aria-pressed',o===b?'true':'false');});
+    S.mode=b.dataset.mode;
+    const mx=(S.mode==='angular')?0.6:0.5;
+    ['errH','errV'].forEach(function(id){document.getElementById(id).max=mx;});
+    syncCtl();drawVerdict();recompute();});});
+function syncCtl(){
+  const mis=(S.mode==='radial'||S.mode==='angular'), lo=(S.mode==='loose');
+  document.getElementById('ctlH').classList.toggle('off',!mis);
+  document.getElementById('ctlV').classList.toggle('off',!mis);
+  document.getElementById('ctlCpl').classList.toggle('off',!mis);
+  document.getElementById('ctlTq').classList.toggle('off',S.mode!=='radial');
+  document.getElementById('ctlFoot').classList.toggle('off',!lo);
+  document.getElementById('ctlGap').classList.toggle('off',!lo);
+  document.getElementById('ctlSoft').classList.toggle('off',!lo);
+}
+function bind(id,vid,fn,fmt){
+  const el=document.getElementById(id);
+  el.addEventListener('input',function(){const v=parseFloat(el.value);fn(v);
+    document.getElementById(vid).textContent=fmt(v);recompute();});
+}
+bind('rpm','vRpm',function(v){S.rpm=v;},function(v){return v;});
+bind('errH','vErrH',function(v){S.errH=v;},function(v){return v.toFixed(2);});
+bind('errV','vErrV',function(v){S.errV=v;},function(v){return v.toFixed(2);});
+bind('tq','vTq',function(v){S.tq=v;},function(v){return v;});
+bind('unb','vUnb',function(v){S.unb=v/100;},function(v){return v;});
+bind('gap','vGap',function(v){S.gap=v;},function(v){return v.toFixed(2);});
+bind('soft','vSoft',function(v){S.soft=v;},function(v){return v;});
+['nl','imp','rat'].forEach(function(id){
+  document.getElementById(id).addEventListener('change',function(e){
+    S[id==='nl'?'nonlin':id]=e.target.checked;recompute();});});
+function setScrub(deg){
+  deg=((deg%360)+360)%360;
+  S.scrub=deg*Math.PI/180;
+  document.getElementById('vScrub').textContent=Math.round(deg);
+  document.getElementById('scrubR').value=deg;
+  updateInstant(); render();
+}
+document.getElementById('scrubR').addEventListener('input',function(e){setScrub(parseFloat(e.target.value));});
+Array.prototype.forEach.call(document.querySelectorAll('[data-jump]'),function(b){
+  b.addEventListener('click',function(){setScrub(parseFloat(b.dataset.jump));});});
+syncCtl();drawVerdict();recompute();
+return {render:render,nudge:function(step){setScrub(Math.round(S.scrub*180/Math.PI)+step);}};
+})();
+
+/* ============================================================ TAB B */
+const B=(function(){
+['geom','ripple','rig'].forEach(reg);
+const F={bm:'joint',mode:'offset',off:6,ang:3,len:220,draw:55*Math.PI/180,
+         gap:0.30,soft:6,amp:1.00,lfoot:'F1',
+         spd:0.25,running:true,theta:0};
+
+/* ---- tilted joint ---- */
+function unwrap(v,near){return v+TAU*Math.round((near-v)/TAU);}
+function hooke(a,b){return unwrap(Math.atan2(Math.sin(a),Math.cos(b)*Math.cos(a)),a);}
+function hookeInv(a,b){return unwrap(Math.atan2(Math.sin(a)*Math.cos(b),Math.cos(a)),a);}
+function geo(){
+  if(F.mode==='offset'){const b=Math.atan2(F.off,F.len);return {b1:b,b2:b,dy:F.off};}
+  return {b1:0,b2:F.ang*Math.PI/180,dy:0};
+}
+function liveB(){const g=geo();return F.mode==='offset'?g.b1:g.b2;}
+function devAt(t){return hooke(t,liveB())-t;}
+function torqueAt(t){const h=0.01;return (devAt(t+h)-2*devAt(t)+devAt(t-h))/(h*h);}
+
+/* ---- loose foot: the same shape of idea, but a KINK instead of a squash ---- */
+function drive(t){return F.amp*Math.cos(t);}          /* unbalance force, + = lifting */
+function clipF(f){
+  if(f<=0) return f;                                   /* seated: stiff, slope 1 */
+  const yy=f*F.soft;                                   /* lifted: soft */
+  if(yy<=F.gap) return yy;
+  return F.gap+(f-F.gap/F.soft);                       /* bolt head bears */
+}
+function outAt(t){return clipF(drive(t));}
+function liftAt(t){return Math.max(0,outAt(t));}
+
+/* one-revolution DFT, integer orders only */
+function bars(fn,kmax){
+  const M=512, out=[];
+  for(let k=1;k<=kmax;k++){
+    let re=0,im=0;
+    for(let i=0;i<M;i++){
+      const t=TAU*i/M, v=fn(t), p=-TAU*k*i/M;
+      re+=v*Math.cos(p); im+=v*Math.sin(p);}
+    out.push(2*Math.hypot(re,im)/M);}
+  return out;
+}
+let bOut=[],bJoint=[];
+function recomputeB(){
+  bOut=bars(outAt,8);
+  bJoint=bars(devAt,8);
+}
+
+/* ================= construction panel ================= */
+function drawGeom(){
+  if(F.bm==='joint') geomJoint(); else geomLoose();
+}
+function geomJoint(){
+  const s=setup('geom'),ctx=s.ctx,W=s.W,H=s.H;
+  const cx=W*0.5, cy=H*0.50, R=Math.min(W,H)*0.31;
+  const b=F.draw, cb=Math.cos(b), th=F.theta, ps=hooke(th,b);
+  tag(ctx,W*.5,20,'A CIRCLE SEEN AT '+Math.round(b*180/Math.PI)+DEG+
+    '  -  ONE AXIS SQUASHED, ONE NOT',C.ink,'center',12,700);
+  tag(ctx,W*.5,38,'true '+BETA+' = '+(liveB()*180/Math.PI).toFixed(2)+DEG+
+    ' - drawn larger so the effect is visible',C.steel,'center',10);
+  ctx.strokeStyle=C.grid;ctx.lineWidth=1.6;
+  ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.stroke();
+  ctx.strokeStyle=C.x;ctx.lineWidth=2;
+  ctx.beginPath();ctx.ellipse(cx,cy,R*cb,R,0,0,7);ctx.stroke();
+  ctx.strokeStyle=C.fine;ctx.lineWidth=1;
+  for(let i=0;i<24;i++){
+    const a=i*TAU/24, px=cx+R*Math.cos(a), py=cy-R*Math.sin(a), qx=cx+R*cb*Math.cos(a);
+    ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(qx,py);ctx.stroke();}
+  const R1=R*1.30, R2=R*1.13;
+  ctx.strokeStyle=C.steel;ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(cx,cy,R1,0,7);ctx.stroke();
+  for(let i=0;i<24;i++){
+    const a=i*TAU/24;
+    ctx.strokeStyle=C.ink2;ctx.lineWidth=1.6;
+    ctx.beginPath();
+    ctx.moveTo(cx+R1*Math.cos(a)*0.965,cy-R1*Math.sin(a)*0.965);
+    ctx.lineTo(cx+R1*Math.cos(a)*1.035,cy-R1*Math.sin(a)*1.035);
+    ctx.stroke();}
+  for(let i=0;i<24;i++){
+    const a=i*TAU/24, a2=hooke(a,b), d=a2-a;
+    ctx.strokeStyle=C.x;ctx.lineWidth=Math.min(7,1.5+Math.abs(d)*22);
+    ctx.beginPath();ctx.arc(cx,cy,R2,-a,-a2,d>0);ctx.stroke();
+    ctx.fillStyle=C.x;
+    ctx.beginPath();ctx.arc(cx+R2*Math.cos(a2),cy-R2*Math.sin(a2),2.6,0,7);ctx.fill();}
+  ctx.fillStyle='rgba(230,159,0,0.22)';
+  ctx.beginPath();ctx.moveTo(cx,cy);
+  ctx.arc(cx,cy,R*0.95,-th,-ps,(ps-th)>0);
+  ctx.closePath();ctx.fill();
+  ctx.strokeStyle=C.ink;ctx.lineWidth=3.5;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+R*Math.cos(th),cy-R*Math.sin(th));ctx.stroke();
+  ctx.beginPath();ctx.arc(cx+R*Math.cos(th),cy-R*Math.sin(th),6,0,7);ctx.fillStyle=C.ink;ctx.fill();
+  ctx.strokeStyle=C.x;ctx.lineWidth=3.5;
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+R*cb*Math.cos(th),cy-R*Math.sin(th));ctx.stroke();
+  ctx.beginPath();ctx.arc(cx+R*cb*Math.cos(th),cy-R*Math.sin(th),6,0,7);ctx.fillStyle=C.x;ctx.fill();
+  [0,90,180,270].forEach(function(d){
+    const a=d*Math.PI/180;ctx.fillStyle=C.z;
+    ctx.beginPath();ctx.arc(cx+R1*1.11*Math.cos(a),cy-R1*1.11*Math.sin(a),4,0,7);ctx.fill();});
+  [45,135,225,315].forEach(function(d){
+    const a=d*Math.PI/180;ctx.strokeStyle=C.x;ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(cx+R1*1.11*Math.cos(a),cy-R1*1.11*Math.sin(a),5,0,7);ctx.stroke();});
+  tag(ctx,14,H-70,'\u25CF  blue: the two agree exactly  -  0'+DEG+', 90'+DEG+', 180'+DEG+', 270'+DEG,C.z,'left',11,700);
+  tag(ctx,14,H-52,'\u25CB  orange: maximum disagreement  -  the four 45'+DEG+' points',C.x,'left',11,700);
+  tag(ctx,14,H-28,'A SQUASH LOOKS THE SAME UPSIDE DOWN.',C.ink,'left',12,700);
+  tag(ctx,14,H-11,'Half-turn symmetric  ->  EVEN orders only: 2'+MUL+', 4'+MUL+', 6'+MUL+'.',C.ink,'left',12,700);
+}
+
+/* the loose-foot construction: input sine -> bent transfer curve -> output */
+function geomLoose(){
+  const s=setup('geom'),ctx=s.ctx,W=s.W,H=s.H;
+  const th=F.theta;
+  const bxL=W*0.40,bxR=W*0.95,bxT=H*0.10,bxB=H*0.52;
+  const outL=W*0.06,outR=W*0.37;
+  const inT=H*0.60,inB=H*0.90;
+  const A=Math.max(0.05,F.amp);
+  const fmin=-A*1.2, fmax=A*1.2;
+  let ymin=1e9,ymax=-1e9;
+  for(let i=0;i<=200;i++){const f=fmin+(fmax-fmin)*i/200,v=clipF(f);
+    ymin=Math.min(ymin,v);ymax=Math.max(ymax,v);}
+  const pad=(ymax-ymin)*0.12||0.1; ymin-=pad; ymax+=pad;
+  const fx=function(f){return bxL+(f-fmin)/(fmax-fmin)*(bxR-bxL);};
+  const gy=function(v){return bxB-(v-ymin)/(ymax-ymin)*(bxB-bxT);};
+
+  tag(ctx,W*.5,18,'THE SAME SINE, PUT THROUGH A BENT LINE',C.ink,'center',12,700);
+  tag(ctx,W*.5,34,'input force below  ->  foot behaviour in the box  ->  motion on the left',C.steel,'center',10);
+
+  /* transfer box */
+  ctx.fillStyle='#FBFCFD';ctx.fillRect(bxL,bxT,bxR-bxL,bxB-bxT);
+  ctx.strokeStyle=C.grid;ctx.lineWidth=1;ctx.strokeRect(bxL,bxT,bxR-bxL,bxB-bxT);
+  /* seated / lifted shading */
+  ctx.fillStyle='rgba(0,118,186,0.07)';
+  ctx.fillRect(bxL,bxT,fx(0)-bxL,bxB-bxT);
+  ctx.fillStyle='rgba(230,159,0,0.09)';
+  ctx.fillRect(fx(0),bxT,bxR-fx(0),bxB-bxT);
+  ctx.strokeStyle=C.ink;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(fx(0),bxT);ctx.lineTo(fx(0),bxB);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(bxL,gy(0));ctx.lineTo(bxR,gy(0));ctx.stroke();
+  tag(ctx,fx(0)-8,bxT+14,'SEATED - stiff',C.z,'right',10,700);
+  tag(ctx,fx(0)+8,bxT+14,'LIFTED - soft',C.x,'left',10,700);
+
+  /* the bent transfer line */
+  ctx.strokeStyle=C.ink;ctx.lineWidth=3;ctx.lineJoin='round';
+  ctx.beginPath();
+  for(let i=0;i<=240;i++){
+    const f=fmin+(fmax-fmin)*i/240;
+    const X=fx(f),Y=gy(clipF(f));
+    i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);}
+  ctx.stroke();
+  /* the straight line it would have been */
+  ctx.strokeStyle=C.steel;ctx.setLineDash([5,4]);ctx.lineWidth=1.4;
+  ctx.beginPath();ctx.moveTo(fx(fmin),gy(fmin));ctx.lineTo(fx(fmax),gy(fmax));ctx.stroke();
+  ctx.setLineDash([]);
+  /* the kinks */
+  ctx.fillStyle=C.x;
+  ctx.beginPath();ctx.arc(fx(0),gy(0),5,0,7);ctx.fill();
+  tag(ctx,fx(0)+10,gy(0)+16,'foot lifts off',C.x,'left',10,700);
+  if(F.gap/F.soft<fmax){
+    const fk=F.gap/F.soft;
+    ctx.fillStyle=C.x;
+    ctx.beginPath();ctx.arc(fx(fk),gy(F.gap),5,0,7);ctx.fill();
+    tag(ctx,fx(fk)+8,gy(F.gap)-12,'bolt head bears',C.x,'left',10,700);}
+  tag(ctx,bxR-6,bxB-10,'force in \u2192',C.ink2,'right',10);
+  ctx.save();ctx.translate(bxL+12,bxT+8);ctx.rotate(-Math.PI/2);
+  tag(ctx,0,0,'\u2190 motion out',C.ink2,'right',10);ctx.restore();
+
+  /* input waveform below, time running down */
+  ctx.strokeStyle=C.grid;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(fx(0),inT);ctx.lineTo(fx(0),inB);ctx.stroke();
+  ctx.strokeStyle=C.z;ctx.lineWidth=2.4;
+  ctx.beginPath();
+  for(let i=0;i<=200;i++){
+    const t=TAU*i/200, X=fx(drive(t)), Y=inT+(inB-inT)*i/200;
+    i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);}
+  ctx.stroke();
+  tag(ctx,bxL,inB+18,'INPUT: the unbalance force, a clean sine',C.z,'left',11,700);
+  tag(ctx,bxL,inB+34,'time runs downward, one revolution',C.ink2,'left',10);
+
+  /* output waveform left, time running left */
+  ctx.strokeStyle=C.grid;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(outL,gy(0));ctx.lineTo(outR,gy(0));ctx.stroke();
+  ctx.strokeStyle=C.steel;ctx.setLineDash([5,4]);ctx.lineWidth=1.6;
+  ctx.beginPath();
+  for(let i=0;i<=200;i++){
+    const t=TAU*i/200, X=outR-(outR-outL)*i/200, Y=gy(drive(t));
+    i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);}
+  ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle=C.x;ctx.lineWidth=2.8;
+  ctx.beginPath();
+  for(let i=0;i<=200;i++){
+    const t=TAU*i/200, X=outR-(outR-outL)*i/200, Y=gy(outAt(t));
+    i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);}
+  ctx.stroke();
+  tag(ctx,outL,bxT-14,'OUTPUT: distorted',C.x,'left',11,700);
+  tag(ctx,outL,bxB+16,'grey dashed = what it would be',C.steel,'left',10);
+  tag(ctx,outL,bxB+30,'if the bolt were tight',C.steel,'left',10);
+
+  /* live construction lines */
+  const f=drive(th), o=outAt(th);
+  const frac=((th%TAU)+TAU)%TAU/TAU;
+  const iy=inT+(inB-inT)*frac, ox=outR-(outR-outL)*frac;
+  ctx.strokeStyle=C.ink;ctx.setLineDash([3,3]);ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(fx(f),iy);ctx.lineTo(fx(f),gy(o));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(fx(f),gy(o));ctx.lineTo(ox,gy(o));ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle=C.z;ctx.beginPath();ctx.arc(fx(f),iy,5,0,7);ctx.fill();
+  ctx.fillStyle=C.ink;ctx.beginPath();ctx.arc(fx(f),gy(o),6,0,7);ctx.fill();
+  ctx.fillStyle=C.x;ctx.beginPath();ctx.arc(ox,gy(o),6,0,7);ctx.fill();
+
+  tag(ctx,14,H-28,'A ONE-SIDED KINK DOES NOT LOOK THE SAME UPSIDE DOWN.',C.ink,'left',12,700);
+  tag(ctx,14,H-11,'No half-turn symmetry  ->  EVERY order: 2'+MUL+', 3'+MUL+', 4'+MUL+', 5'+MUL+'.',C.ink,'left',12,700);
+}
+
+/* ================= consequence panel ================= */
+function drawRipple(){
+  if(F.bm==='joint') ripJoint(); else ripLoose();
+}
+function ripJoint(){
+  const s=setup('ripple'),ctx=s.ctx,W=s.W,H=s.H;
+  const L=54,R=W-54,T=34,B0=H-52;
+  const rows=[
+    {mid:T+(B0-T)*0.22,col:C.x,lbl:'LEAD / LAG of the shaft',unit:DEG,f:function(t){return devAt(t)*180/Math.PI;}},
+    {mid:T+(B0-T)*0.56,col:C.z,lbl:'SPEED RIPPLE',unit:'%',f:function(t){
+        const b=liveB();
+        return (Math.cos(b)/(1-Math.pow(Math.sin(b)*Math.cos(t),2))-1)*100;}},
+    {mid:T+(B0-T)*0.90,col:C.ink,lbl:'INERTIAL TORQUE  (what the bearings feel)',unit:'',f:torqueAt}];
+  ctx.strokeStyle=C.fine;ctx.lineWidth=1;
+  for(let k=0;k<8;k++){const x=L+(R-L)*k/8;ctx.beginPath();ctx.moveTo(x,T);ctx.lineTo(x,B0);ctx.stroke();}
+  ctx.strokeStyle=C.grid;
+  for(let k=0;k<=2;k++){const x=L+(R-L)*k/2;
+    ctx.beginPath();ctx.moveTo(x,T);ctx.lineTo(x,B0);ctx.stroke();
+    tag(ctx,x,B0+16,'rev '+k,C.ink2,'center');}
+  const M=360;
+  rows.forEach(function(row){
+    let mx=1e-9;
+    for(let i=0;i<=M;i++) mx=Math.max(mx,Math.abs(row.f(TAU*2*i/M)));
+    const half=(B0-T)*0.13, sc=mx*1.25;
+    ctx.strokeStyle=C.ink;ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(L,row.mid);ctx.lineTo(R,row.mid);ctx.stroke();
+    tag(ctx,L,row.mid-half-13,row.lbl,row.col,'left',10,700);
+    tag(ctx,R,row.mid-half-13,'peak '+mx.toFixed(3)+row.unit,C.steel,'right',9);
+    ctx.strokeStyle=row.col;ctx.lineWidth=2.4;ctx.lineJoin='round';
+    ctx.beginPath();
+    for(let i=0;i<=M;i++){
+      const t=TAU*2*i/M, v=row.f(t);
+      const X=L+(R-L)*i/M, Y=row.mid-half*(v/sc);
+      i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);}
+    ctx.stroke();
+    const fr=((F.theta%(TAU*2))+TAU*2)%(TAU*2)/(TAU*2);
+    const cxx=L+(R-L)*fr, vv=row.f(F.theta);
+    ctx.beginPath();ctx.arc(cxx,row.mid-half*(vv/sc),5.5,0,7);
+    ctx.fillStyle=row.col;ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=1.8;ctx.stroke();});
+  const fr=((F.theta%(TAU*2))+TAU*2)%(TAU*2)/(TAU*2), cxx=L+(R-L)*fr;
+  ctx.strokeStyle=C.ink;ctx.lineWidth=1.4;ctx.setLineDash([2,3]);
+  ctx.beginPath();ctx.moveTo(cxx,T);ctx.lineTo(cxx,B0);ctx.stroke();ctx.setLineDash([]);
+  tag(ctx,L,20,'FOUR PEAKS IN TWO REVOLUTIONS  =  2'+MUL,C.ink,'left',12,700);
+  tag(ctx,(L+R)/2,B0+34,'input rotation angle',C.ink2,'center',10);
+  tag(ctx,L,H-16,'Lead/lag stays tiny. The torque does not: it goes as J '+
+    String.fromCharCode(969)+String.fromCharCode(178)+' '+BETA+String.fromCharCode(178)+'.',C.ink2,'left',11);
+}
+function ripLoose(){
+  const s=setup('ripple'),ctx=s.ctx,W=s.W,H=s.H;
+  const L=54,R=W-24;
+  /* waveform */
+  const wT=34,wB=H*0.34, wm=(wT+wB)/2, wh=(wB-wT)*0.42;
+  let mx=1e-6;
+  for(let i=0;i<=200;i++) mx=Math.max(mx,Math.abs(outAt(TAU*i/200)),Math.abs(drive(TAU*i/200)));
+  ctx.strokeStyle=C.grid;ctx.lineWidth=1;
+  for(let k=0;k<=2;k++){const x=L+(R-L)*k/2;
+    ctx.beginPath();ctx.moveTo(x,wT);ctx.lineTo(x,wB);ctx.stroke();}
+  ctx.strokeStyle=C.ink;ctx.beginPath();ctx.moveTo(L,wm);ctx.lineTo(R,wm);ctx.stroke();
+  ctx.strokeStyle=C.steel;ctx.setLineDash([5,4]);ctx.lineWidth=1.6;
+  ctx.beginPath();
+  for(let i=0;i<=400;i++){const t=TAU*2*i/400;
+    const X=L+(R-L)*i/400, Y=wm-wh*(drive(t)/mx);
+    i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);}
+  ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle=C.x;ctx.lineWidth=2.6;ctx.lineJoin='round';
+  ctx.beginPath();
+  for(let i=0;i<=400;i++){const t=TAU*2*i/400;
+    const X=L+(R-L)*i/400, Y=wm-wh*(outAt(t)/mx);
+    i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);}
+  ctx.stroke();
+  const fr=((F.theta%(TAU*2))+TAU*2)%(TAU*2)/(TAU*2), cxx=L+(R-L)*fr;
+  ctx.strokeStyle=C.ink;ctx.setLineDash([2,3]);ctx.lineWidth=1.4;
+  ctx.beginPath();ctx.moveTo(cxx,wT);ctx.lineTo(cxx,wB);ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();ctx.arc(cxx,wm-wh*(outAt(F.theta)/mx),5.5,0,7);
+  ctx.fillStyle=C.x;ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.8;ctx.stroke();
+  tag(ctx,L,20,'THE MOTION: one half smooth, one half clipped',C.ink,'left',12,700);
+  tag(ctx,R,20,'two revolutions',C.steel,'right',10);
+  tag(ctx,L,wB+16,'grey dashed = bolt tight',C.steel,'left',10);
+
+  /* bars: loose foot */
+  function barBlock(top,bot,vals,col,title,note){
+    const n=vals.length, bw=(R-L)/n;
+    let m=1e-9; vals.forEach(function(v){m=Math.max(m,v);});
+    m*=1.2;
+    ctx.strokeStyle=C.ink;ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(L,bot);ctx.lineTo(R,bot);ctx.stroke();
+    vals.forEach(function(v,i){
+      const h=(bot-top)*(v/m), x=L+i*bw+bw*0.24, w=bw*0.52;
+      const k=i+1, odd=(k%2===1)&&k>1;
+      ctx.fillStyle=(k===1)?C.ink:(odd?C.y:col);
+      ctx.fillRect(x,bot-h,w,h);
+      tag(ctx,x+w/2,bot+13,String(k)+MUL,C.ink2,'center',10);
+      if(v/m>0.06) tag(ctx,x+w/2,bot-h-8,v.toFixed(2),C.ink2,'center',9);
+    });
+    tag(ctx,L,top-12,title,C.ink,'left',11,700);
+    if(note) tag(ctx,R,top-12,note,C.steel,'right',10);
+  }
+  barBlock(H*0.45,H*0.63,bOut,C.x,'LOOSE FOOT  -  order content','red bars = ODD orders');
+  barBlock(H*0.75,H*0.93,bJoint,C.z,'TILTED JOINT  -  same axes, for comparison','only EVEN orders survive');
+  tag(ctx,L,H-12,'That is the discriminator: a kink gives odd orders, a squash cannot.',C.ink,'left',11,700);
+}
+
+/* ================= rig panel ================= */
+function drawRig(){
+  if(F.bm==='joint') rigJoint(); else rigLoose();
+}
+function rigJoint(){
+  const s=setup('rig'),ctx=s.ctx,W=s.W,H=s.H;
+  const g=geo(), y0=H*0.50, R=H*0.26, sc=(W*0.52)/Math.max(120,F.len);
+  const xA=W*0.24, xB=xA+F.len*sc, dy=-g.dy*sc*2.2;
+  ctx.strokeStyle=C.grid;ctx.lineWidth=1;ctx.setLineDash([9,4,2,4]);
+  ctx.beginPath();ctx.moveTo(W*0.06,y0);ctx.lineTo(xA+10,y0);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(xB-10,y0+dy);ctx.lineTo(W*0.94,y0+dy);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#EDF2F6';ctx.strokeStyle=C.steel;ctx.lineWidth=2;
+  ctx.beginPath();ctx.rect(W*0.06,y0-R*0.28,xA-W*0.06,R*0.56);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#fff';ctx.strokeStyle=C.ink;
+  ctx.beginPath();ctx.rect(xA-8,y0-R,16,2*R);ctx.fill();ctx.stroke();
+  ctx.save();ctx.translate(xB,y0+dy);ctx.rotate(F.mode==='angle'?-g.b2:0);
+  ctx.fillStyle='#fff';ctx.strokeStyle=C.ink;ctx.lineWidth=2;
+  ctx.beginPath();ctx.rect(-8,-R,16,2*R);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#EDF2F6';ctx.strokeStyle=C.steel;
+  ctx.beginPath();ctx.rect(8,-R*0.28,W*0.94-xB,R*0.56);ctx.fill();ctx.stroke();
+  ctx.restore();
+  ctx.strokeStyle=C.ink;ctx.lineWidth=Math.max(6,R*0.30);ctx.lineCap='butt';
+  ctx.beginPath();ctx.moveTo(xA+8,y0);ctx.lineTo(xB-8,y0+dy);ctx.stroke();
+  ctx.strokeStyle=C.x;ctx.lineWidth=Math.max(2,R*0.10);
+  ctx.beginPath();
+  ctx.moveTo(xA+8+(xB-xA-16)*0.08, y0+dy*0.08 - R*0.16*Math.sin(F.theta));
+  ctx.lineTo(xB-8-(xB-xA-16)*0.08, y0+dy*0.92 - R*0.16*Math.sin(F.theta));
+  ctx.stroke();
+  ctx.fillStyle=C.ink;
+  ctx.beginPath();ctx.arc(xA,y0-R*0.75*Math.sin(F.theta),5,0,7);ctx.fill();
+  ctx.fillStyle=C.z;
+  const outA=hookeInv(hooke(F.theta,g.b1),g.b2);
+  ctx.beginPath();ctx.arc(xB,y0+dy-R*0.75*Math.sin(outA),5,0,7);ctx.fill();
+  tag(ctx,xA,y0-R-18,'DRIVING FLANGE',C.ink,'center',11,700);
+  tag(ctx,xB,y0+dy-R-18,'DRIVEN FLANGE',C.z,'center',11,700);
+  tag(ctx,(xA+xB)/2,y0+dy/2+R*0.55,'RIGID SPACER  '+F.len+' mm',C.x,'center',11,700);
+  tag(ctx,14,18,F.mode==='offset'
+    ?'PARALLEL OFFSET  '+F.off.toFixed(1)+' mm  -  the spacer tilts at BOTH ends'
+    :'ANGULAR ERROR  '+F.ang.toFixed(2)+DEG+'  -  one live joint, nothing cancels it',C.ink,'left',12,700);
+  tag(ctx,14,H-14,'Every tilted joint is a squashed circle.',C.ink2,'left',10);
+}
+function rigLoose(){
+  const s=setup('rig'),ctx=s.ctx,W=s.W,H=s.H;
+  const th=F.theta, base=H*0.74, bodyH=H*0.30;
+  const xF1=W*0.34, xF3=W*0.70;
+  const looseX=(F.lfoot==='F1')?xF1:xF3, pivotX=(F.lfoot==='F1')?xF3:xF1;
+  const o=outAt(th), lift=Math.max(0,o);
+  let mxLift=1e-6;
+  for(let i=0;i<=100;i++) mxLift=Math.max(mxLift,liftAt(TAU*i/100));
+  const liftPx=(lift/Math.max(mxLift,1e-6))*H*0.10*Math.min(1,mxLift*3);
+  const rot=Math.atan2(liftPx,Math.abs(looseX-pivotX))*((looseX<pivotX)?1:-1);
+
+  ctx.strokeStyle=C.ink;ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(W*0.10,base);ctx.lineTo(W*0.92,base);ctx.stroke();
+  ctx.strokeStyle=C.grid;ctx.lineWidth=1;
+  for(let x=W*0.10;x<W*0.92;x+=12){
+    ctx.beginPath();ctx.moveTo(x,base);ctx.lineTo(x-7,base+9);ctx.stroke();}
+  tag(ctx,W*0.10,base+24,'BASEPLATE',C.ink2,'left',10,700);
+
+  ctx.save();ctx.translate(pivotX,base);ctx.rotate(rot);ctx.translate(-pivotX,-base);
+  ctx.fillStyle='#EDF2F6';ctx.strokeStyle=C.steel;ctx.lineWidth=2;
+  ctx.beginPath();ctx.rect(W*0.28,base-bodyH,W*0.48,bodyH);ctx.fill();ctx.stroke();
+  [[xF1,'F1'],[xF3,'F3']].forEach(function(p){
+    const isL=(p[1]===F.lfoot);
+    ctx.fillStyle=isL?C.x:C.steel;
+    ctx.beginPath();ctx.rect(p[0]-14,base-12,28,12);ctx.fill();
+    ctx.strokeStyle=isL?C.x:C.steel;ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(p[0],base-22);ctx.lineTo(p[0],base+14);ctx.stroke();
+    ctx.fillStyle=isL?C.x:C.steel;
+    ctx.beginPath();ctx.rect(p[0]-11,base-28,22,7);ctx.fill();
+    tag(ctx,p[0],base-bodyH-14,p[1]+(isL?'  LOOSE':'  tight'),isL?C.x:C.ink2,'center',11,700);});
+  /* the shaft with the heavy spot doing the shaking */
+  const cx=W*0.52, cy=base-bodyH*0.55, rr=bodyH*0.30;
+  ctx.strokeStyle=C.grid;ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(cx,cy,rr,0,7);ctx.stroke();
+  ctx.fillStyle=C.ink;
+  ctx.beginPath();ctx.arc(cx+rr*Math.cos(th),cy-rr*Math.sin(th),7,0,7);ctx.fill();
+  tag(ctx,cx+rr*Math.cos(th),cy-rr*Math.sin(th),'m','#fff','center',9,700);
+  ctx.restore();
+
+  /* gap under the loose foot */
+  if(liftPx>0.6){
+    ctx.fillStyle='rgba(230,159,0,0.32)';
+    ctx.fillRect(looseX-16,base-liftPx,32,liftPx);
+    ctx.strokeStyle=C.x;ctx.lineWidth=1.6;
+    ctx.strokeRect(looseX-16,base-liftPx,32,liftPx);
+    tag(ctx,looseX+24,base-liftPx/2,'GAP OPEN',C.x,'left',12,700);
+  }else{
+    ctx.fillStyle=C.z;
+    ctx.beginPath();ctx.arc(looseX,base+16,5,0,7);ctx.fill();
+    tag(ctx,looseX+14,base+16,'SEATED - base takes the load',C.z,'left',11,700);}
+
+  /* the driving force arrow */
+  const f=drive(th);
+  arrow(ctx,W*0.16,base-bodyH*0.5,W*0.16,base-bodyH*0.5-f*H*0.13,
+    f>0?C.x:C.z,3,11);
+  tag(ctx,W*0.16,base-bodyH*0.5+30,f>0?'force LIFTING':'force PRESSING',
+    f>0?C.x:C.z,'center',11,700);
+  tag(ctx,14,18,'ONE LOOSE HOLD-DOWN BOLT  -  clearance '+F.gap.toFixed(2)+' mm',C.ink,'left',12,700);
+  tag(ctx,14,H-14,'Nothing is misaligned. The unbalance shakes it; the bolt decides what the motion looks like.',C.ink2,'left',10);
+}
+
+/* ================= readouts + copy ================= */
+function updateF(){
+  document.getElementById('f_vang').textContent=Math.round(((F.theta*180/Math.PI)%360+360)%360);
+  if(F.bm==='joint'){
+    const g=geo(), b=liveB();
+    let mxd=0,mxr=0;
+    for(let i=0;i<180;i++){
+      const t=TAU*i/180;
+      mxd=Math.max(mxd,Math.abs(devAt(t)));
+      mxr=Math.max(mxr,Math.abs(Math.cos(b)/(1-Math.pow(Math.sin(b)*Math.cos(t),2))-1));}
+    document.getElementById('f_b1').textContent=(g.b1*180/Math.PI).toFixed(2);
+    document.getElementById('f_b2').textContent=(g.b2*180/Math.PI).toFixed(2);
+    document.getElementById('f_dev').textContent=(mxd*180/Math.PI).toFixed(3);
+    document.getElementById('f_rip').textContent=(mxr*100).toFixed(3);
+    document.getElementById('f_odd').textContent='none';
+    document.getElementById('f_out').textContent=
+      (F.mode==='offset')?'yes - joints cancel':'no - passes through';
+    const dv=devAt(F.theta)*180/Math.PI;
+    document.getElementById('f_now').textContent=(dv>=0?'+':'')+dv.toFixed(3)+DEG;
+    document.getElementById('f_tq').textContent=torqueAt(F.theta).toFixed(3);
+  }else{
+    let mxLift=0;
+    for(let i=0;i<=200;i++) mxLift=Math.max(mxLift,liftAt(TAU*i/200));
+    const one=Math.max(bOut[0],1e-9);
+    const odd=(bOut[2]+bOut[4]+bOut[6])/one;
+    document.getElementById('l_now').textContent=(liftAt(F.theta)*1000).toFixed(0);
+    document.getElementById('l_pk').textContent=(mxLift*1000).toFixed(0);
+    document.getElementById('l_h2').textContent=(bOut[1]/one).toFixed(3);
+    document.getElementById('l_h3').textContent=(bOut[2]/one).toFixed(3);
+    document.getElementById('l_odd').textContent=odd.toFixed(3);
+    document.getElementById('l_sym').textContent=odd>0.005?'no - all orders':'yes (bolt tight)';
+    document.getElementById('f_now').textContent=(liftAt(F.theta)*1000).toFixed(0)+' \u00B5m';
+    document.getElementById('f_tq').textContent=(drive(F.theta)>=0?'+':'')+drive(F.theta).toFixed(2);
+  }
+}
+function setChrome(){
+  const j=(F.bm==='joint');
+  document.getElementById('b_eyeL').textContent=j?'The tilted-circle construction':'The bent-line construction';
+  document.getElementById('b_eyeR').textContent=j?'Pure geometry - no friction, no clearance':'One bolt - one kink in the response';
+  document.getElementById('b_h1').innerHTML=j
+    ?'Tilt a spinning circle and it appears to <u>speed up and slow down</u> &mdash; <b>twice per turn</b>.'
+    :'Bend the response line on <u>one side only</u> and you get <b>every harmonic</b>.';
+  document.getElementById('b_dek').innerHTML=j
+    ?'A joint at an angle is a circle seen edge-on: one direction gets squashed, the other does not. Squashing is a half-turn-symmetric operation, so anything built on it repeats every 180&deg; &mdash; even orders only.'
+    :'A loose foot does not squash anything. It puts a kink in the force-to-motion curve, on the lifting side only. That operation has no half-turn symmetry at all, so it produces odd orders as well as even &mdash; and that is how you tell the two apart in a spectrum.';
+  document.getElementById('b_hook').innerHTML=j
+    ?'<h3>Three ways in, if the maths isn\'t landing</h3><ol>'+
+     '<li><b>The socket wrench.</b> Put a universal-joint adapter on a ratchet and cock it over. Turn the handle steadily and the socket surges, stalls, surges, stalls &mdash; twice per turn.</li>'+
+     '<li><b>The tilted clock.</b> Swing a wall clock away from you like a door. The second hand still sweeps uniformly on its own dial, but <em>as you see it</em> it races past 12 and 6 and crawls past 3 and 9, because there it is moving towards and away from you.</li>'+
+     '<li><b>Point versus line.</b> Unbalance is an <em>arrow</em>; turn it 180&deg; and it points the other way, so it takes a full turn to return: 1&times;. A tilt is an <em>axis</em> with no head or tail; turn it 180&deg; and it is identical: 2&times;.</li></ol>'
+    :'<h3>Three ways in, if the maths isn\'t landing</h3><ol>'+
+     '<li><b>The wobbly table.</b> Push down on a table with one short leg and it is solid. Lift that corner and it swings up freely until something stops it. Push, lift, push, lift at a steady rate and the motion you get is nothing like the push you gave &mdash; because the table behaves differently in the two directions.</li>'+
+     '<li><b>A guitar amp turned up.</b> Overdrive is exactly this: the amplifier clips the top of the waveform and your ear hears added harmonics. Same physics, same maths. A loose foot is a mechanical distortion pedal running on your unbalance.</li>'+
+     '<li><b>The asymmetry is the whole story.</b> A squash treats both halves of the turn the same way, so it can only make even orders. A one-sided clip treats them differently, so it makes odd ones too. If you see a strong 3&times; and 5&times;, no amount of shimming will fix it &mdash; look at the bolts.</li></ol>';
+  document.getElementById('b_c1').textContent=j?'equal steps in, unequal steps out':'sine in, distorted motion out';
+  document.getElementById('b_c2h').innerHTML=j
+    ?'What that costs you <span class="t">two revolutions</span>'
+    :'The spectra, side by side <span class="t">this is the discriminator</span>';
+  document.getElementById('b_righ').firstChild.textContent=j?'The rig it comes from ':'The machine on its feet ';
+  document.getElementById('f_modeSeg').style.display=j?'':'none';
+  document.getElementById('lf_footSeg').style.display=j?'none':'';
+  document.getElementById('roJoint').hidden=!j;
+  document.getElementById('roLoose').hidden=j;
+  document.getElementById('b_i1l').textContent=j?'Lead/lag now':'Lift now';
+  document.getElementById('b_i2l').textContent=j?'Inertial torque':'Driving force';
+  document.getElementById('b_i3l').textContent=j
+    ?'Try 0'+DEG+' then 45'+DEG+': zero, then maximum.'
+    :'Try 0'+DEG+' then 180'+DEG+': lifted, then hard down.';
+  document.getElementById('b_scrubL').textContent=j
+    ?'Rotation - watch the wedge open and close four times'
+    :'Rotation - watch the foot lift and slam';
+  ['f_ctlOff','f_ctlAng','f_ctlLen','f_ctlDraw'].forEach(function(id){
+    document.getElementById(id).classList.toggle('off',!j);});
+  ['lf_ctlGap','lf_ctlSoft','lf_ctlAmp'].forEach(function(id){
+    document.getElementById(id).classList.toggle('off',j);});
+  if(j){
+    document.getElementById('f_ctlOff').classList.toggle('off',F.mode!=='offset');
+    document.getElementById('f_ctlAng').classList.toggle('off',F.mode!=='angle');}
+  drawVerdictB();
+}
+function drawVerdictB(){
+  if(F.bm==='joint'){
+    const off=(F.mode==='offset');
+    document.getElementById('f_verdict').innerHTML=
+     '<h3>Squashing is a half-turn operation</h3>'+
+     '<p>A joint at an angle is a circle viewed obliquely. One direction across it is foreshortened, the perpendicular one is not. Turn that squashed circle through 180&deg;: <em>nothing changes</em>. Squashing left and squashing right are the same squash. Any effect built on it repeats every half turn, which is what <code>2&times;</code> means &mdash; and because the symmetry is exact, only <em>even</em> orders can appear: 2&times;, 4&times;, 6&times;.</p>'+
+     '<p>Compare unbalance. A heavy spot is an <em>arrow</em>, and an arrow at 180&deg; points the opposite way, so it takes a full turn to return: <code>1&times;</code>. Is the fault an arrow, or an axis?</p>'+
+     (off
+       ? '<p><span class="tell">Both joints sit at the same angle here</span>, so the second undoes the first and the driven flange comes out uniform. That is the Z-configuration, and it is also a trap: the output is clean while the middle of the shaft is still surging twice per revolution.</p>'
+       : '<p><span class="tell">Only one joint is articulated</span>, so nothing cancels and the ripple passes straight through as a genuine torsional 2&times;.</p>')+
+     '<p>Now switch to <em>Loose foot</em> above and compare the two bar charts. Same 2&times;, completely different neighbours.</p>';
+  }else{
+    document.getElementById('f_verdict').innerHTML=
+     '<h3>A kink has no symmetry to hide behind</h3>'+
+     '<p>Nothing is misaligned here. One bolt is slack, and the only thing shaking the machine is the residual unbalance it already had &mdash; take the unbalance force to zero and the entire signature disappears. <span class="tell">Looseness creates nothing; it distorts what is already there.</span></p>'+
+     '<p>The construction on the left is the same kind of picture as the tilted-joint one, but the geometric operation is different. There, a circle got squashed. Here, a straight force-to-motion line gets <em>bent on one side only</em>: stiff while the foot is seated, soft while it is off the base, stiff again once the bolt head takes the load. Run a clean sine through that bent line and what comes out is no longer a sine.</p>'+
+     '<p>And this is the part worth carrying to the rig. A squash treats the two halves of the revolution identically, so it can only generate <em>even</em> orders. A one-sided kink treats them differently, so it generates <em>odd</em> orders too. The two bar charts on the right make that comparison directly: <code>3&times;</code> and <code>5&times;</code> are present in one and structurally absent from the other.</p>'+
+     '<p><span class="tell">So:</span> a 2&times; on its own tells you very little. A 2&times; with a healthy 3&times; and 5&times; underneath it is looseness, and no amount of shimming will touch it. Re-torque first, then measure alignment &mdash; a soft foot also corrupts the alignment reading itself.</p>';
+  }
+}
+function renderB(){drawGeom();drawRipple();drawRig();updateF();}
+function recomputeAndRender(){recomputeB();renderB();}
+
+let raf=null;
+function loop(now){
+  if(!F.running||document.hidden||document.getElementById('paneB').hidden){raf=null;return;}
+  if(!loop.last) loop.last=now;
+  const dt=Math.min(0.05,(now-loop.last)/1000); loop.last=now;
+  F.theta+=TAU*F.spd*dt;
+  document.getElementById('f_ang_manual').value=Math.round(((F.theta*180/Math.PI)%360+360)%360);
+  renderB(); raf=requestAnimationFrame(loop);
+}
+function startLoop(){if(raf===null&&F.running){loop.last=0;raf=requestAnimationFrame(loop);}}
+function stopLoop(){if(raf!==null){cancelAnimationFrame(raf);raf=null;}}
+function hold(){
+  if(!F.running) return;
+  F.running=false;
+  const rb=document.getElementById('f_run');
+  rb.setAttribute('aria-pressed','false');rb.textContent='Held';stopLoop();
+}
+seg('bModeSeg','bm',function(v){F.bm=v;setChrome();recomputeAndRender();});
+seg('f_modeSeg','fm',function(v){
+  F.mode=v;
+  document.getElementById('f_ctlOff').classList.toggle('off',v!=='offset');
+  document.getElementById('f_ctlAng').classList.toggle('off',v!=='angle');
+  drawVerdictB();recomputeAndRender();});
+seg('lf_footSeg','lfoot',function(v){F.lfoot=v;renderB();});
+function bindF(id,vid,fn,fmt){
+  const el=document.getElementById(id);
+  el.addEventListener('input',function(){const v=parseFloat(el.value);fn(v);
+    document.getElementById(vid).textContent=fmt(v);recomputeAndRender();});
+}
+bindF('f_off','f_voff',function(v){F.off=v;},function(v){return v.toFixed(1);});
+bindF('f_ang','f_vang2',function(v){F.ang=v;},function(v){return v.toFixed(2);});
+bindF('f_len','f_vlen',function(v){F.len=v;},function(v){return v;});
+bindF('f_draw','f_vdraw',function(v){F.draw=v*Math.PI/180;},function(v){return v;});
+bindF('lf_gap','lf_vgap',function(v){F.gap=v;},function(v){return v.toFixed(2);});
+bindF('lf_soft','lf_vsoft',function(v){F.soft=v;},function(v){return v;});
+bindF('lf_amp','lf_vamp',function(v){F.amp=v;},function(v){return v.toFixed(2);});
+bindF('f_spd','f_vspd',function(v){F.spd=v;},function(v){return v.toFixed(2);});
+document.getElementById('f_run').addEventListener('click',function(){
+  F.running=!F.running;
+  this.setAttribute('aria-pressed',F.running?'true':'false');
+  this.textContent=F.running?'Rotating':'Held';
+  if(F.running) startLoop(); else stopLoop();});
+document.getElementById('f_ang_manual').addEventListener('input',function(e){
+  hold(); F.theta=parseFloat(e.target.value)*Math.PI/180; renderB();});
+Array.prototype.forEach.call(document.querySelectorAll('[data-fjump]'),function(b){
+  b.addEventListener('click',function(){
+    hold(); F.theta=parseFloat(b.dataset.fjump)*Math.PI/180;
+    document.getElementById('f_ang_manual').value=b.dataset.fjump; renderB();});});
+setChrome(); recomputeB();
+return {render:renderB,start:startLoop,stop:stopLoop,
+  nudge:function(step){
+    hold();
+    let d=Math.round(((F.theta*180/Math.PI)%360+360)%360)+step;
+    d=((d%360)+360)%360;
+    F.theta=d*Math.PI/180;
+    document.getElementById('f_ang_manual').value=d;
+    renderB();}};
+})();
+
+/* ============================================================ TAB C
+   Three named misalignments. Every one of them is, to the joint,
+   just "an articulation angle beta lying in a plane at azimuth phi".
+   +X right, +Y up, +Z driver -> driven, theta measured CCW from +X.
+   With the pin angle measured from the BEND PLANE, tan(out) = tan(in)/cos(beta),
+   so the driven member runs FAST when the pin lies IN the bend plane and
+   SLOW a quarter turn away. Four crossings, two cycles, one revolution.   */
+const D=(function(){
+['c3clock','c3rig','c3rip'].forEach(reg);
+const V={cs:'Y',dY:0.15,dX:0.15,gam:0.50,len:220,draw:50*Math.PI/180,
+         view:'side',spd:0.25,running:true,theta:0};
+
+function unwrap(v,near){return v+TAU*Math.round((near-v)/TAU);}
+function hk(a,b){return unwrap(Math.atan2(Math.sin(a),Math.cos(b)*Math.cos(a)),a);}
+function hkInv(a,b){return unwrap(Math.atan2(Math.sin(a)*Math.cos(b),Math.cos(a)),a);}
+
+/* case definitions ------------------------------------------------------ */
+function spec(cs){
+  if(cs==='Y') return {phi:Math.PI/2, b1:Math.atan2(V.dY,V.len), b2:Math.atan2(V.dY,V.len),
+    nj:2, plane:'vertical  Y-Z', fast:"12 & 6", dom:'Y  radial', uniform:true,
+    name:'DRIVEN RAISED IN +Y', vary:'the spacer'};
+  if(cs==='X') return {phi:0, b1:Math.atan2(V.dX,V.len), b2:Math.atan2(V.dX,V.len),
+    nj:2, plane:'horizontal  X-Z', fast:"3 & 9", dom:'X  radial', uniform:true,
+    name:'DRIVEN MOVED TO +X', vary:'the spacer'};
+  return {phi:Math.PI/2, b1:0, b2:V.gam*Math.PI/180,
+    nj:1, plane:'vertical  Y-Z', fast:"12 & 6", dom:'Z  axial', uniform:false,
+    name:'DRIVEN TOP BENT TOWARD DRIVER', vary:'the driven shaft'};
+}
+/* live joint angle: the one that actually articulates */
+function liveB(cs){const s=spec(cs);return (cs==='A')?s.b2:s.b1;}
+/* speed of the varying member, relative to the driver */
+function ratio(th,cs){
+  const s=spec(cs), b=liveB(cs), u=th-s.phi;
+  return Math.cos(b)/(1-Math.pow(Math.sin(b)*Math.cos(u),2));
+}
+function lead(th,cs){
+  const s=spec(cs), b=liveB(cs);
+  return hk(th-s.phi,b)-(th-s.phi);
+}
+function peakRipple(cs){const c=Math.cos(liveB(cs));return Math.max(1/c-1,1-c);}
+function clockOf(deg){
+  const h=[[0,"3 o'clock"],[90,"12 o'clock"],[180,"9 o'clock"],[270,"6 o'clock"]];
+  for(let i=0;i<4;i++){let d=Math.abs(((deg-h[i][0])%360+360)%360);
+    if(d>180)d=360-d; if(d<8) return h[i][1];}
+  return '';
+}
+
+/* ---------------- clock face ----------------
+   Two things live in this panel, and they are NOT the same thing:
+   (1) the projected picture, where the driven pin stays exactly square to the
+       driving pin at all times - the projection hides the non-uniformity;
+   (2) the driven shaft's OWN plane, seen face-on in the inset, where the
+       lead and lag actually happen.
+   The ellipse is the driven yoke circle as projected into this view. It is
+   narrow IN THE DIRECTION OF THE OFFSET, and the driven runs fastest at those
+   narrow ends - smallest radius, same rim travel, quickest sweep.            */
+function drawClock(){
+  const s3=setup('c3clock'),ctx=s3.ctx,W=s3.W,H=s3.H;
+  const S=spec(V.cs), cx=W*0.44, cy=H*0.44, R=Math.min(W,H)*0.26;
+  const bD=V.draw, cb=Math.cos(bD), th=V.theta, u=th-S.phi;
+  const chi=S.phi+hk(u,bD);                 /* driven angle in its OWN plane */
+
+  tag(ctx,W*.5,18,S.name,C.ink,'center',13,700);
+  tag(ctx,W*.5,35,'error plane: '+S.plane+'   -   the ellipse is NARROW along the offset',
+    C.steel,'center',10);
+
+  for(let i=0;i<12;i++){
+    const a=Math.PI/2-i*TAU/12;
+    tag(ctx,cx+R*1.45*Math.cos(a),cy-R*1.45*Math.sin(a),String(i===0?12:i),C.ink2,'center',11,700);}
+
+  /* fast / slow sectors */
+  [[0,C.z],[Math.PI,C.z]].forEach(function(o){
+    ctx.fillStyle='rgba(0,118,186,0.09)';
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R*1.06,-(S.phi+o[0])-0.42,-(S.phi+o[0])+0.42,true);
+    ctx.closePath();ctx.fill();});
+  [Math.PI/2,-Math.PI/2].forEach(function(o){
+    ctx.fillStyle='rgba(230,159,0,0.10)';
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R*1.06,-(S.phi+o)-0.42,-(S.phi+o)+0.42,true);
+    ctx.closePath();ctx.fill();});
+
+  /* driver circle, and the projected driven yoke circle */
+  ctx.strokeStyle=C.grid;ctx.lineWidth=1.6;
+  ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.stroke();
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(-S.phi);
+  ctx.strokeStyle=C.x;ctx.lineWidth=2;
+  ctx.beginPath();ctx.ellipse(0,0,R*cb,R,0,0,7);ctx.stroke();
+  ctx.restore();
+
+  /* the plane of the error */
+  ctx.setLineDash([8,5]);
+  arrow(ctx,cx,cy,cx+Math.cos(S.phi)*R*1.30,cy-Math.sin(S.phi)*R*1.30,C.steel,2,9);
+  arrow(ctx,cx,cy,cx-Math.cos(S.phi)*R*1.30,cy-Math.sin(S.phi+Math.PI)*R*1.30,C.steel,2,9);
+  ctx.setLineDash([]);
+
+  [0,Math.PI].forEach(function(o){
+    const a=S.phi+o, x=cx+R*1.16*Math.cos(a), y=cy-R*1.16*Math.sin(a);
+    ctx.beginPath();ctx.arc(x,y,9,0,7);ctx.fillStyle=C.z;ctx.fill();
+    tag(ctx,x,y,'F','#fff','center',10,700);});
+  [Math.PI/2,-Math.PI/2].forEach(function(o){
+    const a=S.phi+o, x=cx+R*1.16*Math.cos(a), y=cy-R*1.16*Math.sin(a);
+    ctx.beginPath();ctx.arc(x,y,9,0,7);ctx.fillStyle='#fff';ctx.fill();
+    ctx.strokeStyle=C.x;ctx.lineWidth=2.4;ctx.stroke();
+    tag(ctx,x,y,'S',C.x,'center',10,700);});
+
+  /* driving pin */
+  ctx.strokeStyle=C.ink;ctx.lineWidth=4;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+R*Math.cos(th),cy-R*Math.sin(th));ctx.stroke();
+  ctx.beginPath();ctx.arc(cx+R*Math.cos(th),cy-R*Math.sin(th),7,0,7);ctx.fillStyle=C.ink;ctx.fill();
+
+  /* driven pin AS PROJECTED: always exactly square to the driver, sitting on
+     the ellipse. Its radius shrinks and grows - that is the whole mechanism. */
+  const pa=th+Math.PI/2, ca=Math.cos(pa-S.phi), sa=Math.sin(pa-S.phi);
+  const rEll=R*cb/Math.sqrt(ca*ca+cb*cb*sa*sa);
+  const px=cx+rEll*Math.cos(pa), py=cy-rEll*Math.sin(pa);
+  ctx.strokeStyle=C.x;ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(px,py);ctx.stroke();
+  ctx.beginPath();ctx.arc(px,py,6,0,7);ctx.fillStyle=C.x;ctx.fill();
+  ctx.strokeStyle=C.steel;ctx.setLineDash([2,3]);ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(cx,cy,rEll,0,7);ctx.stroke();ctx.setLineDash([]);
+  tag(ctx,cx,cy+R*1.62,'driven pin stays exactly 90'+DEG+' from the driver in this view -',
+    C.ink2,'center',10);
+  tag(ctx,cx,cy+R*1.62+14,'only its RADIUS changes. Short radius = fast sweep.',C.ink,'center',10,700);
+  tag(ctx,W-14,60,'radius now',C.steel,'right',9);
+  tag(ctx,W-14,74,(rEll/R).toFixed(3)+' R',C.x,'right',13,700);
+
+  /* inset: the driven shaft's own plane, face-on. THIS is where lead/lag lives */
+  const ix=W*0.80, iy=H*0.72, ir=Math.min(W,H)*0.115;
+  ctx.fillStyle='#FBFCFD';ctx.beginPath();ctx.arc(ix,iy,ir*1.42,0,7);ctx.fill();
+  ctx.strokeStyle=C.grid;ctx.lineWidth=1.4;
+  ctx.beginPath();ctx.arc(ix,iy,ir,0,7);ctx.stroke();
+  const wedge=chi-th;
+  ctx.fillStyle='rgba(230,159,0,0.26)';
+  ctx.beginPath();ctx.moveTo(ix,iy);
+  ctx.arc(ix,iy,ir*0.92,-th,-chi,wedge>0);
+  ctx.closePath();ctx.fill();
+  ctx.strokeStyle=C.steel;ctx.setLineDash([5,4]);ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(ix,iy);ctx.lineTo(ix+ir*Math.cos(th),iy-ir*Math.sin(th));ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.strokeStyle=C.x;ctx.lineWidth=3.2;
+  ctx.beginPath();ctx.moveTo(ix,iy);ctx.lineTo(ix+ir*Math.cos(chi),iy-ir*Math.sin(chi));ctx.stroke();
+  ctx.beginPath();ctx.arc(ix+ir*Math.cos(chi),iy-ir*Math.sin(chi),6,0,7);
+  ctx.fillStyle=C.x;ctx.fill();
+  tag(ctx,ix,iy-ir*1.62,'DRIVEN PLANE, FACE-ON',C.ink,'center',11,700);
+  tag(ctx,ix,iy+ir*1.60,'grey dashed = uniform',C.steel,'center',10);
+  const lg=wedge*180/Math.PI;
+  tag(ctx,ix,iy+ir*1.60+15,(lg>=0?'+':'')+lg.toFixed(1)+DEG+' as drawn',C.x,'center',12,700);
+
+  /* live speed needle */
+  const r=ratio(th,V.cs), pkr=Math.max(peakRipple(V.cs),1e-6);
+  const bx=W*0.06,bw=W*0.46,by=H-42;
+  ctx.strokeStyle=C.grid;ctx.lineWidth=1;ctx.strokeRect(bx,by-13,bw,26);
+  ctx.strokeStyle=C.ink;ctx.beginPath();
+  ctx.moveTo(bx+bw/2,by-16);ctx.lineTo(bx+bw/2,by+16);ctx.stroke();
+  const frac=Math.max(-1,Math.min(1,(r-1)/pkr));
+  ctx.fillStyle=frac>0?C.z:C.x;
+  ctx.fillRect(bx+bw/2,by-11,frac*bw*0.49,22);
+  tag(ctx,bx,by-22,'SLOW',C.x,'left',10,700);
+  tag(ctx,bx+bw,by-22,'FAST',C.z,'right',10,700);
+  tag(ctx,bx+bw/2,by-22,'in step',C.ink2,'center',10);
+  tag(ctx,bx,by+24,V.cs==='A'?'the DRIVEN shaft is the one that varies'
+    :'the SPACER is the one that varies',C.ink,'left',11,700);
+  tag(ctx,W-14,H-14,'drawn at '+Math.round(bD*180/Math.PI)+DEG+'; true '+BETA+
+    ' = '+(liveB(V.cs)*180/Math.PI).toFixed(3)+DEG,C.steel,'right',10);
+}
+
+/* ---------------- rig elevation / plan ---------------- */
+function drawRig3(){
+  const s3=setup('c3rig'),ctx=s3.ctx,W=s3.W,H=s3.H;
+  const S=spec(V.cs), side=(V.view==='side');
+  const y0=H*0.50, R=H*0.115, xA=W*0.20, xB=W*0.80;
+  /* how far the driven body shifts on screen, and in which view it shows */
+  const shownOffset = (V.cs==='Y'&&side)?V.dY : (V.cs==='X'&&!side)?V.dX : 0;
+  const off=-Math.min(H*0.13, shownOffset*H*0.13/Math.max(0.3,(V.cs==='Y'?V.dY:V.dX)||0.3));
+  const bend=(V.cs==='A'&&side)?V.gam*Math.PI/180*14:0;   /* exaggerated for the eye */
+
+  tag(ctx,W*.5,22,side?'ELEVATION  Z-Y   -   vertical plane':'PLAN  Z-X   -   horizontal plane',
+    C.ink,'center',12,700);
+  const visible=(V.cs==='Y'&&side)||(V.cs==='X'&&!side)||(V.cs==='A'&&side);
+  tag(ctx,W*.5,40,visible?'this view shows the error':'this view is edge-on to the error - it looks perfect here',
+    visible?C.x:C.steel,'center',10,visible?700:500);
+
+  /* axes key */
+  arrow(ctx,W*.06,H-40,W*.16,H-40,C.z,2,8); tag(ctx,W*.17,H-40,'+Z',C.z,'left',11,700);
+  arrow(ctx,W*.06,H-40,W*.06,H-70,side?C.y:C.x,2,8);
+  tag(ctx,W*.075,H-76,side?'+Y':'+X',side?C.y:C.x,'left',11,700);
+
+  ctx.strokeStyle=C.grid;ctx.lineWidth=1;ctx.setLineDash([9,4,2,4]);
+  ctx.beginPath();ctx.moveTo(W*.06,y0);ctx.lineTo(xA+8,y0);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(xB-8,y0+off);ctx.lineTo(W*.94,y0+off);ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* driver shaft + flange */
+  ctx.fillStyle='#EDF2F6';ctx.strokeStyle=C.steel;ctx.lineWidth=2;
+  ctx.beginPath();ctx.rect(W*.06,y0-R*0.30,xA-W*.06,R*0.60);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#fff';ctx.strokeStyle=C.ink;
+  ctx.beginPath();ctx.rect(xA-7,y0-R,14,2*R);ctx.fill();ctx.stroke();
+  tag(ctx,xA,y0-R-16,'DRIVER',C.ink,'center',11,700);
+
+  if(V.cs==='A'){
+    /* single flanged joint, driven flange tipped top-toward-driver */
+    ctx.save();ctx.translate(xB,y0);ctx.rotate(bend);
+    ctx.fillStyle='#fff';ctx.strokeStyle=C.ink;ctx.lineWidth=2;
+    ctx.beginPath();ctx.rect(-7,-R,14,2*R);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#EDF2F6';ctx.strokeStyle=C.steel;
+    ctx.beginPath();ctx.rect(7,-R*0.30,W*.94-xB,R*0.60);ctx.fill();ctx.stroke();
+    ctx.restore();
+    /* the wedge gap: pinched at the top, open at the bottom */
+    ctx.fillStyle='rgba(0,118,186,0.20)';
+    ctx.beginPath();
+    ctx.moveTo(xA+7,y0-R);ctx.lineTo(xA+7,y0+R);
+    ctx.lineTo(xB-7*Math.cos(bend)+R*Math.sin(bend),y0+R*Math.cos(bend)+7*Math.sin(bend));
+    ctx.lineTo(xB-7*Math.cos(bend)-R*Math.sin(bend),y0-R*Math.cos(bend)+7*Math.sin(bend));
+    ctx.closePath();ctx.fill();
+    ctx.strokeStyle=C.ink;ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(xA+7,y0-R);ctx.lineTo(xA+7,y0+R);ctx.stroke();
+    if(side){
+      tag(ctx,(xA+xB)/2,y0-R*1.5,'PINCHED at the top',C.z,'center',11,700);
+      tag(ctx,(xA+xB)/2,y0+R*1.5,'OPEN at the bottom',C.z,'center',11,700);}
+    tag(ctx,xB,y0-R-16,'DRIVEN',C.z,'center',11,700);
+    tag(ctx,(xA+xB)/2,y0+R*2.4,BETA+String.fromCharCode(8322)+' = '+V.gam.toFixed(2)+DEG+
+      '  at the driven end only  -  ONE live joint',C.ink,'center',11,700);
+  }else{
+    /* two joints with a spacer bridging the offset */
+    ctx.fillStyle='#fff';ctx.strokeStyle=C.ink;ctx.lineWidth=2;
+    ctx.beginPath();ctx.rect(xB-7,y0+off-R,14,2*R);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#EDF2F6';ctx.strokeStyle=C.steel;
+    ctx.beginPath();ctx.rect(xB+7,y0+off-R*0.30,W*.94-xB-7,R*0.60);ctx.fill();ctx.stroke();
+    ctx.strokeStyle=C.ink;ctx.lineWidth=Math.max(7,R*0.34);ctx.lineCap='butt';
+    ctx.beginPath();ctx.moveTo(xA+7,y0);ctx.lineTo(xB-7,y0+off);ctx.stroke();
+    tag(ctx,xB,y0+off-R-16,'DRIVEN',C.z,'center',11,700);
+    tag(ctx,(xA+xB)/2,y0+off/2-R*1.5,'RIGID SPACER  L = '+V.len+' mm',C.x,'center',11,700);
+    /* offset dimension */
+    if(Math.abs(off)>2){
+      const dx=xB+W*0.07;
+      arrow(ctx,dx,y0,dx,y0+off,V.cs==='Y'?C.y:C.x,1.6,7);
+      arrow(ctx,dx,y0+off,dx,y0,V.cs==='Y'?C.y:C.x,1.6,7);
+      ctx.strokeStyle=C.grid;ctx.setLineDash([2,3]);ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(xB,y0);ctx.lineTo(dx+10,y0);ctx.stroke();ctx.setLineDash([]);
+      tag(ctx,dx+8,y0+off/2,(V.cs==='Y'?String.fromCharCode(948)+'Y = '+V.dY.toFixed(2)
+        :String.fromCharCode(948)+'X = '+V.dX.toFixed(2))+' mm',
+        V.cs==='Y'?C.y:C.x,'left',11,700);}
+    tag(ctx,(xA+xB)/2,y0+off/2+R*2.2,BETA+String.fromCharCode(8321)+' = '+BETA+String.fromCharCode(8322)+
+      ' = '+(S.b1*180/Math.PI).toFixed(3)+DEG+'  -  TWO live joints, equal and opposite',C.ink,'center',11,700);
+    tag(ctx,(xA+xB)/2,y0+off/2+R*2.9,'the second undoes the first, so the OUTPUT is uniform',C.z,'center',10,700);
+  }
+  tag(ctx,W*.5,H-14,V.cs==='A'
+    ?'A bend needs no spacer. Nothing cancels it.'
+    :'A single joint cannot bridge an offset - you need two, and the spacer tilts between them.',
+    C.ink2,'center',10);
+}
+
+/* ---------------- ripple traces, all three overlaid ---------------- */
+function drawRip3(){
+  const s3=setup('c3rip'),ctx=s3.ctx,W=s3.W,H=s3.H;
+  const L=64,R=W-120,T=40,B0=H-44, mid=(T+B0)/2, half=(B0-T)*0.40;
+  let mx=1e-9;
+  ['Y','X','A'].forEach(function(cs){
+    for(let i=0;i<=200;i++) mx=Math.max(mx,Math.abs(ratio(TAU*2*i/200,cs)-1));});
+  mx=Math.max(mx,1e-9)*1.20;
+
+  ctx.strokeStyle=C.fine;ctx.lineWidth=1;
+  for(let k=0;k<=8;k++){const x=L+(R-L)*k/8;ctx.beginPath();ctx.moveTo(x,T);ctx.lineTo(x,B0);ctx.stroke();}
+  ctx.strokeStyle=C.grid;
+  for(let k=0;k<=2;k++){const x=L+(R-L)*k/2;
+    ctx.beginPath();ctx.moveTo(x,T);ctx.lineTo(x,B0);ctx.stroke();}
+  for(let k=0;k<=8;k++){
+    const x=L+(R-L)*k/8, d=(k*90)%360;
+    tag(ctx,x,B0+16,clockOf(d)||(d+DEG),C.ink2,'center',9);}
+  ctx.strokeStyle=C.ink;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(L,mid);ctx.lineTo(R,mid);ctx.stroke();
+  tag(ctx,L-8,mid,'1.00',C.ink2,'right',10);
+  tag(ctx,L-8,mid-half,'+'+(mx*100).toFixed(2)+'%',C.steel,'right',9);
+  tag(ctx,L-8,mid+half,MINUS+(mx*100).toFixed(2)+'%',C.steel,'right',9);
+
+  const cases=[['Y',C.y,'Case 1  +Y offset'],['X',C.x,'Case 2  +X offset'],['A',C.z,'Case 3  bend']];
+  cases.forEach(function(cc,i){
+    const on=(cc[0]===V.cs);
+    ctx.strokeStyle=cc[1];ctx.lineWidth=on?3:1.4;
+    ctx.globalAlpha=on?1:0.42;
+    ctx.setLineDash(on?[]:[6,4]);
+    ctx.beginPath();
+    for(let k=0;k<=400;k++){
+      const t=TAU*2*k/400, v=ratio(t,cc[0])-1;
+      const X=L+(R-L)*k/400, Y=mid-half*(v/mx);
+      k?ctx.lineTo(X,Y):ctx.moveTo(X,Y);}
+    ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
+    /* legend */
+    const ly=T+18+i*20;
+    ctx.strokeStyle=cc[1];ctx.lineWidth=on?3:1.4;
+    ctx.setLineDash(on?[]:[6,4]);
+    ctx.beginPath();ctx.moveTo(R+14,ly);ctx.lineTo(R+40,ly);ctx.stroke();ctx.setLineDash([]);
+    tag(ctx,R+46,ly,cc[2]+(on?'  \u25C0':''),on?C.ink:C.ink2,'left',10,on?700:500);
+    tag(ctx,R+46,ly+11,String.fromCharCode(177)+(peakRipple(cc[0])*100).toFixed(3)+'%',C.steel,'left',9);});
+
+  const fr=((V.theta%(TAU*2))+TAU*2)%(TAU*2)/(TAU*2), cx=L+(R-L)*fr;
+  ctx.strokeStyle=C.ink;ctx.setLineDash([2,3]);ctx.lineWidth=1.4;
+  ctx.beginPath();ctx.moveTo(cx,T);ctx.lineTo(cx,B0);ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();ctx.arc(cx,mid-half*((ratio(V.theta,V.cs)-1)/mx),6,0,7);
+  ctx.fillStyle=V.cs==='Y'?C.y:V.cs==='X'?C.x:C.z;ctx.fill();
+  ctx.strokeStyle='#fff';ctx.lineWidth=1.8;ctx.stroke();
+
+  tag(ctx,L,20,'Case 1 and Case 2 are the same curve shifted a QUARTER TURN - same physics, different plane.',
+    C.ink,'left',11,700);
+  tag(ctx,(L+R)/2,B0+32,'driving pin position',C.ink2,'center',10);
+}
+
+/* ---------------- readouts and copy ---------------- */
+function updC(){
+  const S=spec(V.cs);
+  document.getElementById('c3b1').textContent=(S.b1*180/Math.PI).toFixed(3);
+  document.getElementById('c3b2').textContent=(S.b2*180/Math.PI).toFixed(3);
+  document.getElementById('c3pl').textContent=S.plane;
+  document.getElementById('c3fast').textContent=S.fast;
+  document.getElementById('c3nj').textContent=S.nj;
+  document.getElementById('c3out').textContent=S.uniform?'yes - cancels':'NO - passes through';
+  document.getElementById('c3rip2').textContent=(peakRipple(V.cs)*100).toFixed(3);
+  document.getElementById('c3dom').textContent=S.dom;
+  const deg=Math.round(((V.theta*180/Math.PI)%360+360)%360);
+  document.getElementById('c3vang').textContent=deg;
+  const ck=clockOf(deg);
+  document.getElementById('c3clk').textContent=ck?('('+ck+')'):'';
+  document.getElementById('c3now').textContent=ratio(V.theta,V.cs).toFixed(4);
+  const lg=lead(V.theta,V.cs)*180/Math.PI;
+  document.getElementById('c3lag').textContent=(lg>=0?'+':'')+lg.toFixed(3)+DEG;
+}
+function verdC(){
+  const S=spec(V.cs);
+  const bY=Math.atan2(V.dY,V.len)*180/Math.PI, bA=V.gam;
+  const rY=peakRipple('Y'), rA=peakRipple('A');
+  let body;
+  if(V.cs==='Y'){
+    body='<p><span class="tell">A single joint cannot bridge an offset at all.</span> You need two, with the spacer tilting between them, so <code>&beta;<sub>1</sub> = &beta;<sub>2</sub> = arctan(&delta;<sub>Y</sub>/L)</code> and both bends lie in the <em>vertical</em> Y&ndash;Z plane. The spacer runs downhill from driver to driven and the two bends are equal and opposite &mdash; the Z-configuration.</p>'+
+      '<p>The driven yoke circle projects to an ellipse that is <em>narrow vertically</em> &mdash; short in the direction of the offset &mdash; so the driven runs <span class="tell">fast at 12 and 6 o\'clock and slow at 3 and 9</span>. The output comes out uniform because the second joint undoes the first &mdash; but the spacer in the middle is still surging twice per turn, and your bearings sit either side of it.</p>'+
+      '<p>The reaction is a shear force plus a couple in the vertical plane, so the 2&times; lands mostly on <em>Y</em>. Axial content is small. Switch to the plan view and the error disappears &mdash; that is exactly why a single-plane alignment check can pass a machine that is out.</p>';
+  }else if(V.cs==='X'){
+    body='<p>Geometrically identical to Case 1, rotated 90&deg; about Z. Same <code>&beta; = arctan(&delta;<sub>X</sub>/L)</code>, same two-joint cancellation, same spacer surge &mdash; but the bend plane is now <em>horizontal</em>.</p>'+
+      '<p>So every clock position shifts a quarter turn: <span class="tell">fast at 3 and 9, slow at 12 and 6</span>. Look at the overlay plot &mdash; Case 1 and Case 2 are the same curve, offset by 90&deg;. That phase shift is the only kinematic difference between them.</p>'+
+      '<p>The 2&times; lands mostly on <em>X</em>. On a real machine this usually <em>reads</em> larger than an equal vertical offset, not because the excitation is bigger but because most structures are softer horizontally. Same force, softer response &mdash; which is why you calibrate with the 1&times;H/1&times;V ratio before drawing conclusions from raw H/V amplitudes.</p>';
+  }else{
+    body='<p>The driven flange leans top-inward, so the face gap is <span class="tell">pinched at the top and open at the bottom</span>, and the driven shaft runs nose-up away from the coupling. This needs no spacer: <code>&beta;<sub>1</sub> = 0, &beta;<sub>2</sub> = &gamma;</code>, in the vertical plane.</p>'+
+      '<p>The clock positions are <em>identical to Case 1</em> &mdash; fast at 12 and 6 &mdash; because it is the same plane. From the spacer motion alone the two are indistinguishable. What separates them is that here <span class="tell">only one joint is live, so nothing cancels</span>: the ripple passes straight through to the driven shaft as a real torsional 2&times;.</p>'+
+      '<p>And the dominant reaction is different in kind. A bend transmits a <em>moment</em>, so the faces must open and pinch and every rim point pumps along the shaft: big <em>Z</em> at 2&times;, with 180&deg; axial phase across the coupling. Radial 2&times; appears on Y as well, via the J&thinsp;&omega;<sup>2</sup>&thinsp;&beta;<sup>2</sup> term.</p>';
+  }
+  document.getElementById('c3verdict').innerHTML=
+    '<h3>'+S.name+'</h3>'+body+
+    '<p><span class="tell">The number that decides everything.</span> Your '+V.len+'&nbsp;mm spacer with '+
+    V.dY.toFixed(2)+'&nbsp;mm of vertical offset gives &beta; = '+bY.toFixed(3)+'&deg;. The '+
+    bA.toFixed(2)+'&deg; bend is '+(bY>1e-6?(bA/bY).toFixed(0):'\u221E')+
+    '&times; larger, and ripple goes as &beta;<sup>2</sup>, so it is about '+
+    (rY>1e-12?(rA/rY).toFixed(0):'\u221E')+'&times; worse. '+
+    'Over a long spacer, parallel offset is nearly kinematically free. Angular error is not &mdash; and it is the one that dumps into Z, where a 3-point mount is softest.</p>';
+}
+function renderC(){drawClock();drawRig3();drawRip3();updC();}
+
+let raf3=null;
+function loop3(now){
+  if(!V.running||document.hidden||document.getElementById('paneC').hidden){raf3=null;return;}
+  if(!loop3.last) loop3.last=now;
+  const dt=Math.min(0.05,(now-loop3.last)/1000); loop3.last=now;
+  V.theta+=TAU*V.spd*dt;
+  document.getElementById('c3ang').value=Math.round(((V.theta*180/Math.PI)%360+360)%360);
+  renderC(); raf3=requestAnimationFrame(loop3);
+}
+function start3(){if(raf3===null&&V.running){loop3.last=0;raf3=requestAnimationFrame(loop3);}}
+function stop3(){if(raf3!==null){cancelAnimationFrame(raf3);raf3=null;}}
+function hold3(){
+  if(!V.running) return;
+  V.running=false;
+  const rb=document.getElementById('c3run');
+  rb.setAttribute('aria-pressed','false');rb.textContent='Held';stop3();
+}
+function syncC(){
+  document.getElementById('c3ctlY').classList.toggle('off',V.cs!=='Y');
+  document.getElementById('c3ctlX').classList.toggle('off',V.cs!=='X');
+  document.getElementById('c3ctlA').classList.toggle('off',V.cs!=='A');
+  if(V.cs==='A') V.view='side';
+  Array.prototype.forEach.call(document.getElementById('c3ViewSeg').querySelectorAll('button'),
+    function(b){b.setAttribute('aria-pressed',b.dataset.c3v===V.view?'true':'false');});
+}
+Array.prototype.forEach.call(document.getElementById('c3Seg').querySelectorAll('.case'),function(b){
+  b.addEventListener('click',function(){
+    Array.prototype.forEach.call(document.getElementById('c3Seg').querySelectorAll('.case'),
+      function(o){o.setAttribute('aria-pressed',o===b?'true':'false');});
+    V.cs=b.dataset.c3; syncC(); verdC(); renderC();});});
+seg('c3ViewSeg','c3v',function(v){V.view=v;renderC();});
+function bindC(id,vid,fn,fmt){
+  const el=document.getElementById(id);
+  el.addEventListener('input',function(){const v=parseFloat(el.value);fn(v);
+    document.getElementById(vid).textContent=fmt(v);verdC();renderC();});
+}
+bindC('c3dY','c3vY',function(v){V.dY=v;},function(v){return v.toFixed(2);});
+bindC('c3dX','c3vX',function(v){V.dX=v;},function(v){return v.toFixed(2);});
+bindC('c3gam','c3vG',function(v){V.gam=v;},function(v){return v.toFixed(2);});
+bindC('c3len','c3vL',function(v){V.len=v;},function(v){return v;});
+bindC('c3draw','c3vD',function(v){V.draw=v*Math.PI/180;},function(v){return v;});
+bindC('c3spd','c3vS',function(v){V.spd=v;},function(v){return v.toFixed(2);});
+document.getElementById('c3run').addEventListener('click',function(){
+  V.running=!V.running;
+  this.setAttribute('aria-pressed',V.running?'true':'false');
+  this.textContent=V.running?'Rotating':'Held';
+  if(V.running) start3(); else stop3();});
+document.getElementById('c3ang').addEventListener('input',function(e){
+  hold3(); V.theta=parseFloat(e.target.value)*Math.PI/180; renderC();});
+Array.prototype.forEach.call(document.querySelectorAll('[data-c3j]'),function(b){
+  b.addEventListener('click',function(){
+    hold3(); V.theta=parseFloat(b.dataset.c3j)*Math.PI/180;
+    document.getElementById('c3ang').value=b.dataset.c3j; renderC();});});
+syncC(); verdC();
+return {render:renderC,start:start3,stop:stop3,
+  nudge:function(step){
+    hold3();
+    let d=Math.round(((V.theta*180/Math.PI)%360+360)%360)+step;
+    d=((d%360)+360)%360;
+    V.theta=d*Math.PI/180;
+    document.getElementById('c3ang').value=d;
+    renderC();}};
+})();
+
+/* ============================================================ */
+let active='A';
+function showTab(which){
+  active=which;
+  ['A','B','C'].forEach(function(t){
+    document.getElementById('pane'+t).hidden=(t!==which);
+    document.getElementById('tab'+t).setAttribute('aria-selected',t===which?'true':'false');});
+  B.stop(); D.stop();
+  if(which==='A') A.render();
+  else if(which==='B'){B.render();B.start();}
+  else {D.render();D.start();}
+}
+['A','B','C'].forEach(function(t){
+  document.getElementById('tab'+t).addEventListener('click',function(){showTab(t);});});
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){B.stop();D.stop();}
+  else if(active==='B') B.start();
+  else if(active==='C') D.start();});
+window.addEventListener('keydown',function(e){
+  if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight') return;
+  const step=(e.shiftKey?1:5)*(e.key==='ArrowRight'?1:-1);
+  if(active==='A') A.nudge(step); else if(active==='B') B.nudge(step); else D.nudge(step);
+  e.preventDefault();});
+let rt=null;
+window.addEventListener('resize',function(){
+  clearTimeout(rt);
+  rt=setTimeout(function(){
+    if(active==='A') A.render(); else if(active==='B') B.render(); else D.render();},120);});
+</script>
+</body>
+</html>

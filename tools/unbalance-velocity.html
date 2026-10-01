@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<!--
+TOOL    : rotor_unbalance_velocity_simulator.html (public copy)
+FAMILY  : vibration
+VERSION : 1.0.0
+DATE    : 2026-10-01
+CHAT    : Unbalance to velocity simulator
+CHANGES : v1.0.0  public copy for haivijayanand.github.io: theory and simulator from residual unbalance to vibration velocity, ISO zones
+STATUS  : working; runs offline in any browser, no network
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unbalance &rarr; Velocity | Rotor Balancing Simulator</title>
+<style>
+:root{
+  --ink:#14181D; --ink-2:#48525C; --ink-3:#78838E;
+  --panel:#E4E8EC; --panel-2:#EDF0F3; --paper:#F7F8FA;
+  --line:#C3CBD3; --line-2:#D8DEE4;
+  --blue:#0076BA; --red:#E8000B; --amber:#E69F00; --sky:#56B4E9; --purple:#CC79A7;
+  --disp:"Arial Narrow","Helvetica Neue Condensed","Liberation Sans Narrow","Roboto Condensed",system-ui,sans-serif;
+  --body:Georgia,"Liberation Serif","Nimbus Roman","Times New Roman",serif;
+  --mono:ui-monospace,"Cascadia Mono","SF Mono","DejaVu Sans Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+
+.masthead{border-bottom:2px solid var(--ink);background:linear-gradient(180deg,#FFF 0%,var(--panel-2) 100%);position:sticky;top:0;z-index:40}
+.masthead-in{max-width:1260px;margin:0 auto;padding:14px 22px 0;display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px}
+.brand{flex:1 1 320px;min-width:0}
+.brand h1{font-family:var(--disp);font-size:clamp(22px,3.4vw,34px);letter-spacing:.14em;text-transform:uppercase;font-weight:700;margin:0;line-height:1.05}
+.brand .sub{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:5px}
+.tabs{display:flex;align-self:flex-end}
+.tab{font-family:var(--disp);text-transform:uppercase;letter-spacing:.16em;font-size:13px;font-weight:700;padding:11px 22px;border:1px solid var(--line);border-bottom:none;background:var(--panel);color:var(--ink-2);cursor:pointer;border-radius:3px 3px 0 0;margin-left:-1px}
+.tab:first-child{margin-left:0}
+.tab[aria-selected="true"]{background:var(--paper);color:var(--ink);box-shadow:inset 0 3px 0 var(--red);position:relative;top:1px}
+.tab:focus-visible{outline:2px solid var(--blue);outline-offset:2px;z-index:2}
+main{max-width:1260px;margin:0 auto;padding:28px 22px 90px}
+.page[hidden]{display:none}
+
+.legend{display:flex;align-items:baseline;gap:10px;border-bottom:1px solid var(--ink);padding-bottom:5px;margin:0 0 16px}
+.legend .idx{font-family:var(--mono);font-size:10px;color:var(--red);letter-spacing:.08em;padding-top:2px}
+.legend h2{font-family:var(--disp);text-transform:uppercase;letter-spacing:.13em;font-size:15px;font-weight:700;margin:0;flex:1}
+
+.theory{max-width:830px}
+.theory h3{font-family:var(--disp);text-transform:uppercase;letter-spacing:.1em;font-size:14px;margin:30px 0 8px;font-weight:700}
+.theory p{margin:0 0 14px}
+.theory ul,.theory ol{margin:0 0 14px;padding-left:22px}
+.theory li{margin-bottom:6px}
+.lead{font-size:18px;line-height:1.65}
+.eq{font-family:var(--mono);font-size:15px;background:#fff;border:1px solid var(--line-2);border-left:3px solid var(--blue);padding:13px 16px;margin:16px 0;overflow-x:auto;white-space:pre-wrap}
+.eq .where{display:block;font-size:11.5px;color:var(--ink-2);margin-top:9px;line-height:1.7;white-space:normal}
+.callout{border:1px solid var(--line);border-left:3px solid var(--amber);background:#FFFDF6;padding:13px 16px;margin:18px 0;font-size:15px}
+.callout strong{font-family:var(--disp);text-transform:uppercase;letter-spacing:.1em;font-size:12px;display:block;margin-bottom:4px;color:#8A5F00}
+var{font-style:italic;font-family:var(--body)}
+table.data{border-collapse:collapse;width:100%;margin:16px 0;font-family:var(--mono);font-size:12.5px;background:#fff}
+table.data th,table.data td{border:1px solid var(--line-2);padding:6px 9px;text-align:right}
+table.data th{background:var(--panel);font-weight:700;font-size:10px;letter-spacing:.07em;text-transform:uppercase;font-family:var(--disp)}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr:nth-child(even) td{background:#FBFCFD}
+
+.sim{display:grid;grid-template-columns:312px 1fr;gap:26px;align-items:start}
+@media (max-width:960px){.sim{grid-template-columns:1fr}}
+.rack{background:var(--panel-2);border:1px solid var(--line);box-shadow:inset 0 1px 0 #fff;padding:16px 16px 20px;position:sticky;top:96px;max-height:calc(100vh - 120px);overflow-y:auto}
+@media (max-width:960px){.rack{position:static;max-height:none}}
+.grp{margin-bottom:20px}
+.grp:last-child{margin-bottom:0}
+.grp-h{font-family:var(--disp);text-transform:uppercase;letter-spacing:.14em;font-size:10.5px;font-weight:700;color:var(--ink-2);border-bottom:1px solid var(--line);padding-bottom:4px;margin-bottom:11px;display:flex;justify-content:space-between}
+.grp-h span{color:var(--red);font-family:var(--mono);letter-spacing:0}
+.field{margin-bottom:11px}
+.field label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);margin-bottom:4px}
+.field label .u{color:var(--ink-3);text-transform:none;letter-spacing:0}
+input[type=number],select{width:100%;font-family:var(--mono);font-size:14px;padding:6px 8px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:2px}
+input[type=number]:focus,select:focus{outline:2px solid var(--blue);outline-offset:-1px;border-color:var(--blue)}
+input[type=range]{width:100%;accent-color:var(--blue);margin:3px 0 0}
+.rowpair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rowtri{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.seg{display:flex;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.seg button{flex:1;font-family:var(--disp);text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;font-weight:700;padding:8px 4px;border:none;cursor:pointer;background:#fff;color:var(--ink-2);border-left:1px solid var(--line);line-height:1.3}
+.seg button:first-child{border-left:none}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.seg button:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+.stack{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.stack button{text-align:left;font-family:var(--disp);text-transform:uppercase;letter-spacing:.08em;font-size:11px;font-weight:700;padding:9px 11px;border:none;border-top:1px solid var(--line);cursor:pointer;background:#fff;color:var(--ink-2);line-height:1.25}
+.stack button:first-child{border-top:none}
+.stack button i{font-family:var(--mono);font-style:normal;font-size:9px;color:var(--red);margin-right:7px}
+.stack button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.stack button[aria-pressed="true"] i{color:var(--amber)}
+.stack button:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+.chk{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);cursor:pointer;margin-top:8px}
+.chk input{accent-color:var(--blue);width:14px;height:14px}
+.hint{font-family:var(--mono);font-size:10px;color:var(--ink-3);line-height:1.5;margin-top:5px}
+.hint.warn{color:var(--red)}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:16px;margin-bottom:24px}
+.card{background:#fff;border:1px solid var(--line)}
+.card[hidden]{display:none}
+.card-h{padding:10px 14px;border-bottom:1px solid var(--line);background:var(--panel);display:flex;align-items:baseline;gap:8px}
+.card-h b{font-family:var(--disp);text-transform:uppercase;letter-spacing:.12em;font-size:12px;font-weight:700;flex:1}
+.card-h em{font-family:var(--mono);font-style:normal;font-size:9.5px;color:var(--ink-3);letter-spacing:.05em;text-transform:uppercase}
+.card.k .card-h{box-shadow:inset 3px 0 0 var(--blue)}
+.card.r .card-h{box-shadow:inset 3px 0 0 var(--red)}
+.card.o .card-h{box-shadow:inset 3px 0 0 var(--amber)}
+.card-b{padding:14px}
+.big{display:flex;align-items:baseline;gap:8px;margin-bottom:2px}
+.big .val{font-family:var(--mono);font-size:34px;font-weight:600;letter-spacing:-.02em;line-height:1}
+.big .unit{font-family:var(--mono);font-size:11px;color:var(--ink-2)}
+.big-cap{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:13px;line-height:1.4}
+.trip{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-2);border:1px solid var(--line-2);margin-bottom:13px}
+.trip div{background:#fff;padding:7px 8px}
+.trip .t{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.trip .v{font-family:var(--mono);font-size:15px;font-weight:600}
+dl.kv{margin:0;font-family:var(--mono);font-size:11.5px}
+dl.kv div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px dotted var(--line-2)}
+dl.kv div:last-child{border-bottom:none}
+dl.kv div[hidden]{display:none}
+dl.kv dt{color:var(--ink-2)}
+dl.kv dd{margin:0;font-weight:600;text-align:right}
+.badge{display:inline-block;font-family:var(--disp);text-transform:uppercase;letter-spacing:.1em;font-size:10.5px;font-weight:700;padding:5px 10px;border:1px solid var(--ink);margin-top:12px;line-height:1.4}
+.badge.zA{background:#E6F2FA;border-color:var(--blue);color:#004E7A}
+.badge.zB{background:#EDF0F3;border-color:var(--ink-2);color:var(--ink)}
+.badge.zC{background:#FFF3DC;border-color:var(--amber);color:#8A5F00}
+.badge.zD{background:#FDE7E8;border-color:var(--red);color:#A50008}
+
+.chartwrap{background:#fff;border:1px solid var(--line);padding:14px 14px 6px}
+.chart-top{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:8px}
+.chart-top .ttl{font-family:var(--disp);text-transform:uppercase;letter-spacing:.12em;font-size:12px;font-weight:700;flex:1}
+.keys{display:flex;flex-wrap:wrap;gap:14px;font-family:var(--mono);font-size:10px;color:var(--ink-2)}
+.keys i{display:inline-block;width:16px;height:0;border-top:3px solid;margin-right:5px;vertical-align:middle}
+svg#plot,svg#rotor{width:100%;height:auto;display:block}
+.axis-l{font-family:var(--mono);font-size:10px;fill:var(--ink-3)}
+.axis-t{font-family:var(--disp);font-size:11px;fill:var(--ink-2);letter-spacing:.1em;text-transform:uppercase}
+.frame{stroke:var(--ink);stroke-width:1.2;fill:none}
+.gridline{stroke:var(--line-2);stroke-width:1}
+.pulse{animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:.85}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none;opacity:.5}}
+.schem{background:#fff;border:1px solid var(--line);border-top:none;padding:10px 14px 12px}
+.schem[hidden]{display:none}
+.footnote{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);line-height:1.7;margin-top:22px;border-top:1px solid var(--line-2);padding-top:12px}
+@media print{.masthead{position:static}.tabs{display:none}.rack{position:static;max-height:none}body{background:#fff}.page[hidden]{display:block}}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-in">
+    <div class="brand">
+      <h1>Unbalance &rarr; Velocity</h1>
+      <div class="sub">Residual unbalance (g&middot;mm) &middot; rotor mass (kg) &middot; speed (rpm) &rarr; vibration velocity (mm/s)</div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" role="tab" id="tab-theory" aria-controls="page-theory" aria-selected="false">Theory</button>
+      <button class="tab" role="tab" id="tab-sim" aria-controls="page-sim" aria-selected="true">Simulator</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= THEORY ================= -->
+<section class="page" id="page-theory" role="tabpanel" aria-labelledby="tab-theory" hidden>
+<div class="theory">
+
+  <div class="legend"><span class="idx">01</span><h2>The question has two answers</h2></div>
+  <p class="lead">"A shaft of mass <var>m</var> with residual unbalance <var>U</var> g&middot;mm runs at <var>N</var> rpm &mdash; what velocity does it produce?" There are two legitimate answers, and confusing them is the single most common error in balancing work.</p>
+  <ol>
+    <li><strong>The kinematic velocity</strong> &mdash; how fast the mass centre travels around the rotational axis. This follows from <var>U</var>, <var>m</var> and <var>N</var> alone, needs no other information, and <em>is</em> the ISO 1940 balance quality grade <var>G</var>.</li>
+    <li><strong>The response velocity</strong> &mdash; what a transducer actually measures on the machine. This is the kinematic value multiplied by a dynamic amplification factor that depends on the structure: natural frequency, damping, and where you put the probe.</li>
+  </ol>
+  <p>The first is a property of the rotor. The second is a property of the machine. A perfectly acceptable G 2.5 rotor can read 15 mm/s on the bearing housing if you park it on its critical speed.</p>
+
+  <div class="legend"><span class="idx">02</span><h2>Specific unbalance, and a convenient unit identity</h2></div>
+  <p>Unbalance <var>U</var> is a mass&ndash;radius product: 400 g&middot;mm is 4 g sitting 100 mm off-axis, or 0.4 g at 1000 mm &mdash; dynamically identical. Dividing by rotor mass gives <em>specific unbalance</em> <var>e</var>, the offset of the mass centre from the rotational axis:</p>
+  <div class="eq">e = U / m
+<span class="where">With <var>U</var> in g&middot;mm and <var>m</var> in kg, note that m [kg] = 1000&thinsp;m [g], so<br>
+e [mm] = U / (1000&thinsp;m) &nbsp;&rArr;&nbsp; <strong>e [&micro;m] = U [g&middot;mm] / m [kg]</strong><br>
+The units cancel to give micrometres directly. 440 g&middot;mm on a 44 kg rotor is exactly 10 &micro;m of mass-centre offset.</span></div>
+
+  <div class="legend"><span class="idx">03</span><h2>Kinematic velocity, and why it <em>is</em> the G grade</h2></div>
+  <p>The mass centre travels a circle of radius <var>e</var> once per revolution. Its tangential speed is radius &times; angular velocity:</p>
+  <div class="eq">&omega; = 2&pi;N / 60   [rad/s]
+
+v = e &middot; &omega;   [mm/s, zero-to-peak]
+<span class="where">e in mm, &omega; in rad/s. Substituting the identity above: v [mm/s] = U [g&middot;mm] &times; &omega; / (1000&thinsp;m [kg]).</span></div>
+  <p>ISO 1940-1 defines the balance quality grade as precisely this product, <var>e</var><sub>per</sub>&middot;&omega;, in mm/s. That is why the grade table reads G 0.4, G 1, G 2.5, G 6.3, G 16&hellip; &mdash; each grade is a constant-<var>e&omega;</var> hyperbola on the familiar log&ndash;log nomogram. Doubling the speed halves the permissible unbalance for the same grade.</p>
+  <div class="eq">U<sub>per</sub> [g&middot;mm] = 1000 &middot; G &middot; m [kg] / &omega;
+<span class="where">Total permissible residual unbalance for a target grade G at service speed. For a two-plane rotor this is then allocated between the correction planes &mdash; see section 06.</span></div>
+  <table class="data">
+    <tr><th>Grade</th><th>e&middot;&omega; (mm/s)</th><th>Typical application</th></tr>
+    <tr><td>G 0.4</td><td>0.4</td><td>Precision grinding spindles, gyroscopes</td></tr>
+    <tr><td>G 1</td><td>1</td><td>Machine tool drives, small armatures</td></tr>
+    <tr><td>G 2.5</td><td>2.5</td><td>Gas and steam turbines, turbo-compressors, machine tool drives</td></tr>
+    <tr><td>G 6.3</td><td>6.3</td><td>Fans, flywheels, pump impellers, general machinery parts</td></tr>
+    <tr><td>G 16</td><td>16</td><td>Drive shafts, crushers, agricultural machinery</td></tr>
+    <tr><td>G 40</td><td>40</td><td>Car wheels, wheel rims, drive shafts</td></tr>
+    <tr><td>G 100</td><td>100</td><td>Diesel engine components, four-cylinder crankshafts</td></tr>
+  </table>
+  <div class="callout"><strong>What this number is not</strong>
+  <var>e&omega;</var> is the velocity of an imaginary point &mdash; the mass centre &mdash; relative to the shaft axis. No transducer measures it directly. It is a <em>specification</em> quantity for the balancing machine, not a <em>condition monitoring</em> quantity for the rig.</div>
+
+  <div class="legend"><span class="idx">04</span><h2>From unbalance to a measured response</h2></div>
+  <p>Rotating unbalance produces a force that grows with the square of speed:</p>
+  <div class="eq">F = m &middot; e &middot; &omega;<sup>2</sup> = U &middot; &omega;<sup>2</sup> &times; 10<sup>&minus;6</sup>   [N, with U in g&middot;mm]
+<span class="where">Rotating in space at 1&times; shaft speed. This is why unbalance always appears at the 1&times; order line, and why it dominates high-speed rigs: at 16,800 rpm the force is 78&times; what it was at 1,900 rpm.</span></div>
+  <p>That force feeds a structure with mass, stiffness and damping. The equation of motion for a single degree of freedom driven by rotating unbalance is</p>
+  <div class="eq">M ẍ + c ẋ + k x = U&omega;<sup>2</sup> sin &omega;t
+
+X / e<sub>eff</sub> = r<sup>2</sup> / &radic;[ (1 &minus; r<sup>2</sup>)<sup>2</sup> + (2&zeta;r)<sup>2</sup> ]
+<span class="where">r = &omega;/&omega;<sub>n</sub> is the frequency ratio, &zeta; = c / (2&radic;(kM)) the damping ratio,<br>
+&omega;<sub>n</sub> = &radic;(k/M) the undamped natural frequency, and e<sub>eff</sub> = U / M the effective offset.<br>
+Phase lag: &phi; = arctan[ 2&zeta;r / (1 &minus; r<sup>2</sup>) ], running from 0&deg; below resonance to 180&deg; above.</span></div>
+  <p>Once the displacement amplitude <var>X</var> is known, velocity and acceleration follow from harmonic differentiation:</p>
+  <div class="eq">v&#770; = &omega;X    a&#770; = &omega;<sup>2</sup>X</div>
+
+  <h3>Three regimes worth memorising</h3>
+  <ul>
+    <li><strong>r &lt;&lt; 1 (stiff, sub-critical):</strong> X &rarr; e&middot;r<sup>2</sup>. The structure barely moves; almost all the unbalance force goes into the foundation. Velocity rises as the <em>cube</em> of speed here, not linearly.</li>
+    <li><strong>r &asymp; 1 (resonance):</strong> X &rarr; e / 2&zeta;. With &zeta; = 0.02 that is 25&times; amplification. Phase passes through 90&deg; &mdash; the reliable resonance indicator, far more trustworthy than the amplitude peak.</li>
+    <li><strong>r &gt;&gt; 1 (super-critical):</strong> X &rarr; e, and the rotor <em>self-centres</em>: it spins about its mass centre and the geometric centre orbits by <var>e</var>. Velocity then approaches e&middot;&omega; &mdash; the kinematic answer. The two curves converge.</li>
+  </ul>
+  <div class="callout"><strong>Why the two answers meet at high speed</strong>
+  Well above the critical speed the response asymptote is exactly the ISO 1940 kinematic line. That is not a coincidence: a self-centred rotor's geometric centre really does orbit at <var>e&omega;</var>. Below and near the critical speed the two diverge sharply &mdash; which is the whole reason both are plotted together in the simulator.</div>
+
+  <div class="legend"><span class="idx">05</span><h2>Single-plane models &mdash; two different measurements</h2></div>
+  <p>The algebra above is identical for both single-plane models offered here. What differs is which stiffness sets &omega;<sub>n</sub>, which mass appears in <var>e</var><sub>eff</sub>, and &mdash; critically &mdash; <em>what the resulting amplitude physically means</em>.</p>
+
+  <h3>Model A &mdash; rigid rotor on flexible supports</h3>
+  <p>The shaft is treated as rigid; all the flexibility is in the bearings, pedestals and mounts. <var>M</var> is the total supported mass and <var>k</var> the support stiffness. The computed <var>X</var> is the <strong>absolute motion of the housing</strong> &mdash; what an accelerometer or velocity pickup on the bearing cap reads, and what ISO 20816 zone limits are written against. Force transmitted onward to the foundation:</p>
+  <div class="eq">F<sub>T</sub> = k&thinsp;X &radic;[ 1 + (2&zeta;r)<sup>2</sup> ]</div>
+
+  <h3>Model B &mdash; Jeffcott rotor (flexible shaft, stiff bearings)</h3>
+  <p>The classic Jeffcott/Laval model: a disc of mass <var>m</var> at mid-span on a massless elastic shaft of stiffness <var>k</var>, in rigid bearings. Here &omega;<sub>n</sub> = &radic;(k/m) is the shaft's <em>critical speed</em>, and <var>X</var> is the <strong>lateral deflection of the shaft relative to the bearings</strong> &mdash; what an eddy-current proximity probe measures, not an accelerometer. In the idealised case the housing does not move at all, which is exactly why turbomachinery with stiff bearings is instrumented with proximity probes.</p>
+  <div class="callout"><strong>Choose the model to match the probe</strong>
+  Casing-mounted accelerometer or velocity pickup &rarr; Model A. Shaft-riding proximity probe &rarr; Model B. Applying an ISO 20816 casing limit to a Model B shaft-relative number, or vice versa, is a category error.</div>
+
+  <div class="legend"><span class="idx">06</span><h2>Model C &mdash; the two-plane rigid rotor</h2></div>
+  <p>Models A and B collapse the rotor to a single point, which cannot represent the most common real situation: a rotor between two bearings, with unbalance distributed along its length. A rigid rotor needs <strong>two</strong> correction planes and has <strong>two</strong> rigid-body modes.</p>
+
+  <h3>Static and couple decomposition</h3>
+  <p>Given unbalance vectors <var>U</var><sub>1</sub>&ang;&theta;<sub>1</sub> and <var>U</var><sub>2</sub>&ang;&theta;<sub>2</sub> at axial positions z<sub>1</sub> and z<sub>2</sub>, with the mass centre at z<sub>g</sub>, the rotor's dynamic state reduces to exactly two quantities:</p>
+  <div class="eq">Static (force) unbalance:  U<sub>s</sub> = U<sub>1</sub> + U<sub>2</sub>            [g&middot;mm, vector sum]
+
+Couple (moment) unbalance: C<sub>u</sub> = U<sub>1</sub>(z<sub>1</sub>&minus;z<sub>g</sub>) + U<sub>2</sub>(z<sub>2</sub>&minus;z<sub>g</sub>)   [g&middot;mm&middot;mm]
+<span class="where">Both are complex quantities &mdash; add them as vectors, not magnitudes. Two 200 g&middot;mm unbalances 180&deg; apart give U<sub>s</sub> = 0 and a large couple; the same two in phase give U<sub>s</sub> = 400 g&middot;mm and, if symmetric about the mass centre, no couple at all.</span></div>
+  <div class="callout"><strong>The trap that costs bearings</strong>
+  Pure couple unbalance has U<sub>s</sub> = 0, so the mass centre sits perfectly on the axis and the kinematic velocity <var>e&omega;</var> is <strong>zero</strong>. The rotor is "balanced" by any single-plane measure, and a static balancing check on knife edges will pass it. It will still rock the rotor about its mass centre hard enough to destroy both bearings. Only a two-plane measurement sees it.</div>
+
+  <h3>Two rigid-body modes</h3>
+  <p>With lateral displacement <var>x</var> of the mass centre and tilt angle &theta; as the two degrees of freedom, bearing A at distance <var>a</var> to one side and B at distance <var>b</var> to the other, the stiffness matrix is</p>
+  <div class="eq">K<sub>11</sub> = k<sub>A</sub> + k<sub>B</sub>
+K<sub>12</sub> = K<sub>21</sub> = b&thinsp;k<sub>B</sub> &minus; a&thinsp;k<sub>A</sub>
+K<sub>22</sub> = a<sup>2</sup>k<sub>A</sub> + b<sup>2</sup>k<sub>B</sub>
+<span class="where">Bearing motions follow from x<sub>A</sub> = x &minus; a&theta; and x<sub>B</sub> = x + b&theta;.</span></div>
+  <p>The off-diagonal term K<sub>12</sub> is the crux. When <var>b</var>k<sub>B</sub> = <var>a</var>k<sub>A</sub> &mdash; the stiffness centre coincides with the mass centre &mdash; it vanishes and the modes separate cleanly into:</p>
+  <ul>
+    <li><strong>Translational (cylindrical / bounce) mode</strong>, &omega;<sub>t</sub> = &radic;(K<sub>11</sub>/M). Both ends move in phase. Driven only by static unbalance.</li>
+    <li><strong>Conical (rocking / pitching) mode</strong>, &omega;<sub>c</sub> = &radic;(K<sub>22</sub>/I<sub>d</sub>). The ends move in antiphase about a node near the mass centre. Driven only by couple unbalance.</li>
+  </ul>
+  <p>Any asymmetry &mdash; unequal bearing stiffness, or a mass centre off mid-span &mdash; couples them, so a purely static unbalance will then also excite rocking. The simulator solves the full coupled 2&times;2 system rather than assuming the modes separate:</p>
+  <div class="eq">| K<sub>11</sub>(1+2&zeta;i) &minus; M&omega;<sup>2</sup>      K<sub>12</sub>(1+2&zeta;i)          |  | X |     | U<sub>s</sub>&omega;<sup>2</sup> |
+|                                                     |  |   |  =  |          |
+| K<sub>12</sub>(1+2&zeta;i)      K<sub>22</sub>(1+2&zeta;i) &minus; J&omega;<sup>2</sup> |  | &Theta; |     | C<sub>u</sub>&omega;<sup>2</sup> |
+<span class="where">Complex (structural) damping is used here so that the damping ratio &zeta; is the same at both modes; the resonant amplification is 1/2&zeta;, as for viscous damping. J is the effective tilt inertia &mdash; see gyroscopics below. Solving gives complex X and &Theta;, then x<sub>A</sub> = X &minus; a&Theta; and x<sub>B</sub> = X + b&Theta; as phasors, so the two bearings add the two modal contributions with their correct relative phase.</span></div>
+  <p>This is why the two bearings almost never read the same. Near the translational critical they move together and read alike; near the conical critical they move in antiphase, and whichever bearing is further from the rocking node reads considerably higher. Watch the bearing A and B curves swap dominance across the two criticals in the sweep plot.</p>
+
+  <h3>Gyroscopic stiffening</h3>
+  <p>A spinning rotor resists tilting. For forward synchronous whirl the polar inertia I<sub>p</sub> subtracts from the diametral inertia I<sub>d</sub>, so the effective tilt inertia is</p>
+  <div class="eq">J = I<sub>d</sub> &minus; I<sub>p</sub>       &gamma; = I<sub>p</sub> / I<sub>d</sub>
+<span class="where">Cylinder estimates: I<sub>d</sub> = m(3R<sup>2</sup> + L<sub>r</sub><sup>2</sup>)/12 about the mass centre, I<sub>p</sub> = mR<sup>2</sup>/2.</span></div>
+  <ul>
+    <li><strong>Long, slender rotors</strong> (&gamma; &lt; 1): J is positive but reduced, so the conical critical is pushed <em>up</em> in speed. The translational critical is untouched &mdash; gyroscopics act only on the tilting mode.</li>
+    <li><strong>Disc-like rotors</strong> (&gamma; &ge; 1, I<sub>p</sub> &ge; I<sub>d</sub>): J &le; 0 and the forward conical critical <strong>ceases to exist</strong> &mdash; it is stiffened out to infinity and the rotor can never run through it. A thin disc on a shaft has only one synchronous critical.</li>
+  </ul>
+  <p>Toggle the gyroscopic option in the simulator and watch the second critical move; on the default rotor it climbs from about 12,300 to 13,300 rpm. Ignoring this is a common way to mis-site an operating point that you believed was clear of resonance.</p>
+
+  <h3>Allocating permissible unbalance between planes</h3>
+  <p>ISO 1940-1 splits the total U<sub>per</sub> between the two correction planes in inverse proportion to their distance from the mass centre, so that the resulting static unbalance stays within the grade:</p>
+  <div class="eq">U<sub>per,1</sub> = U<sub>per</sub> &middot; |z<sub>2</sub> &minus; z<sub>g</sub>| / |z<sub>2</sub> &minus; z<sub>1</sub>|      U<sub>per,2</sub> = U<sub>per</sub> &middot; |z<sub>g</sub> &minus; z<sub>1</sub>| / |z<sub>2</sub> &minus; z<sub>1</sub>|
+<span class="where">The standard additionally recommends that neither plane be allocated less than 30% nor more than 70% of U<sub>per</sub>, which matters when the mass centre sits well outside the middle third of the plane spacing. The simulator applies that clamp and flags when it bites.</span></div>
+
+  <div class="legend"><span class="idx">07</span><h2>Amplitude conventions &mdash; the &radic;2 that ruins reports</h2></div>
+  <p>For a pure sinusoid at a single frequency the three conventions are rigidly related:</p>
+  <div class="eq">v<sub>pk</sub> = &omega;X    v<sub>rms</sub> = v<sub>pk</sub> / &radic;2 = 0.7071 v<sub>pk</sub>    v<sub>pk-pk</sub> = 2 v<sub>pk</sub>
+<span class="where">The &radic;2 relation holds <em>only</em> for a single sinusoid. For a real broadband signal, RMS must be computed from the time record or by summing spectral lines &mdash; peak/&radic;2 will understate it.</span></div>
+  <ul>
+    <li><strong>ISO 1940</strong> balance grades are stated as <var>e&omega;</var>, an amplitude (zero-to-peak) quantity.</li>
+    <li><strong>ISO 20816 / 10816</strong> evaluation zones are stated in <strong>mm/s RMS</strong>, broadband 10&ndash;1000 Hz.</li>
+    <li><strong>Displacement</strong> is conventionally quoted peak-to-peak (&micro;m pk-pk) for shaft-relative measurements, adding a further factor of 2.</li>
+  </ul>
+  <p>A G 6.3 rotor produces 6.3 mm/s <em>peak</em>, which is 4.45 mm/s RMS &mdash; comparing 6.3 against a 4.5 mm/s RMS zone boundary would fail a machine that actually passes.</p>
+
+  <div class="legend"><span class="idx">08</span><h2>Acceptance zones</h2></div>
+  <p>ISO 20816-3 (formerly 10816-3) classifies broadband RMS velocity on non-rotating parts into four zones: <strong>A</strong> newly commissioned, <strong>B</strong> acceptable for unrestricted long-term operation, <strong>C</strong> unsatisfactory for continuous operation, <strong>D</strong> damage likely.</p>
+  <table class="data">
+    <tr><th>Machine group</th><th>Support</th><th>A/B</th><th>B/C</th><th>C/D</th></tr>
+    <tr><td>Group 1 &mdash; large (&gt;300 kW; shaft height &ge; 315 mm)</td><td>Rigid</td><td>2.3</td><td>4.5</td><td>7.1</td></tr>
+    <tr><td>Group 1 &mdash; large</td><td>Flexible</td><td>3.5</td><td>7.1</td><td>11.0</td></tr>
+    <tr><td>Group 2 &mdash; medium (15&ndash;300 kW; 160 &le; H &lt; 315 mm)</td><td>Rigid</td><td>1.4</td><td>2.8</td><td>4.5</td></tr>
+    <tr><td>Group 2 &mdash; medium</td><td>Flexible</td><td>2.3</td><td>4.5</td><td>7.1</td></tr>
+  </table>
+  <p style="font-size:14px;color:var(--ink-2)">Values in mm/s RMS. A support counts as "rigid" when the machine&ndash;support natural frequency exceeds running speed by roughly 25%. Work from the current edition of the standard for contractual acceptance; the table is for orientation. Where a house limit exists, enter it in the custom-limit field instead.</p>
+
+  <div class="legend"><span class="idx">09</span><h2>Worked example</h2></div>
+  <p>A 44 kg rotor carries 440 g&middot;mm residual unbalance and runs at 6,000 rpm.</p>
+  <ul>
+    <li>e = 440 / 44 = <strong>10 &micro;m</strong>; &omega; = 2&pi;(6000)/60 = <strong>628.3 rad/s</strong></li>
+    <li>v = 0.010 mm &times; 628.3 = <strong>6.28 mm/s peak</strong> &rarr; grade <strong>G 6.3</strong>, and 4.44 mm/s RMS</li>
+    <li>Unbalance force = 440 &times; 628.3<sup>2</sup> &times; 10<sup>&minus;6</sup> = <strong>174 N</strong> rotating</li>
+    <li>If the critical speed is 3,500 rpm with &zeta; = 0.05, then r = 1.714 and the amplification is 1.51, so the deflection is <strong>15.1 &micro;m</strong> and the velocity 9.5 mm/s peak &mdash; 6.7 mm/s RMS, zone D, despite a perfectly ordinary balance grade.</li>
+  </ul>
+  <p>Now split that same 440 g&middot;mm into 220 g&middot;mm in each plane, 180&deg; apart, planes 280 mm apart astride the mass centre. The static unbalance is zero, the kinematic velocity is zero, and every single-plane check passes &mdash; while a couple of 220 &times; 140 = 30,800 g&middot;mm&middot;mm drives the conical mode. Switch the simulator to Model C and enter it to see what the bearings do.</p>
+
+  <div class="legend"><span class="idx">10</span><h2>Assumptions and limits</h2></div>
+  <ul>
+    <li>Linear, isotropic supports. Real bearings are anisotropic (different horizontal and vertical stiffness), producing elliptical orbits and split criticals.</li>
+    <li>Models A and B are single-DOF and cannot represent couple unbalance at all. Model C is a rigid rotor: valid below roughly 70% of the first bending critical, above which shaft flexibility must be modelled.</li>
+    <li>Model C includes gyroscopic effects for forward synchronous whirl only &mdash; no backward whirl, no full Campbell diagram, no cross-coupled stiffness or oil-film instability.</li>
+    <li>Inertia estimates assume a uniform cylinder. For a stepped or bladed rotor, override I<sub>d</sub> with a value from the CAD model or a bifilar pendulum test &mdash; the conical critical scales as 1/&radic;I<sub>d</sub>.</li>
+    <li>1&times; order only. Measured broadband RMS will always exceed these values, since it also carries gear mesh, bearing and blade-pass content.</li>
+    <li>Damping is rarely known a priori. Extract it from a coast-down: &zeta; &asymp; &Delta;f/(2f<sub>n</sub>) by the half-power bandwidth, or &zeta; &asymp; 1/(2Q) from the peak amplification.</li>
+  </ul>
+
+</div>
+</section>
+
+<!-- ================= SIMULATOR ================= -->
+<section class="page" id="page-sim" role="tabpanel" aria-labelledby="tab-sim">
+  <div class="sim">
+
+    <form class="rack" id="rack" autocomplete="off">
+      <div class="grp">
+        <div class="grp-h">Response model <span>A</span></div>
+        <div class="stack" role="group" aria-label="Model">
+          <button type="button" id="mA" aria-pressed="true"><i>A</i>Rigid rotor, flexible supports</button>
+          <button type="button" id="mB" aria-pressed="false"><i>B</i>Jeffcott, flexible shaft</button>
+          <button type="button" id="mC" aria-pressed="false"><i>C</i>Two-plane rigid rotor</button>
+        </div>
+        <div class="hint" id="hint-model">&nbsp;</div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-h">Rotor <span>B</span></div>
+        <div class="field">
+          <label for="m">Rotor mass <span class="u">kg</span></label>
+          <input type="number" id="m" value="44" min="0.01" step="0.1">
+        </div>
+        <div class="field" id="fld-U1">
+          <label for="U">Residual unbalance <span class="u">g&middot;mm</span></label>
+          <input type="number" id="U" value="440" min="0" step="10">
+          <div class="hint" id="hint-e">&nbsp;</div>
+        </div>
+        <div class="field">
+          <label for="N">Running speed <span class="u">rpm</span></label>
+          <input type="number" id="N" value="6000" min="0" step="50">
+          <input type="range" id="Nr" value="6000" min="0" max="24000" step="25" aria-label="Running speed slider">
+        </div>
+      </div>
+
+      <!-- single-plane parameters -->
+      <div class="grp" id="grp-single">
+        <div class="grp-h">Support <span>C</span></div>
+        <div class="field" id="fld-M">
+          <label for="M">Supported mass <span class="u">kg</span></label>
+          <input type="number" id="M" value="120" min="0.01" step="1">
+          <div class="hint" id="hint-M">&nbsp;</div>
+        </div>
+        <div class="field">
+          <label for="k">Stiffness <span class="u">MN/m</span></label>
+          <input type="number" id="k" value="16" min="0.0001" step="0.5">
+        </div>
+        <div class="field">
+          <label for="Nc">&hellip;or set critical speed <span class="u">rpm</span></label>
+          <input type="number" id="Nc" value="3487" min="1" step="10">
+        </div>
+      </div>
+
+      <!-- two-plane parameters -->
+      <div class="grp" id="grp-two" hidden>
+        <div class="grp-h">Correction planes <span>C</span></div>
+        <div class="rowtri">
+          <div class="field"><label for="U1">U&#8321; <span class="u">g&middot;mm</span></label><input type="number" id="U1" value="260" min="0" step="10"></div>
+          <div class="field"><label for="a1">&ang; <span class="u">deg</span></label><input type="number" id="a1" value="0" step="5"></div>
+          <div class="field"><label for="z1">z&#8321; <span class="u">mm</span></label><input type="number" id="z1" value="60" step="5"></div>
+        </div>
+        <div class="rowtri">
+          <div class="field"><label for="U2">U&#8322; <span class="u">g&middot;mm</span></label><input type="number" id="U2" value="200" min="0" step="10"></div>
+          <div class="field"><label for="a2">&ang; <span class="u">deg</span></label><input type="number" id="a2" value="160" step="5"></div>
+          <div class="field"><label for="z2">z&#8322; <span class="u">mm</span></label><input type="number" id="z2" value="340" step="5"></div>
+        </div>
+        <div class="hint" id="hint-sc">&nbsp;</div>
+      </div>
+
+      <div class="grp" id="grp-geom" hidden>
+        <div class="grp-h">Geometry &amp; bearings <span>D</span></div>
+        <div class="rowpair">
+          <div class="field"><label for="L">Bearing span <span class="u">mm</span></label><input type="number" id="L" value="400" min="1" step="10"></div>
+          <div class="field"><label for="zg">CG from A <span class="u">mm</span></label><input type="number" id="zg" value="180" step="5"></div>
+        </div>
+        <div class="rowpair">
+          <div class="field"><label for="kA">k&#8320; bearing A <span class="u">MN/m</span></label><input type="number" id="kA" value="20" min="0.0001" step="1"></div>
+          <div class="field"><label for="kB">k&#8331; bearing B <span class="u">MN/m</span></label><input type="number" id="kB" value="20" min="0.0001" step="1"></div>
+        </div>
+        <div class="rowpair">
+          <div class="field"><label for="Lr">Rotor length <span class="u">mm</span></label><input type="number" id="Lr" value="500" min="1" step="10"></div>
+          <div class="field"><label for="Dr">Rotor dia <span class="u">mm</span></label><input type="number" id="Dr" value="160" min="1" step="5"></div>
+        </div>
+        <div class="field">
+          <label for="Idov">I<sub>d</sub> override <span class="u">kg&middot;m&sup2; &mdash; blank = cylinder</span></label>
+          <input type="number" id="Idov" value="" min="0.0001" step="0.01" placeholder="from cylinder">
+        </div>
+        <label class="chk" for="gyro"><input type="checkbox" id="gyro" checked>Include gyroscopic effect</label>
+      </div>
+
+      <div class="grp">
+        <div class="grp-h">Damping <span>E</span></div>
+        <div class="field">
+          <label for="z">Damping ratio &zeta; <span class="u" id="zval">0.050</span></label>
+          <input type="range" id="z" value="0.05" min="0.005" max="0.5" step="0.005">
+        </div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-h">Acceptance <span>F</span></div>
+        <div class="field">
+          <label for="grp">ISO 20816-3 class</label>
+          <select id="grp">
+            <option value="g2r">Group 2 medium &mdash; rigid</option>
+            <option value="g2f">Group 2 medium &mdash; flexible</option>
+            <option value="g1r">Group 1 large &mdash; rigid</option>
+            <option value="g1f">Group 1 large &mdash; flexible</option>
+          </select>
+        </div>
+        <div class="rowpair">
+          <div class="field">
+            <label for="tg">Target grade</label>
+            <select id="tg"><option>0.4</option><option>1</option><option selected>2.5</option><option>6.3</option><option>16</option><option>40</option><option>100</option></select>
+          </div>
+          <div class="field">
+            <label for="lim">House limit <span class="u">mm/s rms</span></label>
+            <input type="number" id="lim" value="" min="0" step="0.1" placeholder="none">
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div>
+      <div class="cards">
+        <div class="card k" id="cardK">
+          <div class="card-h"><b>Kinematic</b><em>ISO 1940 &middot; e&omega;</em></div>
+          <div class="card-b">
+            <div class="big"><span class="val" id="kV">&mdash;</span><span class="unit">mm/s rms</span></div>
+            <div class="big-cap">Mass-centre velocity</div>
+            <div class="trip">
+              <div><div class="t">0-pk</div><div class="v" id="kPk">&mdash;</div></div>
+              <div><div class="t">rms</div><div class="v" id="kRms">&mdash;</div></div>
+              <div><div class="t">pk-pk</div><div class="v" id="kPp">&mdash;</div></div>
+            </div>
+            <dl class="kv">
+              <div id="row-Us" hidden><dt>Static unbalance</dt><dd id="oUs">&mdash;</dd></div>
+              <div id="row-Cu" hidden><dt>Couple unbalance</dt><dd id="oCu">&mdash;</dd></div>
+              <div><dt>Specific unbalance e</dt><dd id="oE">&mdash;</dd></div>
+              <div><dt>Angular velocity &omega;</dt><dd id="oW">&mdash;</dd></div>
+              <div><dt>Unbalance force (rotating)</dt><dd id="oF">&mdash;</dd></div>
+              <div><dt id="lblUp">Permissible U at target</dt><dd id="oUp">&mdash;</dd></div>
+            </dl>
+            <div class="badge" id="kBadge">&mdash;</div>
+          </div>
+        </div>
+
+        <div class="card r" id="cardR">
+          <div class="card-h"><b>Response</b><em id="rWhat">Housing absolute</em></div>
+          <div class="card-b">
+            <div class="big"><span class="val" id="rV">&mdash;</span><span class="unit">mm/s rms</span></div>
+            <div class="big-cap" id="rCap">Measured at bearing housing</div>
+            <div class="trip">
+              <div><div class="t">0-pk</div><div class="v" id="rPk">&mdash;</div></div>
+              <div><div class="t">rms</div><div class="v" id="rRms">&mdash;</div></div>
+              <div><div class="t">pk-pk</div><div class="v" id="rPp">&mdash;</div></div>
+            </div>
+            <dl class="kv">
+              <div><dt>Critical speed</dt><dd id="oNc">&mdash;</dd></div>
+              <div><dt>Frequency ratio r</dt><dd id="oR">&mdash;</dd></div>
+              <div><dt>Amplification X/e</dt><dd id="oA">&mdash;</dd></div>
+              <div><dt>Displacement</dt><dd id="oX">&mdash;</dd></div>
+              <div><dt>Acceleration</dt><dd id="oAcc">&mdash;</dd></div>
+              <div><dt>Phase lag</dt><dd id="oPh">&mdash;</dd></div>
+              <div><dt>Transmitted force</dt><dd id="oFt">&mdash;</dd></div>
+            </dl>
+            <div class="badge" id="rBadge">&mdash;</div>
+          </div>
+        </div>
+
+        <div class="card r" id="cardA" hidden>
+          <div class="card-h"><b>Bearing A</b><em>Housing absolute</em></div>
+          <div class="card-b">
+            <div class="big"><span class="val" id="aV">&mdash;</span><span class="unit">mm/s rms</span></div>
+            <div class="big-cap" id="aCap">Drive end</div>
+            <div class="trip">
+              <div><div class="t">0-pk</div><div class="v" id="aPk">&mdash;</div></div>
+              <div><div class="t">rms</div><div class="v" id="aRms">&mdash;</div></div>
+              <div><div class="t">pk-pk</div><div class="v" id="aPp">&mdash;</div></div>
+            </div>
+            <dl class="kv">
+              <div><dt>Displacement</dt><dd id="aX">&mdash;</dd></div>
+              <div><dt>Acceleration</dt><dd id="aAcc">&mdash;</dd></div>
+              <div><dt>Phase lag</dt><dd id="aPh">&mdash;</dd></div>
+              <div><dt>Dynamic bearing load</dt><dd id="aFt">&mdash;</dd></div>
+            </dl>
+            <div class="badge" id="aBadge">&mdash;</div>
+          </div>
+        </div>
+
+        <div class="card o" id="cardB" hidden>
+          <div class="card-h"><b>Bearing B</b><em>Housing absolute</em></div>
+          <div class="card-b">
+            <div class="big"><span class="val" id="bV">&mdash;</span><span class="unit">mm/s rms</span></div>
+            <div class="big-cap" id="bCap">Non-drive end</div>
+            <div class="trip">
+              <div><div class="t">0-pk</div><div class="v" id="bPk">&mdash;</div></div>
+              <div><div class="t">rms</div><div class="v" id="bRms">&mdash;</div></div>
+              <div><div class="t">pk-pk</div><div class="v" id="bPp">&mdash;</div></div>
+            </div>
+            <dl class="kv">
+              <div><dt>Displacement</dt><dd id="bX">&mdash;</dd></div>
+              <div><dt>Acceleration</dt><dd id="bAcc">&mdash;</dd></div>
+              <div><dt>Phase lag</dt><dd id="bPh">&mdash;</dd></div>
+              <div><dt>Dynamic bearing load</dt><dd id="bFt">&mdash;</dd></div>
+            </dl>
+            <div class="badge" id="bBadge">&mdash;</div>
+          </div>
+        </div>
+
+        <div class="card" id="cardM" hidden>
+          <div class="card-h"><b>Modes</b><em>Rigid-body criticals</em></div>
+          <div class="card-b">
+            <dl class="kv">
+              <div><dt>1st critical (rpm)</dt><dd id="oC1">&mdash;</dd></div>
+              <div><dt>2nd critical (rpm)</dt><dd id="oC2">&mdash;</dd></div>
+              <div><dt>Translational mode</dt><dd id="oWt">&mdash;</dd></div>
+              <div><dt>Conical mode</dt><dd id="oWc">&mdash;</dd></div>
+              <div><dt>I<sub>d</sub> diametral</dt><dd id="oId">&mdash;</dd></div>
+              <div><dt>I<sub>p</sub> polar / &gamma;</dt><dd id="oIp">&mdash;</dd></div>
+              <div><dt>Mode coupling K12</dt><dd id="oK12">&mdash;</dd></div>
+              <div><dt>Tilt angle &Theta;</dt><dd id="oTh">&mdash;</dd></div>
+            </dl>
+            <div class="badge" id="mBadge">&mdash;</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chartwrap">
+        <div class="chart-top">
+          <div class="ttl">Speed sweep &mdash; velocity vs rpm</div>
+          <div class="keys" id="keys"></div>
+          <div class="seg" style="width:150px">
+            <button type="button" id="scLin" aria-pressed="true">Linear</button>
+            <button type="button" id="scLog" aria-pressed="false">Log</button>
+          </div>
+        </div>
+        <svg id="plot" viewBox="0 0 900 430" role="img" aria-label="Velocity versus speed sweep"></svg>
+      </div>
+
+      <div class="schem" id="schemwrap" hidden>
+        <svg id="rotor" viewBox="0 0 900 150" role="img" aria-label="Rotor layout"></svg>
+      </div>
+
+      <div class="footnote" id="note"></div>
+    </div>
+  </div>
+</section>
+
+<script>
+"use strict";
+
+var ZONES={
+  g1r:{n:"Group 1 rigid",A:2.3,B:4.5,C:7.1},
+  g1f:{n:"Group 1 flexible",A:3.5,B:7.1,C:11.0},
+  g2r:{n:"Group 2 rigid",A:1.4,B:2.8,C:4.5},
+  g2f:{n:"Group 2 flexible",A:2.3,B:4.5,C:7.1}
+};
+var GRADES=[0.4,1,2.5,6.3,16,40,100,250,630,1600,4000];
+var RT2=Math.SQRT2, D2R=Math.PI/180, R2D=180/Math.PI;
+
+function $(id){return document.getElementById(id);}
+function num(id){var v=parseFloat($(id).value);return isFinite(v)?v:0;}
+function fmt(x,d){
+  if(!isFinite(x))return "\u221E";
+  if(Math.abs(x)<1e-9)x=0;
+  if(x!==0&&Math.abs(x)<0.001)return x.toExponential(2);
+  if(Math.abs(x)>=100000)return x.toExponential(2);
+  return x.toFixed(d===undefined?2:d);
+}
+function zoneOf(v,z){return v<=z.A?"A":v<=z.B?"B":v<=z.C?"C":"D";}
+function amp(r,z){var d=Math.sqrt(Math.pow(1-r*r,2)+Math.pow(2*z*r,2));return d===0?Infinity:(r*r)/d;}
+
+/* complex helpers */
+function C(re,im){return{re:re,im:im||0};}
+function cadd(a,b){return C(a.re+b.re,a.im+b.im);}
+function csub(a,b){return C(a.re-b.re,a.im-b.im);}
+function cmul(a,b){return C(a.re*b.re-a.im*b.im,a.re*b.im+a.im*b.re);}
+function cdiv(a,b){var d=b.re*b.re+b.im*b.im;if(d===0)return C(Infinity,0);return C((a.re*b.re+a.im*b.im)/d,(a.im*b.re-a.re*b.im)/d);}
+function csc(a,s){return C(a.re*s,a.im*s);}
+function cabs(a){return Math.hypot(a.re,a.im);}
+function carg(a){var d=Math.atan2(a.im,a.re)*R2D;return d<0?d+360:d;}
+
+var state={model:"A",scale:"lin"};
+
+/* ---------------- inertia ---------------- */
+function inertia(){
+  var m=Math.max(num("m"),0.001), Lr=num("Lr")/1000, R=num("Dr")/2000;
+  var Ip=m*R*R/2, Idc=m*(3*R*R+Lr*Lr)/12;
+  var ov=parseFloat($("Idov").value);
+  var Id=(isFinite(ov)&&ov>0)?ov:Idc;
+  return {Id:Id,Ip:Ip,Idc:Idc,over:(isFinite(ov)&&ov>0)};
+}
+
+/* ---------------- two-plane core ---------------- */
+function twoPlaneSetup(){
+  var m=Math.max(num("m"),0.001);
+  var L=num("L")/1000, zg=num("zg")/1000;
+  var a=zg, b=L-zg;
+  var kA=num("kA")*1e6, kB=num("kB")*1e6;
+  var K11=kA+kB, K12=b*kB-a*kA, K22=a*a*kA+b*b*kB;
+  var inr=inertia();
+  var J=$("gyro").checked?(inr.Id-inr.Ip):inr.Id;
+  var u1=C(num("U1")*Math.cos(num("a1")*D2R),num("U1")*Math.sin(num("a1")*D2R));
+  var u2=C(num("U2")*Math.cos(num("a2")*D2R),num("U2")*Math.sin(num("a2")*D2R));
+  var z1=num("z1")/1000, z2=num("z2")/1000;
+  var Us=cadd(u1,u2);                                               /* g.mm */
+  var Cu=cadd(csc(u1,(z1-zg)*1000),csc(u2,(z2-zg)*1000));           /* g.mm.mm */
+  return {m:m,L:L,zg:zg,a:a,b:b,kA:kA,kB:kB,K11:K11,K12:K12,K22:K22,
+          Id:inr.Id,Ip:inr.Ip,over:inr.over,J:J,Us:Us,Cu:Cu,z1:z1,z2:z2,
+          UsSI:csc(Us,1e-6),CuSI:csc(Cu,1e-9)};
+}
+function criticals(s){
+  var A4=s.m*s.J, B2=-(s.K11*s.J+s.K22*s.m), C0=s.K11*s.K22-s.K12*s.K12, out=[];
+  if(Math.abs(A4)<1e-12){
+    var den=s.K11*s.J+s.K22*s.m;
+    if(den!==0){var q=C0/den; if(q>0)out.push(Math.sqrt(q));}
+  } else {
+    var d=B2*B2-4*A4*C0;
+    if(d>=0){
+      [(-B2+Math.sqrt(d))/(2*A4),(-B2-Math.sqrt(d))/(2*A4)].forEach(function(q){if(q>0)out.push(Math.sqrt(q));});
+    }
+  }
+  return out.sort(function(p,q){return p-q;});
+}
+function twoPlaneSolve(n,s,zeta){
+  var w=2*Math.PI*n/60, f=C(1,2*zeta);
+  var D11=csub(csc(f,s.K11),C(s.m*w*w));
+  var D12=csc(f,s.K12);
+  var D22=csub(csc(f,s.K22),C(s.J*w*w));
+  var det=csub(cmul(D11,D22),cmul(D12,D12));
+  var r1=csc(s.UsSI,w*w), r2=csc(s.CuSI,w*w);
+  var X=cdiv(csub(cmul(r1,D22),cmul(D12,r2)),det);
+  var T=cdiv(csub(cmul(D11,r2),cmul(D12,r1)),det);
+  var xA=csub(X,csc(T,s.a)), xB=cadd(X,csc(T,s.b));
+  return {w:w,X:X,T:T,xA:xA,xB:xB,
+          vA:cabs(xA)*w*1000, vB:cabs(xB)*w*1000,
+          dA:cabs(xA)*1e6, dB:cabs(xB)*1e6,
+          phA:carg(xA), phB:carg(xB),
+          FA:s.kA*cabs(xA)*Math.sqrt(1+4*zeta*zeta),
+          FB:s.kB*cabs(xB)*Math.sqrt(1+4*zeta*zeta)};
+}
+
+/* ---------------- single-plane core ---------------- */
+function singleSetup(){
+  var m=Math.max(num("m"),0.001), U=num("U");
+  var mResp=(state.model==="A")?Math.max(num("M"),0.001):m;
+  var k=num("k")*1e6, wn=Math.sqrt(k/mResp);
+  return {m:m,U:U,mResp:mResp,k:k,wn:wn,e:U/m,eEff:U/mResp};
+}
+
+/* ---------------- master compute ---------------- */
+function compute(){
+  var N=num("N"), w=2*Math.PI*N/60, zeta=num("z");
+  var o={N:N,w:w,z:zeta,two:state.model==="C"};
+  if(o.two){
+    var s=twoPlaneSetup();
+    var cr=criticals(s);
+    var sol=twoPlaneSolve(N,s,zeta);
+    o.s=s; o.sol=sol;
+    o.crits=cr.map(function(x){return x*60/(2*Math.PI);});
+    o.wt=Math.sqrt(s.K11/s.m); o.wc=s.J>0?Math.sqrt(s.K22/s.J):Infinity;
+    o.m=s.m; o.Utot=cabs(s.Us);
+    o.e=cabs(s.Us)/s.m;                 /* micrometres, from STATIC unbalance */
+    o.F=cabs(s.Us)*w*w*1e-6;
+  } else {
+    var p=singleSetup();
+    o.p=p; o.m=p.m; o.e=p.e; o.Utot=p.U;
+    o.r=p.wn>0?w/p.wn:0;
+    o.A=amp(o.r,zeta);
+    o.X=p.eEff*o.A;
+    o.vr=(o.X*1e-3)*w;
+    o.a=w*w*(o.X*1e-6);
+    o.F=p.U*w*w*1e-6;
+    o.Ft=p.k*(o.X*1e-6)*Math.sqrt(1+Math.pow(2*zeta*o.r,2));
+    o.ph=Math.atan2(2*zeta*o.r,1-o.r*o.r)*R2D; if(o.ph<0)o.ph+=180;
+    o.Nc=p.wn*60/(2*Math.PI);
+  }
+  o.vk=(o.e*1e-3)*w;
+  return o;
+}
+
+/* ---------------- render ---------------- */
+function trip(pk,ids){
+  $(ids[0]).textContent=fmt(pk,2);
+  $(ids[1]).textContent=fmt(pk/RT2,2);
+  $(ids[2]).textContent=fmt(2*pk,2);
+  $(ids[3]).textContent=fmt(pk/RT2,2);
+}
+function setBadge(el,vrms,z,lim,prefix){
+  var zn=zoneOf(vrms,z);
+  var extra=(isFinite(lim)&&lim>0)?"  \u00B7  house "+fmt(lim,1)+" "+(vrms<=lim?"met":"exceeded"):"";
+  el.textContent=(prefix||"")+"Zone "+zn+" \u00B7 "+z.n+extra;
+  el.className="badge z"+zn;
+}
+
+function render(){
+  var o=compute(), z=ZONES[$("grp").value], G=parseFloat($("tg").value);
+  var lim=parseFloat($("lim").value);
+
+  /* --- kinematic card --- */
+  trip(o.vk,["kPk","kRms","kPp","kV"]);
+  $("oE").textContent=fmt(o.e,2)+" \u00B5m";
+  $("oW").textContent=fmt(o.w,1)+" rad/s";
+  $("oF").textContent=fmt(o.F,1)+" N";
+  var Uper=o.w>0?1000*G*o.m/o.w:Infinity;
+
+  var gi=0; while(gi<GRADES.length&&o.vk>GRADES[gi])gi++;
+  var gLabel=gi>=GRADES.length?"worse than G 4000":"G "+GRADES[gi];
+
+  if(o.two){
+    var s=o.s;
+    $("row-Us").hidden=false; $("row-Cu").hidden=false;
+    var usm=cabs(s.Us);
+    $("oUs").textContent=(usm<1e-6?"0.0 g\u00B7mm (fully cancelled)":fmt(usm,1)+" g\u00B7mm \u2220"+fmt(carg(s.Us),0)+"\u00B0");
+    var eqPair=s.L>0?cabs(s.Cu)/(s.L*1000):0;
+    $("oCu").textContent=fmt(cabs(s.Cu),0)+" g\u00B7mm\u00B2 (\u00B1"+fmt(eqPair,1)+" g\u00B7mm at bearings)";
+    $("lblUp").textContent="Permissible per plane";
+    /* ISO 1940 allocation with the 30-70% clamp */
+    var span=Math.abs(s.z2-s.z1), al1,al2,clamped=false;
+    if(span>1e-9){
+      al1=Math.abs(s.z2-s.zg)/span; al2=Math.abs(s.zg-s.z1)/span;
+    } else {al1=0.5;al2=0.5;}
+    var c1=Math.min(0.7,Math.max(0.3,al1)), c2=Math.min(0.7,Math.max(0.3,al2));
+    if(Math.abs(c1-al1)>1e-6||Math.abs(c2-al2)>1e-6)clamped=true;
+    var Up1=Uper*c1, Up2=Uper*c2;
+    $("oUp").textContent=fmt(Up1,1)+" / "+fmt(Up2,1)+" g\u00B7mm";
+    var pass=(num("U1")<=Up1)&&(num("U2")<=Up2);
+    var kb=$("kBadge");
+    kb.textContent="Static \u2264 "+gLabel+"  \u00B7  target G "+G+(pass?" met both planes":" exceeded")+(clamped?"  \u00B7  30\u201370% clamp applied":"");
+    kb.className="badge "+(pass?"zA":"zC");
+  } else {
+    $("row-Us").hidden=true; $("row-Cu").hidden=true;
+    $("lblUp").textContent="Permissible U at target";
+    $("oUp").textContent=(isFinite(Uper)?fmt(Uper,1):"\u2014")+" g\u00B7mm";
+    var kb2=$("kBadge");
+    kb2.textContent="Rotor grade \u2264 "+gLabel+"  \u00B7  target G "+G+(o.Utot<=Uper?" met":" exceeded");
+    kb2.className="badge "+(o.Utot<=Uper?"zA":"zC");
+  }
+
+  /* --- response cards --- */
+  $("cardR").hidden=o.two;
+  $("cardA").hidden=!o.two; $("cardB").hidden=!o.two; $("cardM").hidden=!o.two;
+
+  if(!o.two){
+    trip(o.vr,["rPk","rRms","rPp","rV"]);
+    $("oNc").textContent=fmt(o.Nc,0)+" rpm ("+fmt(o.p.wn/(2*Math.PI),1)+" Hz)";
+    $("oR").textContent=fmt(o.r,3);
+    $("oA").textContent=fmt(o.A,2)+"\u00D7";
+    $("oX").textContent=fmt(o.X,2)+" \u00B5m pk / "+fmt(2*o.X,2)+" \u00B5m pk-pk";
+    $("oAcc").textContent=fmt(o.a,2)+" m/s\u00B2 ("+fmt(o.a/9.80665,3)+" g pk)";
+    $("oPh").textContent=fmt(o.ph,1)+"\u00B0";
+    $("oFt").textContent=fmt(o.Ft,1)+" N pk";
+    setBadge($("rBadge"),o.vr/RT2,z,lim,"");
+    if(state.model==="A"){
+      $("rWhat").textContent="Housing absolute";
+      $("rCap").textContent="Measured at bearing housing (accelerometer)";
+      $("hint-model").textContent="\u03C9\u2099 from support stiffness and supported mass. Compare against ISO 20816 casing limits.";
+    } else {
+      $("rWhat").textContent="Shaft relative";
+      $("rCap").textContent="Shaft deflection at mid-span (proximity probe)";
+      $("hint-model").textContent="\u03C9\u2099 from shaft bending stiffness and rotor mass. Casing idealised as rigid \u2014 ISO 20816 casing zones do not strictly apply.";
+    }
+    $("hint-e").textContent="e = U/m = "+fmt(o.e,2)+" \u00B5m mass-centre offset";
+    $("fld-M").style.display=(state.model==="A")?"":"none";
+    $("hint-M").textContent=(num("M")<o.m)?"Supported mass is below rotor mass \u2014 check input.":"Rotor + housing + everything moving with it.";
+    $("hint-M").className="hint"+((num("M")<o.m)?" warn":"");
+  } else {
+    var sol=o.sol, s2=o.s;
+    trip(sol.vA,["aPk","aRms","aPp","aV"]);
+    trip(sol.vB,["bPk","bRms","bPp","bV"]);
+    $("aX").textContent=fmt(sol.dA,2)+" \u00B5m pk / "+fmt(2*sol.dA,2)+" pk-pk";
+    $("bX").textContent=fmt(sol.dB,2)+" \u00B5m pk / "+fmt(2*sol.dB,2)+" pk-pk";
+    var accA=o.w*o.w*sol.dA*1e-6, accB=o.w*o.w*sol.dB*1e-6;
+    $("aAcc").textContent=fmt(accA,2)+" m/s\u00B2 ("+fmt(accA/9.80665,3)+" g)";
+    $("bAcc").textContent=fmt(accB,2)+" m/s\u00B2 ("+fmt(accB/9.80665,3)+" g)";
+    $("aPh").textContent=fmt(sol.phA,1)+"\u00B0";
+    $("bPh").textContent=fmt(sol.phB,1)+"\u00B0";
+    $("aFt").textContent=fmt(sol.FA,1)+" N pk";
+    $("bFt").textContent=fmt(sol.FB,1)+" N pk";
+    $("aCap").textContent="At z = 0 mm, "+fmt(s2.a*1000,0)+" mm from CG";
+    $("bCap").textContent="At z = "+fmt(s2.L*1000,0)+" mm, "+fmt(s2.b*1000,0)+" mm from CG";
+    setBadge($("aBadge"),sol.vA/RT2,z,lim,"");
+    setBadge($("bBadge"),sol.vB/RT2,z,lim,"");
+
+    $("oC1").textContent=o.crits.length>0?fmt(o.crits[0],0)+" rpm":"none";
+    $("oC2").textContent=o.crits.length>1?fmt(o.crits[1],0)+" rpm":(s2.J<=0?"none \u2014 gyroscopically stiffened out":"none");
+    $("oWt").textContent=fmt(o.wt/(2*Math.PI),1)+" Hz ("+fmt(o.wt*60/(2*Math.PI),0)+" rpm)";
+    $("oWc").textContent=isFinite(o.wc)?fmt(o.wc/(2*Math.PI),1)+" Hz ("+fmt(o.wc*60/(2*Math.PI),0)+" rpm)":"\u221E";
+    $("oId").textContent=fmt(s2.Id,4)+" kg\u00B7m\u00B2"+(s2.over?" (override)":"");
+    $("oIp").textContent=fmt(s2.Ip,4)+" / \u03B3 = "+fmt(s2.Ip/s2.Id,3);
+    $("oK12").textContent=fmt(s2.K12/1e6,3)+" MN/rad";
+    $("oTh").textContent=fmt(cabs(sol.T)*1e6,2)+" \u00B5rad pk";
+    var mb=$("mBadge");
+    var decoupled=Math.abs(s2.K12)<1e-6*Math.max(s2.K11,1);
+    if(s2.J<=0){mb.textContent="Disc-like rotor \u2014 no forward conical critical";mb.className="badge zA";}
+    else if(decoupled){mb.textContent="Modes decoupled \u2014 stiffness centre at CG";mb.className="badge zA";}
+    else {mb.textContent="Modes coupled \u2014 static unbalance also rocks the rotor";mb.className="badge zB";}
+    $("hint-model").textContent="Coupled 2-DOF rigid rotor. Bearing A at z = 0, B at z = span. Angles are heavy-spot positions.";
+    $("hint-sc").textContent="U\u209B = "+fmt(cabs(s2.Us),0)+" g\u00B7mm  \u00B7  C\u1D64 = "+fmt(cabs(s2.Cu),0)+" g\u00B7mm\u00B2";
+  }
+
+  /* --- context note --- */
+  var res="";
+  if(o.two){
+    var near=o.crits.filter(function(c){return Math.abs(o.N-c)/Math.max(c,1)<0.15;});
+    if(near.length)res="  Operating within 15% of a critical at "+fmt(near[0],0)+" rpm \u2014 amplitude is damping-controlled and highly sensitive.";
+    else if(cabs(o.s.Us)<0.02*(num("U1")+num("U2")))res="  Static unbalance is nearly cancelled: the kinematic velocity reads almost zero while the couple still drives both bearings. This is the case a single-plane check would pass.";
+  } else {
+    if(o.r>0.85&&o.r<1.18)res="  Operating within \u00B115% of the critical speed \u2014 amplitude is damping-controlled and highly sensitive.";
+    else if(o.r>RT2)res="  Super-critical (r > \u221A2): the rotor is self-centring and the response asymptotes to the kinematic line.";
+  }
+  $("note").textContent="1\u00D7 order only \u2014 linear isotropic supports, no cross-coupling or oil-film effects. "+
+    (o.two?"Rigid rotor: valid below about 70% of the first bending critical. ":"")+
+    "Measured broadband RMS will read higher because it also contains gear mesh, bearing and structural content."+res;
+
+  drawPlot(o,z,lim);
+  drawRotor(o);
+}
+
+/* ---------------- sweep + chart ---------------- */
+function sweepAt(n,o){
+  var w=2*Math.PI*n/60;
+  var vk=(o.e*1e-3)*w/RT2;
+  if(o.two){
+    var sol=twoPlaneSolve(n,o.s,o.z);
+    return [vk,sol.vA/RT2,sol.vB/RT2];
+  }
+  var r=o.p.wn>0?w/o.p.wn:0;
+  var vr=(o.p.eEff*1e-3*amp(r,o.z))*w/RT2;
+  return [vk,isFinite(vr)?vr:1e9];
+}
+
+function drawPlot(o,z,lim){
+  var W=900,H=430,L=64,R=18,T=16,B=48,pw=W-L-R,ph=H-T-B;
+  var crit=o.two?o.crits.slice():(o.Nc>0?[o.Nc]:[]);
+  var cmax=crit.length?Math.max.apply(null,crit):o.N;
+  var nMax=Math.max(cmax*1.6,o.N*1.35,1000);
+  var pow=Math.pow(10,Math.floor(Math.log10(nMax)));
+  nMax=Math.ceil(nMax/(pow/2))*(pow/2);
+
+  var nSeries=o.two?3:2, pts=260, series=[],i,j;
+  for(j=0;j<nSeries;j++)series.push([]);
+  var vmax=0;
+  for(i=0;i<=pts;i++){
+    var n=nMax*i/pts, vals=sweepAt(n,o);
+    for(j=0;j<nSeries;j++){
+      var v=vals[j]; if(!isFinite(v))v=1e9;
+      series[j].push([n,v]);
+      if(v<1e8&&v>vmax)vmax=v;
+    }
+  }
+  var logMode=state.scale==="log";
+  var vmin=logMode?Math.max(0.005,vmax/1e4):0;
+  var vtop=vmax*1.12||1;
+  if(isFinite(lim)&&lim>0&&lim>vtop)vtop=lim*1.2;
+
+  function X(n){return L+pw*n/nMax;}
+  function Y(v){
+    if(logMode){
+      var lo=Math.log10(vmin),hi=Math.log10(vtop);
+      return T+ph-ph*(Math.log10(Math.max(v,vmin))-lo)/(hi-lo);
+    }
+    return T+ph-ph*Math.min(v,vtop)/vtop;
+  }
+  function path(arr){
+    var d="",started=false;
+    for(var q=0;q<arr.length;q++){
+      var v=arr[q][1];
+      if(logMode&&v<vmin){started=false;continue;}
+      var x=X(arr[q][0]),y=Y(v); if(y<T-4)y=T-4;
+      d+=(started?"L":"M")+x.toFixed(1)+" "+y.toFixed(1)+" "; started=true;
+    }
+    return d;
+  }
+
+  var g="";
+  var bands=[[0,z.A,"#E8F3FA"],[z.A,z.B,"#EFF2F5"],[z.B,z.C,"#FDF3E0"],[z.C,vtop*10,"#FBE9EA"]];
+  for(var b=0;b<bands.length;b++){
+    var y1=Y(Math.min(bands[b][1],vtop)),y0=Y(Math.max(bands[b][0],vmin));
+    if(y0-y1>0.5)g+='<rect x="'+L+'" y="'+y1.toFixed(1)+'" width="'+pw+'" height="'+(y0-y1).toFixed(1)+'" fill="'+bands[b][2]+'"/>';
+  }
+  var zl=[["A/B",z.A],["B/C",z.B],["C/D",z.C]];
+  for(var q2=0;q2<zl.length;q2++){
+    if(zl[q2][1]<vtop&&zl[q2][1]>vmin){
+      var yy=Y(zl[q2][1]);
+      g+='<line x1="'+L+'" y1="'+yy.toFixed(1)+'" x2="'+(L+pw)+'" y2="'+yy.toFixed(1)+'" stroke="#78838E" stroke-width="1" stroke-dasharray="5 4"/>';
+      g+='<text class="axis-l" x="'+(L+pw-3)+'" y="'+(yy-4).toFixed(1)+'" text-anchor="end">'+zl[q2][0]+' '+zl[q2][1]+'</text>';
+    }
+  }
+  if(isFinite(lim)&&lim>0&&lim<vtop&&lim>vmin){
+    var yl=Y(lim);
+    g+='<line x1="'+L+'" y1="'+yl.toFixed(1)+'" x2="'+(L+pw)+'" y2="'+yl.toFixed(1)+'" stroke="#CC79A7" stroke-width="1.6" stroke-dasharray="2 3"/>';
+    g+='<text class="axis-l" x="'+(L+4)+'" y="'+(yl-4).toFixed(1)+'" fill="#CC79A7">house limit</text>';
+  }
+  var ticks=[],t;
+  if(logMode){
+    var lo2=Math.floor(Math.log10(vmin)),hi2=Math.ceil(Math.log10(vtop));
+    for(t=lo2;t<=hi2;t++){var tv=Math.pow(10,t);if(tv>=vmin&&tv<=vtop)ticks.push(tv);}
+  } else {for(t=0;t<=5;t++)ticks.push(vtop*t/5);}
+  for(var ti=0;ti<ticks.length;ti++){
+    var yv=Y(ticks[ti]);
+    g+='<line class="gridline" x1="'+L+'" y1="'+yv.toFixed(1)+'" x2="'+(L+pw)+'" y2="'+yv.toFixed(1)+'"/>';
+    g+='<text class="axis-l" x="'+(L-8)+'" y="'+(yv+3.5).toFixed(1)+'" text-anchor="end">'+(ticks[ti]>=10?ticks[ti].toFixed(0):ticks[ti].toFixed(ticks[ti]<1?2:1))+'</text>';
+  }
+  for(var xi=0;xi<=6;xi++){
+    var nv=nMax*xi/6,xv=X(nv);
+    g+='<line class="gridline" x1="'+xv.toFixed(1)+'" y1="'+T+'" x2="'+xv.toFixed(1)+'" y2="'+(T+ph)+'"/>';
+    g+='<text class="axis-l" x="'+xv.toFixed(1)+'" y="'+(T+ph+16)+'" text-anchor="middle">'+nv.toFixed(0)+'</text>';
+  }
+  for(var ci=0;ci<crit.length;ci++){
+    if(crit[ci]<=nMax&&crit[ci]>0){
+      var xc=X(crit[ci]);
+      g+='<line x1="'+xc.toFixed(1)+'" y1="'+T+'" x2="'+xc.toFixed(1)+'" y2="'+(T+ph)+'" stroke="#E69F00" stroke-width="1.4" stroke-dasharray="7 3"/>';
+      g+='<text class="axis-l" x="'+(xc+5).toFixed(1)+'" y="'+(T+13+ci*13)+'" fill="#8A5F00">crit '+(ci+1)+' \u00B7 '+crit[ci].toFixed(0)+'</text>';
+    }
+  }
+
+  var cols=o.two?["#0076BA","#E8000B","#E69F00"]:["#0076BA","#E8000B"];
+  var names=o.two?["Kinematic e\u03C9","Bearing A","Bearing B"]:["Kinematic e\u03C9",(state.model==="B"?"Shaft relative":"Housing response")];
+  for(j=nSeries-1;j>=0;j--)
+    g+='<path d="'+path(series[j])+'" fill="none" stroke="'+cols[j]+'" stroke-width="2.2" stroke-linejoin="round"/>';
+  for(j=0;j<nSeries;j++){
+    for(var mk=1;mk<=5;mk++){
+      var idx=Math.round(pts*mk/6),p=series[j][idx];
+      if(p[1]<=vtop&&p[1]>=vmin){
+        var cx2=X(p[0]).toFixed(1),cy2=Y(p[1]).toFixed(1);
+        if(j===0)g+='<circle cx="'+cx2+'" cy="'+cy2+'" r="3.2" fill="#fff" stroke="'+cols[j]+'" stroke-width="1.8"/>';
+        else if(j===1)g+='<rect x="'+(cx2-3)+'" y="'+(cy2-3)+'" width="6" height="6" fill="#fff" stroke="'+cols[j]+'" stroke-width="1.8"/>';
+        else g+='<path d="M'+cx2+' '+(cy2-4)+'L'+(+cx2+4)+' '+cy2+'L'+cx2+' '+(+cy2+4)+'L'+(cx2-4)+' '+cy2+'Z" fill="#fff" stroke="'+cols[j]+'" stroke-width="1.8"/>';
+      }
+    }
+  }
+  if(o.N<=nMax){
+    var xo=X(o.N),vals=sweepAt(o.N,o),nearC=false;
+    for(var cc=0;cc<crit.length;cc++)if(Math.abs(o.N-crit[cc])/Math.max(crit[cc],1)<0.15)nearC=true;
+    g+='<line x1="'+xo.toFixed(1)+'" y1="'+T+'" x2="'+xo.toFixed(1)+'" y2="'+(T+ph)+'" stroke="#14181D" stroke-width="1"'+(nearC?' class="pulse"':' opacity="0.45"')+'/>';
+    var ytop=1e9;
+    for(j=0;j<nSeries;j++){var yy2=Y(vals[j]);if(yy2<ytop)ytop=yy2;
+      g+='<circle cx="'+xo.toFixed(1)+'" cy="'+yy2.toFixed(1)+'" r="5.5" fill="'+cols[j]+'" stroke="#fff" stroke-width="2"/>';}
+    var lx=xo>L+pw*0.62?xo-10:xo+10, anc=xo>L+pw*0.62?"end":"start";
+    g+='<text class="axis-l" x="'+lx.toFixed(1)+'" y="'+(ytop-10).toFixed(1)+'" text-anchor="'+anc+'" fill="#14181D">'+o.N.toFixed(0)+' rpm</text>';
+  }
+  g+='<rect class="frame" x="'+L+'" y="'+T+'" width="'+pw+'" height="'+ph+'"/>';
+  g+='<text class="axis-t" x="'+(L+pw/2)+'" y="'+(H-10)+'" text-anchor="middle">Shaft speed \u2014 rpm</text>';
+  g+='<text class="axis-t" x="'+(-(T+ph/2))+'" y="15" text-anchor="middle" transform="rotate(-90)">Velocity \u2014 mm/s rms</text>';
+  $("plot").innerHTML=g;
+
+  var kh="";
+  for(j=0;j<nSeries;j++)kh+='<span><i style="border-color:'+cols[j]+'"></i>'+names[j]+'</span>';
+  kh+='<span><i style="border-color:#78838E;border-top-style:dashed"></i>Zone limits</span>';
+  if(crit.length)kh+='<span><i style="border-color:#E69F00;border-top-style:dashed"></i>Critical</span>';
+  $("keys").innerHTML=kh;
+}
+
+/* ---------------- rotor schematic ---------------- */
+function drawRotor(o){
+  $("schemwrap").hidden=!o.two;
+  if(!o.two)return;
+  var s=o.s,W=900,H=150,pad=70;
+  var zmin=Math.min(0,s.z1*1000,s.z2*1000), zmax=Math.max(s.L*1000,s.z1*1000,s.z2*1000);
+  var range=Math.max(zmax-zmin,1), sc=(W-2*pad)/range;
+  function P(zmm){return pad+(zmm-zmin)*sc;}
+  var y=80,g="";
+  g+='<line x1="'+P(zmin)+'" y1="'+y+'" x2="'+P(zmax)+'" y2="'+y+'" stroke="#C3CBD3" stroke-width="1" stroke-dasharray="6 4"/>';
+  var rl=Math.min(0,s.z1*1000), rr=Math.max(s.L*1000,s.z2*1000);
+  g+='<rect x="'+P(rl)+'" y="'+(y-16)+'" width="'+((rr-rl)*sc)+'" height="32" fill="#EDF0F3" stroke="#48525C" stroke-width="1.2"/>';
+  [[0,"A",s.kA],[s.L*1000,"B",s.kB]].forEach(function(bg){
+    var x=P(bg[0]);
+    g+='<path d="M'+(x-13)+' '+(y+18)+'L'+x+' '+(y+40)+'L'+(x+13)+' '+(y+18)+'Z" fill="#fff" stroke="#14181D" stroke-width="1.4"/>';
+    g+='<line x1="'+(x-20)+'" y1="'+(y+42)+'" x2="'+(x+20)+'" y2="'+(y+42)+'" stroke="#14181D" stroke-width="2"/>';
+    g+='<text class="axis-l" x="'+x+'" y="'+(y+58)+'" text-anchor="middle" fill="#14181D">'+bg[1]+' \u00B7 '+(bg[2]/1e6).toFixed(0)+' MN/m</text>';
+  });
+  var xg=P(s.zg*1000);
+  g+='<circle cx="'+xg+'" cy="'+y+'" r="7" fill="#fff" stroke="#14181D" stroke-width="1.4"/>';
+  g+='<path d="M'+xg+' '+(y-7)+'A7 7 0 0 1 '+xg+' '+(y+7)+'Z" fill="#14181D"/>';
+  g+='<path d="M'+xg+' '+(y+7)+'A7 7 0 0 1 '+xg+' '+(y-7)+'Z" fill="#fff"/>';
+  g+='<text class="axis-l" x="'+xg+'" y="'+(y-14)+'" text-anchor="middle" fill="#14181D">CG</text>';
+  [[s.z1*1000,num("U1"),num("a1"),"1","#E8000B"],[s.z2*1000,num("U2"),num("a2"),"2","#E69F00"]].forEach(function(pl){
+    var x=P(pl[0]);
+    g+='<line x1="'+x+'" y1="'+(y-42)+'" x2="'+x+'" y2="'+(y+16)+'" stroke="'+pl[4]+'" stroke-width="1.6"/>';
+    g+='<circle cx="'+x+'" cy="'+(y-42)+'" r="4" fill="'+pl[4]+'"/>';
+    g+='<text class="axis-l" x="'+(x+7)+'" y="'+(y-45)+'" fill="'+pl[4]+'">U'+pl[3]+' '+pl[1].toFixed(0)+' g\u00B7mm \u2220'+pl[2].toFixed(0)+'\u00B0</text>';
+    g+='<text class="axis-l" x="'+x+'" y="'+(y+70)+'" text-anchor="middle">z'+pl[3]+'='+pl[0].toFixed(0)+'</text>';
+  });
+  g+='<text class="axis-t" x="'+pad+'" y="'+(H-6)+'">Rotor layout \u2014 axial position in mm from bearing A</text>';
+  $("rotor").innerHTML=g;
+}
+
+/* ---------------- linking + wiring ---------------- */
+function kFromNc(){
+  var mResp=state.model==="A"?Math.max(num("M"),0.001):Math.max(num("m"),0.001);
+  var wn=2*Math.PI*num("Nc")/60;
+  $("k").value=(mResp*wn*wn/1e6).toPrecision(4);
+}
+function ncFromK(){
+  var mResp=state.model==="A"?Math.max(num("M"),0.001):Math.max(num("m"),0.001);
+  var wn=Math.sqrt(num("k")*1e6/mResp);
+  $("Nc").value=(wn*60/(2*Math.PI)).toFixed(0);
+}
+
+["m","U","M","grp","tg","lim","U1","a1","z1","U2","a2","z2","L","zg","kA","kB","Lr","Dr","Idov"].forEach(function(id){
+  $(id).addEventListener("input",function(){if(id==="m"||id==="M")ncFromK();render();});
+});
+$("gyro").addEventListener("change",render);
+$("N").addEventListener("input",function(){$("Nr").value=$("N").value;render();});
+$("Nr").addEventListener("input",function(){$("N").value=$("Nr").value;render();});
+$("k").addEventListener("input",function(){ncFromK();render();});
+$("Nc").addEventListener("input",function(){kFromNc();render();});
+$("z").addEventListener("input",function(){$("zval").textContent=parseFloat($("z").value).toFixed(3);render();});
+
+function setModel(mm){
+  state.model=mm;
+  ["A","B","C"].forEach(function(x){$("m"+x).setAttribute("aria-pressed",x===mm);});
+  var two=(mm==="C");
+  $("grp-single").hidden=two;
+  $("grp-two").hidden=!two;
+  $("grp-geom").hidden=!two;
+  $("fld-U1").style.display=two?"none":"";
+  if(!two)ncFromK();
+  render();
+}
+["A","B","C"].forEach(function(x){$("m"+x).addEventListener("click",function(){setModel(x);});});
+
+function setScale(sc){
+  state.scale=sc;
+  $("scLin").setAttribute("aria-pressed",sc==="lin");
+  $("scLog").setAttribute("aria-pressed",sc==="log");
+  render();
+}
+$("scLin").addEventListener("click",function(){setScale("lin");});
+$("scLog").addEventListener("click",function(){setScale("log");});
+
+function showTab(which){
+  var isSim=which==="sim";
+  $("tab-sim").setAttribute("aria-selected",isSim);
+  $("tab-theory").setAttribute("aria-selected",!isSim);
+  $("page-sim").hidden=!isSim;
+  $("page-theory").hidden=isSim;
+  if(isSim)render();
+  window.scrollTo(0,0);
+}
+$("tab-sim").addEventListener("click",function(){showTab("sim");});
+$("tab-theory").addEventListener("click",function(){showTab("theory");});
+$("rack").addEventListener("submit",function(e){e.preventDefault();});
+
+ncFromK();
+setModel("A");
+</script>
+</body>
+</html>

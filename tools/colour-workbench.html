@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<!--
+TOOL    : colour_workbench.html (public copy)
+FAMILY  : COLOUR
+VERSION : 1.0.0
+DATE    : 2026-10-01
+CHAT    : Colour workbench
+CHANGES : v1.0.0  public copy for haivijayanand.github.io: colour wheel, models, scales, colour-vision simulation, contrast and print
+STATUS  : working; runs offline in any browser, no network
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Colour Workbench — theory, models, vision, print</title>
+<style>
+/* ============================================================
+   VIEWING BOOTH SHELL
+   The interface is deliberately achromatic. Any hue in the chrome
+   biases colour judgement (ISO 3664 specifies a matt neutral grey
+   surround for critical appraisal). Emphasis is carried by weight,
+   rule thickness and inversion — never by an accent hue.
+   ============================================================ */
+:root{
+  --ink:#141414;
+  --booth:#4d4d4d;      /* L*50 neutral surround */
+  --booth-hi:#5a5a5a;
+  --rule:#8a8a8a;
+  --panel:#d7d7d7;
+  --panel-2:#c6c6c6;
+  --paper:#efefef;
+  --field:#f7f7f7;
+  --dim:#6f6f6f;
+  --shadow:0 1px 0 rgba(255,255,255,.45), 0 2px 6px rgba(0,0,0,.30);
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,"Liberation Mono",monospace;
+  --sans:"Segoe UI",Inter,-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --step:8px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--booth);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-weight:650;line-height:1.2;margin:0}
+h2{font-size:1.45rem;letter-spacing:-.01em}
+h3{font-size:1.05rem;margin-top:calc(var(--step)*3)}
+h4{font-size:.92rem;color:var(--dim)}
+p{margin:.6em 0;max-width:74ch}
+a{color:inherit}
+code,.num{font-family:var(--mono);font-size:.86em}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:var(--ink)}
+button{cursor:pointer}
+:focus-visible{outline:3px solid #fff;outline-offset:2px}
+
+/* ---------- booth bar ---------- */
+.booth{
+  position:sticky;top:0;z-index:40;
+  background:var(--booth);
+  border-bottom:1px solid #3a3a3a;
+  box-shadow:0 6px 18px rgba(0,0,0,.28);
+}
+.booth-inner{
+  max-width:1240px;margin:0 auto;
+  padding:14px 18px;
+  display:flex;gap:16px;align-items:center;flex-wrap:wrap;
+}
+.chip{
+  width:104px;height:74px;border-radius:2px;flex:none;
+  border:1px solid rgba(0,0,0,.45);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.18), 0 3px 10px rgba(0,0,0,.35);
+}
+.booth-fields{display:flex;flex-direction:column;gap:6px;min-width:210px}
+.hexrow{display:flex;gap:6px}
+.hexrow input{
+  width:130px;background:var(--field);border:1px solid #3a3a3a;border-radius:2px;
+  padding:7px 9px;font-family:var(--mono);font-size:15px;letter-spacing:.04em;
+}
+.readout{color:#ececec;font-family:var(--mono);font-size:12.5px;line-height:1.65}
+.readout b{font-weight:600;color:#fff}
+.btn{
+  background:var(--panel);border:1px solid #3a3a3a;border-radius:2px;
+  padding:7px 11px;font-size:13.5px;font-weight:550;box-shadow:var(--shadow);
+}
+.btn:hover{background:var(--paper)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:#ededed;border-color:#7d7d7d;box-shadow:none}
+.btn.ghost:hover{background:#5c5c5c}
+.btn.sm{padding:4px 8px;font-size:12.5px}
+
+/* palette tray */
+.tray{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
+.tray-swatches{display:flex;gap:3px;flex-wrap:wrap;max-width:340px}
+.tray-swatches .sw{
+  width:30px;height:30px;border:1px solid rgba(0,0,0,.5);border-radius:2px;
+  position:relative;cursor:pointer;padding:0;
+}
+.tray-swatches .sw::after{
+  content:"×";position:absolute;top:-6px;right:-5px;width:15px;height:15px;
+  background:var(--ink);color:#fff;border-radius:50%;font-size:11px;line-height:15px;
+  text-align:center;opacity:0;transition:opacity .12s;
+}
+.tray-swatches .sw:hover::after{opacity:1}
+.tray-empty{color:#d2d2d2;font-size:12.5px;font-style:italic}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1240px;margin:0 auto;padding:0 18px 90px;display:flex;gap:26px;align-items:flex-start}
+nav.rail{
+  position:sticky;top:132px;flex:none;width:186px;padding-top:26px;
+}
+nav.rail ol{list-style:none;margin:0;padding:0}
+nav.rail li{margin:0}
+nav.rail a{
+  display:block;padding:7px 10px;text-decoration:none;color:#e8e8e8;font-size:14px;
+  border-left:3px solid transparent;
+}
+nav.rail a:hover{background:#5a5a5a}
+nav.rail a.on{background:var(--paper);color:var(--ink);border-left-color:var(--ink);font-weight:600}
+main{flex:1;min-width:0;padding-top:26px}
+
+section.sheet{
+  background:var(--paper);
+  border:1px solid #3a3a3a;
+  padding:24px 26px 30px;
+  margin-bottom:22px;
+  box-shadow:0 8px 22px rgba(0,0,0,.22);
+}
+.lede{color:#3d3d3d;max-width:70ch}
+.hr{border:0;border-top:1px solid #bcbcbc;margin:22px 0}
+
+/* generic bits */
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.box{background:var(--panel);border:1px solid #a9a9a9;padding:12px 14px}
+.box h4{margin-bottom:4px}
+.note{font-size:13px;color:#4a4a4a}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #c4c4c4;vertical-align:top}
+th{font-weight:650;border-bottom:1.5px solid #6f6f6f}
+td.num,th.num{font-family:var(--mono);text-align:right;white-space:nowrap}
+.pill{display:inline-block;padding:1px 7px;border:1px solid #6f6f6f;font-size:11.5px;font-family:var(--mono)}
+.pill.ok{background:#1d1d1d;color:#fff;border-color:#1d1d1d}
+.pill.warn{background:#fff;border-width:2px;font-weight:700}
+label.f{display:block;font-size:12.5px;color:#4a4a4a;margin-bottom:3px}
+select,input[type=text],input[type=number],textarea{
+  background:var(--field);border:1px solid #9a9a9a;border-radius:2px;padding:6px 8px;width:100%;
+}
+textarea{font-family:var(--mono);font-size:12px;line-height:1.5;min-height:150px;resize:vertical}
+input[type=range]{width:100%;accent-color:#2b2b2b}
+.swatch-lg{height:78px;border:1px solid rgba(0,0,0,.4);cursor:pointer;position:relative}
+.swatch-lg span{
+  position:absolute;left:0;right:0;bottom:0;background:rgba(255,255,255,.9);
+  font-family:var(--mono);font-size:11px;padding:2px 4px;text-align:center;
+}
+
+/* wheel */
+.wheel-row{display:flex;gap:22px;flex-wrap:wrap}
+.wheel-hold{position:relative;flex:none}
+#wheel{display:block;border-radius:50%;box-shadow:0 4px 14px rgba(0,0,0,.28);cursor:crosshair;touch-action:none}
+#wheelOverlay{position:absolute;inset:0;pointer-events:none}
+.wheel-ctl{flex:1;min-width:260px}
+.harmony-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(76px,1fr));gap:6px;margin-top:12px}
+
+/* slider rows */
+.srow{display:grid;grid-template-columns:34px 1fr 62px;gap:9px;align-items:center;margin-bottom:7px}
+.srow .lab{font-family:var(--mono);font-size:12.5px;font-weight:600}
+.srow .val{font-family:var(--mono);font-size:12.5px;text-align:right}
+
+/* ramps */
+.ramp{display:flex;height:56px;border:1px solid #999;margin:6px 0 2px}
+.ramp div{flex:1;cursor:pointer;position:relative}
+.ramp-lbl{display:flex;font-family:var(--mono);font-size:10px;color:#555}
+.ramp-lbl span{flex:1;text-align:center}
+
+.scale-row{display:grid;grid-template-columns:repeat(11,1fr);gap:4px}
+.scale-cell{text-align:center;font-family:var(--mono);font-size:10.5px}
+.scale-cell i{display:block;height:52px;border:1px solid #9a9a9a;margin-bottom:2px;font-style:normal}
+
+/* cvd */
+.cvd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.cvd-card{background:var(--panel);border:1px solid #a9a9a9;padding:10px 12px 12px}
+.cvd-pair{display:flex;height:46px;border:1px solid #888;margin:6px 0}
+.cvd-pair div{flex:1}
+canvas.sim{width:100%;height:auto;border:1px solid #8a8a8a;display:block;background:#fff}
+
+/* print helpers */
+.tac-bar{height:22px;background:var(--panel-2);border:1px solid #8a8a8a;position:relative;margin-top:6px}
+.tac-bar i{display:block;height:100%;background:#2b2b2b}
+.tac-bar u{position:absolute;top:-4px;bottom:-4px;width:2px;background:#000;text-decoration:none}
+#cmykChart{border-collapse:collapse}
+#cmykChart td{padding:0;border:0}
+#cmykChart .cell{width:44px;height:34px;border:1px solid rgba(0,0,0,.25);position:relative}
+#cmykChart .hd{font-family:var(--mono);font-size:11px;padding:2px 5px;text-align:center;border:0}
+
+/* print sheet */
+#printSheet{display:none}
+@media print{
+  body{background:#fff}
+  .booth,nav.rail,.no-print{display:none!important}
+  .wrap{display:block;padding:0;max-width:none}
+  main{padding:0}
+  section.sheet{display:none}
+  #printSheet{display:block;background:#fff;color:#000;padding:0}
+  #printSheet .psw{break-inside:avoid}
+  @page{size:A4;margin:14mm}
+}
+#printSheet h2{margin-bottom:2mm}
+.psheet-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5mm;margin-top:5mm}
+.psw i{display:block;height:26mm;border:.3mm solid #000;font-style:normal}
+.psw p{margin:1mm 0 0;font-family:var(--mono);font-size:8pt;line-height:1.35;max-width:none}
+
+@media (max-width:900px){
+  .wrap{flex-direction:column;padding:0 12px 70px}
+  nav.rail{position:static;width:100%;padding-top:14px}
+  nav.rail ol{display:flex;gap:4px;overflow-x:auto;padding-bottom:6px}
+  nav.rail a{white-space:nowrap;border-left:0;border-bottom:3px solid transparent}
+  nav.rail a.on{border-left:0;border-bottom-color:var(--ink)}
+  main{padding-top:6px}
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .tray{margin-left:0;width:100%}
+  section.sheet{padding:18px 15px 24px}
+  .scale-row{grid-template-columns:repeat(4,1fr)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ============ BOOTH BAR ============ -->
+<header class="booth no-print">
+  <div class="booth-inner">
+    <div class="chip" id="chip" title="Active colour"></div>
+    <div class="booth-fields">
+      <div class="hexrow">
+        <input id="hexIn" type="text" value="#2E6F9E" spellcheck="false" aria-label="Hex value of the active colour">
+        <button class="btn" id="pickBtn" title="Pick a colour from the screen" hidden>Pick</button>
+        <button class="btn" id="randBtn" title="Random colour">Roll</button>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn sm" id="addBtn">Add to palette</button>
+        <button class="btn sm" id="copyHex">Copy hex</button>
+      </div>
+    </div>
+    <div class="readout" id="readout"></div>
+    <div class="tray">
+      <div class="tray-swatches" id="tray"><span class="tray-empty">Palette is empty. Add colours to test and export them together.</span></div>
+      <button class="btn ghost sm" id="clearTray">Clear</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="rail no-print" aria-label="Sections">
+    <ol>
+      <li><a href="#s-theory" class="on">Wheel and harmony</a></li>
+      <li><a href="#s-models">Colour models</a></li>
+      <li><a href="#s-shades">Shades and scales</a></li>
+      <li><a href="#s-vision">Colour vision</a></li>
+      <li><a href="#s-contrast">Contrast</a></li>
+      <li><a href="#s-print">Print and ink</a></li>
+      <li><a href="#s-templates">Templates and export</a></li>
+      <li><a href="#s-ref">Definitions</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+  <!-- ============ THEORY ============ -->
+  <section class="sheet" id="s-theory">
+    <h2>Wheel and harmony</h2>
+    <p class="lede">Drag on the wheel to set hue and saturation; the slider below sets lightness. Harmony schemes are fixed angular relationships on the hue circle — they are conventions that reliably avoid clashes, not laws.</p>
+
+    <div class="wheel-row">
+      <div class="wheel-hold">
+        <canvas id="wheel" width="340" height="340" aria-label="Hue and saturation wheel"></canvas>
+        <svg id="wheelOverlay" viewBox="0 0 340 340"></svg>
+      </div>
+      <div class="wheel-ctl">
+        <label class="f" for="wheelL">Lightness — <span class="num" id="wheelLVal">50%</span></label>
+        <input type="range" id="wheelL" min="0" max="100" value="50">
+
+        <label class="f" for="harmSel" style="margin-top:14px">Harmony scheme</label>
+        <select id="harmSel">
+          <option value="complementary">Complementary — one opposite (180°)</option>
+          <option value="analogous">Analogous — neighbours (±30°)</option>
+          <option value="triadic">Triadic — even thirds (120°)</option>
+          <option value="split">Split complementary (150°, 210°)</option>
+          <option value="square">Square — even quarters (90°)</option>
+          <option value="tetradic">Tetradic rectangle (60°, 180°, 240°)</option>
+          <option value="mono">Monochromatic — one hue, five lightnesses</option>
+          <option value="shades">Accented neutral — hue plus greys</option>
+        </select>
+        <p class="note" id="harmNote" style="margin-top:8px"></p>
+
+        <div class="harmony-strip" id="harmStrip"></div>
+        <button class="btn sm" id="harmAdd" style="margin-top:10px">Send this scheme to the palette</button>
+      </div>
+    </div>
+
+    <hr class="hr">
+    <h3>What the wheel is actually showing</h3>
+    <div class="grid g3">
+      <div class="box">
+        <h4>Hue is an angle</h4>
+        <p class="note">Position around the circle. It is cyclic, so 359° and 1° are neighbours. Hue alone carries no information about how light or how vivid a colour is.</p>
+      </div>
+      <div class="box">
+        <h4>Saturation is a radius</h4>
+        <p class="note">Distance from the neutral centre. At the centre every hue collapses to the same grey, which is why washed-out palettes lose their scheme entirely.</p>
+      </div>
+      <div class="box">
+        <h4>Lightness is off-wheel</h4>
+        <p class="note">The third axis cannot be drawn on a flat disc, so it lives on the slider. Most palette failures are lightness failures, not hue failures.</p>
+      </div>
+    </div>
+
+    <h3>Two different wheels, often confused</h3>
+    <table>
+      <tr><th>Wheel</th><th>Primaries</th><th>Complement of red</th><th>Where it applies</th></tr>
+      <tr><td>RYB (artists', 18th century)</td><td>Red, yellow, blue</td><td>Green</td><td>Paint mixing tradition, art teaching</td></tr>
+      <tr><td>RGB/CMY (this tool)</td><td>Red, green, blue light</td><td>Cyan</td><td>Screens, cameras, process printing</td></tr>
+    </table>
+    <p class="note">Both are legitimate for their own domain. Digital and print pipelines are built on the second, so that is the wheel drawn above.</p>
+  </section>
+
+  <!-- ============ MODELS ============ -->
+  <section class="sheet" id="s-models">
+    <h2>Colour models</h2>
+    <p class="lede">A colour <em>model</em> is a coordinate system. A colour <em>space</em> is a model plus a defined meaning for its numbers — sRGB is a space, RGB alone is only a model. Every slider below drives the same single colour, so you can watch one description move as you edit another.</p>
+
+    <div class="grid g2">
+      <div>
+        <h3 style="margin-top:0">RGB — additive, 0–255</h3>
+        <div id="sl-rgb"></div>
+        <h3>HSL — hue, saturation, lightness</h3>
+        <div id="sl-hsl"></div>
+        <h3>HSV — hue, saturation, value</h3>
+        <div id="sl-hsv"></div>
+      </div>
+      <div>
+        <h3 style="margin-top:0">CMYK — subtractive, naive conversion</h3>
+        <div id="sl-cmyk"></div>
+        <h3>CIE L*a*b* — perceptual, device independent</h3>
+        <div id="sl-lab"></div>
+        <h3>LCh — Lab in polar form</h3>
+        <div id="sl-lch"></div>
+      </div>
+    </div>
+
+    <hr class="hr">
+    <h3>All notations for the active colour</h3>
+    <table id="notationTable"></table>
+
+    <hr class="hr">
+    <div class="grid g2">
+      <div>
+        <h3 style="margin-top:0">Additive and subtractive</h3>
+        <svg viewBox="0 0 340 190" style="width:100%;max-width:360px;background:#e6e6e6;border:1px solid #a9a9a9">
+          <g style="mix-blend-mode:screen">
+            <circle cx="72" cy="72" r="46" fill="#f00"/><circle cx="110" cy="72" r="46" fill="#0f0"/><circle cx="91" cy="108" r="46" fill="#00f"/>
+          </g>
+          <text x="20" y="176" font-size="11" font-family="monospace">Light adds to white</text>
+          <g style="mix-blend-mode:multiply">
+            <circle cx="228" cy="72" r="46" fill="#0ff"/><circle cx="266" cy="72" r="46" fill="#f0f"/><circle cx="247" cy="108" r="46" fill="#ff0"/>
+          </g>
+          <text x="196" y="176" font-size="11" font-family="monospace">Ink subtracts to black</text>
+        </svg>
+        <p class="note">Screens emit light and sum toward white. Inks absorb light and stack toward black. This is why a screen mock-up is always a prediction of a print, never a preview of one.</p>
+      </div>
+      <div>
+        <h3 style="margin-top:0">Choosing a model for the job</h3>
+        <table>
+          <tr><th>Task</th><th>Use</th></tr>
+          <tr><td>Storing or transmitting screen colour</td><td>sRGB hex</td></tr>
+          <tr><td>Building a UI theme by hand</td><td>HSL or OKLCH</td></tr>
+          <tr><td>Colour pickers and eyedroppers</td><td>HSV</td></tr>
+          <tr><td>Specifying to a printer</td><td>CMYK plus spot references</td></tr>
+          <tr><td>Measuring a difference</td><td>Lab with ΔE2000</td></tr>
+          <tr><td>Even-looking tint scales</td><td>LCh or OKLCH lightness steps</td></tr>
+        </table>
+        <p class="note">RGB and CMYK are device dependent — the same triple looks different on two monitors or two presses. Lab and LCh are anchored to a measured observer, which is why colour management runs through them.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SHADES ============ -->
+  <section class="sheet" id="s-shades">
+    <h2>Shades and scales</h2>
+    <p class="lede">Tint, tone and shade are precise words. A tint adds white, a shade adds black, a tone adds grey. Click any swatch to make it the active colour.</p>
+
+    <h3>Tints — mixed toward white</h3>
+    <div class="ramp" id="rampTint"></div><div class="ramp-lbl" id="lblTint"></div>
+    <h3>Shades — mixed toward black</h3>
+    <div class="ramp" id="rampShade"></div><div class="ramp-lbl" id="lblShade"></div>
+    <h3>Tones — mixed toward mid grey</h3>
+    <div class="ramp" id="rampTone"></div><div class="ramp-lbl" id="lblTone"></div>
+    <h3>Saturation sweep — hue and lightness held</h3>
+    <div class="ramp" id="rampSat"></div><div class="ramp-lbl" id="lblSat"></div>
+    <h3>Hue sweep — saturation and lightness held</h3>
+    <div class="ramp" id="rampHue"></div><div class="ramp-lbl" id="lblHue"></div>
+
+    <hr class="hr">
+    <h3>Perceptual scale, 50 to 950</h3>
+    <p class="note">Steps are placed on even <span class="num">L*</span> intervals rather than even RGB intervals, so the jumps look equal instead of measuring equal. This is the shape a design-system colour ramp should have. Chroma is pulled in at both ends because no display can hold full chroma at extreme lightness.</p>
+    <div class="scale-row" id="tokenScale"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn sm" id="scaleCss">Copy as CSS variables</button>
+      <button class="btn sm" id="scaleJson">Copy as JSON tokens</button>
+      <button class="btn sm" id="scaleTray">Send scale to palette</button>
+    </div>
+  </section>
+
+  <!-- ============ VISION ============ -->
+  <section class="sheet" id="s-vision">
+    <h2>Colour vision</h2>
+    <p class="lede">Roughly 8% of men and 0.5% of women of northern European descent have some form of colour vision deficiency; red–green types dominate. The simulations below approximate what a colour becomes for each type. They are a design check, not a diagnostic test — no screen simulation can stand in for a clinical assessment.</p>
+
+    <label class="f" for="cvdSev">Severity of the anomalous types — <span class="num" id="cvdSevVal">60%</span></label>
+    <input type="range" id="cvdSev" min="10" max="100" value="60" style="max-width:320px">
+
+    <div class="cvd-grid" id="cvdGrid" style="margin-top:14px"></div>
+
+    <hr class="hr">
+    <h3>Does your palette survive?</h3>
+    <p class="note">Every pair in the palette is simulated and compared with ΔE2000. Below about 10 the two become hard to tell apart; below 5 they are effectively the same colour to that viewer. Add at least three colours to the palette to use this.</p>
+    <div id="cvdMatrix"></div>
+
+    <hr class="hr">
+    <h3>Simulate an image</h3>
+    <p class="note">Everything stays on this machine — the file is read in the browser and never uploaded.</p>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+      <input type="file" id="imgIn" accept="image/*" style="width:auto">
+      <select id="imgType" style="width:auto">
+        <option value="normal">Typical trichromatic vision</option>
+        <option value="protanopia">Protanopia</option>
+        <option value="deuteranopia" selected>Deuteranopia</option>
+        <option value="tritanopia">Tritanopia</option>
+        <option value="achromatopsia">Achromatopsia</option>
+      </select>
+      <button class="btn sm" id="imgReset">Use the built-in test chart</button>
+    </div>
+    <canvas class="sim" id="simCanvas" width="760" height="300"></canvas>
+
+    <hr class="hr">
+    <h3>Designing so colour is never the only channel</h3>
+    <div class="grid g2">
+      <div class="box"><h4>Pair hue with lightness</h4><p class="note">Two colours that differ in L* by 25 or more stay distinguishable under every deficiency, whatever their hues do.</p></div>
+      <div class="box"><h4>Give data a second cue</h4><p class="note">Direct labels, dash patterns, hatching, marker shapes. A legend keyed only by colour fails silently for the reader.</p></div>
+      <div class="box"><h4>Avoid the classic traps</h4><p class="note">Red on green, green on brown, blue on purple, pink on grey, and traffic-light status colours used without icons or text.</p></div>
+      <div class="box"><h4>Blue is the safe axis</h4><p class="note">Blue–yellow deficiency is rare, and blue keeps its separation from warm hues for both protan and deutan viewers.</p></div>
+    </div>
+  </section>
+
+  <!-- ============ CONTRAST ============ -->
+  <section class="sheet" id="s-contrast">
+    <h2>Contrast</h2>
+    <p class="lede">WCAG contrast is a ratio of relative luminance between 1:1 and 21:1. It ignores hue entirely, which is both its strength and its blind spot.</p>
+
+    <div class="grid g2">
+      <div>
+        <div class="grid g2">
+          <div><label class="f" for="cFg">Foreground</label><input type="text" id="cFg" value="#2E6F9E" spellcheck="false"></div>
+          <div><label class="f" for="cBg">Background</label><input type="text" id="cBg" value="#FFFFFF" spellcheck="false"></div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <button class="btn sm" id="cFromActive">Use active as foreground</button>
+          <button class="btn sm" id="cSwap">Swap</button>
+        </div>
+        <div id="cPreview" style="margin-top:14px;border:1px solid #999;padding:16px">
+          <div style="font-size:24px;font-weight:650">Large text, 24px</div>
+          <div style="font-size:15px">Body text at 15px — the size most interface copy actually uses.</div>
+          <div style="font-size:12px">Fine print at 12px, the hardest case to pass.</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:44px;font-weight:700;font-family:var(--mono)" id="cRatio">—</div>
+        <table id="cTable"></table>
+        <p class="note" id="cFix"></p>
+        <button class="btn sm" id="cAutoFix">Adjust the foreground until it passes AA</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PRINT ============ -->
+  <section class="sheet" id="s-print">
+    <h2>Print and ink</h2>
+    <p class="lede">Screen numbers become ink numbers here. The CMYK conversion in this tool is the naive formula with no profile behind it, so treat it as a starting specification to be proofed, not a colour-managed separation.</p>
+
+    <h3>Total area coverage for the active colour</h3>
+    <div id="tacBox"></div>
+
+    <hr class="hr">
+    <h3>Process tint chart</h3>
+    <p class="note">A tint chart is the oldest reliable tool in the trade: print it on the actual stock, on the actual press, and pick from the sheet rather than from the monitor. Choose two channels to vary in 10% steps and fix the other two.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:12px">
+      <div style="width:120px"><label class="f" for="axX">Across</label>
+        <select id="axX"><option>C</option><option selected>M</option><option>Y</option><option>K</option></select></div>
+      <div style="width:120px"><label class="f" for="axY">Down</label>
+        <select id="axY"><option selected>C</option><option>M</option><option>Y</option><option>K</option></select></div>
+      <div style="width:120px"><label class="f" for="fixA">Third channel %</label><input type="number" id="fixA" min="0" max="100" step="10" value="0"></div>
+      <div style="width:120px"><label class="f" for="fixB">Fourth channel %</label><input type="number" id="fixB" min="0" max="100" step="10" value="0"></div>
+    </div>
+    <div style="overflow:auto"><table id="cmykChart"></table></div>
+
+    <hr class="hr">
+    <h3>Black is not one colour</h3>
+    <table>
+      <tr><th>Build</th><th class="num">C</th><th class="num">M</th><th class="num">Y</th><th class="num">K</th><th class="num">TAC</th><th>Use</th></tr>
+      <tr><td>Flat black</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">100</td><td class="num">100%</td><td>Body text, fine rules, anything small</td></tr>
+      <tr><td>Rich black, neutral</td><td class="num">60</td><td class="num">40</td><td class="num">40</td><td class="num">100</td><td class="num">240%</td><td>Large solids on coated stock</td></tr>
+      <tr><td>Rich black, cool</td><td class="num">60</td><td class="num">0</td><td class="num">0</td><td class="num">100</td><td class="num">160%</td><td>Blue-leaning solids, safer on uncoated</td></tr>
+      <tr><td>Rich black, warm</td><td class="num">0</td><td class="num">60</td><td class="num">40</td><td class="num">100</td><td class="num">200%</td><td>Solids next to warm images</td></tr>
+      <tr><td>Registration</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">400%</td><td>Crop and registration marks only, never artwork</td></tr>
+    </table>
+    <p class="note">Never set small type in a rich black: any misregistration shows as coloured fringes on the letterforms. Registration black in artwork floods the sheet and will not dry.</p>
+
+    <hr class="hr">
+    <div class="grid g2">
+      <div>
+        <h3 style="margin-top:0">Spot or process</h3>
+        <table>
+          <tr><th>Spot</th><th>Process</th></tr>
+          <tr><td>Pre-mixed ink, one plate</td><td>Built from four screens</td></tr>
+          <tr><td>Repeats exactly, job to job</td><td>Drifts with press conditions</td></tr>
+          <tr><td>Reaches colours CMYK cannot — vivid orange, clean navy, metallics, fluorescents</td><td>Confined to the process gamut</td></tr>
+          <tr><td>Costs a plate and a wash-up</td><td>Free once you are already running four colours</td></tr>
+        </table>
+        <p class="note">Brand colours on packaging are usually spot for exactly the first two reasons. Named spot libraries are licensed systems, so specify by the vendor's own reference and confirm against a current physical guide — never against a screen.</p>
+      </div>
+      <div>
+        <h3 style="margin-top:0">What moves colour on press</h3>
+        <table>
+          <tr><td>Dot gain</td><td class="note">Halftone dots spread in the nip and into the substrate. Uncoated and film gain far more than coated; a 50% tint can land near 70%.</td></tr>
+          <tr><td>Substrate</td><td class="note">The paper or film is the white point. A yellow-cast board pulls every colour warm and nothing in the file can correct it.</td></tr>
+          <tr><td>Ink film thickness</td><td class="note">More ink means more density and a hue shift, not just a darker version.</td></tr>
+          <tr><td>Trapping and overprint</td><td class="note">Wet ink accepting wet ink differs from dry. Overprinting mixes with what is beneath; knockout removes it first.</td></tr>
+          <tr><td>Metamerism</td><td class="note">Two colours matching under one light and separating under another. Always appraise under a controlled D50 booth.</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TEMPLATES ============ -->
+  <section class="sheet" id="s-templates">
+    <h2>Templates and export</h2>
+    <p class="lede">Everything below is generated from the palette in the booth bar. Files are written locally by the browser.</p>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn sm" data-tpl="css">CSS variables</button>
+      <button class="btn sm" data-tpl="scss">SCSS map</button>
+      <button class="btn sm" data-tpl="json">Design tokens</button>
+      <button class="btn sm" data-tpl="tailwind">Tailwind config</button>
+      <button class="btn sm" data-tpl="gpl">GIMP / Inkscape palette</button>
+      <button class="btn sm" data-tpl="spec">Print specification</button>
+      <button class="btn sm" data-tpl="svg">SVG swatch card</button>
+      <button class="btn sm" data-tpl="csv">CSV of all models</button>
+    </div>
+    <textarea id="tplOut" spellcheck="false" aria-label="Generated template"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn sm" id="tplCopy">Copy</button>
+      <button class="btn sm" id="tplSave">Save file</button>
+      <button class="btn sm" id="printBtn">Print the swatch sheet</button>
+    </div>
+
+    <hr class="hr">
+    <h3>Ready-made palettes</h3>
+    <p class="note">Starting points that already behave under colour vision deficiency and in print. Click to load one into the palette.</p>
+    <div class="grid g2" id="presetBox"></div>
+  </section>
+
+  <!-- ============ REFERENCE ============ -->
+  <section class="sheet" id="s-ref">
+    <h2>Definitions</h2>
+    <p class="lede">The vocabulary, in the sense the trade uses it.</p>
+
+    <div class="grid g2">
+      <div>
+        <h3 style="margin-top:0">The three dimensions</h3>
+        <table>
+          <tr><td>Hue</td><td class="note">Which colour it is — the angle on the wheel.</td></tr>
+          <tr><td>Saturation</td><td class="note">Purity relative to a grey of the same lightness. Model dependent.</td></tr>
+          <tr><td>Chroma</td><td class="note">Absolute colourfulness, not scaled against lightness. What Lab and LCh measure.</td></tr>
+          <tr><td>Value / lightness</td><td class="note">How light. HSV value and HSL lightness are different formulas; L* is the perceptual one.</td></tr>
+          <tr><td>Luminance</td><td class="note">Physical light output, weighted for the eye's green sensitivity. What contrast ratios use.</td></tr>
+          <tr><td>Tint / tone / shade</td><td class="note">Plus white, plus grey, plus black.</td></tr>
+        </table>
+        <h3>Difference and matching</h3>
+        <table>
+          <tr><td>ΔE</td><td class="note">Distance between two colours in Lab. ΔE2000 corrects the older formula's poor behaviour in blues and near-neutrals.</td></tr>
+          <tr><td>ΔE ≈ 1</td><td class="note">The threshold a trained eye can just detect side by side.</td></tr>
+          <tr><td>ΔE 2–3</td><td class="note">Typical commercial print tolerance for a brand colour.</td></tr>
+          <tr><td>ΔE &gt; 5</td><td class="note">Obvious to anyone, adjacent or not.</td></tr>
+          <tr><td>Metamerism</td><td class="note">Matching under one illuminant, mismatching under another.</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3 style="margin-top:0">Spaces and management</h3>
+        <table>
+          <tr><td>Colour model</td><td class="note">A coordinate system — RGB, CMYK, Lab.</td></tr>
+          <tr><td>Colour space</td><td class="note">A model with defined primaries, white point and transfer curve — sRGB, Adobe RGB, Display P3.</td></tr>
+          <tr><td>Gamut</td><td class="note">The set of colours a device can actually produce. Print gamut and screen gamut overlap but neither contains the other.</td></tr>
+          <tr><td>White point</td><td class="note">The illuminant the numbers assume. D65 for screens, D50 for graphic arts.</td></tr>
+          <tr><td>ICC profile</td><td class="note">A measured description of one device, letting a colour-managed pipeline translate between them.</td></tr>
+          <tr><td>Rendering intent</td><td class="note">The rule for handling out-of-gamut colour. Perceptual compresses everything smoothly; relative colorimetric clips outliers and keeps the rest exact.</td></tr>
+          <tr><td>Gamma</td><td class="note">The non-linear encoding of sRGB values. Averaging hex codes directly is wrong for this reason; blends must be done in linear light or in Lab.</td></tr>
+        </table>
+        <h3>Light and appearance</h3>
+        <table>
+          <tr><td>Colour temperature</td><td class="note">The kelvin rating of a light source. Lower is warmer — 2700 K domestic lamp, 5000 K proofing booth, 6500 K daylight monitor.</td></tr>
+          <tr><td>CRI</td><td class="note">How faithfully a lamp renders colour against a reference. Low-CRI light makes accurate appraisal impossible.</td></tr>
+          <tr><td>Simultaneous contrast</td><td class="note">A colour shifts in appearance with its surround. Why this tool's own interface has no hue in it.</td></tr>
+          <tr><td>Chromatic adaptation</td><td class="note">The eye renormalising to the ambient light within seconds, which is why comparisons must be simultaneous.</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  </main>
+</div>
+
+<!-- print-only swatch sheet -->
+<div id="printSheet">
+  <h2 id="psTitle">Colour specification</h2>
+  <div class="psheet-grid" id="psGrid"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* =========================================================
+   1. COLOUR MATHEMATICS
+   ========================================================= */
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const rad=d=>d*Math.PI/180, deg=r=>{let d=r*180/Math.PI;return d<0?d+360:d;};
+const r2=(n,p=1)=>Number(n.toFixed(p));
+
+function hex2rgb(h){
+  if(typeof h!=="string")return null;
+  h=h.trim().replace(/^#/,"");
+  if(/^[0-9a-f]{3}$/i.test(h))h=h.split("").map(c=>c+c).join("");
+  if(!/^[0-9a-f]{6}$/i.test(h))return null;
+  return {r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)};
+}
+function rgb2hex(c){
+  const t=v=>Math.round(clamp(v,0,255)).toString(16).padStart(2,"0");
+  return "#"+t(c.r)+t(c.g)+t(c.b);
+}
+function rgb2hsl(c){
+  const r=c.r/255,g=c.g/255,b=c.b/255;
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn,l=(mx+mn)/2;
+  let h=0,s=0;
+  if(d){
+    s=l>0.5?d/(2-mx-mn):d/(mx+mn);
+    if(mx===r)h=((g-b)/d+(g<b?6:0));
+    else if(mx===g)h=(b-r)/d+2;
+    else h=(r-g)/d+4;
+    h*=60;
+  }
+  return {h,s:s*100,l:l*100};
+}
+function hsl2rgb(o){
+  let h=((o.h%360)+360)%360, s=clamp(o.s,0,100)/100, l=clamp(o.l,0,100)/100;
+  const C=(1-Math.abs(2*l-1))*s, X=C*(1-Math.abs((h/60)%2-1)), m=l-C/2;
+  let t;
+  if(h<60)t=[C,X,0];else if(h<120)t=[X,C,0];else if(h<180)t=[0,C,X];
+  else if(h<240)t=[0,X,C];else if(h<300)t=[X,0,C];else t=[C,0,X];
+  return {r:(t[0]+m)*255,g:(t[1]+m)*255,b:(t[2]+m)*255};
+}
+function rgb2hsv(c){
+  const r=c.r/255,g=c.g/255,b=c.b/255;
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;
+  let h=0;
+  if(d){
+    if(mx===r)h=((g-b)/d+(g<b?6:0));
+    else if(mx===g)h=(b-r)/d+2;
+    else h=(r-g)/d+4;
+    h*=60;
+  }
+  return {h,s:(mx?d/mx:0)*100,v:mx*100};
+}
+function hsv2rgb(o){
+  let h=((o.h%360)+360)%360, s=clamp(o.s,0,100)/100, v=clamp(o.v,0,100)/100;
+  const C=v*s, X=C*(1-Math.abs((h/60)%2-1)), m=v-C;
+  let t;
+  if(h<60)t=[C,X,0];else if(h<120)t=[X,C,0];else if(h<180)t=[0,C,X];
+  else if(h<240)t=[0,X,C];else if(h<300)t=[X,0,C];else t=[C,0,X];
+  return {r:(t[0]+m)*255,g:(t[1]+m)*255,b:(t[2]+m)*255};
+}
+function rgb2cmyk(c){
+  const r=c.r/255,g=c.g/255,b=c.b/255;
+  const k=1-Math.max(r,g,b);
+  if(k>=1-1e-9)return {c:0,m:0,y:0,k:100};
+  return {c:(1-r-k)/(1-k)*100,m:(1-g-k)/(1-k)*100,y:(1-b-k)/(1-k)*100,k:k*100};
+}
+function cmyk2rgb(o){
+  const c=clamp(o.c,0,100)/100,m=clamp(o.m,0,100)/100,y=clamp(o.y,0,100)/100,k=clamp(o.k,0,100)/100;
+  return {r:255*(1-c)*(1-k),g:255*(1-m)*(1-k),b:255*(1-y)*(1-k)};
+}
+const toLin=v=>{v/=255;return v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2.4);};
+const toGam=v=>clamp((v<=0.0031308?v*12.92:1.055*Math.pow(v,1/2.4)-0.055)*255,0,255);
+
+function rgb2xyz(c){
+  const r=toLin(c.r),g=toLin(c.g),b=toLin(c.b);
+  return {
+    x:(0.4124564*r+0.3575761*g+0.1804375*b)*100,
+    y:(0.2126729*r+0.7151522*g+0.0721750*b)*100,
+    z:(0.0193339*r+0.1191920*g+0.9503041*b)*100
+  };
+}
+function xyz2rgb(o){
+  const x=o.x/100,y=o.y/100,z=o.z/100;
+  return {
+    r:toGam( 3.2404542*x-1.5371385*y-0.4985314*z),
+    g:toGam(-0.9692660*x+1.8760108*y+0.0415560*z),
+    b:toGam( 0.0556434*x-0.2040259*y+1.0572252*z)
+  };
+}
+const WP={x:95.047,y:100.000,z:108.883}; // D65 / 2°
+function xyz2lab(o){
+  const f=t=>t>0.008856?Math.cbrt(t):(7.787*t+16/116);
+  const fx=f(o.x/WP.x),fy=f(o.y/WP.y),fz=f(o.z/WP.z);
+  return {L:116*fy-16,a:500*(fx-fy),b:200*(fy-fz)};
+}
+function lab2xyz(o){
+  const fy=(o.L+16)/116, fx=fy+o.a/500, fz=fy-o.b/200;
+  const inv=t=>{const t3=t*t*t;return t3>0.008856?t3:(t-16/116)/7.787;};
+  return {x:inv(fx)*WP.x,y:inv(fy)*WP.y,z:inv(fz)*WP.z};
+}
+const rgb2lab=c=>xyz2lab(rgb2xyz(c));
+const lab2rgb=l=>xyz2rgb(lab2xyz(l));
+function lab2lch(l){return {L:l.L,C:Math.hypot(l.a,l.b),h:deg(Math.atan2(l.b,l.a))};}
+function lch2lab(o){return {L:o.L,a:o.C*Math.cos(rad(o.h)),b:o.C*Math.sin(rad(o.h))};}
+
+/* OKLCH — for the notation table */
+function rgb2oklab(c){
+  const r=toLin(c.r),g=toLin(c.g),b=toLin(c.b);
+  const l=Math.cbrt(0.4122214708*r+0.5363325363*g+0.0514459929*b);
+  const m=Math.cbrt(0.2119034982*r+0.6806995451*g+0.1073969566*b);
+  const s=Math.cbrt(0.0883024619*r+0.2817188376*g+0.6299787005*b);
+  return {
+    L:0.2104542553*l+0.7936177850*m-0.0040720468*s,
+    a:1.9779984951*l-2.4285922050*m+0.4505937099*s,
+    b:0.0259040371*l+0.7827717662*m-0.8086757660*s
+  };
+}
+function relLum(c){return 0.2126*toLin(c.r)+0.7152*toLin(c.g)+0.0722*toLin(c.b);}
+function contrast(a,b){
+  const l1=relLum(a),l2=relLum(b);
+  return (Math.max(l1,l2)+0.05)/(Math.min(l1,l2)+0.05);
+}
+function inGamut(c){return c.r>=-0.5&&c.r<=255.5&&c.g>=-0.5&&c.g<=255.5&&c.b>=-0.5&&c.b<=255.5;}
+
+function deltaE2000(A,B){
+  const kL=1,kC=1,kH=1;
+  const C1=Math.hypot(A.a,A.b), C2=Math.hypot(B.a,B.b), Cb=(C1+C2)/2;
+  const Cb7=Math.pow(Cb,7);
+  const G=0.5*(1-Math.sqrt(Cb7/(Cb7+Math.pow(25,7))));
+  const a1=(1+G)*A.a, a2=(1+G)*B.a;
+  const C1p=Math.hypot(a1,A.b), C2p=Math.hypot(a2,B.b);
+  const h1=(C1p===0)?0:deg(Math.atan2(A.b,a1));
+  const h2=(C2p===0)?0:deg(Math.atan2(B.b,a2));
+  const dLp=B.L-A.L, dCp=C2p-C1p;
+  let dhp=0;
+  if(C1p*C2p!==0){
+    dhp=h2-h1;
+    if(dhp>180)dhp-=360; else if(dhp<-180)dhp+=360;
+  }
+  const dHp=2*Math.sqrt(C1p*C2p)*Math.sin(rad(dhp/2));
+  const Lbp=(A.L+B.L)/2, Cbp=(C1p+C2p)/2;
+  let hbp;
+  if(C1p*C2p===0)hbp=h1+h2;
+  else if(Math.abs(h1-h2)<=180)hbp=(h1+h2)/2;
+  else hbp=(h1+h2<360)?(h1+h2+360)/2:(h1+h2-360)/2;
+  const T=1-0.17*Math.cos(rad(hbp-30))+0.24*Math.cos(rad(2*hbp))
+         +0.32*Math.cos(rad(3*hbp+6))-0.20*Math.cos(rad(4*hbp-63));
+  const dTh=30*Math.exp(-Math.pow((hbp-275)/25,2));
+  const Cbp7=Math.pow(Cbp,7);
+  const Rc=2*Math.sqrt(Cbp7/(Cbp7+Math.pow(25,7)));
+  const Sl=1+(0.015*Math.pow(Lbp-50,2))/Math.sqrt(20+Math.pow(Lbp-50,2));
+  const Sc=1+0.045*Cbp, Sh=1+0.015*Cbp*T;
+  const Rt=-Math.sin(rad(2*dTh))*Rc;
+  return Math.sqrt(
+    Math.pow(dLp/(kL*Sl),2)+Math.pow(dCp/(kC*Sc),2)+Math.pow(dHp/(kH*Sh),2)
+    +Rt*(dCp/(kC*Sc))*(dHp/(kH*Sh))
+  );
+}
+
+/* mixing — done in linear light so blends are physically sensible */
+function mixLin(a,b,t){
+  const f=(x,y)=>toGam(toLin(x)*(1-t)+toLin(y)*t);
+  return {r:f(a.r,b.r),g:f(a.g,b.g),b:f(a.b,b.b)};
+}
+
+/* ---- colour vision deficiency (Machado, Oliveira & Fernandes 2009 matrices,
+        applied in linear light, interpolated with identity for severity) ---- */
+const CVD_FULL={
+  protanopia:[0.152286,1.052583,-0.204868, 0.114503,0.786281,0.099216, -0.003882,-0.048116,1.051998],
+  deuteranopia:[0.367322,0.860646,-0.227968, 0.280085,0.672501,0.047413, -0.011820,0.042940,0.968881],
+  tritanopia:[1.255528,-0.076749,-0.178779, -0.078411,0.930809,0.147602, 0.004733,0.691367,0.303900]
+};
+const IDENT=[1,0,0,0,1,0,0,0,1];
+function cvdMatrix(type,sev){
+  const base=CVD_FULL[type];
+  if(!base)return IDENT.slice();
+  return base.map((v,i)=>IDENT[i]+(v-IDENT[i])*clamp(sev,0,1));
+}
+function simulate(c,type,sev){
+  if(!type||type==="normal")return {r:c.r,g:c.g,b:c.b};
+  if(type==="achromatopsia"){
+    const y=toGam(0.2126*toLin(c.r)+0.7152*toLin(c.g)+0.0722*toLin(c.b));
+    return {r:y,g:y,b:y};
+  }
+  const m=cvdMatrix(type,sev===undefined?1:sev);
+  const r=toLin(c.r),g=toLin(c.g),b=toLin(c.b);
+  return {
+    r:toGam(m[0]*r+m[1]*g+m[2]*b),
+    g:toGam(m[3]*r+m[4]*g+m[5]*b),
+    b:toGam(m[6]*r+m[7]*g+m[8]*b)
+  };
+}
+
+/* =========================================================
+   2. STATE
+   ========================================================= */
+const S={hex:"#2E6F9E", palette:["#2E6F9E","#E8A33D","#3F7D58","#B33A3A"]};
+const listeners=[];
+const onChange=f=>listeners.push(f);
+function setColor(hex,silent){
+  const rgb=hex2rgb(hex);
+  if(!rgb)return false;
+  S.hex=rgb2hex(rgb);
+  listeners.forEach(f=>f(S.hex));
+  return true;
+}
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+const el=(t,a,txt)=>{const e=document.createElement(t);if(a)for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;return e;};
+function textOn(bg){
+  const c=hex2rgb(bg);
+  return contrast(c,{r:255,g:255,b:255})>=contrast(c,{r:0,g:0,b:0})?"#ffffff":"#000000";
+}
+function toast(msg){
+  const t=el("div",{style:"position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#141414;color:#fff;padding:9px 16px;font-size:13.5px;z-index:99;box-shadow:0 6px 20px rgba(0,0,0,.4)"},msg);
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),1700);
+}
+function copy(txt,label){
+  const done=()=>toast((label||"Copied")+" to the clipboard");
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done,()=>fallback());
+  } else fallback();
+  function fallback(){
+    const ta=el("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand("copy");done();}catch(e){toast("Copy failed — select the text and copy manually");}
+    ta.remove();
+  }
+}
+function saveFile(text,name,mime){
+  const blob=new Blob([text],{type:mime||"text/plain"});
+  const url=URL.createObjectURL(blob);
+  const a=el("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},400);
+  toast("Saved "+name);
+}
+
+/* =========================================================
+   3. BOOTH BAR
+   ========================================================= */
+const chip=$("#chip"), hexIn=$("#hexIn"), readout=$("#readout"), tray=$("#tray");
+
+function renderBooth(){
+  const rgb=hex2rgb(S.hex), hsl=rgb2hsl(rgb), lab=rgb2lab(rgb), cmyk=rgb2cmyk(rgb);
+  chip.style.background=S.hex;
+  if(document.activeElement!==hexIn)hexIn.value=S.hex;
+  readout.innerHTML=
+    "<b>"+S.hex.toUpperCase()+"</b> &nbsp; rgb "+Math.round(rgb.r)+" "+Math.round(rgb.g)+" "+Math.round(rgb.b)+"<br>"+
+    "hsl "+r2(hsl.h,0)+"° "+r2(hsl.s,0)+"% "+r2(hsl.l,0)+"% &nbsp; L* "+r2(lab.L)+"<br>"+
+    "cmyk "+r2(cmyk.c,0)+" "+r2(cmyk.m,0)+" "+r2(cmyk.y,0)+" "+r2(cmyk.k,0);
+}
+hexIn.addEventListener("input",()=>{ if(hex2rgb(hexIn.value)) setColor(hexIn.value); });
+hexIn.addEventListener("blur",()=>{ hexIn.value=S.hex; });
+$("#randBtn").addEventListener("click",()=>{
+  setColor(rgb2hex(hsl2rgb({h:Math.random()*360,s:35+Math.random()*50,l:28+Math.random()*45})));
+});
+$("#copyHex").addEventListener("click",()=>copy(S.hex.toUpperCase(),S.hex.toUpperCase()));
+$("#addBtn").addEventListener("click",()=>addToPalette(S.hex));
+$("#clearTray").addEventListener("click",()=>{S.palette=[];renderTray();});
+if("EyeDropper" in window){
+  const pb=$("#pickBtn");pb.hidden=false;
+  pb.addEventListener("click",async()=>{
+    try{const r=await new window.EyeDropper().open();setColor(r.sRGBHex);}catch(e){}
+  });
+}
+function addToPalette(hex){
+  hex=rgb2hex(hex2rgb(hex));
+  if(S.palette.includes(hex)){toast("Already in the palette");return;}
+  if(S.palette.length>=16){toast("The palette holds 16 colours — remove one first");return;}
+  S.palette.push(hex);renderTray();
+}
+function renderTray(){
+  tray.innerHTML="";
+  if(!S.palette.length){
+    tray.appendChild(el("span",{class:"tray-empty"},"Palette is empty. Add colours to test and export them together."));
+  } else {
+    S.palette.forEach(h=>{
+      const b=el("button",{class:"sw",style:"background:"+h,title:h+" — click to load, shift-click to remove"});
+      b.addEventListener("click",ev=>{
+        if(ev.shiftKey){S.palette=S.palette.filter(x=>x!==h);renderTray();}
+        else setColor(h);
+      });
+      tray.appendChild(b);
+    });
+  }
+  renderCvdMatrix();renderPrintSheet();
+}
+
+/* =========================================================
+   4. WHEEL AND HARMONY
+   ========================================================= */
+const wheel=$("#wheel"), wctx=wheel.getContext("2d"), overlay=$("#wheelOverlay");
+const WS=340;
+let wheelL=50;
+
+function drawWheel(){
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  wheel.width=WS*dpr;wheel.height=WS*dpr;
+  wheel.style.width=WS+"px";wheel.style.height=WS+"px";
+  const n=WS*dpr, img=wctx.createImageData(n,n), d=img.data;
+  const cx=n/2, cy=n/2, R=n/2-1;
+  for(let y=0;y<n;y++){
+    for(let x=0;x<n;x++){
+      const dx=x-cx, dy=y-cy, r=Math.hypot(dx,dy), i=(y*n+x)*4;
+      if(r>R+1){d[i+3]=0;continue;}
+      const h=deg(Math.atan2(dx,-dy));
+      const s=clamp(r/R,0,1)*100;
+      const c=hsl2rgb({h,s,l:wheelL});
+      d[i]=c.r;d[i+1]=c.g;d[i+2]=c.b;
+      d[i+3]=r>R?Math.round(255*(1-(r-R)))|0:255;
+    }
+  }
+  wctx.putImageData(img,0,0);
+}
+let wheelPending=false;
+function scheduleWheel(){
+  if(wheelPending)return;
+  wheelPending=true;
+  requestAnimationFrame(()=>{wheelPending=false;drawWheel();});
+}
+/* make a non-button swatch operable from the keyboard */
+function clickable(node,fn,label){
+  node.tabIndex=0;
+  node.setAttribute("role","button");
+  if(label)node.setAttribute("aria-label",label);
+  node.addEventListener("click",fn);
+  node.addEventListener("keydown",e=>{
+    if(e.key==="Enter"||e.key===" "){e.preventDefault();fn(e);}
+  });
+}
+function harmonyAngles(kind){
+  switch(kind){
+    case "complementary":return [0,180];
+    case "analogous":return [-30,0,30];
+    case "triadic":return [0,120,240];
+    case "split":return [0,150,210];
+    case "square":return [0,90,180,270];
+    case "tetradic":return [0,60,180,240];
+    default:return [0];
+  }
+}
+const HARM_NOTE={
+  complementary:"Maximum hue separation. Strong and stable, but the two fight if both are given equal area — let one dominate and use the other for accents only.",
+  analogous:"Neighbouring hues share undertones, so the result is calm and cohesive. Separate them by lightness or nothing will read as distinct.",
+  triadic:"Even thirds of the wheel. Lively and balanced; almost always needs one hue heavily muted to stop it looking like a toy box.",
+  split:"The complement's two neighbours instead of the complement itself. Keeps the tension of a complementary pair without the vibration.",
+  square:"Four evenly spaced hues, two complementary pairs. Only workable when three of the four are pulled well back in saturation.",
+  tetradic:"A rectangle on the wheel — two complementary pairs at unequal spacing. Rich but hard to balance; pick one lead colour first.",
+  mono:"One hue at five lightnesses. The safest scheme there is, and the one that most needs a shape or weight cue to carry meaning.",
+  shades:"The hue with a matched neutral ramp. This is what most interfaces and most packaging actually use once the styling settles."
+};
+function currentHarmony(){
+  const kind=$("#harmSel").value, base=rgb2hsl(hex2rgb(S.hex)), out=[];
+  if(kind==="mono"){
+    [20,35,50,65,80].forEach(l=>out.push(rgb2hex(hsl2rgb({h:base.h,s:base.s,l}))));
+  } else if(kind==="shades"){
+    out.push(S.hex);
+    [88,68,45,22].forEach(l=>out.push(rgb2hex(hsl2rgb({h:base.h,s:6,l}))));
+  } else {
+    harmonyAngles(kind).forEach(a=>out.push(rgb2hex(hsl2rgb({h:base.h+a,s:base.s,l:base.l}))));
+  }
+  return out;
+}
+function renderWheel(){
+  const hsl=rgb2hsl(hex2rgb(S.hex));
+  /* the disc is one lightness plane through the solid — keep it on the plane
+     the active colour actually lives in, or the marker lies about its colour */
+  if(Math.abs(hsl.l-wheelL)>=1){
+    wheelL=hsl.l;
+    $("#wheelL").value=Math.round(wheelL);
+    $("#wheelLVal").textContent=Math.round(wheelL)+"%";
+    scheduleWheel();
+  }
+  const cx=WS/2, cy=WS/2, R=WS/2-1;
+  const pos=(h,s)=>{
+    const a=rad(h), r=(s/100)*R;
+    return [cx+Math.sin(a)*r, cy-Math.cos(a)*r];
+  };
+  let svg="";
+  const cols=currentHarmony();
+  const kind=$("#harmSel").value;
+  cols.forEach((hex,i)=>{
+    const c=rgb2hsl(hex2rgb(hex));
+    const p=pos(c.h,c.s);
+    svg+='<line x1="'+cx+'" y1="'+cy+'" x2="'+p[0]+'" y2="'+p[1]+'" stroke="rgba(0,0,0,.45)" stroke-width="1"/>';
+    svg+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(i===0?11:8)+'" fill="'+hex+'" stroke="#fff" stroke-width="2.5"/>';
+    svg+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(i===0?11:8)+'" fill="none" stroke="#111" stroke-width="1"/>';
+  });
+  overlay.innerHTML=svg;
+
+  const strip=$("#harmStrip");
+  strip.innerHTML="";
+  cols.forEach(hex=>{
+    const d=el("div",{class:"swatch-lg",style:"background:"+hex,title:"Make active"});
+    d.appendChild(el("span",null,hex.toUpperCase()));
+    clickable(d,()=>setColor(hex),"Make "+hex+" the active colour");
+    strip.appendChild(d);
+  });
+  $("#harmNote").textContent=HARM_NOTE[kind]||"";
+}
+function wheelPick(ev){
+  const rect=wheel.getBoundingClientRect();
+  const t=ev.touches?ev.touches[0]:ev;
+  const x=t.clientX-rect.left-WS/2, y=t.clientY-rect.top-WS/2;
+  const R=WS/2-1, r=Math.hypot(x,y);
+  const h=deg(Math.atan2(x,-y));
+  setColor(rgb2hex(hsl2rgb({h,s:clamp(r/R,0,1)*100,l:wheelL})));
+}
+wheel.tabIndex=0;
+wheel.addEventListener("keydown",e=>{
+  const h=rgb2hsl(hex2rgb(S.hex));
+  const big=e.shiftKey?10:1;
+  let dh=0,ds=0;
+  if(e.key==="ArrowLeft")dh=-big; else if(e.key==="ArrowRight")dh=big;
+  else if(e.key==="ArrowUp")ds=big; else if(e.key==="ArrowDown")ds=-big;
+  else return;
+  e.preventDefault();
+  setColor(rgb2hex(hsl2rgb({h:h.h+dh,s:clamp(h.s+ds,0,100),l:wheelL})));
+});
+let dragging=false;
+wheel.addEventListener("pointerdown",e=>{dragging=true;wheel.setPointerCapture(e.pointerId);wheelPick(e);});
+wheel.addEventListener("pointermove",e=>{if(dragging)wheelPick(e);});
+wheel.addEventListener("pointerup",()=>{dragging=false;});
+wheel.addEventListener("pointercancel",()=>{dragging=false;});
+$("#wheelL").addEventListener("input",e=>{
+  wheelL=+e.target.value;$("#wheelLVal").textContent=wheelL+"%";
+  drawWheel();
+  const h=rgb2hsl(hex2rgb(S.hex));
+  setColor(rgb2hex(hsl2rgb({h:h.h,s:h.s,l:wheelL})));
+});
+$("#harmSel").addEventListener("change",renderWheel);
+$("#harmAdd").addEventListener("click",()=>{currentHarmony().forEach(addToPalette);});
+
+/* =========================================================
+   5. MODEL SLIDERS
+   ========================================================= */
+const SLIDERS=[
+  {host:"#sl-rgb",keys:[["R",0,255,1],["G",0,255,1],["B",0,255,1]],
+   get:()=>{const c=hex2rgb(S.hex);return [c.r,c.g,c.b];},
+   set:v=>rgb2hex({r:v[0],g:v[1],b:v[2]}), fmt:v=>Math.round(v)},
+  {host:"#sl-hsl",keys:[["H",0,360,1],["S",0,100,.5],["L",0,100,.5]],
+   get:()=>{const c=rgb2hsl(hex2rgb(S.hex));return [c.h,c.s,c.l];},
+   set:v=>rgb2hex(hsl2rgb({h:v[0],s:v[1],l:v[2]})), fmt:(v,i)=>r2(v,0)+(i?"%":"°")},
+  {host:"#sl-hsv",keys:[["H",0,360,1],["S",0,100,.5],["V",0,100,.5]],
+   get:()=>{const c=rgb2hsv(hex2rgb(S.hex));return [c.h,c.s,c.v];},
+   set:v=>rgb2hex(hsv2rgb({h:v[0],s:v[1],v:v[2]})), fmt:(v,i)=>r2(v,0)+(i?"%":"°")},
+  {host:"#sl-cmyk",keys:[["C",0,100,1],["M",0,100,1],["Y",0,100,1],["K",0,100,1]],
+   get:()=>{const c=rgb2cmyk(hex2rgb(S.hex));return [c.c,c.m,c.y,c.k];},
+   set:v=>rgb2hex(cmyk2rgb({c:v[0],m:v[1],y:v[2],k:v[3]})), fmt:v=>r2(v,0)+"%"},
+  {host:"#sl-lab",keys:[["L*",0,100,.5],["a*",-128,127,1],["b*",-128,127,1]],
+   get:()=>{const c=rgb2lab(hex2rgb(S.hex));return [c.L,c.a,c.b];},
+   set:v=>rgb2hex(lab2rgb({L:v[0],a:v[1],b:v[2]})), fmt:v=>r2(v)},
+  {host:"#sl-lch",keys:[["L*",0,100,.5],["C*",0,150,.5],["h",0,360,1]],
+   get:()=>{const c=lab2lch(rgb2lab(hex2rgb(S.hex)));return [c.L,c.C,c.h];},
+   set:v=>rgb2hex(lab2rgb(lch2lab({L:v[0],C:v[1],h:v[2]}))), fmt:(v,i)=>r2(v)+(i===2?"°":"")}
+];
+SLIDERS.forEach(group=>{
+  const host=$(group.host);
+  group.inputs=[];group.vals=[];
+  group.keys.forEach((k,i)=>{
+    const row=el("div",{class:"srow"});
+    row.appendChild(el("span",{class:"lab"},k[0]));
+    const inp=el("input",{type:"range",min:k[1],max:k[2],step:k[3]});
+    const out=el("span",{class:"val"});
+    row.appendChild(inp);row.appendChild(out);
+    host.appendChild(row);
+    group.inputs.push(inp);group.vals.push(out);
+    inp.addEventListener("input",()=>{
+      const v=group.inputs.map(x=>+x.value);
+      const hex=group.set(v);
+      group.dirty=true;
+      setColor(hex);
+      group.dirty=false;
+      v.forEach((val,j)=>{group.vals[j].textContent=group.fmt(val,j);});
+    });
+  });
+});
+function renderSliders(){
+  SLIDERS.forEach(g=>{
+    if(g.dirty)return;
+    const v=g.get();
+    v.forEach((val,i)=>{
+      g.inputs[i].value=val;
+      g.vals[i].textContent=g.fmt(val,i);
+    });
+  });
+}
+function renderNotations(){
+  const rgb=hex2rgb(S.hex), hsl=rgb2hsl(rgb), hsv=rgb2hsv(rgb), cmyk=rgb2cmyk(rgb);
+  const lab=rgb2lab(rgb), lch=lab2lch(lab), xyz=rgb2xyz(rgb), ok=rgb2oklab(rgb);
+  const okC=Math.hypot(ok.a,ok.b), okH=deg(Math.atan2(ok.b,ok.a));
+  const rows=[
+    ["Hex","#"+S.hex.slice(1).toUpperCase(),"Screens, CSS, most file formats"],
+    ["RGB 8-bit","rgb("+Math.round(rgb.r)+", "+Math.round(rgb.g)+", "+Math.round(rgb.b)+")","Additive channels, sRGB assumed"],
+    ["RGB fraction",[rgb.r,rgb.g,rgb.b].map(v=>r2(v/255,3)).join(", "),"Shader and OpenGL style"],
+    ["HSL","hsl("+r2(hsl.h,0)+" "+r2(hsl.s,0)+"% "+r2(hsl.l,0)+"%)","Hand-authored themes"],
+    ["HSV / HSB",r2(hsv.h,0)+"°, "+r2(hsv.s,0)+"%, "+r2(hsv.v,0)+"%","Picker interfaces"],
+    ["CMYK",[cmyk.c,cmyk.m,cmyk.y,cmyk.k].map(v=>r2(v,0)).join(" / "),"Naive conversion — proof before use"],
+    ["CIE L*a*b*",r2(lab.L)+", "+r2(lab.a)+", "+r2(lab.b),"Device independent, D65"],
+    ["CIE LCh",r2(lch.L)+", "+r2(lch.C)+", "+r2(lch.h,0)+"°","Lab in polar coordinates"],
+    ["CIE XYZ",r2(xyz.x)+", "+r2(xyz.y)+", "+r2(xyz.z),"The tristimulus foundation"],
+    ["OKLCH","oklch("+r2(ok.L*100,1)+"% "+r2(okC,3)+" "+r2(okH,1)+")","Modern CSS, evenly spaced lightness"],
+    ["Relative luminance",r2(relLum(rgb),4),"Drives every contrast ratio"]
+  ];
+  const t=$("#notationTable");
+  t.innerHTML="<tr><th>Notation</th><th>Value</th><th>Where it is used</th></tr>";
+  rows.forEach(r=>{
+    const tr=el("tr");
+    tr.appendChild(el("td",null,r[0]));
+    const td=el("td",{class:"num",style:"cursor:pointer",title:"Click to copy"},r[1]);
+    td.addEventListener("click",()=>copy(r[1],r[0]));
+    tr.appendChild(td);
+    tr.appendChild(el("td",{class:"note"},r[2]));
+    t.appendChild(tr);
+  });
+}
+
+/* =========================================================
+   6. RAMPS AND SCALE
+   ========================================================= */
+function buildRamp(hostId,lblId,cols,labels){
+  const host=$(hostId);host.innerHTML="";
+  cols.forEach(hex=>{
+    const d=el("div",{style:"background:"+hex,title:hex.toUpperCase()+" — make active"});
+    clickable(d,()=>setColor(hex),"Make "+hex+" the active colour");
+    host.appendChild(d);
+  });
+  const l=$(lblId);l.innerHTML="";
+  labels.forEach(t=>l.appendChild(el("span",null,t)));
+}
+function renderRamps(){
+  const base=hex2rgb(S.hex), hsl=rgb2hsl(base);
+  const white={r:255,g:255,b:255}, black={r:0,g:0,b:0}, grey=hsl2rgb({h:0,s:0,l:50});
+  const steps=[0,.15,.3,.45,.6,.75,.9];
+  const pct=steps.map(t=>Math.round(t*100)+"%");
+  buildRamp("#rampTint","#lblTint",steps.map(t=>rgb2hex(mixLin(base,white,t))),pct);
+  buildRamp("#rampShade","#lblShade",steps.map(t=>rgb2hex(mixLin(base,black,t))),pct);
+  buildRamp("#rampTone","#lblTone",steps.map(t=>rgb2hex(mixLin(base,grey,t))),pct);
+  const sats=[0,15,30,45,60,80,100];
+  buildRamp("#rampSat","#lblSat",sats.map(s=>rgb2hex(hsl2rgb({h:hsl.h,s,l:hsl.l}))),sats.map(s=>s+"%"));
+  const hues=[-60,-40,-20,0,20,40,60];
+  buildRamp("#rampHue","#lblHue",hues.map(d=>rgb2hex(hsl2rgb({h:hsl.h+d,s:hsl.s,l:hsl.l}))),
+            hues.map(d=>(d>0?"+":"")+d+"°"));
+}
+const SCALE_STOPS=[50,100,200,300,400,500,600,700,800,900,950];
+function tokenScale(){
+  const lch=lab2lch(rgb2lab(hex2rgb(S.hex)));
+  const targetL=[97,93,86,77,67,57,47,38,29,20,13];
+  return SCALE_STOPS.map((stop,i)=>{
+    const L=targetL[i];
+    // taper chroma at the extremes; no display holds full chroma near white or black
+    const taper=1-Math.pow(Math.abs(L-57)/55,2.1);
+    let C=lch.C*clamp(taper,0.12,1.15)*(L>90?0.55:1);
+    let c=lab2rgb(lch2lab({L,C,h:lch.h}));
+    let guard=0;
+    while(!inGamut(c)&&guard++<40){C*=0.94;c=lab2rgb(lch2lab({L,C,h:lch.h}));}
+    return {stop,hex:rgb2hex(c)};
+  });
+}
+function renderScale(){
+  const host=$("#tokenScale");host.innerHTML="";
+  tokenScale().forEach(s=>{
+    const cell=el("div",{class:"scale-cell"});
+    const i=el("i",{style:"background:"+s.hex,title:s.hex.toUpperCase()+" — make active"});
+    clickable(i,()=>setColor(s.hex),"Make "+s.hex+" the active colour");
+    cell.appendChild(i);
+    cell.appendChild(el("span",null,String(s.stop)));
+    host.appendChild(cell);
+  });
+}
+$("#scaleCss").addEventListener("click",()=>{
+  const n=hueName(S.hex);
+  copy(":root{\n"+tokenScale().map(s=>"  --"+n+"-"+s.stop+": "+s.hex+";").join("\n")+"\n}","CSS variables");
+});
+$("#scaleJson").addEventListener("click",()=>{
+  const o={};tokenScale().forEach(s=>o[s.stop]=s.hex);
+  copy(JSON.stringify({[hueName(S.hex)]:o},null,2),"JSON tokens");
+});
+$("#scaleTray").addEventListener("click",()=>{
+  tokenScale().filter((_,i)=>i%2===0).forEach(s=>addToPalette(s.hex));
+});
+
+const HUE_NAMES=[[15,"red"],[45,"orange"],[70,"yellow"],[100,"lime"],[150,"green"],[175,"teal"],
+                 [195,"cyan"],[255,"blue"],[285,"indigo"],[315,"violet"],[345,"magenta"],[361,"red"]];
+function hueName(hex){
+  const rgb=hex2rgb(hex);
+  /* judge neutrality by Lab chroma, not HSL saturation — near white and near
+     black, HSL saturation reads high while the colour is plainly a neutral */
+  if(lab2lch(rgb2lab(rgb)).C<10)return "grey";
+  /* the bands below are calibrated on the HSL hue circle, which is not the
+     same circle as Lab hue — mixing the two mislabels every colour */
+  const h=rgb2hsl(rgb).h;
+  for(const [lim,name] of HUE_NAMES) if(h<lim)return name;
+  return "colour";
+}
+
+/* =========================================================
+   7. COLOUR VISION
+   ========================================================= */
+const CVD_TYPES=[
+  {id:"protanopia",name:"Protanopia",sev:1,prev:"~1% of men",
+   desc:"The long-wavelength cone is absent. Reds darken sharply and collapse toward brown and grey; red text on a dark ground can vanish."},
+  {id:"protanomaly",base:"protanopia",name:"Protanomaly",varSev:true,prev:"~1% of men",
+   desc:"The long-wavelength cone is shifted rather than missing. A milder red–green confusion that often goes undiagnosed."},
+  {id:"deuteranopia",base:"deuteranopia",name:"Deuteranopia",sev:1,prev:"~1% of men",
+   desc:"The medium-wavelength cone is absent. Greens and reds converge on a shared yellow-brown; lightness is largely preserved."},
+  {id:"deuteranomaly",base:"deuteranopia",name:"Deuteranomaly",varSev:true,prev:"~5% of men — the most common of all",
+   desc:"The medium-wavelength cone is shifted. This is the single most common deficiency, and the one most palettes fail."},
+  {id:"tritanopia",base:"tritanopia",name:"Tritanopia",sev:1,prev:"~1 in 10,000, both sexes",
+   desc:"The short-wavelength cone is absent. Blue and green merge; yellow drifts toward pink. Rare and not sex-linked."},
+  {id:"tritanomaly",base:"tritanopia",name:"Tritanomaly",varSev:true,prev:"Very rare",
+   desc:"A shifted short-wavelength cone. Mild blue–yellow confusion, sometimes acquired rather than inherited."},
+  {id:"achromatopsia",name:"Achromatopsia",prev:"~1 in 30,000",
+   desc:"No functioning colour discrimination at all. Only lightness differences survive, which is the strictest test any palette can face."}
+];
+function simTypeOf(t,sev){
+  if(t.id==="achromatopsia")return c=>simulate(c,"achromatopsia");
+  const base=t.base||t.id;
+  const s=t.varSev?sev:1;
+  return c=>simulate(c,base,s);
+}
+function renderCvd(){
+  const sev=+$("#cvdSev").value/100;
+  const host=$("#cvdGrid");host.innerHTML="";
+  const base=hex2rgb(S.hex);
+  const partner=(()=>{ // the colour most likely to be confused with the active one
+    const h=rgb2hsl(base);
+    return hsl2rgb({h:h.h+130,s:h.s,l:h.l});
+  })();
+  CVD_TYPES.forEach(t=>{
+    const f=simTypeOf(t,sev);
+    const a=f(base), b=f(partner);
+    const card=el("div",{class:"cvd-card"});
+    card.appendChild(el("h4",null,t.name+" — "+t.prev));
+    const pair=el("div",{class:"cvd-pair"});
+    pair.appendChild(el("div",{style:"background:"+rgb2hex(a)}));
+    pair.appendChild(el("div",{style:"background:"+rgb2hex(b)}));
+    card.appendChild(pair);
+    const dE=deltaE2000(rgb2lab(a),rgb2lab(b));
+    const line=el("div",{class:"note"});
+    line.innerHTML="Active colour becomes <span class='num'>"+rgb2hex(a).toUpperCase()+
+      "</span>. Against its wheel neighbour, ΔE2000 <span class='num'>"+r2(dE)+"</span> "+
+      (dE<5?"<span class='pill warn'>merged</span>":dE<10?"<span class='pill warn'>risky</span>":"<span class='pill ok'>separable</span>");
+    card.appendChild(line);
+    card.appendChild(el("p",{class:"note"},t.desc));
+    host.appendChild(card);
+  });
+}
+$("#cvdSev").addEventListener("input",e=>{
+  $("#cvdSevVal").textContent=e.target.value+"%";
+  renderCvd();renderCvdMatrix();
+});
+function renderCvdMatrix(){
+  const host=$("#cvdMatrix");if(!host)return;
+  host.innerHTML="";
+  if(S.palette.length<3){
+    host.appendChild(el("p",{class:"note"},"Add at least three colours to the palette and the pairwise check appears here."));
+    return;
+  }
+  const sev=+$("#cvdSev").value/100;
+  const types=[{n:"Typical",f:c=>c},
+    {n:"Protanopia",f:c=>simulate(c,"protanopia",1)},
+    {n:"Deuteranomaly",f:c=>simulate(c,"deuteranopia",sev)},
+    {n:"Deuteranopia",f:c=>simulate(c,"deuteranopia",1)},
+    {n:"Tritanopia",f:c=>simulate(c,"tritanopia",1)},
+    {n:"Achromatopsia",f:c=>simulate(c,"achromatopsia")}];
+  const tbl=el("table");
+  let head="<tr><th>Vision</th><th>Palette as seen</th><th class='num'>Worst pair ΔE</th><th>Verdict</th></tr>";
+  tbl.innerHTML=head;
+  types.forEach(t=>{
+    const sims=S.palette.map(h=>t.f(hex2rgb(h)));
+    let worst=Infinity, wi=0, wj=1;
+    for(let i=0;i<sims.length;i++)for(let j=i+1;j<sims.length;j++){
+      const d=deltaE2000(rgb2lab(sims[i]),rgb2lab(sims[j]));
+      if(d<worst){worst=d;wi=i;wj=j;}
+    }
+    const tr=el("tr");
+    tr.appendChild(el("td",null,t.n));
+    const td=el("td");
+    const strip=el("div",{style:"display:flex;height:26px;border:1px solid #888"});
+    sims.forEach((c,i)=>strip.appendChild(el("div",{
+      style:"flex:1;background:"+rgb2hex(c)+(i===wi||i===wj?";outline:2px solid #111;outline-offset:-2px":"")})));
+    td.appendChild(strip);
+    tr.appendChild(td);
+    tr.appendChild(el("td",{class:"num"},r2(worst)));
+    const v=el("td");
+    v.innerHTML = worst<5?"<span class='pill warn'>Two colours merge</span>"
+                 : worst<10?"<span class='pill warn'>A pair is hard to separate</span>"
+                 : "<span class='pill ok'>All pairs hold apart</span>";
+    tr.appendChild(v);
+    tbl.appendChild(tr);
+  });
+  host.appendChild(tbl);
+  host.appendChild(el("p",{class:"note"},"The outlined swatches are the closest pair for that vision type."));
+}
+
+/* image simulation */
+const simCanvas=$("#simCanvas"), sctx=simCanvas.getContext("2d",{willReadFrequently:true});
+let sourceImage=null;
+function drawTestChart(){
+  const w=simCanvas.width, h=simCanvas.height;
+  sctx.fillStyle="#f2f2f2";sctx.fillRect(0,0,w,h);
+  // hue band
+  for(let x=0;x<w;x++){
+    const c=hsl2rgb({h:x/w*360,s:78,l:50});
+    sctx.fillStyle=rgb2hex(c);sctx.fillRect(x,0,1,64);
+  }
+  // saturation band at fixed lightness
+  for(let x=0;x<w;x++){
+    const c=hsl2rgb({h:x/w*360,s:40,l:62});
+    sctx.fillStyle=rgb2hex(c);sctx.fillRect(x,64,1,34);
+  }
+  // classic confusion pairs
+  const pairs=[["#C0392B","#1E7B34","Red / green"],["#D35400","#7D6608","Orange / olive"],
+               ["#2980B9","#8E44AD","Blue / purple"],["#E74C3C","#7F5A3C","Red / brown"],
+               ["#27AE60","#B7950B","Green / gold"],["#EC7CA0","#9B9B9B","Pink / grey"]];
+  const cw=w/pairs.length;
+  pairs.forEach((p,i)=>{
+    sctx.fillStyle=p[0];sctx.fillRect(i*cw,110,cw-6,58);
+    sctx.fillStyle=p[1];sctx.fillRect(i*cw,168,cw-6,58);
+    sctx.fillStyle="#222";sctx.font="11px monospace";
+    sctx.fillText(p[2],i*cw+4,240);
+  });
+  // status row with and without a second cue
+  const st=[["#2E7D32","OK"],["#F9A825","Warn"],["#C62828","Fail"]];
+  st.forEach((s,i)=>{
+    sctx.fillStyle=s[0];sctx.fillRect(20+i*130,252,110,34);
+    sctx.fillStyle="#fff";sctx.font="bold 14px sans-serif";
+    sctx.fillText(s[1],32+i*130,274);
+  });
+  st.forEach((s,i)=>{
+    sctx.fillStyle=s[0];sctx.beginPath();sctx.arc(440+i*70,269,15,0,7);sctx.fill();
+  });
+  sctx.fillStyle="#222";sctx.font="11px monospace";
+  sctx.fillText("labelled",20,248);sctx.fillText("colour only",412,248);
+  sourceImage=sctx.getImageData(0,0,w,h);
+}
+function applySim(){
+  if(!sourceImage)return;
+  const type=$("#imgType").value;
+  const out=sctx.createImageData(sourceImage.width,sourceImage.height);
+  const s=sourceImage.data, d=out.data;
+  const sev=1;
+  if(type==="normal"){d.set(s);}
+  else if(type==="achromatopsia"){
+    for(let i=0;i<s.length;i+=4){
+      const y=toGam(0.2126*toLin(s[i])+0.7152*toLin(s[i+1])+0.0722*toLin(s[i+2]));
+      d[i]=d[i+1]=d[i+2]=y;d[i+3]=s[i+3];
+    }
+  } else {
+    const m=cvdMatrix(type,sev);
+    const lut=new Float32Array(256);
+    for(let v=0;v<256;v++)lut[v]=toLin(v);
+    for(let i=0;i<s.length;i+=4){
+      const r=lut[s[i]],g=lut[s[i+1]],b=lut[s[i+2]];
+      d[i]=toGam(m[0]*r+m[1]*g+m[2]*b);
+      d[i+1]=toGam(m[3]*r+m[4]*g+m[5]*b);
+      d[i+2]=toGam(m[6]*r+m[7]*g+m[8]*b);
+      d[i+3]=s[i+3];
+    }
+  }
+  sctx.putImageData(out,0,0);
+}
+$("#imgType").addEventListener("change",applySim);
+$("#imgReset").addEventListener("click",()=>{
+  simCanvas.width=760;simCanvas.height=300;drawTestChart();applySim();
+});
+$("#imgIn").addEventListener("change",e=>{
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  const img=new Image();
+  img.onload=()=>{
+    const maxW=760, sc=Math.min(1,maxW/img.width);
+    simCanvas.width=Math.round(img.width*sc);
+    simCanvas.height=Math.round(img.height*sc);
+    sctx.drawImage(img,0,0,simCanvas.width,simCanvas.height);
+    try{
+      sourceImage=sctx.getImageData(0,0,simCanvas.width,simCanvas.height);
+      applySim();
+    }catch(err){toast("This image could not be read for simulation");}
+    URL.revokeObjectURL(img.src);
+  };
+  img.onerror=()=>toast("That file could not be opened as an image");
+  img.src=URL.createObjectURL(f);
+});
+
+/* =========================================================
+   8. CONTRAST
+   ========================================================= */
+const cFg=$("#cFg"), cBg=$("#cBg");
+function renderContrast(){
+  const fg=hex2rgb(cFg.value)||{r:0,g:0,b:0};
+  const bg=hex2rgb(cBg.value)||{r:255,g:255,b:255};
+  const ratio=contrast(fg,bg);
+  $("#cRatio").textContent=r2(ratio,2)+":1";
+  const p=$("#cPreview");
+  p.style.background=rgb2hex(bg);p.style.color=rgb2hex(fg);
+  const checks=[
+    ["Body text, AA","4.5:1",ratio>=4.5],
+    ["Body text, AAA","7:1",ratio>=7],
+    ["Large text (18.66px bold / 24px), AA","3:1",ratio>=3],
+    ["Large text, AAA","4.5:1",ratio>=4.5],
+    ["Icons, borders, chart keys","3:1",ratio>=3]
+  ];
+  const t=$("#cTable");
+  t.innerHTML="<tr><th>Requirement</th><th class='num'>Needs</th><th>Result</th></tr>";
+  checks.forEach(c=>{
+    const tr=el("tr");
+    tr.appendChild(el("td",null,c[0]));
+    tr.appendChild(el("td",{class:"num"},c[1]));
+    const td=el("td");
+    td.innerHTML=c[2]?"<span class='pill ok'>passes</span>":"<span class='pill warn'>fails</span>";
+    tr.appendChild(td);t.appendChild(tr);
+  });
+  const lFg=rgb2lab(fg).L, lBg=rgb2lab(bg).L;
+  $("#cFix").textContent="L* separation is "+r2(Math.abs(lFg-lBg))+
+    ". A gap of 25 or more keeps a pair distinguishable under every colour vision deficiency, whatever the hues do.";
+}
+[cFg,cBg].forEach(i=>i.addEventListener("input",renderContrast));
+$("#cSwap").addEventListener("click",()=>{
+  const a=cFg.value;cFg.value=cBg.value;cBg.value=a;renderContrast();
+});
+$("#cFromActive").addEventListener("click",()=>{cFg.value=S.hex;renderContrast();});
+$("#cAutoFix").addEventListener("click",()=>{
+  const bg=hex2rgb(cBg.value)||{r:255,g:255,b:255};
+  const lch=lab2lch(rgb2lab(hex2rgb(cFg.value)||{r:0,g:0,b:0}));
+  const darken=relLum(bg)>0.18;
+  for(let step=0;step<=100;step++){
+    const L=clamp(darken?lch.L-step:lch.L+step,0,100);
+    const c=lab2rgb(lch2lab({L,C:lch.C,h:lch.h}));
+    if(!inGamut(c))continue;
+    if(contrast(c,bg)>=4.5){cFg.value=rgb2hex(c);renderContrast();
+      toast("Lightness moved to L* "+r2(L)+" — hue and chroma kept");return;}
+  }
+  toast("No lightness of this hue reaches 4.5:1 here — reduce chroma or change the background");
+});
+
+/* =========================================================
+   9. PRINT
+   ========================================================= */
+function renderTac(){
+  const c=rgb2cmyk(hex2rgb(S.hex));
+  const tac=c.c+c.m+c.y+c.k;
+  const host=$("#tacBox");host.innerHTML="";
+  const line=el("p",{class:"note"});
+  line.innerHTML="Naive separation <span class='num'>C "+r2(c.c,0)+" &nbsp;M "+r2(c.m,0)+
+    " &nbsp;Y "+r2(c.y,0)+" &nbsp;K "+r2(c.k,0)+"</span> &nbsp;→ total area coverage <b class='num'>"+r2(tac,0)+"%</b>";
+  host.appendChild(line);
+  const bar=el("div",{class:"tac-bar"});
+  bar.appendChild(el("i",{style:"width:"+clamp(tac/400*100,0,100)+"%"}));
+  [[240,"news 240"],[300,"sheetfed 300"],[330,"coated 330"]].forEach(m=>{
+    bar.appendChild(el("u",{style:"left:"+(m[0]/400*100)+"%",title:m[1]}));
+  });
+  host.appendChild(bar);
+  const lim=el("p",{class:"note"});
+  lim.innerHTML = tac>330?"<span class='pill warn'>Over limit</span> Above roughly 330% the sheet will not dry cleanly and will set off in the delivery. Add GCR or under-colour removal to shift ink into the black plate."
+    : tac>300?"Within reach for coated stock, above the usual 300% sheetfed limit. Confirm the limit with your printer before releasing artwork."
+    : "<span class='pill ok'>Within limits</span> Comfortable for sheetfed and web offset. Newsprint and uncoated board typically cap near 240%.";
+  host.appendChild(lim);
+}
+function renderCmykChart(){
+  const ax=$("#axX").value, ay=$("#axY").value;
+  const others=["C","M","Y","K"].filter(k=>k!==ax&&k!==ay);
+  const fa=clamp(+$("#fixA").value||0,0,100), fb=clamp(+$("#fixB").value||0,0,100);
+  const t=$("#cmykChart");t.innerHTML="";
+  const head=el("tr");
+  head.appendChild(el("td",{class:"hd"},ay+" ↓ / "+ax+" →"));
+  for(let x=0;x<=100;x+=10)head.appendChild(el("td",{class:"hd"},String(x)));
+  t.appendChild(head);
+  for(let y=0;y<=100;y+=10){
+    const tr=el("tr");
+    tr.appendChild(el("td",{class:"hd"},String(y)));
+    for(let x=0;x<=100;x+=10){
+      const o={c:0,m:0,y:0,k:0};
+      const key=k=>k.toLowerCase()==="y"?"y":k.toLowerCase();
+      o[key(ax)]=x;o[key(ay)]=y;
+      o[key(others[0])]=fa;o[key(others[1])]=fb;
+      const hex=rgb2hex(cmyk2rgb(o));
+      const td=el("td");
+      const cell=el("div",{class:"cell",style:"background:"+hex,
+        title:"C"+o.c+" M"+o.m+" Y"+o.y+" K"+o.k+"  "+hex.toUpperCase()});
+      clickable(cell,()=>setColor(hex),"Make "+hex+" the active colour");
+      td.appendChild(cell);tr.appendChild(td);
+    }
+    t.appendChild(tr);
+  }
+  const cap=el("tr");
+  cap.appendChild(el("td",{class:"hd",colspan:"12",style:"text-align:left;padding-top:6px"},
+    "Fixed: "+others[0]+" "+fa+"%, "+others[1]+" "+fb+"%. Click any patch to make it the active colour."));
+  t.appendChild(cap);
+}
+["#axX","#axY","#fixA","#fixB"].forEach(s=>$(s).addEventListener("input",()=>{
+  if($("#axX").value===$("#axY").value){
+    const alt=["C","M","Y","K"].find(k=>k!==$("#axX").value);
+    $("#axY").value=alt;
+  }
+  renderCmykChart();
+}));
+
+/* =========================================================
+   10. TEMPLATES AND EXPORT
+   ========================================================= */
+function paletteRows(){
+  return S.palette.map((hex,i)=>{
+    const rgb=hex2rgb(hex), hsl=rgb2hsl(rgb), lab=rgb2lab(rgb), cmyk=rgb2cmyk(rgb);
+    return {i,hex,name:hueName(hex)+"-"+(i+1),rgb,hsl,lab,cmyk,
+            tac:cmyk.c+cmyk.m+cmyk.y+cmyk.k,
+            lum:relLum(rgb),
+            onWhite:contrast(rgb,{r:255,g:255,b:255}),
+            onBlack:contrast(rgb,{r:0,g:0,b:0})};
+  });
+}
+const TEMPLATES={
+  css:()=>{
+    const r=paletteRows();
+    return "/* Palette — generated "+new Date().toISOString().slice(0,10)+" */\n:root{\n"+
+      r.map(x=>"  --"+x.name+": "+x.hex+";").join("\n")+"\n\n"+
+      r.map(x=>"  --"+x.name+"-rgb: "+Math.round(x.rgb.r)+" "+Math.round(x.rgb.g)+" "+Math.round(x.rgb.b)+";").join("\n")+
+      "\n}\n";
+  },
+  scss:()=>{
+    const r=paletteRows();
+    return "$palette: (\n"+r.map(x=>'  "'+x.name+'": '+x.hex+",").join("\n")+"\n);\n\n"+
+      "@function brand($key){ @return map-get($palette, $key); }\n";
+  },
+  json:()=>{
+    const o={};
+    paletteRows().forEach(x=>{
+      o[x.name]={value:x.hex,type:"color",
+        $extensions:{hsl:[r2(x.hsl.h,0),r2(x.hsl.s,0),r2(x.hsl.l,0)],
+                     lab:[r2(x.lab.L),r2(x.lab.a),r2(x.lab.b)],
+                     cmyk:[r2(x.cmyk.c,0),r2(x.cmyk.m,0),r2(x.cmyk.y,0),r2(x.cmyk.k,0)]}};
+    });
+    return JSON.stringify({color:o},null,2);
+  },
+  tailwind:()=>{
+    const body=tokenScale().map(s=>"          "+s.stop+": '"+s.hex+"',").join("\n");
+    return "// tailwind.config.js\n"+
+      "module.exports = {\n  theme: {\n    extend: {\n      colors: {\n"+
+      "        "+hueName(S.hex)+": {\n"+body+"\n        },\n"+
+      "      },\n    },\n  },\n};\n";
+  },
+  gpl:()=>{
+    const r=paletteRows();
+    return "GIMP Palette\nName: Workbench palette\nColumns: 8\n#\n"+
+      r.map(x=>[Math.round(x.rgb.r),Math.round(x.rgb.g),Math.round(x.rgb.b)]
+        .map(v=>String(v).padStart(3," ")).join(" ")+"\t"+x.name+" "+x.hex).join("\n")+"\n";
+  },
+  spec:()=>{
+    const r=paletteRows();
+    const pad=(s,n)=>String(s).padEnd(n," ");
+    let out="COLOUR SPECIFICATION\nGenerated "+new Date().toLocaleString()+
+      "\nCMYK values are an unmanaged conversion. Proof on the production stock before approval.\n\n";
+    out+=pad("Ref",10)+pad("Hex",10)+pad("R G B",16)+pad("C M Y K",20)+pad("L*a*b*",22)+"TAC\n";
+    out+="".padEnd(84,"-")+"\n";
+    r.forEach(x=>{
+      out+=pad(x.name,10)+pad(x.hex.toUpperCase(),10)+
+        pad([x.rgb.r,x.rgb.g,x.rgb.b].map(Math.round).join(" "),16)+
+        pad([x.cmyk.c,x.cmyk.m,x.cmyk.y,x.cmyk.k].map(v=>r2(v,0)).join(" "),20)+
+        pad([x.lab.L,x.lab.a,x.lab.b].map(v=>r2(v)).join(" "),22)+
+        r2(x.tac,0)+"%\n";
+    });
+    out+="\nNotes to the printer\n";
+    out+="  Substrate: ____________________  Process: offset / flexo / digital\n";
+    out+="  Total area coverage limit: ______%   Screen ruling: ______ lpi\n";
+    out+="  Spot colours: ______________________________________________\n";
+    out+="  Approval: ΔE2000 tolerance ______ measured against the signed proof\n";
+    out+="  Viewing condition: D50, ISO 3664 booth, neutral grey surround\n";
+    return out;
+  },
+  svg:()=>{
+    const r=paletteRows();
+    const w=180, h=210, cols=Math.min(r.length,4);
+    const rows=Math.ceil(r.length/cols);
+    let s='<svg xmlns="http://www.w3.org/2000/svg" width="'+(cols*w)+'" height="'+(rows*h)+'" viewBox="0 0 '+(cols*w)+' '+(rows*h)+'">\n';
+    s+='<rect width="100%" height="100%" fill="#ffffff"/>\n';
+    r.forEach((x,i)=>{
+      const cx=(i%cols)*w, cy=Math.floor(i/cols)*h;
+      s+='<g transform="translate('+cx+','+cy+')">\n';
+      s+='  <rect x="10" y="10" width="160" height="120" fill="'+x.hex+'" stroke="#000" stroke-width="0.5"/>\n';
+      s+='  <text x="10" y="150" font-family="monospace" font-size="13" font-weight="bold">'+x.hex.toUpperCase()+'</text>\n';
+      s+='  <text x="10" y="166" font-family="monospace" font-size="10">CMYK '+[x.cmyk.c,x.cmyk.m,x.cmyk.y,x.cmyk.k].map(v=>r2(v,0)).join(" ")+'</text>\n';
+      s+='  <text x="10" y="180" font-family="monospace" font-size="10">RGB '+[x.rgb.r,x.rgb.g,x.rgb.b].map(Math.round).join(" ")+'</text>\n';
+      s+='  <text x="10" y="194" font-family="monospace" font-size="10">L*a*b* '+[x.lab.L,x.lab.a,x.lab.b].map(v=>r2(v)).join(" ")+'</text>\n';
+      s+='</g>\n';
+    });
+    s+="</svg>\n";
+    return s;
+  },
+  csv:()=>{
+    const r=paletteRows();
+    let out="name,hex,R,G,B,H,S,L,C,M,Y,K,L*,a*,b*,TAC,contrast_on_white,contrast_on_black\n";
+    r.forEach(x=>{
+      out+=[x.name,x.hex,Math.round(x.rgb.r),Math.round(x.rgb.g),Math.round(x.rgb.b),
+        r2(x.hsl.h,0),r2(x.hsl.s,0),r2(x.hsl.l,0),
+        r2(x.cmyk.c,0),r2(x.cmyk.m,0),r2(x.cmyk.y,0),r2(x.cmyk.k,0),
+        r2(x.lab.L),r2(x.lab.a),r2(x.lab.b),r2(x.tac,0),
+        r2(x.onWhite,2),r2(x.onBlack,2)].join(",")+"\n";
+    });
+    return out;
+  }
+};
+const EXT={css:"css",scss:"scss",json:"json",tailwind:"js",gpl:"gpl",spec:"txt",svg:"svg",csv:"csv"};
+let currentTpl="css";
+$$("[data-tpl]").forEach(b=>b.addEventListener("click",()=>{
+  currentTpl=b.dataset.tpl;
+  if(!S.palette.length){$("#tplOut").value="The palette is empty. Add colours in the bar at the top, then choose a template.";return;}
+  $("#tplOut").value=TEMPLATES[currentTpl]();
+}));
+$("#tplCopy").addEventListener("click",()=>copy($("#tplOut").value,"Template"));
+$("#tplSave").addEventListener("click",()=>{
+  saveFile($("#tplOut").value,"palette."+(EXT[currentTpl]||"txt"),
+    currentTpl==="svg"?"image/svg+xml":"text/plain");
+});
+$("#printBtn").addEventListener("click",()=>window.print());
+
+const PRESETS=[
+  {n:"Okabe–Ito qualitative",d:"Designed to stay separable for every common deficiency. The default choice for scientific figures.",
+   c:["#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7"]},
+  {n:"Sequential blue",d:"A single-hue ramp with even lightness steps. Correct for ordered data and for heatmaps.",
+   c:["#EFF5FB","#C7DCEF","#94C0DF","#5FA0CB","#3579B1","#1B4F86","#0B2C55"]},
+  {n:"Diverging, print safe",d:"Two hues from a neutral midpoint, chosen to survive a naive CMYK conversion without muddying.",
+   c:["#8C3B24","#C0714D","#E3B392","#F2EFEA","#9DC2C4","#4E8B92","#1F4E56"]},
+  {n:"Packaging neutrals",d:"Warm greys and a kraft base for board and film work, where the substrate is rarely white.",
+   c:["#3A3531","#5E574F","#8C8177","#B7ABA0","#D8CEC2","#EFE7DC"]},
+  {n:"Instrumentation dark",d:"For dark dashboards and plotted traces: a fixed lightness band so no trace dominates by brightness.",
+   c:["#5CC8FF","#FFB24D","#7BE07B","#FF7A7A","#C39CFF","#FFE066"]},
+  {n:"Single-hue interface",d:"One brand hue with a matched neutral ramp — the arrangement most production interfaces settle on.",
+   c:["#123A5A","#2E6F9E","#6FA6CC","#C3D8E6","#EDF2F6","#5C5C5C","#1E1E1E"]}
+];
+function renderPresets(){
+  const host=$("#presetBox");host.innerHTML="";
+  PRESETS.forEach(p=>{
+    const box=el("div",{class:"box"});
+    box.appendChild(el("h4",null,p.n));
+    const strip=el("div",{style:"display:flex;height:34px;border:1px solid #888;margin:6px 0;cursor:pointer"});
+    p.c.forEach(h=>strip.appendChild(el("div",{style:"flex:1;background:"+h})));
+    strip.addEventListener("click",()=>{S.palette=p.c.slice();renderTray();toast("Loaded "+p.n);});
+    box.appendChild(strip);
+    box.appendChild(el("p",{class:"note"},p.d));
+    host.appendChild(box);
+  });
+}
+function renderPrintSheet(){
+  const grid=$("#psGrid");if(!grid)return;
+  grid.innerHTML="";
+  $("#psTitle").textContent="Colour specification — "+new Date().toLocaleDateString();
+  paletteRows().forEach(x=>{
+    const d=el("div",{class:"psw"});
+    d.appendChild(el("i",{style:"background:"+x.hex}));
+    const p=el("p");
+    p.innerHTML=x.name+"<br>"+x.hex.toUpperCase()+
+      "<br>CMYK "+[x.cmyk.c,x.cmyk.m,x.cmyk.y,x.cmyk.k].map(v=>r2(v,0)).join(" ")+
+      "<br>RGB "+[x.rgb.r,x.rgb.g,x.rgb.b].map(Math.round).join(" ")+
+      "<br>L*a*b* "+[x.lab.L,x.lab.a,x.lab.b].map(v=>r2(v)).join(" ")+
+      "<br>TAC "+r2(x.tac,0)+"%";
+    d.appendChild(p);
+    grid.appendChild(d);
+  });
+}
+
+/* =========================================================
+   11. NAV AND BOOT
+   ========================================================= */
+const links=$$("nav.rail a");
+const sections=links.map(a=>document.querySelector(a.getAttribute("href")));
+if("IntersectionObserver" in window){
+  const io=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        links.forEach(l=>l.classList.toggle("on",l.getAttribute("href")==="#"+e.target.id));
+      }
+    });
+  },{rootMargin:"-130px 0px -65% 0px"});
+  sections.forEach(s=>s&&io.observe(s));
+}
+
+onChange(()=>{
+  renderBooth();renderWheel();renderSliders();renderNotations();
+  renderRamps();renderScale();renderCvd();renderCvdMatrix();renderTac();
+});
+
+drawWheel();
+renderTray();
+renderCmykChart();
+renderPresets();
+$("#imgReset").click();
+setColor(S.hex);
+$("#tplOut").value=TEMPLATES.css();
+renderContrast();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<!--
+TOOL    : 2048.html (public copy)
+FAMILY  : GAMES
+VERSION : 1.1.0
+DATE    : 2026-10-01
+CHAT    : Building a 2048 game in HTML
+CHANGES : v1.1.0  public copy: best score kept in this browser across reloads
+          v1.0.0  2048 with undo, swipe, pattern autoplay and run history
+STATUS  : working; runs offline in any browser, no network
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2048</title>
+<style>
+:root{
+  --page:#e2e5e8; --ink:#22272b; --muted:#59626a; --rule:#c6cbd0;
+  --frame:#2c3237; --cell:#3a4147; --light:#eef1f3; --chip:#d0d4d8;
+  --g:12px; --slide:110ms;
+  font-family: Bahnschrift, "DIN Alternate", "DIN Next", "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--page); color:var(--ink); min-height:100vh;
+  display:flex; justify-content:center; padding:32px 16px 48px;
+  font-variant-numeric:tabular-nums;
+}
+.wrap{width:100%; max-width:480px}
+@media (min-width:900px){
+  .wrap{max-width:900px; display:grid; grid-template-columns:480px 1fr; column-gap:48px; align-items:start}
+}
+
+/* Header */
+header{display:grid; grid-template-columns:1fr auto; gap:10px 16px; align-items:end; margin-bottom:18px}
+h1{font-size:68px; line-height:.85; margin:0; font-weight:700; letter-spacing:-.02em}
+.scores{display:flex; gap:20px; text-align:right}
+.score .label{display:block; font-size:13px; color:var(--muted)}
+.score .val{display:block; font-size:26px; font-weight:600; position:relative; min-width:3ch}
+.plus{position:absolute; right:0; top:0; font-size:18px; color:#9a6232; pointer-events:none; animation:rise 700ms ease-out forwards}
+@keyframes rise{from{opacity:1; transform:translateY(0)} to{opacity:0; transform:translateY(-28px)}}
+.lede{margin:0; color:var(--muted); font-size:15px; line-height:1.35; max-width:30ch}
+.actions{display:flex; gap:8px}
+
+button{
+  font:inherit; font-size:15px; padding:9px 14px; border-radius:4px;
+  border:1.5px solid var(--frame); background:transparent; color:var(--ink); cursor:pointer;
+}
+button.primary{background:var(--frame); color:var(--light)}
+button:disabled{opacity:.35; cursor:default}
+button:focus-visible, input:focus-visible{outline:3px solid #2d62a8; outline-offset:2px}
+
+/* Board */
+.board{
+  position:relative; width:100%; aspect-ratio:1/1; background:var(--frame);
+  border-radius:8px; container-type:inline-size; touch-action:none; user-select:none; -webkit-user-select:none;
+}
+.cells,.tiles{position:absolute; inset:var(--g)}
+.cells{display:grid; grid-template:repeat(4,1fr)/repeat(4,1fr); gap:var(--g)}
+.cells div{background:var(--cell); border-radius:4px}
+
+.tile{
+  position:absolute; top:0; left:0;
+  width:calc((100% - 3 * var(--g)) / 4); height:calc((100% - 3 * var(--g)) / 4);
+  transform:translate(calc(var(--c) * (100% + var(--g))), calc(var(--r) * (100% + var(--g))));
+  transition:transform var(--slide) ease-in-out;
+}
+.face{
+  width:100%; height:100%; display:grid; place-items:center; border-radius:4px;
+  background:var(--bg); color:var(--fg); font-weight:700; font-size:10.5cqw; line-height:1;
+  box-shadow:inset 0 -4px 0 rgba(0,0,0,.18);
+}
+.d3 .face{font-size:8.8cqw}
+.d4 .face{font-size:7.2cqw}
+.d5 .face{font-size:5.8cqw}
+.d6 .face{font-size:4.8cqw}
+.hot .face{box-shadow:inset 0 -4px 0 rgba(0,0,0,.12), 0 0 18px 3px var(--bg)}
+.merge{z-index:2}
+.spawn .face{animation:spawn 160ms ease-out var(--slide) backwards}
+.merge .face{animation:merge 190ms ease-out var(--slide) backwards}
+@keyframes spawn{from{opacity:0; transform:scale(.2)}}
+@keyframes merge{0%{opacity:0; transform:scale(.7)} 55%{opacity:1; transform:scale(1.12)} 100%{transform:scale(1)}}
+
+.toast{
+  position:absolute; left:50%; top:14px; transform:translateX(-50%); z-index:11;
+  background:#f26b1d; color:#2a1406; font-weight:600; font-size:15px; padding:8px 14px; border-radius:4px;
+  opacity:0; transition:opacity 300ms; pointer-events:none; white-space:nowrap;
+}
+.toast.show{opacity:1}
+
+/* Overlay */
+.overlay{
+  position:absolute; inset:0; border-radius:8px; z-index:10; padding:24px;
+  background:rgba(34,39,43,.86); color:var(--light); text-align:center;
+  display:none; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+}
+.overlay.show{display:flex; animation:fade 280ms ease}
+@keyframes fade{from{opacity:0}}
+.overlay .title{margin:0; font-size:36px; font-weight:700}
+.overlay .sub{margin:0 0 10px; font-size:16px; line-height:1.4; color:#c3cad0; max-width:32ch}
+.overlay .row{display:flex; gap:10px}
+.overlay button{border-color:var(--light); color:var(--light)}
+.overlay button.primary{background:var(--light); color:var(--frame)}
+
+/* Run bar under the board */
+.runbar{display:none; align-items:center; justify-content:space-between; gap:12px; margin-top:10px; font-size:15px}
+.runbar.show{display:flex}
+.runbar button{padding:6px 12px; font-size:14px}
+
+/* Heat scale */
+.heat{display:flex; gap:3px; margin-top:16px}
+.heat span{flex:1; height:10px; border-radius:2px; background:var(--bg); opacity:.2; transition:opacity 300ms; box-shadow:inset 0 0 0 1px rgba(0,0,0,.1)}
+.heat span.on{opacity:1}
+.note{margin:10px 0 0; font-size:14px; color:var(--muted); line-height:1.45}
+.note b{color:var(--ink); font-weight:600}
+
+/* Autoplay panel */
+.auto{margin-top:36px}
+@media (min-width:900px){ .auto{margin-top:0} }
+.auto h2{font-size:24px; font-weight:700; margin:0 0 4px; line-height:1.1}
+.auto h3{font-size:16px; font-weight:600; margin:26px 0 8px}
+.auto .intro{margin:0 0 14px; color:var(--muted); font-size:15px; line-height:1.4}
+.field-label{display:block; font-size:14px; margin-bottom:5px}
+#pattern{
+  width:100%; font:inherit; font-size:16px; padding:9px 10px; border-radius:4px;
+  border:1.5px solid var(--frame); background:#f4f5f6; color:var(--ink);
+}
+#pattern[aria-invalid="true"]{border-color:#b8261a}
+.help{margin:6px 0 0; font-size:13px; color:var(--muted); line-height:1.4}
+.err{margin:6px 0 0; font-size:14px; color:#b8261a; min-height:0}
+.err:empty{display:none}
+.seq{display:flex; flex-wrap:wrap; gap:4px; margin:12px 0 0; min-height:30px}
+.seq span{display:inline-grid; place-items:center; width:30px; height:30px; border-radius:4px; background:var(--chip); font-size:17px; font-weight:600}
+.seq span.now{background:var(--frame); color:var(--light)}
+.seq span.nudge{background:#e0c16a; margin-left:8px}
+
+.speed{display:grid; grid-template-columns:1fr auto; gap:4px 12px; align-items:center; margin-top:18px}
+.speed label{font-size:14px}
+.speed output{font-size:15px; font-weight:600; min-width:6ch; text-align:right}
+.speed input{grid-column:1 / -1; width:100%; accent-color:var(--frame); margin:0}
+.speed .ends{grid-column:1 / -1; display:flex; justify-content:space-between; font-size:12px; color:var(--muted)}
+
+.controls{display:flex; gap:8px; margin-top:16px; align-items:center; flex-wrap:wrap}
+.stats{margin:0 0 0 4px; font-size:14px; color:var(--muted)}
+
+.presets{display:flex; flex-wrap:wrap; gap:6px}
+.preset{padding:6px 10px; font-size:14px; border-width:1px; display:inline-flex; gap:8px; align-items:baseline}
+.preset .gl{letter-spacing:1px; color:var(--muted)}
+.preset[aria-pressed="true"]{background:var(--frame); color:var(--light)}
+.preset[aria-pressed="true"] .gl{color:#b9c2c9}
+.preset-note{margin:10px 0 0; font-size:14px; line-height:1.45; min-height:3em}
+.fine{margin:8px 0 0; font-size:13px; color:var(--muted); line-height:1.45}
+
+table.runs{width:100%; border-collapse:collapse; font-size:14px}
+.runs th{font-weight:400; color:var(--muted); text-align:left; padding:0 0 6px; border-bottom:1px solid var(--rule)}
+.runs td{padding:7px 0; border-bottom:1px solid var(--rule); vertical-align:top}
+.runs .num{text-align:right; padding-left:10px}
+.runs .gl{display:block; color:var(--muted); font-size:13px; letter-spacing:1px}
+.runs .flag{display:block; color:var(--muted); font-size:12px}
+.runs tr.best td{font-weight:600}
+.sw{display:inline-block; width:11px; height:11px; border-radius:2px; margin-right:6px; vertical-align:-1px; box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.empty{font-size:14px; color:var(--muted); margin:0}
+
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+
+@media (max-width:420px){
+  :root{--g:8px}
+  body{padding-top:20px}
+  h1{font-size:54px}
+  .score .val{font-size:22px}
+  .lede{font-size:14px}
+  button{padding:8px 11px; font-size:14px}
+}
+@media (prefers-reduced-motion:reduce){
+  .tile{transition:none}
+  .spawn .face,.merge .face,.overlay.show,.plus{animation:none}
+  .plus{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="game">
+    <header>
+      <h1>2048</h1>
+      <div class="scores">
+        <div class="score"><span class="label">Score</span><span class="val"><span id="score">0</span></span></div>
+        <div class="score"><span class="label">Best</span><span class="val"><span id="best">0</span></span></div>
+      </div>
+      <p class="lede">Slide tiles with the arrow keys, WASD or a swipe. Two of a kind join into one.</p>
+      <div class="actions">
+        <button id="undoBtn" disabled title="Undo last move (U)">Undo</button>
+        <button id="newBtn" class="primary">New game</button>
+      </div>
+    </header>
+
+    <div class="board" id="board" aria-label="Game board">
+      <div class="cells" aria-hidden="true"></div>
+      <div class="tiles" id="tiles" aria-hidden="true"></div>
+      <div class="toast" id="toast" aria-hidden="true"></div>
+      <div class="overlay" id="overlay">
+        <p class="title" id="ovTitle"></p>
+        <p class="sub" id="ovSub"></p>
+        <div class="row" id="ovRow"></div>
+      </div>
+    </div>
+
+    <div class="runbar" id="runbar">
+      <span id="runbarText"></span>
+      <button id="runbarBtn">Pause</button>
+    </div>
+
+    <div class="heat" id="heat" aria-hidden="true"></div>
+    <p class="note">Tile colours follow steel as it heats: bright metal, the temper straws and blues, then cherry red through to white hot. Highest tile <b id="hi">2</b>.</p>
+  </div>
+
+  <section class="auto" aria-labelledby="autoH">
+    <h2 id="autoH">Autoplay</h2>
+    <p class="intro">Give it a sequence of moves and it repeats them until no moves are left.</p>
+
+    <label class="field-label" for="pattern">Move pattern</label>
+    <input id="pattern" value="left, up, right, down" spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="patHelp patErr">
+    <p class="help" id="patHelp">Use left, right, up, down, or L R U D, or arrows. Add ? for a random move.</p>
+    <p class="err" id="patErr" role="alert"></p>
+    <div class="seq" id="seq" aria-hidden="true"></div>
+
+    <div class="speed">
+      <label for="speed">Time per move</label>
+      <output id="speedOut" for="speed">0.25 s</output>
+      <input type="range" id="speed" min="20" max="1000" step="10" value="250">
+      <div class="ends"><span>0.02 s</span><span>1 s</span></div>
+    </div>
+
+    <div class="controls">
+      <button id="playBtn" class="primary">Start autoplay</button>
+      <button id="stepBtn" title="Play the next move of the pattern">One step</button>
+      <p class="stats" id="stats"></p>
+    </div>
+
+    <h3>Patterns to try</h3>
+    <div class="presets" id="presets"></div>
+    <p class="preset-note" id="presetNote"></p>
+    <p class="fine">Figures come from 1,000 simulated games per pattern. No fixed pattern reliably reaches 2048; that takes a player who looks ahead. If none of a pattern's moves can slide anything, autoplay nudges in a direction outside the pattern (down, right, left, then up) so the run can continue.</p>
+
+    <h3>Runs</h3>
+    <table class="runs" id="runs" hidden>
+      <thead><tr><th>Pattern</th><th class="num">Score</th><th class="num">Top tile</th><th class="num">Moves</th></tr></thead>
+      <tbody id="runsBody"></tbody>
+    </table>
+    <p class="empty" id="runsEmpty">Finished autoplay runs appear here so you can compare patterns.</p>
+  </section>
+
+  <p class="sr" id="status" aria-live="polite"></p>
+</div>
+
+<script>
+(() => {
+  // value: [background, text colour, heat name]
+  const PAL = {
+    2:    ['#d6dade', '#2a2f33', 'Bright steel'],
+    4:    ['#ece0ad', '#2a2f33', 'Pale straw, about 205 °C'],
+    8:    ['#e0c16a', '#2a2f33', 'Straw, about 220 °C'],
+    16:   ['#c9953f', '#2a2f33', 'Dark straw, about 240 °C'],
+    32:   ['#9a6232', '#f6f0e9', 'Brown, about 255 °C'],
+    64:   ['#6e3d5c', '#f6eef3', 'Purple, about 270 °C'],
+    128:  ['#3b3a86', '#eef0fa', 'Dark blue, about 295 °C'],
+    256:  ['#2d62a8', '#eef4fb', 'Blue, about 310 °C'],
+    512:  ['#8fb1cc', '#1f2a33', 'Pale blue, about 320 °C'],
+    1024: ['#b8261a', '#fff1ea', 'Cherry red, about 800 °C'],
+    2048: ['#f26b1d', '#2a1406', 'Orange, about 1000 °C'],
+    4096: ['#ffc53a', '#2a1a04', 'Yellow, about 1100 °C'],
+    8192: ['#fff3d6', '#3a2a10', 'White hot, about 1250 °C'],
+  };
+  const pal = v => PAL[Math.min(v, 8192)];
+
+  const PRESETS = [
+    { name:'Clockwise',     p:'left, up, right, down',        note:'Spins round the board. Averages about 2,200 points and reaches 512 in roughly 1 game in 20.' },
+    { name:'Anticlockwise', p:'left, down, right, up',        note:'The same spin reversed, with near-identical results: about 2,300 points on average.' },
+    { name:'Edge sweep',    p:'down, left, down, right',      note:'Pins tiles to the bottom row and sweeps side to side. The strongest pattern tested: about 4,500 points on average, 512 in 4 games out of 10, and now and then 1024.' },
+    { name:'Heavy bottom',  p:'down, down, left, down, right', note:'Edge sweep with an extra press down. A little weaker: about 4,200 points, and 512 in 1 game in 3.' },
+    { name:'Corner hug',    p:'down, left',                   note:'Crams everything into the bottom-left corner and needs frequent nudges. About 2,700 points on average.' },
+    { name:'Never up',      p:'left, down, right',            note:'Avoids up entirely, yet averages only about 1,700 points. Order matters more than you would expect.' },
+    { name:'Side to side',  p:'left, right',                  note:'Jams in about 90 moves with roughly 700 points. Fun to watch it choke.' },
+    { name:'Coin flip',     p:'?',                            note:'A random legal move every time. The baseline, at about 1,100 points.' },
+  ];
+
+  const DIRS = [[-1,0],[0,1],[1,0],[0,-1]];          // 0 up, 1 right, 2 down, 3 left
+  const TOKEN_DIR = { U:0, R:1, D:2, L:3 };
+  const GLYPH = { U:'↑', R:'→', D:'↓', L:'←', '?':'?' };
+  const NUDGE_ORDER = ['D','R','L','U'];
+  const WORDS = { left:'L', l:'L', '←':'L', right:'R', r:'R', '→':'R', up:'U', u:'U', '↑':'U',
+                  down:'D', d:'D', '↓':'D', '?':'?', random:'?', rand:'?' };
+  const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let SLIDE = RM ? 0 : 110;
+
+  const $ = id => document.getElementById(id);
+  const board = $('board'), layer = $('tiles'), overlay = $('overlay');
+  const patIn = $('pattern'), speedIn = $('speed');
+  const els = new Map();
+
+  let grid, score, best = 0, over, won, keepGoing, paused, prev = null, nid = 1;
+  let delay = 250;
+
+  const auto = { active:false, running:false, seq:[], i:0, timer:null, moves:0, nudges:0,
+                 label:'', glyphs:'', assisted:false, changed:false, fresh:true };
+  const runs = [];
+
+  // ---------- Static UI ----------
+  const cells = board.querySelector('.cells');
+  for (let i = 0; i < 16; i++) cells.appendChild(document.createElement('div'));
+  const heat = $('heat');
+  for (const v of Object.keys(PAL)) {
+    const s = document.createElement('span');
+    s.dataset.v = v;
+    s.style.setProperty('--bg', PAL[v][0]);
+    s.title = v + ': ' + PAL[v][2];
+    heat.appendChild(s);
+  }
+
+  const fmt = n => n.toLocaleString();
+  const emptyGrid = () => Array.from({length:4}, () => Array(4).fill(null));
+  const inside = (r, c) => r >= 0 && r < 4 && c >= 0 && c < 4;
+  const say = t => { $('status').textContent = t; };
+
+  // ---------- Pattern parsing ----------
+  function parse(str) {
+    const toks = str.toLowerCase().split(/[\s,;\/|+]+/).filter(Boolean);
+    const out = [];
+    for (const tk of toks) {
+      if (WORDS[tk]) { out.push(WORDS[tk]); continue; }
+      const chars = [...tk];
+      if (chars.every(ch => WORDS[ch])) { chars.forEach(ch => out.push(WORDS[ch])); continue; }
+      return { error: '“' + tk + '” isn’t a move. Use left, right, up, down, L R U D, arrows or ?.' };
+    }
+    if (!out.length) return { error: 'Enter at least one move.' };
+    if (out.length > 64) return { error: 'Keep the pattern to 64 moves or fewer.' };
+    return { seq: out };
+  }
+  const glyphs = seq => seq.map(t => GLYPH[t]).join(' ');
+  function presetFor(seq) {
+    const key = seq.join('');
+    return PRESETS.find(p => parse(p.p).seq.join('') === key) || null;
+  }
+
+  // ---------- Game core ----------
+  function spawn() {
+    const free = [];
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) if (!grid[r][c]) free.push([r, c]);
+    if (!free.length) return;
+    const [r, c] = free[Math.floor(Math.random() * free.length)];
+    grid[r][c] = { id: nid++, value: Math.random() < 0.9 ? 2 : 4, r, c, anim: 'spawn' };
+  }
+
+  // A move in direction d is possible if some tile has an empty or equal neighbour that way.
+  function canMove(d) {
+    const [dr, dc] = DIRS[d];
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) {
+      const t = grid[r][c];
+      if (!t || !inside(r + dr, c + dc)) continue;
+      const n = grid[r + dr][c + dc];
+      if (!n || n.value === t.value) return true;
+    }
+    return false;
+  }
+  const movesAvailable = () => [0,1,2,3].some(canMove);
+
+  function snapshot() {
+    return { vals: grid.map(row => row.map(t => t ? t.value : 0)), score, won, keepGoing };
+  }
+
+  function setSlide(ms) {
+    SLIDE = RM ? 0 : ms;
+    document.documentElement.style.setProperty('--slide', SLIDE + 'ms');
+  }
+
+  function move(dir, fromAuto) {
+    if (over || paused) return false;
+    setSlide(fromAuto ? Math.min(110, Math.round(delay * 0.6)) : 110);
+    const [dr, dc] = DIRS[dir];
+    const rows = [0,1,2,3], cols = [0,1,2,3];
+    if (dr === 1) rows.reverse();
+    if (dc === 1) cols.reverse();
+
+    const before = snapshot();
+    const merged = new Set();
+    const removals = [];
+    let moved = false, gained = 0, made2048 = false;
+
+    for (const r of rows) for (const c of cols) {
+      const t = grid[r][c];
+      if (!t) continue;
+      let nr = r, nc = c;
+      while (inside(nr + dr, nc + dc) && !grid[nr + dr][nc + dc]) { nr += dr; nc += dc; }
+      const tr = nr + dr, tc = nc + dc;
+      const next = inside(tr, tc) ? grid[tr][tc] : null;
+
+      if (next && next.value === t.value && !merged.has(next.id)) {
+        const m = { id: nid++, value: t.value * 2, r: tr, c: tc, anim: 'merge' };
+        grid[r][c] = null;
+        grid[tr][tc] = m;
+        merged.add(m.id);
+        t.r = tr; t.c = tc; next.r = tr; next.c = tc;   // both sources slide into the target
+        removals.push(t, next);
+        gained += m.value;
+        if (m.value === 2048) made2048 = true;
+        moved = true;
+      } else if (nr !== r || nc !== c) {
+        grid[r][c] = null;
+        grid[nr][nc] = t;
+        t.r = nr; t.c = nc;
+        moved = true;
+      }
+    }
+    if (!moved) return false;
+
+    prev = before;
+    score += gained;
+    if (gained && (!fromAuto || delay >= 150)) floatPlus(gained);
+    if (score > best) { best = score; queueSaveBest(); }
+    spawn();
+    render(removals);
+
+    if (made2048 && !won) {
+      won = true;
+      if (auto.active) {
+        keepGoing = true;
+        toast('2048 reached. Autoplay keeps going.');
+        say('2048 reached.');
+      } else {
+        paused = true;
+        setTimeout(() => showOverlay('2048 reached', 'Keep going for 4096, or start a fresh board.',
+          [['Keep going', true, () => { keepGoing = true; paused = false; hideOverlay(); }],
+           ['New game', false, newGame]]), SLIDE + 250);
+      }
+    }
+    if (!movesAvailable()) {
+      over = true;
+      gameOver();
+    }
+    return true;
+  }
+
+  // ---------- Rendering ----------
+  function makeEl(t) {
+    const el = document.createElement('div');
+    const face = document.createElement('div');
+    face.className = 'face';
+    face.textContent = t.value;
+    el.appendChild(face);
+    const p = pal(t.value);
+    el.style.setProperty('--bg', p[0]);
+    el.style.setProperty('--fg', p[1]);
+    el.className = 'tile d' + String(t.value).length + (t.value >= 2048 ? ' hot' : '') + (t.anim ? ' ' + t.anim : '');
+    return el;
+  }
+  function place(el, t) {
+    el.style.setProperty('--r', t.r);
+    el.style.setProperty('--c', t.c);
+  }
+  function topTile() {
+    let hi = 0;
+    for (const row of grid) for (const t of row) if (t && t.value > hi) hi = t.value;
+    return hi;
+  }
+
+  function render(removals = []) {
+    const live = new Set();
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) {
+      const t = grid[r][c];
+      if (!t) continue;
+      live.add(t.id);
+      let el = els.get(t.id);
+      if (!el) { el = makeEl(t); els.set(t.id, el); layer.appendChild(el); }
+      place(el, t);
+      t.anim = null;
+    }
+    for (const t of removals) {
+      const el = els.get(t.id);
+      if (!el) continue;
+      place(el, t);
+      els.delete(t.id);
+      setTimeout(() => el.remove(), SLIDE);
+    }
+    for (const [id, el] of els) if (!live.has(id)) { el.remove(); els.delete(id); }
+
+    const hi = topTile();
+    $('score').textContent = fmt(score);
+    $('best').textContent = fmt(best);
+    $('hi').textContent = fmt(hi);
+    for (const s of heat.children) s.classList.toggle('on', +s.dataset.v <= hi);
+    $('undoBtn').disabled = !prev;
+  }
+
+  function floatPlus(n) {
+    const s = document.createElement('span');
+    s.className = 'plus';
+    s.textContent = '+' + n;
+    $('score').parentNode.appendChild(s);
+    setTimeout(() => s.remove(), 750);
+  }
+
+  let toastTimer = null;
+  function toast(text) {
+    const t = $('toast');
+    t.textContent = text;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function clearTiles() {
+    for (const el of els.values()) el.remove();
+    els.clear();
+    layer.textContent = '';
+  }
+
+  // ---------- Game flow ----------
+  function newGame() {
+    stopAuto();
+    clearTiles();
+    grid = emptyGrid();
+    score = 0; over = false; won = false; keepGoing = false; paused = false; prev = null;
+    hideOverlay();
+    spawn(); spawn();
+    setSlide(110);
+    render();
+    say('New game started.');
+  }
+
+  function undo() {
+    if (!prev) return;
+    if (auto.active) { pauseAuto(); auto.assisted = true; }
+    clearTiles();
+    grid = emptyGrid();
+    prev.vals.forEach((row, r) => row.forEach((v, c) => {
+      if (v) grid[r][c] = { id: nid++, value: v, r, c, anim: null };
+    }));
+    score = prev.score; won = prev.won; keepGoing = prev.keepGoing;
+    over = false; paused = false; prev = null;
+    hideOverlay();
+    render();
+    updateAutoUI();
+    say('Last move undone.');
+  }
+
+  function gameOver() {
+    if (auto.active) {
+      const run = { label: auto.label, glyphs: auto.glyphs, score, top: topTile(), moves: auto.moves,
+                    nudges: auto.nudges, assisted: auto.assisted, changed: auto.changed, fresh: auto.fresh };
+      runs.unshift(run);
+      if (runs.length > 12) runs.pop();
+      renderRuns();
+      auto.active = false; auto.running = false; clearTimeout(auto.timer);
+      updateAutoUI();
+      const nudgeTxt = run.nudges ? ', with ' + run.nudges + (run.nudges === 1 ? ' nudge' : ' nudges') : '';
+      setTimeout(() => showOverlay('No moves left',
+        run.label + ' scored ' + fmt(run.score) + ' with a top tile of ' + fmt(run.top) + ' in ' + fmt(run.moves) + ' moves' + nudgeTxt + '.',
+        [['Run again', true, () => { newGame(); startAuto(); }], ['New game', false, newGame]]), SLIDE + 250);
+    } else {
+      setTimeout(() => showOverlay('No moves left', 'Final score ' + fmt(score) + '.',
+        [['Undo', false, undo], ['New game', true, newGame]]), SLIDE + 250);
+    }
+  }
+
+  function showOverlay(title, sub, buttons) {
+    $('ovTitle').textContent = title;
+    $('ovSub').textContent = sub;
+    const row = $('ovRow');
+    row.textContent = '';
+    let focusBtn = null;
+    for (const [label, primary, fn] of buttons) {
+      const b = document.createElement('button');
+      b.textContent = label;
+      if (primary) { b.className = 'primary'; focusBtn = b; }
+      b.addEventListener('click', fn);
+      row.appendChild(b);
+    }
+    overlay.classList.add('show');
+    say(title + '. ' + sub);
+    if (focusBtn) focusBtn.focus({ preventScroll: true });
+  }
+  function hideOverlay() { overlay.classList.remove('show'); }
+
+  // ---------- Autoplay ----------
+  function readPattern() {
+    const r = parse(patIn.value);
+    $('patErr').textContent = r.error || '';
+    patIn.setAttribute('aria-invalid', r.error ? 'true' : 'false');
+    return r;
+  }
+
+  function applyPattern(seq) {
+    const pre = presetFor(seq);
+    auto.seq = seq;
+    auto.i = 0;
+    auto.label = pre ? pre.name : 'Custom';
+    auto.glyphs = glyphs(seq);
+  }
+
+  function startAuto() {
+    const r = readPattern();
+    if (r.error) { patIn.focus(); return; }
+    if (over) newGame();
+    if (overlay.classList.contains('show')) { keepGoing = true; paused = false; hideOverlay(); }
+    if (!auto.active) {
+      applyPattern(r.seq);
+      auto.active = true; auto.moves = 0; auto.nudges = 0;
+      auto.assisted = false; auto.changed = false; auto.fresh = (score === 0);
+    }
+    auto.running = true;
+    updateAutoUI();
+    bringBoardIntoView();
+    say('Autoplay started.');
+    tick();
+  }
+
+  function pauseAuto() {
+    if (!auto.running) return;
+    auto.running = false;
+    clearTimeout(auto.timer);
+    updateAutoUI();
+    say('Autoplay paused.');
+  }
+
+  function stopAuto() {
+    auto.active = false; auto.running = false;
+    clearTimeout(auto.timer);
+    updateAutoUI();
+  }
+
+  function toggleAuto() { auto.running ? pauseAuto() : startAuto(); }
+
+  function tick() {
+    clearTimeout(auto.timer);
+    if (!auto.running) return;
+    autoStep();
+    if (auto.running) auto.timer = setTimeout(tick, delay);
+  }
+
+  // Plays the next pattern move that actually slides something.
+  // Moves that change nothing are skipped instantly; if a full pass changes nothing, nudge.
+  function autoStep() {
+    if (over) return false;
+    const seq = auto.seq;
+    for (let k = 0; k < seq.length; k++) {
+      const idx = auto.i;
+      auto.i = (auto.i + 1) % seq.length;
+      let d;
+      if (seq[idx] === '?') {
+        const valid = [0,1,2,3].filter(canMove);
+        if (!valid.length) continue;
+        d = valid[Math.floor(Math.random() * valid.length)];
+      } else d = TOKEN_DIR[seq[idx]];
+      if (move(d, true)) { auto.moves++; showSeq(idx, null); updateAutoUI(); return true; }
+    }
+    for (const tok of NUDGE_ORDER.filter(t => !seq.includes(t))) {
+      if (move(TOKEN_DIR[tok], true)) { auto.moves++; auto.nudges++; showSeq(-1, tok); updateAutoUI(); return true; }
+    }
+    return false;
+  }
+
+  function stepOnce() {
+    const r = readPattern();
+    if (r.error) { patIn.focus(); return; }
+    if (over) return;
+    if (auto.running) pauseAuto();
+    if (!auto.active) {
+      applyPattern(r.seq);
+      auto.active = true; auto.moves = 0; auto.nudges = 0;
+      auto.assisted = false; auto.changed = false; auto.fresh = (score === 0);
+    }
+    autoStep();
+    updateAutoUI();
+  }
+
+  function manualMove(d) {
+    if (auto.running) pauseAuto();
+    if (move(d, false) && auto.active) auto.assisted = true;
+  }
+
+  // ---------- Autoplay UI ----------
+  function showSeq(nowIdx, nudgeTok) {
+    const box = $('seq');
+    const seq = auto.active ? auto.seq : (parse(patIn.value).seq || []);
+    box.textContent = '';
+    seq.forEach((t, i) => {
+      const s = document.createElement('span');
+      s.textContent = GLYPH[t];
+      if (i === nowIdx) s.className = 'now';
+      box.appendChild(s);
+    });
+    if (nudgeTok) {
+      const s = document.createElement('span');
+      s.className = 'nudge';
+      s.textContent = GLYPH[nudgeTok];
+      s.title = 'Nudge';
+      box.appendChild(s);
+    }
+  }
+
+  function updateAutoUI() {
+    const playBtn = $('playBtn');
+    playBtn.textContent = auto.running ? 'Pause' : (auto.active ? 'Resume' : 'Start autoplay');
+    $('stepBtn').disabled = over;
+    const nudge = auto.nudges ? ', ' + auto.nudges + (auto.nudges === 1 ? ' nudge' : ' nudges') : '';
+    $('stats').textContent = auto.active ? fmt(auto.moves) + (auto.moves === 1 ? ' move' : ' moves') + nudge : '';
+    const bar = $('runbar');
+    bar.classList.toggle('show', auto.active);
+    $('runbarText').textContent = auto.active
+      ? auto.label + (auto.running ? ', move ' : ', paused at move ') + fmt(auto.moves) : '';
+    $('runbarBtn').textContent = auto.running ? 'Pause' : 'Resume';
+  }
+
+  function bringBoardIntoView() {
+    const r = board.getBoundingClientRect();
+    if (r.top < 0 || r.bottom > innerHeight) board.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'center' });
+  }
+
+  function renderPresets() {
+    const box = $('presets');
+    const cur = parse(patIn.value).seq;
+    const curKey = cur ? cur.join('') : '';
+    box.textContent = '';
+    let active = null;
+    for (const p of PRESETS) {
+      const seq = parse(p.p).seq;
+      const b = document.createElement('button');
+      b.className = 'preset';
+      const on = seq.join('') === curKey;
+      if (on) active = p;
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      const n = document.createElement('span'); n.textContent = p.name;
+      const g = document.createElement('span'); g.className = 'gl'; g.textContent = seq.map(t => GLYPH[t]).join('');
+      b.append(n, g);
+      b.addEventListener('click', () => { patIn.value = p.p; onPatternInput(); });
+      box.appendChild(b);
+    }
+    $('presetNote').textContent = active ? active.name + ': ' + active.note : 'Pick a pattern to see how it tends to do.';
+  }
+
+  function onPatternInput() {
+    const r = readPattern();
+    renderPresets();
+    if (r.seq && auto.active) {
+      if (r.seq.join('') !== auto.seq.join('')) auto.changed = true;
+      applyPattern(r.seq);
+      updateAutoUI();
+    }
+    showSeq(-1, null);
+  }
+
+  function renderRuns() {
+    const body = $('runsBody');
+    body.textContent = '';
+    const bestScore = Math.max(...runs.map(r => r.score));
+    for (const r of runs) {
+      const tr = document.createElement('tr');
+      if (runs.length > 1 && r.score === bestScore) tr.className = 'best';
+      const flags = [];
+      if (!r.fresh) flags.push('started mid-game');
+      if (r.changed) flags.push('pattern changed');
+      if (r.assisted) flags.push('with your moves');
+      const td1 = document.createElement('td');
+      td1.textContent = r.label;
+      const gl = document.createElement('span'); gl.className = 'gl'; gl.textContent = r.glyphs.replace(/ /g, '');
+      td1.appendChild(gl);
+      if (flags.length) { const f = document.createElement('span'); f.className = 'flag'; f.textContent = flags.join(', '); td1.appendChild(f); }
+      const td2 = document.createElement('td'); td2.className = 'num'; td2.textContent = fmt(r.score);
+      const td3 = document.createElement('td'); td3.className = 'num';
+      const sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = pal(r.top)[0];
+      td3.append(sw, document.createTextNode(fmt(r.top)));
+      const td4 = document.createElement('td'); td4.className = 'num'; td4.textContent = fmt(r.moves);
+      tr.append(td1, td2, td3, td4);
+      body.appendChild(tr);
+    }
+    $('runs').hidden = !runs.length;
+    $('runsEmpty').hidden = !!runs.length;
+  }
+
+  function applySpeed() {
+    delay = +speedIn.value;
+    $('speedOut').textContent = (delay / 1000).toFixed(2) + ' s';
+  }
+
+  // ---------- Best score storage ----------
+  // Kept in this browser (localStorage), and in Claude's artifact storage when present.
+  let saveTimer = null;
+  function queueSaveBest() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(async () => {
+      try { localStorage.setItem('best-2048', String(best)); } catch (e) {}
+      try { if (window.storage && window.storage.set) await window.storage.set('best-2048', String(best), false); } catch (e) {}
+    }, 1500);
+  }
+  async function loadBest() {
+    try { const v = parseInt(localStorage.getItem('best-2048') || '0', 10) || 0;
+          if (v > best) { best = v; $('best').textContent = fmt(best); } } catch (e) {}
+    try {
+      if (window.storage && window.storage.get) {
+        const r = await window.storage.get('best-2048', false);
+        if (r && r.value) { best = Math.max(best, parseInt(r.value, 10) || 0); $('best').textContent = fmt(best); }
+      }
+    } catch (e) {}
+  }
+
+  // ---------- Input ----------
+  const KEYS = { ArrowUp:0, ArrowRight:1, ArrowDown:2, ArrowLeft:3, w:0, d:1, s:2, a:3 };
+  document.addEventListener('keydown', e => {
+    const tag = e.target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (k in KEYS) { e.preventDefault(); manualMove(KEYS[k]); }
+    else if (k === 'u') undo();
+    else if (k === ' ' && tag !== 'BUTTON') { e.preventDefault(); toggleAuto(); }
+  });
+  patIn.addEventListener('input', onPatternInput);
+  patIn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); startAuto(); } });
+  speedIn.addEventListener('input', applySpeed);
+
+  let sx = 0, sy = 0, pid = null;
+  board.addEventListener('pointerdown', e => {
+    if (e.target.closest('.overlay.show')) return;
+    pid = e.pointerId; sx = e.clientX; sy = e.clientY;
+  });
+  board.addEventListener('pointerup', e => {
+    if (e.pointerId !== pid) return;
+    pid = null;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    const ax = Math.abs(dx), ay = Math.abs(dy);
+    if (Math.max(ax, ay) < 24) return;
+    manualMove(ax > ay ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0));
+  });
+  board.addEventListener('pointercancel', () => { pid = null; });
+
+  $('newBtn').addEventListener('click', newGame);
+  $('undoBtn').addEventListener('click', undo);
+  $('playBtn').addEventListener('click', toggleAuto);
+  $('runbarBtn').addEventListener('click', toggleAuto);
+  $('stepBtn').addEventListener('click', stepOnce);
+
+  applySpeed();
+  renderPresets();
+  showSeq(-1, null);
+  newGame();
+  loadBest();
+
+  // Test hook (harmless in normal play)
+  window.__game2048 = {
+    get grid(){ return grid.map(r => r.map(t => t ? t.value : 0)); },
+    get state(){ return { score, over, auto: { ...auto, timer: undefined }, runs: runs.slice() }; },
+    move: d => move(d, false), newGame, startAuto, pauseAuto,
+    load(vals){ stopAuto(); clearTiles(); grid = emptyGrid(); vals.forEach((row,r)=>row.forEach((v,c)=>{ if(v) grid[r][c]={id:nid++,value:v,r,c,anim:null}; })); over=false; paused=false; prev=null; hideOverlay(); render(); }
+  };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<!--
+TOOL    : rotor_balancer.html (public copy)
+FAMILY  : BALANCING
+VERSION : 2.0.1
+DATE    : 2026-10-01
+CHAT    : Rotor Balancing GUI
+CHANGES : v2.0.1  public copy: organisation emblem, affiliation and phone number removed
+          v2.0.0  single-, dual-plane and worst-case bolt/washer balancing to ISO 1940-1
+STATUS  : working; runs offline in any browser, no network
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rotor Balance Simulator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
+:root{--bg:#0a0e14;--panel:#0f1621;--panel2:#141c2a;--border:#1e3a5f;--accent:#00d4ff;--accent2:#ff6b35;--accent3:#39ff14;--warn:#ffaa00;--danger:#ff2d55;--text:#c8d8e8;--dim:#4a6080;--grid:rgba(0,212,255,0.04);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;min-height:100vh;overflow-x:hidden;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:40px 40px;}
+header{background:linear-gradient(135deg,#0a0e14 0%,#0f1e30 100%);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 30px rgba(0,212,255,0.08);}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:18px;color:var(--accent);letter-spacing:2px;text-shadow:0 0 20px rgba(0,212,255,0.5);}
+.logo span{color:var(--accent2);}
+.subtitle{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:3px;}
+.tabs{margin-left:auto;display:flex;gap:4px;}
+.tab{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:1px;padding:6px 16px;border:1px solid var(--border);background:transparent;color:var(--dim);cursor:pointer;transition:all 0.2s;}
+.tab.active,.tab:hover{background:rgba(0,212,255,0.1);border-color:var(--accent);color:var(--accent);}
+.main{display:flex;gap:0;min-height:calc(100vh - 56px);}
+.sidebar{width:300px;min-width:300px;background:var(--panel);border-right:1px solid var(--border);padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;}
+.section-title{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:6px;}
+.param-group{background:var(--panel2);border:1px solid var(--border);border-radius:2px;padding:10px;}
+.param-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.param-row:last-child{margin-bottom:0;}
+label{font-size:12px;color:var(--text);font-weight:600;}
+input[type=number]{background:#0a0e14;border:1px solid var(--border);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:13px;padding:4px 8px;width:88px;text-align:right;}
+.unit{font-size:11px;color:var(--dim);margin-left:4px;}
+.btn{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:1px;padding:9px 12px;border:1px solid;cursor:pointer;width:100%;transition:all 0.2s;text-transform:uppercase;}
+.btn-primary{background:rgba(0,212,255,0.1);border-color:var(--accent);color:var(--accent);}
+.btn-primary:hover{background:rgba(0,212,255,0.25);box-shadow:0 0 15px rgba(0,212,255,0.3);}
+.btn-warn{background:rgba(255,170,0,0.1);border-color:var(--warn);color:var(--warn);}
+.btn-warn:hover{background:rgba(255,170,0,0.25);}
+.btn-danger{background:rgba(255,45,85,0.1);border-color:var(--danger);color:var(--danger);}
+.btn-danger:hover{background:rgba(255,45,85,0.25);}
+.btn-success{background:rgba(57,255,20,0.1);border-color:var(--accent3);color:var(--accent3);}
+.btn-success:hover{background:rgba(57,255,20,0.25);}
+.content{flex:1;padding:16px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
+.viz-row{display:flex;gap:14px;}
+.canvas-panel{background:var(--panel);border:1px solid var(--border);border-radius:2px;padding:10px;position:relative;}
+.canvas-title{font-family:'Orbitron',monospace;font-size:10px;color:var(--accent);letter-spacing:2px;margin-bottom:8px;text-align:center;}
+canvas{display:block;}
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;}
+.metric-card{background:var(--panel2);border:1px solid var(--border);padding:9px 12px;text-align:center;transition:border-color 0.3s;}
+.metric-label{font-size:9px;color:var(--dim);letter-spacing:2px;font-family:'Orbitron',monospace;margin-bottom:3px;}
+.metric-value{font-family:'Share Tech Mono',monospace;font-size:20px;font-weight:bold;color:var(--accent);}
+.metric-unit{font-size:10px;color:var(--dim);}
+.metric-card.good{border-color:var(--accent3);}.metric-card.good .metric-value{color:var(--accent3);}
+.metric-card.warn{border-color:var(--warn);}.metric-card.warn .metric-value{color:var(--warn);}
+.metric-card.bad{border-color:var(--danger);}.metric-card.bad .metric-value{color:var(--danger);}
+.bolt-table-wrap{background:var(--panel);border:1px solid var(--border);padding:10px;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:1px;color:var(--accent);text-align:center;padding:5px 7px;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{font-family:'Share Tech Mono',monospace;font-size:12px;text-align:center;padding:4px 7px;border-bottom:1px solid rgba(30,58,95,0.5);}
+tr:hover td{background:rgba(0,212,255,0.04);}
+td input[type=number]{width:70px;padding:3px 6px;font-size:12px;}
+.washer-ctrl{display:flex;align-items:center;justify-content:center;gap:5px;}
+.washer-btn{width:22px;height:22px;background:transparent;border:1px solid var(--border);color:var(--text);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;}
+.washer-btn:hover{border-color:var(--accent);color:var(--accent);}
+.washer-count{font-family:'Share Tech Mono',monospace;font-size:14px;min-width:20px;text-align:center;color:var(--accent3);}
+.status-bar{background:var(--panel);border-top:1px solid var(--border);padding:7px 16px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--dim);display:flex;gap:18px;flex-wrap:wrap;}
+.status-item{display:flex;gap:5px;}
+.status-key{color:var(--dim);}.status-val{color:var(--accent);}
+select{background:#0a0e14;border:1px solid var(--border);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:11px;padding:4px 6px;width:100%;}
+.page{display:none;}.page.active{display:flex;flex-direction:column;gap:14px;}
+.result-box{background:var(--panel2);border:1px solid var(--border);padding:10px 12px;font-family:'Share Tech Mono',monospace;font-size:11px;line-height:1.8;}
+.result-box .ok{color:var(--accent3);}.result-box .ng{color:var(--danger);}.result-box .warn{color:var(--warn);}.result-box .info{color:var(--accent);}
+.badge{display:inline-block;padding:1px 6px;font-family:'Orbitron',monospace;font-size:9px;border:1px solid;letter-spacing:1px;}
+.badge-ok{color:var(--accent3);border-color:var(--accent3);}.badge-ng{color:var(--danger);border-color:var(--danger);}.badge-warn{color:var(--warn);border-color:var(--warn);}
+.step-lbl{font-family:'Orbitron',monospace;font-size:9px;color:var(--dim);letter-spacing:2px;padding:6px 0 3px;border-bottom:1px solid var(--border);margin-top:2px;}
+::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);}::-webkit-scrollbar-thumb:hover{background:var(--accent);}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="logo">ROTOR<span>BALANCE</span> SIM</div>
+    <div class="subtitle">SHAFT / FLANGE / COUPLING BALANCER V2.0 — ISO 1940-1</div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="showPage('single',this)">SINGLE PLANE</button>
+    <button class="tab" onclick="showPage('dual',this)">DUAL PLANE</button>
+    <button class="tab" onclick="showPage('worst',this)">WORST CASE</button>
+    <button class="tab" onclick="showPage('guide',this)">PROCEDURE</button>
+  </div>
+</header>
+<div class="main">
+<div class="sidebar">
+  <div class="param-group">
+    <div class="section-title">Rotor Parameters</div>
+    <div class="param-row"><label>Rotor Mass</label><div style="display:flex;align-items:center"><input type="number" id="rotorMass" value="5000" min="100" max="50000" oninput="recalc()"><span class="unit">g</span></div></div>
+    <div class="param-row"><label>Bolt Radius R</label><div style="display:flex;align-items:center"><input type="number" id="boltRadius" value="50" min="10" max="300" oninput="recalc()"><span class="unit">mm</span></div></div>
+    <div class="param-row"><label>No. of Bolts</label><select id="numBolts" onchange="initBolts()"><option value="6">6 Bolts (60°)</option><option value="8" selected>8 Bolts (45°)</option><option value="10">10 Bolts (36°)</option><option value="12">12 Bolts (30°)</option></select></div>
+    <div class="param-row"><label>Running RPM</label><div style="display:flex;align-items:center"><input type="number" id="runRPM" value="3000" min="100" max="100000" oninput="recalc()"><span class="unit">rpm</span></div></div>
+    <div class="param-row"><label>ISO 1940 Grade</label><select id="isoGrade" onchange="recalc()"><option value="0.4">G0.4 Gyroscopes</option><option value="1">G1 Precision grinders</option><option value="2.5" selected>G2.5 Gas turbines</option><option value="6.3">G6.3 Fans / motors</option><option value="16">G16 Drive shafts</option><option value="40">G40 Crankshafts</option><option value="100">G100 Agricultural</option><option value="250">G250 Heavy machinery</option></select></div>
+    <div class="param-row" style="background:rgba(0,212,255,0.05);padding:5px;border:1px solid rgba(0,212,255,0.15)">
+      <label style="color:var(--accent)">ISO Permissible U</label>
+      <div style="display:flex;align-items:center"><span id="isoPermissible" style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--accent3)">—</span><span class="unit">g·mm</span></div>
+    </div>
+    <div class="param-row"><label>Manual Tolerance</label><div style="display:flex;align-items:center"><input type="number" id="tolerance" value="5" min="0.1" max="100000" step="0.1" oninput="recalc()"><span class="unit">g·mm</span></div></div>
+    <button class="btn btn-primary" style="font-size:9px;padding:5px;margin-top:4px" onclick="applyISOTolerance()">↓ APPLY ISO VALUE AS TOLERANCE</button>
+  </div>
+
+  <div class="param-group">
+    <div class="section-title">Component Tolerances</div>
+    <div class="param-row"><label>Bolt Nominal</label><div style="display:flex;align-items:center"><input type="number" id="boltNom" value="25" step="0.1" oninput="recalc()"><span class="unit">g</span></div></div>
+    <div class="param-row"><label>Bolt ±Tol</label><div style="display:flex;align-items:center"><input type="number" id="boltTol" value="0.5" step="0.1" oninput="recalc()"><span class="unit">g</span></div></div>
+    <div class="param-row"><label>Washer Nominal</label><div style="display:flex;align-items:center"><input type="number" id="washerNom" value="1.0" step="0.1" oninput="recalc()"><span class="unit">g</span></div></div>
+    <div class="param-row"><label>Washer ±Tol</label><div style="display:flex;align-items:center"><input type="number" id="washerTol" value="0.01" step="0.01" oninput="recalc()"><span class="unit">g</span></div></div>
+    <div class="param-row"><label>Max Washers/Bolt</label><div style="display:flex;align-items:center"><input type="number" id="maxWashers" value="5" min="1" max="20" oninput="recalc()"></div></div>
+  </div>
+
+  <div class="param-group" id="dualParams" style="display:none">
+    <div class="section-title">Dual Plane</div>
+    <div class="param-row"><label>Plane Separation</label><div style="display:flex;align-items:center"><input type="number" id="planeSep" value="200" min="10" max="2000" oninput="recalc()"><span class="unit">mm</span></div></div>
+    <div class="param-row"><label>Bearing A pos</label><div style="display:flex;align-items:center"><input type="number" id="bearA" value="0" min="-500" max="500" oninput="recalc()"><span class="unit">mm</span></div></div>
+    <div class="param-row"><label>Bearing B pos</label><div style="display:flex;align-items:center"><input type="number" id="bearB" value="200" min="-500" max="500" oninput="recalc()"><span class="unit">mm</span></div></div>
+  </div>
+
+  <div class="step-lbl">STEP 1 — RANDOMIZE BOLTS</div>
+  <button class="btn btn-primary" onclick="randomizeBolts()">⟳ RANDOMIZE BOLT MASSES</button>
+
+  <div class="step-lbl">STEP 2 — OPTIMIZE POSITIONS (SWAP)</div>
+  <button class="btn btn-primary" onclick="optimizeSwapSingle()">⇄ SWAP-OPTIMIZE SINGLE PLANE</button>
+  <button class="btn btn-primary" onclick="optimizeSwapDual()">⇄ SWAP-OPTIMIZE BOTH PLANES</button>
+  <div id="swapReport" style="display:none;background:rgba(0,212,255,0.04);border:1px solid var(--border);padding:8px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--dim);line-height:1.7"></div>
+
+  <div class="step-lbl">STEP 3 — ADD WASHERS</div>
+  <button class="btn btn-success" onclick="autoBalance()">⚡ AUTO-SOLVE WASHERS ONLY</button>
+  <button class="btn btn-success" style="background:rgba(57,255,20,0.18);font-size:9px" onclick="fullSolve()">⚡⇄ FULL SOLVE (SWAP + WASHERS)</button>
+
+  <div class="step-lbl">ANALYSIS</div>
+  <button class="btn btn-warn" onclick="doWorstCase()">⚠ SIMULATE WORST CASE</button>
+  <button class="btn btn-danger" onclick="improperInstall()">✕ IMPROPER INSTALL SIM</button>
+
+  <div class="result-box" id="resultBox"><span class="info">[ AWAITING INPUT ]</span><br>Initialize bolt masses and run solver.</div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+<!-- SINGLE PLANE -->
+<div id="page-single" class="page active">
+  <div class="metrics-grid">
+    <div class="metric-card" id="mc-residual"><div class="metric-label">RESIDUAL U</div><div class="metric-value" id="mv-residual">—</div><div class="metric-unit">g·mm</div></div>
+    <div class="metric-card" id="mc-angle"><div class="metric-label">HEAVY SPOT</div><div class="metric-value" id="mv-angle">—</div><div class="metric-unit">deg CCW</div></div>
+    <div class="metric-card" id="mc-washers"><div class="metric-label">TOTAL WASHERS</div><div class="metric-value" id="mv-washers">—</div><div class="metric-unit">pcs</div></div>
+    <div class="metric-card" id="mc-status"><div class="metric-label">TOL STATUS</div><div class="metric-value" id="mv-status">—</div><div class="metric-unit">manual tol</div></div>
+    <div class="metric-card" id="mc-isograde"><div class="metric-label">ISO GRADE</div><div class="metric-value" id="mv-isograde">G2.5</div><div class="metric-unit">selected</div></div>
+    <div class="metric-card" id="mc-isoperm"><div class="metric-label">PERMISSIBLE U</div><div class="metric-value" id="mv-isoperm">—</div><div class="metric-unit">g·mm @ RPM</div></div>
+    <div class="metric-card" id="mc-isoverdict"><div class="metric-label">ISO VERDICT</div><div class="metric-value" id="mv-isoverdict">—</div><div class="metric-unit" id="mu-isoverdict">—</div></div>
+  </div>
+  <div class="viz-row">
+    <div class="canvas-panel" style="flex:0 0 340px"><div class="canvas-title">FLANGE — POLAR VIEW</div><canvas id="polarCanvas" width="318" height="318"></canvas></div>
+    <div class="canvas-panel" style="flex:1"><div class="canvas-title">MASS DISTRIBUTION</div><canvas id="barCanvas" width="460" height="318"></canvas></div>
+    <div class="canvas-panel" style="flex:0 0 210px"><div class="canvas-title">VECTOR SUM</div><canvas id="vectorCanvas" width="188" height="318"></canvas></div>
+  </div>
+  <div class="bolt-table-wrap">
+    <div class="section-title">BOLT CONFIGURATION TABLE</div>
+    <table><thead><tr><th>BOLT#</th><th>ANGLE°</th><th>BOLT MASS(g)</th><th>WASHERS</th><th>WASHER MASS(g)</th><th>TOTAL(g)</th><th>m·cos(θ)</th><th>m·sin(θ)</th><th>U CONTRIB(g·mm)</th><th>STATUS</th></tr></thead>
+    <tbody id="boltTbody"></tbody><tfoot id="boltTfoot"></tfoot></table>
+  </div>
+</div>
+
+<!-- DUAL PLANE -->
+<div id="page-dual" class="page">
+  <div class="metrics-grid">
+    <div class="metric-card" id="mc-du1"><div class="metric-label">PLANE 1 U</div><div class="metric-value" id="mv-du1">—</div><div class="metric-unit">g·mm</div></div>
+    <div class="metric-card" id="mc-du2"><div class="metric-label">PLANE 2 U</div><div class="metric-value" id="mv-du2">—</div><div class="metric-unit">g·mm</div></div>
+    <div class="metric-card" id="mc-dbrA"><div class="metric-label">BEARING A REACTION</div><div class="metric-value" id="mv-dbrA">—</div><div class="metric-unit">g·mm</div></div>
+    <div class="metric-card" id="mc-dbrB"><div class="metric-label">BEARING B REACTION</div><div class="metric-value" id="mv-dbrB">—</div><div class="metric-unit">g·mm</div></div>
+  </div>
+  <div class="viz-row">
+    <div class="canvas-panel" style="flex:0 0 320px"><div class="canvas-title">PLANE 1 — POLAR</div><canvas id="dualPolar1" width="298" height="260"></canvas></div>
+    <div class="canvas-panel" style="flex:0 0 320px"><div class="canvas-title">PLANE 2 — POLAR</div><canvas id="dualPolar2" width="298" height="260"></canvas></div>
+    <div class="canvas-panel" style="flex:1"><div class="canvas-title">AXIAL / ISO VIEW</div><canvas id="isoCanvas" width="300" height="260"></canvas></div>
+  </div>
+  <div style="display:flex;gap:14px">
+    <div class="bolt-table-wrap" style="flex:1"><div class="section-title">PLANE 1 BOLTS</div>
+      <table><thead><tr><th>#</th><th>ANGLE</th><th>BOLT(g)</th><th>WASHERS</th><th>TOTAL(g)</th><th>m·cos</th><th>m·sin</th></tr></thead><tbody id="boltTbodyP1"></tbody></table></div>
+    <div class="bolt-table-wrap" style="flex:1"><div class="section-title">PLANE 2 BOLTS</div>
+      <table><thead><tr><th>#</th><th>ANGLE</th><th>BOLT(g)</th><th>WASHERS</th><th>TOTAL(g)</th><th>m·cos</th><th>m·sin</th></tr></thead><tbody id="boltTbodyP2"></tbody></table></div>
+  </div>
+</div>
+
+<!-- WORST CASE -->
+<div id="page-worst" class="page">
+  <div style="background:var(--panel);border:1px solid var(--border);padding:14px">
+    <div class="section-title">WORST CASE ANALYSIS</div>
+    <p style="color:var(--dim);font-size:12px;margin-bottom:10px">Evaluates unbalance under systematic misalignment and tolerance stack-up scenarios.</p>
+    <div class="metrics-grid">
+      <div class="metric-card"><div class="metric-label">NOMINAL (EQUAL)</div><div class="metric-value" id="wc-nominal">—</div><div class="metric-unit">g·mm</div></div>
+      <div class="metric-card bad"><div class="metric-label">TOL STACK WORST</div><div class="metric-value" id="wc-tolworst">—</div><div class="metric-unit">g·mm</div></div>
+      <div class="metric-card bad"><div class="metric-label">1 BOLT SWAPPED</div><div class="metric-value" id="wc-1bolt">—</div><div class="metric-unit">g·mm</div></div>
+      <div class="metric-card bad"><div class="metric-label">WORST INSTALL</div><div class="metric-value" id="wc-worst">—</div><div class="metric-unit">g·mm</div></div>
+    </div>
+  </div>
+  <div class="viz-row">
+    <div class="canvas-panel" style="flex:1"><div class="canvas-title">SCENARIO COMPARISON</div><canvas id="worstBarCanvas" width="660" height="260"></canvas></div>
+    <div class="canvas-panel" style="flex:0 0 280px"><div class="canvas-title">WORST CASE POLAR</div><canvas id="worstPolarCanvas" width="258" height="260"></canvas></div>
+  </div>
+  <div class="result-box" id="worstResult"><span class="info">Click ⚠ SIMULATE WORST CASE to analyse...</span></div>
+</div>
+
+<!-- PROCEDURE -->
+<div id="page-guide" class="page">
+  <div style="background:var(--panel);border:1px solid var(--border);padding:20px;font-family:'Rajdhani',sans-serif;font-size:14px;line-height:1.9;color:var(--text)">
+    <div class="section-title" style="font-size:13px">BALANCING PROCEDURE — SINGLE &amp; DUAL PLANE (ISO 1940-1)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:14px">
+      <div>
+        <div style="color:var(--accent);font-family:'Orbitron',monospace;font-size:11px;margin-bottom:8px">SINGLE PLANE METHOD</div>
+        <b style="color:var(--dim)">STEP 1 — WEIGH ALL BOLTS</b><br>
+        Weigh each bolt individually. Record actual mass (nominal ±tolerance).<br><br>
+        <b style="color:var(--dim)">STEP 2 — SWAP-OPTIMIZE POSITIONS</b><br>
+        For 8 bolts: exhaustive search through all 8! = 40,320 permutations finds the arrangement with minimum residual unbalance before any washers are added.<br><br>
+        <b style="color:var(--dim)">STEP 3 — COMPUTE STATIC UNBALANCE</b><br>
+        <span style="font-family:'Share Tech Mono',monospace;color:var(--accent)">Ux = Σ mᵢ·R·cos(θᵢ)</span><br>
+        <span style="font-family:'Share Tech Mono',monospace;color:var(--accent)">Uy = Σ mᵢ·R·sin(θᵢ)</span><br>
+        <span style="font-family:'Share Tech Mono',monospace;color:var(--accent)">U = √(Ux²+Uy²), φ = atan2(Uy,Ux)</span><br><br>
+        <b style="color:var(--dim)">STEP 4 — WASHER CORRECTION</b><br>
+        Solver uses gradient-descent + integer coordinate-descent to find minimum washers. Places washers at bolts opposing the heavy spot vector.<br><br>
+        <b style="color:var(--dim)">STEP 5 — ISO 1940 VERIFICATION</b><br>
+        <span style="font-family:'Share Tech Mono',monospace;color:var(--accent)">e = G × 9549 / RPM (mm)</span><br>
+        <span style="font-family:'Share Tech Mono',monospace;color:var(--accent)">U_perm = e × M_rotor (g·mm)</span>
+      </div>
+      <div>
+        <div style="color:var(--accent2);font-family:'Orbitron',monospace;font-size:11px;margin-bottom:8px">DUAL PLANE METHOD</div>
+        <b style="color:var(--dim)">STEP 1 — SETUP GEOMETRY</b><br>
+        Define planes at axial positions z1, z2. Define bearing positions a, b.<br><br>
+        <b style="color:var(--dim)">STEP 2 — SWAP-OPTIMIZE EACH PLANE</b><br>
+        Each plane's 8 bolts are independently optimized — 8! search per plane. Total: 80,640 combinations evaluated.<br><br>
+        <b style="color:var(--dim)">STEP 3 — PLANE UNBALANCES</b><br>
+        Each plane independently: compute Ux, Uy from bolt masses and angles.<br><br>
+        <b style="color:var(--dim)">STEP 4 — BEARING REACTIONS</b><br>
+        <span style="font-family:'Share Tech Mono',monospace;color:var(--accent2)">FA = U1·(b-z1)/(b-a) + U2·(b-z2)/(b-a)</span><br>
+        <span style="font-family:'Share Tech Mono',monospace;color:var(--accent2)">FB = U1·(z1-a)/(b-a) + U2·(z2-a)/(b-a)</span><br><br>
+        <b style="color:var(--dim)">STEP 5 — WASHER CORRECTION PER PLANE</b><br>
+        Independent washer solver for each plane. Cross-plane coupling via influence coefficients.
+      </div>
+    </div>
+    <div style="margin-top:18px;padding:12px;background:rgba(255,170,0,0.07);border:1px solid rgba(255,170,0,0.3)">
+      <div style="color:var(--warn);font-family:'Orbitron',monospace;font-size:10px;margin-bottom:6px">⚠ WORST CASE — IMPROPER INSTALLATION EFFECTS</div>
+      <b>1. One bolt wrong position:</b> Creates additional eccentricity ≈ m·2R·sin(θ_error/2)<br>
+      <b>2. Swapped adjacent bolts:</b> Minimal if masses similar; serious if heavy bolt moved far.<br>
+      <b>3. All bolts identical except one heavy:</b> Even +1g at R=50mm = 50 g·mm — may exceed G2.5 limit.<br>
+      <b>4. Tolerance stack alternating:</b> Worst case alternating ±tol creates residual ≈ 2·tol·R·n/π
+    </div>
+
+    <!-- DEVELOPER FOOTER -->
+    <div style="margin-top:28px;background:linear-gradient(135deg,#0a0e14,#0d1a2e 60%,#0f1e30);border:1px solid #1e3a5f;border-top:3px solid #00d4ff;padding:0;display:flex;align-items:stretch;box-shadow:0 4px 40px rgba(0,212,255,0.08);">
+      <div style="width:6px;background:linear-gradient(180deg,#00d4ff,#1a3a6e);flex-shrink:0"></div>
+      <div style="padding:22px 28px;flex:1;display:flex;flex-direction:column;justify-content:center;gap:5px">
+        <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+          <span style="font-family:'Orbitron',monospace;font-size:17px;font-weight:900;color:#00d4ff;letter-spacing:2px;text-shadow:0 0 20px rgba(0,212,255,0.4)">K VIJAY ANAND</span>
+          
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:#4a6080">📍 Chennai, Tamil Nadu, India</div>
+        <div style="height:1px;background:linear-gradient(90deg,#1e3a5f,transparent);margin:5px 0"></div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap">
+          <a href="mailto:haivijayanand@gmail.com" style="font-family:'Share Tech Mono',monospace;font-size:12px;color:#00d4ff;text-decoration:none">✉ haivijayanand@gmail.com</a>
+        </div>
+        <div style="margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:9px;color:#1e3a5f;letter-spacing:2px">ROTOR BALANCE SIMULATOR V2.0 · ISO 1940-1 COMPLIANT</div>
+      </div>
+      <div style="width:6px;background:linear-gradient(180deg,#ff6b35,#1a3a6e);flex-shrink:0"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end content -->
+</div><!-- end main -->
+
+<div class="status-bar">
+  <div class="status-item"><span class="status-key">BOLTS:</span><span class="status-val" id="s-bolts">8</span></div>
+  <div class="status-item"><span class="status-key">RADIUS:</span><span class="status-val" id="s-radius">50mm</span></div>
+  <div class="status-item"><span class="status-key">TOL:</span><span class="status-val" id="s-tol">5 g·mm</span></div>
+  <div class="status-item"><span class="status-key">Ux:</span><span class="status-val" id="s-ux">—</span></div>
+  <div class="status-item"><span class="status-key">Uy:</span><span class="status-val" id="s-uy">—</span></div>
+  <div class="status-item"><span class="status-key">RESIDUAL:</span><span class="status-val" id="s-res">—</span></div>
+  <div class="status-item"><span class="status-key">ISO:</span><span class="status-val" id="s-iso">—</span></div>
+  <div class="status-item"><span class="status-key">ISO VERDICT:</span><span class="status-val" id="s-iso-verdict">—</span></div>
+</div>
+
+<script>
+// ===== STATE =====
+var state = {
+  mode:'single', numBolts:8, boltRadius:50, rotorMass:5000, tolerance:5,
+  boltNom:25, boltTol:0.5, washerNom:1.0, washerTol:0.01, maxWashers:5,
+  planeSep:200, bearA:0, bearB:200,
+  bolts:[], boltsP2:[]
+};
+
+function showPage(p, el) {
+  document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  if(el) el.classList.add('active');
+  state.mode = p;
+  document.getElementById('dualParams').style.display = (p==='dual')?'block':'none';
+  if(p==='dual') renderDual();
+  if(p==='worst') runWorstCase();
+}
+
+function randBoltMass() {
+  var n=parseFloat(document.getElementById('boltNom').value)||25;
+  var t=parseFloat(document.getElementById('boltTol').value)||0.5;
+  return n+(Math.random()*2-1)*t;
+}
+function randWasherMass() {
+  var n=parseFloat(document.getElementById('washerNom').value)||1.0;
+  var t=parseFloat(document.getElementById('washerTol').value)||0.01;
+  return n+(Math.random()*2-1)*t;
+}
+function getAngle(i,n){ return (360/n)*i; }
+
+function initBolts() {
+  state.numBolts = parseInt(document.getElementById('numBolts').value)||8;
+  state.bolts=[]; state.boltsP2=[];
+  for(var i=0;i<state.numBolts;i++){
+    state.bolts.push({mass:randBoltMass(),washers:0,washerMassEach:randWasherMass()});
+    state.boltsP2.push({mass:randBoltMass(),washers:0,washerMassEach:randWasherMass()});
+  }
+  recalc();
+}
+function randomizeBolts() {
+  state.bolts=[]; state.boltsP2=[];
+  for(var i=0;i<state.numBolts;i++){
+    state.bolts.push({mass:randBoltMass(),washers:0,washerMassEach:randWasherMass()});
+    state.boltsP2.push({mass:randBoltMass(),washers:0,washerMassEach:randWasherMass()});
+  }
+  document.getElementById('swapReport').style.display='none';
+  recalc();
+}
+
+function computeUnbalance(bolts,n,R) {
+  var ux=0,uy=0;
+  for(var i=0;i<n;i++){
+    var a=getAngle(i,n)*Math.PI/180;
+    var m=bolts[i].mass+bolts[i].washers*bolts[i].washerMassEach;
+    ux+=m*R*Math.cos(a); uy+=m*R*Math.sin(a);
+  }
+  var u=Math.sqrt(ux*ux+uy*uy);
+  var phi=Math.atan2(uy,ux)*180/Math.PI;
+  return {ux:ux,uy:uy,u:u,phi:phi};
+}
+
+// ===== ISO =====
+function calcISO() {
+  var G=parseFloat(document.getElementById('isoGrade').value)||2.5;
+  var rpm=parseFloat(document.getElementById('runRPM').value)||3000;
+  var M=parseFloat(document.getElementById('rotorMass').value)||5000;
+  var e=G*9549.3/rpm;
+  return {G:G,rpm:rpm,M:M,e_perm:e,U_perm:e*M};
+}
+function applyISOTolerance(){
+  document.getElementById('tolerance').value=calcISO().U_perm.toFixed(2);
+  recalc();
+}
+
+function updateFromInputs() {
+  state.boltRadius=parseFloat(document.getElementById('boltRadius').value)||50;
+  state.rotorMass=parseFloat(document.getElementById('rotorMass').value)||5000;
+  state.tolerance=parseFloat(document.getElementById('tolerance').value)||5;
+  state.boltNom=parseFloat(document.getElementById('boltNom').value)||25;
+  state.boltTol=parseFloat(document.getElementById('boltTol').value)||0.5;
+  state.washerNom=parseFloat(document.getElementById('washerNom').value)||1.0;
+  state.washerTol=parseFloat(document.getElementById('washerTol').value)||0.01;
+  state.maxWashers=parseInt(document.getElementById('maxWashers').value)||5;
+  state.planeSep=parseFloat(document.getElementById('planeSep').value)||200;
+  state.bearA=parseFloat(document.getElementById('bearA').value)||0;
+  state.bearB=parseFloat(document.getElementById('bearB').value)||200;
+  document.getElementById('s-bolts').textContent=state.numBolts;
+  document.getElementById('s-radius').textContent=state.boltRadius+'mm';
+  document.getElementById('s-tol').textContent=state.tolerance+' g·mm';
+  var iso=calcISO();
+  document.getElementById('isoPermissible').textContent=iso.U_perm.toFixed(1);
+  document.getElementById('mv-isograde').textContent='G'+iso.G;
+  document.getElementById('mv-isoperm').textContent=iso.U_perm.toFixed(1);
+  document.getElementById('mu-isoverdict').textContent=iso.rpm+' RPM';
+  document.getElementById('s-iso').textContent='G'+iso.G+' → '+iso.U_perm.toFixed(1)+' g·mm';
+}
+
+function recalc() {
+  if(state.bolts.length===0) initBolts();
+  updateFromInputs();
+  renderBoltTable();
+  drawPolar(); drawBar(); drawVector();
+  updateMetrics();
+  if(state.mode==='dual') renderDual();
+}
+
+function renderBoltTable() {
+  var tb=document.getElementById('boltTbody');
+  var tf=document.getElementById('boltTfoot');
+  var n=state.numBolts, R=state.boltRadius;
+  var rows='', sumM=0, sumW=0, sumMcos=0, sumMsin=0;
+  for(var i=0;i<n;i++){
+    var b=state.bolts[i];
+    var ang=getAngle(i,n), rad=ang*Math.PI/180;
+    var wm=b.washers*b.washerMassEach, tm=b.mass+wm;
+    var mc=tm*Math.cos(rad), ms=tm*Math.sin(rad);
+    sumM+=tm; sumW+=b.washers; sumMcos+=mc; sumMsin+=ms;
+    rows+='<tr><td>'+(i+1)+'</td><td>'+ang.toFixed(1)+'</td>'
+      +'<td><input type="number" value="'+b.mass.toFixed(3)+'" step="0.001" style="width:72px" onchange="updateBoltMass('+i+',this.value)"></td>'
+      +'<td><div class="washer-ctrl"><button class="washer-btn" onclick="adjWasher('+i+',-1)">−</button>'
+      +'<span class="washer-count" id="wc-'+i+'">'+b.washers+'</span>'
+      +'<button class="washer-btn" onclick="adjWasher('+i+',1)">+</button></div></td>'
+      +'<td>'+wm.toFixed(3)+'</td>'
+      +'<td style="color:var(--accent)">'+tm.toFixed(3)+'</td>'
+      +'<td>'+mc.toFixed(3)+'</td><td>'+ms.toFixed(3)+'</td>'
+      +'<td>'+(tm*R).toFixed(2)+'</td>'
+      +'<td><span class="badge badge-ok">OK</span></td></tr>';
+  }
+  tb.innerHTML=rows;
+  var u=computeUnbalance(state.bolts,n,R);
+  tf.innerHTML='<tr style="border-top:1px solid var(--border)">'
+    +'<td colspan="2" style="color:var(--dim)">TOTALS</td><td>—</td>'
+    +'<td style="color:var(--accent3)">'+sumW+'</td><td>—</td>'
+    +'<td style="color:var(--accent)">'+sumM.toFixed(3)+'</td>'
+    +'<td style="color:var(--accent2)">'+u.ux.toFixed(3)+'</td>'
+    +'<td style="color:var(--accent2)">'+u.uy.toFixed(3)+'</td>'
+    +'<td style="color:'+(u.u<=state.tolerance?'var(--accent3)':'var(--danger)')+'"><b>'+u.u.toFixed(2)+'</b></td>'
+    +'<td><span class="badge '+(u.u<=state.tolerance?'badge-ok':'badge-ng')+'">'+(u.u<=state.tolerance?'PASS':'FAIL')+'</span></td></tr>';
+}
+
+function updateBoltMass(i,v){ state.bolts[i].mass=parseFloat(v)||state.boltNom; recalc(); }
+function adjWasher(i,d){ state.bolts[i].washers=Math.max(0,Math.min(state.maxWashers,state.bolts[i].washers+d)); recalc(); }
+
+function updateMetrics() {
+  var n=state.numBolts, R=state.boltRadius, tol=state.tolerance;
+  var u=computeUnbalance(state.bolts,n,R);
+  var totalW=state.bolts.reduce(function(s,b){return s+b.washers;},0);
+  document.getElementById('mv-residual').textContent=u.u.toFixed(2);
+  document.getElementById('mv-angle').textContent=((u.phi+360)%360).toFixed(1);
+  document.getElementById('mv-washers').textContent=totalW;
+  document.getElementById('mv-status').textContent=u.u<=tol?'PASS':'FAIL';
+  var mc=document.getElementById('mc-residual'), ms=document.getElementById('mc-status');
+  ['good','warn','bad'].forEach(function(c){mc.classList.remove(c);ms.classList.remove(c);});
+  if(u.u<=tol){mc.classList.add('good');ms.classList.add('good');}
+  else if(u.u<=tol*3){mc.classList.add('warn');ms.classList.add('warn');}
+  else{mc.classList.add('bad');ms.classList.add('bad');}
+  document.getElementById('s-ux').textContent=u.ux.toFixed(2);
+  document.getElementById('s-uy').textContent=u.uy.toFixed(2);
+  document.getElementById('s-res').textContent=u.u.toFixed(2)+' g·mm';
+  var iso=calcISO();
+  var isoPass=u.u<=iso.U_perm;
+  var isoMargin=((1-u.u/iso.U_perm)*100).toFixed(1);
+  var mc_iv=document.getElementById('mc-isoverdict');
+  var mv_iv=document.getElementById('mv-isoverdict');
+  ['good','warn','bad'].forEach(function(c){mc_iv.classList.remove(c);});
+  mv_iv.textContent=isoPass?'PASS':'FAIL';
+  mc_iv.classList.add(isoPass?'good':'bad');
+  var siv=document.getElementById('s-iso-verdict');
+  if(siv){siv.textContent=isoPass?'✔ PASS':'✘ FAIL'; siv.style.color=isoPass?'var(--accent3)':'var(--danger)';}
+  var isoStr=isoPass?'<span class="ok">✔ ISO G'+iso.G+' PASS (margin '+isoMargin+'%)</span>':'<span class="ng">✘ ISO G'+iso.G+' FAIL — '+( u.u/iso.U_perm).toFixed(2)+'× over limit</span>';
+  document.getElementById('resultBox').innerHTML=
+    (u.u<=tol?'<span class="ok">✔ BALANCED</span>':'<span class="ng">✘ UNBALANCED</span>')+'<br>'
+    +'<span class="info">Residual U:</span> <b>'+u.u.toFixed(3)+' g·mm</b><br>'
+    +'<span class="info">Heavy spot:</span> '+((u.phi+360)%360).toFixed(1)+'°<br>'
+    +'<span class="info">Manual tol:</span> '+tol+' g·mm | Ratio: '+(u.u/tol).toFixed(2)+'×<br>'
+    +'<span class="info">Total washers:</span> '+totalW+'<br>'
+    +'─────────────────<br>'
+    +'<span class="info">ISO 1940 G'+iso.G+'</span> @ '+iso.rpm+' rpm<br>'
+    +'<span class="info">e_perm:</span> '+iso.e_perm.toFixed(4)+' mm | U_perm: '+iso.U_perm.toFixed(2)+' g·mm<br>'
+    +isoStr;
+}
+
+// ===== DRAWING =====
+function drawPolar() {
+  var cv=document.getElementById('polarCanvas'), ctx=cv.getContext('2d');
+  var W=cv.width,H=cv.height,cx=W/2,cy=H/2,R=130;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#0a0e14'; ctx.fillRect(0,0,W,H);
+  for(var r=30;r<=R;r+=30){ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.strokeStyle='rgba(30,58,95,0.5)';ctx.lineWidth=0.5;ctx.stroke();}
+  for(var a=0;a<360;a+=15){var rad=a*Math.PI/180;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+R*Math.cos(rad),cy-R*Math.sin(rad));ctx.strokeStyle='rgba(30,58,95,0.3)';ctx.lineWidth=0.5;ctx.stroke();}
+  ctx.beginPath();ctx.arc(cx,cy,R*0.72,0,2*Math.PI);ctx.strokeStyle='rgba(0,212,255,0.2)';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+  var n=state.numBolts;
+  var maxM=state.bolts.reduce(function(m,b){return Math.max(m,b.mass+b.washers*b.washerMassEach);},0);
+  var minM=state.bolts.reduce(function(m,b){return Math.min(m,b.mass+b.washers*b.washerMassEach);},Infinity);
+  for(var i=0;i<n;i++){
+    var b=state.bolts[i];
+    var ang=getAngle(i,n)*Math.PI/180;
+    var tm=b.mass+b.washers*b.washerMassEach;
+    var br=R*0.72, bx=cx+br*Math.cos(ang), by=cy-br*Math.sin(ang);
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(bx,by);ctx.strokeStyle='rgba(0,212,255,0.15)';ctx.lineWidth=0.5;ctx.stroke();
+    var barLen=(tm/maxM)*22;
+    ctx.beginPath();ctx.moveTo(bx-barLen*Math.cos(ang),by+barLen*Math.sin(ang));ctx.lineTo(bx+barLen*Math.cos(ang),by-barLen*Math.sin(ang));
+    var heat=(tm-minM)/(maxM-minM+0.001);
+    ctx.strokeStyle='hsl('+(((1-heat)*200))+',100%,60%)';ctx.lineWidth=4;ctx.stroke();
+    ctx.beginPath();ctx.arc(bx,by,tm===maxM?10:7,0,2*Math.PI);
+    ctx.fillStyle=b.washers>0?'rgba(57,255,20,0.3)':'rgba(0,212,255,0.15)';ctx.fill();
+    ctx.strokeStyle=b.washers>0?'var(--accent3)':'var(--accent)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='bold 9px Orbitron,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i+1,bx,by);
+    if(b.washers>0){ctx.fillStyle='var(--accent3)';ctx.font='8px Share Tech Mono,monospace';ctx.fillText('+'+b.washers+'W',bx+15*Math.cos(ang+0.5),by-15*Math.sin(ang+0.5));}
+  }
+  var u=computeUnbalance(state.bolts,n,state.boltRadius);
+  if(u.u>0.001){
+    var vang=Math.atan2(u.uy,u.ux);
+    var vlen=Math.min(R*0.65,60);
+    var ex=cx+vlen*Math.cos(vang),ey=cy-vlen*Math.sin(vang);
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(ex,ey);
+    ctx.strokeStyle=u.u<=state.tolerance?'var(--accent3)':'var(--danger)';ctx.lineWidth=2.5;ctx.stroke();
+    var ah=10,aw=5;
+    ctx.beginPath();ctx.moveTo(ex,ey);
+    ctx.lineTo(ex-ah*Math.cos(vang)+aw*Math.sin(vang),ey+ah*Math.sin(vang)+aw*Math.cos(vang));
+    ctx.lineTo(ex-ah*Math.cos(vang)-aw*Math.sin(vang),ey+ah*Math.sin(vang)-aw*Math.cos(vang));
+    ctx.closePath();ctx.fillStyle=u.u<=state.tolerance?'var(--accent3)':'var(--danger)';ctx.fill();
+  }
+  ctx.beginPath();ctx.arc(cx,cy,5,0,2*Math.PI);ctx.fillStyle='var(--accent)';ctx.fill();
+  ctx.fillStyle='var(--dim)';ctx.font='9px Share Tech Mono,monospace';ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.fillText('0°',cx+R*0.76+10,cy-4);ctx.fillText('90°',cx-4,cy-R*0.76-12);
+  ctx.fillText('180°',cx-R*0.76-18,cy-4);ctx.fillText('270°',cx-4,cy+R*0.76+4);
+}
+
+function drawBar() {
+  var cv=document.getElementById('barCanvas'),ctx=cv.getContext('2d');
+  var W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,W,H);
+  var n=state.numBolts;
+  var bm=state.bolts.map(function(b){return b.mass;}), wm=state.bolts.map(function(b){return b.washers*b.washerMassEach;});
+  var tm=state.bolts.map(function(b,i){return bm[i]+wm[i];});
+  var maxM=Math.max.apply(null,tm)*1.15, minM=Math.min.apply(null,tm)*0.85;
+  var pL=42,pR=15,pT=20,pB=28, bw=(W-pL-pR)/n-5, scY=(H-pT-pB)/(maxM-minM);
+  for(var y=Math.ceil(minM);y<=maxM;y+=0.5){
+    var py=H-pB-(y-minM)*scY;
+    ctx.beginPath();ctx.moveTo(pL,py);ctx.lineTo(W-pR,py);ctx.strokeStyle='rgba(30,58,95,0.4)';ctx.lineWidth=0.5;ctx.stroke();
+    if(y%1===0){ctx.fillStyle='var(--dim)';ctx.font='9px Share Tech Mono,monospace';ctx.textAlign='right';ctx.fillText(y.toFixed(1),pL-3,py+3);}
+  }
+  for(var i=0;i<n;i++){
+    var bx=pL+i*(bw+5)+2;
+    var bh=(bm[i]-minM)*scY, wh=wm[i]*scY;
+    ctx.fillStyle='rgba(0,212,255,0.6)';ctx.fillRect(bx,H-pB-bh,bw,bh);
+    if(wm[i]>0){ctx.fillStyle='rgba(57,255,20,0.8)';ctx.fillRect(bx,H-pB-bh-wh,bw,wh);}
+    ctx.strokeStyle='rgba(0,212,255,0.3)';ctx.lineWidth=0.5;ctx.strokeRect(bx,H-pB-(bh+wh),bw,bh+wh);
+    ctx.fillStyle='var(--text)';ctx.font='9px Share Tech Mono,monospace';ctx.textAlign='center';ctx.fillText(i+1,bx+bw/2,H-pB+12);
+    ctx.fillStyle='var(--accent)';ctx.font='8px Share Tech Mono,monospace';ctx.fillText(tm[i].toFixed(2),bx+bw/2,H-pB-bh-wh-4);
+  }
+  var nomY=H-pB-(state.boltNom-minM)*scY;
+  ctx.beginPath();ctx.moveTo(pL,nomY);ctx.lineTo(W-pR,nomY);ctx.strokeStyle='rgba(255,107,53,0.7)';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='var(--accent2)';ctx.font='9px Share Tech Mono,monospace';ctx.textAlign='right';ctx.fillText('NOM',W-pR,nomY-3);
+  ctx.strokeStyle='var(--border)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pL,pT);ctx.lineTo(pL,H-pB);ctx.lineTo(W-pR,H-pB);ctx.stroke();
+}
+
+function drawVector() {
+  var cv=document.getElementById('vectorCanvas'),ctx=cv.getContext('2d');
+  var W=cv.width,H=cv.height,cx=W/2,cy=H/2;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,W,H);
+  var n=state.numBolts,R=state.boltRadius;
+  ctx.strokeStyle='rgba(30,58,95,0.5)';ctx.lineWidth=0.5;
+  ctx.beginPath();ctx.moveTo(cx,10);ctx.lineTo(cx,H-10);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(10,cy);ctx.lineTo(W-10,cy);ctx.stroke();
+  var maxU=Math.max.apply(null,state.bolts.map(function(b){return (b.mass+b.washers*b.washerMassEach)*R;}));
+  var scale=(W/2-15)/maxU;
+  for(var i=0;i<n;i++){
+    var b=state.bolts[i], ang=getAngle(i,n)*Math.PI/180;
+    var m=b.mass+b.washers*b.washerMassEach;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+m*R*Math.cos(ang)*scale,cy-m*R*Math.sin(ang)*scale);
+    ctx.strokeStyle='hsl('+(i/n*300)+',80%,55%)';ctx.lineWidth=1;ctx.stroke();
+  }
+  var u=computeUnbalance(state.bolts,n,R);
+  if(Math.sqrt(u.ux*u.ux+u.uy*u.uy)*scale>0.5){
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+u.ux*scale,cy-u.uy*scale);
+    ctx.strokeStyle=u.u<=state.tolerance?'var(--accent3)':'var(--danger)';ctx.lineWidth=3;ctx.stroke();
+  }
+  ctx.beginPath();ctx.arc(cx,cy,4,0,2*Math.PI);ctx.fillStyle='var(--accent)';ctx.fill();
+  ctx.fillStyle='var(--dim)';ctx.font='10px Share Tech Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('U='+u.u.toFixed(2)+' g·mm',cx,H-6);
+}
+
+// ===== SWAP OPTIMIZER =====
+function computeUfromMasses(masses,n,R){
+  var ux=0,uy=0;
+  for(var i=0;i<n;i++){var a=getAngle(i,n)*Math.PI/180;ux+=masses[i]*R*Math.cos(a);uy+=masses[i]*R*Math.sin(a);}
+  return Math.sqrt(ux*ux+uy*uy);
+}
+
+function swapOptimize(bolts,n,R){
+  var masses=bolts.map(function(b){return b.mass;});
+  var idx=Array.from ? Array.from({length:n},function(_,i){return i;}) : (function(){var a=[];for(var i=0;i<n;i++)a.push(i);return a;})();
+  if(n<=8){
+    var best=Infinity, bestPerm=idx.slice();
+    function permute(arr,cur,used){
+      if(cur.length===arr.length){
+        var m=cur.map(function(i){return masses[i];});
+        var u=computeUfromMasses(m,n,R);
+        if(u<best){best=u;bestPerm=cur.slice();}
+        return;
+      }
+      for(var i=0;i<arr.length;i++){
+        if(used[i]) continue;
+        used[i]=true;cur.push(arr[i]);
+        permute(arr,cur,used);
+        cur.pop();used[i]=false;
+      }
+    }
+    permute(idx,[],new Array(n).fill(false));
+    return bestPerm;
+  }
+  // Simulated annealing for n>8
+  var curPerm=idx.slice(), bestPerm2=idx.slice();
+  var curU=computeUfromMasses(curPerm.map(function(i){return masses[i];}),n,R);
+  var bestU=curU, T=5.0;
+  for(var iter=0;iter<60000;iter++){
+    var i=Math.floor(Math.random()*n), j=Math.floor(Math.random()*n);
+    if(i===j) continue;
+    var tmp=curPerm[i];curPerm[i]=curPerm[j];curPerm[j]=tmp;
+    var nu=computeUfromMasses(curPerm.map(function(k){return masses[k];}),n,R);
+    if(nu<curU||Math.random()<Math.exp(-(nu-curU)/T)){curU=nu;if(nu<bestU){bestU=nu;bestPerm2=curPerm.slice();}}
+    else{tmp=curPerm[i];curPerm[i]=curPerm[j];curPerm[j]=tmp;}
+    T*=0.99995;
+  }
+  return bestPerm2;
+}
+
+function applyPerm(bolts,perm){
+  var origM=bolts.map(function(b){return b.mass;});
+  var origW=bolts.map(function(b){return b.washerMassEach;});
+  for(var i=0;i<bolts.length;i++){bolts[i].mass=origM[perm[i]];bolts[i].washerMassEach=origW[perm[i]];bolts[i].washers=0;}
+}
+
+function buildLog(bolts,perm,n){
+  var lines=[];
+  for(var i=0;i<n;i++){
+    if(perm[i]!==i) lines.push('Pos '+(i+1)+' ('+getAngle(i,n).toFixed(0)+'°): bolt#'+(perm[i]+1)+' ['+bolts[perm[i]].mass.toFixed(3)+'g]');
+  }
+  if(lines.length===0) lines.push('No swaps — already optimal');
+  return lines;
+}
+
+function showSwapRpt(label,uBefore,uAfter,log){
+  var red=((1-uAfter/uBefore)*100).toFixed(1);
+  var col=uAfter<uBefore?'var(--accent3)':'var(--warn)';
+  var div=document.getElementById('swapReport');
+  div.style.display='block';
+  div.innerHTML='<span style="color:var(--accent)">'+label+'</span><br>'
+    +'U before: <span style="color:var(--danger)">'+uBefore.toFixed(3)+' g·mm</span><br>'
+    +'U after:  <span style="color:'+col+'">'+uAfter.toFixed(3)+' g·mm</span><br>'
+    +'Reduction: <span style="color:'+col+'">'+red+'%</span><br>'
+    +'<span style="color:var(--dim)">──────────</span><br>'
+    +log.slice(0,12).map(function(l){return '<span style="color:var(--dim)">'+l+'</span>';}).join('<br>')
+    +(log.length>12?'<br><span style="color:var(--dim)">...+'+( log.length-12)+' more</span>':'');
+}
+
+function optimizeSwapSingle(){
+  var n=state.numBolts, R=state.boltRadius;
+  state.bolts.forEach(function(b){b.washers=0;});
+  var uB=computeUnbalance(state.bolts,n,R);
+  var perm=swapOptimize(state.bolts,n,R);
+  var log=buildLog(state.bolts,perm,n);
+  applyPerm(state.bolts,perm);
+  var uA=computeUnbalance(state.bolts,n,R);
+  showSwapRpt('SWAP REPORT — SINGLE PLANE',uB.u,uA.u,log);
+  recalc();
+}
+
+function optimizeSwapDual(){
+  var n=state.numBolts, R=state.boltRadius;
+  state.bolts.forEach(function(b){b.washers=0;});
+  state.boltsP2.forEach(function(b){b.washers=0;});
+  var uB1=computeUnbalance(state.bolts,n,R), uB2=computeUnbalance(state.boltsP2,n,R);
+  var p1=swapOptimize(state.bolts,n,R), p2=swapOptimize(state.boltsP2,n,R);
+  var l1=buildLog(state.bolts,p1,n), l2=buildLog(state.boltsP2,p2,n);
+  applyPerm(state.bolts,p1); applyPerm(state.boltsP2,p2);
+  var uA1=computeUnbalance(state.bolts,n,R), uA2=computeUnbalance(state.boltsP2,n,R);
+  showSwapRpt('SWAP REPORT — BOTH PLANES',uB1.u+uB2.u,uA1.u+uA2.u,
+    ['— PLANE 1 —'].concat(l1).concat(['— PLANE 2 —']).concat(l2));
+  recalc();
+  if(state.mode==='dual') renderDual();
+}
+
+// ===== WASHER SOLVER =====
+function solveWashers(bolts,n,R,tol,maxW){
+  bolts.forEach(function(b){b.washers=0;});
+  var u0=computeUnbalance(bolts,n,R);
+  if(u0.u<=tol) return;
+  var dux=[],duy=[];
+  for(var i=0;i<n;i++){
+    var a=getAngle(i,n)*Math.PI/180, wm=bolts[i].washerMassEach;
+    dux.push(wm*R*Math.cos(a)); duy.push(wm*R*Math.sin(a));
+  }
+  var w=new Array(n).fill(0), lr=0.005;
+  for(var s=0;s<3000;s++){
+    var rx=u0.ux,ry=u0.uy;
+    for(var i=0;i<n;i++){rx+=w[i]*dux[i];ry+=w[i]*duy[i];}
+    if(rx*rx+ry*ry<1e-6) break;
+    for(var i=0;i<n;i++){w[i]-=lr*(2*(rx*dux[i]+ry*duy[i])+0.02*w[i]);if(w[i]<0)w[i]=0;if(w[i]>maxW)w[i]=maxW;}
+  }
+  var wi=w.map(function(v){return Math.max(0,Math.min(maxW,Math.round(v)));});
+  var improved=true;
+  while(improved){
+    improved=false;
+    var rx=u0.ux,ry=u0.uy;
+    for(var i=0;i<n;i++){rx+=wi[i]*dux[i];ry+=wi[i]*duy[i];}
+    var ce=rx*rx+ry*ry;
+    for(var i=0;i<n;i++){
+      if(wi[i]<maxW){var ne=(rx+dux[i])*(rx+dux[i])+(ry+duy[i])*(ry+duy[i]);if(ne<ce-1e-9){wi[i]++;improved=true;break;}}
+      if(wi[i]>0){var nx2=rx-dux[i],ny2=ry-duy[i],ne2=nx2*nx2+ny2*ny2;if(ne2<ce-1e-9||(Math.sqrt(ne2)<=tol&&wi[i]>0)){wi[i]--;improved=true;break;}}
+    }
+  }
+  for(var i=0;i<n;i++) bolts[i].washers=wi[i];
+  // final cleanup
+  var uf=computeUnbalance(bolts,n,R);
+  for(var iter=0;iter<20&&uf.u>tol;iter++){
+    var best=-1,bestG=0;
+    for(var i=0;i<n;i++){
+      if(bolts[i].washers>=maxW) continue;
+      var a=getAngle(i,n)*Math.PI/180,wm2=bolts[i].washerMassEach;
+      var gain=-(uf.ux*wm2*R*Math.cos(a)+uf.uy*wm2*R*Math.sin(a))/uf.u;
+      if(gain>bestG){bestG=gain;best=i;}
+    }
+    if(best<0) break;
+    bolts[best].washers++;
+    uf=computeUnbalance(bolts,n,R);
+  }
+}
+
+function autoBalance(){
+  var n=state.numBolts,R=state.boltRadius,tol=state.tolerance,maxW=state.maxWashers;
+  var u0=computeUnbalance(state.bolts,n,R);
+  solveWashers(state.bolts,n,R,tol,maxW);
+  var uf=computeUnbalance(state.bolts,n,R);
+  var totalW=state.bolts.reduce(function(s,b){return s+b.washers;},0);
+  document.getElementById('resultBox').innerHTML=
+    '<span class="info">[ AUTO-SOLVER ]</span><br>'
+    +'Initial U: <span class="ng">'+u0.u.toFixed(3)+' g·mm</span><br>'
+    +'Final U: <span class="'+(uf.u<=tol?'ok':'warn')+'">'+uf.u.toFixed(3)+' g·mm</span><br>'
+    +'Washers: <span class="info">'+totalW+' pcs</span><br>'
+    +'Status: <span class="'+(uf.u<=tol?'ok':'ng')+'">'+(uf.u<=tol?'✔ BALANCED':'✘ NEEDS MORE')+'</span>';
+  recalc();
+}
+
+function fullSolve(){
+  var n=state.numBolts,R=state.boltRadius,tol=state.tolerance,maxW=state.maxWashers;
+  state.bolts.forEach(function(b){b.washers=0;});
+  var uB=computeUnbalance(state.bolts,n,R);
+  var perm=swapOptimize(state.bolts,n,R);
+  var log=buildLog(state.bolts,perm,n);
+  applyPerm(state.bolts,perm);
+  var uS=computeUnbalance(state.bolts,n,R);
+  solveWashers(state.bolts,n,R,tol,maxW);
+  var uF=computeUnbalance(state.bolts,n,R);
+  var totalW=state.bolts.reduce(function(s,b){return s+b.washers;},0);
+  var div=document.getElementById('swapReport');
+  div.style.display='block';
+  div.innerHTML='<span style="color:var(--accent)">FULL SOLVE REPORT</span><br>'
+    +'① Swap: '+uB.u.toFixed(3)+' → <span style="color:var(--warn)">'+uS.u.toFixed(3)+'</span> g·mm<br>'
+    +'② Washers: <span style="color:var(--accent3)">'+uF.u.toFixed(3)+' g·mm</span> ('+totalW+' pcs)<br>'
+    +'Swaps made: '+log.filter(function(l){return l.indexOf('No swap')<0;}).length+'<br>'
+    +'<span style="color:'+(uF.u<=tol?'var(--accent3)':'var(--danger)')+'">'+(uF.u<=tol?'✔ BALANCED':'✘ NEEDS MORE')+'</span>';
+  recalc();
+}
+
+function improperInstall(){
+  var n=state.numBolts;
+  var masses=state.bolts.map(function(b){return b.mass;});
+  var hi=masses.indexOf(Math.max.apply(null,masses));
+  var ti=(hi+Math.floor(n/4))%n;
+  var tmp={mass:state.bolts[hi].mass,washerMassEach:state.bolts[hi].washerMassEach};
+  state.bolts[hi].mass=state.bolts[ti].mass;state.bolts[hi].washerMassEach=state.bolts[ti].washerMassEach;
+  state.bolts[ti].mass=tmp.mass;state.bolts[ti].washerMassEach=tmp.washerMassEach;
+  recalc();
+  document.getElementById('resultBox').innerHTML+='<br><span class="ng">⚠ IMPROPER INSTALL: heaviest bolt moved 90°</span>';
+}
+
+// ===== WORST CASE =====
+function doWorstCase(){
+  showPage('worst',document.querySelectorAll('.tab')[2]);
+  runWorstCase();
+}
+
+function runWorstCase(){
+  updateFromInputs();
+  var n=state.numBolts,R=state.boltRadius,tol=state.tolerance;
+  var nom=state.boltNom,bt=state.boltTol,wn=state.washerNom;
+  var b1=[],b2=[],b4=[];
+  for(var i=0;i<n;i++){
+    b1.push({mass:nom,washers:0,washerMassEach:wn});
+    b2.push({mass:nom+(i%2===0?bt:-bt),washers:0,washerMassEach:wn});
+    b4.push({mass:state.bolts[i].mass,washers:0,washerMassEach:state.bolts[i].washerMassEach});
+  }
+  var u1=computeUnbalance(b1,n,R), u2=computeUnbalance(b2,n,R);
+  var b3=state.bolts.map(function(b){return {mass:b.mass,washers:0,washerMassEach:b.washerMassEach};});
+  solveWashers(b3,n,R,tol,state.maxWashers);
+  var b3bad=b3.slice(); var tmp={mass:b3bad[0].mass,washerMassEach:b3bad[0].washerMassEach,washers:b3bad[0].washers};
+  b3bad[0].mass=b3bad[1].mass;b3bad[1].mass=tmp.mass;
+  var u3=computeUnbalance(b3bad,n,R);
+  var masses4=b4.map(function(b){return b.mass;});
+  var hi=masses4.indexOf(Math.max.apply(null,masses4));
+  var tt={mass:b4[0].mass,washerMassEach:b4[0].washerMassEach};
+  b4[0].mass=b4[hi].mass;b4[hi].mass=tt.mass;
+  var u4=computeUnbalance(b4,n,R);
+  document.getElementById('wc-nominal').textContent=u1.u.toFixed(2);
+  document.getElementById('wc-tolworst').textContent=u2.u.toFixed(2);
+  document.getElementById('wc-1bolt').textContent=u3.u.toFixed(2);
+  document.getElementById('wc-worst').textContent=u4.u.toFixed(2);
+  var ucurr=computeUnbalance(state.bolts,n,R);
+  var scenarios=[
+    {label:'Current',u:ucurr.u},{label:'Nominal\nEqual',u:u1.u},
+    {label:'Tol Stack\nAlt±',u:u2.u},{label:'1 Bolt\nSwapped',u:u3.u},{label:'Worst\nInstall',u:u4.u}
+  ];
+  drawWorstBar(scenarios); drawWorstPolar(b4,n);
+  var iso=calcISO();
+  document.getElementById('worstResult').innerHTML=
+    '<span class="info">WORST CASE ANALYSIS</span><br>'
+    +'Nominal equal masses: <span class="'+(u1.u<=tol?'ok':'ng')+'">'+u1.u.toFixed(3)+' g·mm</span><br>'
+    +'Tolerance stack (alt ±'+bt+'g): <span class="'+(u2.u<=tol?'ok':'warn')+'">'+u2.u.toFixed(3)+' g·mm</span><br>'
+    +'One bolt swapped: <span class="'+(u3.u<=tol?'ok':'ng')+'">'+u3.u.toFixed(3)+' g·mm</span><br>'
+    +'Heaviest at worst pos: <span class="ng">'+u4.u.toFixed(3)+' g·mm</span><br>'
+    +'ISO G'+iso.G+' @ '+iso.rpm+' rpm — permissible: '+iso.U_perm.toFixed(2)+' g·mm<br>'
+    +'<span class="warn">Worst case exceeds ISO by: '+(u4.u/iso.U_perm).toFixed(2)+'×</span>';
+}
+
+function drawWorstBar(sc){
+  var cv=document.getElementById('worstBarCanvas'),ctx=cv.getContext('2d');
+  var W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,W,H);
+  var maxU=Math.max.apply(null,sc.map(function(s){return s.u;}))*1.2;
+  maxU=Math.max(maxU,state.tolerance*3);
+  var pL=45,pR=15,pT=20,pB=50,bw=(W-pL-pR)/sc.length-10,scY=(H-pT-pB)/maxU;
+  var tolY=H-pB-state.tolerance*scY;
+  ctx.beginPath();ctx.moveTo(pL,tolY);ctx.lineTo(W-pR,tolY);ctx.strokeStyle='rgba(57,255,20,0.5)';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='var(--accent3)';ctx.font='9px Share Tech Mono,monospace';ctx.textAlign='right';ctx.fillText('TOL',pL-2,tolY+3);
+  for(var v=0;v<=maxU;v+=5){
+    var py=H-pB-v*scY;
+    ctx.beginPath();ctx.moveTo(pL,py);ctx.lineTo(W-pR,py);ctx.strokeStyle='rgba(30,58,95,0.3)';ctx.lineWidth=0.5;ctx.stroke();
+    ctx.fillStyle='var(--dim)';ctx.font='9px Share Tech Mono,monospace';ctx.textAlign='right';ctx.fillText(v,pL-3,py+3);
+  }
+  for(var i=0;i<sc.length;i++){
+    var s=sc[i], bx=pL+i*(bw+10)+5, bh=s.u*scY;
+    var col=s.u<=state.tolerance?'rgba(57,255,20,0.7)':s.u<=state.tolerance*3?'rgba(255,170,0,0.7)':'rgba(255,45,85,0.7)';
+    ctx.fillStyle=col;ctx.fillRect(bx,H-pB-bh,bw,bh);
+    ctx.strokeStyle=col.replace('0.7','1');ctx.lineWidth=1;ctx.strokeRect(bx,H-pB-bh,bw,bh);
+    ctx.fillStyle='var(--text)';ctx.font='10px Share Tech Mono,monospace';ctx.textAlign='center';ctx.fillText(s.u.toFixed(2),bx+bw/2,H-pB-bh-5);
+    var lines=s.label.split('\n');lines.forEach(function(ln,li){ctx.fillText(ln,bx+bw/2,H-pB+14+li*13);});
+  }
+  ctx.strokeStyle='var(--border)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pL,pT);ctx.lineTo(pL,H-pB);ctx.lineTo(W-pR,H-pB);ctx.stroke();
+}
+
+function drawWorstPolar(bolts,n){
+  var cv=document.getElementById('worstPolarCanvas'),ctx=cv.getContext('2d');
+  var W=cv.width,H=cv.height,cx=W/2,cy=H/2,R=100;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,W,H);
+  for(var r=25;r<=R;r+=25){ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.strokeStyle='rgba(30,58,95,0.4)';ctx.lineWidth=0.5;ctx.stroke();}
+  var masses=bolts.map(function(b){return b.mass+b.washers*b.washerMassEach;});
+  var maxM=Math.max.apply(null,masses);
+  for(var i=0;i<n;i++){
+    var ang=getAngle(i,n)*Math.PI/180, br=R*0.72;
+    var bx=cx+br*Math.cos(ang),by=cy-br*Math.sin(ang);
+    ctx.beginPath();ctx.arc(bx,by,7,0,2*Math.PI);
+    ctx.fillStyle=masses[i]===maxM?'rgba(255,45,85,0.4)':'rgba(0,212,255,0.15)';ctx.fill();
+    ctx.strokeStyle=masses[i]===maxM?'var(--danger)':'var(--dim)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='bold 9px Orbitron,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i+1,bx,by);
+  }
+  var u=computeUnbalance(bolts,n,state.boltRadius);
+  var vang=Math.atan2(u.uy,u.ux),vlen=Math.min(R*0.7,50);
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+vlen*Math.cos(vang),cy-vlen*Math.sin(vang));
+  ctx.strokeStyle='var(--danger)';ctx.lineWidth=3;ctx.stroke();
+  ctx.fillStyle='var(--dim)';ctx.font='9px Share Tech Mono,monospace';ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.fillText('U='+u.u.toFixed(2),cx,H-14);
+}
+
+// ===== DUAL PLANE =====
+function renderDual(){
+  updateFromInputs();
+  var n=state.numBolts,R=state.boltRadius;
+  var u1=computeUnbalance(state.bolts,n,R), u2=computeUnbalance(state.boltsP2,n,R);
+  var a=state.bearA,b=state.bearB,L=state.planeSep;
+  var span=Math.abs(b-a)||1;
+  var brA=Math.abs(u1.u*(b-0)/span)+Math.abs(u2.u*(b-L)/span);
+  var brB=Math.abs(u1.u*(0-a)/span)+Math.abs(u2.u*(L-a)/span);
+  document.getElementById('mv-du1').textContent=u1.u.toFixed(2);
+  document.getElementById('mv-du2').textContent=u2.u.toFixed(2);
+  document.getElementById('mv-dbrA').textContent=brA.toFixed(2);
+  document.getElementById('mv-dbrB').textContent=brB.toFixed(2);
+  drawDualPolar('dualPolar1',state.bolts,n);
+  drawDualPolar('dualPolar2',state.boltsP2,n);
+  drawIso();
+  renderDualTbl('boltTbodyP1',state.bolts,n,R);
+  renderDualTbl('boltTbodyP2',state.boltsP2,n,R);
+}
+
+function drawDualPolar(id,bolts,n){
+  var cv=document.getElementById(id),ctx=cv.getContext('2d');
+  var W=cv.width,H=cv.height,cx=W/2,cy=H/2,R=100;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,W,H);
+  for(var r=25;r<=R;r+=25){ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.strokeStyle='rgba(30,58,95,0.4)';ctx.lineWidth=0.5;ctx.stroke();}
+  ctx.beginPath();ctx.arc(cx,cy,R*0.72,0,2*Math.PI);ctx.strokeStyle='rgba(0,212,255,0.2)';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+  for(var i=0;i<n;i++){
+    var ang=getAngle(i,n)*Math.PI/180, br=R*0.72;
+    var bx=cx+br*Math.cos(ang),by=cy-br*Math.sin(ang);
+    ctx.beginPath();ctx.arc(bx,by,6,0,2*Math.PI);
+    ctx.fillStyle=bolts[i].washers>0?'rgba(57,255,20,0.3)':'rgba(0,212,255,0.15)';ctx.fill();
+    ctx.strokeStyle=bolts[i].washers>0?'var(--accent3)':'var(--accent)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='bold 8px Orbitron,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i+1,bx,by);
+  }
+  var u=computeUnbalance(bolts,n,state.boltRadius);
+  var vang=Math.atan2(u.uy,u.ux),vlen=Math.min(45,R*0.55);
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+vlen*Math.cos(vang),cy-vlen*Math.sin(vang));
+  ctx.strokeStyle=u.u<=state.tolerance?'var(--accent3)':'var(--danger)';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='var(--accent)';ctx.font='10px Share Tech Mono,monospace';ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.fillText('U='+u.u.toFixed(2)+' g·mm',cx,H-14);
+}
+
+function drawIso(){
+  var cv=document.getElementById('isoCanvas'),ctx=cv.getContext('2d');
+  var W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,W,H);
+  var xP1=65,xP2=W-65,cy=H/2,r=75;
+  ctx.strokeStyle='rgba(0,212,255,0.3)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(20,cy);ctx.lineTo(W-20,cy);ctx.stroke();
+  ctx.strokeStyle='var(--accent)';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(xP1,cy,18,r,0,0,2*Math.PI);ctx.stroke();
+  ctx.fillStyle='rgba(0,212,255,0.05)';ctx.fill();
+  ctx.strokeStyle='var(--accent2)';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(xP2,cy,18,r,0,0,2*Math.PI);ctx.stroke();
+  ctx.fillStyle='rgba(255,107,53,0.05)';ctx.fill();
+  var n=state.numBolts;
+  var u1=computeUnbalance(state.bolts,n,state.boltRadius);
+  var u2=computeUnbalance(state.boltsP2,n,state.boltRadius);
+  function drawVec(px,u,col){
+    var ang=Math.atan2(u.uy,u.ux),vlen=Math.min(u.u*1.5,r*0.75);
+    ctx.beginPath();ctx.moveTo(px,cy);ctx.lineTo(px+18*Math.cos(ang+0.3),cy-vlen*Math.sin(ang));
+    ctx.strokeStyle=col;ctx.lineWidth=3;ctx.stroke();
+    ctx.beginPath();ctx.arc(px+18*Math.cos(ang+0.3),cy-vlen*Math.sin(ang),5,0,2*Math.PI);
+    ctx.fillStyle=col;ctx.fill();
+  }
+  drawVec(xP1,u1,'var(--accent)'); drawVec(xP2,u2,'var(--accent2)');
+  ctx.font='10px Orbitron,monospace';ctx.textAlign='center';
+  ctx.fillStyle='var(--accent)';ctx.fillText('PLANE 1',xP1,18);
+  ctx.fillStyle='var(--accent2)';ctx.fillText('PLANE 2',xP2,18);
+  ctx.fillStyle='var(--dim)';ctx.font='9px Share Tech Mono,monospace';ctx.fillText('L = '+state.planeSep+' mm',W/2,cy+r+18);
+  [state.bearA,state.bearB].forEach(function(pos,idx){
+    var px=xP1+(xP2-xP1)*(pos/(state.planeSep||1));
+    px=Math.max(30,Math.min(W-30,px));
+    ctx.fillStyle='var(--warn)';ctx.beginPath();ctx.moveTo(px,cy+r+4);ctx.lineTo(px-8,cy+r+18);ctx.lineTo(px+8,cy+r+18);ctx.closePath();ctx.fill();
+    ctx.fillStyle='var(--warn)';ctx.font='9px Share Tech Mono,monospace';ctx.textAlign='center';ctx.fillText(idx===0?'BRG A':'BRG B',px,cy+r+30);
+  });
+}
+
+function renderDualTbl(id,bolts,n,R){
+  var rows='';
+  for(var i=0;i<n;i++){
+    var b=bolts[i],ang=getAngle(i,n),rad=ang*Math.PI/180,tm=b.mass+b.washers*b.washerMassEach;
+    rows+='<tr><td>'+(i+1)+'</td><td>'+ang.toFixed(0)+'°</td><td>'+b.mass.toFixed(2)+'</td><td>'+b.washers+'</td>'
+      +'<td style="color:var(--accent)">'+tm.toFixed(2)+'</td>'
+      +'<td>'+(tm*Math.cos(rad)).toFixed(2)+'</td><td>'+(tm*Math.sin(rad)).toFixed(2)+'</td></tr>';
+  }
+  document.getElementById(id).innerHTML=rows;
+}
+
+// ===== INIT =====
+window.addEventListener('DOMContentLoaded',function(){ initBolts(); });
+</script>
+</body>
+</html>

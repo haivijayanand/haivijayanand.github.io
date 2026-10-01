@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<!--
+TOOL    : rotogravure_deadtime_simulator.html (public copy)
+FAMILY  : PRINTING
+VERSION : 2.1.1
+DATE    : 2026-10-01
+CHAT    : Rotogravure register simulator
+CHANGES : v2.1.1  public copy: phone number removed from the contact panel
+          v2.1    web spans, tension stretch, cylinder drift, camera delay/noise/filter, waste cost
+STATUS  : working; runs offline in any browser, no network
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rotogravure Register Simulator v2.1</title>
+<style>
+:root{--bg:#11161d;--panel:#19212c;--panel2:#222c3a;--border:#344054;--text:#edf2f7;--sub:#99a7ba;--blue:#4299e1;--orange:#ed8936;--yellow:#f6d365;--ok:#3dd6b0;--warn:#f6ad55;--bad:#fc8181;--paper:#f6f0de}
+*{box-sizing:border-box}body{margin:0;padding:18px;background:var(--bg);color:var(--text);font:14px "Segoe UI",Arial,sans-serif;max-width:1500px}h1{font-size:20px;margin:0 0 4px}.sub{color:var(--sub);font-size:12px;margin-bottom:14px}.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap}.tab{border:0;background:none;color:var(--sub);padding:10px 15px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent}.tab.active{color:var(--text);border-bottom-color:var(--blue)}.pane{display:none}.pane.active{display:block}.panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}.section h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--sub);margin:0 0 12px}.field{margin-bottom:11px}.field label{display:block;color:var(--sub);font-size:12px;margin-bottom:4px}.field input,.field select{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px}.row{display:flex;gap:8px;align-items:center}.row input[type=range]{flex:1}.row input[type=number]{width:90px}.check{display:flex!important;gap:8px;align-items:center;color:var(--text)!important}.check input{width:auto}.btn{background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-weight:700;cursor:pointer}.btn:hover{border-color:var(--blue)}.btn.primary{background:var(--blue);color:#08131d}.btn.warn{background:#69451b}.btnbar{display:flex;gap:8px;flex-wrap:wrap}.notice{color:var(--sub);font-size:12px;line-height:1.5}.stationsGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}.spanField{background:var(--panel2);border:1px solid var(--border);border-radius:7px;padding:8px}.spanField label{font-size:11px;color:var(--sub);display:block;margin-bottom:4px}.spanField input{width:100%;background:#111826;border:1px solid var(--border);color:var(--text);border-radius:5px;padding:6px}.speedBox{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.speedBox input[type=range]{min-width:260px;flex:1}.speedBox input[type=number]{width:90px}.chip{background:var(--panel2);border:1px solid var(--border);border-radius:999px;padding:7px 11px;color:var(--sub);font-size:12px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px}.canvasWrap{overflow:auto}canvas{display:block;width:100%;height:auto;background:var(--panel2);border:1px solid var(--border);border-radius:8px}.status{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:12px}.big{font-size:20px;font-weight:800;color:var(--yellow)}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px;border-bottom:1px solid var(--border);text-align:right}th:first-child,td:first-child{text-align:left}th{color:var(--sub);font-size:11px}.regRow{display:grid;grid-template-columns:115px 90px 90px 145px minmax(220px,1fr);gap:11px;align-items:center;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:9px}.meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.tag{background:#101722;border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-weight:800}.ink{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}.mark{position:relative;width:86px;height:86px;background:var(--paper);border:1px solid #c9bea0;border-radius:8px}.mark:after{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px dashed #9e957c}.cross{position:absolute;left:50%;width:20px;height:20px;transform:translate(-50%,-50%);color:#111}.cross .v,.cross .h{position:absolute;background:currentColor;border-radius:1px}.cross .v{width:3px;height:100%;left:50%;transform:translateX(-50%)}.cross .h{height:3px;width:100%;top:50%;transform:translateY(-50%)}.pm{display:flex;gap:6px}.pm button{flex:1;font-size:16px}.offset{background:#111826;border:1px solid var(--border);border-radius:7px;padding:8px}.offset b{font-size:17px;color:var(--yellow)}.trackWrap{min-width:0}.trackMeta{display:flex;justify-content:space-between;gap:8px;color:var(--sub);font-size:11px;margin-bottom:5px}.track{position:relative;height:24px;background:#101722;border:1px solid var(--border);border-radius:999px;overflow:hidden}.track:before{content:"";position:absolute;left:9px;right:40px;top:50%;border-top:2px solid #42506a}.track:after{content:"CAM";position:absolute;right:7px;top:50%;transform:translateY(-50%);color:var(--yellow);font-size:10px;font-weight:900}.pulse{position:absolute;top:50%;width:20px;height:20px;border:3px solid #050505;border-radius:50%;transform:translate(-50%,-50%);background:#ffe600!important;color:#ffe600!important;box-shadow:0 0 5px #fff,0 0 16px #ffe600,0 0 24px rgba(255,230,0,.75);z-index:5;pointer-events:none}.summary{display:grid;grid-template-columns:120px 120px 1fr;gap:12px;align-items:center;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:11px;margin-top:10px}.summaryMark{position:relative;width:115px;height:110px;background:var(--paper);border:1px solid #c9bea0;border-radius:8px}.alarm-good{color:var(--ok)}.alarm-warn{color:var(--warn)}.alarm-bad{color:var(--bad)}.metricGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.metric{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px}.metric .k{font-size:11px;color:var(--sub)}.metric .v{font-size:17px;font-weight:800;margin-top:3px}.hidden{display:none!important}
+@media(max-width:1000px){.layout{grid-template-columns:1fr}.regRow{grid-template-columns:1fr}.summary{grid-template-columns:1fr}.track{min-width:260px}}
+</style>
+</head>
+<body>
+<h1>Rotogravure Register-Correction Simulator</h1>
+<div class="sub">Machine setup, transport dead time, tension/stretch, progressive drift, camera behaviour, waste and registration correction.</div>
+
+<div class="tabs">
+<button class="tab active" data-pane="settings">Initial Settings</button>
+<button class="tab" data-pane="sim">Dead-Time Simulator</button>
+<button class="tab" data-pane="reg">Register Marks</button>
+<button class="tab" data-pane="about">About</button>
+</div>
+
+<div id="settings" class="pane active">
+  <div class="panel">
+    <div class="grid">
+      <div class="section">
+        <h2>Press layout</h2>
+        <div class="field"><label>Number of stations</label><select id="setN"><option value="8">8 stations</option><option value="12" selected>12 stations</option></select></div>
+        <div class="field"><label class="check"><input type="checkbox" id="setTurn" checked> Turn-bar / fold-over present</label></div>
+        <div class="field"><label>Turn-bar after station</label><input type="number" id="setTurnAfter" value="8" min="1" max="11"></div>
+        <div class="field"><label>Turn-bar additional web length (m)</label><input type="number" id="setTurnLen" value="6" min="0" step="0.1"></div>
+        <div class="field"><label>Camera offset after last station (m)</label><input type="number" id="setCamOffset" value="2" min="0" step="0.1"></div>
+        <div class="field"><label>Print repeat length (mm)</label><input type="number" id="setRepeat" value="850" min="1" step="1"></div>
+      </div>
+
+      <div class="section">
+        <h2>Substrate and tension</h2>
+        <div class="field"><label>Substrate preset</label><select id="setMaterial"><option value="PET12">PET – 12 µm</option><option value="LDPE100">LDPE tube – 100 µm</option><option value="custom">Custom</option></select></div>
+        <div class="field"><label>Web width (mm)</label><input type="number" id="setWidth" value="500" min="10" step="1"></div>
+        <div class="field"><label>Thickness (µm)</label><input type="number" id="setThickness" value="12" min="1" step="1"></div>
+        <div class="field"><label>Elastic modulus (MPa)</label><input type="number" id="setE" value="4000" min="1" step="10"></div>
+        <div class="field"><label>Density (kg/m³)</label><input type="number" id="setDensity" value="1390" min="1" step="1"></div>
+        <div class="field"><label>Web tension (N)</label><input type="number" id="setTension" value="80" min="0" step="1"></div>
+        <div class="field"><label>Tension disturbance (%)</label><input type="number" id="setTensionDist" value="0" min="-90" max="200" step="1"></div>
+      </div>
+
+      <div class="section">
+        <h2>Uncertainty switches</h2>
+        <div class="field"><label class="check"><input type="checkbox" id="setAllUncertainties" checked> Enable all uncertainties</label></div>
+        <div class="field"><label class="check"><input type="checkbox" id="setStretch" checked> Tension-disturbance / stretch contribution</label></div>
+        <div class="field"><label class="check"><input type="checkbox" id="setDrift" checked> Progressive cylinder / repeat drift</label></div>
+        <div class="field"><label class="check"><input type="checkbox" id="setCamDelayEnabled" checked> Camera-processing delay</label></div>
+        <div class="field"><label class="check"><input type="checkbox" id="setNoiseEnabled" checked> Camera measurement noise</label></div>
+        <div class="field"><label class="check"><input type="checkbox" id="setFilterEnabled" checked> Moving-average filtering</label></div>
+        <div class="notice">The master switch enables or disables all uncertainty effects together. Individual effects may also be selected separately.</div>
+      </div>
+
+      <div class="section">
+        <h2>Register and camera</h2>
+        <div class="field"><label>Correction step per press (mm)</label><input type="number" id="setStep" value="0.10" min="0.01" step="0.01"></div>
+        <div class="field"><label>Camera processing delay (s)</label><input type="number" id="setCamDelay" value="0.25" min="0" step="0.05"></div>
+        <div class="field"><label>Measurement noise ± (mm)</label><input type="number" id="setNoise" value="0.02" min="0" step="0.01"></div>
+        <div class="field"><label>Moving-average samples</label><input type="number" id="setFilterN" value="5" min="1" max="50" step="1"></div>
+        <div class="field"><label>Acceptable limit ± (mm)</label><input type="number" id="setGood" value="0.10" min="0" step="0.01"></div>
+        <div class="field"><label>Warning limit ± (mm)</label><input type="number" id="setWarn" value="0.20" min="0" step="0.01"></div>
+        <div class="field"><label>Maximum simulated register error ± (mm)</label><input type="number" id="setMaxError" value="4.00" min="0.10" max="20" step="0.10"></div>
+        <div class="field"><label>Playback speed-up ×</label><input type="number" id="setPlayback" value="1" min="1" max="20" step="1"></div>
+      </div>
+
+      <div class="section">
+        <h2>Waste and drift</h2>
+        <div class="field"><label>Substrate cost basis</label><select id="setCostBasis"><option value="kg">₹ per kg</option><option value="m">₹ per metre</option></select></div>
+        <div class="field"><label>Substrate cost</label><input type="number" id="setCost" value="220" min="0" step="1"></div>
+        <div class="notice">Progressive drift is entered independently for each station below in mm per 100 repeats. Positive drift moves the mark upward. All simulated and camera-displayed errors are limited by the Maximum simulated register error setting.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel section">
+    <h2>Individual station-to-station lengths</h2>
+    <div id="spanFields" class="stationsGrid"></div>
+  </div>
+
+  <div class="panel section">
+    <h2>Progressive cylinder / repeat drift</h2>
+    <div id="driftFields" class="stationsGrid"></div>
+  </div>
+
+  <div class="panel">
+    <div class="btnbar">
+      <button class="btn primary" id="applySettings">Apply Settings</button>
+      <button class="btn" id="loadPET">Load PET defaults</button>
+      <button class="btn" id="loadLDPE">Load LDPE defaults</button>
+      <button class="btn" id="resetAll">Restore defaults</button>
+    </div>
+    <div id="settingsStatus" class="notice" style="margin-top:10px">Edit the configuration and press Apply Settings.</div>
+  </div>
+</div>
+
+<div id="sim" class="pane">
+  <div class="panel">
+    <div class="speedBox">
+      <b>Line speed</b>
+      <input type="range" id="speedSim" min="0" max="150" value="60" step="1">
+      <input type="number" id="speedSimNum" min="0" max="1000" value="60" step="1">
+      <span class="chip">m/min</span>
+      <button class="btn" id="stopSpeed">Stop</button>
+    </div>
+    <div id="simMetrics" class="metricGrid"></div>
+  </div>
+  <div class="layout">
+    <div class="panel canvasWrap">
+      <canvas id="machineCanvas" width="1050" height="250"></canvas>
+      <div id="simStatus" class="status">Select a station from the table to launch a correction pulse.</div>
+    </div>
+    <div class="panel">
+      <table><thead><tr><th>Station</th><th>Distance</th><th>Physical</th><th>Total</th><th>Waste cost</th></tr></thead><tbody id="simTable"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<div id="reg" class="pane">
+  <div class="panel">
+    <div class="speedBox">
+      <b>Line speed</b>
+      <input type="range" id="speedReg" min="0" max="150" value="60" step="1">
+      <input type="number" id="speedRegNum" min="0" max="1000" value="60" step="1">
+      <span class="chip">m/min</span>
+      <button class="btn" id="randomize">Randomize marks</button>
+      <button class="btn" id="applyZero">Apply zero to all</button>
+      <button class="btn" id="zeroNow">Zero all now</button>
+      <button class="btn" id="clearPulses">Clear pulses</button>
+    </div>
+    <div id="regMetrics" class="metricGrid"></div>
+  </div>
+  <div class="panel"><div id="regRows"></div></div>
+</div>
+
+<div id="about" class="pane">
+  <div class="panel">
+    <h2>Rotogravure Register Simulator v2.1</h2>
+    <p class="notice">This version models individual web spans, shared live speed, transport distance, tension-induced stretch, progressive cylinder drift, individually switchable camera delay/noise/filtering, register tolerance bands, and substrate waste.</p>
+    <p class="notice">The tension model uses the change from nominal tension, ΔL = ΔT·L/(EA), so steady setup strain is not incorrectly shown as registration error. It is intended for training and sensitivity studies, not machine certification.</p>
+  </div>
+  <div class="panel" style="max-width:480px">
+    <h2 style="font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--sub);margin:0 0 12px">Contact</h2>
+    <div style="font-size:15px;font-weight:800;margin-bottom:2px">K Vijay Anand</div>
+    <div style="display:flex;gap:10px;font-size:13.5px;margin-top:6px"><span style="color:var(--sub);width:60px;flex-shrink:0">Email</span><span>haivijayanand@gmail.com</span></div>
+  </div>
+</div>
+
+<script>
+const inkPalette=[
+{name:'K',c:'#111111',t:'#fff'},{name:'C',c:'#00b7ff',t:'#06151d'},{name:'M',c:'#ff2ea6',t:'#210613'},{name:'Y',c:'#ffd400',t:'#201800'},
+{name:'Orange',c:'#ff7a00',t:'#210d00'},{name:'Violet',c:'#7c4dff',t:'#fff'},{name:'Teal',c:'#00b894',t:'#061a15'},{name:'Red',c:'#ff4d4f',t:'#210707'},
+{name:'Blue',c:'#3b8ce0',t:'#07131c'},{name:'Green',c:'#7cb342',t:'#101705'},{name:'Brown',c:'#8d6e63',t:'#fff'},{name:'Pink',c:'#f06292',t:'#210812'}];
+const presets={
+ PET12:{thickness:12,E:4000,density:1390,tension:80,cost:220},
+ LDPE100:{thickness:100,E:250,density:920,tension:40,cost:140}
+};
+let cfg={N:12,turn:true,turnAfter:8,turnLen:6,camOffset:2,repeatMm:850,widthMm:500,thicknessUm:12,E_MPa:4000,density:1390,tensionN:80,tensionDistPct:0,stepMm:.1,camDelay:0.25,noiseMm:.02,filterN:5,good:.1,warn:.2,maxError:4,playback:1,costBasis:'kg',cost:220,allUncertainties:true,stretch:true,drift:true,camDelayEnabled:true,noiseEnabled:true,filterEnabled:true,spans:Array(11).fill(4.5),drifts:Array(12).fill(0)};
+let speed=60, observed={},target={},pulses=[],noiseHist={},repeatCounter=0,lastFrame=performance.now(),simPulse=null,cumulativeWasteCost=0,cumulativeWasteM=0;
+for(let i=1;i<=12;i++){observed[i]=0;target[i]=0;noiseHist[i]=[]}
+
+const $=id=>document.getElementById(id);
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.pane).classList.add('active');renderAll()});
+
+const uncertaintyIds=['setStretch','setDrift','setCamDelayEnabled','setNoiseEnabled','setFilterEnabled'];
+function updateUncertaintyMaster(){
+ const master=$('setAllUncertainties');
+ const states=uncertaintyIds.map(id=>$(id).checked);
+ master.checked=states.every(Boolean);
+ master.indeterminate=!states.every(Boolean)&&states.some(Boolean);
+}
+$('setAllUncertainties').onchange=e=>{uncertaintyIds.forEach(id=>$(id).checked=e.target.checked);updateUncertaintyMaster()};
+uncertaintyIds.forEach(id=>$(id).onchange=updateUncertaintyMaster);
+
+function buildDynamicFields(){
+ const sf=$('spanFields');sf.innerHTML='';
+ for(let i=1;i<cfg.N;i++){sf.innerHTML+=`<div class="spanField"><label>S${i} → S${i+1} length (m)</label><input id="span${i}" type="number" min="0.1" step="0.1" value="${cfg.spans[i-1]??4.5}"></div>`}
+ const df=$('driftFields');df.innerHTML='';
+ for(let i=1;i<=cfg.N;i++){df.innerHTML+=`<div class="spanField"><label>Station ${i} drift (mm/100 repeats)</label><input id="drift${i}" type="number" step="0.01" value="${cfg.drifts[i-1]??0}"></div>`}
+}
+function loadCfgToForm(){
+ $('setN').value=cfg.N;$('setTurn').checked=cfg.turn;$('setTurnAfter').value=cfg.turnAfter;$('setTurnLen').value=cfg.turnLen;$('setCamOffset').value=cfg.camOffset;$('setRepeat').value=cfg.repeatMm;
+ $('setWidth').value=cfg.widthMm;$('setThickness').value=cfg.thicknessUm;$('setE').value=cfg.E_MPa;$('setDensity').value=cfg.density;$('setTension').value=cfg.tensionN;$('setTensionDist').value=cfg.tensionDistPct;
+ $('setStep').value=cfg.stepMm;$('setCamDelay').value=cfg.camDelay;$('setNoise').value=cfg.noiseMm;$('setFilterN').value=cfg.filterN;$('setGood').value=cfg.good;$('setWarn').value=cfg.warn;$('setMaxError').value=cfg.maxError;$('setPlayback').value=cfg.playback;
+ $('setCostBasis').value=cfg.costBasis;$('setCost').value=cfg.cost;$('setAllUncertainties').checked=cfg.allUncertainties;$('setStretch').checked=cfg.stretch;$('setDrift').checked=cfg.drift;$('setCamDelayEnabled').checked=cfg.camDelayEnabled;$('setNoiseEnabled').checked=cfg.noiseEnabled;$('setFilterEnabled').checked=cfg.filterEnabled;updateUncertaintyMaster();buildDynamicFields()
+}
+function readForm(){
+ const n=+$('setN').value;
+ const oldSpans=cfg.spans.slice(),oldDrifts=cfg.drifts.slice();
+ cfg.N=n;cfg.turn=$('setTurn').checked;cfg.turnAfter=Math.min(n-1,Math.max(1,+$('setTurnAfter').value||1));cfg.turnLen=+$('setTurnLen').value||0;cfg.camOffset=+$('setCamOffset').value||0;cfg.repeatMm=+$('setRepeat').value||850;
+ cfg.widthMm=+$('setWidth').value||500;cfg.thicknessUm=+$('setThickness').value||12;cfg.E_MPa=+$('setE').value||4000;cfg.density=+$('setDensity').value||1390;cfg.tensionN=+$('setTension').value||0;cfg.tensionDistPct=+$('setTensionDist').value||0;
+ cfg.stepMm=+$('setStep').value||.1;cfg.camDelay=+$('setCamDelay').value||0;cfg.noiseMm=+$('setNoise').value||0;cfg.filterN=Math.max(1,+$('setFilterN').value||1);cfg.good=+$('setGood').value||.1;cfg.warn=+$('setWarn').value||.2;cfg.maxError=Math.max(.1,+$('setMaxError').value||4);cfg.playback=Math.max(1,+$('setPlayback').value||1);
+ cfg.costBasis=$('setCostBasis').value;cfg.cost=+$('setCost').value||0;cfg.allUncertainties=$('setAllUncertainties').checked;cfg.stretch=$('setStretch').checked;cfg.drift=$('setDrift').checked;cfg.camDelayEnabled=$('setCamDelayEnabled').checked;cfg.noiseEnabled=$('setNoiseEnabled').checked;cfg.filterEnabled=$('setFilterEnabled').checked;
+ cfg.spans=[];for(let i=1;i<n;i++)cfg.spans.push(+($('span'+i)?.value)||oldSpans[i-1]||4.5);
+ cfg.drifts=[];for(let i=1;i<=n;i++)cfg.drifts.push(+($('drift'+i)?.value)||oldDrifts[i-1]||0);
+}
+$('setN').onchange=()=>{const n=+$('setN').value;cfg.N=n;cfg.turnAfter=Math.min(cfg.turnAfter,n-1);cfg.spans=Array.from({length:n-1},(_,i)=>cfg.spans[i]??4.5);cfg.drifts=Array.from({length:n},(_,i)=>cfg.drifts[i]??0);buildDynamicFields()};
+$('setMaterial').onchange=()=>{const p=presets[$('setMaterial').value];if(p){$('setThickness').value=p.thickness;$('setE').value=p.E;$('setDensity').value=p.density;$('setTension').value=p.tension;$('setCost').value=p.cost}};
+$('loadPET').onclick=()=>{$('setMaterial').value='PET12';$('setMaterial').onchange()};
+$('loadLDPE').onclick=()=>{$('setMaterial').value='LDPE100';$('setMaterial').onchange()};
+$('applySettings').onclick=()=>{readForm();pulses=[];simPulse=null;$('settingsStatus').textContent=`Applied: ${cfg.N} stations, ${cfg.widthMm} mm web, ${cfg.thicknessUm} µm substrate, ${cfg.tensionN} N tension. Active uncertainties: ${[cfg.stretch,cfg.drift,cfg.camDelayEnabled,cfg.noiseEnabled,cfg.filterEnabled].filter(Boolean).length}/5.`;noiseHist={};for(let i=1;i<=12;i++)noiseHist[i]=[];renderAll()};
+$('resetAll').onclick=()=>{cfg={N:12,turn:true,turnAfter:8,turnLen:6,camOffset:2,repeatMm:850,widthMm:500,thicknessUm:12,E_MPa:4000,density:1390,tensionN:80,tensionDistPct:0,stepMm:.1,camDelay:.25,noiseMm:.02,filterN:5,good:.1,warn:.2,maxError:4,playback:1,costBasis:'kg',cost:220,allUncertainties:true,stretch:true,drift:true,camDelayEnabled:true,noiseEnabled:true,filterEnabled:true,spans:Array(11).fill(4.5),drifts:Array(12).fill(0)};loadCfgToForm();renderAll()};
+
+function syncSpeed(v){speed=Math.max(0,+v||0);['speedSim','speedSimNum','speedReg','speedRegNum'].forEach(id=>$(id).value=speed);renderAll()}
+['speedSim','speedSimNum','speedReg','speedRegNum'].forEach(id=>$(id).oninput=e=>syncSpeed(e.target.value));
+$('stopSpeed').onclick=()=>syncSpeed(0);
+
+function distanceToCamera(st){
+ let d=cfg.camOffset;
+ for(let i=st;i<cfg.N;i++)d+=cfg.spans[i-1];
+ if(cfg.turn&&st<=cfg.turnAfter)d+=cfg.turnLen;
+ return d
+}
+function clampError(v){return Math.max(-cfg.maxError,Math.min(cfg.maxError,v))}
+function effectiveCamDelay(){return cfg.camDelayEnabled?cfg.camDelay:0}
+function stretchMm(st){
+ if(!cfg.stretch)return 0;
+ // Register contribution is based on tension CHANGE from the nominal set tension,
+ // not on the full steady elastic extension already present during setup.
+ const L=distanceToCamera(st),deltaT=cfg.tensionN*(cfg.tensionDistPct/100),A=(cfg.widthMm/1000)*(cfg.thicknessUm/1e6),E=cfg.E_MPa*1e6;
+ if(A<=0||E<=0)return 0;
+ return clampError(deltaT*L/(E*A)*1000)
+}
+function wasteForDistance(d){
+ const repeats=d/(cfg.repeatMm/1000),area=d*(cfg.widthMm/1000),mass=area*(cfg.thicknessUm/1e6)*cfg.density;
+ const cost=cfg.costBasis==='kg'?mass*cfg.cost:d*cfg.cost;
+ return {repeats,mass,cost}
+}
+function cameraReading(st){
+ if(isLocked(st))return 0;
+ const trueVal=clampError((observed[st]||0)+stretchMm(st));
+ const noisy=cfg.noiseEnabled?clampError(trueVal+(Math.random()*2-1)*cfg.noiseMm):trueVal;
+ if(!cfg.filterEnabled){noiseHist[st]=[];return noisy}
+ const h=noiseHist[st];h.push(noisy);while(h.length>cfg.filterN)h.shift();
+ return h.reduce((a,b)=>a+b,0)/h.length
+}
+function stationInfo(st){
+ const idx=cfg.turn&&st>cfg.turnAfter?st-cfg.turnAfter-1:st-1;
+ const side=cfg.turn&&st>cfg.turnAfter?'Rear':'Front';
+ return {...inkPalette[idx%inkPalette.length],side}
+}
+// The first station on each side of the fold is the datum/reference cylinder —
+// every other station corrects relative to it, so it can never itself carry an offset.
+function isLocked(st){return st===1||(cfg.turn&&st===cfg.turnAfter+1)}
+function alarmClass(v){const a=Math.abs(v);return a<=cfg.good?'alarm-good':a<=cfg.warn?'alarm-warn':'alarm-bad'}
+function fmt(v,n=2){return (v>=0?'+':'')+v.toFixed(n)}
+function cross(color,top){return `<div class="cross" style="color:${color};top:${top}px"><div class="v"></div><div class="h"></div></div>`}
+
+function renderSim(){
+ const rows=[];for(let st=1;st<=cfg.N;st++){const d=distanceToCamera(st),physical=speed>0?d/(speed/60):Infinity,total=physical+effectiveCamDelay(),w=wasteForDistance(d);rows.push({st,d,physical,total,w})}
+ const totalPath=distanceToCamera(1),stretch=stretchMm(1);
+ $('simMetrics').innerHTML=`<div class="metric"><div class="k">Total web path S1 → camera</div><div class="v">${totalPath.toFixed(1)} m</div></div><div class="metric"><div class="k">Tension stretch contribution at S1</div><div class="v">${stretch.toFixed(3)} mm</div></div><div class="metric"><div class="k">Cumulative simulated waste</div><div class="v">${cumulativeWasteM.toFixed(1)} m / ₹${cumulativeWasteCost.toFixed(0)}</div></div>`;
+ $('simTable').innerHTML=rows.map(r=>`<tr data-st="${r.st}" style="cursor:pointer"><td>S${r.st}</td><td>${r.d.toFixed(1)} m</td><td>${isFinite(r.physical)?r.physical.toFixed(1)+' s':'Stopped'}</td><td>${isFinite(r.total)?r.total.toFixed(1)+' s':'Stopped'}</td><td>₹${r.w.cost.toFixed(1)}</td></tr>`).join('');
+
+ drawMachine(rows)
+}
+function launchSimPulse(st){const d=distanceToCamera(st);simPulse={st,total:d,remaining:d,cameraDelay:effectiveCamDelay(),waste:wasteForDistance(d)};$('simStatus').innerHTML=`Pulse launched from <b>Station ${st}</b>. It will move according to the live line speed.`}
+function drawMachine(rows){
+ const c=$('machineCanvas'),x=c.getContext('2d'),W=c.width,H=c.height,mL=55,mR=75,usable=W-mL-mR,total=distanceToCamera(1)||1;x.clearRect(0,0,W,H);
+ let positions={},cum=0;for(let st=1;st<=cfg.N;st++){positions[st]=mL+cum/total*usable;if(st<cfg.N){cum+=cfg.spans[st-1];if(cfg.turn&&st===cfg.turnAfter)cum+=cfg.turnLen}}const camX=mL+(cum+cfg.camOffset)/total*usable,y=125;
+ x.strokeStyle='#43516a';x.lineWidth=3;x.beginPath();x.moveTo(mL-20,y);x.lineTo(camX,y);x.stroke();
+ for(let st=1;st<=cfg.N;st++){const info=stationInfo(st);x.fillStyle=info.c;x.beginPath();x.arc(positions[st],y,11,0,Math.PI*2);x.fill();x.fillStyle='#0a1018';x.font='bold 11px Segoe UI';x.textAlign='center';x.textBaseline='middle';x.fillText(st,positions[st],y)}
+ x.fillStyle='#f6d365';x.fillRect(camX-14,y-16,28,32);x.fillStyle='#111';x.font='bold 9px Segoe UI';x.fillText('CAM',camX,y);
+ if(simPulse){const frac=1-simPulse.remaining/simPulse.total;const px=positions[simPulse.st]+(camX-positions[simPulse.st])*Math.max(0,Math.min(1,frac));x.save();x.fillStyle='#ffe600';x.strokeStyle='#050505';x.lineWidth=4;x.shadowColor='#ffe600';x.shadowBlur=22;x.beginPath();x.arc(px,y,13,0,Math.PI*2);x.fill();x.shadowBlur=0;x.stroke();x.restore()}
+}
+
+function queue(st,dir){
+ if(isLocked(st))return;
+ const d=distanceToCamera(st),info=stationInfo(st),delta=dir*cfg.stepMm;
+ target[st]=+clampError(target[st]+delta).toFixed(6);
+ pulses.push({st,delta,total:d,remaining:d,camRemain:effectiveCamDelay(),color:info.c});
+}
+function randomize(){
+ pulses=[];
+ const randomLimit=Math.min(2,cfg.maxError);
+ const maxSteps=Math.max(1,Math.floor(randomLimit/cfg.stepMm));
+ for(let st=1;st<=cfg.N;st++){
+  if(isLocked(st)){observed[st]=target[st]=0;continue}
+  const v=(Math.floor(Math.random()*(2*maxSteps+1))-maxSteps)*cfg.stepMm;
+  observed[st]=target[st]=clampError(v);
+ }
+}
+function zeroNow(){pulses=[];for(let st=1;st<=12;st++)observed[st]=target[st]=0;cumulativeWasteM=0;cumulativeWasteCost=0}
+function applyZero(){for(let st=1;st<=cfg.N;st++){if(isLocked(st))continue;const steps=Math.round(Math.abs(target[st])/cfg.stepMm),dir=target[st]>0?-1:1;for(let j=0;j<steps;j++)queue(st,dir)}}
+$('randomize').onclick=()=>{randomize();renderAll()};$('zeroNow').onclick=()=>{zeroNow();renderAll()};$('applyZero').onclick=()=>{applyZero();renderAll()};$('clearPulses').onclick=()=>{pulses=[];renderAll()};
+
+function renderReg(){
+ let html='',maxD=distanceToCamera(1)||1,maxAbs=0,sumSq=0;
+ for(let st=1;st<=cfg.N;st++){
+  const locked=isLocked(st),info=stationInfo(st),cam=cameraReading(st),trueV=locked?0:clampError((observed[st]||0)+stretchMm(st)),pending=pulses.filter(p=>p.st===st),d=distanceToCamera(st),trackPct=25+75*d/maxD;
+  maxAbs=Math.max(maxAbs,Math.abs(cam));sumSq+=cam*cam;
+  const y=43-Math.max(-31,Math.min(31,cam*18));
+  const dots=pending.map((p,j)=>{const frac=1-p.remaining/p.total;const left=2+Math.max(0,Math.min(1,frac))*92;return `<span class="pulse" style="left:${left}%;top:${45+(j%3)*5}%;background:${p.color};color:${p.color}"></span>`}).join('');
+  const pmHtml=locked?`<div class="pm"><button class="btn" disabled style="opacity:.35;cursor:not-allowed">+</button><button class="btn" disabled style="opacity:.35;cursor:not-allowed">−</button></div><small class="notice">reference — no offset</small>`
+                     :`<div class="pm"><button class="btn" data-st="${st}" data-dir="1">+</button><button class="btn" data-st="${st}" data-dir="-1">−</button></div><small class="notice">±${cfg.stepMm.toFixed(2)} mm</small>`;
+  const offsetHtml=locked?`<b class="alarm-good">0.00 mm</b><div class="notice">datum cylinder</div><div class="notice">fixed reference</div>`
+                         :`<b class="${alarmClass(cam)}">${fmt(cam)} mm</b><div class="notice">camera filtered</div><div class="notice">true ${fmt(trueV)} · target ${fmt(target[st])}</div>`;
+  html+=`<div class="regRow"><div class="meta"><span class="tag">S${st}</span><span class="ink" style="background:${info.c};color:${info.t}">${info.name}</span><small>${info.side}${locked?' · REF':''}</small></div><div class="mark">${cross('#111',43)}${cross(info.c,y)}</div><div>${pmHtml}</div><div class="offset">${offsetHtml}</div><div class="trackWrap" style="max-width:${trackPct}%"><div class="trackMeta"><span>${d.toFixed(1)} m</span><span>${pending.length} pulse(s)</span></div><div class="track">${dots}</div></div></div>`
+ }
+ const front=[...Array(cfg.N)].map((_,i)=>i+1).filter(st=>!cfg.turn||st<=cfg.turnAfter),rear=[...Array(cfg.N)].map((_,i)=>i+1).filter(st=>cfg.turn&&st>cfg.turnAfter);
+ html+=summaryRow('Front',front)+summaryRow('Rear',rear);$('regRows').innerHTML=html;
+
+ const rms=Math.sqrt(sumSq/cfg.N);
+ $('regMetrics').innerHTML=`<div class="metric"><div class="k">Maximum camera error</div><div class="v ${alarmClass(maxAbs)}">${maxAbs.toFixed(3)} mm</div></div><div class="metric"><div class="k">RMS register error</div><div class="v ${alarmClass(rms)}">${rms.toFixed(3)} mm</div></div><div class="metric"><div class="k">Repeat counter</div><div class="v">${repeatCounter.toFixed(1)}</div></div><div class="metric"><div class="k">Pending corrections</div><div class="v">${pulses.length}</div></div>`
+}
+function summaryRow(label,sts){
+ let marks=cross('#111',55);sts.forEach(st=>{const info=stationInfo(st),v=isLocked(st)?0:clampError((observed[st]||0)+stretchMm(st)),y=55-Math.max(-42,Math.min(42,v*18));marks+=cross(info.c,y)});
+ return `<div class="summary"><div class="tag">${label} composite</div><div class="summaryMark">${marks}</div><div class="notice">${sts.length?`Stations ${sts.join(', ')} superimposed as seen by the camera.`:'No stations assigned to this side.'}</div></div>`
+}
+
+function update(dt){
+ const travelled=(speed/60)*dt*cfg.playback;
+ repeatCounter+=travelled/(cfg.repeatMm/1000);
+ if(cfg.drift&&speed>0){for(let st=1;st<=cfg.N;st++){if(isLocked(st))continue;const dv=(cfg.drifts[st-1]||0)/100*(travelled/(cfg.repeatMm/1000));observed[st]=clampError(observed[st]+dv);target[st]=clampError(target[st]+dv)}}
+ pulses.forEach(p=>{if(p.remaining>0)p.remaining=Math.max(0,p.remaining-travelled);else p.camRemain=Math.max(0,p.camRemain-dt*cfg.playback)});
+ const done=pulses.filter(p=>p.remaining<=0&&p.camRemain<=0);done.forEach(p=>{observed[p.st]=+clampError(observed[p.st]+p.delta).toFixed(6);const w=wasteForDistance(p.total);cumulativeWasteM+=p.total;cumulativeWasteCost+=w.cost});
+ pulses=pulses.filter(p=>!(p.remaining<=0&&p.camRemain<=0));
+ if(simPulse){if(simPulse.remaining>0)simPulse.remaining=Math.max(0,simPulse.remaining-travelled);else simPulse.cameraDelay=Math.max(0,simPulse.cameraDelay-dt*cfg.playback);if(simPulse.remaining<=0&&simPulse.cameraDelay<=0){cumulativeWasteM+=simPulse.total;cumulativeWasteCost+=simPulse.waste.cost;$('simStatus').innerHTML=`Correction from <b>Station ${simPulse.st}</b> is visible. Waste: ${simPulse.total.toFixed(1)} m, ${simPulse.waste.repeats.toFixed(1)} repeats, estimated ₹${simPulse.waste.cost.toFixed(1)}.`;simPulse=null}}
+}
+
+// Stable delegated controls: the animated views are redrawn frequently. Using
+// pointerdown on the permanent container prevents desktop clicks being lost
+// when a row/button is replaced between mousedown and mouseup.
+$('simTable').addEventListener('pointerdown',e=>{
+ const row=e.target.closest('tr[data-st]');
+ if(!row)return;
+ e.preventDefault();
+ launchSimPulse(+row.dataset.st);
+ renderAll();
+});
+$('regRows').addEventListener('pointerdown',e=>{
+ const b=e.target.closest('button[data-st][data-dir]');
+ if(!b)return;
+ e.preventDefault();
+ queue(+b.dataset.st,+b.dataset.dir);
+ renderAll();
+});
+
+function renderAll(){renderSim();renderReg()}
+function loop(now){const dt=Math.min(.1,(now-lastFrame)/1000);lastFrame=now;update(dt);if($('sim').classList.contains('active')||$('reg').classList.contains('active'))renderAll();requestAnimationFrame(loop)}
+loadCfgToForm();renderAll();requestAnimationFrame(loop);
+</script>
+</body></html>

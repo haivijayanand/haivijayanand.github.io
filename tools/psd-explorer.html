@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<!--
+TOOL    : psd_explorer.html (public copy)
+FAMILY  : vibration
+VERSION : 1.0.2
+DATE    : 2026-10-01
+CHAT    : g2/Hz PSD explained in detail through an interactive HTML
+CHANGES : v1.0.2  public copy for haivijayanand.github.io; standalone page
+          v1.0.1  wrapped as a full HTML document
+          v1.0.0  unit anatomy, FFT-vs-PSD lab, profile lab, Miles' equation lab, quick reference
+STATUS  : stable
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PSD Explorer</title>
+<meta name="description" content="Interactive explainer for acceleration spectral density in g²/Hz">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --sunk:#E9EDF3;
+  --ink:#172033; --muted:#566178; --rule:#D5DBE5;
+  --grid:#C9D1DE; --grid-minor:#E6EAF0;
+  --accent:#2451C9; --accent-soft:#DCE5FB;
+  --trace2:#C66A12; --trace3:#0F8A7A;
+  --warn:#B7791F; --crit:#C23B3B;
+  --display:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0F131A; --surface:#161C26; --sunk:#1D2430;
+    --ink:#E4E8EF; --muted:#9AA5B8; --rule:#2A3342;
+    --grid:#35404F; --grid-minor:#222A36;
+    --accent:#7FA0FF; --accent-soft:#223153;
+    --trace2:#F0A04B; --trace3:#3CC7B3;
+    --warn:#E0B04A; --crit:#F07070;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F131A; --surface:#161C26; --sunk:#1D2430;
+  --ink:#E4E8EF; --muted:#9AA5B8; --rule:#2A3342;
+  --grid:#35404F; --grid-minor:#222A36;
+  --accent:#7FA0FF; --accent-soft:#223153;
+  --trace2:#F0A04B; --trace3:#3CC7B3;
+  --warn:#E0B04A; --crit:#F07070;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--body);padding-inline:16px;padding-block:0 64px}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.1;margin:0}
+h1{font-size:clamp(34px,6vw,52px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:clamp(24px,3.6vw,32px);font-weight:600}
+h3{font-size:19px;font-weight:600}
+p{margin:0;max-width:68ch}
+.prose{display:flex;flex-direction:column;gap:14px}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.muted{color:var(--muted)}
+code,.m{font-family:var(--mono);font-size:.92em}
+.eq{font-family:var(--mono);font-size:14px;background:var(--sunk);border-radius:6px;padding:10px 14px;overflow-x:auto;white-space:nowrap;max-width:100%}
+sub,sup{font-size:.72em}
+
+/* hero */
+header{padding-top:40px;display:flex;flex-direction:column;gap:22px}
+.unit{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:2px solid var(--ink);border-bottom:1px solid var(--rule)}
+.unit>div{padding:18px 16px 18px 0;display:flex;flex-direction:column;gap:8px}
+.unit>div+div{padding-left:16px;border-left:1px solid var(--rule)}
+.unit .big{font:600 clamp(40px,8vw,72px)/1 var(--display);letter-spacing:-.02em}
+.unit .big small{font-size:.45em;color:var(--muted);font-weight:500}
+.unit p{font-size:14px;color:var(--muted)}
+.unit b{color:var(--ink);font-weight:600}
+@media (max-width:640px){
+  .unit{grid-template-columns:1fr}
+  .unit>div+div{padding-left:0;border-left:0;border-top:1px solid var(--rule)}
+}
+
+/* labs */
+.lab{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:16px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px 18px}
+.ctl{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ctl label{font:500 12px/1.2 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.ctl label output{color:var(--ink);text-transform:none;letter-spacing:0;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+select,input[type=number],button{font:14px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--rule);border-radius:6px;padding:7px 9px;min-width:0}
+input[type=number]{font-family:var(--mono);width:100%;font-variant-numeric:tabular-nums}
+button{cursor:pointer;background:var(--surface)}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--surface);border-color:var(--accent);font-weight:500}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.check{display:flex;align-items:center;gap:8px;font-size:14px}
+.check input{accent-color:var(--accent);width:16px;height:16px}
+
+.plots{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.plot{display:flex;flex-direction:column;gap:6px;min-width:0}
+.plot .cap{font:500 12px/1.3 var(--mono);color:var(--muted);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.plot canvas{width:100%;height:260px;display:block;background:var(--surface);border-radius:6px}
+.plot.short canvas{height:170px}
+.key{display:inline-flex;align-items:center;gap:6px}
+.key i{display:inline-block;width:14px;height:3px;border-radius:2px}
+
+.readouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.ro{background:var(--sunk);padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.ro span{font:500 11px/1.25 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.ro b{font:500 18px/1.25 var(--mono);font-variant-numeric:tabular-nums}
+.ro em{font:12px/1.3 var(--body);color:var(--muted);font-style:normal}
+.ro.hi b{color:var(--accent)}
+
+.note{border-left:3px solid var(--trace2);padding:4px 0 4px 14px;font-size:14px;color:var(--muted);max-width:72ch}
+.note b{color:var(--ink)}
+
+.tablewrap{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th{font:500 11px/1.2 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;padding:8px 8px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:6px 8px;border-bottom:1px solid var(--grid-minor);white-space:nowrap}
+td.num{font-family:var(--mono);text-align:right}
+td input{max-width:120px}
+td button{padding:4px 9px;font-size:13px}
+.row-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.ref{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.card ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px;max-width:68ch}
+footer{font-size:13px;color:var(--muted);border-top:1px solid var(--rule);padding-top:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>body{margin:0}</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Random vibration · acceleration spectral density</div>
+  <h1>Reading g²/Hz</h1>
+  <p class="muted">A PSD in g²/Hz tells you how the mean-square acceleration of a random signal is spread over frequency. Each part of the unit carries meaning, and every lab below lets you change one thing and watch what moves.</p>
+  <div class="unit">
+    <div>
+      <div class="big">g²</div>
+      <p><b>Mean-square acceleration.</b> Squaring turns amplitude into power. Uncorrelated random components add in g², never in g, so power is the quantity you can add up across frequency.</p>
+    </div>
+    <div>
+      <div class="big">/Hz</div>
+      <p><b>Per hertz of bandwidth.</b> Dividing by the analysis bandwidth makes the number independent of the frequency resolution you chose. It is a density, like kg/m³.</p>
+    </div>
+    <div>
+      <div class="big">∫ → √ <small>= Grms</small></div>
+      <p><b>Area gives the total.</b> Integrate g²/Hz over Hz and you get g². Take the square root and you get the overall RMS acceleration, Grms.</p>
+    </div>
+  </div>
+</header>
+
+<section class="prose">
+  <div class="eyebrow">1 · The physical meaning</div>
+  <h2>A filter, a square, and an average</h2>
+  <p>The cleanest way to picture a PSD value is as a measurement you could make with hardware. Pass the acceleration signal through an ideal band-pass filter 1 Hz wide, centred at frequency <span class="m">f</span>. Square the filter output and average it over a long time. The result, in g², is the PSD value at <span class="m">f</span> in g²/Hz. Repeat for every frequency and you have the spectrum.</p>
+  <p>If the filter were 4 Hz wide, you would collect roughly four times the power, so you divide by 4 Hz to get back to a per-hertz number. That division is why a PSD stays the same when you change analyser resolution, while a plain FFT amplitude spectrum of noise does not.</p>
+  <div class="eq">G<sub>aa</sub>(f) = lim<sub>Δf→0</sub> ⟨ a<sub>Δf</sub>²(t) ⟩ / Δf  [g²/Hz]      G<sub>rms</sub> = √( ∫ G<sub>aa</sub>(f) df )</div>
+  <p>Worked example: a flat 0.04 g²/Hz from 20 Hz to 2000 Hz has an area of 0.04 × 1980 = 79.2 g². The overall level is √79.2 = <b>8.90 Grms</b>. Doubling the PSD to 0.08 g²/Hz (+3 dB) raises Grms only by √2, to 12.6 Grms.</p>
+</section>
+
+<!-- LAB 1 -->
+<section class="prose" id="lab1">
+  <div class="eyebrow">2 · Lab · FFT amplitude versus PSD</div>
+  <h2>Why random vibration is quoted as a density</h2>
+  <p>This lab synthesises an acceleration record sampled at 4096 Hz: white Gaussian noise at a known PSD level, plus an optional sine tone. It then estimates both a peak-amplitude spectrum and a PSD using a Hann window and averaging (Welch's method, no overlap).</p>
+  <p><b>Try this:</b> change the frequency resolution Δf. The noise floor of the amplitude spectrum moves by √2 per step, but the PSD floor stays at the level you set. The sine does the opposite: its amplitude stays at A, while its PSD peak grows as Δf shrinks. A PSD is the right scale for broadband random signals, and the wrong scale for reading a sine amplitude.</p>
+</section>
+
+<div class="lab">
+  <div class="controls">
+    <div class="ctl"><label for="l1df">Resolution Δf <output id="o_l1df"></output></label>
+      <select id="l1df"><option value="1">1 Hz (N = 4096)</option><option value="2">2 Hz (N = 2048)</option><option value="4" selected>4 Hz (N = 1024)</option><option value="8">8 Hz (N = 512)</option><option value="16">16 Hz (N = 256)</option></select></div>
+    <div class="ctl"><label for="l1k">Averages K <output id="o_l1k"></output></label><input type="range" id="l1k" min="1" max="64" step="1" value="16"></div>
+    <div class="ctl"><label for="l1p0">Noise PSD level <output id="o_l1p0"></output></label>
+      <select id="l1p0"><option value="0.001">0.001 g²/Hz</option><option value="0.004">0.004 g²/Hz</option><option value="0.01" selected>0.01 g²/Hz</option><option value="0.04">0.04 g²/Hz</option></select></div>
+    <div class="ctl"><label for="l1a">Sine amplitude <output id="o_l1a"></output></label><input type="range" id="l1a" min="0" max="10" step="0.5" value="3"></div>
+    <div class="ctl"><label for="l1f0">Sine frequency <output id="o_l1f0"></output></label><input type="range" id="l1f0" min="40" max="1960" step="1" value="600"></div>
+    <div class="ctl"><label>&nbsp;</label><button id="l1new" type="button">New random record</button></div>
+  </div>
+
+  <div class="plot short">
+    <div class="cap"><span>Time record, first 125 ms (g)</span><span class="key"><i style="background:var(--crit)"></i>±3σ of the whole record</span></div>
+    <canvas id="c1t" aria-label="Time history of the synthesised acceleration record"></canvas>
+  </div>
+  <div class="plots">
+    <div class="plot">
+      <div class="cap"><span>Amplitude spectrum (g peak)</span><span class="key"><i style="background:var(--trace2)"></i>expected</span></div>
+      <canvas id="c1a" aria-label="Peak amplitude spectrum"></canvas>
+    </div>
+    <div class="plot">
+      <div class="cap"><span>PSD (g²/Hz)</span><span class="key"><i style="background:var(--trace2)"></i>expected</span></div>
+      <canvas id="c1p" aria-label="Power spectral density"></canvas>
+    </div>
+  </div>
+  <div class="readouts" id="r1"></div>
+</div>
+
+<section class="prose">
+  <h3>What the readouts show</h3>
+  <ul class="steps">
+    <li><b>Parseval check.</b> The Grms from the area under the PSD matches the RMS computed straight from the time record. The PSD redistributes the signal's mean square over frequency without losing any of it.</li>
+    <li><b>Sine in a PSD.</b> A sine of peak amplitude A carries A²/2 g² of mean square, all in one frequency. The PSD spreads that over the analysis bandwidth, so its peak reads (A²/2) ÷ (ENBW·Δf), where ENBW is 1.5 bins for a Hann window. Halve Δf and the spike doubles.</li>
+    <li><b>Noise in an amplitude spectrum.</b> Each bin collects noise power in proportion to its width, so the amplitude floor scales with √Δf. A reader who does not know Δf cannot interpret it.</li>
+    <li><b>Record length.</b> A PSD needs T = K ÷ Δf seconds of data. Finer resolution or more averages both cost time.</li>
+  </ul>
+</section>
+
+<section class="prose">
+  <div class="eyebrow">3 · Estimation quality</div>
+  <h2>Resolution, averaging and confidence</h2>
+  <p>A single FFT of a random signal gives a PSD estimate that scatters wildly around the true level; each bin follows a chi-square distribution with only 2 degrees of freedom. Averaging K independent segments raises this to 2K degrees of freedom and shrinks the normalised random error to about 1/√K. Set K to 1 in the lab above and watch the PSD become grass; set it to 64 and it tightens to about ±1.2 dB.</p>
+  <div class="eq">ε<sub>r</sub> ≈ 1/√(B<sub>e</sub>·T) ≈ 1/√K      DOF = 2K      T = K / Δf      B<sub>e</sub> = ENBW·Δf (Hann: 1.5·Δf)</div>
+  <p>Resolution trades against this. Around a lightly damped resonance the true PSD peak has a half-power bandwidth of f<sub>n</sub>/Q. If Δf is wider than about a quarter of that, the estimate smears the peak and under-reads it. That is bias error, and averaging cannot remove it. Choose Δf from the sharpest peak you care about, then choose K from the record length you can afford.</p>
+</section>
+
+<!-- LAB 2 -->
+<section class="prose" id="lab2">
+  <div class="eyebrow">4 · Lab · Test profile</div>
+  <h2>Grms is the area under the curve</h2>
+  <p>Random vibration test specifications are written as straight-line breakpoints on log-log axes. Between two breakpoints the PSD follows a power law, and the slope is quoted in dB per octave. Edit the breakpoints below; every figure is integrated exactly on the log-log segments.</p>
+</section>
+
+<div class="lab">
+  <div class="controls">
+    <div class="ctl"><label for="l2preset">Profile</label>
+      <select id="l2preset"><option value="ex">Example qualification profile</option><option value="flat">Flat 0.04 g²/Hz, 20 to 2000 Hz</option><option value="hump">Narrow hump at 250 Hz</option><option value="low">Low-frequency heavy (transport-like)</option></select></div>
+    <div class="ctl"><label for="l2lvl">Test level <output id="o_l2lvl"></output></label><input type="range" id="l2lvl" min="-12" max="6" step="0.5" value="0"></div>
+    <div class="ctl"><label for="l2b1">Band start <output id="o_l2b1"></output></label><input type="range" id="l2b1" min="0" max="1000" step="1" value="0"></div>
+    <div class="ctl"><label for="l2b2">Band end <output id="o_l2b2"></output></label><input type="range" id="l2b2" min="0" max="1000" step="1" value="1000"></div>
+  </div>
+  <div class="row-actions">
+    <label class="check"><input type="checkbox" id="l2tol" checked> ±3 dB alarm lines</label>
+    <label class="check"><input type="checkbox" id="l2abort"> ±6 dB abort lines</label>
+  </div>
+  <div class="plots">
+    <div class="plot">
+      <div class="cap"><span>Profile PSD (g²/Hz), log-log</span><span class="key"><i style="background:var(--accent)"></i>profile <i style="background:var(--trace3);margin-left:8px"></i>selected band</span></div>
+      <canvas id="c2p" aria-label="Test profile PSD on log-log axes"></canvas>
+    </div>
+    <div class="plot">
+      <div class="cap"><span>Cumulative share of g² (%)</span><span class="key"><i style="background:var(--trace2)"></i>50 % point</span></div>
+      <canvas id="c2c" aria-label="Cumulative mean square versus frequency"></canvas>
+    </div>
+  </div>
+  <div class="readouts" id="r2"></div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Freq (Hz)</th><th>PSD (g²/Hz)</th><th>Slope to next</th><th>Segment area (g²)</th><th>Grms up to here</th><th></th></tr></thead>
+      <tbody id="t2"></tbody>
+    </table>
+  </div>
+  <div class="row-actions"><button type="button" id="l2add">Add breakpoint</button><span class="muted" style="font-size:13px">Values at 0 dB test level. Rows are sorted by frequency when you leave a field.</span></div>
+</div>
+
+<section class="prose">
+  <h3>Slopes, segments and the exact integral</h3>
+  <p>Between breakpoints (f<sub>1</sub>, P<sub>1</sub>) and (f<sub>2</sub>, P<sub>2</sub>) the profile is P(f) = P<sub>1</sub>(f/f<sub>1</sub>)<sup>b</sup>. The exponent and the slope are two views of the same line: +3 dB/oct means b = 1 (PSD doubles every octave), −6 dB/oct means b = −2.</p>
+  <div class="eq">b = ln(P<sub>2</sub>/P<sub>1</sub>) / ln(f<sub>2</sub>/f<sub>1</sub>)      slope = 10·log<sub>10</sub>(P<sub>2</sub>/P<sub>1</sub>) / log<sub>2</sub>(f<sub>2</sub>/f<sub>1</sub>)  dB/oct</div>
+  <div class="eq">Area = P<sub>1</sub>f<sub>1</sub>/(b+1) · [ (f<sub>2</sub>/f<sub>1</sub>)<sup>b+1</sup> − 1 ]     (b = −1: Area = P<sub>1</sub>f<sub>1</sub>·ln(f<sub>2</sub>/f<sub>1</sub>))</div>
+  <p>Do not integrate a log-log profile with straight trapezoids in linear space. On steep segments the error is several percent in Grms, and the power-law formula is exact.</p>
+  <p>The level slider shows a rule worth memorising: a change of <b>x dB</b> in PSD changes Grms by x/2 dB in amplitude terms. −6 dB halves Grms; +3 dB multiplies it by 1.41.</p>
+</section>
+
+<section class="prose">
+  <div class="eyebrow">5 · From acceleration to motion</div>
+  <h2>Velocity and displacement from the same PSD</h2>
+  <p>Each integration in time divides the spectrum by (2πf)² in PSD terms. The acceleration PSD first converts to SI units (1 g²/Hz = 96.17 (m/s²)²/Hz), then:</p>
+  <div class="eq">G<sub>vv</sub>(f) = G<sub>aa</sub>(f)·g<sub>0</sub>² / (2πf)²      G<sub>dd</sub>(f) = G<sub>aa</sub>(f)·g<sub>0</sub>² / (2πf)<sup>4</sup>      g<sub>0</sub> = 9.80665 m/s²</div>
+  <p>The 1/f<sup>4</sup> weighting means displacement is dominated by the lowest frequencies in the profile, even when they carry little of the g². Lower the first breakpoint in the table and watch the displacement readout jump while Grms barely moves. This is the figure to check against shaker stroke: the 3σ peak-to-peak displacement (6 × D<sub>rms</sub>) must fit inside the armature's usable travel with margin.</p>
+</section>
+
+<!-- LAB 3 -->
+<section class="prose" id="lab3">
+  <div class="eyebrow">6 · Lab · Single-degree-of-freedom response</div>
+  <h2>Miles' equation</h2>
+  <p>A component on a resonance amplifies the base PSD by its transmissibility squared, |H(f)|². When the input PSD is roughly flat across the resonance and damping is light, the response integral collapses to Miles' equation. This lab drives an SDOF system with the profile from Lab 4 and compares Miles' answer with the exact numerical integral.</p>
+  <div class="eq">G<sub>rms,resp</sub> ≈ √( π/2 · f<sub>n</sub> · Q · P(f<sub>n</sub>) )      |H|² = [1 + (2ζr)²] / [(1 − r²)² + (2ζr)²],  r = f/f<sub>n</sub>,  ζ = 1/(2Q)</div>
+</section>
+
+<div class="lab">
+  <div class="controls">
+    <div class="ctl"><label for="l3fn">Natural frequency f<sub>n</sub> <output id="o_l3fn"></output></label><input type="range" id="l3fn" min="0" max="1000" step="1" value="560"></div>
+    <div class="ctl"><label for="l3q">Q (amplification) <output id="o_l3q"></output></label><input type="range" id="l3q" min="2" max="50" step="1" value="10"></div>
+  </div>
+  <div class="plot">
+    <div class="cap"><span>Input and response PSD (g²/Hz)</span><span class="key"><i style="background:var(--accent)"></i>input <i style="background:var(--trace2);margin-left:8px"></i>response</span></div>
+    <canvas id="c3" aria-label="Input and response PSD"></canvas>
+  </div>
+  <div class="readouts" id="r3"></div>
+  <p class="note" id="n3"></p>
+</div>
+
+<section class="prose">
+  <h3>When to trust Miles</h3>
+  <ul class="steps">
+    <li>The input PSD should be close to flat over roughly f<sub>n</sub>/2 to 2f<sub>n</sub>. Put f<sub>n</sub> on a steep slope or near a breakpoint and the gap to the exact value widens.</li>
+    <li>Q should be moderate to high (about 5 and above). At low Q the response spreads over a wide band and the flat-input assumption breaks down.</li>
+    <li>Miles gives the RMS of absolute acceleration of the mass. For stress and fatigue, the relative displacement Z<sub>rms</sub> ≈ G<sub>rms,resp</sub>·g<sub>0</sub>/(2πf<sub>n</sub>)² is usually more useful.</li>
+    <li>Response peaks are Gaussian too: 3σ = 3 × G<sub>rms,resp</sub> is the usual design peak, exceeded about 0.27 % of the time.</li>
+  </ul>
+</section>
+
+<!-- REFERENCE -->
+<section class="prose">
+  <div class="eyebrow">7 · Quick reference</div>
+  <h2>Conversions and pitfalls</h2>
+</section>
+<div class="ref">
+  <div class="card">
+    <h3>Decibels on a PSD</h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Change</th><th>PSD ×</th><th>Grms ×</th></tr></thead>
+      <tbody>
+        <tr><td class="num">+6 dB</td><td class="num">4.00</td><td class="num">2.00</td></tr>
+        <tr><td class="num">+3 dB</td><td class="num">2.00</td><td class="num">1.41</td></tr>
+        <tr><td class="num">+1 dB</td><td class="num">1.26</td><td class="num">1.12</td></tr>
+        <tr><td class="num">−3 dB</td><td class="num">0.50</td><td class="num">0.71</td></tr>
+        <tr><td class="num">−6 dB</td><td class="num">0.25</td><td class="num">0.50</td></tr>
+      </tbody>
+    </table></div>
+    <p class="muted" style="font-size:13px">PSD is a power quantity, so dB = 10·log<sub>10</sub>(ratio).</p>
+  </div>
+  <div class="card">
+    <h3>Unit conversions</h3>
+    <ul>
+      <li>1 g²/Hz = 96.17 (m/s²)²/Hz</li>
+      <li>One-sided G(f) = 2 × two-sided S(f), for f &gt; 0. Test specifications and controllers use one-sided.</li>
+      <li>PSD in dB re 1 g²/Hz: 0.01 g²/Hz = −20 dB</li>
+      <li>ASD in g/√Hz is the square root of the PSD. 0.04 g²/Hz = 0.2 g/√Hz.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Gaussian peaks</h3>
+    <ul>
+      <li>±1σ contains 68.3 % of samples</li>
+      <li>±2σ contains 95.4 %</li>
+      <li>±3σ contains 99.73 %</li>
+      <li>Many shaker controllers let you clip the drive at a set sigma limit, often 3σ. Instantaneous peaks of 4 to 5 Grms occur in unclipped long records.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Common mistakes</h3>
+    <ul>
+      <li>Reading a sine amplitude off a PSD without knowing Δf and the window.</li>
+      <li>Comparing Grms from two PSDs over different frequency ranges.</li>
+      <li>Summing Grms of bands directly. Add g² (areas), then take the root.</li>
+      <li>Using the amplitude-window correction on a PSD. PSD normalisation uses Σw², which accounts for the window's noise bandwidth.</li>
+      <li>Too coarse a Δf around a sharp resonance: bias that averaging cannot fix.</li>
+    </ul>
+  </div>
+</div>
+
+<footer>PSD Explorer v1.0.0 · The lab signal is synthesised in your browser with a seeded generator; nothing is sent anywhere. Profiles shown are illustrative examples, not quotations from any standard.</footer>
+</div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const G0=9.80665;
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function fmt(v,s=3){if(!isFinite(v))return "–";if(v===0)return "0";const a=Math.abs(v);if(a>=1e5||a<1e-3)return v.toExponential(s-1).replace("e","e");return String(+v.toPrecision(s));}
+const SUP={"-":"⁻","0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹"};
+function tickLabel(v,axis){
+  if(axis==="x"){if(v>=1000)return (v/1000)+"k";return String(+v.toPrecision(3));}
+  if(v>=0.001&&v<1e4)return String(+v.toPrecision(3));
+  const e=Math.round(Math.log10(v)),m=v/Math.pow(10,e);
+  const es=String(e).split("").map(c=>SUP[c]).join("");
+  return (Math.abs(m-1)<1e-6?"":(+m.toPrecision(2))+"×")+"10"+es;
+}
+function niceStep(r){const p=Math.pow(10,Math.floor(Math.log10(r)));const n=r/p;return (n<1.5?1:n<3?2:n<7?5:10)*p;}
+function ticks(min,max,log,axis){
+  const t=[];
+  if(log){
+    const span=Math.log10(max/min);
+    for(let e=Math.floor(Math.log10(min));e<=Math.ceil(Math.log10(max));e++){
+      for(let k=1;k<=9;k++){const v=k*Math.pow(10,e);if(v<min*0.9999||v>max*1.0001)continue;
+        const lab=k===1||((k===2||k===5)&&((axis==="x"&&span<=3.5)||(axis==="y"&&span<=1.6)));
+        t.push({v,major:k===1,label:lab});}
+    }
+  }else{
+    const st=niceStep((max-min)/(axis==="x"?6:5));
+    for(let v=Math.ceil(min/st)*st;v<=max+st*1e-6;v+=st)t.push({v:Math.abs(v)<st*1e-9?0:v,major:true,label:true});
+  }
+  return t;
+}
+function plot(cv,o){
+  const W=cv.clientWidth,H=cv.clientHeight;if(!W||!H)return;
+  const d=window.devicePixelRatio||1;cv.width=Math.round(W*d);cv.height=Math.round(H*d);
+  const c=cv.getContext("2d");c.setTransform(d,0,0,d,0,0);c.clearRect(0,0,W,H);
+  const m={l:62,r:14,t:12,b:o.xlabel?40:26};const pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const tx=v=>o.xlog?Math.log10(v):v,ty=v=>o.ylog?Math.log10(v):v;
+  const x0=tx(o.xmin),x1=tx(o.xmax),y0=ty(o.ymin),y1=ty(o.ymax);
+  const X=v=>m.l+(tx(v)-x0)/(x1-x0)*pw,Y=v=>m.t+ph-(ty(v)-y0)/(y1-y0)*ph;
+  const ink=css("--ink"),mut=css("--muted"),grid=css("--grid"),gridm=css("--grid-minor");
+  c.font='11px "IBM Plex Mono", ui-monospace, monospace';c.lineWidth=1;
+  const xt=ticks(o.xmin,o.xmax,o.xlog,"x"),yt=ticks(o.ymin,o.ymax,o.ylog,"y");
+  for(const t of xt){c.strokeStyle=t.major?grid:gridm;const px=Math.round(X(t.v))+.5;c.beginPath();c.moveTo(px,m.t);c.lineTo(px,m.t+ph);c.stroke();}
+  for(const t of yt){c.strokeStyle=t.major?grid:gridm;const py=Math.round(Y(t.v))+.5;c.beginPath();c.moveTo(m.l,py);c.lineTo(m.l+pw,py);c.stroke();}
+  c.strokeStyle=grid;c.strokeRect(m.l+.5,m.t+.5,pw-1,ph-1);
+  c.fillStyle=mut;c.textAlign="center";c.textBaseline="top";
+  let lastX=-1e9;
+  for(const t of xt){if(!t.label)continue;const px=X(t.v);const s=tickLabel(t.v,"x");const w=c.measureText(s).width;if(px-w/2<lastX+6)continue;c.fillText(s,px,m.t+ph+6);lastX=px+w/2;}
+  c.textAlign="right";c.textBaseline="middle";
+  let lastY=1e9;
+  for(const t of yt){if(!t.label)continue;const py=Y(t.v);if(lastY-py<14)continue;c.fillText(o.ylog?tickLabel(t.v,"y"):String(+t.v.toPrecision(4)),m.l-6,py);lastY=py;}
+  if(o.xlabel){c.textAlign="center";c.textBaseline="bottom";c.fillText(o.xlabel,m.l+pw/2,H-2);}
+  c.save();c.beginPath();c.rect(m.l,m.t,pw,ph);c.clip();
+  const drawSeries=s=>{
+    const n=s.x.length;
+    const path=()=>{c.beginPath();let pen=false,fx=null,lx=null;
+      for(let i=0;i<n;i++){const xv=s.x[i],yv=s.y[i];if(!(yv>0)&&o.ylog||!isFinite(yv)||(o.xlog&&!(xv>0))){pen=false;continue;}
+        const px=X(xv),py=Y(yv);if(!pen){c.moveTo(px,py);pen=true;if(fx===null)fx=px;}else c.lineTo(px,py);lx=px;}
+      return [fx,lx];};
+    if(s.fill){const [fx,lx]=path();if(fx!==null){c.lineTo(lx,m.t+ph);c.lineTo(fx,m.t+ph);c.closePath();c.globalAlpha=s.fillAlpha||.16;c.fillStyle=s.fill;c.fill();c.globalAlpha=1;}}
+    if(s.w!==0){path();c.strokeStyle=s.color;c.lineWidth=s.w||1.5;c.setLineDash(s.dash||[]);c.lineJoin="round";c.stroke();c.setLineDash([]);}
+  };
+  (o.series||[]).forEach(drawSeries);
+  for(const h of o.hl||[]){c.strokeStyle=h.color;c.lineWidth=h.w||1.25;c.setLineDash(h.dash||[]);const py=Y(h.y);c.beginPath();c.moveTo(m.l,py);c.lineTo(m.l+pw,py);c.stroke();c.setLineDash([]);}
+  for(const v of o.vl||[]){c.strokeStyle=v.color;c.lineWidth=v.w||1.25;c.setLineDash(v.dash||[]);const px=X(v.x);c.beginPath();c.moveTo(px,m.t);c.lineTo(px,m.t+ph);c.stroke();c.setLineDash([]);}
+  for(const p of o.pts||[]){c.fillStyle=p.color;c.beginPath();c.arc(X(p.x),Y(p.y),p.r||3.5,0,Math.PI*2);c.fill();}
+  c.font='500 11px "IBM Plex Mono", ui-monospace, monospace';
+  for(const t of o.texts||[]){c.fillStyle=t.color||ink;c.textAlign=t.align||"center";c.textBaseline=t.base||"bottom";c.fillText(t.t,X(t.x)+(t.dx||0),Y(t.y)+(t.dy||0));}
+  c.restore();
+}
+function decadeRange(lo,hi){return [Math.pow(10,Math.floor(Math.log10(lo))),Math.pow(10,Math.ceil(Math.log10(hi)))];}
+
+/* ---------- FFT ---------- */
+function fft(re,im){
+  const n=re.length;
+  for(let i=1,j=0;i<n;i++){let b=n>>1;for(;j&b;b>>=1)j^=b;j^=b;if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t;}}
+  for(let len=2;len<=n;len<<=1){const a=-2*Math.PI/len,wr=Math.cos(a),wi=Math.sin(a),h=len>>1;
+    for(let i=0;i<n;i+=len){let cr=1,ci=0;
+      for(let j=0;j<h;j++){const k=i+j+h,vr=re[k]*cr-im[k]*ci,vi=re[k]*ci+im[k]*cr;re[k]=re[i+j]-vr;im[k]=im[i+j]-vi;re[i+j]+=vr;im[i+j]+=vi;const t=cr*wr-ci*wi;ci=cr*wi+ci*wr;cr=t;}}}
+}
+function rng(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function chi2q(n,z){const a=2/(9*n);return n*Math.pow(Math.max(1-a+z*Math.sqrt(a),1e-6),3);}
+
+/* ---------- LAB 1 ---------- */
+let seed1=20260927,L1=null;
+function runL1(){
+  const df=+$("l1df").value,K=+$("l1k").value,P0=+$("l1p0").value,A=+$("l1a").value,f0=+$("l1f0").value;
+  $("o_l1df").textContent=df+" Hz";$("o_l1k").textContent=K;$("o_l1p0").textContent=P0+" g²/Hz";$("o_l1a").textContent=A+" g pk";$("o_l1f0").textContent=f0+" Hz";
+  const fs=4096,N=fs/df,Lt=N*K,r=rng(seed1),sig=Math.sqrt(P0*fs/2),ph=r()*2*Math.PI;
+  const x=new Float64Array(Lt);
+  for(let n=0;n<Lt;n+=2){const u1=r()||1e-12,u2=r(),R=Math.sqrt(-2*Math.log(u1))*sig;x[n]=R*Math.cos(2*Math.PI*u2);if(n+1<Lt)x[n+1]=R*Math.sin(2*Math.PI*u2);}
+  let ss=0;const w0=2*Math.PI*f0/fs;
+  for(let n=0;n<Lt;n++){x[n]+=A*Math.sin(w0*n+ph);ss+=x[n]*x[n];}
+  const rmsT=Math.sqrt(ss/Lt);
+  const w=new Float64Array(N);let S1=0,S2=0;
+  for(let n=0;n<N;n++){w[n]=0.5*(1-Math.cos(2*Math.PI*n/N));S1+=w[n];S2+=w[n]*w[n];}
+  const acc=new Float64Array(N/2+1),re=new Float64Array(N),im=new Float64Array(N);
+  for(let k=0;k<K;k++){const o=k*N;for(let n=0;n<N;n++){re[n]=x[o+n]*w[n];im[n]=0;}fft(re,im);for(let b=0;b<=N/2;b++)acc[b]+=re[b]*re[b]+im[b]*im[b];}
+  const nb=N/2,f=new Float64Array(nb),P=new Float64Array(nb),Am=new Float64Array(nb);
+  let area=0;
+  for(let b=1;b<=nb;b++){const m2=acc[b]/K,fac=b===nb?1:2;f[b-1]=b*df;P[b-1]=fac*m2/(fs*S2);Am[b-1]=fac*Math.sqrt(m2)/S1;area+=P[b-1]*df;}
+  area+=acc[0]/K/(fs*S2)*df;
+  const enbw=N*S2/(S1*S1);
+  const kf=Math.round(f0/df)-1;let pkP=0,pkA=0,noiseS=0,noiseN=0,noiseA=0;
+  for(let i=0;i<nb;i++){if(Math.abs(i-kf)<=3){if(P[i]>pkP)pkP=P[i];if(Am[i]>pkA)pkA=Am[i];}else if(Math.abs(i-kf)>6&&f[i]>20&&f[i]<fs/2-20){noiseS+=P[i];noiseA+=Am[i]*Am[i];noiseN++;}}
+  const floorP=noiseS/noiseN,floorA=Math.sqrt(noiseA/noiseN);
+  const dof=2*K,lo=dof/chi2q(dof,1.645),hi=dof/chi2q(dof,-1.645);
+  L1={df,K,P0,A,f0,fs,N,x,rmsT,f,P,Am,area,enbw,pkP,pkA,floorP,floorA,dof,lo,hi,T:K/df};
+  drawL1();
+  const expP=A>0?(A*A/2)/(enbw*df):0,expA=Math.sqrt(2*P0*enbw*df);
+  $("r1").innerHTML=[
+    ro("Grms from PSD area",fmt(Math.sqrt(area),4)+" g","time record: "+fmt(rmsT,4)+" g",true),
+    ro("PSD noise floor",fmt(floorP)+" g²/Hz","set level "+P0+" · unchanged by Δf"),
+    ro("Amplitude noise floor",fmt(floorA)+" g","expected ≈ "+fmt(expA)+" g · scales √Δf"),
+    ro("Sine in amplitude",A?fmt(pkA)+" g":"off","true amplitude "+A+" g"),
+    ro("Sine in PSD",A?fmt(pkP)+" g²/Hz":"off",A?"(A²/2)/(1.5·Δf) = "+fmt(expP):"no tone"),
+    ro("Record length T",fmt(L1.T)+" s",K+" × "+N+" samples"),
+    ro("Degrees of freedom",String(dof),"ε ≈ "+fmt(100/Math.sqrt(K),2)+" %"),
+    ro("90 % confidence",fmt(10*Math.log10(lo),2)+" / +"+fmt(10*Math.log10(hi),2)+" dB","band around the true PSD")
+  ].join("");
+}
+function ro(k,v,e,hi){return '<div class="ro'+(hi?' hi':'')+'"><span>'+k+'</span><b>'+v+'</b>'+(e?'<em>'+e+'</em>':'')+'</div>';}
+function drawL1(){
+  if(!L1)return;const {f,P,Am,x,rmsT,P0,A,df,enbw,fs}=L1;
+  const ac=css("--accent"),t2=css("--trace2"),cr=css("--crit");
+  const nt=Math.min(512,x.length),tt=new Float64Array(nt),xv=new Float64Array(nt);let mx=0;
+  for(let i=0;i<nt;i++){tt[i]=i/fs*1000;xv[i]=x[i];mx=Math.max(mx,Math.abs(x[i]));}
+  const ylim=Math.max(mx,3*rmsT)*1.1;
+  plot($("c1t"),{xmin:0,xmax:tt[nt-1],ymin:-ylim,ymax:ylim,series:[{x:tt,y:xv,color:ac,w:1.1}],hl:[{y:3*rmsT,color:cr,dash:[5,4]},{y:-3*rmsT,color:cr,dash:[5,4]}],xlabel:"time (ms)"});
+  const expP=A>0?(A*A/2)/(enbw*df):0,expA=Math.sqrt(2*P0*enbw*df);
+  let pmax=Math.max(expP,P0),pmin=P0;for(const v of P)if(v>pmax)pmax=v;
+  plot($("c1p"),{xmin:0,xmax:fs/2,ylog:true,ymin:Math.pow(10,Math.floor(Math.log10(pmin/30))),ymax:Math.pow(10,Math.ceil(Math.log10(pmax*1.5))),
+    series:[{x:f,y:P,color:ac,w:1.1}],hl:[{y:P0,color:t2,dash:[6,4],w:1.5}].concat(A>0?[{y:expP,color:t2,dash:[2,4]}]:[]),xlabel:"frequency (Hz)"});
+  let amax=Math.max(A,expA);for(const v of Am)if(v>amax)amax=v;
+  plot($("c1a"),{xmin:0,xmax:fs/2,ylog:true,ymin:Math.pow(10,Math.floor(Math.log10(expA/10))),ymax:Math.pow(10,Math.ceil(Math.log10(amax*1.5))),
+    series:[{x:f,y:Am,color:ac,w:1.1}],hl:[{y:expA,color:t2,dash:[6,4],w:1.5}].concat(A>0?[{y:A,color:t2,dash:[2,4]}]:[]),xlabel:"frequency (Hz)"});
+}
+["l1df","l1k","l1p0","l1a","l1f0"].forEach(id=>$(id).addEventListener("input",runL1));
+$("l1new").addEventListener("click",()=>{seed1=(Math.random()*2**31)|0;runL1();});
+
+/* ---------- LAB 2 ---------- */
+const PRESETS={
+  ex:[[20,0.01],[80,0.04],[350,0.04],[2000,0.007]],
+  flat:[[20,0.04],[2000,0.04]],
+  hump:[[20,0.005],[180,0.005],[230,0.06],[280,0.06],[350,0.005],[2000,0.005]],
+  low:[[5,0.02],[12,0.02],[40,0.002],[200,0.002],[500,0.0005]]
+};
+let prof=PRESETS.ex.map(([f,p])=>({f,p}));
+let S2d=null;
+function segsOf(pr,sc){const s=[];for(let i=0;i<pr.length-1;i++){const a=pr[i],b=pr[i+1];const bx=Math.log(b.p/a.p)/Math.log(b.f/a.f);
+  s.push({f1:a.f,f2:b.f,p1:a.p*sc,p2:b.p*sc,b:bx,dbo:10*Math.log10(b.p/a.p)/Math.log2(b.f/a.f)});}return s;}
+function segArea(sg,fa,fb){fa=Math.max(fa,sg.f1);fb=Math.min(fb,sg.f2);if(fb<=fa)return 0;const pa=sg.p1*Math.pow(fa/sg.f1,sg.b);
+  if(Math.abs(sg.b+1)<1e-9)return pa*fa*Math.log(fb/fa);return pa*fa/(sg.b+1)*(Math.pow(fb/fa,sg.b+1)-1);}
+function areaOf(S,fa,fb){let a=0;for(const s of S)a+=segArea(s,fa,fb);return a;}
+function psdAt(S,f){for(const s of S)if(f>=s.f1&&f<=s.f2)return s.p1*Math.pow(f/s.f1,s.b);return 0;}
+function logGrid(a,b,n){const g=new Float64Array(n),la=Math.log(a),lb=Math.log(b);for(let i=0;i<n;i++)g[i]=Math.exp(la+(lb-la)*i/(n-1));return g;}
+function validProf(){return prof.filter(r=>r.f>0&&r.p>0&&isFinite(r.f)&&isFinite(r.p)).sort((a,b)=>a.f-b.f).filter((r,i,a)=>i===0||r.f>a[i-1].f);}
+function sliderF(id,fmin,fmax){return fmin*Math.pow(fmax/fmin,+$(id).value/1000);}
+function renderTable(){
+  $("t2").innerHTML=prof.map((r,i)=>'<tr><td><input type="number" id="pf'+i+'" data-i="'+i+'" data-k="f" value="'+r.f+'" min="0.1" step="any" aria-label="Frequency row '+(i+1)+'"></td>'+
+    '<td><input type="number" id="pp'+i+'" data-i="'+i+'" data-k="p" value="'+r.p+'" min="0" step="any" aria-label="PSD row '+(i+1)+'"></td>'+
+    '<td class="num" id="sl'+i+'"></td><td class="num" id="ar'+i+'"></td><td class="num" id="cg'+i+'"></td>'+
+    '<td><button type="button" data-del="'+i+'" aria-label="Remove row '+(i+1)+'">Remove</button></td></tr>').join("");
+}
+$("t2").addEventListener("input",e=>{const t=e.target;if(!t.dataset.k)return;prof[+t.dataset.i][t.dataset.k]=parseFloat(t.value);runL2();});
+$("t2").addEventListener("change",e=>{if(!e.target.dataset.k)return;const v=validProf();if(v.length>=2){prof=v.map(r=>({...r}));renderTable();runL2();}});
+$("t2").addEventListener("click",e=>{const d=e.target.dataset.del;if(d===undefined)return;if(prof.length<=2)return;prof.splice(+d,1);renderTable();runL2();});
+$("l2add").addEventListener("click",()=>{const l=prof[prof.length-1];prof.push({f:+(l.f*1.5).toPrecision(3),p:l.p});renderTable();runL2();});
+$("l2preset").addEventListener("change",e=>{prof=PRESETS[e.target.value].map(([f,p])=>({f,p}));$("l2b1").value=0;$("l2b2").value=1000;renderTable();runL2();});
+["l2lvl","l2b1","l2b2","l2tol","l2abort"].forEach(id=>$(id).addEventListener("input",runL2));
+
+function runL2(){
+  const pr=validProf();if(pr.length<2){$("r2").innerHTML=ro("Profile","needs 2 points","enter at least two valid breakpoints");return;}
+  const lvl=+$("l2lvl").value,sc=Math.pow(10,lvl/10);
+  $("o_l2lvl").textContent=(lvl>0?"+":"")+lvl+" dB";
+  const S=segsOf(pr,sc),fmin=pr[0].f,fmax=pr[pr.length-1].f;
+  let b1=sliderF("l2b1",fmin,fmax),b2=sliderF("l2b2",fmin,fmax);if(b2<b1)[b1,b2]=[b2,b1];
+  $("o_l2b1").textContent=fmt(b1)+" Hz";$("o_l2b2").textContent=fmt(b2)+" Hz";
+  const tot=areaOf(S,fmin,fmax),band=areaOf(S,b1,b2);
+  // velocity & displacement
+  let v2=0,d2=0;
+  for(const s of S){const g=logGrid(s.f1,s.f2,240);for(let i=1;i<g.length;i++){const fa=g[i-1],fb=g[i];
+    const pa=s.p1*Math.pow(fa/s.f1,s.b),pb=s.p1*Math.pow(fb/s.f1,s.b);const wa=2*Math.PI*fa,wb=2*Math.PI*fb;
+    v2+=0.5*(pa*G0*G0/(wa*wa)+pb*G0*G0/(wb*wb))*(fb-fa);d2+=0.5*(pa*G0*G0/Math.pow(wa,4)+pb*G0*G0/Math.pow(wb,4))*(fb-fa);}}
+  const vr=Math.sqrt(v2)*1000,dr=Math.sqrt(d2)*1000;
+  // cumulative
+  const grid=logGrid(fmin,fmax,400),cum=new Float64Array(400);let f50=fmax;
+  for(let i=0;i<400;i++){cum[i]=100*areaOf(S,fmin,grid[i])/tot;if(i>0&&cum[i-1]<50&&cum[i]>=50)f50=grid[i];}
+  // table computed columns (unscaled rows map to sorted? use current prof order)
+  let cumA=0;
+  prof.forEach((r,i)=>{const nx=prof[i+1];const ok=nx&&r.f>0&&r.p>0&&nx.f>r.f&&nx.p>0;
+    const el=$("sl"+i),ea=$("ar"+i),ec=$("cg"+i);if(!el)return;
+    if(i===0)cumA=0;
+    ec.textContent=fmt(Math.sqrt(cumA),4)+" g";
+    if(ok){const s=segsOf([r,nx],sc)[0];const a=segArea(s,s.f1,s.f2);el.textContent=(s.dbo>=0?"+":"")+s.dbo.toFixed(2)+" dB/oct";ea.textContent=fmt(a,4);cumA+=a;}
+    else{el.textContent=nx?"check values":"–";ea.textContent="–";}
+  });
+  S2d={S,pr,sc,fmin,fmax,b1,b2,grid,cum,f50};
+  drawL2();
+  $("r2").innerHTML=[
+    ro("Overall Grms",fmt(Math.sqrt(tot),4)+" g",fmt(tot,4)+" g² area",true),
+    ro("Band Grms",fmt(Math.sqrt(band),4)+" g",fmt(100*band/tot,3)+" % of g², "+fmt(b1)+"–"+fmt(b2)+" Hz"),
+    ro("Level effect",(lvl>0?"+":"")+lvl+" dB","Grms × "+fmt(Math.pow(10,lvl/20),3)),
+    ro("Velocity RMS",fmt(vr,3)+" mm/s","peak 3σ "+fmt(3*vr,3)+" mm/s"),
+    ro("Displacement RMS",fmt(dr,3)+" mm","3σ peak "+fmt(3*dr,3)+" mm"),
+    ro("Stroke, pk-pk 3σ",fmt(6*dr,3)+" mm","compare with shaker travel"),
+    ro("Half of g² below",fmt(f50)+" Hz","median frequency of power")
+  ].join("");
+  runL3();
+}
+function drawL2(){
+  if(!S2d)return;const {S,pr,sc,fmin,fmax,b1,b2,grid,cum,f50}=S2d;
+  const ac=css("--accent"),t3=css("--trace3"),wn=css("--warn"),cr=css("--crit"),t2=css("--trace2"),mu=css("--muted");
+  const fx=pr.map(r=>r.f),py=pr.map(r=>r.p*sc);
+  const [xmn,xmx]=decadeRange(fmin/1.05,fmax*1.05);
+  const pmin=Math.min(...py),pmax=Math.max(...py);
+  const ymn=Math.pow(10,Math.floor(Math.log10(pmin/5))),ymx=Math.pow(10,Math.ceil(Math.log10(pmax*5)));
+  const bx=Array.from(logGrid(b1,b2,120)),by=bx.map(f=>psdAt(S,f));
+  const ser=[{x:fx,y:py,color:ac,w:2,fill:ac,fillAlpha:.10},{x:bx,y:by,color:t3,w:0,fill:t3,fillAlpha:.35}];
+  const mk=(k,col,dash)=>({x:fx,y:py.map(v=>v*k),color:col,w:1.1,dash});
+  if($("l2tol").checked)ser.push(mk(Math.pow(10,.3),wn,[5,4]),mk(Math.pow(10,-.3),wn,[5,4]));
+  if($("l2abort").checked)ser.push(mk(Math.pow(10,.6),cr,[2,3]),mk(Math.pow(10,-.6),cr,[2,3]));
+  const texts=[];
+  for(const s of S){if(!isFinite(s.dbo))continue;const fm=Math.sqrt(s.f1*s.f2);texts.push({x:fm,y:psdAt(S,fm),t:(s.dbo>=0?"+":"")+s.dbo.toFixed(1)+" dB/oct",dy:-8,color:mu});}
+  plot($("c2p"),{xlog:true,ylog:true,xmin:xmn,xmax:xmx,ymin:ymn,ymax:ymx,series:ser,pts:fx.map((x,i)=>({x,y:py[i],color:ac})),texts,xlabel:"frequency (Hz)"});
+  plot($("c2c"),{xlog:true,xmin:xmn,xmax:xmx,ymin:0,ymax:100,series:[{x:grid,y:cum,color:ac,w:2,fill:ac,fillAlpha:.08}],vl:[{x:f50,color:t2,dash:[5,4]}],hl:[{y:50,color:t2,dash:[2,4],w:1}],xlabel:"frequency (Hz)"});
+}
+
+/* ---------- LAB 3 ---------- */
+let S3d=null;
+function runL3(){
+  if(!S2d)return;const {S,fmin,fmax}=S2d;
+  const fn=sliderF("l3fn",fmin,fmax),Q=+$("l3q").value,z=1/(2*Q);
+  $("o_l3fn").textContent=fmt(fn)+" Hz";$("o_l3q").textContent=Q+"  (ζ = "+fmt(z,2)+")";
+  const Pn=psdAt(S,fn),miles=Math.sqrt(Math.PI/2*fn*Q*Pn);
+  const n=6000,g=logGrid(fmin,fmax,n),Rin=new Float64Array(n),Rout=new Float64Array(n);let a=0;
+  for(let i=0;i<n;i++){const r=g[i]/fn,num=1+Math.pow(2*z*r,2),den=Math.pow(1-r*r,2)+Math.pow(2*z*r,2);Rin[i]=psdAt(S,g[i]);Rout[i]=Rin[i]*num/den;if(i)a+=0.5*(Rout[i]+Rout[i-1])*(g[i]-g[i-1]);}
+  const exact=Math.sqrt(a),zr=miles*G0/Math.pow(2*Math.PI*fn,2)*1000;
+  const inG=Math.sqrt(areaOf(S,fmin,fmax));
+  S3d={g,Rin,Rout,fn,fmin,fmax};
+  drawL3();
+  const diff=100*(miles-exact)/exact;
+  $("r3").innerHTML=[
+    ro("Input PSD at fn",fmt(Pn)+" g²/Hz","from the Lab 4 profile"),
+    ro("Miles Grms",fmt(miles,4)+" g","√(π/2·fn·Q·P)",true),
+    ro("Exact Grms",fmt(exact,4)+" g","∫|H|²·P df, numerical"),
+    ro("Miles error",(diff>=0?"+":"")+fmt(diff,2)+" %",Math.abs(diff)<10?"assumptions hold here":"assumptions strained"),
+    ro("3σ response peak",fmt(3*exact,4)+" g","input is "+fmt(inG,3)+" Grms"),
+    ro("Relative disp. RMS",fmt(zr,3)+" mm","3σ "+fmt(3*zr,3)+" mm")
+  ].join("");
+  $("n3").innerHTML=Math.abs(diff)<10?"<b>Close agreement.</b> The input is nearly flat across the half-power band of "+fmt(fn/Q)+" Hz, so Miles works well. Move f<sub>n</sub> onto a sloping segment or near the ends of the profile to see it drift."
+    :"<b>Miles and the exact integral disagree.</b> Either the input PSD changes steeply across the resonance, f<sub>n</sub> sits near the edge of the profile, or Q is low enough that off-resonance input contributes a large share. Use the exact integral here.";
+}
+function drawL3(){
+  if(!S3d)return;const {g,Rin,Rout,fn,fmin,fmax}=S3d;
+  const ac=css("--accent"),t2=css("--trace2"),mu=css("--muted");
+  let mx=0,mn=Infinity;for(let i=0;i<g.length;i++){if(Rout[i]>mx)mx=Rout[i];if(Rin[i]>0&&Rin[i]<mn)mn=Rin[i];}
+  const [xmn,xmx]=decadeRange(fmin/1.05,fmax*1.05);
+  const step=4,xs=[],yi=[],yo=[];for(let i=0;i<g.length;i+=step){xs.push(g[i]);yi.push(Rin[i]);yo.push(Rout[i]);}
+  let kmax=0;for(let i=1;i<g.length;i++)if(Rout[i]>Rout[kmax])kmax=i;xs.push(g[kmax]);yi.push(Rin[kmax]);yo.push(Rout[kmax]);
+  const ord=xs.map((x,i)=>i).sort((a,b)=>xs[a]-xs[b]);
+  plot($("c3"),{xlog:true,ylog:true,xmin:xmn,xmax:xmx,ymin:Math.pow(10,Math.floor(Math.log10(Math.min(mn,...yo.filter(v=>v>0))/2))),ymax:Math.pow(10,Math.ceil(Math.log10(mx*2))),
+    series:[{x:ord.map(i=>xs[i]),y:ord.map(i=>yi[i]),color:ac,w:2},{x:ord.map(i=>xs[i]),y:ord.map(i=>yo[i]),color:t2,w:1.8,fill:t2,fillAlpha:.12}],
+    vl:[{x:fn,color:mu,dash:[3,4],w:1}],xlabel:"frequency (Hz)"});
+}
+["l3fn","l3q"].forEach(id=>$(id).addEventListener("input",runL3));
+
+/* ---------- redraw on theme / resize ---------- */
+let raf=0;function redraw(){cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{drawL1();drawL2();drawL3();});}
+new ResizeObserver(redraw).observe(document.querySelector(".wrap"));
+try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",redraw);}catch(e){}
+new MutationObserver(redraw).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme","class"]});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+
+renderTable();runL1();runL2();
+</script>
+</body>
+</html>

@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<!--
+TOOL    : sudoku.html - interactive Sudoku: play, enter your own puzzle, step-by-step solver
+FAMILY  : GAMES
+VERSION : 1.6.0
+DATE    : 2026-09-26
+CHAT    : Design an interactive sudoku puzzle with solutions in HTML
+CHANGES : Two-column laptop layout - grid left, scan/step panel right; header block added
+STATUS  : Working
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sudoku</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,700;9..144,900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --vellum:#CBD3D6;
+    --vellum-deep:#B7C1C5;
+    --paper:#FAF8F4;
+    --ink:#152B33;
+    --ink-soft:#4A6068;
+    --pen:#1F5FA8;
+    --amber:#E8B93F;
+    --amber-wash:#F6E3AD;
+    --amber-faint:#FBF2D9;
+    --brick:#B3402B;
+    --brick-wash:#F3DBD5;
+    --moss:#2E7D6B;
+    --line:#9DAAAF;
+    --line-strong:#152B33;
+
+    --board:min(calc(100vw - 22px), 460px);
+    --board:max(232px, min(calc(100vw - 22px), calc((100dvh - 300px) / 1.16), 460px));
+    --cell:calc(var(--board)/9);
+    --radius:3px;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+
+  body{
+    background:var(--vellum);
+    background-image:
+      linear-gradient(rgba(21,43,51,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(21,43,51,.045) 1px, transparent 1px);
+    background-size:22px 22px;
+    color:var(--ink);
+    font-family:"Archivo","Helvetica Neue",Arial,sans-serif;
+    font-size:16px;
+    -webkit-text-size-adjust:100%;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding:16px 11px calc(28px + env(safe-area-inset-bottom, 0px));
+    overflow-x:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  main{
+    width:var(--board);
+    max-width:100%;
+    display:flex;
+    flex-direction:column;
+    gap:13px;
+  }
+  main > *{flex:0 0 auto}
+  [hidden]{display:none !important}
+
+  /* ---------- header ---------- */
+  header{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+
+  .wordmark{
+    font-family:"Fraunces",Georgia,serif;
+    font-weight:900;
+    font-size:clamp(28px,8.5vw,40px);
+    letter-spacing:-.035em;
+    line-height:.9;
+    margin:0;
+  }
+
+  .clock{display:flex;align-items:center;gap:8px}
+  #time{font-variant-numeric:tabular-nums;font-weight:600;font-size:19px;color:var(--ink-soft)}
+
+  /* ---------- buttons ---------- */
+  button{
+    font-family:inherit;
+    font-size:15px;
+    font-weight:500;
+    color:var(--ink);
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:9px 12px;
+    cursor:pointer;
+    transition:background .12s ease, border-color .12s ease, color .12s ease;
+  }
+  button:hover{background:#fff;border-color:var(--ink-soft)}
+  button:active{background:var(--vellum-deep)}
+  button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
+  button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  button:disabled{opacity:.4;cursor:default}
+  button.strong{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  button.strong:hover{background:#0D1E24}
+  .icon-btn{padding:7px 10px;line-height:1}
+
+  .levels{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .levels button{padding:8px 4px;font-size:14px}
+
+  /* ---------- board ---------- */
+  .stage{position:relative}
+
+  .board{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    grid-template-rows:repeat(3,1fr);
+    gap:2.5px;
+    background:var(--line-strong);
+    padding:2.5px;
+    border-radius:var(--radius);
+    box-shadow:0 2px 0 rgba(21,43,51,.18);
+    touch-action:manipulation;
+    width:100%;
+    aspect-ratio:1/1;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+
+  .box{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    grid-template-rows:repeat(3,1fr);
+    gap:1px;
+    background:var(--line);
+    min-width:0;min-height:0;
+  }
+
+  .cell{
+    min-width:0;min-height:0;
+    background:var(--paper);
+    border:0;border-radius:0;padding:0;
+    position:relative;
+    display:flex;align-items:center;justify-content:center;
+    font-size:calc(var(--cell) * .58);
+    font-weight:500;
+    font-variant-numeric:lining-nums;
+    color:var(--pen);
+    cursor:pointer;
+    transition:background .1s ease;
+  }
+  .cell:hover{background:#fff}
+  .cell:focus-visible{outline:2px solid var(--pen);outline-offset:-3px;z-index:3}
+
+  .cell.given{color:var(--ink);font-weight:700}
+  .cell.peer{background:#EFF1EC}
+  .cell.same{background:var(--amber-wash)}
+  .cell.sel{background:var(--amber);box-shadow:inset 0 0 0 2px var(--ink)}
+  .cell.conflict{color:var(--brick)}
+  .cell.conflict:not(.sel){background:var(--brick-wash)}
+  .cell.wrong{color:var(--brick);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:.1em}
+  .cell.hinted{color:var(--moss)}
+  .cell.hinted::after{content:"";position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;background:var(--moss)}
+
+  /* walkthrough highlights */
+  .cell.w-unit{background:var(--amber-faint)}
+  .cell.w-base{background:var(--amber-wash)}
+  .cell.w-cut{background:var(--brick-wash)}
+  .cell.w-place{background:var(--amber);box-shadow:inset 0 0 0 2px var(--ink);color:var(--moss);font-weight:700}
+
+  .notes{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    grid-template-rows:repeat(3,1fr);
+    width:100%;height:100%;
+    padding:7%;
+    font-size:calc(var(--cell) * .23);
+    font-weight:600;
+    color:var(--ink-soft);
+    line-height:1;
+  }
+  .notes span{display:flex;align-items:center;justify-content:center}
+  .notes .gone{color:var(--brick);text-decoration:line-through;text-decoration-thickness:1px}
+  .notes .keep{color:var(--moss)}
+
+  /* overlays */
+  .veil{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+    background:rgba(203,211,214,.94);
+    border-radius:var(--radius);
+    text-align:center;padding:20px;z-index:5;
+  }
+  .veil p{margin:0;font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:22px}
+  .veil small{display:block;font-family:"Archivo",sans-serif;font-weight:400;font-size:14px;color:var(--ink-soft);margin-top:6px}
+
+  /* ---------- message ---------- */
+  .message{
+    min-height:20px;
+    font-size:14.5px;
+    color:var(--ink-soft);
+    text-align:center;
+    font-variant-numeric:tabular-nums;
+  }
+  .message strong{color:var(--ink);font-weight:600}
+  .message.warn{color:var(--brick)}
+
+  /* ---------- keypad ---------- */
+  .pad{display:grid;grid-template-columns:repeat(9,1fr);gap:4px}
+  .pad button{
+    padding:0;min-width:0;
+    aspect-ratio:.8;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+    font-size:calc(var(--cell) * .52);
+    font-weight:600;
+    color:var(--pen);
+  }
+  .pad button b{font-weight:600;line-height:1}
+  .pad button i{font-style:normal;font-size:10px;font-weight:500;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+  .pad button.done{color:var(--line);background:var(--vellum-deep);border-color:var(--line)}
+  .pad button.done i{color:var(--line)}
+
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .wide{grid-column:1 / -1}
+  .grid2 button, .grid4 button{min-width:0}
+
+  /* ---------- walkthrough panel ---------- */
+  .panel{display:flex;flex-direction:column;gap:8px}
+
+  .step-card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-left:4px solid var(--amber);
+    border-radius:var(--radius);
+    padding:11px 13px;
+    font-size:15px;
+    line-height:1.45;
+    min-height:5.2em;
+  }
+  .step-card h2{
+    margin:0 0 4px;
+    font-family:"Fraunces",Georgia,serif;
+    font-size:17px;
+    font-weight:700;
+    letter-spacing:-.01em;
+  }
+  .step-card p{margin:0;color:var(--ink-soft)}
+  .step-card ul{margin:7px 0 0;padding-left:19px;color:var(--ink-soft)}
+  .step-card li{margin:4px 0;line-height:1.4}
+  .step-card b{color:var(--ink);font-weight:600}
+
+  .step-card.hint{border-left-color:var(--moss);min-height:0}
+  .step-card.hint h2{color:var(--moss)}
+
+  .scrub{
+    width:100%;
+    accent-color:var(--ink);
+    margin:0;
+  }
+
+  .legend{
+    display:flex;flex-wrap:wrap;gap:10px 16px;justify-content:center;
+    font-size:12.5px;color:var(--ink-soft);
+  }
+  .legend span{display:flex;align-items:center;gap:5px}
+  .swatch{width:11px;height:11px;border-radius:2px;border:1px solid var(--line)}
+
+  /* ---------- library panel ---------- */
+  input[type=text], textarea{
+    font-family:inherit;
+    font-size:15px;
+    color:var(--ink);
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:9px 11px;
+    width:100%;
+    min-width:0;
+  }
+  textarea{resize:vertical;line-height:1.5;word-break:break-all}
+  input[type=text]:focus, textarea:focus{outline:2px solid var(--pen);outline-offset:1px;border-color:var(--pen)}
+
+  .label{font-size:12.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+
+  .saves{display:flex;flex-direction:column;gap:6px}
+  .save-row{
+    display:flex;align-items:center;gap:8px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:8px 10px;
+  }
+  .save-row .who{flex:1;min-width:0}
+  .save-row .who b{display:block;font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .save-row .who span{font-size:12.5px;color:var(--ink-soft)}
+  .save-row button{padding:6px 10px;font-size:13.5px}
+  .save-row .kill{border-color:transparent;background:transparent;color:var(--brick);padding:6px 8px}
+  .save-row .kill:hover{background:var(--brick-wash);border-color:var(--brick-wash)}
+
+  .empty-note{
+    border:1px dashed var(--line);
+    border-radius:var(--radius);
+    padding:14px;
+    text-align:center;
+    font-size:14px;
+    color:var(--ink-soft);
+  }
+  .note{margin:0;font-size:13px;line-height:1.45;color:var(--ink-soft)}
+  .note.warn{color:var(--brick)}
+  hr.rule{border:0;border-top:1px solid var(--line);margin:2px 0}
+
+  /* ---------- win reveal ---------- */
+  @keyframes settle{
+    0%{transform:scale(1)}
+    45%{transform:scale(.9);background:var(--amber)}
+    100%{transform:scale(1)}
+  }
+  .solved .cell{animation:settle .5s ease both;animation-delay:calc(var(--d) * 26ms)}
+
+  @media (prefers-reduced-motion: reduce){
+    .solved .cell{animation:none}
+    *{transition:none !important}
+  }
+
+  /* ---------- laptop: grid on the left, reading panel on the right ---------- */
+  @media (min-width:900px){
+    :root{
+      --board:min(52vw, calc(100dvh - 300px), 640px);
+    }
+    body{padding:24px 26px 44px}
+
+    main{
+      width:auto;
+      max-width:100%;
+      display:grid;
+      grid-template-columns:var(--board) auto;
+      grid-template-areas:
+        "head  stop"
+        "lev   side"
+        "grid  side"
+        "msg   side"
+        "pad   side"
+        "tools side"
+        "foot  side";
+      justify-content:center;
+      align-items:start;
+      column-gap:32px;
+      row-gap:13px;
+    }
+
+    header{grid-area:head}
+    #levels{grid-area:lev}
+    .stage{grid-area:grid}
+    .message{grid-area:msg}
+    #pad{grid-area:pad}
+    #playTools{grid-area:tools}
+    #playFooter, #entryFooter{grid-area:foot}
+
+    /* the side column sizes to its content, so it collapses when no panel is open */
+    #hintCard, #walkPanel, #libPanel{
+      grid-area:side;
+      width:min(430px, 34vw);
+      position:sticky;
+      top:24px;
+      max-height:calc(100dvh - 48px);
+      overflow-y:auto;
+    }
+
+    /* the step counter reads with the panel it labels, not under the grid */
+    main[data-mode="walk"] .message,
+    main[data-mode="lib"] .message{
+      grid-area:stop;
+      align-self:end;
+      text-align:left;
+      padding-left:2px;
+    }
+
+    .wordmark{font-size:42px}
+    .step-card{font-size:15.5px}
+    .step-card li{margin:6px 0}
+  }
+
+  @media (max-width:360px){
+    .pad button i{font-size:9px}
+    button{font-size:14px;padding:9px 8px}
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1 class="wordmark" id="wordmark">sudoku</h1>
+    <div class="clock" id="clock">
+      <span id="time">0:00</span>
+      <button id="pause" class="icon-btn" aria-label="Pause the clock">Pause</button>
+    </div>
+  </header>
+
+  <div class="levels" id="levels" role="group" aria-label="Difficulty">
+    <button data-level="easy" aria-pressed="true">Easy</button>
+    <button data-level="medium" aria-pressed="false">Medium</button>
+    <button data-level="hard" aria-pressed="false">Hard</button>
+    <button data-level="expert" aria-pressed="false">Expert</button>
+  </div>
+
+  <div class="stage">
+    <div class="board" id="board" role="grid" aria-label="Sudoku grid"></div>
+    <div class="veil" id="veil" hidden>
+      <p id="veilText">Paused</p>
+      <button id="veilBtn">Resume</button>
+    </div>
+  </div>
+
+  <div class="message" id="message" aria-live="polite"></div>
+
+  <div class="step-card hint" id="hintCard" hidden>
+    <h2 id="hintTitle"></h2>
+    <p id="hintText"></p>
+  </div>
+
+  <div class="pad" id="pad" role="group" aria-label="Number keys"></div>
+
+  <!-- play mode -->
+  <div class="grid4" id="playTools">
+    <button id="notes" aria-pressed="false">Notes</button>
+    <button id="erase">Erase</button>
+    <button id="undo">Undo</button>
+    <button id="hint">Hint</button>
+  </div>
+
+  <div class="grid2" id="playFooter">
+    <button id="new">New puzzle</button>
+    <button id="reveal">Show solution</button>
+    <button id="own">Enter your own</button>
+    <button id="walk">Solve step by step</button>
+    <button id="library">Save &amp; load</button>
+    <button id="mark" aria-pressed="false">Mark mistakes</button>
+  </div>
+
+  <!-- entry mode -->
+  <div class="grid2" id="entryFooter" hidden>
+    <button id="eraseEntry">Erase</button>
+    <button id="clearEntry">Clear grid</button>
+    <button id="playOwn" class="wide strong">Play this puzzle</button>
+    <button id="walkOwn">Solve step by step</button>
+    <button id="saveEntry">Save this grid</button>
+    <button id="cancelEntry" class="wide">Cancel</button>
+  </div>
+
+  <!-- library mode -->
+  <section class="panel" id="libPanel" hidden>
+    <div class="label">Save the current puzzle</div>
+    <input type="text" id="saveName" placeholder="Name it" autocomplete="off" spellcheck="false">
+    <button id="doSave" class="strong">Save</button>
+
+    <hr class="rule">
+    <div class="label">Saved puzzles</div>
+    <div class="saves" id="saveList"></div>
+
+    <hr class="rule">
+    <div class="label">Puzzle code</div>
+    <textarea id="codeBox" rows="3" readonly aria-label="Code for the current puzzle"></textarea>
+    <div class="grid2">
+      <button id="copyCode">Copy code</button>
+      <button id="download">Download file</button>
+    </div>
+
+    <hr class="rule">
+    <div class="label">Open a code</div>
+    <textarea id="pasteBox" rows="3" placeholder="Paste a puzzle code, or 81 digits with 0 or . for blanks" spellcheck="false"></textarea>
+    <button id="loadCode">Open pasted puzzle</button>
+
+    <p class="note" id="storeNote"></p>
+    <button id="libExit">Back to the puzzle</button>
+  </section>
+
+  <!-- walkthrough mode -->
+  <section class="panel" id="walkPanel" hidden>
+    <div class="step-card">
+      <h2 id="stepTitle">Starting position</h2>
+      <p id="stepText"></p>
+    </div>
+    <input type="range" class="scrub" id="scrub" min="0" max="0" value="0" aria-label="Scrub through steps">
+    <div class="grid4">
+      <button id="wFirst">Start</button>
+      <button id="wBack">Back</button>
+      <button id="wNext">Next</button>
+      <button id="wLast">End</button>
+    </div>
+    <div class="legend">
+      <span><i class="swatch" style="background:var(--amber)"></i>digit placed</span>
+      <span><i class="swatch" style="background:var(--amber-wash)"></i>the clue used</span>
+      <span><i class="swatch" style="background:var(--brick-wash)"></i>candidates removed</span>
+    </div>
+    <button id="wExit">Back to the puzzle</button>
+  </section>
+</main>
+
+<script>
+/* ============================================================
+   1. Bit helpers, units and peers
+   ============================================================ */
+
+const BOX = new Uint8Array(81);
+for (let i = 0; i < 81; i++) BOX[i] = (((i / 9 | 0) / 3 | 0) * 3) + ((i % 9) / 3 | 0);
+
+const BIT_TO_NUM = new Uint8Array(513);
+for (let d = 1; d <= 9; d++) BIT_TO_NUM[1 << (d - 1)] = d;
+
+function popcount(x) {
+  x = x - ((x >> 1) & 0x5555);
+  x = (x & 0x3333) + ((x >> 2) & 0x3333);
+  x = (x + (x >> 4)) & 0x0f0f;
+  return (x * 0x0101 >> 8) & 0x3f;
+}
+function digitsOf(mask) {
+  const out = [];
+  for (let d = 1; d <= 9; d++) if (mask & (1 << (d - 1))) out.push(d);
+  return out;
+}
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function cellName(i) { return `R${(i / 9 | 0) + 1}C${i % 9 + 1}`; }
+function listPhrase(arr) {
+  if (arr.length === 1) return String(arr[0]);
+  return arr.slice(0, -1).join(', ') + ' and ' + arr[arr.length - 1];
+}
+
+const UNITS = [];
+for (let r = 0; r < 9; r++) {
+  const cells = []; for (let c = 0; c < 9; c++) cells.push(r * 9 + c);
+  UNITS.push({ cells, name: `row ${r + 1}`, kind: 'row', n: r });
+}
+for (let c = 0; c < 9; c++) {
+  const cells = []; for (let r = 0; r < 9; r++) cells.push(r * 9 + c);
+  UNITS.push({ cells, name: `column ${c + 1}`, kind: 'col', n: c });
+}
+for (let b = 0; b < 9; b++) {
+  const cells = [];
+  for (let k = 0; k < 9; k++) cells.push(((b / 3 | 0) * 3 + (k / 3 | 0)) * 9 + (b % 3) * 3 + (k % 3));
+  UNITS.push({ cells, name: `box ${b + 1}`, kind: 'box', n: b });
+}
+const ROWU = UNITS.slice(0, 9), COLU = UNITS.slice(9, 18), BOXU = UNITS.slice(18, 27);
+
+const PEERS = [];
+for (let i = 0; i < 81; i++) {
+  const s = new Set();
+  for (const u of UNITS) if (u.cells.includes(i)) for (const j of u.cells) if (j !== i) s.add(j);
+  PEERS.push([...s]);
+}
+
+function combos(arr, n) {
+  const out = [], cur = [];
+  (function rec(start) {
+    if (cur.length === n) { out.push(cur.slice()); return; }
+    for (let i = start; i < arr.length; i++) { cur.push(arr[i]); rec(i + 1); cur.pop(); }
+  })(0);
+  return out;
+}
+
+/* ============================================================
+   2. Solver, generator
+   ============================================================ */
+
+function countSolutions(grid, limit) {
+  const g = Int8Array.from(grid);
+  const rows = new Int32Array(9), cols = new Int32Array(9), boxes = new Int32Array(9);
+  for (let i = 0; i < 81; i++) {
+    const v = g[i];
+    if (v) {
+      const b = 1 << (v - 1);
+      if ((rows[i / 9 | 0] | cols[i % 9] | boxes[BOX[i]]) & b) return 0;
+      rows[i / 9 | 0] |= b; cols[i % 9] |= b; boxes[BOX[i]] |= b;
+    }
+  }
+  let found = 0;
+  (function rec() {
+    let best = -1, bestMask = 0, bestCount = 10;
+    for (let i = 0; i < 81; i++) {
+      if (g[i]) continue;
+      const mask = ~(rows[i / 9 | 0] | cols[i % 9] | boxes[BOX[i]]) & 0x1FF;
+      const n = popcount(mask);
+      if (n === 0) return false;
+      if (n < bestCount) { bestCount = n; best = i; bestMask = mask; if (n === 1) break; }
+    }
+    if (best === -1) { found++; return found >= limit; }
+    const r = best / 9 | 0, c = best % 9, b = BOX[best];
+    let m = bestMask;
+    while (m) {
+      const bit = m & -m; m ^= bit;
+      g[best] = BIT_TO_NUM[bit];
+      rows[r] |= bit; cols[c] |= bit; boxes[b] |= bit;
+      if (rec()) { g[best] = 0; rows[r] ^= bit; cols[c] ^= bit; boxes[b] ^= bit; return true; }
+      rows[r] ^= bit; cols[c] ^= bit; boxes[b] ^= bit;
+      g[best] = 0;
+    }
+    return false;
+  })();
+  return found;
+}
+
+/* First solution, or null. Randomised when the grid is empty. */
+function solveGrid(grid) {
+  const g = Int8Array.from(grid);
+  const rows = new Int32Array(9), cols = new Int32Array(9), boxes = new Int32Array(9);
+  for (let i = 0; i < 81; i++) {
+    const v = g[i];
+    if (v) {
+      const b = 1 << (v - 1);
+      if ((rows[i / 9 | 0] | cols[i % 9] | boxes[BOX[i]]) & b) return null;
+      rows[i / 9 | 0] |= b; cols[i % 9] |= b; boxes[BOX[i]] |= b;
+    }
+  }
+  const ok = (function rec() {
+    let best = -1, bestMask = 0, bestCount = 10;
+    for (let i = 0; i < 81; i++) {
+      if (g[i]) continue;
+      const mask = ~(rows[i / 9 | 0] | cols[i % 9] | boxes[BOX[i]]) & 0x1FF;
+      const n = popcount(mask);
+      if (n === 0) return false;
+      if (n < bestCount) { bestCount = n; best = i; bestMask = mask; if (n === 1) break; }
+    }
+    if (best === -1) return true;
+    const r = best / 9 | 0, c = best % 9, b = BOX[best];
+    const bits = [];
+    let m = bestMask;
+    while (m) { const bit = m & -m; m ^= bit; bits.push(bit); }
+    shuffle(bits);
+    for (const bit of bits) {
+      g[best] = BIT_TO_NUM[bit];
+      rows[r] |= bit; cols[c] |= bit; boxes[b] |= bit;
+      if (rec()) return true;
+      rows[r] ^= bit; cols[c] ^= bit; boxes[b] ^= bit;
+      g[best] = 0;
+    }
+    return false;
+  })();
+  return ok ? Array.from(g) : null;
+}
+
+const TARGET = { easy: 43, medium: 35, hard: 29, expert: 24 };
+
+function makePuzzle(level) {
+  const solution = solveGrid(new Array(81).fill(0));
+  const puzzle = solution.slice();
+  let given = 81;
+  const target = TARGET[level];
+
+  const pairs = [];
+  for (let i = 0; i < 40; i++) pairs.push([i, 80 - i]);
+  shuffle(pairs);
+  pairs.push([40, 40]);
+
+  for (const [a, b] of pairs) {
+    if (given <= target) break;
+    const va = puzzle[a], vb = puzzle[b];
+    if (!va && !vb) continue;
+    puzzle[a] = 0; puzzle[b] = 0;
+    if (countSolutions(puzzle, 2) !== 1) { puzzle[a] = va; puzzle[b] = vb; }
+    else given -= (a === b) ? 1 : 2;
+  }
+  return { solution, puzzle, given };
+}
+
+/* ============================================================
+   3. Step-by-step logical solver
+   ============================================================ */
+
+function logicalSolve(puzzle) {
+  const grid = puzzle.slice();
+  const cand = new Array(81).fill(0);
+
+  for (let i = 0; i < 81; i++) {
+    if (grid[i]) { cand[i] = 0; continue; }
+    let used = 0;
+    for (const j of PEERS[i]) if (grid[j]) used |= 1 << (grid[j] - 1);
+    cand[i] = ~used & 0x1FF;
+  }
+
+  const full = solveGrid(puzzle);
+  const snap = () => ({ grid: grid.slice(), cand: cand.slice() });
+  const states = [snap()], steps = [];
+
+  const has = (i, d) => !grid[i] && (cand[i] & (1 << (d - 1)));
+
+  const UNIT_LIST = { box: BOXU, row: ROWU, col: COLU };
+  const KIND_WORD = { box: 'box', row: 'row', col: 'column' };
+
+  /* One full scanning pass: finds every cell the pass can settle, all at once. */
+  function sweep(kind, title) {
+    const found = [], taken = new Set();
+
+    if (kind === 'cell') {
+      for (let i = 0; i < 81; i++) {
+        if (grid[i] || popcount(cand[i]) !== 1) continue;
+        found.push({ i, d: BIT_TO_NUM[cand[i]], u: -1, blockers: [] });
+      }
+    } else {
+      for (const u of UNIT_LIST[kind]) {
+        for (let d = 1; d <= 9; d++) {
+          if (u.cells.some(i => grid[i] === d)) continue;
+          const spots = u.cells.filter(i => has(i, d));
+          if (spots.length !== 1) continue;
+          const i = spots[0];
+          if (taken.has(i)) continue;
+          taken.add(i);
+          const blockers = [];
+          let faded = 0;
+          for (const j of u.cells) {
+            if (grid[j] || j === i) continue;
+            const b = blockerOf(grid, j, d);
+            if (b >= 0) { if (!blockers.includes(b)) blockers.push(b); }
+            else faded++;            // candidate died in an earlier elimination, not to a placed digit
+          }
+          found.push({ i, d, u: UNITS.indexOf(u), blockers, faded });
+        }
+      }
+    }
+    if (!found.length) return null;
+
+    const bullets = found.map(p => {
+      if (p.u < 0) {
+        return `<li><b>${p.d}</b> at <b>${cellName(p.i)}</b> — the only digit that cell can still take</li>`;
+      }
+      const u = UNITS[p.u];
+      const seen = p.blockers.length
+        ? `covered by the ${p.d}${p.blockers.length > 1 ? 's' : ''} at ` +
+          (p.blockers.length > 3
+            ? `${p.blockers.slice(0, 3).map(cellName).join(', ')} and others`
+            : listPhrase(p.blockers.map(cellName)))
+        : '';
+      const lost = p.faded
+        ? `${p.faded === 1 ? 'one of them lost' : p.faded + ' of them lost'} that digit to an earlier elimination`
+        : '';
+      const tail = seen && lost ? ` — its other empty cells are ${seen}, and ${lost}`
+        : seen ? ` — its other empty cells are ${seen}`
+        : ` — every other empty cell there ${p.faded === 1 ? 'lost' : 'lost'} that digit to an earlier elimination`;
+      return `<li><b>${p.d}</b> at <b>${cellName(p.i)}</b>, the only home left in <b>${u.name}</b>${tail}</li>`;
+    }).join('');
+
+    const n = found.length;
+    const lead = kind === 'cell'
+      ? `${n === 1 ? 'One cell has' : n + ' cells have'} just a single candidate left.`
+      : `Every ${KIND_WORD[kind]} checked in turn. ${n === 1 ? 'One digit is' : n + ' digits are'} pinned to a single cell.`;
+
+    const unit = [], base = [];
+    for (const p of found) {
+      if (p.u >= 0) unit.push(...UNITS[p.u].cells);
+      base.push(...p.blockers);
+    }
+    return { title, text: `${lead}<ul>${bullets}</ul>`, places: found, unit, base };
+  }
+
+  function pointing() {
+    for (const box of BOXU) {
+      for (let d = 1; d <= 9; d++) {
+        if (box.cells.some(i => grid[i] === d)) continue;
+        const spots = box.cells.filter(i => has(i, d));
+        if (spots.length < 2) continue;
+        const rows = new Set(spots.map(i => i / 9 | 0));
+        const cols = new Set(spots.map(i => i % 9));
+        if (rows.size === 1) {
+          const line = ROWU[[...rows][0]];
+          const cuts = line.cells.filter(i => !box.cells.includes(i) && has(i, d)).map(i => ({ i, d }));
+          if (cuts.length) return {
+            title: 'Pointing pair',
+            text: `Inside <b>${box.name}</b>, <b>${d}</b> can only go in ${listPhrase(spots.map(cellName))} — all of them in <b>${line.name}</b>. Wherever it lands, that row gets its ${d} from this box, so remove <b>${d}</b> from the rest of ${line.name}.`,
+            cuts, base: spots, unit: box.cells
+          };
+        }
+        if (cols.size === 1) {
+          const line = COLU[[...cols][0]];
+          const cuts = line.cells.filter(i => !box.cells.includes(i) && has(i, d)).map(i => ({ i, d }));
+          if (cuts.length) return {
+            title: 'Pointing pair',
+            text: `Inside <b>${box.name}</b>, <b>${d}</b> can only go in ${listPhrase(spots.map(cellName))} — all of them in <b>${line.name}</b>. Wherever it lands, that column gets its ${d} from this box, so remove <b>${d}</b> from the rest of ${line.name}.`,
+            cuts, base: spots, unit: box.cells
+          };
+        }
+      }
+    }
+    return null;
+  }
+
+  function claiming() {
+    for (const line of [...ROWU, ...COLU]) {
+      for (let d = 1; d <= 9; d++) {
+        if (line.cells.some(i => grid[i] === d)) continue;
+        const spots = line.cells.filter(i => has(i, d));
+        if (spots.length < 2) continue;
+        const boxes = new Set(spots.map(i => BOX[i]));
+        if (boxes.size !== 1) continue;
+        const box = BOXU[[...boxes][0]];
+        const cuts = box.cells.filter(i => !line.cells.includes(i) && has(i, d)).map(i => ({ i, d }));
+        if (cuts.length) return {
+          title: 'Box-line reduction',
+          text: `In <b>${line.name}</b>, <b>${d}</b> can only go in ${listPhrase(spots.map(cellName))} — all inside <b>${box.name}</b>. That line must take its ${d} from those cells, so clear <b>${d}</b> from the rest of the box.`,
+          cuts, base: spots, unit: line.cells
+        };
+      }
+    }
+    return null;
+  }
+
+  function nakedSubset(n) {
+    const label = n === 2 ? 'Naked pair' : n === 3 ? 'Naked triple' : 'Naked quad';
+    for (const u of UNITS) {
+      const open = u.cells.filter(i => !grid[i] && popcount(cand[i]) >= 2 && popcount(cand[i]) <= n);
+      if (open.length <= n) continue;
+      for (const set of combos(open, n)) {
+        let union = 0;
+        for (const i of set) union |= cand[i];
+        if (popcount(union) !== n) continue;
+        const cuts = [];
+        for (const i of u.cells) {
+          if (set.includes(i) || grid[i]) continue;
+          for (const d of digitsOf(union & cand[i])) cuts.push({ i, d });
+        }
+        if (!cuts.length) continue;
+        return {
+          title: label,
+          text: `${listPhrase(set.map(cellName))} in <b>${u.name}</b> hold only ${listPhrase(digitsOf(union))} between them. Those ${n} cells use up those ${n} digits, so no other cell in ${u.name} can take them.`,
+          cuts, base: set, unit: u.cells
+        };
+      }
+    }
+    return null;
+  }
+
+  function hiddenSubset(n) {
+    const label = n === 2 ? 'Hidden pair' : 'Hidden triple';
+    for (const u of UNITS) {
+      const info = [];
+      for (let d = 1; d <= 9; d++) {
+        if (u.cells.some(i => grid[i] === d)) continue;
+        const spots = u.cells.filter(i => has(i, d));
+        if (spots.length >= 2 && spots.length <= n) info.push({ d, spots });
+      }
+      if (info.length < n) continue;
+      for (const set of combos(info, n)) {
+        const cellsSet = new Set();
+        for (const it of set) for (const i of it.spots) cellsSet.add(i);
+        if (cellsSet.size !== n) continue;
+        let keep = 0;
+        for (const it of set) keep |= 1 << (it.d - 1);
+        const cuts = [];
+        for (const i of cellsSet) for (const d of digitsOf(cand[i] & ~keep)) cuts.push({ i, d });
+        if (!cuts.length) continue;
+        return {
+          title: label,
+          text: `In <b>${u.name}</b>, the digits ${listPhrase(set.map(s => s.d))} can only go in ${listPhrase([...cellsSet].map(cellName))}. Those cells are reserved for them, so every other candidate there can go.`,
+          cuts, base: [...cellsSet], unit: u.cells
+        };
+      }
+    }
+    return null;
+  }
+
+  function xWing() {
+    for (let d = 1; d <= 9; d++) {
+      for (const [lines, cross, lineWord, crossWord] of [[ROWU, COLU, 'row', 'column'], [COLU, ROWU, 'column', 'row']]) {
+        const spots = [];
+        for (const u of lines) {
+          if (u.cells.some(i => grid[i] === d)) { spots.push(null); continue; }
+          const s = u.cells.filter(i => has(i, d));
+          spots.push(s.length === 2 ? s : null);
+        }
+        for (let a = 0; a < 9; a++) {
+          if (!spots[a]) continue;
+          const ka = spots[a].map(i => lineWord === 'row' ? i % 9 : i / 9 | 0);
+          for (let b = a + 1; b < 9; b++) {
+            if (!spots[b]) continue;
+            const kb = spots[b].map(i => lineWord === 'row' ? i % 9 : i / 9 | 0);
+            if (ka[0] !== kb[0] || ka[1] !== kb[1]) continue;
+            const corners = [...spots[a], ...spots[b]];
+            const cuts = [];
+            for (const k of ka) for (const i of cross[k].cells) {
+              if (!corners.includes(i) && has(i, d)) cuts.push({ i, d });
+            }
+            if (!cuts.length) continue;
+            return {
+              title: 'X-Wing',
+              text: `<b>${d}</b> is limited to ${crossWord}s ${ka[0] + 1} and ${ka[1] + 1} in both ${lineWord} ${a + 1} and ${lineWord} ${b + 1}. Whichever way those four corners resolve, both ${crossWord}s get their ${d} from them, so remove <b>${d}</b> elsewhere in those ${crossWord}s.`,
+              cuts, base: corners, unit: []
+            };
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  function searchStep() {
+    if (!full) return null;
+    let best = -1, bestCount = 10;
+    for (let i = 0; i < 81; i++) {
+      if (grid[i]) continue;
+      const n = popcount(cand[i]);
+      if (n < bestCount) { bestCount = n; best = i; }
+    }
+    if (best === -1) return null;
+    return {
+      title: 'Trial and error',
+      text: `No basic pattern applies here. Testing the ${bestCount} candidates of <b>${cellName(best)}</b> shows that only <b>${full[best]}</b> leads anywhere, so place it and carry on.`,
+      places: [{ i: best, d: full[best], u: -1, blockers: [] }], base: [], search: true
+    };
+  }
+
+  const PASSES = [['box', 'Box scan'], ['row', 'Row scan'], ['col', 'Column scan'], ['cell', 'Cell scan']];
+  const deeper = [pointing, claiming, () => nakedSubset(2), () => hiddenSubset(2),
+    () => nakedSubset(3), () => hiddenSubset(3), xWing, searchStep];
+
+  let pass = 0, dry = 0, guard = 0;
+  while (grid.includes(0) && guard++ < 400) {
+    let step = null;
+
+    /* Take the passes in rotation, skipping any that turn up nothing. */
+    while (dry < PASSES.length && !step) {
+      step = sweep(PASSES[pass][0], PASSES[pass][1]);
+      pass = (pass + 1) % PASSES.length;
+      dry = step ? 0 : dry + 1;
+    }
+
+    /* Only when a whole rotation is dry do we reach for the harder tactics. */
+    if (!step) {
+      for (const t of deeper) { step = t(); if (step) break; }
+      if (step) { pass = 0; dry = 0; }
+    }
+    if (!step) break;
+
+    if (step.places) {
+      for (const p of step.places) {
+        if (grid[p.i]) continue;
+        grid[p.i] = p.d;
+        cand[p.i] = 0;
+        for (const j of PEERS[p.i]) cand[j] &= ~(1 << (p.d - 1));
+      }
+    }
+    if (step.cuts) for (const { i, d } of step.cuts) cand[i] &= ~(1 << (d - 1));
+
+    steps.push(step);
+    states.push(snap());
+  }
+
+  return { states, steps, solved: !grid.includes(0) };
+}
+
+/* ============================================================
+   4. Game state and DOM
+   ============================================================ */
+
+const S = {
+  mode: 'play',            // play | enter | walk
+  level: 'easy',
+  custom: false,
+  solution: [], puzzle: [], board: [], notes: [],
+  hinted: new Set(), history: [],
+  sel: null, noteMode: false, marking: false,
+  seconds: 0, over: false, paused: false
+};
+
+const W = { states: [], steps: [], givens: [], idx: 0 };
+
+const $ = id => document.getElementById(id);
+const boardEl = $('board'), padEl = $('pad'), msgEl = $('message'),
+      timeEl = $('time'), veil = $('veil'), veilText = $('veilText'), veilBtn = $('veilBtn');
+const cells = new Array(81), padKeys = new Array(10);
+
+for (let b = 0; b < 9; b++) {
+  const box = document.createElement('div');
+  box.className = 'box';
+  for (let k = 0; k < 9; k++) {
+    const r = (b / 3 | 0) * 3 + (k / 3 | 0), c = (b % 3) * 3 + (k % 3), idx = r * 9 + c;
+    const cell = document.createElement('button');
+    cell.className = 'cell'; cell.type = 'button';
+    cell.tabIndex = -1;
+    cell.setAttribute('role', 'gridcell');
+    cell.style.setProperty('--d', Math.abs(r - 4) + Math.abs(c - 4));
+    cell.addEventListener('click', () => select(idx));
+    cells[idx] = cell;
+    box.appendChild(cell);
+  }
+  boardEl.appendChild(box);
+}
+
+for (let d = 1; d <= 9; d++) {
+  const k = document.createElement('button');
+  k.type = 'button';
+  k.innerHTML = `<b>${d}</b><i></i>`;
+  k.setAttribute('aria-label', `Enter ${d}`);
+  k.addEventListener('click', () => enter(d));
+  padKeys[d] = k;
+  padEl.appendChild(k);
+}
+
+function say(html, warn) {
+  msgEl.innerHTML = html;
+  msgEl.classList.toggle('warn', !!warn);
+}
+
+/* ============================================================
+   5. Rendering
+   ============================================================ */
+
+function conflicts(grid) {
+  const bad = new Set();
+  for (const u of UNITS) {
+    const seen = new Map();
+    for (const i of u.cells) {
+      const v = grid[i];
+      if (!v) continue;
+      if (seen.has(v)) { bad.add(i); bad.add(seen.get(v)); }
+      else seen.set(v, i);
+    }
+  }
+  return bad;
+}
+
+function render() {
+  if (S.mode === 'walk') return renderWalk();
+
+  const bad = conflicts(S.board);
+  const entering = S.mode === 'enter';
+  const selVal = S.sel !== null ? S.board[S.sel] : 0;
+  const selR = S.sel !== null ? (S.sel / 9 | 0) : -1;
+  const selC = S.sel !== null ? (S.sel % 9) : -1;
+  const selB = S.sel !== null ? BOX[S.sel] : -1;
+
+  for (let i = 0; i < 81; i++) {
+    const cell = cells[i], v = S.board[i];
+    const given = entering ? !!v : S.puzzle[i] !== 0;
+
+    let cls = 'cell';
+    if (given) cls += ' given';
+    if (!entering && S.hinted.has(i)) cls += ' hinted';
+    if (bad.has(i)) cls += ' conflict';
+    if (!entering && S.marking && !S.puzzle[i] && v && v !== S.solution[i]) cls += ' wrong';
+
+    if (S.sel !== null) {
+      if (i === S.sel) cls += ' sel';
+      else if (selVal && v === selVal) cls += ' same';
+      else if ((i / 9 | 0) === selR || (i % 9) === selC || BOX[i] === selB) cls += ' peer';
+    }
+    cell.className = cls;
+    cell.tabIndex = (i === S.sel) ? 0 : -1;
+
+    const where = `Row ${(i / 9 | 0) + 1}, column ${i % 9 + 1}`;
+    if (v) {
+      cell.textContent = v;
+      cell.setAttribute('aria-label', `${where}, ${v}${given && !entering ? ', clue' : ''}`);
+    } else if (S.notes[i]) {
+      let html = '<span class="notes">';
+      for (let d = 1; d <= 9; d++) html += `<span>${(S.notes[i] >> (d - 1)) & 1 ? d : ''}</span>`;
+      cell.innerHTML = html + '</span>';
+      cell.setAttribute('aria-label', `${where}, notes`);
+    } else {
+      cell.textContent = '';
+      cell.setAttribute('aria-label', `${where}, empty`);
+    }
+  }
+
+  for (let d = 1; d <= 9; d++) {
+    let placed = 0;
+    for (let i = 0; i < 81; i++) if (S.board[i] === d) placed++;
+    const left = 9 - placed;
+    padKeys[d].querySelector('i').textContent = entering ? '' : (left > 0 ? left : '');
+    padKeys[d].classList.toggle('done', !entering && left === 0);
+  }
+
+  $('undo').disabled = S.history.length === 0;
+  $('hint').disabled = S.over;
+}
+
+function renderWalk() {
+  const st = W.idx > 0 ? W.steps[W.idx - 1] : null;
+  const s = W.states[W.idx];
+  const cut = new Map();
+  if (st && st.cuts) for (const { i, d } of st.cuts) {
+    if (!cut.has(i)) cut.set(i, []);
+    cut.get(i).push(d);
+  }
+  const unit = new Set(st && st.unit || []);
+  const base = new Set(st && st.base || []);
+  const laid = new Set((st && st.places || []).map(p => p.i));
+
+  for (let i = 0; i < 81; i++) {
+    const cell = cells[i], v = s.grid[i];
+    let cls = 'cell';
+    if (W.givens[i]) cls += ' given';
+    if (unit.has(i)) cls += ' w-unit';
+    if (base.has(i)) cls += ' w-base';
+    if (cut.has(i)) cls += ' w-cut';
+    if (laid.has(i)) cls += ' w-place';
+    cell.className = cls;
+    cell.tabIndex = -1;
+
+    if (v) {
+      cell.textContent = v;
+      cell.setAttribute('aria-label', `Row ${(i / 9 | 0) + 1}, column ${i % 9 + 1}, ${v}`);
+    } else {
+      const gone = cut.get(i) || [];
+      let html = '<span class="notes">';
+      for (let d = 1; d <= 9; d++) {
+        if (s.cand[i] & (1 << (d - 1))) html += `<span>${d}</span>`;
+        else if (gone.includes(d)) html += `<span class="gone">${d}</span>`;
+        else html += '<span></span>';
+      }
+      cell.innerHTML = html + '</span>';
+      cell.setAttribute('aria-label', `Row ${(i / 9 | 0) + 1}, column ${i % 9 + 1}, candidates`);
+    }
+  }
+
+  $('stepTitle').textContent = st ? st.title : 'Starting position';
+  $('stepText').innerHTML = st ? st.text
+    : 'Small digits show every value each empty cell could still take. Press Next to watch the candidates narrow down.';
+  $('scrub').value = W.idx;
+  $('wBack').disabled = $('wFirst').disabled = W.idx === 0;
+  $('wNext').disabled = $('wLast').disabled = W.idx >= W.steps.length;
+  say(`Step <strong>${W.idx}</strong> of ${W.steps.length}`);
+}
+
+/* ============================================================
+   6. Play actions
+   ============================================================ */
+
+function select(idx) {
+  if (S.mode === 'walk' || S.paused || S.over) return;
+  S.sel = idx;
+  render();
+  cells[idx].focus({ preventScroll: true });
+}
+
+function commit(changes) {
+  S.history.push(changes);
+  if (S.history.length > 300) S.history.shift();
+}
+
+function enter(d) {
+  if (S.sel === null || S.mode === 'walk' || S.over || S.paused) return;
+  const i = S.sel;
+
+  if (S.mode === 'enter') {
+    commit([{ i, val: S.board[i], notes: 0 }]);
+    S.board[i] = (S.board[i] === d) ? 0 : d;
+    say('');
+    render();
+    return;
+  }
+
+  if (S.puzzle[i] !== 0) return;
+  const changes = [{ i, val: S.board[i], notes: S.notes[i] }];
+
+  if (S.noteMode) {
+    if (S.board[i]) return;
+    S.notes[i] ^= (1 << (d - 1));
+  } else if (S.board[i] === d) {
+    S.board[i] = 0;
+    S.hinted.delete(i);
+  } else {
+    S.board[i] = d;
+    S.notes[i] = 0;
+    S.hinted.delete(i);
+    const bit = 1 << (d - 1);
+    for (const j of PEERS[i]) {
+      if (S.notes[j] & bit) { changes.push({ i: j, val: S.board[j], notes: S.notes[j] }); S.notes[j] &= ~bit; }
+    }
+  }
+
+  commit(changes);
+  hideHint();
+  say('');
+  render();
+  checkWin();
+}
+
+function erase() {
+  if (S.sel === null || S.mode === 'walk' || S.over || S.paused) return;
+  const i = S.sel;
+  if (S.mode !== 'enter' && S.puzzle[i] !== 0) return;
+  if (!S.board[i] && !S.notes[i]) return;
+  commit([{ i, val: S.board[i], notes: S.notes[i] }]);
+  S.board[i] = 0; S.notes[i] = 0; S.hinted.delete(i);
+  hideHint();
+  say('');
+  render();
+}
+
+function undo() {
+  if (!S.history.length || S.over) return;
+  for (const ch of S.history.pop()) { S.board[ch.i] = ch.val; S.notes[ch.i] = ch.notes; }
+  hideHint();
+  say('');
+  render();
+}
+
+/* ---- shared explanation builders -------------------------------------- */
+
+/* A placed copy of d that one of j's peers already holds. */
+function blockerOf(grid, j, d) {
+  for (const p of PEERS[j]) if (grid[p] === d) return p;
+  return -1;
+}
+
+function explainNakedSingle(grid, i, d) {
+  let seenMask = 0;
+  for (const p of PEERS[i]) if (grid[p]) seenMask |= 1 << (grid[p] - 1);
+  const seen = digitsOf(seenMask);
+  if (popcount(seenMask) === 8) {
+    return `<b>${cellName(i)}</b> already sees ${listPhrase(seen)} across its row, column and box. ` +
+           `That accounts for eight of the nine digits, so only <b>${d}</b> can go there.`;
+  }
+  return `<b>${cellName(i)}</b> sees ${seen.length ? listPhrase(seen) : 'no digits yet'} in its row, column and box, ` +
+         `and the eliminations above account for the others. Only <b>${d}</b> is left, so place it.`;
+}
+
+/* Names the cell blocking each rival, so the claim can be checked by eye. */
+function explainHiddenSingle(grid, cand, u, i, d) {
+  const rivals = u.cells.filter(j => !grid[j] && j !== i);
+  if (!rivals.length) {
+    return `<b>${cellName(i)}</b> is the last empty cell in <b>${u.name}</b>, and that ${u.kind === 'box' ? 'box' : u.kind === 'row' ? 'row' : 'column'} still needs a <b>${d}</b>. Place it.`;
+  }
+
+  const parts = [];
+  let faded = 0;
+  for (const j of rivals) {
+    const b = blockerOf(grid, j, d);
+    if (b >= 0) parts.push(`${cellName(j)} sees the ${d} at ${cellName(b)}`);
+    else faded++;
+  }
+
+  let why;
+  if (parts.length > 5) {
+    const rest = parts.length - 5;
+    why = `${listPhrase(parts.slice(0, 5))}, and the remaining ${rest === 1 ? 'one is' : rest + ' are'} shut out the same way`;
+  } else if (parts.length) {
+    why = listPhrase(parts);
+  } else {
+    why = 'every one of them lost its candidate to the eliminations above';
+  }
+  const extra = (parts.length && faded)
+    ? `, while ${faded === 1 ? 'another cell' : faded + ' others'} lost the ${d} to the eliminations above`
+    : '';
+
+  return `<b>${u.name}</b> still needs a <b>${d}</b>. Of its empty cells, ${why}${extra}. ` +
+         `That leaves <b>${cellName(i)}</b> as the only cell in ${u.name} that can hold the <b>${d}</b>.`;
+}
+
+/* Candidate masks for a board as it stands. */
+function candidatesFor(grid) {
+  const cand = new Array(81).fill(0);
+  for (let i = 0; i < 81; i++) {
+    if (grid[i]) continue;
+    let used = 0;
+    for (const j of PEERS[i]) if (grid[j]) used |= 1 << (grid[j] - 1);
+    cand[i] = ~used & 0x1FF;
+  }
+  return cand;
+}
+
+/* Can this one cell be settled by a plain scan? */
+function directHint(grid, i) {
+  const cand = candidatesFor(grid);
+  if (!cand[i]) return null;
+
+  if (popcount(cand[i]) === 1) {
+    const d = BIT_TO_NUM[cand[i]];
+    return { i, d, title: 'Naked single', text: explainNakedSingle(grid, i, d) };
+  }
+
+  for (const u of UNITS) {
+    if (!u.cells.includes(i)) continue;
+    for (const d of digitsOf(cand[i])) {
+      const spots = u.cells.filter(j => !grid[j] && (cand[j] & (1 << (d - 1))));
+      if (spots.length !== 1) continue;
+      return { i, d, title: 'Hidden single', text: explainHiddenSingle(grid, cand, u, i, d) };
+    }
+  }
+  return null;
+}
+
+function showHint(title, text) {
+  $('hintTitle').textContent = title;
+  $('hintText').innerHTML = text;
+  $('hintCard').hidden = false;
+}
+function hideHint() { $('hintCard').hidden = true; }
+
+/* Which earlier eliminations does this placement actually lean on? */
+function groundwork(steps, fp) {
+  const st = steps[fp];
+  if (!st || !st.places) return [];
+  const { i, d, u } = st.places[0];
+  const unit = u >= 0 ? UNITS[u].cells : [];
+  const out = [];
+  for (let k = 0; k < fp; k++) {
+    const s = steps[k];
+    if (!s.cuts) continue;
+    const bears = unit.length
+      ? s.cuts.some(c => c.d === d && unit.includes(c.i))   // hidden single: cuts of d inside the unit
+      : s.cuts.some(c => c.i === i);                        // naked single: cuts in the cell itself
+    if (bears) out.push(s);
+  }
+  return out;
+}
+
+function hint() {
+  if (S.mode !== 'play' || S.over || S.paused) return;
+  if (!S.board.includes(0)) return;
+
+  if (countSolutions(S.board, 1) === 0) {
+    showHint('Something has gone wrong',
+      'One of the digits you have entered makes this grid impossible, so there is no honest hint to give. Turn on <b>Mark mistakes</b> to see which entries disagree with the answer.');
+    say('');
+    return;
+  }
+
+  const want = (S.sel !== null && !S.board[S.sel]) ? S.sel : null;
+  let info = want !== null ? directHint(S.board, want) : null;
+  let lead = '', title = info ? info.title : '';
+
+  if (!info) {
+    const res = logicalSolve(S.board);
+    const fp = res.steps.findIndex(s => s.places);
+    if (fp < 0) { showHint('Nothing left to find', 'No further move can be worked out from here.'); return; }
+    const st = res.steps[fp];
+    const at = res.states[fp];
+    const p = st.places[0];
+
+    /* A hint fills one cell, so explain that one in full rather than the whole sweep. */
+    info = {
+      i: p.i, d: p.d,
+      title: st.search ? st.title : p.u >= 0 ? 'Hidden single' : 'Naked single',
+      text: st.search ? st.text
+        : p.u >= 0 ? explainHiddenSingle(at.grid, at.cand, UNITS[p.u], p.i, p.d)
+                   : explainNakedSingle(at.grid, p.i, p.d)
+    };
+    title = info.title;
+
+    /* Never assert a deduction without the eliminations it rests on. */
+    const pre = groundwork(res.steps, fp);
+    if (pre.length) {
+      title = `${pre[0].title} → ${st.title}`;
+      const shown = pre.slice(0, 2)
+        .map((s, n) => `<b>${n === 0 ? 'First' : 'Then'}:</b> ${s.text}`)
+        .join(' ');
+      const more = pre.length > 2 ? ' A couple of further eliminations follow the same way. ' : ' ';
+      lead = `${shown}${more}<b>Now:</b> `;
+    }
+    if (want !== null) {
+      lead = `<b>${cellName(want)}</b> cannot be settled by a straight scan yet. Here is a move that can be. ` + lead;
+    }
+  }
+
+  commit([{ i: info.i, val: S.board[info.i], notes: S.notes[info.i] }]);
+  S.board[info.i] = info.d;
+  S.notes[info.i] = 0;
+  S.hinted.add(info.i);
+  S.sel = info.i;
+  showHint(title, lead + info.text);
+  say('');
+  render();
+  checkWin();
+}
+
+function reveal() {
+  if (S.mode !== 'play' || S.over) return;
+  stopClock();
+  S.over = true;
+  for (let i = 0; i < 81; i++) {
+    if (!S.puzzle[i] && S.board[i] !== S.solution[i]) S.hinted.add(i);
+    S.board[i] = S.solution[i]; S.notes[i] = 0;
+  }
+  S.sel = null; S.history = [];
+  render();
+  say('Solution shown. Start a new puzzle when you are ready.');
+}
+
+function checkWin() {
+  for (let i = 0; i < 81; i++) if (S.board[i] !== S.solution[i]) return;
+  stopClock();
+  S.over = true; S.sel = null;
+  render();
+  boardEl.classList.add('solved');
+  const label = S.custom ? 'Your puzzle' : S.level[0].toUpperCase() + S.level.slice(1) + ' puzzle';
+  veilText.innerHTML = `Solved in ${fmt(S.seconds)}<small>${label}, ${S.hinted.size} hint${S.hinted.size === 1 ? '' : 's'} used</small>`;
+  veilBtn.textContent = 'Play another';
+  setTimeout(() => { veil.hidden = false; veilBtn.focus(); }, 900);
+}
+
+/* ============================================================
+   7. Clock
+   ============================================================ */
+
+let ticker = null;
+function fmt(s) { return `${s / 60 | 0}:${String(s % 60).padStart(2, '0')}`; }
+function startClock() {
+  stopClock();
+  ticker = setInterval(() => { S.seconds++; timeEl.textContent = fmt(S.seconds); }, 1000);
+}
+function stopClock() { clearInterval(ticker); ticker = null; }
+
+function togglePause() {
+  if (S.mode !== 'play' || S.over) return;
+  S.paused = !S.paused;
+  if (S.paused) {
+    stopClock();
+    veilText.textContent = 'Paused';
+    veilBtn.textContent = 'Resume';
+    veil.hidden = false;
+    $('pause').textContent = 'Resume';
+    veilBtn.focus();
+  } else {
+    veil.hidden = true;
+    $('pause').textContent = 'Pause';
+    startClock();
+  }
+}
+
+/* ============================================================
+   8. Modes
+   ============================================================ */
+
+function setMode(m) {
+  S.mode = m;
+  document.querySelector('main').dataset.mode = m;
+  $('levels').hidden = m !== 'play';
+  padEl.hidden = m === 'walk' || m === 'lib';
+  $('playTools').hidden = m !== 'play';
+  $('playFooter').hidden = m !== 'play';
+  $('entryFooter').hidden = m !== 'enter';
+  $('walkPanel').hidden = m !== 'walk';
+  $('libPanel').hidden = m !== 'lib';
+  $('clock').hidden = m !== 'play';
+  $('wordmark').textContent =
+    m === 'enter' ? 'your puzzle' : m === 'walk' ? 'walkthrough' : m === 'lib' ? 'saved' : 'sudoku';
+  boardEl.classList.remove('solved');
+  veil.hidden = true;
+  $('hintCard').hidden = true;
+}
+
+function newPuzzle() {
+  setMode('play');
+  say('Generating…');
+  stopClock();
+  $('pause').textContent = 'Pause';
+
+  setTimeout(() => {
+    const { solution, puzzle, given } = makePuzzle(S.level);
+    S.custom = false;
+    S.solution = solution; S.puzzle = puzzle; S.board = puzzle.slice();
+    S.notes = new Array(81).fill(0);
+    S.hinted = new Set(); S.history = [];
+    S.sel = null; S.over = false; S.paused = false; S.seconds = 0;
+    timeEl.textContent = '0:00';
+    render();
+    say(`${given} clues to start from.`);
+    startClock();
+  }, 30);
+}
+
+function startEntry() {
+  stopClock();
+  setMode('enter');
+  S.board = new Array(81).fill(0);
+  S.puzzle = new Array(81).fill(0);
+  S.notes = new Array(81).fill(0);
+  S.hinted = new Set(); S.history = [];
+  S.sel = 0; S.over = false; S.paused = false;
+  document.querySelectorAll('#levels button').forEach(b => b.setAttribute('aria-pressed', 'false'));
+  render();
+  say('Tap a cell, then a digit, to type in your clues.');
+}
+
+/* Returns the solution, or null after posting the reason. */
+function validateEntry() {
+  const filled = S.board.filter(Boolean).length;
+  if (filled < 17) { say(`Only ${filled} clues so far. A sudoku needs at least 17 to have one answer.`, true); return null; }
+  if (conflicts(S.board).size) { say('Two clues clash — the red cells repeat a digit in a row, column or box.', true); return null; }
+  const n = countSolutions(S.board, 2);
+  if (n === 0) { say('No arrangement fits these clues. Check them once more.', true); return null; }
+  const sol = solveGrid(S.board);
+  if (n > 1) say('More than one answer fits these clues. Working with one of them.', true);
+  return sol;
+}
+
+function playOwn() {
+  const sol = validateEntry();
+  if (!sol) return;
+  const given = S.board.filter(Boolean).length;
+  S.custom = true;
+  S.solution = sol;
+  S.puzzle = S.board.slice();
+  S.notes = new Array(81).fill(0);
+  S.hinted = new Set(); S.history = [];
+  S.sel = null; S.over = false; S.seconds = 0;
+  timeEl.textContent = '0:00';
+  setMode('play');
+  $('pause').textContent = 'Pause';
+  render();
+  say(`Your puzzle, ${given} clues.`);
+  startClock();
+}
+
+function startWalk(puzzle) {
+  const clues = puzzle.filter(Boolean).length;
+  if (!clues) { say('Nothing to solve yet.', true); return; }
+  say('Working out the steps…');
+  stopClock();
+
+  setTimeout(() => {
+    const res = logicalSolve(puzzle);
+    if (!res.steps.length) { say('That grid is already complete.', true); return; }
+    W.states = res.states; W.steps = res.steps; W.givens = puzzle.map(v => v !== 0); W.idx = 0;
+    $('scrub').max = res.steps.length;
+    setMode('walk');
+    renderWalk();
+    const searched = res.steps.filter(s => s.search).length;
+    if (!res.solved) say('These clues do not pin down a single answer — the walkthrough goes as far as logic allows.', true);
+    else if (searched) setTimeout(() => say(`${res.steps.length} steps, ${searched} of them needing trial and error.`), 1200);
+  }, 30);
+}
+
+function goto(i) {
+  W.idx = Math.max(0, Math.min(W.steps.length, i));
+  renderWalk();
+}
+
+function exitWalk() {
+  setMode('play');
+  render();
+  say('');
+  if (!S.over) startClock();
+}
+
+/* ============================================================
+   8b. Saving: storage, portable codes, library
+   ============================================================ */
+
+const STORE_KEY = 'sudoku.saves.v1';
+
+/* localStorage is unavailable on some file:// and content:// pages,
+   so fall back to memory and tell the user what that means. */
+const shelf = (() => {
+  try {
+    const k = '__probe';
+    localStorage.setItem(k, '1');
+    localStorage.removeItem(k);
+    return localStorage;
+  } catch (e) { return null; }
+})();
+let memSaves = [];
+
+function readSaves() {
+  if (!shelf) return memSaves;
+  try { return JSON.parse(shelf.getItem(STORE_KEY) || '[]'); }
+  catch (e) { return []; }
+}
+function writeSaves(list) {
+  if (!shelf) { memSaves = list; return true; }
+  try { shelf.setItem(STORE_KEY, JSON.stringify(list)); return true; }
+  catch (e) { memSaves = list; return false; }
+}
+
+const toStr = arr => arr.map(v => v || '.').join('');
+
+function currentCode() {
+  if (!S.puzzle.length) return '';
+  return ['SDK1', toStr(S.puzzle), toStr(S.board), S.custom ? 'custom' : S.level, S.seconds].join('|');
+}
+
+/* Accepts our own code, or any loose grid of 81 digits with 0 . _ * as blanks. */
+function parseCode(raw) {
+  const text = (raw || '').trim();
+  if (!text) return null;
+
+  if (/^SDK1\|/i.test(text)) {
+    const p = text.split('|');
+    const puzzle = gridFrom(p[1]);
+    if (!puzzle) return null;
+    return {
+      puzzle,
+      board: gridFrom(p[2]) || puzzle.slice(),
+      level: p[3] && p[3] !== 'custom' ? p[3] : 'easy',
+      custom: p[3] === 'custom',
+      seconds: parseInt(p[4], 10) || 0
+    };
+  }
+  const puzzle = gridFrom(text);
+  if (!puzzle) return null;
+  return { puzzle, board: puzzle.slice(), level: 'easy', custom: true, seconds: 0 };
+}
+
+function gridFrom(text) {
+  if (!text) return null;
+  const chars = String(text).replace(/[^0-9._*]/g, '').replace(/[._*]/g, '0');
+  if (chars.length !== 81) return null;
+  return chars.split('').map(Number);
+}
+
+/* Loads a parsed puzzle into play mode. Returns an error string, or null. */
+function loadPuzzle(data) {
+  if (conflicts(data.puzzle).size) return 'That grid repeats a digit in a row, column or box.';
+  const sol = solveGrid(data.puzzle);
+  if (!sol) return 'No arrangement fits those clues.';
+
+  const board = data.board.slice();
+  for (let i = 0; i < 81; i++) {
+    if (data.puzzle[i]) board[i] = data.puzzle[i];      // clues always win
+  }
+  if (conflicts(board).size) for (let i = 0; i < 81; i++) if (!data.puzzle[i]) board[i] = 0;
+
+  S.custom = !!data.custom;
+  S.level = data.level || 'easy';
+  S.solution = sol;
+  S.puzzle = data.puzzle.slice();
+  S.board = board;
+  S.notes = data.notes ? data.notes.slice() : new Array(81).fill(0);
+  S.hinted = new Set(); S.history = [];
+  S.sel = null; S.over = false; S.paused = false;
+  S.seconds = data.seconds || 0;
+  timeEl.textContent = fmt(S.seconds);
+
+  document.querySelectorAll('#levels button').forEach(b =>
+    b.setAttribute('aria-pressed', String(!S.custom && b.dataset.level === S.level)));
+
+  setMode('play');
+  $('pause').textContent = 'Pause';
+  render();
+  startClock();
+  return null;
+}
+
+function defaultName() {
+  const label = S.custom ? 'Your puzzle' : S.level[0].toUpperCase() + S.level.slice(1);
+  const d = new Date();
+  return `${label} · ${d.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}`;
+}
+
+function saveCurrent(puzzle, board, notes) {
+  const list = readSaves();
+  const entry = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    name: ($('saveName').value || '').trim() || defaultName(),
+    level: S.level, custom: S.custom,
+    puzzle: toStr(puzzle), board: toStr(board),
+    notes: notes ? notes.slice() : new Array(81).fill(0),
+    seconds: S.seconds, ts: Date.now()
+  };
+  list.unshift(entry);
+  if (list.length > 40) list.length = 40;
+  const persisted = writeSaves(list);
+  $('saveName').value = '';
+  renderSaves();
+  say(persisted
+    ? `Saved as <strong>${escapeHtml(entry.name)}</strong>.`
+    : `Saved as <strong>${escapeHtml(entry.name)}</strong>, but only until you close this page.`, !persisted);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function renderSaves() {
+  const list = readSaves();
+  const box = $('saveList');
+  if (!list.length) {
+    box.innerHTML = '<div class="empty-note">Nothing saved yet.</div>';
+    return;
+  }
+  box.innerHTML = '';
+  for (const s of list) {
+    const clues = (s.puzzle.match(/[1-9]/g) || []).length;
+    const done = (s.board.match(/[1-9]/g) || []).length;
+    const left = 81 - done;
+    const row = document.createElement('div');
+    row.className = 'save-row';
+    row.innerHTML =
+      `<div class="who"><b>${escapeHtml(s.name)}</b>` +
+      `<span>${clues} clues · ${left ? left + ' cells to go' : 'complete'} · ${fmt(s.seconds || 0)}</span></div>`;
+
+    const open = document.createElement('button');
+    open.textContent = 'Open';
+    open.addEventListener('click', () => {
+      const err = loadPuzzle({
+        puzzle: gridFrom(s.puzzle), board: gridFrom(s.board), notes: s.notes,
+        level: s.level, custom: s.custom, seconds: s.seconds
+      });
+      say(err || `Opened <strong>${escapeHtml(s.name)}</strong>.`, !!err);
+    });
+
+    const kill = document.createElement('button');
+    kill.className = 'kill';
+    kill.textContent = 'Delete';
+    kill.setAttribute('aria-label', `Delete ${s.name}`);
+    kill.addEventListener('click', () => {
+      writeSaves(readSaves().filter(x => x.id !== s.id));
+      renderSaves();
+      say('Deleted.');
+    });
+
+    row.append(open, kill);
+    box.appendChild(row);
+  }
+}
+
+function openLibrary() {
+  stopClock();
+  setMode('lib');
+  $('codeBox').value = currentCode();
+  $('saveName').placeholder = defaultName();
+  $('storeNote').textContent = shelf
+    ? 'Saves live in this browser on this device. Copy the code or download the file to keep a puzzle elsewhere.'
+    : 'This page cannot write to browser storage, so saves will vanish when you close it. Copy the code or download the file instead.';
+  $('storeNote').classList.toggle('warn', !shelf);
+  renderSaves();
+  say('');
+}
+
+function downloadSaves() {
+  const list = readSaves();
+  const lines = ['My sudoku puzzles', '', `Current puzzle:`, currentCode(), ''];
+  if (list.length) {
+    lines.push('Saved:');
+    for (const s of list) {
+      lines.push('', s.name, ['SDK1', s.puzzle, s.board, s.custom ? 'custom' : s.level, s.seconds || 0].join('|'));
+    }
+  }
+  lines.push('', 'Paste any code back into the app under "Open a code".');
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sudoku-puzzles.txt';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  say('File downloaded.');
+}
+
+async function copyCode() {
+  const text = $('codeBox').value;
+  try {
+    await navigator.clipboard.writeText(text);
+    say('Code copied.');
+  } catch (e) {
+    $('codeBox').focus();
+    $('codeBox').select();
+    say('Copy blocked by the browser — the code is selected, copy it by hand.', true);
+  }
+}
+
+/* ============================================================
+   9. Wiring
+   ============================================================ */
+
+document.querySelectorAll('#levels button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#levels button').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+    S.level = btn.dataset.level;
+    newPuzzle();
+  });
+});
+
+$('notes').addEventListener('click', e => {
+  S.noteMode = !S.noteMode;
+  e.currentTarget.setAttribute('aria-pressed', String(S.noteMode));
+});
+$('mark').addEventListener('click', e => {
+  S.marking = !S.marking;
+  e.currentTarget.setAttribute('aria-pressed', String(S.marking));
+  render();
+});
+
+$('erase').addEventListener('click', erase);
+$('undo').addEventListener('click', undo);
+$('hint').addEventListener('click', hint);
+$('new').addEventListener('click', newPuzzle);
+$('reveal').addEventListener('click', reveal);
+$('pause').addEventListener('click', togglePause);
+$('own').addEventListener('click', startEntry);
+$('walk').addEventListener('click', () => startWalk(S.puzzle));
+
+$('eraseEntry').addEventListener('click', erase);
+$('clearEntry').addEventListener('click', () => {
+  S.board = new Array(81).fill(0);
+  S.history = [];
+  render();
+  say('Grid cleared.');
+});
+$('playOwn').addEventListener('click', playOwn);
+$('walkOwn').addEventListener('click', () => { if (validateEntry()) startWalk(S.board.slice()); });
+$('saveEntry').addEventListener('click', () => {
+  if (!validateEntry()) return;
+  S.custom = true;
+  S.puzzle = S.board.slice();
+  S.seconds = 0;
+  openLibrary();
+  saveCurrent(S.board, S.board, null);
+});
+$('cancelEntry').addEventListener('click', () => {
+  setMode('play');
+  render();
+  say('');
+  if (!S.over) startClock();
+});
+
+$('wFirst').addEventListener('click', () => goto(0));
+$('wBack').addEventListener('click', () => goto(W.idx - 1));
+$('wNext').addEventListener('click', () => goto(W.idx + 1));
+$('wLast').addEventListener('click', () => goto(W.steps.length));
+$('scrub').addEventListener('input', e => goto(+e.target.value));
+$('wExit').addEventListener('click', exitWalk);
+
+$('library').addEventListener('click', openLibrary);
+$('doSave').addEventListener('click', () => saveCurrent(S.puzzle, S.board, S.notes));
+$('copyCode').addEventListener('click', copyCode);
+$('download').addEventListener('click', downloadSaves);
+$('loadCode').addEventListener('click', () => {
+  const data = parseCode($('pasteBox').value);
+  if (!data) { say('That does not look like a puzzle — I need 81 digits, with 0 or a dot for the blanks.', true); return; }
+  const err = loadPuzzle(data);
+  if (err) { say(err, true); return; }
+  $('pasteBox').value = '';
+  say('Puzzle opened.');
+});
+$('libExit').addEventListener('click', () => {
+  setMode('play');
+  render();
+  say('');
+  if (!S.over) startClock();
+});
+
+veilBtn.addEventListener('click', () => { if (S.over) newPuzzle(); else togglePause(); });
+
+document.addEventListener('keydown', e => {
+  const tag = e.target && e.target.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+  if (e.metaKey || e.ctrlKey) {
+    if (e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+    return;
+  }
+  const k = e.key;
+
+  if (S.mode === 'walk') {
+    if (k === 'ArrowRight' || k === ' ') { e.preventDefault(); goto(W.idx + 1); }
+    if (k === 'ArrowLeft') { e.preventDefault(); goto(W.idx - 1); }
+    if (k === 'Home') goto(0);
+    if (k === 'End') goto(W.steps.length);
+    if (k === 'Escape') exitWalk();
+    return;
+  }
+
+  if (S.mode === 'lib') { if (k === 'Escape') $('libExit').click(); return; }
+
+  if (k >= '1' && k <= '9') { e.preventDefault(); enter(+k); return; }
+  if (k === 'Backspace' || k === 'Delete' || k === '0') { e.preventDefault(); erase(); return; }
+  if (k.toLowerCase() === 'n' && S.mode === 'play') { $('notes').click(); return; }
+  if (k.toLowerCase() === 'h' && S.mode === 'play') { hint(); return; }
+  if (k === ' ') { e.preventDefault(); togglePause(); return; }
+
+  const arrows = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+  if (arrows.includes(k)) {
+    e.preventDefault();
+    if (S.sel === null) { select(40); return; }
+    let r = S.sel / 9 | 0, c = S.sel % 9;
+    if (k === 'ArrowUp') r = (r + 8) % 9;
+    if (k === 'ArrowDown') r = (r + 1) % 9;
+    if (k === 'ArrowLeft') c = (c + 8) % 9;
+    if (k === 'ArrowRight') c = (c + 1) % 9;
+    select(r * 9 + c);
+  }
+});
+
+newPuzzle();
+</script>
+</body>
+</html>

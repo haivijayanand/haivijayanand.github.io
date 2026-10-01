@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<!--
+TOOL    : Rolling Element Bearing Explorer - anatomy, designation decoding, defect frequencies
+FAMILY  : BEARING_ANALYSIS
+VERSION : 1.0.0
+DATE    : 2026-09-14
+CHAT    : Elements of roller and ball bearings - nomenclature, numbering, bearing frequencies
+CHANGES : v1.0.0 - Initial build. Four modules: Anatomy (interactive SVG section + end view,
+                   bearing type family table), Designation (ISO 15 / SKF-style decoder with
+                   bore-code, series and suffix tables), Frequencies (FTF / BPFO / BPFI / BSF
+                   calculator, inner- or outer-ring rotation, geometry estimator from bore and
+                   OD, harmonic table, illustrative spectrum canvas), Diagnostics (sideband and
+                   fault-progression notes). Fully offline, no external assets.
+STATUS  : Active
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rolling Element Bearing Explorer</title>
+<style>
+:root{
+  --bg:#e9edf1;
+  --panel:#ffffff;
+  --ink:#16212b;
+  --muted:#5d6d7a;
+  --line:#c3cfd8;
+  --line-soft:#dde5eb;
+  --steel:#0f5f70;
+  --steel-dk:#0a4351;
+  --amber:#a85e08;
+  --red:#96311f;
+  --ball:#7aa7bb;
+  --ring:#b9c6ce;
+  --mono:ui-monospace,"SFMono-Regular","Cascadia Mono","Consolas","DejaVu Sans Mono",monospace;
+  --sans:"Inter","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+
+/* ---------- masthead ---------- */
+header.top{
+  background:var(--steel-dk);
+  color:#eaf2f5;
+  border-bottom:3px solid var(--steel);
+}
+header.top .wrap{padding-top:22px;padding-bottom:18px}
+h1{
+  margin:0;
+  font-size:27px;
+  font-weight:650;
+  letter-spacing:-.015em;
+}
+header.top p{margin:6px 0 0;color:#a7c3cd;max-width:64ch;font-size:14px}
+
+nav.tabs{
+  background:var(--steel-dk);
+  border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:20;
+}
+nav.tabs .wrap{display:flex;gap:2px;flex-wrap:wrap;padding-bottom:0}
+nav.tabs button{
+  background:transparent;border:0;border-bottom:3px solid transparent;
+  color:#9fbcc7;font:inherit;font-size:14px;font-weight:550;
+  padding:11px 16px;cursor:pointer;
+}
+nav.tabs button:hover{color:#fff}
+nav.tabs button[aria-selected="true"]{color:#fff;border-bottom-color:#4fb6cd;background:rgba(255,255,255,.06)}
+nav.tabs button:focus-visible{outline:2px solid #7fd3e6;outline-offset:-2px}
+
+main{padding:26px 0 60px}
+section[role=tabpanel][hidden]{display:none}
+
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  padding:22px 24px;
+  margin-bottom:18px;
+}
+h2{
+  font-size:18px;margin:0 0 4px;font-weight:640;letter-spacing:-.01em;
+}
+h2 + .sub{margin:0 0 16px;color:var(--muted);font-size:13.5px}
+h3{font-size:15px;margin:22px 0 8px;font-weight:620}
+p{margin:0 0 10px;max-width:78ch}
+.muted{color:var(--muted)}
+code,.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+code{background:#eef3f6;padding:1px 5px;border:1px solid var(--line-soft);font-size:13px}
+
+/* ---------- tables ---------- */
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:6px 0 14px}
+th,td{border:1px solid var(--line-soft);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:#eef3f6;font-weight:620}
+td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+tbody tr:nth-child(even){background:#f7fafb}
+
+/* ---------- anatomy ---------- */
+.figrow{display:grid;grid-template-columns:1.35fr 1fr;gap:18px;align-items:start}
+@media(max-width:860px){.figrow{grid-template-columns:1fr}}
+svg.fig{width:100%;height:auto;background:#fbfdfe;border:1px solid var(--line-soft)}
+.hit{cursor:pointer}
+.hit:hover .part,.hit.on .part{fill:#ffd9a8;stroke:var(--amber)}
+.hit.on text,.hit:hover text{fill:var(--amber);font-weight:700}
+.lbl{font:500 12px var(--sans);fill:var(--muted)}
+.dim{font:500 11px var(--mono);fill:var(--steel)}
+.partlist{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
+.partlist button{
+  font:inherit;font-size:13px;background:#f2f6f8;border:1px solid var(--line);
+  padding:5px 10px;cursor:pointer;color:var(--ink)
+}
+.partlist button.on{background:var(--steel);border-color:var(--steel);color:#fff}
+.readout{
+  border-left:3px solid var(--steel);background:#f4f9fb;padding:12px 14px;min-height:86px
+}
+.readout h4{margin:0 0 4px;font-size:14.5px}
+.readout p{margin:0;font-size:14px;color:#2b3b46}
+
+/* ---------- forms ---------- */
+.grid2{display:grid;grid-template-columns:340px 1fr;gap:22px;align-items:start}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+fieldset{border:1px solid var(--line-soft);padding:14px 14px 6px;margin:0 0 14px}
+legend{font-size:12.5px;font-weight:640;color:var(--steel);padding:0 6px}
+label{display:block;font-size:13px;margin:0 0 10px;color:#33434f}
+label span.t{display:block;margin-bottom:3px}
+input[type=text],input[type=number],select{
+  width:100%;font:inherit;font-family:var(--mono);font-size:14px;
+  padding:7px 9px;border:1px solid var(--line);background:#fff;color:var(--ink)
+}
+input:focus,select:focus{outline:2px solid #4fb6cd;outline-offset:-1px;border-color:var(--steel)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button.act{
+  font:inherit;font-weight:600;font-size:14px;background:var(--steel);color:#fff;
+  border:1px solid var(--steel-dk);padding:9px 16px;cursor:pointer
+}
+button.act:hover{background:var(--steel-dk)}
+button.ghost{
+  font:inherit;font-size:13px;background:#fff;color:var(--steel);
+  border:1px solid var(--line);padding:7px 12px;cursor:pointer
+}
+button.ghost:hover{border-color:var(--steel)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+
+/* ---------- results ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px;margin:4px 0 16px}
+.card{border:1px solid var(--line);border-top:3px solid var(--steel);padding:10px 12px;background:#fbfdfe}
+.card .k{font-size:12px;color:var(--muted);margin-bottom:2px}
+.card .v{font-family:var(--mono);font-size:21px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.card .u{font-size:12px;color:var(--muted);margin-left:3px}
+.card .x{font-family:var(--mono);font-size:12.5px;color:var(--steel);margin-top:2px}
+.card.inner{border-top-color:var(--amber)}
+.card.ball{border-top-color:#5b7f34}
+.card.cage{border-top-color:#6b5ba8}
+.note{font-size:13px;padding:9px 12px;border-left:3px solid var(--steel);background:#f4f9fb;margin:10px 0}
+.warn{border-left-color:var(--red);background:#fdf3f1}
+.ok{border-left-color:#4c7a2c;background:#f3f8ef}
+canvas{width:100%;height:290px;border:1px solid var(--line-soft);background:#fbfdfe;display:block}
+
+kbd{font-family:var(--mono);font-size:12px;background:#eef3f6;border:1px solid var(--line);padding:0 4px}
+.formula{font-family:var(--mono);font-size:13.5px;background:#f4f9fb;border-left:3px solid var(--steel);padding:10px 14px;margin:8px 0;white-space:pre-wrap;overflow-x:auto}
+footer{color:var(--muted);font-size:12.5px;padding:0 0 30px}
+
+@media print{
+  body{background:#fff;font-size:11pt}
+  nav.tabs,.partlist,.btnrow,button{display:none!important}
+  header.top{background:#fff;color:#000;border-bottom:2px solid #000}
+  header.top p{color:#333}
+  .panel{border:1px solid #999;page-break-inside:avoid;padding:10px 0}
+  @page{size:A4;margin:14mm}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>Rolling Element Bearing Explorer</h1>
+    <p>Anatomy, ISO designation decoding, and the four characteristic defect frequencies — computed from bearing geometry and shaft speed.</p>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <div class="wrap">
+    <button role="tab" id="t-anatomy" aria-controls="p-anatomy" aria-selected="true">Anatomy</button>
+    <button role="tab" id="t-types" aria-controls="p-types" aria-selected="false">Bearing types</button>
+    <button role="tab" id="t-desig" aria-controls="p-desig" aria-selected="false">Designation decoder</button>
+    <button role="tab" id="t-freq" aria-controls="p-freq" aria-selected="false">Defect frequencies</button>
+    <button role="tab" id="t-diag" aria-controls="p-diag" aria-selected="false">Diagnostics</button>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- ==================== ANATOMY ==================== -->
+<section role="tabpanel" id="p-anatomy" aria-labelledby="t-anatomy">
+  <div class="panel">
+    <h2>Elements of a rolling bearing</h2>
+    <p class="sub">Click any part in the drawings or the list below. The section view is a radial cut through the bearing axis; the end view looks along the shaft.</p>
+
+    <div class="figrow">
+      <div>
+        <svg class="fig" id="svgSection" viewBox="0 0 720 430" role="img" aria-label="Radial section through a deep groove ball bearing">
+          <!-- centreline -->
+          <line x1="40" y1="395" x2="700" y2="395" stroke="#8ea3b0" stroke-width="1" stroke-dasharray="18 4 3 4"/>
+          <text class="dim" x="46" y="389">bearing axis / shaft centreline</text>
+
+          <!-- shaft -->
+          <rect x="200" y="330" width="320" height="65" fill="#dfe7ec" stroke="#9fb2bd"/>
+          <text class="lbl" x="360" y="368" text-anchor="middle">shaft</text>
+
+          <!-- inner ring -->
+          <g class="hit" data-part="inner">
+            <rect class="part" x="240" y="268" width="240" height="62" fill="#cfdbe2" stroke="#7d94a1" stroke-width="1.5"/>
+            <path class="part" d="M330 268 a34 34 0 0 0 60 0" fill="#fbfdfe" stroke="#7d94a1" stroke-width="1.5"/>
+            <text class="lbl" x="268" y="305">inner ring</text>
+          </g>
+
+          <!-- rolling element -->
+          <g class="hit" data-part="ball">
+            <circle class="part" cx="360" cy="240" r="31" fill="var(--ball)" stroke="#3d6274" stroke-width="1.5"/>
+            <circle cx="350" cy="229" r="8" fill="#b6d2de" opacity=".8"/>
+            <text class="lbl" x="360" y="245" text-anchor="middle" fill="#12303c">ball</text>
+          </g>
+
+          <!-- outer ring -->
+          <g class="hit" data-part="outer">
+            <rect class="part" x="240" y="150" width="240" height="62" fill="#cfdbe2" stroke="#7d94a1" stroke-width="1.5"/>
+            <path class="part" d="M330 212 a34 34 0 0 1 60 0" fill="#fbfdfe" stroke="#7d94a1" stroke-width="1.5"/>
+            <text class="lbl" x="268" y="188">outer ring</text>
+          </g>
+
+          <!-- raceway callout -->
+          <g class="hit" data-part="raceway">
+            <circle class="part" cx="360" cy="209" r="6" fill="#fff" stroke="var(--steel)" stroke-width="1.5"/>
+            <line x1="366" y1="206" x2="530" y2="150" stroke="var(--steel)" stroke-width="1"/>
+            <text class="lbl" x="534" y="148">raceway (groove)</text>
+          </g>
+
+          <!-- cage -->
+          <g class="hit" data-part="cage">
+            <path class="part" d="M262 240 h58 M400 240 h58" stroke="#8a6d3b" stroke-width="9" fill="none" stroke-linecap="round"/>
+            <text class="lbl" x="150" y="244">cage</text>
+            <line x1="186" y1="240" x2="256" y2="240" stroke="#8a6d3b" stroke-width="1"/>
+          </g>
+
+          <!-- seal -->
+          <g class="hit" data-part="seal">
+            <path class="part" d="M470 158 L470 322" stroke="#4b4b4b" stroke-width="7" fill="none"/>
+            <line x1="474" y1="200" x2="600" y2="200" stroke="#4b4b4b" stroke-width="1"/>
+            <text class="lbl" x="604" y="204">seal / shield</text>
+          </g>
+
+          <!-- dimensions -->
+          <g stroke="var(--steel)" stroke-width="1" fill="none">
+            <line x1="120" y1="395" x2="120" y2="150"/>
+            <line x1="112" y1="150" x2="128" y2="150"/><line x1="112" y1="395" x2="128" y2="395"/>
+            <line x1="166" y1="395" x2="166" y2="268"/>
+            <line x1="158" y1="268" x2="174" y2="268"/><line x1="158" y1="395" x2="174" y2="395"/>
+            <line x1="240" y1="112" x2="480" y2="112"/>
+            <line x1="240" y1="104" x2="240" y2="120"/><line x1="480" y1="104" x2="480" y2="120"/>
+            <line x1="240" y1="240" x2="700" y2="240" stroke-dasharray="7 4" stroke="#9a6a2f"/>
+          </g>
+          <text class="dim" x="114" y="142" text-anchor="middle">D/2</text>
+          <text class="dim" x="160" y="260" text-anchor="middle">d/2</text>
+          <text class="dim" x="360" y="102" text-anchor="middle">B  (width)</text>
+          <text class="dim" x="640" y="234" fill="#9a6a2f">pitch circle, Pd/2</text>
+          <text class="dim" x="540" y="300">D = outside dia.   d = bore dia.</text>
+        </svg>
+      </div>
+
+      <div>
+        <svg class="fig" id="svgEnd" viewBox="0 0 420 420" role="img" aria-label="End view showing rolling elements on the pitch circle"></svg>
+      </div>
+    </div>
+
+    <div class="partlist" id="partBtns"></div>
+    <div class="readout" id="partOut">
+      <h4>Select a part</h4>
+      <p>Every rolling bearing reduces friction the same way: two hardened rings separated by rolling elements that are spaced by a cage. The geometry of those four parts is exactly what sets the defect frequencies in the last tab.</p>
+    </div>
+
+    <h3>Geometry symbols used throughout this tool</h3>
+    <table>
+      <thead><tr><th>Symbol</th><th>Name</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td class="n">d</td><td>Bore diameter</td><td>Inner ring bore; the shaft fit. Encoded in the bearing number.</td></tr>
+        <tr><td class="n">D</td><td>Outside diameter</td><td>Outer ring OD; the housing fit.</td></tr>
+        <tr><td class="n">B</td><td>Width</td><td>Axial width of the bearing (T for tapered roller assemblies).</td></tr>
+        <tr><td class="n">Pd</td><td>Pitch diameter</td><td>Diameter of the circle through the rolling element centres. Often written D<sub>m</sub> or PCD. Roughly (d+D)/2.</td></tr>
+        <tr><td class="n">Bd</td><td>Rolling element diameter</td><td>Ball diameter, or roller mean diameter. Often written D<sub>w</sub> or d<sub>b</sub>.</td></tr>
+        <tr><td class="n">Z</td><td>Number of rolling elements</td><td>Also written N<sub>b</sub> or n. Counted in one row.</td></tr>
+        <tr><td class="n">&theta;</td><td>Contact angle</td><td>Angle between the load line through the contacts and the radial plane. 0&deg; for deep groove and cylindrical roller under pure radial load; 15–40&deg; for angular contact; 10–30&deg; for tapered roller.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ==================== TYPES ==================== -->
+<section role="tabpanel" id="p-types" aria-labelledby="t-types" hidden>
+  <div class="panel">
+    <h2>Ball bearings against roller bearings</h2>
+    <p class="sub">The rolling element shape decides the contact geometry, and that decides load capacity, speed limit and misalignment tolerance.</p>
+    <p>A ball touches each raceway at a <em>point</em> that spreads into a small ellipse under load. A roller touches along a <em>line</em>. The line contact carries far more load for the same envelope but has higher friction, a lower speed limit and much less tolerance of misalignment — which is why a line-contact bearing is nearly always paired with a self-aligning or spherical arrangement when shaft deflection is expected.</p>
+
+    <table>
+      <thead><tr><th>Feature</th><th>Ball bearing</th><th>Roller bearing</th></tr></thead>
+      <tbody>
+        <tr><td>Contact</td><td>Point (elliptical patch)</td><td>Line (rectangular patch)</td></tr>
+        <tr><td>Radial capacity</td><td>Moderate</td><td>High to very high</td></tr>
+        <tr><td>Thrust capacity</td><td>Good in deep groove and angular contact</td><td>Poor for cylindrical (N, NU); high for tapered and spherical</td></tr>
+        <tr><td>Speed limit</td><td>High</td><td>Lower — more sliding, more heat</td></tr>
+        <tr><td>Misalignment</td><td>2–10 arc-min typical</td><td>Cylindrical &lt; 2 arc-min; spherical up to 1.5–2&deg;</td></tr>
+        <tr><td>Stiffness</td><td>Lower</td><td>Higher</td></tr>
+        <tr><td>Cost</td><td>Low</td><td>Higher</td></tr>
+      </tbody>
+    </table>
+
+    <h3>The main families</h3>
+    <table>
+      <thead><tr><th>Type</th><th>ISO first digit / prefix</th><th>Contact angle</th><th>Takes</th><th>Typical use</th></tr></thead>
+      <tbody>
+        <tr><td>Deep groove ball</td><td class="n">6</td><td class="n">0&deg;</td><td>Radial + moderate axial both ways</td><td>The default bearing. Motors, gearboxes, accessory drives.</td></tr>
+        <tr><td>Angular contact ball, single row</td><td class="n">7</td><td class="n">15&deg;, 25&deg;, 30&deg;, 40&deg;</td><td>Radial + axial one way</td><td>Mounted in pairs or sets; spindles, pinion shafts, pumps.</td></tr>
+        <tr><td>Angular contact ball, double row</td><td class="n">3 (or 0/5 prefix)</td><td class="n">25–35&deg;</td><td>Radial + axial both ways</td><td>Rigid location in one bearing position.</td></tr>
+        <tr><td>Four-point contact ball</td><td>QJ</td><td class="n">35&deg;</td><td>Pure axial both ways</td><td>Axial location beside a cylindrical roller bearing.</td></tr>
+        <tr><td>Self-aligning ball</td><td class="n">1 (or 2 with spherical OD race)</td><td class="n">~0&deg;</td><td>Radial, tolerates 1.5–3&deg;</td><td>Long shafts, plummer blocks, fans.</td></tr>
+        <tr><td>Thrust ball</td><td class="n">5</td><td class="n">90&deg;</td><td>Pure axial</td><td>Screw jacks, low-speed thrust takes.</td></tr>
+        <tr><td>Cylindrical roller</td><td>N, NU, NJ, NUP, NN</td><td class="n">0&deg;</td><td>High radial; axial only if ribbed (NJ, NUP)</td><td>Gearbox shafts, traction motors, rolling mills.</td></tr>
+        <tr><td>Tapered roller</td><td class="n">3 (302xx, 320xx, 322xx, 313xx)</td><td class="n">10–30&deg;</td><td>Heavy radial + axial one way</td><td>Always in opposed pairs; wheel hubs, pinions, spindles.</td></tr>
+        <tr><td>Spherical roller</td><td class="n">2 (222xx, 223xx, 213xx)</td><td class="n">~10&deg;</td><td>Very heavy radial + axial both ways, tolerates 1–2&deg;</td><td>Crushers, mills, fans on long shafts, heavy industry.</td></tr>
+        <tr><td>Toroidal roller</td><td>C</td><td class="n">~0&deg;</td><td>Radial, tolerates misalignment <em>and</em> axial float</td><td>Non-locating position on long thermally growing shafts.</td></tr>
+        <tr><td>Needle roller</td><td>NA, NK, HK, RNA</td><td class="n">0&deg;</td><td>High radial in small radial space</td><td>Gudgeon pins, rocker arms, compact gear trains.</td></tr>
+        <tr><td>Spherical / cylindrical roller thrust</td><td class="n">8, 292xx, 293xx, 294xx</td><td class="n">~45–90&deg;</td><td>Very heavy axial</td><td>Extruders, vertical shafts, press screws.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="note">Cage nomenclature you will meet on the same part number: <code>J</code> pressed steel, <code>M</code> machined brass, <code>TN9</code> / <code>TVP</code> glass-fibre polyamide 6,6, <code>CC</code> / <code>CA</code> / <code>EC</code> specific spherical- and cylindrical-roller cage and guidance designs. The cage does not carry load; it spaces the elements and it is usually the first thing to fail once the elements start to skid.</div>
+  </div>
+</section>
+
+<!-- ==================== DESIGNATION ==================== -->
+<section role="tabpanel" id="p-desig" aria-labelledby="t-desig" hidden>
+  <div class="panel">
+    <h2>Decode a bearing designation</h2>
+    <p class="sub">ISO 15 / ISO 355 style basic numbers with SKF-family prefixes and suffixes. Try <code>6205-2RS1/C3</code>, <code>22220 EK/W33</code>, <code>NU 2220 ECM</code>, <code>32210 J2/Q</code>, <code>7208 BECBP</code>, <code>608</code>.</p>
+    <div class="row2" style="max-width:640px">
+      <label><span class="t">Designation</span><input type="text" id="desigIn" value="6205-2RS1/C3" spellcheck="false"></label>
+      <label><span class="t">&nbsp;</span><button class="act" id="desigBtn" style="width:100%">Decode</button></label>
+    </div>
+    <div id="desigOut"></div>
+
+    <h3>How the basic number is built</h3>
+    <div class="formula">  6  2  05          2  22  20          NU  22  20
+  |  |  |           |  |   |           |   |   |
+  |  |  bore code   |  |   bore code   |   |   bore code
+  |  dia. series    |  dim. series     |   dim. series
+  type              type               type prefix</div>
+    <p>Read it from the right. The last two digits are almost always the <strong>bore code</strong>. Everything to the left of them is the <strong>dimension series</strong>, and the leftmost digit or letter group is the <strong>type</strong>.</p>
+
+    <h3>Bore code</h3>
+    <table>
+      <thead><tr><th>Code</th><th class="n">Bore d (mm)</th><th>Rule</th></tr></thead>
+      <tbody>
+        <tr><td class="n">1 … 9</td><td class="n">1 … 9</td><td>Three-digit numbers only (608 = 8 mm bore). Single digit is the bore itself.</td></tr>
+        <tr><td class="n">00</td><td class="n">10</td><td rowspan="4">Four fixed exceptions.</td></tr>
+        <tr><td class="n">01</td><td class="n">12</td></tr>
+        <tr><td class="n">02</td><td class="n">15</td></tr>
+        <tr><td class="n">03</td><td class="n">17</td></tr>
+        <tr><td class="n">04 … 96</td><td class="n">20 … 480</td><td>Multiply the code by 5. 6208 &rarr; 08 &times; 5 = 40 mm.</td></tr>
+        <tr><td class="n">/500 and up</td><td class="n">500+</td><td>Bore written out in millimetres after a slash. Also used for odd bores, e.g. <code>62/22</code> = 22 mm.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Dimension series (ISO 15)</h3>
+    <p>Two digits: width series then diameter series. For a given bore, the series fixes the OD and width, so any maker's 6205 interchanges with any other's.</p>
+    <table>
+      <thead><tr><th>Digit</th><th>Diameter series (2nd position)</th><th>Width series (1st position, often omitted = 0)</th></tr></thead>
+      <tbody>
+        <tr><td class="n">7, 8, 9</td><td>Extra thin section</td><td>Extra narrow</td></tr>
+        <tr><td class="n">0, 1</td><td>Very light / extra light</td><td>Narrow</td></tr>
+        <tr><td class="n">2</td><td>Light — the common general-purpose series</td><td>Normal</td></tr>
+        <tr><td class="n">3</td><td>Medium</td><td>Wide</td></tr>
+        <tr><td class="n">4</td><td>Heavy</td><td>Extra wide</td></tr>
+      </tbody>
+    </table>
+    <div class="note">Same bore, different series: <code>6005</code>, <code>6205</code>, <code>6305</code> and <code>6405</code> all take a 25 mm shaft and have OD 47, 52, 62 and 80 mm with rising load capacity. <strong>The element count Z changes with the series</strong>, so the defect frequencies of a 6205 and a 6305 are not the same.</div>
+
+    <h3>Common prefixes</h3>
+    <table>
+      <thead><tr><th>Prefix</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td class="n">N, NU, NJ, NUP, NF, NN, NNU</td><td>Cylindrical roller, the letters describing which ring carries ribs and therefore how much axial load can pass through.</td></tr>
+        <tr><td class="n">QJ</td><td>Four-point contact ball bearing.</td></tr>
+        <tr><td class="n">C</td><td>CARB toroidal roller bearing.</td></tr>
+        <tr><td class="n">NA, NK, HK, RNA, BK</td><td>Needle roller variants (with or without inner ring, drawn cup, open or closed end).</td></tr>
+        <tr><td class="n">GE, GEH</td><td>Spherical plain bearing — a sliding bearing, no rolling elements, no defect frequencies.</td></tr>
+        <tr><td class="n">W, R, S</td><td>Stainless, inch-bore, or special ring variants depending on the maker.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Common suffixes</h3>
+    <table>
+      <thead><tr><th>Suffix</th><th>Meaning</th><th>Why the vibration analyst cares</th></tr></thead>
+      <tbody>
+        <tr><td class="n">Z / 2Z / ZZ</td><td>Shield one side / both sides (non-contact)</td><td>Grease for life; cannot be relubricated.</td></tr>
+        <tr><td class="n">RS / 2RS / 2RS1 / DDU / VV</td><td>Contact seal one / both sides</td><td>Adds drag and heat; limits speed.</td></tr>
+        <tr><td class="n">C2 / — / C3 / C4 / C5</td><td>Radial internal clearance: less than normal, normal, greater, greater still</td><td>Clearance changes the load zone. Excess clearance widens the load zone, raises BPFO amplitude and can produce a cage-frequency rattle.</td></tr>
+        <tr><td class="n">P6 / P5 / P4 / P2</td><td>Tightening tolerance class (ISO 492)</td><td>Higher class = lower runout = lower 1&times; and 2&times; content.</td></tr>
+        <tr><td class="n">E / EC</td><td>Reinforced internal design, more or larger elements</td><td><strong>Changes Z.</strong> An E-suffix bearing has different defect frequencies from the plain version.</td></tr>
+        <tr><td class="n">K</td><td>Tapered bore, taper 1:12</td><td>Mounted on an adapter sleeve; drive-up sets the clearance.</td></tr>
+        <tr><td class="n">N / NR</td><td>Snap ring groove in outer ring / groove with ring supplied</td><td>Housing location method.</td></tr>
+        <tr><td class="n">W33</td><td>Annular groove and three lubrication holes in the outer ring</td><td>Standard on spherical roller bearings in housings.</td></tr>
+        <tr><td class="n">J / M / TN9 / TVP / CC / CA</td><td>Cage material and design</td><td>Cage design sets the skid behaviour and the FTF-family modulation.</td></tr>
+        <tr><td class="n">B / A / AC</td><td>Contact angle variant on angular contact ball bearings (40&deg;, 30&deg;, 25&deg;)</td><td><strong>Changes &theta;</strong>, and therefore every defect frequency.</td></tr>
+        <tr><td class="n">GA / GB / DB / DF / DT</td><td>Matched pair arrangements: back-to-back, face-to-face, tandem</td><td>Sets which ring takes thrust and how the load zone sits.</td></tr>
+        <tr><td class="n">VA228 / VQ / HT</td><td>High temperature execution, special grease or heat treatment</td><td>Common on accessory gearbox and turbine applications.</td></tr>
+      </tbody>
+    </table>
+    <div class="note warn">Suffix codes are <strong>not</strong> standardised across manufacturers the way the basic number is. SKF <code>2RS1</code>, FAG <code>2RSR</code>, NSK <code>DDU</code> and NTN <code>LLU</code> all mean a double contact seal. Always confirm against the maker's own catalogue before ordering or before trusting a geometry table.</div>
+  </div>
+</section>
+
+<!-- ==================== FREQUENCIES ==================== -->
+<section role="tabpanel" id="p-freq" aria-labelledby="t-freq" hidden>
+  <div class="panel">
+    <h2>Characteristic defect frequencies</h2>
+    <p class="sub">A local defect produces an impact every time a rolling element passes over it. The repetition rate is fixed by kinematics, so each fault location has its own signature frequency.</p>
+
+    <div class="grid2">
+      <div>
+        <fieldset>
+          <legend>Bearing geometry</legend>
+          <label><span class="t">Preset (typical published values)</span>
+            <select id="preset">
+              <option value="custom">Custom entry</option>
+              <option value="6203">6203 — Z 8, Bd 6.75, Pd 28.50</option>
+              <option value="6205" selected>6205 — Z 9, Bd 7.94, Pd 39.04</option>
+              <option value="6206">6206 — Z 9, Bd 9.53, Pd 46.40</option>
+              <option value="6308">6308 — Z 8, Bd 15.08, Pd 65.00</option>
+            </select>
+          </label>
+          <label><span class="t">Z — number of rolling elements</span><input type="number" id="Z" value="9" min="3" max="60" step="1"></label>
+          <div class="row2">
+            <label><span class="t">Bd — element dia. (mm)</span><input type="number" id="Bd" value="7.94" step="0.01" min="0.1"></label>
+            <label><span class="t">Pd — pitch dia. (mm)</span><input type="number" id="Pd" value="39.04" step="0.01" min="0.2"></label>
+          </div>
+          <label><span class="t">&theta; — contact angle (deg)</span><input type="number" id="theta" value="0" step="0.5" min="0" max="89"></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Estimate geometry from bore and OD</legend>
+          <div class="row2">
+            <label><span class="t">Bore d (mm)</span><input type="number" id="estD" value="25" step="0.5"></label>
+            <label><span class="t">OD D (mm)</span><input type="number" id="estOD" value="52" step="0.5"></label>
+          </div>
+          <div class="btnrow"><button class="ghost" id="estBtn">Estimate and fill</button></div>
+          <p class="muted" style="font-size:12.5px;margin:4px 0 8px">Uses Pd = (d+D)/2, Bd &asymp; 0.30(D&minus;d), Z &asymp; &pi;Pd/(1.6&middot;Bd). Good to a few percent for deep groove ball bearings only — use it to sanity-check, not to report.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Operating condition</legend>
+          <div class="row2">
+            <label><span class="t">Shaft speed</span><input type="number" id="speed" value="1780" step="1" min="0"></label>
+            <label><span class="t">Units</span>
+              <select id="speedUnit"><option value="rpm" selected>rpm</option><option value="hz">Hz</option></select>
+            </label>
+          </div>
+          <label><span class="t">Rotating ring</span>
+            <select id="rotRing">
+              <option value="inner" selected>Inner ring rotates, outer stationary</option>
+              <option value="outer">Outer ring rotates, inner stationary</option>
+            </select>
+          </label>
+        </fieldset>
+        <div class="btnrow">
+          <button class="act" id="calcBtn">Calculate</button>
+          <button class="ghost" onclick="window.print()">Print this page</button>
+        </div>
+      </div>
+
+      <div>
+        <div id="freqCards" class="cards"></div>
+        <div id="freqChecks"></div>
+        <h3 style="margin-top:14px">Illustrative spectrum</h3>
+        <label style="max-width:300px"><span class="t">Show the signature of</span>
+          <select id="faultSel">
+            <option value="bpfo" selected>Outer race defect</option>
+            <option value="bpfi">Inner race defect</option>
+            <option value="bsf">Rolling element defect</option>
+            <option value="ftf">Cage defect</option>
+          </select>
+        </label>
+        <canvas id="spec" aria-label="Illustrative vibration spectrum showing the selected fault family"></canvas>
+        <p class="muted" style="font-size:12.5px;margin-top:6px">Line positions are calculated from your inputs; amplitudes are schematic, drawn only to show the harmonic and sideband pattern you are looking for.</p>
+      </div>
+    </div>
+
+    <h3>The formulas</h3>
+    <p>With shaft rotational frequency <code>S</code> in Hz, and writing <code>r = (Bd/Pd)·cos&theta;</code> for the geometry ratio, the standard inner-rotating case gives:</p>
+    <div class="formula">FTF  = (S/2)·(1 − r)                    cage / train frequency
+BPFO = (Z/2)·S·(1 − r)   = Z · FTF     ball pass frequency, outer race
+BPFI = (Z/2)·S·(1 + r)   = Z · (S − FTF)
+BSF  = (Pd/2Bd)·S·(1 − r²)             ball spin frequency (element rotation)
+BDF  = 2 · BSF                          ball defect frequency, the usual observed line</div>
+    <p>If the outer ring rotates instead, the cage runs with the outer ring and the two ball-pass expressions swap their signs: FTF = (S/2)(1+r), BPFO = (Z/2)S(1+r), BPFI = (Z/2)S(1−r). The BSF expression is unchanged. The tool applies whichever case you select.</p>
+    <p>Every one of these is a <em>relative</em> speed. <code>S</code> is the difference in rotational speed between the two rings, which for a normal machine is simply the shaft speed.</p>
+
+    <h3>Why 2×BSF and not BSF</h3>
+    <p>A ball spins about its own axis at BSF. A spall on the ball strikes a raceway once per ball revolution — but it strikes the <em>inner</em> race and then the <em>outer</em> race within one revolution, so the impact rate seen at the housing is usually <code>2×BSF</code>. A defect that only reaches one raceway, or an element that skids, will show BSF instead. Look for both.</p>
+
+    <h3>Rule-of-thumb estimates when geometry is unavailable</h3>
+    <p>For a typical bearing with 8 to 12 elements and <code>r</code> near 0.2, the ratios collapse to usable approximations:</p>
+    <div class="formula">FTF  ≈ 0.38 · S  to  0.42 · S
+BPFO ≈ 0.4 · Z · S
+BPFI ≈ 0.6 · Z · S
+BPFO + BPFI = Z · S      ← always exactly true, use it as a check</div>
+    <p>That last identity is the fastest audit of any bearing frequency table: add the outer and inner ball-pass orders and you must get the element count.</p>
+  </div>
+</section>
+
+<!-- ==================== DIAGNOSTICS ==================== -->
+<section role="tabpanel" id="p-diag" aria-labelledby="t-diag" hidden>
+  <div class="panel">
+    <h2>Reading the signature</h2>
+    <p class="sub">Frequency tells you where the defect is. The pattern around that frequency tells you how the load reaches it, and the envelope tells you how far it has progressed.</p>
+
+    <h3>Sidebands</h3>
+    <table>
+      <thead><tr><th>Fault</th><th>Carrier</th><th>Sideband spacing</th><th>Reason</th></tr></thead>
+      <tbody>
+        <tr><td>Outer race</td><td>BPFO and harmonics</td><td>None normally</td><td>The defect sits at a fixed angular position in a fixed load zone, so the impact amplitude does not vary. Sidebands at 1&times; appear only if the load direction rotates or the shaft is bent.</td></tr>
+        <tr><td>Inner race</td><td>BPFI and harmonics</td><td>1&times; shaft</td><td>The defect rotates in and out of the load zone once per shaft revolution, amplitude-modulating the impact train.</td></tr>
+        <tr><td>Rolling element</td><td>2&times;BSF (and BSF)</td><td>FTF</td><td>The defective element orbits at cage speed, entering and leaving the load zone once per cage revolution.</td></tr>
+        <tr><td>Cage</td><td>FTF, low amplitude</td><td>—</td><td>Rarely seen alone. Usually appears as a modulation on another family, or as a broadband rattle once the cage cracks.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Stages of failure</h3>
+    <table>
+      <thead><tr><th>Stage</th><th>What is happening</th><th>Where to look</th><th>Remaining life</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Sub-surface fatigue, no visible spall</td><td>Ultrasonic / acoustic emission, 250–350 kHz. Nothing in the velocity spectrum.</td><td>Long — 10 to 20% of life consumed</td></tr>
+        <tr><td>2</td><td>Spall initiates; impacts ring the bearing's natural frequencies</td><td>Envelope / demodulated spectrum, 500 Hz–30 kHz band. Discrete defect frequency appears in the envelope well before the raw spectrum.</td><td>Weeks to months</td></tr>
+        <tr><td>3</td><td>Defect frequency and harmonics visible in the raw velocity spectrum, sidebands develop</td><td>Raw spectrum plus envelope. Harmonic count grows as the spall widens.</td><td>Days to weeks — plan the replacement</td></tr>
+        <tr><td>4</td><td>Discrete frequencies collapse into a raised noise floor; clearance grows; 1&times; rises</td><td>Overall level, noise floor, temperature. Defect frequencies may <em>disappear</em>.</td><td>Hours to days</td></tr>
+      </tbody>
+    </table>
+    <div class="note warn">The disappearance of a clean defect frequency is not recovery. In stage 4 the spall has spread far enough that impacts are no longer periodic, and the spectrum flattens. Judge it on overall level and trend, never on the defect line alone.</div>
+
+    <h3>Practical cautions</h3>
+    <table>
+      <thead><tr><th>Issue</th><th>What to do</th></tr></thead>
+      <tbody>
+        <tr><td>Defect frequencies are non-integer</td><td>That is the point. A line at exactly 3&times; or 4&times; shaft speed is far more likely blade pass, coupling or gear mesh than a bearing. Bearing lines land between the orders.</td></tr>
+        <tr><td>Slip</td><td>Real cages slip 1–2% under light or variable load, so measured lines sit slightly below calculated ones. Allow a ±1–2% search band when you set alarms.</td></tr>
+        <tr><td>Contact angle changes with thrust</td><td>Deep groove bearings develop a contact angle under axial preload, which shifts every frequency. Angular contact and tapered bearings shift with load too. Calculate a band, not a line.</td></tr>
+        <tr><td>Resolution</td><td>To separate BPFI sidebands at 1&times; you need line spacing well below the shaft frequency. For a 30 Hz shaft, aim for 3200 lines or more over the chosen span.</td></tr>
+        <tr><td>Two bearings, same defect frequency</td><td>Common on a gearbox where identical bearings sit on the same shaft. Separate them by sensor location and phase, not by frequency.</td></tr>
+        <tr><td>Gearbox shafts</td><td>Use the speed of the shaft <em>that bearing</em> is on, not the input speed. Apply the gear ratio first.</td></tr>
+        <tr><td>E-suffix and cage variants</td><td>A reinforced bearing of the same basic number can have a different element count. Confirm Z from the maker's data before writing the alarm band.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>Worked check</h2>
+    <p>A 6205 on a 1780 rpm shaft, inner ring rotating: S = 29.67 Hz, r = 7.94/39.04 = 0.2034.</p>
+    <div class="formula">FTF  = (29.67/2)(1 − 0.2034)          = 11.82 Hz   = 0.398 ×
+BPFO = (9/2)(29.67)(1 − 0.2034)       = 106.4 Hz   = 3.585 ×
+BPFI = (9/2)(29.67)(1 + 0.2034)       = 160.7 Hz   = 5.415 ×
+BSF  = (39.04/15.88)(29.67)(1 − 0.2034²) = 69.9 Hz = 2.357 ×
+2×BSF                                  = 139.8 Hz  = 4.714 ×
+
+check: 3.585 + 5.415 = 9.000 = Z   ✓
+check: FTF/S = 0.398, inside the expected 0.38–0.42 band   ✓</div>
+  </div>
+</section>
+
+<footer class="wrap">Calculated values are kinematic ideals. Confirm Z, Bd, Pd and &theta; against the manufacturer's data before setting alarm bands on a production machine.</footer>
+</main>
+
+<script>
+"use strict";
+/* ---------------- tabs ---------------- */
+const tabs=[...document.querySelectorAll('nav.tabs button')];
+tabs.forEach(t=>t.addEventListener('click',()=>{
+  tabs.forEach(o=>{
+    const on=o===t;
+    o.setAttribute('aria-selected',on?'true':'false');
+    document.getElementById(o.getAttribute('aria-controls')).hidden=!on;
+  });
+  if(t.id==='t-freq') draw();
+  window.scrollTo({top:0});
+}));
+
+/* ---------------- anatomy ---------------- */
+const PARTS={
+  inner:{n:'Inner ring',d:'Hardened steel ring pressed onto the shaft, carrying the inner raceway. Rotates with the shaft in the usual arrangement, so a defect on it passes through the load zone once per revolution — which is exactly why inner race faults are modulated at 1× shaft speed.'},
+  outer:{n:'Outer ring',d:'Seats in the housing and carries the outer raceway. Normally stationary, so a defect stays in one angular position and its impacts have constant amplitude, giving BPFO harmonics with no sidebands.'},
+  ball:{n:'Rolling element',d:'Ball, cylindrical roller, tapered roller, spherical roller or needle. It orbits the axis at cage speed FTF while spinning about its own axis at BSF. Both motions appear in the vibration signature of a damaged element.'},
+  cage:{n:'Cage (separator, retainer)',d:'Keeps the elements evenly spaced so they never rub each other, and retains them during handling. It carries no load. Pressed steel, machined brass or polyamide. Its rotational speed is the fundamental train frequency, FTF.'},
+  raceway:{n:'Raceway',d:'The precision-ground groove each ring presents to the elements. In a deep groove ball bearing the groove radius is about 52% of the ball radius — close enough to spread contact stress, loose enough to avoid excess friction. Spalling starts here, just below the surface.'},
+  seal:{n:'Seal or shield',d:'A shield (Z) runs with a small clearance and adds no friction. A contact seal (RS) rubs the inner ring, keeps contamination out and grease in, but adds drag and heat and lowers the speed limit.'},
+  pitch:{n:'Pitch circle',d:'The circle through the rolling element centres, diameter Pd. Together with the element diameter Bd, the count Z and the contact angle θ, it fixes every defect frequency.'}
+};
+const partOut=document.getElementById('partOut');
+function showPart(k){
+  const p=PARTS[k]; if(!p) return;
+  partOut.innerHTML='<h4>'+p.n+'</h4><p>'+p.d+'</p>';
+  document.querySelectorAll('.hit').forEach(g=>g.classList.toggle('on',g.dataset.part===k));
+  document.querySelectorAll('#partBtns button').forEach(b=>b.classList.toggle('on',b.dataset.part===k));
+}
+const pb=document.getElementById('partBtns');
+Object.keys(PARTS).forEach(k=>{
+  const b=document.createElement('button'); b.textContent=PARTS[k].n; b.dataset.part=k;
+  b.addEventListener('click',()=>showPart(k)); pb.appendChild(b);
+});
+document.addEventListener('click',e=>{
+  const g=e.target.closest('.hit'); if(g) showPart(g.dataset.part);
+});
+
+/* end view */
+(function endView(){
+  const s=document.getElementById('svgEnd'),cx=210,cy=200,Ro=155,Ri=78,Rp=118,br=26,n=9;
+  const NS='http://www.w3.org/2000/svg';
+  const el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const g=el('g',{});
+  g.appendChild(el('circle',{cx,cy,r:Ro,fill:'#cfdbe2',stroke:'#7d94a1','stroke-width':1.5}));
+  g.appendChild(el('circle',{cx,cy,r:Rp+br+4,fill:'#fbfdfe',stroke:'#9fb2bd'}));
+  g.appendChild(el('circle',{cx,cy,r:Rp-br-4,fill:'#cfdbe2',stroke:'#9fb2bd'}));
+  g.appendChild(el('circle',{cx,cy,r:Ri,fill:'#e6edf1',stroke:'#7d94a1','stroke-width':1.5}));
+  g.appendChild(el('circle',{cx,cy,r:Rp,fill:'none',stroke:'#9a6a2f','stroke-width':1,'stroke-dasharray':'6 4'}));
+  for(let i=0;i<n;i++){
+    const a=(i/n)*2*Math.PI-Math.PI/2;
+    const bx=cx+Rp*Math.cos(a),by=cy+Rp*Math.sin(a);
+    g.appendChild(el('circle',{cx:bx,cy:by,r:br,fill:'#7aa7bb',stroke:'#3d6274','stroke-width':1.3}));
+    g.appendChild(el('circle',{cx:bx-8,cy:by-8,r:6,fill:'#b6d2de',opacity:.75}));
+  }
+  s.appendChild(g);
+  const t=(x,y,txt,cls,anc)=>{const e=el('text',{x,y,class:cls||'lbl'});if(anc)e.setAttribute('text-anchor',anc);e.textContent=txt;s.appendChild(e);};
+  s.appendChild(el('line',{x1:cx,y1:cy,x2:cx+Rp*Math.cos(-Math.PI/2),y2:cy+Rp*Math.sin(-Math.PI/2),stroke:'#9a6a2f','stroke-width':1}));
+  t(cx+6,cy-50,'Pd/2','dim');
+  s.appendChild(el('line',{x1:cx+Rp-br,y1:cy+Rp*0+0,x2:cx+Rp+br,y2:cy,stroke:'#3d6274','stroke-width':1}));
+  t(cx+Rp+34,cy+4,'Bd','dim');
+  t(cx,cy+6,'Z = 9 elements','lbl','middle');
+  t(cx,392,'End view — pitch circle (dashed) through element centres','lbl','middle');
+})();
+showPart('ball');
+
+/* ---------------- designation decoder ---------------- */
+const TYPE={'0':'Double row angular contact ball bearing','1':'Self-aligning ball bearing','2':'Spherical roller bearing or barrel roller bearing (also spherical roller thrust in the 29x series)','3':'Tapered roller bearing (or double row angular contact ball in 32xx/33xx)','4':'Double row deep groove ball bearing','5':'Thrust ball bearing','6':'Single row deep groove ball bearing','7':'Single row angular contact ball bearing','8':'Cylindrical roller thrust bearing'};
+const PREFIX={'NU':'Cylindrical roller, ribs on outer ring only — inner ring floats axially','NJ':'Cylindrical roller, ribs on outer ring plus one inner rib — axial location one direction','NUP':'Cylindrical roller with loose flange ring — axial location both directions','N':'Cylindrical roller, ribs on inner ring only','NF':'Cylindrical roller, ribs on inner ring plus one outer rib','NN':'Double row cylindrical roller','NNU':'Double row cylindrical roller, ribs on outer ring','QJ':'Four-point contact ball bearing','C':'CARB toroidal roller bearing','NA':'Needle roller with inner ring','NK':'Needle roller without inner ring','HK':'Drawn cup needle roller, open end','RNA':'Needle roller without inner ring (machined)','GE':'Spherical plain bearing — sliding, not rolling'};
+const DIA={'7':'extra thin section','8':'extra thin section','9':'thin section','0':'very light','1':'extra light','2':'light (general purpose)','3':'medium','4':'heavy','5':'heavy'};
+const WID={'0':'narrow','1':'narrow','2':'normal','3':'wide','4':'extra wide','5':'extra wide','8':'extra narrow','9':'extra narrow'};
+const SUFF=[['2RS1','Contact seal both sides (SKF nitrile)'],['2RSH','Contact seal both sides, low friction'],['2RSL','Low friction seal both sides'],['2RS','Contact seal both sides'],['RS1','Contact seal one side'],['RSH','Contact seal one side'],['RS','Contact seal one side'],['DDU','Contact seal both sides (NSK)'],['LLU','Contact seal both sides (NTN)'],['2Z','Shield both sides'],['ZZ','Shield both sides'],['Z','Shield one side'],['VV','Non-contact seal both sides'],['W33','Annular groove and three lubrication holes in outer ring'],['C2','Radial internal clearance smaller than normal'],['C3','Radial internal clearance greater than normal'],['C4','Radial internal clearance greater than C3'],['C5','Radial internal clearance greater than C4'],['CN','Normal radial internal clearance'],['P4','Tolerance class ISO 4 (high precision)'],['P5','Tolerance class ISO 5'],['P6','Tolerance class ISO 6'],['P52','Precision class with C2 clearance'],['ECM','Reinforced design, machined brass cage'],['ECP','Reinforced design, polyamide cage'],['EC','Reinforced design, modified roller-to-flange contact'],['TN9','Glass-fibre reinforced polyamide 6,6 cage'],['TVP','Glass-fibre reinforced polyamide cage (FAG)'],['CC','Spherical roller cage design, C design with guide ring'],['CA','Spherical roller, machined cage with guide ring'],['MA','Machined brass cage, outer ring guided'],['MB','Machined brass cage, inner ring guided'],['M','Machined brass cage'],['J2','Pressed steel cage (variant)'],['J','Pressed steel cage'],['NR','Snap ring groove with snap ring fitted'],['N','Snap ring groove in outer ring'],['K30','Tapered bore, taper 1:30'],['K','Tapered bore, taper 1:12'],['E','Reinforced internal design — element count may differ from the plain version'],['BE','40 degree contact angle, reinforced'],['B','40 degree contact angle (angular contact ball)'],['AC','25 degree contact angle'],['A','30 degree contact angle or modified internal design'],['DB','Matched pair, back-to-back'],['DF','Matched pair, face-to-face'],['DT','Matched pair, tandem'],['GA','Universally matchable, light preload'],['GB','Universally matchable, moderate preload'],['VA228','High temperature execution'],['HT','High temperature grease'],['Q','Optimised contact geometry (tapered roller)'],['VQ','Special execution'],['GJN','Polyurea high temperature grease'],['MT33','Standard grease, wide temperature range']];
+
+function boreFromCode(code){
+  if(code==='00')return 10; if(code==='01')return 12; if(code==='02')return 15; if(code==='03')return 17;
+  const v=parseInt(code,10); if(isNaN(v))return null;
+  return v*5;
+}
+function decode(raw){
+  const s=raw.trim().toUpperCase().replace(/\s+/g,'');
+  if(!s) return null;
+  const slash=s.match(/\/(\d{3,4})(?![0-9])/);
+  const m=s.match(/^([A-Z]*)(\d{2,5})(.*)$/);
+  if(!m) return {err:'Could not parse that. Expect an optional letter prefix, then 2 to 5 digits, then suffixes — for example 6205-2RS1/C3.'};
+  let [,pre,digits,rest]=m;
+  const out={pre,digits,rest,rows:[]};
+  let bore=null,boreNote='',series='';
+  if(slash && /^\/?\d{3,4}$/.test(slash[1]) && parseInt(slash[1],10)>=500){
+    bore=parseInt(slash[1],10); boreNote='Bore stated directly after the slash (500 mm and above).'; series=digits;
+  } else if(digits.length>=4){
+    const code=digits.slice(-2); series=digits.slice(0,-2); bore=boreFromCode(code);
+    boreNote='Bore code '+code+(['00','01','02','03'].includes(code)?' is one of the four fixed exceptions.':' × 5 mm.');
+  } else if(digits.length===3){
+    bore=parseInt(digits.slice(-1),10); series=digits.slice(0,-1);
+    boreNote='Three-digit number: the last digit is the bore in millimetres directly.';
+  } else { series=digits; boreNote='Too few digits to read a bore code reliably.'; }
+
+  let typeTxt='',seriesDigits=series;
+  if(pre && PREFIX[pre]){ typeTxt=PREFIX[pre]; }
+  else if(series.length){ typeTxt=TYPE[series[0]]||'Type digit '+series[0]+' — check the manufacturer catalogue.'; seriesDigits=series.slice(1); }
+
+  out.rows.push(['Type',(pre?pre+' — ':'')+(typeTxt||'not identified')]);
+  if(seriesDigits.length===2){
+    out.rows.push(['Width series',seriesDigits[0]+' — '+(WID[seriesDigits[0]]||'see catalogue')]);
+    out.rows.push(['Diameter series',seriesDigits[1]+' — '+(DIA[seriesDigits[1]]||'see catalogue')]);
+  } else if(seriesDigits.length===1){
+    out.rows.push(['Diameter series',seriesDigits[0]+' — '+(DIA[seriesDigits[0]]||'see catalogue')+' (width series 0, omitted)']);
+  }
+  out.rows.push(['Bore',bore!==null?bore+' mm':'not determined']);
+  out.rows.push(['Bore rule',boreNote]);
+
+  const found=[]; let hay=rest.replace(/[-\/]/g,'');
+  SUFF.forEach(([k,v])=>{ const i=hay.indexOf(k); if(i>-1){ found.push([k,v]); hay=hay.slice(0,i)+' '.repeat(k.length)+hay.slice(i+k.length);} });
+  out.suffix=found; out.left=hay.replace(/\s+/g,'');
+  out.bore=bore;
+  return out;
+}
+function renderDecode(){
+  const r=decode(document.getElementById('desigIn').value);
+  const box=document.getElementById('desigOut');
+  if(!r){box.innerHTML='';return;}
+  if(r.err){box.innerHTML='<div class="note warn">'+r.err+'</div>';return;}
+  let h='<table><thead><tr><th style="width:170px">Field</th><th>Reading</th></tr></thead><tbody>';
+  r.rows.forEach(([a,b])=>{h+='<tr><td>'+a+'</td><td>'+b+'</td></tr>';});
+  h+='</tbody></table>';
+  if(r.suffix.length){
+    h+='<h3>Suffixes</h3><table><thead><tr><th style="width:110px">Code</th><th>Meaning</th></tr></thead><tbody>';
+    r.suffix.forEach(([a,b])=>{h+='<tr><td class="n">'+a+'</td><td>'+b+'</td></tr>';});
+    h+='</tbody></table>';
+  }
+  if(r.left) h+='<div class="note warn">Unrecognised characters left over: <code>'+r.left+'</code>. Manufacturer-specific suffix — check the maker\u2019s catalogue.</div>';
+  if(r.bore) h+='<div class="note">Shaft fit is '+r.bore+' mm. To get the defect frequencies you still need Z, Bd and \u03b8, which the designation does not encode — take them from the manufacturer or estimate them on the Defect frequencies tab.</div>';
+  box.innerHTML=h;
+}
+document.getElementById('desigBtn').addEventListener('click',renderDecode);
+document.getElementById('desigIn').addEventListener('keydown',e=>{if(e.key==='Enter')renderDecode();});
+renderDecode();
+
+/* ---------------- frequencies ---------------- */
+const PRESETS={'6203':{Z:8,Bd:6.747,Pd:28.5},'6205':{Z:9,Bd:7.94,Pd:39.04},'6206':{Z:9,Bd:9.525,Pd:46.4},'6308':{Z:8,Bd:15.081,Pd:65.0}};
+const g=id=>document.getElementById(id);
+const val=id=>parseFloat(g(id).value);
+
+g('preset').addEventListener('change',e=>{
+  const p=PRESETS[e.target.value]; if(!p)return;
+  g('Z').value=p.Z; g('Bd').value=p.Bd; g('Pd').value=p.Pd; g('theta').value=0; calc();
+});
+g('estBtn').addEventListener('click',()=>{
+  const d=val('estD'),D=val('estOD');
+  if(!(D>d&&d>0)){alert('Outside diameter must be larger than the bore.');return;}
+  const Pd=(d+D)/2, Bd=0.30*(D-d), Z=Math.max(3,Math.round(Math.PI*Pd/(1.6*Bd)));
+  g('Pd').value=Pd.toFixed(2); g('Bd').value=Bd.toFixed(2); g('Z').value=Z; g('preset').value='custom'; calc();
+});
+['Z','Bd','Pd','theta','speed','speedUnit','rotRing','faultSel'].forEach(id=>{
+  g(id).addEventListener('input',calc); g(id).addEventListener('change',calc);
+});
+g('calcBtn').addEventListener('click',calc);
+
+let F=null;
+function calc(){
+  const Z=val('Z'),Bd=val('Bd'),Pd=val('Pd'),th=val('theta');
+  const S=g('speedUnit').value==='rpm'? val('speed')/60 : val('speed');
+  const cards=g('freqCards'),checks=g('freqChecks');
+  if([Z,Bd,Pd,th,S].some(v=>isNaN(v))){cards.innerHTML='';checks.innerHTML='<div class="note warn">Fill in every field to calculate.</div>';F=null;return;}
+  if(Bd>=Pd){cards.innerHTML='';checks.innerHTML='<div class="note warn">Element diameter must be smaller than the pitch diameter. Check Bd and Pd.</div>';F=null;return;}
+  const r=(Bd/Pd)*Math.cos(th*Math.PI/180);
+  const outerRot=g('rotRing').value==='outer';
+  const sgn=outerRot?1:-1;
+  const ftf=(S/2)*(1+sgn*r);
+  const bpfo=outerRot? (Z/2)*S*(1+r) : (Z/2)*S*(1-r);
+  const bpfi=outerRot? (Z/2)*S*(1-r) : (Z/2)*S*(1+r);
+  const bsf=(Pd/(2*Bd))*S*(1-r*r);
+  F={S,Z,r,ftf,bpfo,bpfi,bsf,bdf:2*bsf};
+
+  const card=(cls,k,hz,extra)=>'<div class="card '+cls+'"><div class="k">'+k+'</div><div class="v">'+hz.toFixed(2)+'<span class="u">Hz</span></div><div class="x">'+(S>0?(hz/S).toFixed(4)+' ×  ·  '+(hz*60).toFixed(0)+' cpm':'—')+(extra?'<br>'+extra:'')+'</div></div>';
+  cards.innerHTML =
+    card('','BPFO — outer race',bpfo)+
+    card('inner','BPFI — inner race',bpfi)+
+    card('ball','BSF — element spin',bsf)+
+    card('ball','2×BSF — element defect',2*bsf)+
+    card('cage','FTF — cage',ftf)+
+    card('','Shaft 1×',S);
+
+  const sum=(bpfo+bpfi)/S, ratio=ftf/S;
+  let h='<div class="note ok"><strong>Identity check:</strong> BPFO + BPFI = '+sum.toFixed(4)+' × shaft, and Z = '+Z+'. '+(Math.abs(sum-Z)<1e-6?'Exact, as it must be.':'Mismatch — recheck the inputs.')+'</div>';
+  h+='<div class="note'+((ratio>0.34&&ratio<0.46)||outerRot?'':' warn')+'"><strong>Cage ratio:</strong> FTF/shaft = '+ratio.toFixed(4)+'. '+
+     (outerRot?'Outer ring rotating, so the cage runs with the outer ring and this ratio sits above 0.5.'
+      :(ratio>0.34&&ratio<0.46?'Inside the usual 0.38–0.42 band for a real bearing.':'Outside the usual 0.38–0.42 band — check Bd, Pd and the contact angle.'))+'</div>';
+  h+='<div class="note"><strong>Search bands at ±1.5% for slip:</strong> BPFO '+(bpfo*0.985).toFixed(1)+'–'+(bpfo*1.015).toFixed(1)+' Hz · BPFI '+(bpfi*0.985).toFixed(1)+'–'+(bpfi*1.015).toFixed(1)+' Hz · 2×BSF '+(2*bsf*0.985).toFixed(1)+'–'+(2*bsf*1.015).toFixed(1)+' Hz</div>';
+  h+='<h3>Harmonics</h3><table><thead><tr><th>Order</th><th class="n">BPFO (Hz)</th><th class="n">BPFI (Hz)</th><th class="n">2×BSF (Hz)</th><th class="n">FTF (Hz)</th></tr></thead><tbody>';
+  for(let k=1;k<=5;k++) h+='<tr><td class="n">'+k+'×</td><td class="n">'+(k*bpfo).toFixed(2)+'</td><td class="n">'+(k*bpfi).toFixed(2)+'</td><td class="n">'+(k*2*bsf).toFixed(2)+'</td><td class="n">'+(k*ftf).toFixed(2)+'</td></tr>';
+  h+='</tbody></table>';
+  checks.innerHTML=h;
+  draw();
+}
+
+/* spectrum */
+function draw(){
+  const c=g('spec'); if(!c||!F) return;
+  const dpr=window.devicePixelRatio||1, W=c.clientWidth||700, H=290;
+  c.width=W*dpr; c.height=H*dpr;
+  const x=c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,W,H);
+  const L=44,R=12,T=14,B=34, pw=W-L-R, ph=H-T-B;
+  const fault=g('faultSel').value;
+  const fam={bpfo:{f:F.bpfo,n:'BPFO',sb:0,c:'#0f5f70'},bpfi:{f:F.bpfi,n:'BPFI',sb:F.S,c:'#a85e08'},
+             bsf:{f:F.bdf,n:'2×BSF',sb:F.ftf,c:'#5b7f34'},ftf:{f:F.ftf,n:'FTF',sb:0,c:'#6b5ba8'}}[fault];
+  const fmax=Math.max(fam.f*5.6,F.S*6);
+  const px=f=>L+(f/fmax)*pw, py=a=>T+ph-a*ph*0.88;
+
+  x.strokeStyle='#dde5eb'; x.lineWidth=1;
+  for(let i=0;i<=5;i++){const yy=T+ph*i/5; x.beginPath(); x.moveTo(L,yy); x.lineTo(L+pw,yy); x.stroke();}
+  x.strokeStyle='#8ea3b0'; x.beginPath(); x.moveTo(L,T+ph); x.lineTo(L+pw,T+ph); x.stroke();
+  x.fillStyle='#5d6d7a'; x.font='11px ui-monospace,monospace'; x.textAlign='center';
+  for(let i=0;i<=6;i++){const f=fmax*i/6; x.fillText(f.toFixed(0),px(f),T+ph+15);}
+  x.fillText('Hz',L+pw/2,T+ph+30);
+  x.save(); x.translate(12,T+ph/2); x.rotate(-Math.PI/2); x.fillText('amplitude',0,0); x.restore();
+
+  const stem=(f,a,col,w)=>{ if(f<=0||f>fmax)return; x.strokeStyle=col; x.lineWidth=w||1.6;
+    x.beginPath(); x.moveTo(px(f),T+ph); x.lineTo(px(f),py(a)); x.stroke(); };
+
+  for(let k=1;k<=3;k++) stem(k*F.S,[0.42,0.16,0.10][k-1],'#93a7b3',1.4);
+  const labels=[];
+  for(let k=1;k<=5;k++){
+    const f=k*fam.f, a=0.95*Math.exp(-0.32*(k-1));
+    if(f>fmax) break;
+    stem(f,a,fam.c,2.2);
+    labels.push([f,a,k+'×'+fam.n]);
+    if(fam.sb>0){ for(const s of[-2,-1,1,2]){ stem(f+s*fam.sb,a*(Math.abs(s)===1?0.45:0.22),fam.c,1.2);} }
+  }
+  x.fillStyle='#16212b'; x.font='600 11px ui-monospace,monospace'; x.textAlign='left';
+  labels.slice(0,3).forEach(([f,a,t])=>{ x.fillText(t,Math.min(px(f)+4,L+pw-60),py(a)-5); });
+  x.fillStyle='#93a7b3'; x.fillText('1× shaft',Math.min(px(F.S)+4,L+pw-60),py(0.42)-5);
+  if(fam.sb>0){ x.fillStyle=fam.c; x.textAlign='right';
+    x.fillText('sidebands at '+(fault==='bpfi'?'1× shaft':'FTF')+' = '+fam.sb.toFixed(2)+' Hz',L+pw-4,T+12); }
+}
+window.addEventListener('resize',draw);
+calc();
+</script>
+</body>
+</html>

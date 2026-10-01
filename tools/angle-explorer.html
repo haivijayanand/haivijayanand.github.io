@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<!--
+TOOL    : angle_explorer.html (public copy)
+FAMILY  : GEOMETRY
+VERSION : 1.0.0
+DATE    : 2026-10-01
+CHAT    : Angle explorer
+CHANGES : v1.0.0  public copy for haivijayanand.github.io: angles between rays and inside polygons, with direction readouts
+STATUS  : working; runs offline in any browser, no network
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Angle Explorer — rays, polygons and direction</title>
+<style>
+  :root{
+    --board:#eaf0f6; --paper:#ffffff; --ink:#13253c; --ink-soft:#5a6b80;
+    --rule:#c8d6e5; --grid:#dce6f1; --accent:#d55e00; --faint:#94a7ba;
+    --shadow:0 1px 2px rgba(19,37,60,.10), 0 8px 24px rgba(19,37,60,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--board);color:var(--ink);
+    font:16px/1.5 "Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;
+    -webkit-text-size-adjust:100%;padding:14px 12px 40px}
+  .wrap{max-width:780px;margin:0 auto}
+  header{margin:2px 2px 14px}
+  .eyebrow{font:600 11px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft)}
+  h1{font-size:26px;line-height:1.15;margin:8px 0 4px;letter-spacing:-.02em}
+  header p{margin:0;color:var(--ink-soft);font-size:14px}
+
+  .card{background:var(--paper);border:1px solid var(--rule);border-radius:14px;
+    box-shadow:var(--shadow);overflow:hidden;margin-bottom:12px}
+
+  .tabs{display:flex;border-bottom:1px solid var(--rule);background:#f7fafd}
+  .tabs button{flex:1;border:0;background:transparent;border-radius:0;padding:13px 10px;
+    font:700 15px/1 inherit;color:var(--ink-soft);cursor:pointer;border-bottom:3px solid transparent}
+  .tabs button[aria-selected="true"]{color:var(--ink);background:var(--paper);border-bottom-color:var(--accent)}
+
+  .tools{display:flex;gap:6px;padding:8px;border-bottom:1px solid var(--rule);flex-wrap:wrap;align-items:center}
+  button{font:600 14px/1 inherit;color:var(--ink);background:#f3f7fb;border:1px solid var(--rule);
+    border-radius:9px;padding:9px 12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  button:hover{background:#e9f0f7}
+  button:focus-visible{outline:3px solid #0072b2;outline-offset:2px}
+  button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+  button:disabled{opacity:.4;cursor:default}
+  .spacer{flex:1}
+  .ghost{background:transparent;border-color:transparent;color:var(--ink-soft);font-weight:600}
+  .ghost:hover{background:#f0f4f9}
+  .lbl{font:600 12px/1 ui-monospace,Menlo,monospace;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-soft);padding:0 4px}
+
+  .stage{position:relative;background:var(--paper)}
+  canvas{display:block;width:100%;touch-action:none}
+  .hint{position:absolute;left:10px;bottom:10px;right:10px;font-size:13px;color:var(--ink-soft);
+    background:rgba(255,255,255,.88);border:1px solid var(--rule);border-radius:8px;
+    padding:6px 9px;pointer-events:none}
+
+  .strip{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;border-top:1px solid var(--rule);background:#f7fafd}
+  .tag{font:600 12.5px/1 inherit;background:#fff;border:1px solid var(--rule);
+    border-radius:999px;padding:6px 10px;color:var(--ink-soft)}
+  .tag b{color:var(--ink)}
+  .tag.hero{background:var(--ink);border-color:var(--ink);color:#fff}
+  .tag.pin{cursor:pointer;color:var(--ink);border-color:#9fb3c8}
+  .tag.pin:hover{background:#fdf0e7;border-color:var(--accent)}
+  .tag.pin span{color:var(--ink-soft);font-weight:700;margin-left:6px}
+  .tag.clear{cursor:pointer;background:transparent;border-style:dashed}
+
+  .readout{display:flex;align-items:center;gap:14px;padding:14px 16px;border-top:1px solid var(--rule)}
+  .dial{flex:0 0 auto;width:64px;height:64px;border-radius:50%;border:2px solid var(--rule);
+    position:relative;display:grid;place-items:center}
+  .dial svg{position:absolute;inset:-2px}
+  .dial b{font:700 15px/1 ui-monospace,Menlo,Consolas,monospace;color:var(--accent)}
+  .val{font:700 34px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:-.02em}
+  .val small{font-size:20px;opacity:.6}
+  .name{font-weight:700;font-size:18px;margin-bottom:3px}
+  .sub{color:var(--ink-soft);font-size:13.5px;margin-top:3px}
+  .acts{display:flex;flex-direction:column;gap:6px}
+  .vec{position:relative;text-decoration:overline;text-decoration-thickness:1.5px;
+    padding-right:.12em;white-space:nowrap;font-weight:700}
+  .vec::after{content:"▸";position:absolute;right:-.30em;top:-.72em;font-size:.52em;text-decoration:none}
+  .muted .val,.muted .name{color:var(--ink-soft)}
+
+  .opts{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border-top:1px solid var(--rule)}
+  .chip{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;
+    background:#f3f7fb;border:1px solid var(--rule);border-radius:999px;padding:7px 12px;cursor:pointer}
+  .chip input{accent-color:#0072b2;margin:0}
+  .seg{display:flex;border:1px solid var(--rule);border-radius:999px;overflow:hidden}
+  .seg button{border:0;border-radius:0;background:#f3f7fb;padding:8px 11px;font-size:13.5px}
+  .seg button+button{border-left:1px solid var(--rule)}
+  .hidden{display:none!important}
+
+  details{padding:0 16px 14px;border-top:1px solid var(--rule)}
+  summary{cursor:pointer;font-weight:700;padding:14px 0;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"›";display:inline-block;margin-right:8px;transition:transform .18s}
+  details[open] summary::before{transform:rotate(90deg)}
+  details p{margin:0 0 10px;font-size:14.5px;color:#2c4159}
+  details b{color:var(--ink)}
+  kbd{font:600 12px ui-monospace,Menlo,monospace;background:#f3f7fb;border:1px solid var(--rule);
+    border-radius:5px;padding:1px 5px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Geometry &nbsp;·&nbsp; Lines, shapes and angles</div>
+    <h1>Angle Explorer</h1>
+    <p>Draw rays or a polygon, pick two vectors, and read the turn between them.</p>
+  </header>
+
+  <div class="card">
+    <div class="tabs" role="tablist">
+      <button id="tabLines" role="tab" aria-selected="true">Two lines</button>
+      <button id="tabPoly"  role="tab" aria-selected="false">Polygon</button>
+    </div>
+
+    <div class="tools" id="toolsLines">
+      <button id="mBuild" aria-pressed="true">Draw rays</button>
+      <button id="mMeasure" aria-pressed="false">Measure angle</button>
+      <span class="spacer"></span>
+      <button class="ghost" id="undo">Undo ray</button>
+      <button class="ghost" id="reset">Start over</button>
+    </div>
+
+    <div class="tools hidden" id="toolsPoly">
+      <span class="lbl">Sides</span>
+      <div class="seg" id="sideSeg"></div>
+      <span class="spacer"></span>
+      <button class="ghost" id="polyReset">Reset shape</button>
+    </div>
+    <div class="tools hidden" id="toolsPoly2">
+      <span class="lbl">Shape</span>
+      <div class="seg" id="presetSeg"></div>
+    </div>
+
+    <div class="stage">
+      <canvas id="cv"></canvas>
+      <div class="hint" id="hint"></div>
+    </div>
+
+    <div class="strip hidden" id="pins"></div>
+    <div class="strip hidden" id="facts"></div>
+
+    <div class="readout muted" id="readout">
+      <div class="dial"><svg id="dialSvg" viewBox="0 0 68 68"></svg><b id="dialTxt">—</b></div>
+      <div>
+        <div class="name" id="angName">No angle measured yet</div>
+        <div class="val" id="angVal">—<small>°</small></div>
+        <div class="sub" id="angSub">Tap a ray, then a second ray.</div>
+      </div>
+      <span class="spacer"></span>
+      <div class="acts">
+        <button id="revealBtn" class="hidden">Show answer</button>
+        <button id="pinBtn" disabled>Keep this angle</button>
+      </div>
+    </div>
+
+    <div class="opts">
+      <div class="seg" role="group" aria-label="Turn direction">
+        <button id="dAcw" aria-pressed="true">↺ Anticlockwise</button>
+        <button id="dCw" aria-pressed="false">↻ Clockwise</button>
+        <button id="dShort" aria-pressed="false">Smaller</button>
+      </div>
+      <label class="chip"><input type="checkbox" id="optKeep"> Keep every angle</label>
+      <label class="chip"><input type="checkbox" id="optGuess"> Guess first</label>
+    </div>
+
+    <div class="opts" id="optsLines">
+      <label class="chip"><input type="checkbox" id="optProt"> Protractor</label>
+      <label class="chip"><input type="checkbox" id="optSnap"> Snap to 5°</label>
+      <label class="chip"><input type="checkbox" id="optExt"> Full lines</label>
+      <label class="chip"><input type="checkbox" id="optAll"> All angles at O</label>
+    </div>
+
+    <div class="opts hidden" id="optsPoly">
+      <label class="chip"><input type="checkbox" id="pDiag" checked> Diagonals</label>
+      <label class="chip"><input type="checkbox" id="pSpoke"> Spokes to O</label>
+      <label class="chip"><input type="checkbox" id="pAll"> All corner angles</label>
+      <label class="chip"><input type="checkbox" id="pSplit"> Split corners by diagonals</label>
+      <label class="chip"><input type="checkbox" id="pJunc"> Junction angles</label>
+      <label class="chip"><input type="checkbox" id="pMarks" checked> Equal marks</label>
+      <label class="chip"><input type="checkbox" id="pGrid"> Snap to grid</label>
+    </div>
+
+    <details id="helpLines">
+      <summary>How the Two lines tab works</summary>
+      <p><b>1 · Place the vertex.</b> Your first tap marks the point <b>O</b> where the lines cross.</p>
+      <p><b>2 · Draw rays.</b> Each tap after that shoots a ray out of O, named <b>A, B, C, D…</b> in order. Drag a ray tip to swing it; drag O to move the whole figure.</p>
+      <p><b>3 · Measure.</b> Tap <b>Measure angle</b>, then tap a ray — it becomes a vector with its tail at O and an arrowhead at the far end. Tap a second ray to get the angle. <b>Double tap empty space</b> to let go of the selection.</p>
+      <p><b>4 · Keep several at once.</b> <b>Keep this angle</b> pins the measurement to the board so you can build up all four angles at a crossing and check they add to 360°. Tick <b>Keep every angle</b> to pin them automatically; tap a pin below the board to remove it.</p>
+      <p><b>Why order matters:</b> ∠AOB is the turn from OA to OB. Start at OB instead and you sweep the rest of the circle, so the two add up to 360°.</p>
+      <p>Keyboard: <kbd>1</kbd>–<kbd>6</kbd> pick a ray, <kbd>Esc</kbd> clears the selection.</p>
+    </details>
+
+    <details id="helpPoly" class="hidden">
+      <summary>How the Polygon tab works</summary>
+      <p><b>Sides, diagonals and O.</b> Every side has its own colour and the corners are named <b>A, B, C…</b> anticlockwise. Grey dashed lines are the diagonals. In a quadrilateral the two diagonals cross at a single point and that point is <b>O</b>; in bigger polygons each crossing is a named junction (<b>X1, X2…</b>) and O sits at their middle. All of it is recomputed the instant you move a corner.</p>
+      <p><b>Measure at a corner.</b> Tap two lines that share a corner — both tails jump to it and the angle reads <b>∠ABC</b>: first letter, corner, second letter.</p>
+      <p><b>Measure where diagonals cross.</b> Tap two diagonals that cross without touching, and the angle is taken at the crossing itself, so a square gives ∠AOB = 90°. Each vector points toward the end you tapped, so tapping the other half gives the vertically opposite angle instead.</p>
+      <p><b>See them all.</b> <b>All corner angles</b> labels every corner and checks the total against (n−2)×180°. <b>Split corners by diagonals</b> cuts each corner into the pieces the diagonals make, so you can see the side-to-diagonal angles adding back up to the corner. <b>Junction angles</b> opens up every diagonal crossing — the four angles there add to 360° and opposite ones are equal.</p>
+      <p><b>Drag the corners.</b> The shape name updates live. Tick marks show equal sides, a small square shows a right angle, and <b>double tap empty space</b> drops the selection.</p>
+    </details>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+const TAU=Math.PI*2, D2R=Math.PI/180, R2D=180/Math.PI;
+const RAY_C=["#0072b2","#e69f00","#cc79a7","#56b4e9","#111111","#7a7a7a"];
+const POLY_C=["#0072b2","#e69f00","#cc79a7","#56b4e9","#111111","#7a7a7a","#8c5a2b","#4b3f9e"];
+const NAMES="ABCDEFGH".split("");
+const ACCENT="#d55e00", FAINT="#94a7ba", INK="#13253c", PIN="#4b3f9e";
+
+const cv=document.getElementById("cv"), ctx=cv.getContext("2d");
+let W=600,H=460,dpr=1;
+
+const G={tab:"lines", dir:"acw", guess:false, revealed:false, keep:false, pins:[]};
+const L={O:null, rays:[], mode:"build", sel:[], snap:false, prot:false, ext:false, all:false, drag:null};
+const P={n:5, preset:"regular", verts:[], O:{x:0,y:0}, xings:[], oneSpot:false, segs:[], sel:[],
+         diag:true, spokes:false, all:false, split:false, junc:false, marks:true, grid:false, drag:null};
+
+/* ================= maths helpers ================= */
+const norm=a=>((a%TAU)+TAU)%TAU;
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const pxAt=(O,a,r)=>[O.x+r*Math.cos(a), O.y-r*Math.sin(a)];
+const angFrom=(O,p)=>norm(Math.atan2(-(p.y-O.y), p.x-O.x));
+function sweep(a1,a2,mode){
+  const acw=norm(a2-a1);
+  if(mode==="acw") return {rad:acw,sign:+1,word:"anticlockwise"};
+  if(mode==="cw")  return {rad:norm(a1-a2),sign:-1,word:"clockwise"};
+  return acw<=Math.PI ? {rad:acw,sign:+1,word:"anticlockwise"} : {rad:TAU-acw,sign:-1,word:"clockwise"};
+}
+function segDist(p,a,b){
+  const vx=b.x-a.x, vy=b.y-a.y, L2=vx*vx+vy*vy||1;
+  let u=((p.x-a.x)*vx+(p.y-a.y)*vy)/L2; u=Math.max(0,Math.min(1,u));
+  return Math.hypot(p.x-(a.x+u*vx), p.y-(a.y+u*vy));
+}
+function crossPoint(p1,p2,p3,p4){
+  const dx1=p2.x-p1.x, dy1=p2.y-p1.y, dx2=p4.x-p3.x, dy2=p4.y-p3.y;
+  const den=dx1*dy2-dy1*dx2;
+  if(Math.abs(den)<1e-9) return null;
+  const t=((p3.x-p1.x)*dy2-(p3.y-p1.y)*dx2)/den;
+  const u=((p3.x-p1.x)*dy1-(p3.y-p1.y)*dx1)/den;
+  if(t<-1e-6||t>1+1e-6||u<-1e-6||u>1+1e-6) return null;
+  return {x:p1.x+t*dx1, y:p1.y+t*dy1};
+}
+const kindOf=d=> d<89.5?"acute":d<90.5?"right":d<179.5?"obtuse":d<180.5?"straight":"reflex";
+
+/* ================= drawing helpers ================= */
+function head(x,y,th,s,color){
+  ctx.beginPath(); ctx.moveTo(x,y);
+  ctx.lineTo(x-s*Math.cos(th-0.38), y-s*Math.sin(th-0.38));
+  ctx.lineTo(x-s*0.58*Math.cos(th), y-s*0.58*Math.sin(th));
+  ctx.lineTo(x-s*Math.cos(th+0.38), y-s*Math.sin(th+0.38));
+  ctx.closePath(); ctx.fillStyle=color; ctx.fill();
+}
+function tailBar(O,a,color,len){
+  const q=a+Math.PI/2, t=len||8;
+  ctx.strokeStyle=color; ctx.lineWidth=3.4; ctx.lineCap="round";
+  ctx.beginPath();
+  ctx.moveTo(O.x+t*Math.cos(q), O.y-t*Math.sin(q));
+  ctx.lineTo(O.x-t*Math.cos(q), O.y+t*Math.sin(q));
+  ctx.stroke();
+}
+function drawVector(tail,tip,color,width){
+  const th=Math.atan2(tip.y-tail.y, tip.x-tail.x), len=dist(tail,tip);
+  const cut=Math.min(13, len*0.3);
+  ctx.save(); ctx.lineCap="round";
+  ctx.strokeStyle="rgba(213,94,0,.20)"; ctx.lineWidth=(width||4.5)+8;
+  ctx.beginPath(); ctx.moveTo(tail.x,tail.y); ctx.lineTo(tip.x,tip.y); ctx.stroke();
+  ctx.strokeStyle=color; ctx.lineWidth=width||4.5;
+  ctx.beginPath(); ctx.moveTo(tail.x,tail.y);
+  ctx.lineTo(tip.x-cut*Math.cos(th), tip.y-cut*Math.sin(th)); ctx.stroke();
+  head(tip.x,tip.y,th,17,color);
+  tailBar(tail,norm(-th),color,8);
+  ctx.restore();
+}
+function drawArcAt(O,a1,rad,sign,radius,color,label,fill,lw,fs){
+  const n=Math.max(10,Math.round(rad*R2D/2)), pts=[];
+  for(let i=0;i<=n;i++) pts.push(pxAt(O,a1+sign*rad*i/n,radius));
+  ctx.save();
+  if(fill){ ctx.beginPath(); ctx.moveTo(O.x,O.y);
+    pts.forEach(p=>ctx.lineTo(p[0],p[1])); ctx.closePath(); ctx.fillStyle=fill; ctx.fill(); }
+  ctx.strokeStyle=color; ctx.lineWidth=lw||3; ctx.lineCap="round"; ctx.lineJoin="round";
+  ctx.beginPath(); pts.forEach((p,i)=> i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.stroke();
+  const t1=pxAt(O,a1,radius-7), t2=pxAt(O,a1,radius+7);
+  ctx.beginPath(); ctx.moveTo(t1[0],t1[1]); ctx.lineTo(t2[0],t2[1]); ctx.stroke();
+  const e=pts[n], q=pts[n-1];
+  head(e[0],e[1],Math.atan2(e[1]-q[1],e[0]-q[0]),Math.min(13,(lw||3)*4.3),color);
+  if(label){
+    const m=pxAt(O,a1+sign*rad/2,radius+(fs?fs+6:22));
+    ctx.font="700 "+(fs||15)+"px ui-monospace,Menlo,Consolas,monospace";
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.lineWidth=5; ctx.strokeStyle="#fff"; ctx.strokeText(label,m[0],m[1]);
+    ctx.fillStyle=color; ctx.fillText(label,m[0],m[1]);
+  }
+  ctx.restore();
+}
+function tagText(t,x,y,color,size){
+  ctx.font="700 "+(size||18)+"px 'Avenir Next',Segoe UI,system-ui,sans-serif";
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.lineWidth=4.5; ctx.strokeStyle="#fff"; ctx.strokeText(t,x,y);
+  ctx.fillStyle=color; ctx.fillText(t,x,y);
+}
+const vecTag=(a,b,c)=>'<span class="vec" style="color:'+c+'">'+a+b+'</span>';
+
+/* ================= canvas ================= */
+function resize(){
+  const rect=cv.parentElement.getBoundingClientRect();
+  W=Math.max(280,rect.width);
+  H=Math.min(540,Math.max(340,Math.round(W*0.80)));
+  dpr=window.devicePixelRatio||1;
+  cv.width=W*dpr; cv.height=H*dpr; cv.style.height=H+"px";
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  if(L.O){ L.O.x=Math.min(Math.max(L.O.x,20),W-20); L.O.y=Math.min(Math.max(L.O.y,20),H-20); }
+  if(P.verts.length) buildPoly(P.n,P.preset);
+  draw();
+}
+window.addEventListener("resize",resize);
+function grid(){
+  ctx.fillStyle="#fff"; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle="#dce6f1"; ctx.lineWidth=1; ctx.beginPath();
+  for(let x=0;x<W;x+=26){ctx.moveTo(x+.5,0);ctx.lineTo(x+.5,H);}
+  for(let y=0;y<H;y+=26){ctx.moveTo(0,y+.5);ctx.lineTo(W,y+.5);}
+  ctx.stroke();
+}
+
+/* ================= LINES tab ================= */
+function protractor(){
+  const R=Math.min(W,H)*0.42, O=L.O;
+  ctx.save(); ctx.strokeStyle="#b9cbdd"; ctx.fillStyle="#8ea5bc"; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.arc(O.x,O.y,R,0,TAU); ctx.stroke();
+  ctx.font="10px ui-monospace,Menlo,monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  for(let d=0;d<360;d+=5){
+    const a=d*D2R, big=d%30===0, len=big?11:(d%10===0?7:4);
+    const p1=pxAt(O,a,R-len), p2=pxAt(O,a,R);
+    ctx.beginPath(); ctx.moveTo(p1[0],p1[1]); ctx.lineTo(p2[0],p2[1]);
+    ctx.lineWidth=big?1.4:1; ctx.stroke();
+    if(big){ const t=pxAt(O,a,R+13); ctx.fillText(d+"°",t[0],t[1]); }
+  }
+  ctx.restore();
+}
+function drawRay(r,i){
+  const O=L.O, tp=pxAt(O,r.a,r.len), tip={x:tp[0],y:tp[1]}, on=L.sel.indexOf(i)>=0;
+  if(on) drawVector(O,tip,r.c,4.5);
+  else{
+    ctx.save(); ctx.lineCap="round"; ctx.strokeStyle=r.c; ctx.lineWidth=3.2;
+    ctx.beginPath(); ctx.moveTo(O.x,O.y); ctx.lineTo(tip.x,tip.y); ctx.stroke();
+    ctx.fillStyle="#fff"; ctx.lineWidth=2.6;
+    ctx.beginPath(); ctx.arc(tip.x,tip.y,6,0,TAU); ctx.fill(); ctx.stroke(); ctx.restore();
+  }
+  const lp=pxAt(O,r.a,r.len+(on?30:20));
+  tagText(r.n,lp[0],lp[1],r.c,18);
+}
+function linesMeasure(){
+  if(L.sel.length<2) return null;
+  const r1=L.rays[L.sel[0]], r2=L.rays[L.sel[1]];
+  if(!r1||!r2) return null;
+  const s=sweep(r1.a,r2.a,G.dir);
+  return {O:L.O,a1:r1.a,rad:s.rad,sign:s.sign,word:s.word,deg:s.rad*R2D,
+          n1:r1.n,n2:r2.n,c1:r1.c,c2:r2.c,vn:"O",r:72};
+}
+function drawLines(){
+  if(!L.O) return;
+  if(L.prot) protractor();
+  if(L.ext) L.rays.forEach(r=>{
+    const b=pxAt(L.O,r.a+Math.PI,r.len);
+    ctx.save(); ctx.setLineDash([6,6]); ctx.strokeStyle="#aebccb"; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(L.O.x,L.O.y); ctx.lineTo(b[0],b[1]); ctx.stroke(); ctx.restore();
+  });
+  if(L.all && L.rays.length>1){
+    const ord=L.rays.map((r,i)=>({a:r.a,i})).sort((p,q)=>p.a-q.a);
+    ord.forEach((o,k)=>{
+      const nx=ord[(k+1)%ord.length], rad=norm(nx.a-o.a)||TAU;
+      drawArcAt(L.O,o.a,rad,+1,42+(k%2)*16,"#8ea5bc",(rad*R2D).toFixed(0)+"°","rgba(142,165,188,.10)",2.2,12);
+    });
+  }
+  drawPins();
+  const m=linesMeasure();
+  if(m) drawArcAt(L.O,m.a1,m.rad,m.sign,72,ACCENT,
+      (G.guess&&!G.revealed)?"?":m.deg.toFixed(1)+"°","rgba(213,94,0,.10)");
+  L.rays.forEach(drawRay);
+  ctx.save(); ctx.fillStyle=INK; ctx.beginPath(); ctx.arc(L.O.x,L.O.y,6,0,TAU); ctx.fill(); ctx.restore();
+  tagText("O",L.O.x-17,L.O.y+17,INK,18);
+  readoutLines(m);
+}
+
+/* ================= POLYGON tab ================= */
+const UNITS={
+  3:{ scalene:[[-1.00,0.60],[0.95,0.80],[0.15,-0.85]],
+      right:[[-0.85,0.75],[0.95,0.75],[-0.85,-0.75]],
+      isosceles:[[-0.90,0.62],[0.90,0.62],[0.00,-0.88]], equilateral:null },
+  4:{ quad:[[-0.95,0.55],[0.85,0.80],[0.95,-0.45],[-0.40,-0.90]],
+      parallelogram:[[-1.00,0.60],[0.60,0.60],[1.00,-0.60],[-0.60,-0.60]],
+      rectangle:[[-1.00,0.62],[1.00,0.62],[1.00,-0.62],[-1.00,-0.62]],
+      square:[[-0.80,0.80],[0.80,0.80],[0.80,-0.80],[-0.80,-0.80]] }
+};
+const PRESETS={
+  3:[["scalene","Scalene"],["right","Right angled"],["isosceles","Isosceles"],["equilateral","Equilateral"]],
+  4:[["quad","Quadrilateral"],["parallelogram","Parallelogram"],["rectangle","Rectangle"],["square","Square"]],
+  n:[["regular","Regular"],["irregular","Irregular"]]
+};
+function regularUnits(n,rot){
+  const out=[]; for(let k=0;k<n;k++){const a=(rot||90)*D2R+k*TAU/n; out.push([Math.cos(a),-Math.sin(a)]);}
+  return out;
+}
+function buildPoly(n,preset){
+  P.n=n; P.preset=preset;
+  const s=Math.min(W,H)*0.34, cx=W/2, cy=H/2-6;
+  let u;
+  if(n===3&&UNITS[3][preset]) u=UNITS[3][preset];
+  else if(n===4&&UNITS[4][preset]) u=UNITS[4][preset];
+  else if(preset==="irregular")
+    u=regularUnits(n).map((p,k)=>{const f=0.62+0.38*((Math.sin(k*2.7)+1)/2); return [p[0]*f,p[1]*f*1.05];});
+  else u=regularUnits(n);
+  if(!u) u=regularUnits(n);
+  P.verts=u.map(p=>({x:cx+s*p[0], y:cy+s*p[1]}));
+  if(signedArea(P.verts)<0) P.verts.reverse();
+  P.verts.forEach((v,i)=> v.name=NAMES[i]);
+  P.sel=[]; G.pins=G.pins.filter(p=>p.tab!=="poly");
+  rebuildSegs(); centre();
+}
+function signedArea(v){
+  let A=0; const n=v.length;
+  for(let i=0;i<n;i++){const a=v[i],b=v[(i+1)%n]; A+=a.x*(-b.y)-b.x*(-a.y);}
+  return A/2;
+}
+function diagPairs(){
+  const n=P.verts.length,d=[];
+  for(let i=0;i<n;i++) for(let j=i+2;j<n;j++){ if(i===0&&j===n-1) continue; d.push([i,j]); }
+  return d;
+}
+/* O and every junction are recomputed from scratch on each frame, so they follow the corners */
+function centre(){
+  const n=P.verts.length; if(!n) return;
+  const d=diagPairs(), pts=[];
+  for(let a=0;a<d.length;a++) for(let b=a+1;b<d.length;b++){
+    const [i,j]=d[a],[k,l]=d[b];
+    if(i===k||i===l||j===k||j===l) continue;
+    const p=crossPoint(P.verts[i],P.verts[j],P.verts[k],P.verts[l]);
+    if(p && !pts.some(q=>dist(q,p)<1.5)) pts.push(p);
+  }
+  pts.sort((a,b)=> (a.y-b.y)||(a.x-b.x));
+  P.xings=pts;
+  if(pts.length){
+    let x=0,y=0; pts.forEach(p=>{x+=p.x;y+=p.y;});
+    P.O={x:x/pts.length,y:y/pts.length};
+    P.oneSpot=pts.length===1;
+  } else {
+    let x=0,y=0; P.verts.forEach(v=>{x+=v.x;y+=v.y;});
+    P.O={x:x/n,y:y/n}; P.oneSpot=false;
+  }
+  P.junctions=pts.map((p,i)=>({p, name: dist(p,P.O)<2 ? "O" : "X"+(i+1)}));
+}
+function centreNote(){
+  if(!P.xings.length) return "O = centre of the corners";
+  if(P.oneSpot) return "O = where the two diagonals cross";
+  return "O = middle of the "+P.xings.length+" crossings";
+}
+function rebuildSegs(){
+  const n=P.verts.length,s=[];
+  for(let i=0;i<n;i++) s.push({t:"side",a:i,b:(i+1)%n,c:POLY_C[i%POLY_C.length],key:"s"+i});
+  if(P.diag) diagPairs().forEach(([i,j])=> s.push({t:"diag",a:i,b:j,c:INK,key:"d"+i+"-"+j}));
+  if(P.spokes) for(let i=0;i<n;i++) s.push({t:"spoke",a:"O",b:i,c:"#4b5f78",key:"r"+i});
+  P.segs=s;
+  const keys=s.map(x=>x.key);
+  P.sel=P.sel.filter(e=>keys.indexOf(e.key)>=0);
+  G.pins=G.pins.filter(p=> p.tab!=="poly" || (keys.indexOf(p.u.key)>=0 && keys.indexOf(p.v.key)>=0));
+}
+const ptOf=r=> r==="O" ? P.O : P.verts[r];
+const nameOf=r=> r==="O" ? "O" : P.verts[r].name;
+const otherEnd=(e,ref)=> e.a===ref ? e.b : e.a;
+function junctionName(p){
+  const j=(P.junctions||[]).find(j=>dist(j.p,p)<2);
+  return j?j.name:"X";
+}
+/* resolve two chosen segments into a pivot point and two outgoing directions */
+function pairInfo(u,v){
+  let sh;
+  [u.a,u.b].forEach(r=>{ if(r===v.a||r===v.b) sh=r; });
+  if(sh!==undefined) return {type:"v", p:ptOf(sh), pname:nameOf(sh), h1:otherEnd(u,sh), h2:otherEnd(v,sh)};
+  const x=crossPoint(ptOf(u.a),ptOf(u.b),ptOf(v.a),ptOf(v.b));
+  if(!x) return null;
+  return {type:"x", p:x, pname:junctionName(x), h1:u.near, h2:v.near};
+}
+function measureFrom(u,v,dir){
+  const info=pairInfo(u,v);
+  if(!info) return null;
+  const P1=ptOf(info.h1), P2=ptOf(info.h2);
+  const a1=angFrom(info.p,P1), a2=angFrom(info.p,P2), s=sweep(a1,a2,dir);
+  return {O:info.p, type:info.type, vn:info.pname, h1:info.h1, h2:info.h2,
+          a1, rad:s.rad, sign:s.sign, word:s.word, deg:s.rad*R2D,
+          n1:nameOf(info.h1), n2:nameOf(info.h2), c1:u.c, c2:v.c,
+          r:Math.min(64, 0.34*Math.min(dist(info.p,P1), dist(info.p,P2)))};
+}
+function polyMeasure(){
+  if(P.sel.length<2) return null;
+  const m=measureFrom(P.sel[0],P.sel[1],G.dir);
+  return m || {noshare:true};
+}
+function selectSeg(s,p){
+  const da=dist(p,ptOf(s.a)), db=dist(p,ptOf(s.b));
+  const near=da<=db?s.a:s.b;
+  const e={key:s.key,t:s.t,c:s.c,a:s.a,b:s.b,near,far:near===s.a?s.b:s.a};
+  const dup=P.sel.some(x=>x.key===s.key);
+  if(P.sel.length>=2||dup) P.sel=[e]; else P.sel.push(e);
+  G.revealed=false;
+  if(P.sel.length===2 && G.keep) pinCurrent();
+  draw();
+}
+function interiorAngles(){
+  const n=P.verts.length, sgn=signedArea(P.verts)>0?1:-1, out=[];
+  for(let i=0;i<n;i++){
+    const V=P.verts[i], pv=P.verts[(i-1+n)%n], nx=P.verts[(i+1)%n];
+    const ap=angFrom(V,pv), an=angFrom(V,nx);
+    out.push({i,V,start:sgn>0?an:ap, rad: sgn>0?norm(ap-an):norm(an-ap),
+      deg:(sgn>0?norm(ap-an):norm(an-ap))*R2D,
+      r:Math.min(38,0.26*Math.min(dist(V,pv),dist(V,nx)))});
+  }
+  return out;
+}
+function sideLengths(){
+  const n=P.verts.length,o=[];
+  for(let i=0;i<n;i++) o.push(dist(P.verts[i],P.verts[(i+1)%n]));
+  return o;
+}
+function classify(){
+  const n=P.verts.length, len=sideLengths(), ia=interiorAngles();
+  const mx=Math.max.apply(null,len), tolL=mx*0.025, tolA=1.2;
+  const eq=(a,b)=>Math.abs(a-b)<tolL;
+  const rights=ia.filter(a=>Math.abs(a.deg-90)<tolA).length;
+  const allSides=len.every(v=>eq(v,len[0]));
+  const allAng=ia.every(a=>Math.abs(a.deg-ia[0].deg)<tolA);
+  if(n===3){
+    const byS=allSides?"Equilateral":(eq(len[0],len[1])||eq(len[1],len[2])||eq(len[0],len[2]))?"Isosceles":"Scalene";
+    const big=Math.max.apply(null,ia.map(a=>a.deg));
+    return {name:byS==="Equilateral"?"Equilateral triangle":byS+" triangle",
+            extra:rights?"right angled":big>90+tolA?"obtuse":"acute"};
+  }
+  if(n===4){
+    const par=(i,j)=>{
+      const d1=Math.atan2(P.verts[(i+1)%4].y-P.verts[i].y,P.verts[(i+1)%4].x-P.verts[i].x);
+      const d2=Math.atan2(P.verts[(j+1)%4].y-P.verts[j].y,P.verts[(j+1)%4].x-P.verts[j].x);
+      const d=Math.abs(norm(d1-d2)*R2D); return d<2||Math.abs(d-180)<2;
+    };
+    const p1=par(0,2), p2=par(1,3);
+    if(allSides&&rights===4) return {name:"Square",extra:"4 equal sides · 4 right angles"};
+    if(rights===4) return {name:"Rectangle",extra:"opposite sides equal · 4 right angles"};
+    if(allSides) return {name:"Rhombus",extra:"4 equal sides · opposite sides parallel"};
+    if(p1&&p2) return {name:"Parallelogram",extra:"both pairs of opposite sides parallel"};
+    if(p1||p2) return {name:"Trapezium",extra:"one pair of parallel sides"};
+    return {name:"Quadrilateral",extra:rights?rights+" right angle"+(rights>1?"s":""):"no special pairs"};
+  }
+  const base=["","","","triangle","quadrilateral","pentagon","hexagon","heptagon","octagon"][n]||(n+"-gon");
+  return {name:(allSides&&allAng?"Regular ":"Irregular ")+base, extra:allSides?"all sides equal":"sides differ"};
+}
+/* the diagonals leaving a corner, as offsets inside its interior angle */
+function cornerSplits(a){
+  const n=P.verts.length, out=[];
+  P.verts.forEach((w,j)=>{
+    if(j===a.i || j===(a.i+1)%n || j===(a.i-1+n)%n) return;
+    const off=norm(angFrom(a.V,w)-a.start);
+    if(off>0.012 && off<a.rad-0.012) out.push(off);
+  });
+  return out.sort((x,y)=>x-y);
+}
+function drawCornerAngles(){
+  interiorAngles().forEach(a=>{
+    const cuts = P.split ? cornerSplits(a) : [];
+    let outer = a.r;
+    if(cuts.length){
+      const bounds=[0].concat(cuts,[a.rad]);
+      const maxR=Math.max(30, a.r+14), step=Math.min(14,Math.max(7.5,(maxR-18)/bounds.length));
+      for(let k=0;k<bounds.length-1;k++){
+        const rad=bounds[k+1]-bounds[k];
+        drawArcAt(a.V, a.start+bounds[k], rad, +1, 18+k*step, "#4b6b8a",
+          (rad*R2D).toFixed(0)+"°", "rgba(75,107,138,.08)", 1.8, 11);
+      }
+      outer = 18+(bounds.length-1)*step+11;
+    }
+    if(P.all) drawArcAt(a.V, a.start, a.rad, +1, outer, "#7d93aa",
+      a.deg.toFixed(0)+"°", cuts.length?null:"rgba(125,147,170,.10)", 2.2, 12);
+  });
+}
+function drawJunctionAngles(){
+  const js=P.junctions||[]; if(!js.length) return;
+  const labelAll=js.length*4<=12;
+  js.forEach(j=>{
+    const dirs=[];
+    diagPairs().forEach(([i,k])=>{
+      const A=P.verts[i],B=P.verts[k];
+      if(segDist(j.p,A,B)>0.8) return;
+      dirs.push(angFrom(j.p,A), angFrom(j.p,B));
+    });
+    if(dirs.length<4) return;
+    dirs.sort((a,b)=>a-b);
+    const arcs=dirs.map((a,t)=>({a, rad:norm(dirs[(t+1)%dirs.length]-a)||TAU}));
+    const smallest=arcs.reduce((s,x)=>x.rad<s.rad?x:s,arcs[0]);
+    arcs.forEach(x=>{
+      const show=labelAll||x===smallest;
+      drawArcAt(j.p,x.a,x.rad,+1,24,"#7d93aa",show?(x.rad*R2D).toFixed(0)+"°":null,
+        "rgba(125,147,170,.10)",1.8,11);
+    });
+    if(j.name!=="O") tagText(j.name, j.p.x, j.p.y-16, "#5f7386", 13);
+  });
+}
+function drawMarks(){
+  const n=P.verts.length, len=sideLengths(), mx=Math.max.apply(null,len), tol=mx*0.025, groups=[];
+  len.forEach((v,i)=>{
+    const g=groups.find(g=>Math.abs(g.v-v)<tol);
+    if(g) g.idx.push(i); else groups.push({v,idx:[i]});
+  });
+  groups.filter(g=>g.idx.length>1).forEach((g,k)=>{
+    g.idx.forEach(i=>{
+      const a=P.verts[i], b=P.verts[(i+1)%n];
+      const mx2=(a.x+b.x)/2, my=(a.y+b.y)/2;
+      const th=Math.atan2(b.y-a.y,b.x-a.x), nx2=Math.cos(th+Math.PI/2), ny=Math.sin(th+Math.PI/2);
+      ctx.save(); ctx.strokeStyle=INK; ctx.lineWidth=2; ctx.lineCap="round";
+      for(let t=0;t<=k;t++){
+        const off=(t-k/2)*5;
+        ctx.beginPath();
+        ctx.moveTo(mx2+Math.cos(th)*off-nx2*6, my+Math.sin(th)*off-ny*6);
+        ctx.lineTo(mx2+Math.cos(th)*off+nx2*6, my+Math.sin(th)*off+ny*6);
+        ctx.stroke();
+      }
+      ctx.restore();
+    });
+  });
+  interiorAngles().forEach(a=>{
+    if(Math.abs(a.deg-90)>1.2) return;
+    const s=Math.min(16,a.r*0.6);
+    const p1=pxAt(a.V,a.start,s), p2=pxAt(a.V,a.start+Math.PI/2,s);
+    const c=[p1[0]+p2[0]-a.V.x, p1[1]+p2[1]-a.V.y];
+    ctx.save(); ctx.strokeStyle=INK; ctx.lineWidth=1.8;
+    ctx.beginPath(); ctx.moveTo(p1[0],p1[1]); ctx.lineTo(c[0],c[1]); ctx.lineTo(p2[0],p2[1]); ctx.stroke();
+    ctx.restore();
+  });
+}
+function drawPoly(){
+  if(!P.verts.length) return;
+  centre();
+  const selKeys=P.sel.map(e=>e.key);
+  ctx.save(); ctx.beginPath();
+  P.verts.forEach((v,i)=> i?ctx.lineTo(v.x,v.y):ctx.moveTo(v.x,v.y));
+  ctx.closePath(); ctx.fillStyle="rgba(0,114,178,.05)"; ctx.fill(); ctx.restore();
+
+  P.segs.filter(s=>s.t!=="side").forEach(s=>{
+    if(selKeys.indexOf(s.key)>=0) return;
+    const a=ptOf(s.a),b=ptOf(s.b);
+    ctx.save(); ctx.setLineDash(s.t==="diag"?[7,6]:[3,6]);
+    ctx.strokeStyle=s.t==="diag"?FAINT:"#c2d0de"; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); ctx.restore();
+  });
+  P.segs.filter(s=>s.t==="side").forEach(s=>{
+    if(selKeys.indexOf(s.key)>=0) return;
+    const a=ptOf(s.a),b=ptOf(s.b);
+    ctx.save(); ctx.lineCap="round"; ctx.strokeStyle=s.c; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); ctx.restore();
+  });
+  if(P.diag && !P.oneSpot) P.xings.forEach(p=>{
+    ctx.save(); ctx.fillStyle="#6f88a1"; ctx.strokeStyle="#fff"; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(p.x,p.y,3.4,0,TAU); ctx.stroke(); ctx.fill(); ctx.restore();
+  });
+  if(P.marks) drawMarks();
+  if(P.junc) drawJunctionAngles();
+  if(P.all||P.split) drawCornerAngles();
+
+  drawPins();
+  const m=polyMeasure();
+  if(m&&!m.noshare) drawArcAt(m.O,m.a1,m.rad,m.sign,m.r,ACCENT,
+      (G.guess&&!G.revealed)?"?":m.deg.toFixed(1)+"°","rgba(213,94,0,.12)");
+
+  P.verts.forEach(v=>{
+    ctx.save(); ctx.fillStyle="#fff"; ctx.strokeStyle=INK; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.arc(v.x,v.y,5.5,0,TAU); ctx.fill(); ctx.stroke(); ctx.restore();
+  });
+  if(P.sel.length===2 && m && !m.noshare){
+    drawVector(m.O, ptOf(m.h1), P.sel[0].c, 4.5);
+    drawVector(m.O, ptOf(m.h2), P.sel[1].c, 4.5);
+  } else P.sel.forEach(e=> drawVector(ptOf(e.far), ptOf(e.near), e.c, 4.5));
+
+  ctx.save(); ctx.fillStyle=INK; ctx.beginPath(); ctx.arc(P.O.x,P.O.y,5,0,TAU); ctx.fill(); ctx.restore();
+  tagText("O",P.O.x,P.O.y-17,INK,16);
+  P.verts.forEach(v=>{
+    const dx=v.x-P.O.x, dy=v.y-P.O.y, d=Math.hypot(dx,dy)||1;
+    tagText(v.name, v.x+dx/d*23, v.y+dy/d*23, INK, 18);
+  });
+  readoutPoly(m); facts();
+}
+
+/* ================= pinned angles ================= */
+function currentMeasure(){ return G.tab==="lines" ? linesMeasure() : (P.sel.length===2 ? measureFrom(P.sel[0],P.sel[1],G.dir) : null); }
+function pinCurrent(release){
+  const m=currentMeasure(); if(!m) return;
+  if(G.tab==="lines") G.pins.push({tab:"lines", i1:L.sel[0], i2:L.sel[1], dir:G.dir});
+  else G.pins.push({tab:"poly", u:Object.assign({},P.sel[0]), v:Object.assign({},P.sel[1]), dir:G.dir});
+  if(release){ L.sel=[]; P.sel=[]; G.revealed=false; }   // committed, ready for the next one
+  pinStrip();
+}
+function pinData(p){
+  if(p.tab==="lines"){
+    const r1=L.rays[p.i1], r2=L.rays[p.i2]; if(!r1||!r2) return null;
+    const s=sweep(r1.a,r2.a,p.dir);
+    return {O:L.O,a1:r1.a,rad:s.rad,sign:s.sign,deg:s.rad*R2D,
+            label:"∠"+r1.n+"O"+r2.n, r:72, word:s.word};
+  }
+  const m=measureFrom(p.u,p.v,p.dir); if(!m) return null;
+  return {O:m.O,a1:m.a1,rad:m.rad,sign:m.sign,deg:m.deg,
+          label:"∠"+m.n1+m.vn+m.n2, r:m.r, word:m.word};
+}
+function drawPins(){
+  const live=currentMeasure();
+  const used=live?[live.O]:[];
+  G.pins.forEach(p=>{
+    if(p.tab!==G.tab) return;
+    const d=pinData(p); if(!d) return;
+    const k=used.filter(u=>dist(u,d.O)<3).length; used.push(d.O);
+    const r=Math.max(20, d.r - 17*k);
+    drawArcAt(d.O,d.a1,d.rad,d.sign,r,PIN,d.label+" "+d.deg.toFixed(0)+"°",
+      "rgba(75,63,158,.07)",2.2,12);
+  });
+}
+function pinStrip(){
+  const box=$("pins"), mine=G.pins.filter(p=>p.tab===G.tab);
+  box.classList.toggle("hidden", mine.length===0);
+  if(!mine.length){ box.innerHTML=""; return; }
+  box.innerHTML = mine.map((p)=>{
+    const d=pinData(p); if(!d) return "";
+    const i=G.pins.indexOf(p);
+    return '<button class="tag pin" data-i="'+i+'">'+d.label+' '+d.deg.toFixed(1)+
+           '° '+(d.word==="anticlockwise"?"↺":"↻")+'<span>×</span></button>';
+  }).join("") + '<button class="tag clear" data-clear="1">Clear all</button>';
+  box.querySelectorAll("[data-i]").forEach(b=> b.onclick=()=>{
+    G.pins.splice(+b.dataset.i,1); pinStrip(); draw();
+  });
+  const c=box.querySelector("[data-clear]");
+  if(c) c.onclick=()=>{ G.pins=G.pins.filter(p=>p.tab!==G.tab); pinStrip(); draw(); };
+}
+
+/* ================= readout ================= */
+const $=id=>document.getElementById(id);
+function paint(o){
+  $("readout").classList.toggle("muted",!!o.muted);
+  $("angName").innerHTML=o.name;
+  $("angVal").innerHTML=o.val;
+  $("angSub").innerHTML=o.sub;
+  $("dialSvg").innerHTML=o.dial||"";
+  $("dialTxt").textContent=o.dialTxt===undefined?"—":o.dialTxt;
+  $("revealBtn").classList.toggle("hidden",!o.reveal);
+  $("pinBtn").disabled=!o.canPin;
+}
+function arcDial(a1,rad,sign){
+  const R=30,cx=34,cy=34,a2=a1+sign*rad;
+  const p1=[cx+R*Math.cos(a1),cy-R*Math.sin(a1)], p2=[cx+R*Math.cos(a2),cy-R*Math.sin(a2)];
+  return '<path d="M'+p1[0].toFixed(1)+' '+p1[1].toFixed(1)+' A'+R+' '+R+' 0 '+(rad>Math.PI?1:0)+' '+
+    (sign>0?0:1)+' '+p2[0].toFixed(1)+' '+p2[1].toFixed(1)+'" fill="none" stroke="'+ACCENT+
+    '" stroke-width="4" stroke-linecap="round"/>';
+}
+function rayDial(a,c){
+  const p=[34+28*Math.cos(a),34-28*Math.sin(a)];
+  return '<line x1="34" y1="34" x2="'+p[0].toFixed(1)+'" y2="'+p[1].toFixed(1)+
+    '" stroke="'+c+'" stroke-width="4" stroke-linecap="round"/><circle cx="34" cy="34" r="3.5" fill="'+c+'"/>';
+}
+function readoutLines(m){
+  if(!m){
+    if(L.sel.length===1){
+      const r=L.rays[L.sel[0]];
+      paint({name:"First vector selected", val:vecTag("O",r.n,r.c),
+        sub:"Tail at O, arrowhead at "+r.n+" · pointing "+(r.a*R2D).toFixed(1)+
+            "° from the 0° line · now tap the second ray.",
+        dial:rayDial(r.a,r.c), dialTxt:""});
+      return;
+    }
+    paint({muted:true,name:"No angle measured yet",val:"—<small>°</small>",
+      sub:L.O?"Switch to Measure, then tap one ray and a second ray.":"Tap the board to place the vertex O.",
+      dialTxt:"—"});
+    return;
+  }
+  const hid=G.guess&&!G.revealed;
+  paint({name:"∠"+m.n1+"O"+m.n2+" &nbsp;·&nbsp; from "+vecTag("O",m.n1,m.c1)+" to "+vecTag("O",m.n2,m.c2),
+    val:hid?"?<small>°</small>":m.deg.toFixed(1)+"<small>°</small>",
+    sub:hid?"Estimate the turn, then show the answer.":
+      (m.word==="anticlockwise"?"↺ ":"↻ ")+m.word+" · "+kindOf(m.deg)+
+      " angle · the other way round is "+(360-m.deg).toFixed(1)+"°",
+    dial:arcDial(m.a1,m.rad,m.sign), dialTxt:m.word==="anticlockwise"?"↺":"↻",
+    reveal:hid, canPin:true});
+}
+function readoutPoly(m){
+  if(!m){
+    if(P.sel.length===1){
+      const e=P.sel[0], t=nameOf(e.far), h=nameOf(e.near);
+      const kind=e.t==="side"?"Side":e.t==="diag"?"Diagonal":"Spoke to the centre";
+      paint({name:kind+" selected", val:vecTag(t,h,e.c),
+        sub:"Tail at "+t+", arrowhead at "+h+" · length "+(dist(ptOf(e.far),ptOf(e.near))/26).toFixed(2)+
+            " squares · now tap a line it meets or crosses.",
+        dial:rayDial(angFrom(ptOf(e.far),ptOf(e.near)),e.c), dialTxt:""});
+      return;
+    }
+    paint({muted:true,name:"No angle measured yet",val:"—<small>°</small>",
+      sub:"Tap a side, diagonal or spoke, then a second one that meets or crosses it.",dialTxt:"—"});
+    return;
+  }
+  if(m.noshare){
+    paint({muted:true,name:"Those two never meet",val:"—<small>°</small>",
+      sub:"An angle needs a shared corner or a crossing point. Pick two lines that touch or cross.",dialTxt:"—"});
+    return;
+  }
+  const hid=G.guess&&!G.revealed;
+  const where=m.type==="x" ? "where they cross ("+m.vn+")" : "corner "+m.vn;
+  paint({name:"∠"+m.n1+m.vn+m.n2+" &nbsp;·&nbsp; from "+vecTag(m.vn,m.n1,m.c1)+" to "+vecTag(m.vn,m.n2,m.c2),
+    val:hid?"?<small>°</small>":m.deg.toFixed(1)+"<small>°</small>",
+    sub:hid?"Estimate the turn at "+where+", then show the answer.":
+      (m.word==="anticlockwise"?"↺ ":"↻ ")+m.word+" at "+where+" · "+kindOf(m.deg)+
+      " angle · the other way round is "+(360-m.deg).toFixed(1)+"°",
+    dial:arcDial(m.a1,m.rad,m.sign), dialTxt:m.word==="anticlockwise"?"↺":"↻",
+    reveal:hid, canPin:true});
+}
+function facts(){
+  const n=P.verts.length, c=classify(), d=n*(n-3)/2, sum=(n-2)*180, ia=interiorAngles();
+  $("facts").innerHTML=
+    '<span class="tag hero">'+c.name+'</span>'+
+    '<span class="tag">'+c.extra+'</span>'+
+    '<span class="tag"><b>'+n+'</b> sides · <b>'+n+'</b> corners</span>'+
+    '<span class="tag"><b>'+d+'</b> diagonal'+(d===1?"":"s")+'</span>'+
+    '<span class="tag">corner angles add to <b>'+sum+'°</b></span>'+
+    '<span class="tag">'+centreNote()+'</span>'+
+    (P.all?'<span class="tag">measured: <b>'+ia.reduce((s,a)=>s+a.deg,0).toFixed(0)+'°</b></span>':'');
+}
+function hint(){
+  const h=$("hint");
+  if(G.tab==="lines"){
+    if(!L.O){ h.textContent="Tap anywhere to place the vertex O."; return; }
+    h.textContent = L.mode==="build"
+      ? (L.rays.length>=6 ? "Six rays is the limit. Drag a tip to move it, or switch to Measure."
+        : "Tap to add ray O"+NAMES[L.rays.length]+". Drag a tip to swing a ray, drag O to move everything.")
+      : (L.sel.length===0 ? "Tap the first ray. Double tap empty space to clear."
+        : L.sel.length===1 ? "Now tap the second ray — the arrow turns from the first to the second."
+        : "Keep this angle to leave it on the board, or tap another ray.");
+  } else {
+    h.textContent = P.sel.length===0
+      ? "Drag any corner — sides, diagonals and O all follow. Tap a line to make it a vector."
+      : P.sel.length===1 ? "Now tap a line that meets it at a corner, or one that crosses it."
+      : "Keep this angle to leave it on the board. Double tap empty space to clear.";
+  }
+}
+function draw(){
+  grid();
+  if(G.tab==="lines"){ drawLines(); if(!L.O) readoutLines(null); }
+  else drawPoly();
+  hint();
+}
+
+/* ================= pointer ================= */
+function pos(e){ const r=cv.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top}; }
+let moved=false;
+function nearestRay(p){
+  let best=-1,bd=1e9;
+  L.rays.forEach((r,i)=>{
+    const t=pxAt(L.O,r.a,r.len);
+    const d=segDist(p,L.O,{x:t[0],y:t[1]});
+    if(d<bd){bd=d;best=i;}
+  });
+  return {i:best,d:bd};
+}
+function nearestSeg(p){
+  let best=null,bd=1e9;
+  P.segs.forEach(s=>{ const d=segDist(p,ptOf(s.a),ptOf(s.b)); if(d<bd){bd=d;best=s;} });
+  return {s:best,d:bd};
+}
+cv.addEventListener("pointerdown",e=>{
+  if(cv.setPointerCapture) cv.setPointerCapture(e.pointerId);
+  moved=false;
+  const p=pos(e);
+  if(G.tab==="lines"){
+    if(!L.O) return;
+    if(dist(p,L.O)<22){ L.drag={type:"O"}; return; }
+    for(let i=L.rays.length-1;i>=0;i--){
+      const t=pxAt(L.O,L.rays[i].a,L.rays[i].len);
+      if(Math.hypot(p.x-t[0],p.y-t[1])<22){ L.drag={type:"tip",i}; return; }
+    }
+  } else {
+    for(let i=0;i<P.verts.length;i++) if(dist(p,P.verts[i])<24){ P.drag={i}; return; }
+  }
+});
+cv.addEventListener("pointermove",e=>{
+  const p=pos(e);
+  if(G.tab==="lines"&&L.drag){
+    moved=true;
+    if(L.drag.type==="O"){ L.O.x=Math.min(Math.max(p.x,16),W-16); L.O.y=Math.min(Math.max(p.y,16),H-16); }
+    else{
+      const r=L.rays[L.drag.i];
+      let a=angFrom(L.O,p); if(L.snap) a=norm(Math.round(a*R2D/5)*5*D2R);
+      r.a=a; r.len=Math.min(Math.max(dist(p,L.O),45),Math.min(W,H)*0.40);
+    }
+    draw(); pinStrip();
+  } else if(G.tab==="poly"&&P.drag){
+    moved=true;
+    const v=P.verts[P.drag.i];
+    let x=Math.min(Math.max(p.x,22),W-22), y=Math.min(Math.max(p.y,22),H-30);
+    if(P.grid){ x=Math.round(x/26)*26; y=Math.round(y/26)*26; }
+    v.x=x; v.y=y;
+    draw(); pinStrip();
+  }
+});
+cv.addEventListener("pointerup",e=>{
+  const wasDrag=(!!L.drag||!!P.drag)&&moved;
+  L.drag=null; P.drag=null;
+  if(wasDrag){ draw(); return; }
+  const p=pos(e);
+  if(G.tab==="lines"){
+    if(!L.O){ L.O={x:p.x,y:p.y}; draw(); return; }
+    if(L.mode==="build"){
+      if(L.rays.length>=6) return;
+      let a=angFrom(L.O,p); if(L.snap) a=norm(Math.round(a*R2D/5)*5*D2R);
+      const len=Math.min(Math.max(dist(p,L.O),70),Math.min(W,H)*0.38);
+      L.rays.push({n:NAMES[L.rays.length],a,len,c:RAY_C[L.rays.length]});
+      draw();
+    } else {
+      const n=nearestRay(p);
+      if(n.d<16) pickRay(n.i);
+    }
+  } else {
+    const n=nearestSeg(p);
+    if(n.d<15) selectSeg(n.s,p);
+  }
+});
+/* double tap on empty space lets go of the current selection */
+cv.addEventListener("dblclick",e=>{
+  const p=pos(e);
+  if(G.tab==="lines"){
+    if(L.mode!=="measure"||!L.O) return;
+    if(nearestRay(p).d<16 || dist(p,L.O)<20) return;
+    L.sel=[];
+  } else {
+    if(nearestSeg(p).d<15) return;
+    if(P.verts.some(v=>dist(p,v)<20)) return;
+    P.sel=[];
+  }
+  G.revealed=false; draw();
+});
+function pickRay(i){
+  if(L.sel.length>=2||(L.sel.length===1&&L.sel[0]===i)) L.sel=[i];
+  else L.sel.push(i);
+  G.revealed=false;
+  if(L.sel.length===2&&G.keep) pinCurrent();
+  draw();
+}
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){ L.sel=[]; P.sel=[]; draw(); }
+  const n=parseInt(e.key,10);
+  if(G.tab==="lines"&&L.mode==="measure"&&n>=1&&n<=L.rays.length) pickRay(n-1);
+});
+
+/* ================= controls ================= */
+function setTab(t){
+  G.tab=t; G.revealed=false;
+  $("tabLines").setAttribute("aria-selected",t==="lines");
+  $("tabPoly").setAttribute("aria-selected",t==="poly");
+  ["toolsLines","optsLines","helpLines"].forEach(id=>$(id).classList.toggle("hidden",t!=="lines"));
+  ["toolsPoly","toolsPoly2","optsPoly","helpPoly","facts"].forEach(id=>$(id).classList.toggle("hidden",t!=="poly"));
+  if(t==="poly"&&!P.verts.length) buildPoly(P.n,P.preset);
+  draw(); pinStrip();
+}
+$("tabLines").onclick=()=>setTab("lines");
+$("tabPoly").onclick=()=>setTab("poly");
+function setMode(m){
+  L.mode=m; L.sel=[]; G.revealed=false;
+  $("mBuild").setAttribute("aria-pressed",m==="build");
+  $("mMeasure").setAttribute("aria-pressed",m==="measure");
+  draw();
+}
+$("mBuild").onclick=()=>setMode("build");
+$("mMeasure").onclick=()=>setMode("measure");
+$("undo").onclick=()=>{
+  if(L.rays.length){
+    L.rays.pop();
+    L.sel=L.sel.filter(i=>i<L.rays.length);
+    G.pins=G.pins.filter(p=>p.tab!=="lines"||(p.i1<L.rays.length&&p.i2<L.rays.length));
+  } else L.O=null;
+  G.revealed=false; draw(); pinStrip();
+};
+$("reset").onclick=()=>{ L.O=null; L.rays=[]; L.sel=[]; G.pins=G.pins.filter(p=>p.tab!=="lines");
+  G.revealed=false; setMode("build"); pinStrip(); };
+function setDir(d){
+  G.dir=d; G.revealed=false;
+  $("dAcw").setAttribute("aria-pressed",d==="acw");
+  $("dCw").setAttribute("aria-pressed",d==="cw");
+  $("dShort").setAttribute("aria-pressed",d==="short");
+  draw();
+}
+$("dAcw").onclick=()=>setDir("acw");
+$("dCw").onclick=()=>setDir("cw");
+$("dShort").onclick=()=>setDir("short");
+$("optProt").onchange=e=>{L.prot=e.target.checked;draw();};
+$("optSnap").onchange=e=>{L.snap=e.target.checked;};
+$("optExt").onchange=e=>{L.ext=e.target.checked;draw();};
+$("optAll").onchange=e=>{L.all=e.target.checked;draw();};
+$("optGuess").onchange=e=>{G.guess=e.target.checked;G.revealed=false;draw();};
+$("optKeep").onchange=e=>{G.keep=e.target.checked;};
+$("revealBtn").onclick=()=>{G.revealed=true;draw();};
+$("pinBtn").onclick=()=>{ pinCurrent(true); draw(); };
+$("pDiag").onchange=e=>{P.diag=e.target.checked;rebuildSegs();draw();pinStrip();};
+$("pSpoke").onchange=e=>{P.spokes=e.target.checked;rebuildSegs();draw();pinStrip();};
+$("pAll").onchange=e=>{P.all=e.target.checked;draw();};
+$("pSplit").onchange=e=>{P.split=e.target.checked;draw();};
+$("pJunc").onchange=e=>{P.junc=e.target.checked;draw();};
+$("pMarks").onchange=e=>{P.marks=e.target.checked;draw();};
+$("pGrid").onchange=e=>{P.grid=e.target.checked;};
+$("polyReset").onclick=()=>{ buildPoly(P.n,P.preset); draw(); pinStrip(); };
+function sideButtons(){
+  const box=$("sideSeg"); box.innerHTML="";
+  [3,4,5,6,7,8].forEach(k=>{
+    const b=document.createElement("button");
+    b.textContent=k; b.setAttribute("aria-pressed",k===P.n);
+    b.onclick=()=>{ buildPoly(k, k===3?"equilateral":k===4?"square":"regular");
+      presetButtons(); sideButtons(); draw(); pinStrip(); };
+    box.appendChild(b);
+  });
+}
+function presetButtons(){
+  const box=$("presetSeg"); box.innerHTML="";
+  (PRESETS[P.n]||PRESETS.n).forEach(([key,label])=>{
+    const b=document.createElement("button");
+    b.textContent=label; b.setAttribute("aria-pressed",key===P.preset);
+    b.onclick=()=>{ buildPoly(P.n,key); presetButtons(); draw(); pinStrip(); };
+    box.appendChild(b);
+  });
+}
+/* ================= start ================= */
+function start(){
+  resize();
+  L.O={x:W/2,y:H/2};
+  const R=Math.min(W,H)*0.34;
+  [0,55,180,235].forEach((d,i)=> L.rays.push({n:NAMES[i],a:norm(d*D2R),len:R,c:RAY_C[i]}));
+  P.n=4; P.preset="square"; buildPoly(4,"square");
+  sideButtons(); presetButtons(); setTab("lines");
+}
+start();
+})();
+</script>
+</body>
+</html>

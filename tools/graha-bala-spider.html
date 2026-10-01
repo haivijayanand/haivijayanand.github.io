@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<!--
+TOOL    : graha_bala_spider.html (public copy)
+FAMILY  : astro
+VERSION : 1.0.0
+DATE    : 2026-10-01
+CHAT    : Graha Bala spider plots
+CHANGES : v1.0.0  public copy for haivijayanand.github.io: Ucca Bala and Dik Bala spider plots in English and Tamil
+STATUS  : working; runs offline in any browser, no network
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Graha Bala — Spider Plots of Planetary Strength</title>
+<style>
+:root{
+  --ink:#0B0F1C;
+  --plate:#141A2E;
+  --plate-2:#1B2239;
+  --brass:#C9A227;
+  --brass-dim:#6E5D1C;
+  --parchment:#EAE5D6;
+  --muted:#8792AE;
+  --line:#28304C;
+  --sun:#E69F00; --moon:#56B4E9; --mars:#D55E00; --mercury:#009E73;
+  --jupiter:#F0E442; --venus:#CC79A7; --saturn:#4C9BE8;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ink);
+  color:var(--parchment);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px}
+
+/* ---------- masthead ---------- */
+header.plate{
+  border:1px solid var(--line);
+  border-radius:2px;
+  background:
+    linear-gradient(180deg,var(--plate-2),var(--plate));
+  padding:26px 26px 22px;
+  position:relative;
+  overflow:hidden;
+}
+header.plate::after{
+  content:"";position:absolute;inset:6px;border:1px solid rgba(201,162,39,.22);
+  border-radius:1px;pointer-events:none;
+}
+.eyebrow{
+  font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--brass);margin:0 0 10px;
+}
+h1{
+  font-family:var(--serif);font-weight:400;font-size:clamp(28px,5vw,44px);
+  letter-spacing:-.01em;margin:0 0 8px;line-height:1.08;
+}
+h1 em{font-style:italic;color:var(--brass)}
+.dek{color:var(--muted);max-width:64ch;margin:0;font-size:14.5px}
+
+/* ---------- controls ---------- */
+.controls{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;
+  margin:20px 0 18px;
+}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.ctl label{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);
+}
+select,button,input[type=number]{
+  font-family:var(--sans);font-size:14px;color:var(--parchment);
+  background:var(--plate-2);border:1px solid var(--line);
+  border-radius:2px;padding:8px 11px;
+}
+select:focus-visible,button:focus-visible,input:focus-visible,
+[role=tab]:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+button{cursor:pointer;transition:border-color .15s,color .15s}
+button:hover{border-color:var(--brass);color:var(--brass)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:transparent;padding:8px 13px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed=true]{background:var(--brass);color:#1A1403;font-weight:600}
+.seg button[aria-pressed=true]:hover{color:#1A1403}
+
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin:22px 0 0;flex-wrap:wrap}
+[role=tab]{
+  background:none;border:0;border-bottom:2px solid transparent;border-radius:0;
+  padding:11px 15px;color:var(--muted);font-size:14px;cursor:pointer;
+}
+[role=tab]:hover{color:var(--parchment)}
+[role=tab][aria-selected=true]{color:var(--brass);border-bottom-color:var(--brass)}
+[role=tabpanel]{padding-top:24px}
+[hidden]{display:none !important}
+
+/* ---------- chart plate ---------- */
+.chartplate{
+  border:1px solid var(--line);background:var(--plate);border-radius:2px;
+  padding:18px;
+}
+.chartgrid{display:grid;grid-template-columns:minmax(0,1fr) 268px;gap:22px;align-items:start}
+@media(max-width:860px){.chartgrid{grid-template-columns:1fr}}
+svg{display:block;width:100%;height:auto;touch-action:none}
+
+/* ---------- readout ---------- */
+.readout{
+  border:1px solid var(--line);border-radius:2px;background:var(--plate-2);
+  padding:14px 15px;font-family:var(--mono);font-size:12.5px;
+}
+.readout h3{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--brass);margin:0 0 12px;font-weight:500;
+}
+.row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px dotted var(--line)}
+.row:last-child{border-bottom:0}
+.row span:first-child{color:var(--muted)}
+.row span:last-child{text-align:right}
+.big{font-size:26px;font-family:var(--serif);color:var(--brass);letter-spacing:-.01em}
+.hint{color:var(--muted);font-size:11.5px;margin-top:12px;line-height:1.5;font-family:var(--sans)}
+
+/* ---------- legend ---------- */
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:16px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:22px;height:0;border-top-width:2.5px;border-top-style:solid;vertical-align:middle;margin-right:7px}
+.legend .dot{width:9px;height:9px;border-radius:50%;border-top:0;display:inline-block;margin-right:7px;vertical-align:middle}
+.legend .ring{width:9px;height:9px;border-radius:50%;border:2px solid var(--parchment);display:inline-block;margin-right:7px;vertical-align:middle}
+
+/* ---------- small multiples ---------- */
+.multiples{display:grid;grid-template-columns:repeat(auto-fill,minmax(238px,1fr));gap:16px}
+.mini{border:1px solid var(--line);background:var(--plate);border-radius:2px;padding:12px}
+.mini h4{
+  margin:0 0 2px;font-family:var(--serif);font-weight:400;font-size:18px;
+  display:flex;align-items:baseline;gap:8px;
+}
+.mini .glyph{font-size:19px}
+.mini .sub{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.06em;margin:0 0 8px}
+
+/* ---------- table ---------- */
+table{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:12.5px}
+caption{
+  text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--brass);padding-bottom:10px;
+}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{color:var(--muted);font-weight:500;border-bottom:1px solid var(--brass-dim);
+  font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}
+tbody tr:hover{background:var(--plate-2)}
+td.peak{color:var(--brass)}
+.bar{display:inline-block;height:7px;background:var(--brass-dim);vertical-align:middle;border-radius:1px}
+
+.note{color:var(--muted);font-size:13px;max-width:74ch;margin:18px 0 0}
+.note b{color:var(--parchment);font-weight:600}
+h2.sec{font-family:var(--serif);font-weight:400;font-size:24px;margin:32px 0 12px}
+
+footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:12px;font-family:var(--mono);line-height:1.7}
+
+@media print{
+  body{background:#fff;color:#111}
+  .controls,.tabs,.readout,footer .noprint{display:none}
+  .chartplate,.mini,header.plate{border-color:#bbb;background:#fff}
+  h1,h2.sec,.mini h4{color:#111}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="plate">
+  <p class="eyebrow">Jyotiṣa · Ṣaḍbala · polar strength profiles</p>
+  <h1>Graha Bala <em>Spider Plots</em></h1>
+  <p class="dek">Continuous 360° strength curves for the seven classical planets — <b>Ucca Bala</b> (exaltation strength, by zodiac degree) and <b>Dik Bala</b> (directional strength, by house). Drawn in South Indian orientation: Aries fills the 11–12 hour on the clock face, Taurus starts at 12, and the signs run clockwise in whole-hour steps.</p>
+</header>
+
+<div class="controls">
+  <div class="ctl">
+    <label for="planet">Planet</label>
+    <select id="planet"></select>
+  </div>
+  <div class="ctl">
+    <label>Orientation</label>
+    <div class="seg" id="orient">
+      <button data-o="south" aria-pressed="true">South Indian · CW</button>
+      <button data-o="north" aria-pressed="false">North / Western · CCW</button>
+    </div>
+  </div>
+  <div class="ctl">
+    <label>Scale</label>
+    <div class="seg" id="units">
+      <button data-u="pct" aria-pressed="true">Percent</button>
+      <button data-u="vir" aria-pressed="false">Virūpas</button>
+    </div>
+  </div>
+  <div class="ctl">
+    <label for="lon">Cursor longitude</label>
+    <input type="number" id="lon" min="0" max="359.9" step="1" value="10">
+  </div>
+  <div class="ctl">
+    <label>&nbsp;</label>
+    <button id="csv">Download CSV</button>
+  </div>
+</div>
+
+<div class="tabs" role="tablist">
+  <button role="tab" id="t-phys" aria-selected="true" aria-controls="p-phys">Physical scale</button>
+  <button role="tab" id="t-bhava" aria-selected="false" aria-controls="p-bhava">Houses</button>
+  <button role="tab" id="t-single" aria-selected="false" aria-controls="p-single">Single planet</button>
+  <button role="tab" id="t-grid" aria-selected="false" aria-controls="p-grid">All seven</button>
+  <button role="tab" id="t-overlay" aria-selected="false" aria-controls="p-overlay">Overlay</button>
+  <button role="tab" id="t-dik" aria-selected="false" aria-controls="p-dik">Dik Bala</button>
+  <button role="tab" id="t-aspect" aria-selected="false" aria-controls="p-aspect">House aspects</button>
+  <button role="tab" id="t-house" aria-selected="false" aria-controls="p-house">House pressure</button>
+  <button role="tab" id="t-table" aria-selected="false" aria-controls="p-table">Degree table</button>
+</div>
+
+<!-- ============ PHYSICAL SCALE ============ -->
+<section role="tabpanel" id="p-phys" aria-labelledby="t-phys">
+  <p class="note" style="margin:0 0 16px">Newtonian attraction between each body and the Earth, computed as
+    <span style="font-family:var(--mono);color:var(--parchment)">F ∝ M₁M₂ / r²</span>,
+    expressed as a percentage of the pull the Moon exerts on the Earth at its mean distance.
+    Mass is in Earth masses; distance is in Earth–Moon distances, where 1 unit = 384,400 km.</p>
+  <div class="controls" style="margin-top:0">
+    <div class="ctl">
+      <label>Order by</label>
+      <div class="seg" id="basis">
+        <button data-b="mean" aria-pressed="true">Mean effect</button>
+        <button data-b="min" aria-pressed="false">Closest approach</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label>Force law</label>
+      <div class="seg" id="law">
+        <button data-l="grav" aria-pressed="true">Gravity · M/r²</button>
+        <button data-l="tide" aria-pressed="false">Tidal · M/r³</button>
+      </div>
+    </div>
+  </div>
+  <div class="chartplate">
+    <svg id="svg-phys" viewBox="0 0 780 300" role="img" aria-label="Relative gravitational pull on Earth"></svg>
+  </div>
+  <table id="phys-table" style="margin-top:26px"></table>
+  <p class="note" id="phys-note"></p>
+</section>
+
+<!-- ============ BHAVAS ============ -->
+<section role="tabpanel" id="p-bhava" aria-labelledby="t-bhava" hidden>
+  <p class="note" style="margin:0 0 14px">The twelve <b>bhāvas</b> counted from the lagna. Each sector is a
+    whole hour on the clock face — house 1 sits at 11–12 by default, the next at 12–1, running clockwise.
+    The rāśis on the outer ring are fixed to their sectors in South Indian fashion, so
+    <b>clicking a sector moves the lagna there</b> and the houses renumber clockwise from it.</p>
+  <div class="controls" style="margin-top:0">
+    <div class="ctl">
+      <label for="lagsel">Lagna rāśi</label>
+      <select id="lagsel"></select>
+    </div>
+    <div class="ctl">
+      <label for="bhsel">Show detail for</label>
+      <select id="bhsel"></select>
+    </div>
+  </div>
+  <div class="chartplate">
+    <div class="chartgrid">
+      <div><svg id="svg-bhava" viewBox="0 0 640 640" role="img" aria-label="The twelve houses from lagna"></svg></div>
+      <div>
+        <div class="readout" id="bh-detail"></div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i class="dot" style="background:#C9A227"></i>Kendra · angle (1, 4, 7, 10)</span>
+      <span><i class="dot" style="background:#4C9BE8"></i>Trikoṇa · trine (1, 5, 9)</span>
+      <span><i class="dot" style="background:#8C4A3F"></i>Duḥsthāna · difficult (6, 8, 12)</span>
+      <span><i class="dot" style="background:#3A4463"></i>Remaining (2, 3, 11)</span>
+    </div>
+  </div>
+  <table id="bh-table" style="margin-top:26px"></table>
+  <p class="note">This wheel always uses the South Indian clock layout, so the orientation toggle above
+    does not apply here. House 1 belongs to both groups at once — it is the only bhāva that is both a kendra and a
+    trikoṇa, which is why the tradition treats the lagna as the single most important point in the chart.
+    The <b>upachaya</b> houses (3, 6, 10, 11) form a cross-cutting group said to improve with time, so a
+    malefic placed there is read differently from the same malefic elsewhere. The kāraka column gives the
+    planet most commonly assigned as natural significator; sources differ on several houses, and some assign
+    more than one, so treat that column as indicative rather than settled.</p>
+</section>
+
+<!-- ============ SINGLE ============ -->
+<section role="tabpanel" id="p-single" aria-labelledby="t-single" hidden>
+  <div class="chartplate">
+    <div class="chartgrid">
+      <div><svg id="svg-single" viewBox="0 0 640 640" role="img" aria-label="Ucca Bala polar chart"></svg></div>
+      <div>
+        <div class="readout">
+          <h3>Cursor readout</h3>
+          <div class="row"><span>Strength</span><span class="big" id="r-val">100.0%</span></div>
+          <div class="row"><span>Longitude</span><span id="r-lon">10° 00′</span></div>
+          <div class="row"><span>Sign</span><span id="r-sign">Aries</span></div>
+          <div class="row"><span>In sign</span><span id="r-insign">10° 00′</span></div>
+          <div class="row"><span>Clock</span><span id="r-clock">11:50</span></div>
+          <div class="row"><span>Virūpas</span><span id="r-vir">60.0 / 60</span></div>
+          <div class="row"><span>From ucca</span><span id="r-fromE">0.0°</span></div>
+          <p class="hint">Move the pointer over the wheel to sweep degrees, or type a longitude above. Arrow keys step 1°, Shift+arrow steps 10°.</p>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="border-top-color:var(--sun)" id="lg-line"></i><span id="lg-name">Sun</span> — Ucca Bala</span>
+      <span><i class="dot" style="background:#EAE5D6"></i>Deep exaltation · 100%</span>
+      <span><i class="ring"></i>Deep debilitation · 0% (at centre)</span>
+      <span><i style="border-top-color:#6E5D1C;border-top-style:dashed"></i>Debilitation axis</span>
+    </div>
+  </div>
+  <p class="note" id="single-note"></p>
+</section>
+
+<!-- ============ GRID ============ -->
+<section role="tabpanel" id="p-grid" aria-labelledby="t-grid" hidden>
+  <div class="multiples" id="multiples"></div>
+  <p class="note"><b>Opposite pairs invert.</b> Sun (ucca Aries) and Saturn (ucca Libra) are near-mirror images, as are Jupiter (Cancer) and Mars (Capricorn). Where one planet peaks the other bottoms out. <b>Mercury</b> is the outlier the classics flag: it is exalted in Virgo and debilitated in Pisces, and its 15° peak sits close to a quarter-turn from most others — the curve here uses the standard 180° axis model throughout, so Mercury's profile is the same shape, just rotated.</p>
+</section>
+
+<!-- ============ OVERLAY ============ -->
+<section role="tabpanel" id="p-overlay" aria-labelledby="t-overlay" hidden>
+  <div class="chartplate">
+    <div class="chartgrid">
+      <div><svg id="svg-overlay" viewBox="0 0 640 640" role="img" aria-label="All planets overlaid"></svg></div>
+      <div>
+        <div class="readout">
+          <h3>All planets at cursor</h3>
+          <div id="ov-rows"></div>
+          <p class="hint">Every curve is the same cardioid rotated to its own exaltation point. The seven do not sum to a constant: the combined total peaks at 413.9% around Taurus 3° and bottoms at 286.1% around Scorpio 3°.</p>
+        </div>
+      </div>
+    </div>
+    <div class="legend" id="ov-legend"></div>
+  </div>
+</section>
+
+<!-- ============ DIK BALA ============ -->
+<section role="tabpanel" id="p-dik" aria-labelledby="t-dik" hidden>
+  <div class="chartplate">
+    <div class="chartgrid">
+      <div><svg id="svg-dik" viewBox="0 0 640 640" role="img" aria-label="Dik Bala directional strength"></svg></div>
+      <div>
+        <div class="readout">
+          <h3>Directional strength</h3>
+          <div id="dik-rows"></div>
+          <p class="hint">House 1 fills the 11–12 hour and the houses run clockwise in whole-hour steps, matching the sign wheel. Strength is measured outward from each planet's powerless cusp.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <h2 class="sec">Which planet is strong where</h2>
+  <table id="dik-table"></table>
+  <p class="note">Dik Bala answers a different question from exaltation. Exaltation asks how comfortably a planet expresses its nature; direction asks in which sphere of life it has leverage. A Sun in Aries inside the 10th house has both — peak sign alignment and full directional power.</p>
+</section>
+
+<!-- ============ ASPECTS ============ -->
+<section role="tabpanel" id="p-aspect" aria-labelledby="t-aspect" hidden>
+  <div class="controls" style="margin-top:0">
+    <div class="ctl">
+      <label for="posel">House occupied, counted from lagna</label>
+      <select id="posel"></select>
+    </div>
+  </div>
+  <div class="chartplate">
+    <div class="chartgrid">
+      <div><svg id="svg-aspect" viewBox="0 0 640 640" role="img" aria-label="Graha drishti by house"></svg></div>
+      <div>
+        <div class="readout">
+          <h3>Houses influenced</h3>
+          <div id="asp-rows"></div>
+          <p class="hint">Counting is inclusive: a planet in the 1st casting a 7th-house aspect lands on house 7. Strength follows the Parāśarī scale; the three special aspects override it to full.</p>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i class="dot" style="background:#EAE5D6"></i>Occupied house</span>
+      <span>Full 100% · three-quarter 75% · half 50% · quarter 25%</span>
+    </div>
+  </div>
+  <p class="note" id="asp-note"></p>
+</section>
+
+<!-- ============ HOUSE PRESSURE ============ -->
+<section role="tabpanel" id="p-house" aria-labelledby="t-house" hidden>
+  <p class="note" style="margin:0 0 14px">Place all seven planets, then read the total aspectual load falling on each house. Occupancy is counted separately from aspect and is marked on the rim.</p>
+  <div class="controls" id="placers" style="margin-top:0"></div>
+  <div class="chartplate">
+    <div class="chartgrid">
+      <div><svg id="svg-house" viewBox="0 0 640 640" role="img" aria-label="Total aspect load per house"></svg></div>
+      <div>
+        <div class="readout">
+          <h3>Load per house</h3>
+          <div id="hp-rows"></div>
+        </div>
+      </div>
+    </div>
+    <div class="legend" id="hp-legend"></div>
+  </div>
+  <table id="hp-table"></table>
+</section>
+
+<!-- ============ TABLE ============ -->
+<section role="tabpanel" id="p-table" aria-labelledby="t-table" hidden>
+  <table id="sign-table"></table>
+  <h2 class="sec">Degree by degree</h2>
+  <div class="controls" style="margin-top:0">
+    <div class="ctl">
+      <label for="signsel">Show degrees within</label>
+      <select id="signsel"></select>
+    </div>
+  </div>
+  <table id="deg-table"></table>
+</section>
+
+<footer>
+  <span class="noprint">Ucca Bala (%) = D / 180° × 100, where D is the angular separation between the point in question and the planet's deep debilitation degree. Virūpas = % × 0.6, maximum 60.<br></span>
+  Colour series uses the Wong colour-blind-safe palette; exaltation and debilitation markers are distinguished by shape as well as fill.
+</footer>
+
+</div>
+
+<script>
+"use strict";
+
+/* ---------------- data ---------------- */
+const SIGNS = [
+  {n:"Aries",       s:"♈", t:"Meṣa"},      {n:"Taurus",  s:"♉", t:"Vṛṣabha"},
+  {n:"Gemini",      s:"♊", t:"Mithuna"},   {n:"Cancer",  s:"♋", t:"Karka"},
+  {n:"Leo",         s:"♌", t:"Siṃha"},     {n:"Virgo",   s:"♍", t:"Kanyā"},
+  {n:"Libra",       s:"♎", t:"Tulā"},      {n:"Scorpio", s:"♏", t:"Vṛścika"},
+  {n:"Sagittarius", s:"♐", t:"Dhanus"},    {n:"Capricorn",s:"♑",t:"Makara"},
+  {n:"Aquarius",    s:"♒", t:"Kumbha"},    {n:"Pisces",  s:"♓", t:"Mīna"}
+];
+
+// exaltation sign index + peak degree  ->  absolute deep-exaltation longitude
+const PLANETS = [
+  {k:"sun",     n:"Sun",     t:"Sūrya",  ta:"சூரியன்", tr:"Sūriyaṉ", wd:"ஞாயிறு", g:"☉", sign:0,  deg:10, col:"var(--sun)",     hex:"#E69F00", dik:10, dash:"none"},
+  {k:"moon",    n:"Moon",    t:"Candra", ta:"சந்திரன்", tr:"Chandiraṉ", wd:"திங்கள்", g:"☽", sign:1,  deg:3,  col:"var(--moon)",    hex:"#56B4E9", dik:4,  dash:"7 4"},
+  {k:"mars",    n:"Mars",    t:"Maṅgala",ta:"செவ்வாய்", tr:"Sevvāy", wd:"செவ்வாய்", g:"♂", sign:9,  deg:28, col:"var(--mars)",    hex:"#D55E00", dik:10, dash:"none"},
+  {k:"mercury", n:"Mercury", t:"Budha",  ta:"புதன்", tr:"Budhaṉ", wd:"புதன்", g:"☿", sign:5,  deg:15, col:"var(--mercury)", hex:"#009E73", dik:1,  dash:"2 4"},
+  {k:"jupiter", n:"Jupiter", t:"Guru",   ta:"வியாழன்", tr:"Viyāzhaṉ", wd:"வியாழன்", g:"♃", sign:3,  deg:5,  col:"var(--jupiter)", hex:"#F0E442", dik:1,  dash:"10 4 2 4"},
+  {k:"venus",   n:"Venus",   t:"Śukra",  ta:"வெள்ளி", tr:"Veḷḷi", wd:"வெள்ளி", g:"♀", sign:11, deg:27, col:"var(--venus)",   hex:"#CC79A7", dik:4,  dash:"7 4"},
+  {k:"saturn",  n:"Saturn",  t:"Śani",   ta:"சனி", tr:"Saṉi", wd:"சனி", g:"♄", sign:6,  deg:20, col:"var(--saturn)",  hex:"#4C9BE8", dik:7,  dash:"2 4"}
+];
+PLANETS.forEach(p=>{ p.ucca = p.sign*30 + p.deg; p.neecha = (p.ucca+180)%360; });
+
+const DIRN = {1:"East · Lagna", 4:"North · Nadir", 7:"West", 10:"South · Zenith"};
+
+/* ---------------- maths ---------------- */
+const norm  = a => ((a % 360) + 360) % 360;
+const sep   = (a,b) => { const d = norm(a-b); return Math.min(d, 360-d); };
+const ucca  = (lon, p) => sep(lon, p.neecha) / 180 * 100;
+
+// screen angle, degrees clockwise from 12 o'clock
+function scr(lon, orient){ return orient === "south" ? lon - 30 : 90 - lon; }
+function inv(ang, orient){ return norm(orient === "south" ? ang + 30 : 90 - ang); }
+
+function pt(cx, cy, r, ang){
+  const a = ang * Math.PI / 180;
+  return [cx + r*Math.sin(a), cy - r*Math.cos(a)];
+}
+function fmtDMS(d){
+  const dd = Math.floor(d), mm = Math.round((d-dd)*60);
+  return (mm===60 ? (dd+1)+"° 00′" : dd+"° "+String(mm).padStart(2,"0")+"′");
+}
+// hour that a whole sign / house occupies, and its span label
+const hourOf = i => ((11 + i - 1) % 12) + 1;
+const spanOf = i => hourOf(i) + "–" + hourOf(i+1);
+function clockOf(lon){
+  // South Indian: Aries 0° sits at 11:00, each sign filling one whole hour
+  const mins = (((660 + lon*2) % 720) + 720) % 720;
+  const h = Math.floor(mins/60) || 12, m = Math.round(mins%60);
+  return h + ":" + String(m).padStart(2,"0");
+}
+
+/* ---------------- state ---------------- */
+const S = { planet:PLANETS[0], orient:"south", units:"pct", lon:10, sign:0,
+  pos:{sun:1, moon:4, mars:10, mercury:2, jupiter:5, venus:12, saturn:7},
+  basis:"mean", law:"grav", bhava:1, lagnaSector:0 };
+const $  = id => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, txt){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (txt !== undefined) e.textContent = txt;
+  return e;
+}
+const val = v => S.units === "vir" ? (v*0.6).toFixed(1) : v.toFixed(1) + "%";
+
+/* ---------------- wheel renderer ---------------- */
+function drawWheel(svg, R, cx, cy, opts){
+  svg.innerHTML = "";
+  const o = opts || {};
+  const labels = o.labels || "zodiac";
+
+  // rings
+  [20,40,60,80,100].forEach(v=>{
+    svg.appendChild(el("circle",{cx,cy,r:R*v/100,fill:"none",
+      stroke: v===100 ? "#C9A227" : "#28304C",
+      "stroke-width": v===100 ? 1.4 : 1,
+      "stroke-opacity": v===100 ? .85 : .8}));
+    if(!o.mini && v<100){
+      const [x,y] = pt(cx,cy,R*v/100, o.tickAngle !== undefined ? o.tickAngle : -15);
+      svg.appendChild(el("text",{x,y:y-4,fill:"#7E8AAB","font-size":10,
+        "font-family":"ui-monospace,monospace","text-anchor":"middle",
+        stroke:"#141A2E","stroke-width":3,"paint-order":"stroke"},
+        S.units==="vir" ? (v*0.6).toFixed(0) : v+"%"));
+    }
+  });
+
+  // spokes at boundaries
+  for (let i=0;i<12;i++){
+    const ang = scr(i*30, S.orient);
+    const [x,y] = pt(cx,cy,R,ang);
+    svg.appendChild(el("line",{x1:cx,y1:cy,x2:x,y2:y,stroke:"#28304C","stroke-width":1}));
+  }
+
+  // rim labels
+  if (labels !== "none"){
+    for (let i=0;i<12;i++){
+      const mid = i*30+15;
+      const ang = scr(mid, S.orient);
+      const sg = SIGNS[i];
+      if (o.mini){
+        const [x,y] = pt(cx,cy,R+16,ang);
+        svg.appendChild(el("text",{x,y:y+4,fill:"#C9A227",
+          "font-size":12,"text-anchor":"middle"}, sg.s));
+      } else {
+        const [x,y] = pt(cx,cy,R+34,ang);
+        const t = el("text",{x,y:y+4,"font-size":12,
+          "font-family":"ui-monospace,monospace","text-anchor":"middle"});
+        const a = el("tspan",{fill:"#C9A227","font-size":15}, sg.s+" ");
+        const b = el("tspan",{fill:"#8792AE"},
+          S.orient==="south" ? sg.n.slice(0,3).toUpperCase()+" "+spanOf(i)
+                             : sg.n.slice(0,3).toUpperCase());
+        t.appendChild(a); t.appendChild(b); svg.appendChild(t);
+      }
+    }
+  }
+  return {cx,cy,R};
+}
+
+function curvePath(p, cx, cy, R){
+  let d = "";
+  for (let L=0; L<=360; L++){
+    const r = R * ucca(L, p) / 100;
+    const [x,y] = pt(cx,cy,r,scr(L%360, S.orient));
+    d += (L===0?"M":"L") + x.toFixed(2) + " " + y.toFixed(2);
+  }
+  return d + "Z";
+}
+
+function drawPlanetCurve(svg, p, cx, cy, R, opts){
+  const o = opts||{};
+  const d = curvePath(p,cx,cy,R);
+  if (o.fill !== false)
+    svg.appendChild(el("path",{d,fill:p.hex,"fill-opacity":o.mini?.16:.13,stroke:"none"}));
+  svg.appendChild(el("path",{d,fill:"none",stroke:p.hex,
+    "stroke-width":o.mini?1.6:2.2,"stroke-linejoin":"round",
+    "stroke-dasharray":o.dash?p.dash:"none"}));
+
+  // debilitation axis (dashed radial line towards the 0% direction)
+  const [nx,ny] = pt(cx,cy,R,scr(p.neecha,S.orient));
+  svg.appendChild(el("line",{x1:cx,y1:cy,x2:nx,y2:ny,stroke:"#6E5D1C",
+    "stroke-width":1,"stroke-dasharray":"4 5","stroke-opacity":.9}));
+
+  // deep exaltation marker — filled disc on the rim
+  const [ex,ey] = pt(cx,cy,R,scr(p.ucca,S.orient));
+  svg.appendChild(el("circle",{cx:ex,cy:ey,r:o.mini?3.6:5.6,fill:"#EAE5D6",
+    stroke:p.hex,"stroke-width":2}));
+
+  // deep debilitation marker — hollow ring at the centre
+  svg.appendChild(el("circle",{cx,cy,r:o.mini?3.6:5.6,fill:"var(--plate)",
+    stroke:"#EAE5D6","stroke-width":2}));
+}
+
+/* ---------------- graha dṛṣṭi (house aspects) ---------------- */
+// Parāśarī graded aspect, by inclusive house count from the occupied house
+const DRISHTI_BASE = {3:25, 4:75, 5:50, 7:100, 8:75, 9:50, 10:25};
+// the three special full aspects
+const SPECIAL = {mars:[4,8], jupiter:[5,9], saturn:[3,10]};
+function drishti(p, n){
+  if (n === 1) return 0;                       // own house = occupancy, not aspect
+  const sp = SPECIAL[p.k];
+  if (sp && sp.indexOf(n) !== -1) return 100;
+  return DRISHTI_BASE[n] || 0;
+}
+const houseCount = (from, to) => ((to - from + 12) % 12) + 1;
+const aspectOn = (p, from, to) => drishti(p, houseCount(from, to));
+
+// phi = degrees measured from the 1st cusp, increasing with house number
+function hAngle(phi, orient){ return orient === "south" ? phi - 30 : 270 - phi; }
+const hCenter = (h, orient) => hAngle((h-1)*30 + 15, orient);
+const houseClock = h => spanOf(h-1);
+
+/* ---------------- house wheel ---------------- */
+function drawHouseWheel(svg, R, cx, cy, o){
+  svg.innerHTML = "";
+  const max = o.scaleMax || 100;
+  [25,50,75,100].forEach(f=>{
+    svg.appendChild(el("circle",{cx,cy,r:R*f/100,fill:"none",
+      stroke: f===100 ? "#C9A227" : "#28304C",
+      "stroke-width": f===100 ? 1.4 : 1}));
+    if (f<100){
+      const [x,y] = pt(cx,cy,R*f/100, hAngle(255,S.orient));
+      svg.appendChild(el("text",{x,y:y-4,fill:"#7E8AAB","font-size":10,
+        "font-family":"ui-monospace,monospace","text-anchor":"middle",
+        stroke:"#141A2E","stroke-width":3,"paint-order":"stroke"},
+        Math.round(max*f/100) + (o.unitSuffix||"%")));
+    }
+  });
+  for (let h=1;h<=12;h++){
+    const a = hAngle((h-1)*30, S.orient);           // cusp
+    const [x,y] = pt(cx,cy,R,a);
+    svg.appendChild(el("line",{x1:cx,y1:cy,x2:x,y2:y,stroke:"#28304C","stroke-width":1}));
+    const [lx,ly] = pt(cx,cy,R+34,hCenter(h,S.orient));
+    const t = el("text",{x:lx,y:ly+4,"font-size":12,
+      "font-family":"ui-monospace,monospace","text-anchor":"middle"});
+    t.appendChild(el("tspan",{fill:"#C9A227"},"H"+h));
+    t.appendChild(el("tspan",{fill:"#8792AE"},
+      S.orient==="south" ? " "+houseClock(h) : ""));
+    if (o.occ && o.occ[h-1] && o.occ[h-1].length)
+      o.occ[h-1].forEach(pl =>
+        t.appendChild(el("tspan",{fill:pl.hex,"font-size":14}," "+pl.g)));
+    svg.appendChild(t);
+    if (o.showDirn && DIRN[h])
+      svg.appendChild(el("text",{x:lx,y:ly+17,fill:"#C9A227","font-size":10,
+        "font-family":"ui-monospace,monospace","text-anchor":"middle",
+        "letter-spacing":"0.1em"}, DIRN[h].split(" · ")[0].toUpperCase()));
+  }
+}
+function polyPath(vals, cx, cy, R, max){
+  let d = "";
+  for (let h=1;h<=12;h++){
+    const r = R * (vals[h-1]/max);
+    const [x,y] = pt(cx,cy,r,hCenter(h,S.orient));
+    d += (h===1?"M":"L") + x.toFixed(2) + " " + y.toFixed(2);
+  }
+  return d + "Z";
+}
+
+/* ---------------- physical scale ---------------- */
+// 1 astronomical unit expressed in Earth-Moon mean distances (384,400 km)
+const AU_EM = 389.172;
+// mass in Earth masses; dmin/dmax = geocentric distance range in AU
+const PHYS = {
+  sun:     {m:332956.03, dmin:0.98329,   dmax:1.01671},
+  moon:    {m:0.012294,  dmin:0.0024285, dmax:0.0027106},
+  mercury: {m:0.055300,  dmin:0.549,     dmax:1.451},
+  venus:   {m:0.815000,  dmin:0.255,     dmax:1.745},
+  mars:    {m:0.107500,  dmin:0.372,     dmax:2.683},
+  jupiter: {m:317.8292,  dmin:3.950,     dmax:6.456},
+  saturn:  {m:95.1647,   dmin:8.028,     dmax:11.084}
+};
+// geocentric distance in Earth-Moon units. which: "near" | "far" | "mean"
+function physDist(k, which){
+  const d = PHYS[k];
+  const au = which==="near" ? d.dmin : which==="far" ? d.dmax : (d.dmin+d.dmax)/2;
+  return au * AU_EM;
+}
+// reference is always the Moon at its mean distance, so the scale never shifts
+function physRef(){
+  const d = PHYS.moon, r = (d.dmin+d.dmax)/2 * AU_EM;
+  return d.m / Math.pow(r, S.law==="tide" ? 3 : 2);
+}
+// closest approach gives the strongest effect, so "near" is the maximum
+function physF(k, which){
+  return PHYS[k].m / Math.pow(physDist(k,which), S.law==="tide" ? 3 : 2) / physRef() * 100;
+}
+function fmtSci(v){
+  if (v >= 100)  return v.toFixed(0);
+  if (v >= 1)    return v.toFixed(2);
+  if (v >= 0.001) return v.toPrecision(3);
+  return v.toExponential(2);
+}
+
+function renderPhys(){
+  const svg = $("svg-phys"); svg.innerHTML = "";
+  const rows = PLANETS.map(p=>({p,
+      hi:physF(p.k,"near"), lo:physF(p.k,"far"), mid:physF(p.k,"mean")}))
+    .sort((a,b)=> S.basis==="min" ? b.hi-a.hi : b.mid-a.mid);
+
+  const L0 = -6, L1 = 5;                     // log10 axis bounds, in percent
+  const x0 = 168, x1 = 588, H = 30, top = 50;
+  const X = v => x0 + (x1-x0) * (Math.min(Math.max(Math.log10(v),L0),L1) - L0) / (L1 - L0);
+
+  for (let e=L0; e<=L1; e++){
+    const x = X(Math.pow(10,e));
+    svg.appendChild(el("line",{x1:x,y1:top-14,x2:x,y2:top+7*H,
+      stroke: e===2 ? "#C9A227" : "#28304C", "stroke-width": e===2 ? 1.4 : 1}));
+    svg.appendChild(el("text",{x,y:top+7*H+16,fill:e===2?"#C9A227":"#5C688A",
+      "font-size":9.5,"font-family":"ui-monospace,monospace","text-anchor":"middle"},
+      e===2 ? "Moon" : "1e"+e));
+  }
+  rows.forEach((r,i)=>{
+    const y = top + i*H;
+    svg.appendChild(el("text",{x:x0-14,y:y+15,fill:"#EAE5D6","font-size":13,
+      "text-anchor":"end"}, r.p.g+" "+r.p.n));
+    svg.appendChild(el("text",{x:x0-104,y:y+15,fill:"#8792AE","font-size":11,
+      "text-anchor":"end"}, r.p.ta));
+    const xa = X(r.lo), xb = X(r.hi);
+    // the span between farthest and closest
+    svg.appendChild(el("rect",{x:xa,y:y+5,width:Math.max(xb-xa,1.5),height:14,
+      fill:r.p.hex,"fill-opacity":.32,rx:1}));
+    [[xa,"far"],[xb,"near"]].forEach(([x])=>
+      svg.appendChild(el("line",{x1:x,y1:y+3,x2:x,y2:y+21,
+        stroke:r.p.hex,"stroke-width":2.4})));
+    // mean marker
+    svg.appendChild(el("circle",{cx:X(r.mid),cy:y+12,r:3.4,fill:"#141A2E",
+      stroke:r.p.hex,"stroke-width":2}));
+    svg.appendChild(el("text",{x:x1+10,y:y+16,fill:"#8792AE","font-size":10.5,
+      "font-family":"ui-monospace,monospace"},
+      fmtSci(r.lo)+" – "+fmtSci(r.hi)+"%"));
+  });
+  svg.appendChild(el("text",{x:x0-104,y:24,fill:"#EAE5D6","font-size":15,
+    "font-family":"Georgia,serif"},
+    (S.law==="tide" ? "Tidal effect on Earth" : "Gravitational pull on Earth")
+    + " · range over the orbit · log scale · Moon = 100%"));
+
+  const unit = S.law==="tide" ? "M/r³" : "M₁M₂/r²";
+  let h = "<caption>"+(S.law==="tide"?"Tidal":"Gravitational")+" effect relative to the Earth–Moon pair"
+        + "</caption><thead><tr><th>Planet</th><th>தமிழ்</th><th>Mass (M⊕)</th>"
+        + "<th>r closest</th><th>r farthest</th><th>"+unit+" mean</th>"
+        + "<th>Min %</th><th>Max %</th><th>Swing</th></tr></thead><tbody>";
+  rows.forEach(r=>{
+    const raw = PHYS[r.p.k].m / Math.pow(physDist(r.p.k,"mean"), S.law==="tide" ? 3 : 2);
+    h += '<tr><td><span style="color:'+r.p.hex+'">'+r.p.g+"</span> "+r.p.n
+      + '<span style="color:#5C688A"> '+r.p.tr+"</span></td>"
+      + '<td style="text-align:left;font-family:var(--sans);font-size:14px">'+r.p.ta+"</td>"
+      + "<td>"+(PHYS[r.p.k].m>=1 ? PHYS[r.p.k].m.toLocaleString(undefined,{maximumFractionDigits:0})
+                                 : PHYS[r.p.k].m.toFixed(4))+"</td>"
+      + "<td>"+physDist(r.p.k,"near").toFixed(1)+"</td>"
+      + "<td>"+physDist(r.p.k,"far").toFixed(1)+"</td>"
+      + "<td>"+raw.toExponential(2)+"</td>"
+      + "<td>"+fmtSci(r.lo)+"%</td>"
+      + '<td class="'+(r.p.k==="sun"?"peak":"")+'">'+fmtSci(r.hi)+"%</td>"
+      + "<td>"+(r.hi/r.lo).toFixed(1)+"×</td></tr>";
+  });
+  $("phys-table").innerHTML = h+"</tbody>";
+
+  const F = k => ({lo:physF(k,"far"), hi:physF(k,"near")});
+  const ven = F("venus"), jup = F("jupiter"), mar = F("mars");
+  $("phys-note").innerHTML =
+    "Each bar spans the whole orbit: the left tick is the body at its farthest, the right tick at its "
+    + "closest, the hollow circle the mean. Because the force goes as the inverse square, the swing is "
+    + "the square of the distance ratio — <b>Mars varies by "+(mar.hi/mar.lo).toFixed(0)
+    + "×</b> across its cycle and Venus by "+(ven.hi/ven.lo).toFixed(0)+"×, while the Sun barely moves. "
+    + "The ranges also overlap: Venus at closest ("+fmtSci(ven.hi)+"%) exceeds Jupiter at its farthest ("
+    + fmtSci(jup.lo)+"%), so the ordering of the five is not fixed but depends on where they happen to be. "
+    + "<b>What this does and does not show:</b> it compares Newtonian attraction only. Classical jyotiṣa "
+    + "does not claim gravity as its mechanism, so these figures sit alongside the traditional model in "
+    + "the other tabs as a physical scale reference, not as a test of it. Tamil weekday names follow the "
+    + "same seven bodies — ஞாயிறு, திங்கள், செவ்வாய், புதன், வியாழன், வெள்ளி, சனி — in the classical order.";
+}
+
+/* ---------------- bhāvas (houses from lagna) ---------------- */
+const BHAVA = [
+ {n:1,  s:"Tanu / Lagna", ta:"லக்னம்", en:"Self",
+  k:"Sun", sig:"Body, physical constitution, appearance, vitality, temperament, the general trajectory of life. The reference point from which all other houses are counted."},
+ {n:2,  s:"Dhana", ta:"தன ஸ்தானம்", en:"Wealth",
+  k:"Jupiter", sig:"Accumulated wealth, family of origin, speech, food, face. Counted as a maraka house because it holds what sustains life."},
+ {n:3,  s:"Sahaja / Vikrama", ta:"சகஜ ஸ்தானம்", en:"Courage",
+  k:"Mars", sig:"Younger siblings, courage and initiative, effort, short journeys, communication, skill of the hands."},
+ {n:4,  s:"Sukha / Bandhu", ta:"சுக ஸ்தானம்", en:"Home",
+  k:"Moon", sig:"Mother, home and land, vehicles, early schooling, inner contentment. The nadir of the chart, the private base."},
+ {n:5,  s:"Putra", ta:"புத்திர ஸ்தானம்", en:"Progeny",
+  k:"Jupiter", sig:"Children, intelligence and discernment, creative work, speculation, mantra and upāsana, merit carried from before (pūrva puṇya)."},
+ {n:6,  s:"Ari / Roga", ta:"ரிபு ஸ்தானம்", en:"Adversity",
+  k:"Mars", sig:"Enemies, debts, disease, litigation, daily work and service, competition. Difficult, but also upachaya — struggle here tends to yield over time."},
+ {n:7,  s:"Yuvati / Kalatra", ta:"களத்திர ஸ்தானம்", en:"Partnership",
+  k:"Venus", sig:"Spouse and partnership, contracts, trade, public dealings, the other party in any exchange. Also a maraka house."},
+ {n:8,  s:"Randhra / Āyus", ta:"ஆயுள் ஸ்தானம்", en:"Longevity",
+  k:"Saturn", sig:"Length of life, sudden and unforeseen events, inheritance and others' resources, the occult, what is hidden or must be transformed."},
+ {n:9,  s:"Dharma / Bhāgya", ta:"பாக்கிய ஸ்தானம்", en:"Fortune",
+  k:"Jupiter", sig:"Fortune and grace, father, guru, higher learning, ethics and law, pilgrimage. Widely held to be the most auspicious of the twelve."},
+ {n:10, s:"Karma", ta:"கர்ம ஸ்தானம்", en:"Action",
+  k:"Mercury", sig:"Career and action in the world, status, authority, public standing, what one is known for. The zenith, the most visible point."},
+ {n:11, s:"Lābha / Āya", ta:"லாப ஸ்தானம்", en:"Gains",
+  k:"Jupiter", sig:"Income and gains, elder siblings, networks and associations, the fulfilment of desires. Upachaya — reliably improves with time."},
+ {n:12, s:"Vyaya", ta:"விரய ஸ்தானம்", en:"Loss",
+  k:"Saturn", sig:"Expenditure and loss, isolation, foreign lands, sleep and the bed, confinement — and, read the other way, liberation (mokṣa)."}
+];
+const KENDRA=[1,4,7,10], TRIKONA=[1,5,9], DUS=[6,8,12], UPACHAYA=[3,6,10,11], MARAKA=[2,7];
+function bhavaClass(n){
+  const t=[];
+  if (KENDRA.includes(n)) t.push("Kendra");
+  if (TRIKONA.includes(n)) t.push("Trikoṇa");
+  if (DUS.includes(n)) t.push("Duḥsthāna");
+  if (UPACHAYA.includes(n)) t.push("Upachaya");
+  if (MARAKA.includes(n)) t.push("Maraka");
+  return t;
+}
+function bhavaHue(n){
+  if (DUS.includes(n)) return "#8C4A3F";
+  if (KENDRA.includes(n)) return "#C9A227";
+  if (TRIKONA.includes(n)) return "#4C9BE8";
+  return "#3A4463";
+}
+function sector(cx,cy,r1,r2,a1,a2){
+  const [xo1,yo1]=pt(cx,cy,r2,a1), [xo2,yo2]=pt(cx,cy,r2,a2);
+  const [xi2,yi2]=pt(cx,cy,r1,a2), [xi1,yi1]=pt(cx,cy,r1,a1);
+  const sw = a2>a1 ? 1 : 0;
+  return "M"+xo1+" "+yo1+" A"+r2+" "+r2+" 0 0 "+sw+" "+xo2+" "+yo2
+       + " L"+xi2+" "+yi2+" A"+r1+" "+r1+" 0 0 "+(1-sw)+" "+xi1+" "+yi1+" Z";
+}
+
+// screen sector 0 spans 11-12 o'clock; sectors run clockwise in whole hours.
+// Rasis are fixed to sectors (Aries = sector 0), South Indian style.
+const bAngle = x => x - 30;                       // sector edge -> screen angle CW from 12
+const bCenter = i => bAngle(i*30 + 15);
+const sectorSpan = spanOf;
+// which house a sector carries, given where the lagna sits
+const houseAtSector = i => ((i - S.lagnaSector + 12) % 12) + 1;
+const sectorOfHouse = h => (S.lagnaSector + h - 1) % 12;
+
+function renderBhava(){
+  const svg = $("svg-bhava"), cx=320, cy=320, r1=92, r2=196;
+  svg.innerHTML = "";
+
+  for (let i=0;i<12;i++){
+    const hn = houseAtSector(i), b = BHAVA[hn-1];
+    const a1 = bAngle(i*30), a2 = bAngle((i+1)*30);
+    const isLagna = hn === 1, isSel = hn === S.bhava;
+    const g = el("g",{style:"cursor:pointer"});
+    g.appendChild(el("path",{d:sector(cx,cy,r1,r2,a1,a2),fill:bhavaHue(hn),
+      "fill-opacity": isSel ? .62 : .2,
+      stroke: isSel ? "#EAE5D6" : isLagna ? "#C9A227" : "#141A2E",
+      "stroke-width": isSel ? 2 : isLagna ? 2 : 1.5}));
+    const mid = bCenter(i);
+    const [tx,ty] = pt(cx,cy,(r1+r2)/2,mid);
+    g.appendChild(el("text",{x:tx,y:ty-2,fill:"#EAE5D6","font-size":19,
+      "font-family":"Georgia,serif","text-anchor":"middle"}, hn));
+    g.appendChild(el("text",{x:tx,y:ty+15,fill:"#8792AE","font-size":10,
+      "font-family":"ui-monospace,monospace","text-anchor":"middle"}, b.en));
+    if (isLagna){
+      const [lx,ly] = pt(cx,cy,r1+14,mid);
+      g.appendChild(el("text",{x:lx,y:ly+4,fill:"#C9A227","font-size":9,
+        "font-family":"ui-monospace,monospace","text-anchor":"middle",
+        "letter-spacing":"0.1em"},"ASC"));
+    }
+    // clicking re-anchors the lagna to this sector
+    g.addEventListener("click", ()=>{
+      S.lagnaSector = i; S.bhava = 1;
+      $("lagsel").value = i; $("bhsel").value = 1;
+      renderBhava();
+    });
+    svg.appendChild(g);
+
+    // the rasi ring, fixed to the sectors
+    const sg = SIGNS[i];
+    const [nx,ny] = pt(cx,cy,r2+34,mid);
+    const t = el("text",{x:nx,y:ny-2,"font-size":13,
+      "font-family":"ui-monospace,monospace","text-anchor":"middle"});
+    t.appendChild(el("tspan",{fill:"#C9A227","font-size":16}, sg.s+" "));
+    t.appendChild(el("tspan",{fill:"#8792AE"}, sg.n.slice(0,3).toUpperCase()));
+    svg.appendChild(t);
+    svg.appendChild(el("text",{x:nx,y:ny+13,fill:"#5C688A","font-size":9.5,
+      "font-family":"ui-monospace,monospace","text-anchor":"middle"}, sectorSpan(i)));
+  }
+
+  const lagSign = SIGNS[S.lagnaSector];
+  svg.appendChild(el("text",{x:cx,y:cy-10,fill:"#C9A227","font-size":13,
+    "font-family":"ui-monospace,monospace","text-anchor":"middle","letter-spacing":"0.14em"},"LAGNA"));
+  svg.appendChild(el("text",{x:cx,y:cy+14,fill:"#EAE5D6","font-size":17,
+    "font-family":"Georgia,serif","text-anchor":"middle"}, lagSign.s+" "+lagSign.n));
+  svg.appendChild(el("text",{x:cx,y:cy+34,fill:"#8792AE","font-size":10,
+    "font-family":"ui-monospace,monospace","text-anchor":"middle"},
+    "H1 at "+sectorSpan(S.lagnaSector)));
+
+  const b = BHAVA[S.bhava-1], sec = sectorOfHouse(S.bhava), sgn = SIGNS[sec];
+  $("bh-detail").innerHTML =
+    '<h3>Bhāva '+b.n+'</h3>'
+    + '<div class="row"><span>Name</span><span>'+b.s+'</span></div>'
+    + '<div class="row"><span>தமிழ்</span><span style="font-family:var(--sans)">'+b.ta+'</span></div>'
+    + '<div class="row"><span>Theme</span><span>'+b.en+'</span></div>'
+    + '<div class="row"><span>Rāśi</span><span style="color:#C9A227">'+sgn.s+' '+sgn.n+'</span></div>'
+    + '<div class="row"><span>Clock</span><span>'+sectorSpan(sec)+'</span></div>'
+    + '<div class="row"><span>Group</span><span>'+(bhavaClass(b.n).join(", ")||"—")+'</span></div>'
+    + '<div class="row"><span>Kāraka</span><span>'+b.k+'</span></div>'
+    + '<p class="hint">'+b.sig+'</p>';
+
+  let h = "<caption>The twelve bhāvas from a "+lagSign.n+" lagna</caption><thead><tr><th>House</th>"
+        + "<th>Rāśi</th><th>Clock</th><th>Sanskrit</th><th>தமிழ்</th><th>Theme</th><th>Group</th>"
+        + "<th>Kāraka</th><th>Principal significations</th></tr></thead><tbody>";
+  BHAVA.forEach(bb=>{
+    const sc = sectorOfHouse(bb.n), sn = SIGNS[sc];
+    h += '<tr><td style="color:'+bhavaHue(bb.n)+'">'+bb.n+"</td>"
+      + '<td style="text-align:left">'+sn.s+" "+sn.n+"</td>"
+      + "<td>"+sectorSpan(sc)+"</td>"
+      + '<td style="text-align:left">'+bb.s+"</td>"
+      + '<td style="text-align:left;font-family:var(--sans);font-size:14px">'+bb.ta+"</td>"
+      + '<td style="text-align:left">'+bb.en+"</td>"
+      + '<td style="text-align:left;color:#8792AE">'+(bhavaClass(bb.n).join(", ")||"—")+"</td>"
+      + '<td style="text-align:left">'+bb.k+"</td>"
+      + '<td style="text-align:left;white-space:normal;font-family:var(--sans);font-size:13px;'
+      + 'line-height:1.5;min-width:260px">'+bb.sig+"</td></tr>";
+  });
+  $("bh-table").innerHTML = h+"</tbody>";
+}
+
+/* ---------------- single ---------------- */
+function renderSingle(){
+  const svg = $("svg-single"), R = 218, cx = 320, cy = 320;
+  drawWheel(svg,R,cx,cy,{});
+  const p = S.planet;
+  drawPlanetCurve(svg,p,cx,cy,R,{});
+
+  // cursor
+  const v = ucca(S.lon,p), r = R*v/100;
+  const ang = scr(S.lon,S.orient);
+  const [hx,hy] = pt(cx,cy,R,ang);
+  svg.appendChild(el("line",{x1:cx,y1:cy,x2:hx,y2:hy,stroke:"#EAE5D6",
+    "stroke-width":1,"stroke-opacity":.35}));
+  const [px,py] = pt(cx,cy,r,ang);
+  svg.appendChild(el("circle",{cx:px,cy:py,r:4.5,fill:"#EAE5D6"}));
+
+  // centre stamp
+  svg.appendChild(el("text",{x:cx,y:cy-R-84,fill:"#EAE5D6","font-size":19,
+    "font-family":"Georgia,serif","text-anchor":"middle"},
+    p.g+"  "+p.n+" · Ucca Bala"));
+  svg.appendChild(el("text",{x:cx,y:cy-R-66,fill:"#8792AE","font-size":11,
+    "font-family":"ui-monospace,monospace","text-anchor":"middle","letter-spacing":"0.1em"},
+    "UCCA "+SIGNS[p.sign].n.toUpperCase()+" "+p.deg+"°   ·   NĪCA "
+    +SIGNS[Math.floor(p.neecha/30)].n.toUpperCase()+" "+(p.neecha%30)+"°"));
+
+  $("lg-line").style.borderTopColor = p.hex;
+  $("lg-name").textContent = p.n;
+
+  $("r-val").textContent   = val(v);
+  $("r-lon").textContent   = fmtDMS(S.lon);
+  $("r-sign").textContent  = SIGNS[Math.floor(S.lon/30)].n;
+  $("r-insign").textContent= fmtDMS(S.lon%30);
+  $("r-clock").textContent = S.orient==="south" ? clockOf(S.lon) : "—";
+  $("r-vir").textContent   = (v*0.6).toFixed(1)+" / 60";
+  $("r-fromE").textContent = sep(S.lon,p.ucca).toFixed(1)+"°";
+
+  $("single-note").innerHTML =
+    "<b>"+p.n+" ("+p.t+")</b> reaches full Ucca Bala at "+SIGNS[p.sign].n+" "+p.deg+
+    "° (absolute "+p.ucca+"°) and falls to zero exactly opposite, at "+
+    SIGNS[Math.floor(p.neecha/30)].n+" "+(p.neecha%30)+"° (absolute "+p.neecha+
+    "°). The cusp at the centre of the wheel is the debilitation point — that inward notch is what "+
+    "gives every one of these curves its cardioid shape.";
+}
+
+/* ---------------- small multiples ---------------- */
+function renderGrid(){
+  const host = $("multiples"); host.innerHTML = "";
+  PLANETS.forEach(p=>{
+    const card = document.createElement("div"); card.className = "mini";
+    card.innerHTML = '<h4><span class="glyph" style="color:'+p.hex+'">'+p.g+
+      '</span>'+p.n+' <span style="font-size:14px;color:var(--muted)">'+p.ta+'</span></h4><p class="sub">UCCA '+SIGNS[p.sign].n.toUpperCase()+' '+p.deg+
+      '° · NĪCA '+SIGNS[Math.floor(p.neecha/30)].n.toUpperCase()+' '+(p.neecha%30)+'°</p>';
+    const svg = el("svg",{viewBox:"0 0 260 260",role:"img",
+      "aria-label":p.n+" Ucca Bala profile"});
+    card.appendChild(svg); host.appendChild(card);
+    drawWheel(svg,94,130,130,{mini:true});
+    drawPlanetCurve(svg,p,130,130,94,{mini:true});
+  });
+}
+
+/* ---------------- overlay ---------------- */
+function renderOverlay(){
+  const svg = $("svg-overlay"), R = 218, cx = 320, cy = 320;
+  drawWheel(svg,R,cx,cy,{});
+  PLANETS.forEach(p=>drawPlanetCurve(svg,p,cx,cy,R,{fill:false,dash:true}));
+
+  const ang = scr(S.lon,S.orient);
+  const [hx,hy] = pt(cx,cy,R,ang);
+  svg.appendChild(el("line",{x1:cx,y1:cy,x2:hx,y2:hy,stroke:"#EAE5D6",
+    "stroke-width":1,"stroke-opacity":.4}));
+  svg.appendChild(el("text",{x:cx,y:cy-R-66,fill:"#EAE5D6","font-size":18,
+    "font-family":"Georgia,serif","text-anchor":"middle"},
+    "Seven planets · Ucca Bala"));
+
+  const rows = PLANETS.map(p=>({p,v:ucca(S.lon,p)})).sort((a,b)=>b.v-a.v);
+  $("ov-rows").innerHTML = rows.map(r=>
+    '<div class="row"><span style="color:'+r.p.hex+'">'+r.p.g+' '+r.p.n+
+    '</span><span>'+val(r.v)+'</span></div>').join("")
+    + '<div class="row"><span>Longitude</span><span>'+fmtDMS(S.lon)+' · '
+    + SIGNS[Math.floor(S.lon/30)].n+'</span></div>';
+
+  $("ov-legend").innerHTML = PLANETS.map(p=>
+    '<span><i style="border-top-color:'+p.hex+
+    (p.dash!=="none"?';border-top-style:dashed':'')+'"></i>'+p.g+' '+p.n+'</span>').join("");
+}
+
+/* ---------------- aspects ---------------- */
+function renderAspect(){
+  const svg = $("svg-aspect"), R = 200, cx = 320, cy = 320;
+  const p = S.planet, from = S.pos[p.k];
+  drawHouseWheel(svg,R,cx,cy,{scaleMax:100});
+
+  const vals = [];
+  for (let h=1;h<=12;h++) vals.push(aspectOn(p,from,h));
+  const d = polyPath(vals,cx,cy,R,100);
+  svg.appendChild(el("path",{d,fill:p.hex,"fill-opacity":.14,stroke:"none"}));
+  svg.appendChild(el("path",{d,fill:"none",stroke:p.hex,"stroke-width":2.2,
+    "stroke-linejoin":"round"}));
+
+  // vertices
+  for (let h=1;h<=12;h++){
+    if (!vals[h-1]) continue;
+    const [x,y] = pt(cx,cy,R*vals[h-1]/100,hCenter(h,S.orient));
+    svg.appendChild(el("circle",{cx:x,cy:y,r:4,fill:p.hex,
+      stroke:"#141A2E","stroke-width":1.5}));
+  }
+  // occupied house marker on the rim
+  const [ox,oy] = pt(cx,cy,R,hCenter(from,S.orient));
+  svg.appendChild(el("line",{x1:cx,y1:cy,x2:ox,y2:oy,stroke:"#EAE5D6",
+    "stroke-width":1,"stroke-opacity":.3,"stroke-dasharray":"3 4"}));
+  svg.appendChild(el("circle",{cx:ox,cy:oy,r:6,fill:"#EAE5D6",
+    stroke:p.hex,"stroke-width":2}));
+
+  svg.appendChild(el("text",{x:cx,y:cy-R-92,fill:"#EAE5D6","font-size":18,
+    "font-family":"Georgia,serif","text-anchor":"middle"},
+    p.g+"  "+p.n+" in house "+from+" · dṛṣṭi"));
+  const sp = SPECIAL[p.k];
+  svg.appendChild(el("text",{x:cx,y:cy-R-74,fill:"#8792AE","font-size":11,
+    "font-family":"ui-monospace,monospace","text-anchor":"middle","letter-spacing":"0.1em"},
+    sp ? "FULL ASPECT ON THE "+sp[0]+"TH, 7TH AND "+sp[1]+"TH"
+       : "FULL ASPECT ON THE 7TH ONLY"));
+
+  const hit = [];
+  for (let h=1;h<=12;h++) if (vals[h-1]) hit.push([h,vals[h-1]]);
+  hit.sort((a,b)=>b[1]-a[1]);
+  $("asp-rows").innerHTML =
+    '<div class="row"><span>Occupies</span><span style="color:'+p.hex+'">House '+from
+    +' · '+houseClock(from)+'</span></div>'
+    + hit.map(([h,v])=>'<div class="row"><span>House '+h+' <span style="color:#5C688A">('
+      +houseCount(from,h)+'th from)</span></span><span>'
+      + (S.units==="vir" ? (v*0.6).toFixed(0)+" vir" : v+"%")+'</span></div>').join("");
+
+  $("asp-note").innerHTML = "<b>"+p.n+"</b> in house "+from+" throws its full aspect on house "
+    + ((from+6-1)%12+1) + (sp ? ", and by its special aspect also on houses "
+    + ((from+sp[0]-2)%12+1) + " and " + ((from+sp[1]-2)%12+1) : "")
+    + ". The remaining lobes are the graded Parāśarī aspects — three-quarter on the 4th and 8th, "
+    + "half on the 5th and 9th, quarter on the 3rd and 10th, counted inclusively from house "+from+".";
+}
+
+/* ---------------- house pressure ---------------- */
+function renderHouse(){
+  const svg = $("svg-house"), R = 200, cx = 320, cy = 320;
+  const tot = [], occ = [];
+  for (let h=1;h<=12;h++){
+    tot.push(PLANETS.reduce((a,p)=>a + aspectOn(p,S.pos[p.k],h), 0));
+    occ.push(PLANETS.filter(p=>S.pos[p.k]===h));
+  }
+  const peak = Math.max(...tot);
+  const max = Math.max(100, Math.ceil(peak/100)*100);
+  drawHouseWheel(svg,R,cx,cy,{scaleMax:max, occ:occ});
+
+  const d = polyPath(tot,cx,cy,R,max);
+  svg.appendChild(el("path",{d,fill:"#C9A227","fill-opacity":.12,stroke:"none"}));
+  svg.appendChild(el("path",{d,fill:"none",stroke:"#C9A227","stroke-width":2.6,
+    "stroke-linejoin":"round"}));
+  for (let h=1;h<=12;h++){
+    const [x,y] = pt(cx,cy,R*tot[h-1]/max,hCenter(h,S.orient));
+    svg.appendChild(el("circle",{cx:x,cy:y,r:4,fill:"#C9A227",
+      stroke:"#141A2E","stroke-width":1.5}));
+  }
+  svg.appendChild(el("text",{x:cx,y:cy-R-92,fill:"#EAE5D6","font-size":18,
+    "font-family":"Georgia,serif","text-anchor":"middle"},"Total aspect load by house"));
+
+  const order = tot.map((v,i)=>[i+1,v]).sort((a,b)=>b[1]-a[1]);
+  $("hp-rows").innerHTML = order.map(([h,v])=>
+    '<div class="row"><span>House '+h+(occ[h-1].length?' <span style="color:#C9A227">'
+      +occ[h-1].map(p=>p.g).join("")+'</span>':'')+'</span><span>'
+    + (S.units==="vir" ? (v*0.6).toFixed(0)+" vir" : v+"%")+'</span></div>').join("");
+
+  $("hp-legend").innerHTML =
+    '<span><i style="border-top-color:#C9A227;border-top-width:3px"></i>'
+    + 'Combined aspect load · scale to '+max+'%</span>'
+    + '<span>Planet glyphs beside a house label mark occupancy</span>'
+    + '<span>Per-planet contributions are broken out in the table below</span>';
+
+  let html = "<caption>Aspect load per house</caption><thead><tr><th>House</th><th>Clock</th>"
+           + "<th>Occupants</th><th>Aspected by</th><th>Total</th><th></th></tr></thead><tbody>";
+  for (let h=1;h<=12;h++){
+    const by = PLANETS.filter(p=>aspectOn(p,S.pos[p.k],h)>0)
+      .map(p=>'<span style="color:'+p.hex+'">'+p.g+"</span>"
+        +'<span style="color:#5C688A">'+aspectOn(p,S.pos[p.k],h)+"</span>");
+    html += "<tr><td>House "+h+"</td><td>"+(S.orient==="south"?houseClock(h):"—")+"</td>"
+      + "<td>"+(occ[h-1].map(p=>'<span style="color:'+p.hex+'">'+p.g+"</span>").join(" ")||"—")+"</td>"
+      + "<td>"+(by.join(" ")||"—")+"</td>"
+      + '<td class="'+(tot[h-1]===peak?"peak":"")+'">'
+      + (S.units==="vir" ? (tot[h-1]*0.6).toFixed(0) : tot[h-1]+"%")+"</td>"
+      + '<td><span class="bar" style="width:'+(tot[h-1]/max*90).toFixed(1)+'px"></span></td></tr>';
+  }
+  $("hp-table").innerHTML = html+"</tbody>";
+}
+
+/* ---------------- dik bala ---------------- */
+// house cusp h -> screen angle CW from 12 o'clock (Asc at 9 o'clock, houses CCW)
+const houseAngle = h => norm(270 - 30*(h-1));
+// p.dik is the house of FULL strength; the powerless cusp is 6 houses away
+const opp = h => ((h+5) % 12) + 1;
+// position within house circle, measured in degrees from the 1st cusp
+const dikAt = (phi, p) => sep(phi, (opp(p.dik)-1)*30) / 180 * 100;
+
+function renderDik(){
+  const svg = $("svg-dik"), R = 200, cx = 320, cy = 320;
+  drawHouseWheel(svg,R,cx,cy,{scaleMax:100,showDirn:true});
+  PLANETS.forEach(p=>{
+    let d = "";
+    for (let i=0;i<=360;i++){
+      const r = R * dikAt(i%360, p) / 100;
+      const [x,y] = pt(cx,cy,r,hAngle(i,S.orient));
+      d += (i===0?"M":"L")+x.toFixed(2)+" "+y.toFixed(2);
+    }
+    svg.appendChild(el("path",{d:d+"Z",fill:"none",stroke:p.hex,"stroke-width":2,
+      "stroke-dasharray":p.dash,"stroke-opacity":p.k===S.planet.k?1:.42}));
+  });
+  svg.appendChild(el("text",{x:cx,y:cy-R-92,fill:"#EAE5D6","font-size":18,
+    "font-family":"Georgia,serif","text-anchor":"middle"},"Dik Bala · directional strength"));
+
+  $("dik-rows").innerHTML = PLANETS.map(p=>
+    '<div class="row"><span style="color:'+p.hex+'">'+p.g+' '+p.n+
+    '</span><span>full H'+p.dik+' · nil H'+opp(p.dik)+'</span></div>').join("");
+
+  const groups = [[10,"South · Zenith"],[1,"East · Lagna"],[4,"North · Nadir"],[7,"West"]];
+  let html = "<caption>Dik Bala — full and powerless directions</caption>"
+           + "<thead><tr><th>Full direction</th><th>House</th><th>Planets</th>"
+           + "<th>Powerless house</th></tr></thead><tbody>";
+  groups.forEach(([h,label])=>{
+    const gs = PLANETS.filter(p=>p.dik===h);
+    if(!gs.length) return;
+    html += "<tr><td>"+label+"</td><td>"+h+"th</td><td>"
+         + gs.map(p=>'<span style="color:'+p.hex+'">'+p.g+" "+p.n+"</span>").join(", ")
+         + "</td><td>"+opp(h)+"th</td></tr>";
+  });
+  $("dik-table").innerHTML = html+"</tbody>";
+}
+
+/* ---------------- tables ---------------- */
+function renderTables(){
+  const p = S.planet;
+  let h = "<caption>Ucca Bala by sign — "+p.g+" "+p.n+"</caption>"
+        + "<thead><tr><th>Sign</th><th>Longitude</th><th>at 0°</th><th>at 15°</th>"
+        + "<th>at 29°</th><th>Sign mean</th><th></th></tr></thead><tbody>";
+  for (let i=0;i<12;i++){
+    const base = i*30;
+    let sum = 0; for (let d=0;d<30;d++) sum += ucca(base+d,p);
+    const mean = sum/30, peak = i===p.sign;
+    h += '<tr><td class="'+(peak?"peak":"")+'">'+SIGNS[i].s+" "+SIGNS[i].n
+       + (peak ? " · ucca "+p.deg+"°" : "")+"</td>"
+      + "<td>"+base+"°–"+(base+30)+"°</td>"
+      + "<td>"+val(ucca(base,p))+"</td>"
+      + "<td>"+val(ucca(base+15,p))+"</td>"
+      + "<td>"+val(ucca(base+29,p))+"</td>"
+      + "<td>"+val(mean)+"</td>"
+      + '<td><span class="bar" style="width:'+(mean*0.9).toFixed(1)+'px"></span></td></tr>';
+  }
+  $("sign-table").innerHTML = h+"</tbody>";
+
+  const base = S.sign*30;
+  let g = "<caption>Degree by degree — "+SIGNS[S.sign].n+"</caption>"
+        + "<thead><tr><th>Degree</th><th>Absolute</th><th>Strength</th><th>Virūpas</th>"
+        + "<th>Clock</th><th></th></tr></thead><tbody>";
+  for (let d=0; d<30; d++){
+    const L = base+d, v = ucca(L,p);
+    g += "<tr><td>"+SIGNS[S.sign].n+" "+d+"°</td><td>"+L+"°</td>"
+      + '<td class="'+(L===p.ucca?"peak":"")+'">'+v.toFixed(2)+"%</td>"
+      + "<td>"+(v*0.6).toFixed(2)+"</td>"
+      + "<td>"+clockOf(L)+"</td>"
+      + '<td><span class="bar" style="width:'+(v*0.9).toFixed(1)+'px"></span></td></tr>';
+  }
+  $("deg-table").innerHTML = g+"</tbody>";
+}
+
+/* ---------------- csv ---------------- */
+function downloadCSV(){
+  let out = "absolute_longitude_deg,sign,degree_in_sign,clock_position_south_indian,"
+          + PLANETS.map(p=>p.k+"_ucca_bala_pct").join(",")+"\n";
+  for (let L=0;L<360;L++){
+    out += L+","+SIGNS[Math.floor(L/30)].n+","+(L%30)+","+clockOf(L)+","
+        + PLANETS.map(p=>ucca(L,p).toFixed(4)).join(",")+"\n";
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([out],{type:"text/csv"}));
+  a.download = "ucca_bala_360_degrees.csv"; a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ---------------- wiring ---------------- */
+function renderAll(){ renderPhys(); renderBhava(); renderSingle(); renderGrid(); renderOverlay(); renderDik();
+  renderAspect(); renderHouse(); renderTables(); }
+
+const psel = $("planet");
+PLANETS.forEach((p,i)=>{
+  const o = document.createElement("option");
+  o.value = i; o.textContent = p.g+"  "+p.n+" ("+p.t+")"; psel.appendChild(o);
+});
+psel.onchange = e => { S.planet = PLANETS[+e.target.value];
+  $("posel").value = S.pos[S.planet.k]; renderAll(); };
+
+const ssel = $("signsel");
+SIGNS.forEach((s,i)=>{
+  const o = document.createElement("option");
+  o.value = i; o.textContent = s.s+"  "+s.n+" ("+s.t+")"; ssel.appendChild(o);
+});
+ssel.onchange = e => { S.sign = +e.target.value; renderTables(); };
+
+$("orient").onclick = e => {
+  const b = e.target.closest("button[data-o]"); if(!b) return;
+  S.orient = b.dataset.o;
+  [...e.currentTarget.children].forEach(x=>x.setAttribute("aria-pressed", x===b));
+  renderAll();
+};
+$("units").onclick = e => {
+  const b = e.target.closest("button[data-u]"); if(!b) return;
+  S.units = b.dataset.u;
+  [...e.currentTarget.children].forEach(x=>x.setAttribute("aria-pressed", x===b));
+  renderAll();
+};
+$("lon").oninput = e => {
+  const v = parseFloat(e.target.value);
+  if (!isNaN(v)) { S.lon = norm(v); renderSingle(); renderOverlay(); }
+};
+$("basis").onclick = e => {
+  const b = e.target.closest("button[data-b]"); if(!b) return;
+  S.basis = b.dataset.b;
+  [...e.currentTarget.children].forEach(x=>x.setAttribute("aria-pressed", x===b));
+  renderPhys();
+};
+$("law").onclick = e => {
+  const b = e.target.closest("button[data-l]"); if(!b) return;
+  S.law = b.dataset.l;
+  [...e.currentTarget.children].forEach(x=>x.setAttribute("aria-pressed", x===b));
+  renderPhys();
+};
+$("csv").onclick = downloadCSV;
+
+// lagna rasi and detail-house selectors on the Houses tab
+const lagsel = $("lagsel");
+SIGNS.forEach((sg,i)=>{
+  const o = document.createElement("option");
+  o.value = i; o.textContent = sg.s+"  "+sg.n+"  ·  "+sectorSpan(i);
+  lagsel.appendChild(o);
+});
+lagsel.value = S.lagnaSector;
+lagsel.onchange = e => { S.lagnaSector = +e.target.value; renderBhava(); };
+
+const bhsel = $("bhsel");
+BHAVA.forEach(b=>{
+  const o = document.createElement("option");
+  o.value = b.n; o.textContent = "House "+b.n+"  ·  "+b.en;
+  bhsel.appendChild(o);
+});
+bhsel.value = S.bhava;
+bhsel.onchange = e => { S.bhava = +e.target.value; renderBhava(); };
+
+// occupied-house selector for the aspect tab
+const posel = $("posel");
+for (let h=1;h<=12;h++){
+  const o = document.createElement("option");
+  o.value = h; o.textContent = "House "+h+"  ·  "+houseClock(h);
+  posel.appendChild(o);
+}
+posel.value = S.pos[S.planet.k];
+posel.onchange = e => { S.pos[S.planet.k] = +e.target.value; renderAspect(); renderHouse(); };
+
+// one selector per planet on the house-pressure tab
+const placers = $("placers");
+PLANETS.forEach(p=>{
+  const wrap = document.createElement("div"); wrap.className = "ctl";
+  const lab = document.createElement("label");
+  lab.setAttribute("for","pl-"+p.k);
+  lab.textContent = p.g+" "+p.n;
+  const sel = document.createElement("select"); sel.id = "pl-"+p.k;
+  for (let h=1;h<=12;h++){
+    const o = document.createElement("option"); o.value = h; o.textContent = "H"+h;
+    sel.appendChild(o);
+  }
+  sel.value = S.pos[p.k];
+  sel.onchange = e => {
+    S.pos[p.k] = +e.target.value;
+    if (p.k === S.planet.k) $("posel").value = S.pos[p.k];
+    renderAspect(); renderHouse();
+  };
+  wrap.appendChild(lab); wrap.appendChild(sel); placers.appendChild(wrap);
+});
+
+function trackPointer(svg){
+  svg.addEventListener("pointermove", ev=>{
+    const b = svg.getBoundingClientRect();
+    const x = (ev.clientX-b.left)/b.width*640, y = (ev.clientY-b.top)/b.height*640;
+    const ang = norm(Math.atan2(x-320, 320-y)*180/Math.PI);
+    S.lon = Math.round(inv(ang,S.orient)*10)/10;
+    $("lon").value = S.lon.toFixed(1);
+    renderSingle(); renderOverlay();
+  });
+}
+trackPointer($("svg-single")); trackPointer($("svg-overlay"));
+
+document.addEventListener("keydown", ev=>{
+  if (ev.target.tagName === "INPUT" || ev.target.tagName === "SELECT") return;
+  let step = 0;
+  if (ev.key === "ArrowRight" || ev.key === "ArrowUp") step = 1;
+  if (ev.key === "ArrowLeft"  || ev.key === "ArrowDown") step = -1;
+  if (!step) return;
+  ev.preventDefault();
+  S.lon = norm(S.lon + step*(ev.shiftKey?10:1));
+  $("lon").value = S.lon.toFixed(1);
+  renderSingle(); renderOverlay();
+});
+
+const tabs = [...document.querySelectorAll('[role=tab]')];
+tabs.forEach(t => t.onclick = () => {
+  tabs.forEach(x=>{
+    const on = x===t;
+    x.setAttribute("aria-selected", on);
+    $(x.getAttribute("aria-controls")).hidden = !on;
+  });
+});
+
+renderAll();
+</script>
+</body>
+</html>

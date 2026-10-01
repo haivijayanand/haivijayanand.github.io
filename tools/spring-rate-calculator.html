@@ -2,10 +2,12 @@
 <!--
 TOOL    : spring-rate-calculator.html (public copy)
 FAMILY  : SPRING
-VERSION : 3.3.1
+VERSION : 3.3.2
 DATE    : 2026-10-01
 CHAT    : Compression spring rate calculator
-CHANGES : v3.3.1  one generic example spring and a single strut; the multi-strut picker, the
+CHANGES : v3.3.2  springs and the strut you save are kept in this browser and come back
+                  after a reload; Download master file still moves them between computers
+          v3.3.1  one generic example spring and a single strut; the multi-strut picker, the
                   side-by-side table and the Compare tab are left out of the public copy
           v3.3.0  public copy for haivijayanand.github.io: opens with two made-up example
                   springs and three example struts; the working library is kept privately
@@ -2883,8 +2885,23 @@ function cloudMsg(t){ const e=$("cloudStatus"); if(e) e.textContent=t; }
 function libBody(){
   return {format:"compression-spring-library",v:1,units:"internal: mm, N, MPa, kg/m3",springs:LIB,struts:STRUTS};
 }
+/* public copy: keep the library in this browser when there is no online store */
+const LOCAL_KEY="spring-calc.library.v1";
+let LOCAL=false;
+try{ localStorage.setItem(LOCAL_KEY+".probe","1"); localStorage.removeItem(LOCAL_KEY+".probe"); LOCAL=true; }catch(e){}
+function saveLocal(){
+  if(typeof STRUTS!=="undefined" && shown("p6")) readStrut();
+  try{
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(Object.assign(libBody(),{saved:new Date().toISOString()})));
+    cloudMsg("Saved in this browser at "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})+
+      " \u00B7 "+LIB.length+" spring"+(LIB.length!==1?"s":""));
+  }catch(e){ cloudMsg("This browser would not save the library. Download the master file to keep it."); }
+}
 function schedulePersist(){
-  if(!CLOUD) return;
+  if(!CLOUD){
+    if(LOCAL){ clearTimeout(cloudTimer); cloudTimer=setTimeout(saveLocal,400); }
+    return;
+  }
   clearTimeout(cloudTimer); cloudTimer=setTimeout(persist,1200);
 }
 async function persist(){
@@ -2934,8 +2951,24 @@ $("strutForm").addEventListener("change",schedulePersist);
   $(id).addEventListener("click",e=>{ if(e.target.closest("button")) schedulePersist(); });
 });
 document.addEventListener("visibilitychange",()=>{
-  if(document.visibilityState==="hidden" && CLOUD){ clearTimeout(cloudTimer); persist(); }
+  if(document.visibilityState!=="hidden") return;
+  if(CLOUD){ clearTimeout(cloudTimer); persist(); }
 });
+if(LOCAL && !(window.claude && typeof window.claude.use==="function")){
+  $("libHelp").textContent="Springs and the strut you save are kept in this browser on this computer, so they are "+
+    "still here after a reload. Clearing the browser's site data removes them: download the master file to keep a "+
+    "copy or to move them to another computer.";
+  let stored=null;
+  try{ stored=JSON.parse(localStorage.getItem(LOCAL_KEY)||"null"); }catch(e){}
+  if(stored && Array.isArray(stored.springs) && stored.springs.length){
+    applyLibrary(stored);
+    cloudMsg("Opened from this browser \u00B7 "+LIB.length+" spring"+(LIB.length!==1?"s":"")+
+      (stored.saved?" \u00B7 last saved "+String(stored.saved).slice(0,10):""));
+    status("Opened "+LIB.length+" saved spring"+(LIB.length!==1?"s":"")+" from this browser. Use Load to switch between them.");
+  } else {
+    cloudMsg("Nothing saved in this browser yet. Save a spring and it will be here next time.");
+  }
+}
 (async()=>{
   const C=window.claude;
   if(!C||typeof C.use!=="function") return;              // opened from disk

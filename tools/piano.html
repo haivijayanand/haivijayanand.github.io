@@ -1,0 +1,2257 @@
+<!DOCTYPE html>
+<!--
+TOOL    : piano.html (public copy)
+FAMILY  : MUSIC
+VERSION : 1.1.0
+DATE    : 2026-10-01
+CHAT    : Piano - play, record, replay
+CHANGES : v1.1.0  the loaded songbook, the last recorded take and the notes box are kept in
+                  this browser and come back after a reload
+          v1.0.0  piano with eight synthesised instruments, note wheel, recording, sequencer,
+                  letter-sheet converter and Carnatic practice
+STATUS  : working; runs offline in any browser, no network
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Piano — play, record, replay</title>
+<style>
+  :root{
+    --ink:#191521;
+    --ink-2:#221d2c;
+    --felt:#7a1f2b;
+    --ivory:#f5f0e6;
+    --ivory-dim:#ded7c7;
+    --ebony:#26222c;
+    --brass:#c79a3a;
+    --muted:#a49aae;
+    --line:#332c3f;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(120% 80% at 50% -10%, #2a2336 0%, var(--ink) 60%) fixed;
+    color:var(--ivory);
+    font-family:"Avenir Next","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    padding:28px 20px 60px;
+  }
+  .wrap{max-width:min(1480px, 94vw);margin:0 auto}
+
+  header{margin-bottom:22px}
+  h1{
+    font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    font-weight:600;
+    font-size:clamp(28px,4.5vw,42px);
+    letter-spacing:.01em;
+    margin:0 0 6px;
+  }
+  header p{margin:0;color:var(--muted);max-width:62ch}
+
+  /* ---------- keyboard ---------- */
+  .stagetop{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between}
+  .instbar{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+  .inst{
+    background:#221d2c;border:1px solid var(--line);color:var(--muted);
+    border-radius:999px;padding:5px 12px;cursor:pointer;font:inherit;font-size:12.5px;
+  }
+  .inst:hover{color:var(--ivory);border-color:#4a4159}
+  .inst[aria-pressed="true"]{background:var(--brass);color:#221b08;border-color:#e9c877;font-weight:600}
+  .inst:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+
+  .views{display:flex;gap:4px;margin:0}
+  .vtab{
+    background:transparent;border:1px solid transparent;border-radius:7px 7px 0 0;
+    padding:8px 16px;color:var(--muted);cursor:pointer;font:inherit;font-size:14px;
+  }
+  .vtab:hover{color:var(--ivory)}
+  .vtab[aria-selected="true"]{background:#2c2536;border-color:var(--line);border-bottom-color:transparent;color:var(--ivory)}
+  .vtab:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+
+  .wheelwrap{
+    margin:26px 0 18px;padding:14px 14px 18px;
+    background:linear-gradient(#2c2536,#1d1826);
+    border:1px solid var(--line);border-radius:14px;
+    box-shadow:0 24px 50px rgba(0,0,0,.45);
+  }
+  .wheelbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin-bottom:6px}
+  .oct{display:flex;align-items:center;gap:8px}
+  .octbtn{
+    background:#221d2c;border:1px solid var(--line);color:var(--ivory);
+    border-radius:6px;width:34px;height:34px;font-size:18px;line-height:1;cursor:pointer;
+  }
+  .octbtn:hover:not(:disabled){border-color:var(--brass)}
+  .octbtn:disabled{opacity:.35;cursor:default}
+  #octLabel{color:var(--muted);font-size:13.5px;min-width:15ch;text-align:center}
+  .ordbtn{
+    background:#221d2c;border:1px solid var(--line);color:var(--muted);
+    border-radius:999px;padding:6px 13px;cursor:pointer;font:inherit;font-size:13px;
+  }
+  .ordbtn[aria-pressed="true"]{background:var(--brass);color:#221b08;border-color:#e9c877;font-weight:600}
+  #wheel{display:block;margin:0 auto;width:100%;max-width:430px;height:auto;touch-action:none;user-select:none}
+  .wedge{fill:#f5f0e6;stroke:#1d1826;stroke-width:2;cursor:pointer}
+  .wedge.black{fill:#2f2939}
+  .wedge.down{fill:#e3d0a4}
+  .wedge.next{fill:#7aa7b8}
+  .wedge.lit{fill:var(--brass)}
+  .wlabel{font-family:"Avenir Next","Segoe UI",Roboto,sans-serif;font-size:15px;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+  .hub{fill:#15121d;stroke:var(--line);stroke-width:1.5}
+  #hubNote{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-size:30px;fill:#4b4358;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+  #hubNote.on{fill:var(--brass)}
+  #hubNote.small{font-size:19px}
+  #hubHint{font-size:11px;fill:#5d5470;text-anchor:middle;dominant-baseline:central;pointer-events:none;letter-spacing:.08em}
+  .case{
+    margin:26px 0 18px;
+    background:linear-gradient(#2c2536,#1d1826);
+    border:1px solid var(--line);
+    border-radius:10px 10px 14px 14px;
+    padding:10px 10px 14px;
+    box-shadow:0 24px 50px rgba(0,0,0,.45);
+    overflow-x:auto;
+  }
+  .felt{height:7px;border-radius:3px;background:linear-gradient(var(--felt),#4f1420);margin-bottom:10px}
+  .keys{position:relative;height:210px;min-width:640px;user-select:none;touch-action:none}
+  .wk,.bk{position:absolute;top:0;cursor:pointer;border:0;padding:0;font:inherit}
+  .wk{
+    background:linear-gradient(#fffdf7 0%,var(--ivory) 70%,var(--ivory-dim) 100%);
+    height:100%;
+    border-radius:0 0 5px 5px;
+    box-shadow:inset -1px 0 0 rgba(0,0,0,.18), 0 3px 0 rgba(0,0,0,.35);
+    color:#8c8477;
+    display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;
+    font-size:11px;
+  }
+  .bk{
+    background:linear-gradient(#3a3444 0%,var(--ebony) 65%,#14121a 100%);
+    height:62%;
+    border-radius:0 0 4px 4px;
+    box-shadow:0 3px 0 #0c0a11, inset 0 -2px 0 rgba(255,255,255,.06);
+    color:#7c7488;
+    display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;
+    font-size:11px;
+    z-index:2;
+  }
+  .wk.down{background:linear-gradient(#efe8d8,#ddd4c0);transform:translateY(2px);box-shadow:inset 0 2px 6px rgba(0,0,0,.25)}
+  .bk.down{background:linear-gradient(#4a4358,#221e2b);transform:translateY(2px)}
+  .wk.next{background:linear-gradient(#cfe2ea,#b2ccd8);box-shadow:inset 0 0 0 2px #6f9dae, 0 3px 0 rgba(0,0,0,.35)}
+  .bk.next{background:linear-gradient(#3d5c69,#20323b);box-shadow:inset 0 0 0 2px #6f9dae, 0 3px 0 #0c0a11}
+  .wk.lit{background:linear-gradient(#f8e6bd,#e6cf98)}
+  .bk.lit{background:linear-gradient(#6a5a34,#3a3120)}
+  .wk:focus-visible,.bk:focus-visible{outline:2px solid var(--brass);outline-offset:-2px}
+  .kc{opacity:.55}
+
+  /* ---------- controls ---------- */
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0}
+  button.ctl{
+    background:#2a2436;color:var(--ivory);
+    border:1px solid var(--line);border-radius:7px;
+    padding:9px 15px;cursor:pointer;font-size:14px;
+  }
+  button.ctl:hover{border-color:var(--brass)}
+  button.ctl:disabled{opacity:.4;cursor:default;border-color:var(--line)}
+  button.ctl.armed{background:var(--felt);border-color:#a2303f}
+  button.primary{background:var(--brass);color:#221b08;border-color:#e0b355;font-weight:600}
+  label.sw{display:flex;align-items:center;gap:7px;color:var(--muted);cursor:pointer}
+  input[type=range]{width:130px;accent-color:var(--brass)}
+  .meter{color:var(--muted);font-variant-numeric:tabular-nums;min-width:9ch}
+
+  h2{
+    font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    font-weight:600;font-size:20px;margin:34px 0 6px;
+  }
+  h2+p{margin:0 0 10px;color:var(--muted);max-width:70ch}
+  textarea{
+    width:100%;min-height:128px;resize:vertical;
+    background:#15121d;color:var(--ivory);
+    border:1px solid var(--line);border-radius:8px;
+    padding:12px 14px;font-family:"SF Mono",Consolas,monospace;font-size:14px;line-height:1.7;
+  }
+  textarea:focus{outline:none;border-color:var(--brass)}
+  .status{min-height:22px;color:var(--muted);font-size:13px;margin-top:8px}
+  .status.bad{color:#e78a95}
+
+  .conv{margin-top:14px;border:1px solid var(--line);border-radius:8px;background:#15121d;padding:10px 12px}
+  .conv summary{cursor:pointer;color:var(--muted);font-size:13.5px;list-style:none}
+  .conv summary::-webkit-details-marker{display:none}
+  .conv summary::before{content:'▸  ';color:var(--brass)}
+  .conv[open] summary::before{content:'▾  '}
+  .conv p{color:var(--muted);font-size:13px;margin:10px 0}
+  .conv .fields{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:10px 0}
+  .conv .fields label{color:var(--muted);font-size:13px;display:flex;gap:6px;align-items:center}
+  .conv select,.conv input[type=number]{
+    background:#221d2c;color:var(--ivory);border:1px solid var(--line);
+    border-radius:5px;padding:5px 7px;font:inherit;font-size:13px;
+  }
+  .conv input[type=number]{width:66px}
+  #rawNotes{min-height:100px;font-size:13px}
+  #bookFile{color:var(--muted);font-size:13px;max-width:100%}
+  #bookFile::file-selector-button{
+    background:#2a2436;color:var(--ivory);border:1px solid var(--line);
+    border-radius:6px;padding:6px 12px;margin-right:10px;cursor:pointer;font:inherit;font-size:13px;
+  }
+  #bookFile::file-selector-button:hover{border-color:var(--brass)}
+
+  .lyrics{margin-top:14px;border:1px solid var(--line);border-radius:8px;background:#15121d;padding:8px;max-height:280px;overflow-y:auto}
+  .lyhead{color:var(--ivory);font-family:"Iowan Old Style",Georgia,serif;font-size:15px;padding:4px 8px 8px}
+  .lysec{color:var(--brass);font-size:11.5px;letter-spacing:.08em;padding:8px 8px 3px}
+  .lyrow{
+    display:block;width:100%;text-align:left;background:transparent;border:0;
+    border-radius:6px;padding:6px 8px;cursor:pointer;font:inherit;
+  }
+  .lyrow:hover{background:#241f2f}
+  .lyrow .lytext{display:block;color:var(--ivory);font-size:13.5px}
+  .lyrow .lynotes{display:block;color:var(--muted);font-family:"SF Mono",Consolas,monospace;font-size:12px;margin-top:2px}
+  .lyrow:focus-visible{outline:2px solid var(--brass);outline-offset:-2px}
+
+  .picker{position:relative;margin:0 0 12px;max-width:520px}
+  #songSearch{
+    width:100%;background:#15121d;color:var(--ivory);
+    border:1px solid var(--line);border-radius:8px;
+    padding:11px 14px;font:inherit;font-size:14px;
+  }
+  #songSearch:focus{outline:none;border-color:var(--brass)}
+  #songSearch::placeholder{color:#6d647a}
+  #songList{
+    position:absolute;z-index:20;left:0;right:0;top:calc(100% + 6px);
+    margin:0;padding:5px;list-style:none;
+    max-height:284px;overflow-y:auto;
+    background:#1d1826;border:1px solid var(--line);border-radius:8px;
+    box-shadow:0 18px 36px rgba(0,0,0,.5);
+  }
+  #songList li{padding:8px 11px;border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+  #songList li .meta{color:var(--muted);font-size:12px;white-space:nowrap}
+  #songList li.on,#songList li:hover{background:#2c2436}
+  #songList li.none{cursor:default;color:var(--muted)}
+  #songList li.none:hover{background:transparent}
+
+  .nowbar{
+    display:flex;align-items:baseline;gap:14px;
+    margin:-4px 0 6px;min-height:34px;
+  }
+  #nowNote{
+    font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    font-size:26px;letter-spacing:.06em;color:#4b4358;
+    display:inline-block;min-width:5ch;
+    transition:color .08s linear;
+  }
+  #nowNote.on{color:var(--brass)}
+  #nowChord{
+    font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    font-size:21px;letter-spacing:.06em;color:#9d8244;
+  }
+  #nowChord:empty{display:none}
+  .nowbar span.hint{color:var(--muted);font-size:13px}
+
+  .score{
+    display:flex;flex-wrap:wrap;gap:6px;
+    margin:12px 0 0;padding:10px;
+    background:#15121d;border:1px solid var(--line);border-radius:8px;
+    max-height:158px;overflow-y:auto;
+  }
+  .score:empty{display:none}
+  .chip{
+    font-family:"SF Mono",Consolas,monospace;font-size:13px;
+    padding:4px 9px;border-radius:5px;
+    background:#241f2f;color:#bdb3c9;border:1px solid transparent;cursor:pointer;
+  }
+  .chip.rest{background:transparent;color:#5d5470}
+  .chip.done{color:#6f6684;background:#1c1826}
+  .chip.now{background:var(--brass);color:#221b08;border-color:#e9c877;font-weight:600}
+  .chip.bar{background:transparent;color:#463e56;cursor:default;padding:4px 2px}
+
+  .helpwrap{margin-top:44px;border-top:1px solid var(--line);padding-top:20px}
+
+  .ltabs{display:flex;gap:4px;margin:26px 0 18px;border-bottom:1px solid var(--line)}
+  .ltab{
+    background:transparent;border:1px solid transparent;border-bottom:0;
+    border-radius:8px 8px 0 0;padding:9px 17px;margin-bottom:-1px;
+    color:var(--muted);cursor:pointer;font:inherit;font-size:14.5px;
+  }
+  .ltab:hover{color:var(--ivory)}
+  .ltab[aria-selected="true"]{background:#2c2536;border-color:var(--line);color:var(--ivory)}
+  .ltab:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+
+  section.conv{margin:0 0 22px;padding:16px 18px}
+  section.conv h3{
+    font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    color:var(--ivory);font-weight:600;font-size:17px;margin:0 0 4px;
+  }
+  section.conv #rawNotes{min-height:200px}
+
+  body.practice .helpcol{display:none}
+  body.practice .cols{grid-template-columns:minmax(0,1fr)}
+  body.practice .lyrics{max-height:none}
+  body.practice #practiceBtn{background:var(--brass);color:#221b08;border-color:#e9c877;font-weight:600}
+
+  .lyrow.now{background:var(--brass)}
+  .lyrow.now .lytext{color:#221b08;font-weight:600}
+  .lyrow.now .lynotes{color:#4a3a12}
+
+  .cols{display:grid;grid-template-columns:minmax(0,1fr);gap:30px;align-items:start;margin-top:26px}
+  .notecol{order:-1}          /* narrow screens: notes first, help underneath */
+
+  @media (min-width:941px){
+    .cols{grid-template-columns:minmax(0,1fr) minmax(380px,480px)}
+    .notecol{order:0}
+    .stage{
+      position:sticky;top:0;z-index:30;
+      background:linear-gradient(#241e30,#1d1826);
+      margin:0 -20px;padding:6px 20px 4px;
+      border-bottom:1px solid var(--line);
+      box-shadow:0 16px 30px rgba(0,0,0,.45);
+    }
+    .stage .case{margin-top:10px;margin-bottom:8px}
+    .stage .keys{height:180px}
+    .notecol{
+      position:sticky;top:calc(var(--stageH, 340px) + 18px);
+      max-height:calc(100vh - var(--stageH, 340px) - 40px);
+      overflow-y:auto;padding-right:6px;
+    }
+    .helpwrap{margin-top:0;border-top:0;padding-top:0}
+    #songList{max-height:230px}
+  }
+  @media (min-width:1320px){
+    .cols{grid-template-columns:minmax(0,1fr) minmax(460px,580px);gap:38px}
+    #seq{min-height:150px}
+    #rawNotes{min-height:120px}
+  }
+  @media (min-width:941px){
+    body.practice .notecol{position:static;max-height:none;overflow:visible}
+  }
+  @media (max-height:660px){
+    .stage{position:static;box-shadow:none;background:transparent;border-bottom:0;margin:0;padding:0}
+    .notecol{position:static;max-height:none;overflow:visible}
+  }
+  .tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px}
+  .tab{
+    background:transparent;border:1px solid transparent;border-radius:7px;
+    padding:8px 14px;color:var(--muted);cursor:pointer;font:inherit;font-size:14px;
+  }
+  .tab:hover{color:var(--ivory)}
+  .tab[aria-selected="true"]{background:#2a2436;border-color:var(--line);color:var(--ivory)}
+  .tab:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+  .panel{color:var(--muted);font-size:14px;max-width:72ch}
+  .panel h3{
+    font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    color:var(--ivory);font-weight:600;font-size:17px;margin:20px 0 7px;
+  }
+  .panel h3:first-child{margin-top:0}
+  .panel p{margin:0 0 11px}
+  .panel ul{margin:0 0 11px;padding-left:20px}
+  .panel li{margin-bottom:5px}
+  .panel table{border-collapse:collapse;margin:4px 0 16px;font-size:13.5px;width:100%;max-width:560px}
+  .panel th,.panel td{border-bottom:1px solid var(--line);padding:7px 14px 7px 0;text-align:left;vertical-align:top}
+  .panel th{color:var(--ivory);font-weight:600}
+  .panel td:first-child{font-family:"SF Mono",Consolas,monospace;color:var(--ivory);white-space:nowrap}
+  button.try{
+    background:#241f2f;border:1px solid var(--line);color:var(--brass);
+    border-radius:5px;padding:3px 10px;cursor:pointer;
+    font-family:"SF Mono",Consolas,monospace;font-size:12.5px;
+  }
+  button.try:hover{border-color:var(--brass)}
+  code{background:#221d2c;border-radius:4px;padding:1px 5px;font-size:12.5px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Piano</h1>
+  <p>Click the keys or use your computer keyboard. Record what you play and hear it back, or type a line of notes and let the piano read it.</p>
+</header>
+
+<div class="stage" id="stage">
+<div class="stagetop">
+<div class="views" role="tablist" aria-label="Playing surface">
+  <button class="vtab" role="tab" data-view="keys" aria-selected="true" aria-controls="viewKeys">Keyboard</button>
+  <button class="vtab" role="tab" data-view="wheel" aria-selected="false" tabindex="-1" aria-controls="viewWheel">Wheel</button>
+</div>
+<div class="instbar" id="instBar" role="group" aria-label="Instrument"></div>
+</div>
+
+<div class="case" id="viewKeys">
+  <div class="felt"></div>
+  <div class="keys" id="keys"></div>
+</div>
+
+<div class="wheelwrap" id="viewWheel" hidden>
+  <div class="wheelbar">
+    <div class="oct">
+      <button class="octbtn" id="octDown" type="button" aria-label="Octave down">&minus;</button>
+      <span id="octLabel"></span>
+      <button class="octbtn" id="octUp" type="button" aria-label="Octave up">+</button>
+    </div>
+    <button class="ordbtn" id="ordChroma" type="button" aria-pressed="true">Chromatic</button>
+    <button class="ordbtn" id="ordFifths" type="button" aria-pressed="false">Fifths</button>
+  </div>
+  <svg id="wheel" viewBox="0 0 430 430" role="group" aria-label="Note wheel">
+    <g id="wedges"></g>
+    <circle class="hub" cx="215" cy="215" r="86"></circle>
+    <text id="hubNote" x="215" y="208">—</text>
+    <text id="hubHint" x="215" y="243">HOLD AND DRAG</text>
+  </svg>
+</div>
+
+<div class="nowbar">
+  <span id="nowNote">—</span>
+  <span id="nowChord"></span>
+  <span class="hint" id="nowHint">Whatever is sounding shows here.</span>
+</div>
+</div>
+
+<div class="row">
+  <button class="ctl" id="recBtn">Record</button>
+  <button class="ctl" id="playRecBtn" disabled>Play recording</button>
+  <button class="ctl" id="toSeqBtn" disabled>Send to notes box</button>
+  <button class="ctl" id="clearRecBtn" disabled>Clear</button>
+  <span class="meter" id="recMeter">no take yet</span>
+</div>
+
+<div class="row">
+  <label class="sw"><input type="checkbox" id="sustain"> Sustain (hold Space)</label>
+  <label class="sw">Volume <input type="range" id="vol" min="0" max="100" value="75"></label>
+  <label class="sw">Tempo <input type="range" id="bpm" min="40" max="200" value="100"><span class="meter" id="bpmOut">100 BPM</span></label>
+</div>
+
+<div class="status" id="status"></div>
+
+<div class="cols">
+<div class="helpcol">
+
+<div class="ltabs" role="tablist" aria-label="Left panel">
+  <button class="ltab" role="tab" id="lt-guide" aria-controls="lp-guide" aria-selected="true">Guide</button>
+  <button class="ltab" role="tab" id="lt-convert" aria-controls="lp-convert" aria-selected="false" tabindex="-1">Paste &amp; convert</button>
+</div>
+
+<div id="lp-convert" role="tabpanel" aria-labelledby="lt-convert" hidden>
+<section class="conv" id="conv">
+  <h3>Convert letter notes from a sheet</h3>
+  <p>Many piano sheets give bare letters with no octave numbers and no rhythm — <code>FFF F#F#F# C#D#</code> and so on. Paste those lines here and they become playable tokens. Sheets that already write the octave (<code>D4 G4 A#3</code>) are taken exactly as written, and commas are treated as spaces. Where words and notes share a line, the capitals are read as notes and the rest as words; a whole page pasted as one block is split at the wide gaps between phrases. Write a flat as a small <code>b</code>: <code>Ab</code> is A flat, <code>AB</code> is two notes.</p>
+  <textarea id="rawNotes" spellcheck="false" placeholder="CCGG AAG&#10;FFEE DDC"></textarea>
+  <div class="fields">
+    <label>Start octave
+      <select id="convOct"><option>3</option><option selected>4</option><option>5</option></select>
+    </label>
+    <label>Beats each
+      <input id="convLen" type="number" min="0.125" max="4" step="0.125" value="0.5">
+    </label>
+    <label>Transpose
+      <input id="convShift" type="number" min="-12" max="12" step="1" value="0">
+    </label>
+    <label><input type="checkbox" id="convSmooth" checked> Keep steps small</label>
+  </div>
+  <div class="row">
+    <button class="ctl" id="convBtn">Convert into the notes box</button>
+  </div>
+  <div class="status" id="convStatus"></div>
+</section>
+
+<section class="conv" id="book">
+  <h3>Load a songbook file (.json)</h3>
+  <p>A songbook holds titles, note letters and the words that go with them. Once loaded, its songs join the search box above — by title, and by any word in the text — and the lines appear below so you can play them one at a time. The file is read on your machine and nothing leaves it; reloading the page clears it.</p>
+  <input type="file" id="bookFile" accept=".json,application/json">
+  <div class="status" id="bookStatus"></div>
+</section>
+</div>
+
+<div id="lp-guide" role="tabpanel" aria-labelledby="lt-guide">
+<div class="helpwrap">
+  <div class="tabs" role="tablist" aria-label="Help">
+    <button class="tab" role="tab" id="tab-play" aria-controls="p-play" aria-selected="true">Playing</button>
+    <button class="tab" role="tab" id="tab-names" aria-controls="p-names" aria-selected="false" tabindex="-1">Note names</button>
+    <button class="tab" role="tab" id="tab-write" aria-controls="p-write" aria-selected="false" tabindex="-1">Writing notes</button>
+    <button class="tab" role="tab" id="tab-theory" aria-controls="p-theory" aria-selected="false" tabindex="-1">Scales &amp; mood</button>
+    <button class="tab" role="tab" id="tab-carnatic" aria-controls="p-carnatic" aria-selected="false" tabindex="-1">Carnatic practice</button>
+    <button class="tab" role="tab" id="tab-rec" aria-controls="p-rec" aria-selected="false" tabindex="-1">Recording &amp; songs</button>
+  </div>
+
+  <div class="panel" role="tabpanel" id="p-play" aria-labelledby="tab-play">
+    <h3>Three ways to make a sound</h3>
+    <p>Click or tap a key. Hold the mouse down and slide sideways for a glissando. On a touch screen, drag along the keys.</p>
+    <p>Or type. The two rows of your computer keyboard sit under two octaves of the piano, and the letter is printed on each key:</p>
+    <table>
+      <tr><th>Keys</th><th>What they play</th></tr>
+      <tr><td>z s x d c v g b h n j m ,</td><td>C3 up to C4 — the lower octave</td></tr>
+      <tr><td>q 2 w 3 e r 5 t 6 y 7 u i</td><td>C4 up to C5 — the middle octave</td></tr>
+      <tr><td>Space</td><td>Sustain pedal — notes ring on after you let go</td></tr>
+      <tr><td>Tab, then Enter</td><td>Moves key to key and plays one, for anyone using a keyboard only</td></tr>
+    </table>
+    <p>The black keys are the sharps and flats, and they sit where your fingers expect: the letter keys between them are the white notes.</p>
+
+    <h3>Eight instruments</h3>
+    <p>The row of buttons above the keyboard changes the voice. Everything else — the songs, your recordings, the notes you write — plays through whichever one is selected, so the same tune can be a lullaby on the music box or a hymn on the organ. Picking one sounds middle C so you can hear the change.</p>
+    <table>
+      <tr><th>Instrument</th><th>Character</th></tr>
+      <tr><td>Grand piano</td><td>Struck string: bright attack, long ring in the bass</td></tr>
+      <tr><td>Electric piano</td><td>Softer, with a bell-like edge that fades before the body of the note</td></tr>
+      <tr><td>Music box</td><td>Metal comb — very short attack, glassy, no warmth in the low notes</td></tr>
+      <tr><td>Marimba</td><td>Wooden bar and mallet: dry, quick, wants fast tunes</td></tr>
+      <tr><td>Acoustic guitar</td><td>A real plucked string, computed as a vibrating loop rather than stacked tones</td></tr>
+      <tr><td>Church organ</td><td>Holds forever with no decay at all, so long notes stay loud</td></tr>
+      <tr><td>Flute</td><td>Breathy, gentle attack, vibrato that eases in on held notes</td></tr>
+      <tr><td>Strings</td><td>Slow swell of detuned bows — try it on Silent Night</td></tr>
+    </table>
+    <p>The first five are struck or plucked: they ring and fade on their own, and lifting the key only cuts the tail short. The last three are blown or bowed, so a note lasts exactly as long as you hold the key, and written lengths matter far more. The sustain pedal changes nothing on those three, because there is nothing left ringing to hold.</p>
+
+    <h3>The wheel</h3>
+    <p>The Wheel tab above the keyboard is the same instrument in a circle. One full turn is one octave, so the twelve wedges are the twelve notes and the ring repeats the way pitch itself does. Press the mouse button anywhere on the ring and keep it down: sliding round plays note after note, and the sound follows your hand without ever running off the edge. Stray into the middle or past the rim and the note you are on keeps sounding — it only changes when you reach a different wedge, and only stops when you let the button go. On a touch screen each finger gets its own note, so you can hold a chord.</p>
+    <p>The minus and plus buttons move the whole ring an octave at a time, between octave 3 and octave 5. The name of whatever is sounding appears in the middle, where your eye already is.</p>
+    <p><b>Chromatic</b> puts the notes round in the order they sit on the keyboard, so a sweep is a true glissando — dramatic, and a little harsh. <b>Fifths</b> reorders them C G D A E B and so on, which places consonant notes side by side: any two neighbours agree with each other, so wandering around the ring sounds musical whatever you do. That one is worth handing to a child.</p>
+    <p>Whichever view you use, the other lights up too when a song plays — a good way to see where a note on the wheel lives on the keyboard.</p>
+
+    <h3>What the highlights tell you</h3>
+    <p>A key glows while its note is sounding, the name of the note appears under the keyboard, and the matching chip in the strip below the notes box turns gold. Turn the glow off with the highlight checkbox if it distracts; the name under the keyboard stays either way.</p>
+
+    <h3>Volume and tempo</h3>
+    <p>Volume is the overall loudness. Tempo only affects written notes and playback, in beats per minute — 60 BPM means one beat per second, 120 BPM means two. Your live playing is never quantised to it.</p>
+  </div>
+
+  <div class="panel" role="tabpanel" id="p-names" aria-labelledby="tab-names" hidden>
+    <h3>Letters, not numbers</h3>
+    <p>Music uses seven letters, A B C D E F G, and then starts again at A. Those seven are the white keys. Count up from any C and you get C D E F G A B, then the next C.</p>
+
+    <h3>Sharps and flats</h3>
+    <p>The black keys sit between white keys and take the name of a neighbour with a sign attached:</p>
+    <ul>
+      <li><b>#</b> means sharp — one key to the right. C# is the black key just above C.</li>
+      <li><b>b</b> means flat — one key to the left. Db is that same black key, named from above.</li>
+    </ul>
+    <p>So C# and Db are one and the same key. Write whichever you prefer; this piano accepts both. E and B have no black key above them, which is why the black keys come in groups of two and three.</p>
+
+    <h3>The octave number</h3>
+    <p>The same letter repeats all along the keyboard, so a number says which one you mean. C4 is middle C. C3 is an octave lower, C5 an octave higher — twice the frequency each time you go up one.</p>
+    <p>The number changes at every C, not at A. That catches people out: B3 and C4 are neighbours, one key apart.</p>
+    <table>
+      <tr><th>Name</th><th>Meaning</th></tr>
+      <tr><td>C4</td><td>Middle C, the fourth C on a full piano</td></tr>
+      <tr><td>A4</td><td>The A above middle C — the 440 Hz tuning note</td></tr>
+      <tr><td>F#3</td><td>The black key above F, one octave below middle</td></tr>
+      <tr><td>Gb3</td><td>The very same key, spelled from G downward</td></tr>
+      <tr><td>C</td><td>No number given, so octave 4 is assumed</td></tr>
+    </table>
+    <p>This keyboard runs from C3 to C6, three octaves. Anything you write outside that range still plays; you just won't see a key light up for it.</p>
+  </div>
+
+  <div class="panel" role="tabpanel" id="p-write" aria-labelledby="tab-write" hidden>
+    <h3>One token per note</h3>
+    <p>Separate notes with spaces. Each token is a note name, optionally followed by a colon and a length in beats. Leave the length off and the note gets one beat.</p>
+    <table>
+      <tr><th>Token</th><th>Plays</th><th></th></tr>
+      <tr><td>C4</td><td>Middle C for one beat</td><td><button class="try" data-try="C4 D4 E4 F4 G4">Try</button></td></tr>
+      <tr><td>G4:2</td><td>G above middle C, held two beats</td><td><button class="try" data-try="C4 D4 E4:2 D4 C4:4">Try</button></td></tr>
+      <tr><td>E4:0.5</td><td>Half a beat — a quick note</td><td><button class="try" data-try="C4:0.5 D4:0.5 E4:0.5 F4:0.5 G4:2">Try</button></td></tr>
+      <tr><td>C4+E4+G4</td><td>A chord: all three together</td><td><button class="try" data-try="C4+E4+G4:2 F3+A3+C4:2 G3+B3+D4:2 C3+E3+G3:2">Try</button></td></tr>
+      <tr><td>-</td><td>A rest — one beat of silence</td><td><button class="try" data-try="C4 - C4 - C4 E4 G4:2">Try</button></td></tr>
+      <tr><td>-:2</td><td>Two beats of silence</td><td><button class="try" data-try="G4 E4 -:2 G4 E4 C4:2">Try</button></td></tr>
+      <tr><td>|</td><td>A bar line. The player ignores it; it's there to keep long tunes readable</td><td></td></tr>
+    </table>
+
+    <h3>How long is a beat?</h3>
+    <p>It depends on the tempo slider. At 120 BPM a beat is half a second, so <code>C4:2</code> lasts one second. Change the tempo and every length changes with it, which is how one line of notes can be a lullaby or a march.</p>
+    <p>Common lengths: <code>:4</code> a long held note, <code>:2</code> half as long, <code>:1</code> the default, <code>:0.5</code> a running note, <code>:0.25</code> very quick. Triplets work too — three notes of <code>:0.33</code> fill one beat.</p>
+
+    <h3>A worked example</h3>
+    <p><code>E4 D4 C4 D4 E4 E4 E4:2</code> is the opening of Mary Had a Little Lamb: six notes of one beat, then a longer one to end the phrase. <button class="try" data-try="E4 D4 C4 D4 E4 E4 E4:2 | D4 D4 D4:2 E4 G4 G4:2">Try it</button></p>
+
+    <h3>Sheets with bare letters</h3>
+    <p>A lot of piano sheets circulating online give pitch letters only — no octave numbers, no rhythm, lyrics interleaved with the notes. The <b>Paste &amp; convert</b> tab at the top of this column turns that shape into playable tokens: paste the lines, choose which octave to start in and how long each note should be, and it writes the result into the notes box. Lines containing words are recognised as words and skipped, so you can paste a whole page.</p>
+    <p>Two things it has to guess, and how it guesses them. <b>Octave</b>: with "keep steps small" ticked, each note goes wherever it lands closest to the one before, which is what melodies usually do, and every line restarts in your chosen octave so a long sheet cannot creep away. Untick it and every note goes into the one octave. <b>Rhythm</b>: it cannot be guessed at all, so every note gets the same length and you fix the long ones by hand — that is what the <code>:beats</code> suffix is for, and the score strip makes it quick to find them.</p>
+    <p>There is also a transpose box, for sheets written a semitone or two away from where you want to play.</p>
+
+    <p>Pasting is enough — the panel decodes as soon as text lands in it, so you can copy a page from wherever you keep your sheets and drop it straight in. Where the paste has words above its note lines, those lines appear underneath the panel as a sheet: words on top, notes below, and clicking any line plays that phrase alone.</p>
+    <p>Some sheets put the words and the notes on the same line, and some arrive as one long block with wide gaps instead of line breaks. Both are handled: a block is split at the gaps, and on a mixed line the capitals are taken as notes and everything else as words. That last part is a guess based on case, and it can misfire — a syllable written in capitals that happens to be spelled from the letters A to G will be read as notes. Check the score strip against the sheet before trusting a long paste.</p>
+
+    <h3>If something is wrong</h3>
+    <p>The line under the buttons says what it found — an unknown note name or a bad length, with the token quoted. The strip of chips only appears while the whole line reads correctly, so it doubles as a check while you type.</p>
+  </div>
+
+  <div class="panel" role="tabpanel" id="p-theory" aria-labelledby="tab-theory" hidden>
+    <h3>Everything is counted in semitones</h3>
+    <p>A semitone is the smallest step here: the very next key along, black or white. Two semitones make a whole tone. Every scale below is just a particular pattern of those two steps, and the pattern is what you recognise, not the starting note.</p>
+    <table>
+      <tr><td>All twelve semitones in a row</td><td><button class="try" data-try="C4:0.35 C#4:0.35 D4:0.35 D#4:0.35 E4:0.35 F4:0.35 F#4:0.35 G4:0.35 G#4:0.35 A4:0.35 A#4:0.35 B4:0.35 C5:1">Try</button></td></tr>
+      <tr><td>Nothing but whole tones — no home, no rest</td><td><button class="try" data-try="C4:0.5 D4:0.5 E4:0.5 F#4:0.5 G#4:0.5 A#4:0.5 C5:1">Try</button></td></tr>
+    </table>
+
+    <h3>The major scale</h3>
+    <p>Seven notes, then the eighth is the first one again an octave up. Counting in semitones the steps are <b>2 2 1 2 2 2 1</b> — two whole tones, a semitone, three whole tones, a semitone. Start that pattern on C and it lands on the white keys only, which is why C major is where everyone begins.</p>
+    <table>
+      <tr><th>Scale</th><th>Notes</th><th></th></tr>
+      <tr><td>C major</td><td>C D E F G A B C — no black keys</td><td><button class="try" data-try="C4:0.5 D4:0.5 E4:0.5 F4:0.5 G4:0.5 A4:0.5 B4:0.5 C5:1">Try</button></td></tr>
+      <tr><td>G major</td><td>Same pattern from G, so F must be sharpened</td><td><button class="try" data-try="G3:0.5 A3:0.5 B3:0.5 C4:0.5 D4:0.5 E4:0.5 F#4:0.5 G4:1">Try</button></td></tr>
+      <tr><td>F major</td><td>From F, and now B has to be flattened</td><td><button class="try" data-try="F3:0.5 G3:0.5 A3:0.5 Bb3:0.5 C4:0.5 D4:0.5 E4:0.5 F4:1">Try</button></td></tr>
+      <tr><td>D major</td><td>From D: two sharps, F# and C#</td><td><button class="try" data-try="D4:0.5 E4:0.5 F#4:0.5 G4:0.5 A4:0.5 B4:0.5 C#5:0.5 D5:1">Try</button></td></tr>
+    </table>
+    <p>That is the whole business of keys: one shape, moved to a different starting note, needing whatever black keys keep the pattern intact. Nursery songs live almost entirely in these scales, which is why they sound settled and cheerful.</p>
+    <p>A tune built from C major: <button class="try" data-try="E4 D4 C4 D4 E4 E4 E4:2 | D4 D4 D4:2 E4 G4 G4:2">Try</button></p>
+
+    <h3>Minor scales</h3>
+    <p>The natural minor changes the pattern to <b>2 1 2 2 1 2 2</b>. The third note is now closer to the first, and that one semitone is most of the difference between bright and heavy.</p>
+    <table>
+      <tr><th>Scale</th><th>Notes</th><th></th></tr>
+      <tr><td>A natural minor</td><td>A B C D E F G A — again all white keys</td><td><button class="try" data-try="A3:0.5 B3:0.5 C4:0.5 D4:0.5 E4:0.5 F4:0.5 G4:0.5 A4:1">Try</button></td></tr>
+      <tr><td>A harmonic minor</td><td>Raise the seventh to G#: the leap up to A gains a pull, and the gap before it sounds eastern</td><td><button class="try" data-try="A3:0.5 B3:0.5 C4:0.5 D4:0.5 E4:0.5 F4:0.5 G#4:0.5 A4:1">Try</button></td></tr>
+      <tr><td>A melodic minor</td><td>Raise the sixth as well going up, to smooth that gap out</td><td><button class="try" data-try="A3:0.5 B3:0.5 C4:0.5 D4:0.5 E4:0.5 F#4:0.5 G#4:0.5 A4:1">Try</button></td></tr>
+      <tr><td>C minor</td><td>The minor pattern from C: E, A and B all flattened</td><td><button class="try" data-try="C4:0.5 D4:0.5 Eb4:0.5 F4:0.5 G4:0.5 Ab4:0.5 Bb4:0.5 C5:1">Try</button></td></tr>
+    </table>
+    <p>C major and A minor use exactly the same seven notes — they only differ in which note feels like home. Play them one after the other and listen for the change of centre, not of notes: <button class="try" data-try="C4:0.4 D4:0.4 E4:0.4 F4:0.4 G4:0.4 A4:0.4 B4:0.4 C5:1 -:0.5 A3:0.4 B3:0.4 C4:0.4 D4:0.4 E4:0.4 F4:0.4 G4:0.4 A4:1">Try</button></p>
+
+    <h3>The third decides it</h3>
+    <p>Take the first, third and fifth notes of a scale and you have a chord. Everything hangs on that third note: four semitones above the root gives major, three gives minor. One key's difference turns the same chord over.</p>
+    <table>
+      <tr><td>Two thirds, bare</td><td>major then minor</td><td><button class="try" data-try="C4+E4:2 -:0.5 C4+Eb4:2">Try</button></td></tr>
+      <tr><td>Two full chords</td><td>C major then C minor</td><td><button class="try" data-try="C4+E4+G4:2 -:0.5 C4+Eb4+G4:2">Try</button></td></tr>
+      <tr><td>The same tune both ways</td><td>Twinkle, major then minor</td><td><button class="try" data-try="C4 C4 G4 G4 A4 A4 G4:2 F4 F4 E4 E4 D4 D4 C4:2 -:1 C4 C4 G4 G4 Ab4 Ab4 G4:2 F4 F4 Eb4 Eb4 D4 D4 C4:2">Try</button></td></tr>
+    </table>
+
+    <h3>Moods to try</h3>
+    <p>Nothing here is a rule — these are the habits listeners have learned. Change the instrument as well as the notes: the same sad line is grief on strings and merely thoughtful on marimba.</p>
+    <table>
+      <tr><th>Feeling</th><th>What makes it</th><th></th></tr>
+      <tr><td>Happy</td><td>Major chords, steps upward, a bright key</td><td><button class="try" data-try="C4+E4+G4:2 G3+B3+D4:2 A3+C4+E4:2 F3+A3+C4:2">Try</button></td></tr>
+      <tr><td>Sad</td><td>Minor chords and a line that falls rather than climbs</td><td><button class="try" data-try="A3+C4+E4:2 F3+A3+C4:2 C4+E4+G4:2 G3+B3+D4:2 -:0.5 A4 G4 F4 E4:2 D4 C4 B3 A3:3">Try</button></td></tr>
+      <tr><td>Calm</td><td>The five-note pentatonic scale — it contains no semitone clash, so nothing can grate</td><td><button class="try" data-try="C4:0.4 D4:0.4 E4:0.4 G4:0.4 A4:0.4 C5:0.4 A4:0.4 G4:0.4 E4:0.4 D4:0.4 C4:1.5">Try</button></td></tr>
+      <tr><td>Dreamy</td><td>Four-note chords with the seventh added, and a raised fourth</td><td><button class="try" data-try="C4+E4+G4+B4:3 F3+A3+C4+E4:3 -:0.5 C4:0.4 D4:0.4 E4:0.4 F#4:0.4 G4:0.4 A4:0.4 B4:0.4 C5:1.5">Try</button></td></tr>
+      <tr><td>Spooky</td><td>Diminished chords stacked in equal steps, and the tritone — three whole tones, the most unsettled gap there is</td><td><button class="try" data-try="C4+D#4+F#4:1.5 C#4+E4+G4:1.5 D4+F4+G#4:1.5 -:0.5 C4+F#4:2">Try</button></td></tr>
+      <tr><td>Grand</td><td>Wide leaps of a fifth and an octave, low notes underneath</td><td><button class="try" data-try="C3+G3+C4:1 -:0.25 C4:0.5 G4:0.5 C5:1 G4:0.5 C5:0.5 E5:2 | C3+G3+C4+E4:3">Try</button></td></tr>
+      <tr><td>Bluesy</td><td>A flattened third and seventh, plus the note between the fourth and fifth</td><td><button class="try" data-try="C4:0.4 Eb4:0.4 F4:0.4 F#4:0.4 G4:0.4 Bb4:0.4 C5:0.8 Bb4:0.4 G4:0.4 F#4:0.4 F4:0.4 Eb4:0.4 C4:1.5">Try</button></td></tr>
+      <tr><td>Mysterious</td><td>A flattened second, one semitone above home</td><td><button class="try" data-try="C4:0.4 Db4:0.4 Eb4:0.4 F4:0.4 G4:0.4 Ab4:0.4 Bb4:0.4 C5:1.5">Try</button></td></tr>
+    </table>
+    <p>Two shortcuts worth keeping. Any notes from the calm pentatonic set can be played in any order and still agree with each other — set the wheel to Fifths, stay on C D E G A, and a child cannot make a wrong sound. And the Fifths ordering on the wheel is this same theory drawn as a circle: neighbours there are the notes that share the most scales, which is exactly why they sound agreeable together.</p>
+  </div>
+
+  <div class="panel" role="tabpanel" id="p-carnatic" aria-labelledby="tab-carnatic" hidden>
+    <h3>The seven swaras</h3>
+    <p>South Indian practice names the notes Sa Ri Ga Ma Pa Da Ni instead of C D E F G A B. The important difference is that Sa is not a fixed key — it is wherever you decide to start, and everything else is measured from it. Here Sa sits on C4 so that the exercises land under one hand, but move Sa to D and every exercise moves with it.</p>
+    <p>Ri, Ga, Da and Ni each come in more than one position, and which ones you pick is what makes one raga differ from another.</p>
+    <table>
+      <tr><th>Swara</th><th>Position used below</th><th>Key</th></tr>
+      <tr><td>Sa</td><td>fixed home note</td><td>C4</td></tr>
+      <tr><td>Ri</td><td>lowered (R1)</td><td>Db4</td></tr>
+      <tr><td>Ga</td><td>raised (G3)</td><td>E4</td></tr>
+      <tr><td>Ma</td><td>plain (M1)</td><td>F4</td></tr>
+      <tr><td>Pa</td><td>fixed fifth</td><td>G4</td></tr>
+      <tr><td>Da</td><td>lowered (D1)</td><td>Ab4</td></tr>
+      <tr><td>Ni</td><td>raised (N3)</td><td>B4</td></tr>
+    </table>
+
+    <h3>Mayamalavagowla, and why beginners start there</h3>
+    <p>Those seven make the raga Mayamalavagowla. It is the traditional starting point because it is symmetrical — a semitone step at the bottom of each half, then a wider gap — so the hand learns an even shape, and because its wide intervals make sloppy tuning obvious. On this keyboard it uses two black keys, Db and Ab.</p>
+    <p>Up and down the raga: <button class="try" data-try="C4:0.5 Db4:0.5 E4:0.5 F4:0.5 G4:0.5 Ab4:0.5 B4:0.5 C5:1 C5:0.5 B4:0.5 Ab4:0.5 G4:0.5 F4:0.5 E4:0.5 Db4:0.5 C4:1.5">Try</button></p>
+
+    <h3>The practice ladder</h3>
+    <p>Work down this list in order. Each step is the same seven notes in a harder pattern, and each is meant to be played slowly and evenly long before it is played fast. Start at 60 on the tempo slider, not the tempo given here.</p>
+    <table>
+      <tr><th>Exercise</th><th>What it trains</th><th></th></tr>
+      <tr><td>Sarali Varisai</td><td>Straight up, straight down. Evenness of touch and the shape of the raga</td><td><button class="try" data-try="C4:0.5 Db4:0.5 E4:0.5 F4:0.5 G4:0.5 Ab4:0.5 B4:0.5 C5:0.5 C5:0.5 B4:0.5 Ab4:0.5 G4:0.5 F4:0.5 E4:0.5 Db4:0.5 C4:1.5">Try</button></td></tr>
+      <tr><td>Janta Varisai</td><td>Every swara struck twice. Independence of the fingers and a firm, repeatable attack</td><td><button class="try" data-try="C4:0.4 C4:0.4 Db4:0.4 Db4:0.4 E4:0.4 E4:0.4 F4:0.4 F4:0.4 G4:0.4 G4:0.4 Ab4:0.4 Ab4:0.4 B4:0.4 B4:0.4 C5:0.4 C5:0.4 C5:0.4 C5:0.4 B4:0.4 B4:0.4 Ab4:0.4 Ab4:0.4 G4:0.4 G4:0.4 F4:0.4 F4:0.4 E4:0.4 E4:0.4 Db4:0.4 Db4:0.4 C4:0.4 C4:1.2">Try</button></td></tr>
+      <tr><td>Alankaram</td><td>Three-note groups that climb by one step each time. Phrasing, and hearing where you are in the scale</td><td><button class="try" data-try="C4:0.33 Db4:0.33 E4:0.33 Db4:0.33 E4:0.33 F4:0.33 E4:0.33 F4:0.33 G4:0.33 F4:0.33 G4:0.33 Ab4:0.33 G4:0.33 Ab4:0.33 B4:0.33 Ab4:0.33 B4:0.33 C5:1.5">Try</button></td></tr>
+    </table>
+    <p>All three are in the song list too — search <b>varisai</b> or <b>carnatic</b> — so you can load one, slow the tempo, and use the score strip to follow along. Try them on the flute voice: a held instrument punishes uneven timing in a way the piano hides.</p>
+
+    <h3>Ragas as scales you can hear</h3>
+    <p>A raga is far more than a scale — it carries characteristic phrases, ornaments and a sense of direction that no keyboard can show. But the scale is where it starts, and hearing them side by side tells you a great deal about why one melody feels festive and another grave.</p>
+    <table>
+      <tr><th>Raga</th><th>Notes from Sa</th><th></th></tr>
+      <tr><td>Mohanam</td><td>Five notes, no semitones — the same set as the major pentatonic</td><td><button class="try" data-try="C4:0.5 D4:0.5 E4:0.5 G4:0.5 A4:0.5 C5:1 C5:0.5 A4:0.5 G4:0.5 E4:0.5 D4:0.5 C4:1.5">Try</button></td></tr>
+      <tr><td>Shankarabharanam</td><td>Note for note the Western major scale</td><td><button class="try" data-try="C4:0.5 D4:0.5 E4:0.5 F4:0.5 G4:0.5 A4:0.5 B4:0.5 C5:1 C5:0.5 B4:0.5 A4:0.5 G4:0.5 F4:0.5 E4:0.5 D4:0.5 C4:1.5">Try</button></td></tr>
+      <tr><td>Kalyani</td><td>Major with a raised Ma — the Lydian sound, bright and expectant</td><td><button class="try" data-try="C4:0.5 D4:0.5 E4:0.5 F#4:0.5 G4:0.5 A4:0.5 B4:0.5 C5:1 C5:0.5 B4:0.5 A4:0.5 G4:0.5 F#4:0.5 E4:0.5 D4:0.5 C4:1.5">Try</button></td></tr>
+      <tr><td>Keeravani</td><td>Lowered Ga and Da with a raised Ni — the harmonic minor</td><td><button class="try" data-try="C4:0.5 D4:0.5 Eb4:0.5 F4:0.5 G4:0.5 Ab4:0.5 B4:0.5 C5:1 C5:0.5 B4:0.5 Ab4:0.5 G4:0.5 F4:0.5 Eb4:0.5 D4:0.5 C4:1.5">Try</button></td></tr>
+      <tr><td>Hindolam</td><td>Five notes with no Ri and no Pa — grave, and hard to make sound wrong</td><td><button class="try" data-try="C4:0.5 Eb4:0.5 F4:0.5 Ab4:0.5 Bb4:0.5 C5:1 C5:0.5 Bb4:0.5 Ab4:0.5 F4:0.5 Eb4:0.5 C4:1.5">Try</button></td></tr>
+      <tr><td>Madhyamavati</td><td>Five notes, traditionally sung at the close of a concert</td><td><button class="try" data-try="C4:0.5 D4:0.5 F4:0.5 G4:0.5 Bb4:0.5 C5:1 C5:0.5 Bb4:0.5 G4:0.5 F4:0.5 D4:0.5 C4:1.5">Try</button></td></tr>
+    </table>
+    <p>Mohanam is worth dwelling on: five notes, no semitone anywhere, so anything you play within it agrees with itself. Set the wheel to Fifths, keep to C D E G A, and a beginner can improvise for an hour without a wrong note. A great many Tamil melodies, film and folk alike, sit on exactly those five.</p>
+
+    <h3>Three more drills</h3>
+    <p>Once the ladder above is even, these keep the same seven notes but break the straight line. They are ordinary practice patterns rather than any numbered traditional exercise — useful for the fingers, not something to recite.</p>
+    <table>
+      <tr><th>Drill</th><th>What it trains</th><th></th></tr>
+      <tr><td>Skipping in thirds</td><td>Sa Ga, Ri Ma, Ga Pa — the hand stops moving in a straight line</td><td><button class="try" data-try="C4:0.5 E4:0.5 Db4:0.5 F4:0.5 E4:0.5 G4:0.5 F4:0.5 Ab4:0.5 G4:0.5 B4:0.5 Ab4:0.5 C5:1 C5:0.5 Ab4:0.5 B4:0.5 G4:0.5 Ab4:0.5 F4:0.5 G4:0.5 E4:0.5 F4:0.5 Db4:0.5 E4:0.5 C4:1.5">Try</button></td></tr>
+      <tr><td>Four-note groups</td><td>Longer phrases that shift up one swara at a time</td><td><button class="try" data-try="C4:0.33 Db4:0.33 E4:0.33 F4:0.33 Db4:0.33 E4:0.33 F4:0.33 G4:0.33 E4:0.33 F4:0.33 G4:0.33 Ab4:0.33 F4:0.33 G4:0.33 Ab4:0.33 B4:0.33 G4:0.33 Ab4:0.33 B4:0.33 C5:1.5">Try</button></td></tr>
+      <tr><td>Patterns in Mohanam</td><td>The same idea with five notes, so it already sounds like a melody</td><td><button class="try" data-try="C4:0.4 D4:0.4 E4:0.4 D4:0.4 E4:0.4 G4:0.4 E4:0.4 G4:0.4 A4:0.4 G4:0.4 A4:0.4 C5:1 C5:0.4 A4:0.4 G4:0.4 A4:0.4 G4:0.4 E4:0.4 G4:0.4 E4:0.4 D4:0.4 E4:0.4 D4:0.4 C4:1.5">Try</button></td></tr>
+    </table>
+
+    <h3>More ragas to hear</h3>
+    <p>All of these are in the song list as well — search <b>raga</b> to see them together. Playing them one after another is the quickest way to feel how much a single altered swara changes the character.</p>
+    <table>
+      <tr><th>Raga</th><th>Character and notes</th><th></th></tr>
+      <tr><td>Hamsadhwani</td><td>Five notes, festive, no Ma or Da — often heard at the opening of a concert</td><td><button class="try" data-try="C4:0.5 D4:0.5 E4:0.5 G4:0.5 B4:0.5 C5:1 C5:0.5 B4:0.5 G4:0.5 E4:0.5 D4:0.5 C4:1.5">Try</button></td></tr>
+      <tr><td>Bilahari</td><td>Climbs on five notes, comes down on all seven — the asymmetry is the point</td><td><button class="try" data-try="C4:0.5 D4:0.5 E4:0.5 G4:0.5 A4:0.5 C5:1 C5:0.5 B4:0.5 A4:0.5 G4:0.5 F4:0.5 E4:0.5 D4:0.5 C4:1.5">Try</button></td></tr>
+      <tr><td>Natabhairavi</td><td>Lowered Ga, Da and Ni — the natural minor exactly</td><td><button class="try" data-try="C4:0.5 D4:0.5 Eb4:0.5 F4:0.5 G4:0.5 Ab4:0.5 Bb4:0.5 C5:1 C5:0.5 Bb4:0.5 Ab4:0.5 G4:0.5 F4:0.5 Eb4:0.5 D4:0.5 C4:1.5">Try</button></td></tr>
+      <tr><td>Charukesi</td><td>Major in the lower half, minor in the upper — sweet turning wistful halfway up</td><td><button class="try" data-try="C4:0.5 D4:0.5 E4:0.5 F4:0.5 G4:0.5 Ab4:0.5 Bb4:0.5 C5:1 C5:0.5 Bb4:0.5 Ab4:0.5 G4:0.5 F4:0.5 E4:0.5 D4:0.5 C4:1.5">Try</button></td></tr>
+      <tr><td>Sriranjani</td><td>Six notes, no Pa, which leaves it restless</td><td><button class="try" data-try="C4:0.5 D4:0.5 Eb4:0.5 F4:0.5 A4:0.5 Bb4:0.5 C5:1 C5:0.5 Bb4:0.5 A4:0.5 F4:0.5 Eb4:0.5 D4:0.5 C4:1.5">Try</button></td></tr>
+      <tr><td>Abhogi</td><td>Five gentle notes, also without Pa</td><td><button class="try" data-try="C4:0.5 D4:0.5 Eb4:0.5 F4:0.5 A4:0.5 C5:1 C5:0.5 A4:0.5 F4:0.5 Eb4:0.5 D4:0.5 C4:1.5">Try</button></td></tr>
+      <tr><td>Revathi</td><td>Lowered Ri with no Ga — still and open</td><td><button class="try" data-try="C4:0.5 Db4:0.5 F4:0.5 G4:0.5 Bb4:0.5 C5:1 C5:0.5 Bb4:0.5 G4:0.5 F4:0.5 Db4:0.5 C4:1.5">Try</button></td></tr>
+      <tr><td>Shanmukhapriya</td><td>Raised Ma over a minor lower half — tense, and a favourite for drama</td><td><button class="try" data-try="C4:0.5 D4:0.5 Eb4:0.5 F#4:0.5 G4:0.5 Ab4:0.5 Bb4:0.5 C5:1 C5:0.5 Bb4:0.5 Ab4:0.5 G4:0.5 F#4:0.5 Eb4:0.5 D4:0.5 C4:1.5">Try</button></td></tr>
+      <tr><td>Simhendramadhyamam</td><td>The same, but with the raised Ni pulling hard back to Sa</td><td><button class="try" data-try="C4:0.5 D4:0.5 Eb4:0.5 F#4:0.5 G4:0.5 Ab4:0.5 B4:0.5 C5:1 C5:0.5 B4:0.5 Ab4:0.5 G4:0.5 F#4:0.5 Eb4:0.5 D4:0.5 C4:1.5">Try</button></td></tr>
+    </table>
+
+    <h3>Moving Sa</h3>
+    <p>To practise from a different Sa, rewrite the exercise a step higher — Sa on D means Ri becomes Eb, Ga becomes F#, and so on. The pattern of gaps is what stays the same. This is the same idea as the key signatures in the Scales tab, arrived at from the other direction.</p>
+  </div>
+
+  <div class="panel" role="tabpanel" id="p-rec" aria-labelledby="tab-rec" hidden>
+    <h3>Recording what you play</h3>
+    <p>Press Record, play, press it again to stop. The take keeps the exact moment you struck each key and how long you held it, so playing it back sounds like you rather than a grid.</p>
+    <p><b>Send to notes box</b> turns a take into written notes. It rounds each note to the nearest quarter beat at the current tempo, adds rests for the gaps, and groups notes struck together into chords — so set the tempo before you convert, and expect the written version to be tidier than the played one.</p>
+
+    <h3>The song list</h3>
+    <p>The search box above the notes offers forty-one entries: traditional tunes, and the Carnatic drills and raga scales from the practice tab. Type any part of a title, or a word about it: try star, sleeping, christmas, farm, beethoven, varisai or raga. Picking one writes its notes into the box, sets the tempo it was written for, and plays it.</p>
+    <p>Nothing is locked. Edit a loaded song, change its tempo, add a chord, and play it again. Clicking any chip in the strip plays just that note or chord, which is the quickest way to check one spot.</p>
+
+    <h3>Songbook files</h3>
+    <p>The <b>Paste &amp; convert</b> tab also loads a <code>.json</code> songbook: titles, note letters and the words that go with them. Its songs join the same search box as the built-in tunes, findable by title or by any word in the text, and the lines appear underneath the notes so you can play one at a time while learning a phrase. Everything is read on your own machine and nothing is stored — reloading the page clears it.</p>
+    <p>The file looks like this, and is easy enough to write by hand for tunes you work out yourself:</p>
+    <table>
+      <tr><td>{ "songs": [ { "title": "…",<br>&nbsp;&nbsp;"lines": [ { "text": "…", "letters": "CCGG AAG" } ] } ] }</td></tr>
+    </table>
+    <p>Only <code>title</code> and <code>lines</code> are needed, and within a line only <code>letters</code>. Optional extras are <code>scale</code>, <code>transpose</code> and a <code>section</code> label per line. The letters are run through the converter settings above, so the octave, note length and transpose you set there apply — change them and load the file again to redo the guesses.</p>
+
+    <h3>Practice view</h3>
+    <p>The Practice button beside Play clears the guide and the converter out of the way, leaving the keyboard across the full width with the notes and the sheet beneath it. While a song plays, the line being sung lights up and scrolls itself into view, so you can follow a page without touching anything. Press it again to bring the rest back.</p>
+    <p>Next to it, <b>Loop</b> repeats whatever is playing with one beat between passes, until you press Stop — for a written line, a loaded song or a recorded take alike. Tick or untick it while a song is running: switching it on carries straight into the next pass, switching it off lets the current one finish and stops there. A single phrase on a loop, played slowly, is how a hard bar becomes an easy one.</p>
+    <p>Practice view adds one thing the normal view does not have: the key coming <b>next</b> is shown in a cool blue while the key sounding <b>now</b> is gold. The blue appears a note ahead, including before the first note of a phrase, so a hand can be moving to the right place rather than chasing what has already been played. Slow the tempo until the blue arrives early enough to act on. It follows the highlight checkbox, so turning highlighting off removes both.</p>
+    <p>With nothing playing, that blue key waits for you. Whatever is in the notes box is marked from its first note, and it moves on only when you play the note it is showing — at your own pace, with no clock running. A wrong note is ignored rather than marked wrong, so you can hunt for the right one; a chord waits until every note of it is down, in whatever order you find them. The chip in the strip and the line in the sheet follow along, and reaching the end starts you again at the beginning. Press Play and the song takes the marks back; press Stop and they return to your hands.</p>
+
+    <h3>Where the sound comes from</h3>
+    <p>No audio is downloaded. Every note is built as it plays: most instruments stack a handful of harmonics under an envelope of their own, and the guitar models a real string as a loop of vibration that loses a little energy each time round. Save this file anywhere and it works with no network at all.</p>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="notecol">
+<h2>Notes to play</h2>
+<p>One note per token: letter, optional <code>#</code> or <code>b</code>, octave number. Add <code>:beats</code> for length, join a chord with <code>+</code>, use <code>-</code> for a rest. Bar lines are ignored.</p>
+<div class="picker">
+  <input id="songSearch" type="text" autocomplete="off" role="combobox" aria-expanded="false"
+         aria-controls="songList" aria-autocomplete="list"
+         placeholder="Pick a song — type to search, or click for the whole list">
+  <ul id="songList" role="listbox" hidden></ul>
+</div>
+
+<textarea id="seq" spellcheck="false">C4 D4 E4 C4 | C4 D4 E4 C4 | E4 F4 G4:2 | E4 F4 G4:2
+G4:0.5 A4:0.5 G4:0.5 F4:0.5 E4 C4 | C4 G3 C4:2
+C4+E4+G4:2 F3+A3+C4:2 G3+B3+D4:2 C3+E4+G4:4</textarea>
+<div class="row">
+  <button class="ctl primary" id="playSeqBtn">Play notes</button>
+  <button class="ctl" id="stopBtn">Stop</button>
+  <button class="ctl" id="practiceBtn" aria-pressed="false">Practice view</button>
+  <label class="sw"><input type="checkbox" id="loop"> Loop</label>
+  <label class="sw"><input type="checkbox" id="hilite" checked> Highlight notes while playing</label>
+</div>
+<div class="score" id="score"></div>
+
+
+
+
+
+<div class="lyrics" id="lyrics" hidden></div>
+</div>
+</div>
+
+</div>
+
+<script>
+/* ======================= note names ======================= */
+const SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const PC = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+
+function midiOf(name){
+  const m = /^([A-Ga-g])([#b]?)(-?\d)?$/.exec(String(name).trim());
+  if(!m) return null;
+  let semi = PC[m[1].toUpperCase()] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0);
+  const oct = m[3] === undefined ? 4 : parseInt(m[3], 10);
+  return semi + (oct + 1) * 12;
+}
+const nameOf = m => SHARP[m % 12] + (Math.floor(m / 12) - 1);
+const freqOf = m => 440 * Math.pow(2, (m - 69) / 12);
+
+/* ======================= audio ======================= */
+let ctx = null, master = null;
+function audio(){
+  if(!ctx){
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    master = ctx.createGain();
+    master.gain.value = 0.75;
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -14; comp.ratio.value = 4;
+    master.connect(comp); comp.connect(ctx.destination);
+  }
+  if(ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
+
+/* ---- instruments ----------------------------------------------------
+   Two families. A 'pluck' voice is struck or plucked: it has its own decay
+   and the key release only cuts it short. A 'hold' voice is blown or bowed:
+   it rings for exactly as long as the key is down. Partials are
+   [harmonic, level, decay multiplier]; harmonics need not be whole numbers,
+   which is what makes bells and bars sound metallic rather than sung. ---- */
+const INSTRUMENTS = {
+  piano: {
+    label:'Grand piano', type:'pluck', wave:'triangle', gain:0.28,
+    partials:[[1,1,1],[2,0.42,0.9],[3,0.20,0.8],[4,0.11,0.7],[5,0.055,0.6],[6,0.03,0.5]],
+    stiff:0.0004, attack:0.004, thump:0.5,
+    decay:f => Math.max(0.9, 7.5 - Math.log2(f / 55) * 1.15),
+    filter:{ open:f => Math.min(14000, f * 9 + 1500), close:f => Math.max(500, f * 3), time:1.4, q:0.6 },
+    release:0.16, pedal:1.1
+  },
+  epiano: {
+    label:'Electric piano', type:'pluck', wave:'sine', gain:0.32,
+    partials:[[1,1,1],[2,0.16,0.7],[4,0.30,0.26],[7,0.10,0.15],[13,0.03,0.09]],
+    attack:0.006,
+    decay:f => Math.max(1.0, 5.5 - Math.log2(f / 55) * 0.7),
+    filter:{ open:f => Math.min(12000, f * 8 + 900), close:f => Math.max(600, f * 3), time:1.0, q:0.4 },
+    release:0.2, pedal:1.0
+  },
+  musicbox: {
+    label:'Music box', type:'pluck', wave:'sine', gain:0.24,
+    partials:[[1,1,1],[3.01,0.34,0.5],[5.42,0.17,0.32],[8.9,0.06,0.2]],
+    attack:0.002,
+    decay:f => Math.max(0.8, 4.2 - Math.log2(f / 110) * 0.7),
+    release:0.3, pedal:0.7
+  },
+  marimba: {
+    label:'Marimba', type:'pluck', wave:'sine', gain:0.36,
+    partials:[[1,1,1],[3.9,0.34,0.34],[9.2,0.10,0.18]],
+    attack:0.003, thump:0.35,
+    decay:f => Math.max(0.35, 1.7 - Math.log2(f / 110) * 0.28),
+    release:0.12, pedal:0.45
+  },
+  guitar: {
+    label:'Acoustic guitar', type:'ks', gain:0.55, damp:0.46,
+    decay:f => Math.max(1.1, 4.6 - Math.log2(f / 82) * 0.85),
+    release:0.12, pedal:0.6
+  },
+  organ: {
+    label:'Church organ', type:'hold', wave:'sine', gain:0.13,
+    partials:[[1,1],[2,0.6],[3,0.4],[4,0.28],[6,0.16],[8,0.1]],
+    attack:0.02, release:0.09
+  },
+  flute: {
+    label:'Flute', type:'hold', wave:'sine', gain:0.32,
+    partials:[[1,1],[2,0.12],[3,0.05]],
+    attack:0.07, release:0.15, breath:0.06,
+    vibrato:{ rate:5, depth:7, delay:0.35 }
+  },
+  strings: {
+    label:'Strings', type:'hold', wave:'sawtooth', gain:0.11,
+    partials:[[1,1],[1,0.8],[2,0.18]], detune:7,
+    attack:0.18, release:0.45,
+    filter:{ open:f => Math.min(1800, f * 3 + 300), close:f => Math.min(6000, f * 7 + 1200), time:0.7, q:0.8 },
+    vibrato:{ rate:5.5, depth:6, delay:0.5 }
+  }
+};
+let current = 'piano';
+
+/* Karplus–Strong string, rendered into a buffer.
+   A feedback delay built from live nodes cannot go below one render block,
+   which would cap the pitch around 375 Hz, so the string is computed
+   sample by sample instead and cached per note. */
+const ksCache = new Map();
+function ksBuffer(f, secs, damp){
+  const key = Math.round(f * 10) + '|' + secs.toFixed(1);
+  if(ksCache.has(key)) return ksCache.get(key);
+  const sr = ctx.sampleRate;
+  // Read position is fractional: rounding the loop to whole samples would put
+  // the top octave up to 15 cents out, which is audible in a chord. The damping
+  // filter itself adds about `damp` of a sample of delay, so take that off.
+  const D = sr / f - damp;
+  const N = Math.ceil(D) + 2;
+  const len = Math.ceil(sr * secs);
+  const buf = ctx.createBuffer(1, len, sr);
+  const out = buf.getChannelData(0);
+  const line = new Float32Array(N);
+  let prev = 0;
+  for(let i = 0; i < N; i++){                 // noise burst, softened a little
+    const x = Math.random() * 2 - 1;
+    prev = (x + prev) * 0.5;
+    line[i] = prev;
+  }
+  // Each slot of the delay line is rewritten once per round trip, not once per
+  // sample, so the loss must be set per round trip: secs * f of them in total.
+  const r = Math.pow(0.0008, 1 / Math.max(1, secs * f));
+  let w = 0, last = 0;
+  for(let n = 0; n < len; n++){
+    let rp = w - D; if(rp < 0) rp += N;
+    const i0 = Math.floor(rp), fr = rp - i0;
+    const cur = line[i0] * (1 - fr) + line[(i0 + 1) % N] * fr;
+    const v = ((1 - damp) * cur + damp * last) * r;
+    last = cur;
+    line[w] = v;
+    w = (w + 1) % N;
+    out[n] = v;
+  }
+  ksCache.set(key, buf);
+  return buf;
+}
+
+let noiseBuf = null;
+function noise(){
+  if(!noiseBuf){
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for(let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  return noiseBuf;
+}
+
+/* Every voice that is currently able to make a sound. A held or blown
+   instrument rings until something releases it, so a voice that was started
+   without a matching release — a preview note, a stopped sequence — would
+   drone on forever. Registering them all gives us one honest kill switch. */
+const live = new Set();
+function allNotesOff(){
+  live.forEach(h => h.release());
+  live.clear();
+}
+
+// Starts one note at audio-time t0 on the current instrument. Returns a handle with release(t).
+function strike(midi, t0, vel){
+  audio();
+  const spec = INSTRUMENTS[current];
+  const f = freqOf(midi);
+  t0 = Math.max(t0, ctx.currentTime);
+  vel = vel === undefined ? 0.8 : vel;
+  const level = vel * spec.gain / Math.max(1, Math.log2(Math.max(f, 60) / 110) * 0.35 + 1);
+  const decay = spec.decay ? spec.decay(f) : 0;
+
+  const amp = ctx.createGain();
+  amp.gain.setValueAtTime(0.0001, t0);
+  if(spec.filter){
+    const filt = ctx.createBiquadFilter();
+    filt.type = 'lowpass'; filt.Q.value = spec.filter.q;
+    filt.frequency.setValueAtTime(Math.max(80, spec.filter.open(f)), t0);
+    filt.frequency.exponentialRampToValueAtTime(Math.max(80, spec.filter.close(f)), t0 + spec.filter.time);
+    amp.connect(filt); filt.connect(master);
+  }else{
+    amp.connect(master);
+  }
+
+  const parts = [];
+  if(spec.type === 'ks'){
+    const src = ctx.createBufferSource();
+    src.buffer = ksBuffer(f, decay, spec.damp);
+    const g = ctx.createGain(); g.gain.value = level;
+    src.connect(g); g.connect(amp);
+    src.start(t0); src.stop(t0 + decay + 0.05);
+    parts.push(src);
+    amp.gain.linearRampToValueAtTime(1, t0 + 0.002);
+  }else{
+    let vib = null;
+    if(spec.vibrato){
+      const lfo = ctx.createOscillator(), depth = ctx.createGain();
+      lfo.frequency.value = spec.vibrato.rate;
+      depth.gain.setValueAtTime(0, t0);
+      depth.gain.linearRampToValueAtTime(spec.vibrato.depth, t0 + spec.vibrato.delay);
+      lfo.connect(depth); lfo.start(t0);
+      parts.push(lfo); vib = depth;
+    }
+    spec.partials.forEach((p, i) => {
+      const n = p[0], a = p[1], df = p[2] || 1;
+      const o = ctx.createOscillator();
+      o.type = (spec.wave === 'triangle' && i > 0) ? 'sine' : (spec.wave || 'sine');
+      o.frequency.value = f * n * (1 + (spec.stiff || 0) * n * n);
+      if(spec.detune) o.detune.value = i === 1 ? spec.detune : i === 2 ? -spec.detune : 0;
+      if(vib) vib.connect(o.detune);
+      const g = ctx.createGain();
+      if(spec.type === 'pluck'){
+        g.gain.setValueAtTime(a * level, t0);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + Math.max(0.06, decay * df));
+      }else{
+        g.gain.value = a * level;
+      }
+      o.connect(g); g.connect(amp);
+      o.start(t0);
+      o.stop(t0 + (spec.type === 'pluck' ? decay + 0.1 : 45));
+      parts.push(o);
+    });
+    if(spec.thump){                                  // the knock of hammer or mallet
+      const th = ctx.createOscillator(), tg = ctx.createGain();
+      th.type = 'sine'; th.frequency.setValueAtTime(f * 0.5, t0);
+      tg.gain.setValueAtTime(level * spec.thump, t0);
+      tg.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.06);
+      th.connect(tg); tg.connect(amp);
+      th.start(t0); th.stop(t0 + 0.2);
+      parts.push(th);
+    }
+    if(spec.breath){                                 // air noise around the pitch
+      const nz = ctx.createBufferSource(); nz.buffer = noise(); nz.loop = true;
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass';
+      bp.frequency.value = f * 2; bp.Q.value = 1.2;
+      const ng = ctx.createGain(); ng.gain.value = level * spec.breath;
+      nz.connect(bp); bp.connect(ng); ng.connect(amp);
+      nz.start(t0); nz.stop(t0 + 45);
+      parts.push(nz);
+    }
+    amp.gain.linearRampToValueAtTime(1, t0 + spec.attack);
+  }
+
+  let released = false;
+  const handle = {
+    end: t0 + decay,
+    startsAt: t0,
+    release(t){
+      if(released) return;
+      released = true;
+      live.delete(handle);
+      const rt = Math.max(t === undefined ? ctx.currentTime : t, t0 + 0.02);
+      const fall = spec.type === 'hold' ? spec.release
+                 : (sustainEl.checked ? spec.pedal : spec.release);
+      amp.gain.cancelScheduledValues(rt);
+      amp.gain.setValueAtTime(Math.max(amp.gain.value, 0.0001), rt);
+      amp.gain.exponentialRampToValueAtTime(0.0001, rt + fall);
+      parts.forEach(p => { try{ p.stop(rt + fall + 0.03); }catch(e){} });
+    }
+  };
+  live.add(handle);
+  // A fast sweep round the wheel can pile up voices, so retire the oldest once
+  // the pile gets deep. Only ones already sounding may be retired: playing a
+  // written song schedules every note up front, and those future voices sit in
+  // here waiting their turn — cutting them would silence the rest of the song.
+  if(live.size > 48){
+    for(const h of live){
+      if(h !== handle && h.startsAt <= ctx.currentTime){ h.release(); break; }
+    }
+  }
+  // A struck or plucked voice dies on its own, so forget it once it has.
+  // This timer is deliberately outside the sequencer's timer list, which gets
+  // cleared on Stop — the registry must survive that.
+  if(spec.type !== 'hold'){
+    setTimeout(() => live.delete(handle),
+               Math.max(0, (t0 - ctx.currentTime + decay + 1.5) * 1000));
+  }
+  return handle;
+}
+
+/* ======================= keyboard build ======================= */
+const LOW = midiOf('C3'), HIGH = midiOf('C6');
+const TYPING = {
+  z:0, s:1, x:2, d:3, c:4, v:5, g:6, b:7, h:8, n:9, j:10, m:11, ',':12,
+  q:12, '2':13, w:14, '3':15, e:16, r:17, '5':18, t:19, '6':20, y:21, '7':22, u:23, i:24
+};
+const typeLabel = {};
+for(const k in TYPING) if(!(TYPING[k] in typeLabel)) typeLabel[TYPING[k]] = k;
+
+const keysEl = document.getElementById('keys');
+const keyByMidi = new Map();
+
+(function build(){
+  const whites = [];
+  for(let m = LOW; m <= HIGH; m++) if(!SHARP[m % 12].includes('#')) whites.push(m);
+  const w = 100 / whites.length;
+  let wi = 0;
+  for(let m = LOW; m <= HIGH; m++){
+    const black = SHARP[m % 12].includes('#');
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = black ? 'bk' : 'wk';
+    el.dataset.midi = m;
+    el.setAttribute('aria-label', nameOf(m));
+    const tl = typeLabel[m - LOW];
+    el.innerHTML = (black ? '' : '<span>' + nameOf(m) + '</span>') +
+                   (tl ? '<span class="kc">&nbsp;' + (tl === ',' ? ',' : tl.toUpperCase()) + '</span>' : '');
+    if(black){
+      el.style.left = (wi * w - w * 0.32) + '%';
+      el.style.width = (w * 0.64) + '%';
+    }else{
+      el.style.left = (wi * w) + '%';
+      el.style.width = w + '%';
+      wi++;
+    }
+    keysEl.appendChild(el);
+    keyByMidi.set(m, el);
+  }
+})();
+
+/* ======================= playing ======================= */
+const held = new Map();          // midi -> {handle, startedAt}
+const sustainEl = document.getElementById('sustain');
+const statusEl = document.getElementById('status');
+
+const sounding = new Set();
+const nowEl = document.getElementById('nowNote');
+const hiliteEl = document.getElementById('hilite');
+function paintNow(){
+  const list = Array.from(sounding).sort((a, b) => a - b).map(nameOf);
+  // The lowest note keeps the fixed slot on the left; anything sounding with it
+  // is named to the right, so a chord reads as its notes rather than a count.
+  nowEl.textContent = list.length ? list[0] : '—';
+  nowEl.classList.toggle('on', list.length > 0);
+  const chord = document.getElementById('nowChord');
+  if(chord) chord.textContent = list.length > 1 ? list.slice(1).join('  ') : '';
+  const hub = document.getElementById('hubNote');
+  if(hub){
+    hub.textContent = list.length ? list.slice(0, 4).join(' ') : '—';
+    hub.classList.toggle('on', list.length > 0);
+    hub.classList.toggle('small', list.length > 2);
+  }
+}
+
+// A note may be visible on the keyboard, on the wheel, or on both at once.
+function paint(midi, cls, on){
+  const k = keyByMidi.get(midi); if(k) k.classList.toggle(cls, on);
+  const w = wheelByMidi.get(midi); if(w) w.classList.toggle(cls, on);
+}
+
+function noteOn(midi, vel){
+  if(held.has(midi)) return;
+  const h = strike(midi, audio().currentTime, vel);
+  held.set(midi, { h: h, t: performance.now() });
+  paint(midi, 'down', true);
+  sounding.add(midi); paintNow();
+  manualStep(midi);
+  if(recording) recStart(midi);
+}
+function noteOff(midi){
+  const v = held.get(midi);
+  if(!v) return;
+  held.delete(midi);
+  v.h.release();
+  paint(midi, 'down', false);
+  sounding.delete(midi); paintNow();
+  if(recording) recEnd(midi);
+}
+function flash(midi, ms){
+  ms = Math.max(120, ms);
+  sounding.add(midi); paintNow();
+  setTimeout(() => { sounding.delete(midi); paintNow(); }, ms);
+  if(!hiliteEl.checked) return;
+  paint(midi, 'lit', true);
+  setTimeout(() => paint(midi, 'lit', false), ms);
+}
+
+// pointer
+let pointerDown = false;
+keysEl.addEventListener('pointerdown', e => {
+  const k = e.target.closest('[data-midi]'); if(!k) return;
+  e.preventDefault(); pointerDown = true;
+  keysEl.setPointerCapture && k.releasePointerCapture && 0;
+  noteOn(+k.dataset.midi, 0.85);
+});
+keysEl.addEventListener('pointerover', e => {
+  if(!pointerDown) return;
+  const k = e.target.closest('[data-midi]'); if(!k) return;
+  held.forEach((v, m) => { if(m !== +k.dataset.midi) noteOff(m); });
+  noteOn(+k.dataset.midi, 0.8);
+});
+window.addEventListener('pointerup', () => {
+  if(!pointerDown) return;
+  pointerDown = false;
+  Array.from(held.keys()).forEach(noteOff);
+});
+keysEl.addEventListener('contextmenu', e => e.preventDefault());
+
+// typing
+const downKeys = new Set();
+window.addEventListener('keydown', e => {
+  if(e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+  if(e.code === 'Space'){ e.preventDefault(); sustainEl.checked = true; return; }
+  if(e.key === 'Enter' && e.target.dataset && e.target.dataset.midi){
+    const m = +e.target.dataset.midi;
+    noteOn(m, 0.85); setTimeout(() => noteOff(m), 350);
+    return;
+  }
+  const k = e.key.toLowerCase();
+  if(!(k in TYPING) || e.metaKey || e.ctrlKey || e.altKey || downKeys.has(k)) return;
+  e.preventDefault();
+  downKeys.add(k);
+  noteOn(LOW + TYPING[k], 0.85);
+});
+window.addEventListener('keyup', e => {
+  if(e.code === 'Space'){ sustainEl.checked = false; return; }
+  const k = e.key.toLowerCase();
+  if(downKeys.has(k)){ downKeys.delete(k); noteOff(LOW + TYPING[k]); }
+});
+window.addEventListener('blur', () => { downKeys.clear(); Array.from(held.keys()).forEach(noteOff); });
+
+document.getElementById('vol').addEventListener('input', e => {
+  audio(); master.gain.value = e.target.value / 100 * 0.95;
+});
+const bpmEl = document.getElementById('bpm'), bpmOut = document.getElementById('bpmOut');
+bpmEl.addEventListener('input', () => bpmOut.textContent = bpmEl.value + ' BPM');
+
+/* ======================= note wheel ======================= */
+/* One turn is one octave, so the twelve wedges are pitch classes and the
+   octave buttons move the whole ring. The wedge under the pointer is worked
+   out from the geometry rather than from the event target, because capturing
+   the pointer (which is what lets you drag with the button down) stops the
+   browser sending hover events to the shapes underneath. */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const CHROMA = [0,1,2,3,4,5,6,7,8,9,10,11];
+const FIFTHS = [0,7,2,9,4,11,6,1,8,3,10,5];
+const CX = 215, CY = 215, R_IN = 92, R_OUT = 205, STEP = Math.PI * 2 / 12;
+
+const wheelSvg = document.getElementById('wheel');
+const wedgeG = document.getElementById('wedges');
+const octLabel = document.getElementById('octLabel');
+const wheelByMidi = new Map();
+const wedges = [];
+let wheelOct = 4, wheelOrder = 'chromatic';
+
+function arcPath(r0, r1, a0, a1){
+  const pt = (r, a) => (CX + r * Math.cos(a)).toFixed(2) + ' ' + (CY + r * Math.sin(a)).toFixed(2);
+  return 'M' + pt(r1, a0) + ' A' + r1 + ' ' + r1 + ' 0 0 1 ' + pt(r1, a1) +
+         ' L' + pt(r0, a1) + ' A' + r0 + ' ' + r0 + ' 0 0 0 ' + pt(r0, a0) + ' Z';
+}
+(function buildWheel(){
+  const gap = 0.012;
+  for(let i = 0; i < 12; i++){
+    const a0 = -Math.PI / 2 + i * STEP + gap, a1 = a0 + STEP - gap * 2;
+    const p = document.createElementNS(SVG_NS, 'path');
+    p.setAttribute('class', 'wedge');
+    p.setAttribute('d', arcPath(R_IN, R_OUT, a0, a1));
+    const mid = (a0 + a1) / 2, rl = (R_IN + R_OUT) / 2;
+    const t = document.createElementNS(SVG_NS, 'text');
+    t.setAttribute('class', 'wlabel');
+    t.setAttribute('x', (CX + rl * Math.cos(mid)).toFixed(1));
+    t.setAttribute('y', (CY + rl * Math.sin(mid)).toFixed(1));
+    wedgeG.appendChild(p); wedgeG.appendChild(t);
+    wedges.push({ el: p, label: t });
+  }
+})();
+
+function layoutWheel(){
+  wheelByMidi.clear();
+  const order = wheelOrder === 'fifths' ? FIFTHS : CHROMA;
+  wedges.forEach((w, i) => {
+    const pc = order[i];
+    const midi = 12 * (wheelOct + 1) + pc;
+    const black = SHARP[pc].indexOf('#') > -1;
+    w.midi = midi;
+    w.el.classList.toggle('black', black);
+    w.el.classList.remove('down', 'lit');
+    w.el.setAttribute('aria-label', SHARP[pc] + wheelOct);
+    w.label.textContent = SHARP[pc] + wheelOct;
+    w.label.setAttribute('fill', black ? '#c9c0d6' : '#8c8477');
+    wheelByMidi.set(midi, w.el);
+  });
+  held.forEach((v, m) => { const e = wheelByMidi.get(m); if(e) e.classList.add('down'); });
+  octLabel.textContent = 'Octave ' + wheelOct + ' · C' + wheelOct + ' to B' + wheelOct;
+  document.getElementById('octDown').disabled = wheelOct <= 3;
+  document.getElementById('octUp').disabled = wheelOct >= 5;
+}
+
+document.getElementById('octDown').addEventListener('click', () => {
+  if(wheelOct > 3){ wheelOct--; layoutWheel(); }
+});
+document.getElementById('octUp').addEventListener('click', () => {
+  if(wheelOct < 5){ wheelOct++; layoutWheel(); }
+});
+[['ordChroma','chromatic'],['ordFifths','fifths']].forEach(([id, mode]) => {
+  document.getElementById(id).addEventListener('click', () => {
+    wheelOrder = mode;
+    document.getElementById('ordChroma').setAttribute('aria-pressed', mode === 'chromatic' ? 'true' : 'false');
+    document.getElementById('ordFifths').setAttribute('aria-pressed', mode === 'fifths' ? 'true' : 'false');
+    layoutWheel();
+    say(mode === 'fifths'
+      ? 'Fifths order — neighbouring wedges always sound consonant together.'
+      : 'Chromatic order — neighbouring wedges are a semitone apart.');
+  });
+});
+
+// Which wedge is under a screen point? Pure geometry, so fast drags never skip.
+function wedgeAt(clientX, clientY){
+  const r = wheelSvg.getBoundingClientRect();
+  if(!r.width) return -1;
+  const x = (clientX - r.left) * (430 / r.width) - CX;
+  const y = (clientY - r.top) * (430 / r.height) - CY;
+  const dist = Math.sqrt(x * x + y * y);
+  if(dist < R_IN || dist > R_OUT) return -1;
+  let a = Math.atan2(y, x) + Math.PI / 2;
+  a = (a % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+  return Math.floor(a / STEP) % 12;
+}
+
+const wheelPointers = new Map();     // pointerId -> midi currently sounding for that finger
+function wheelMove(e){
+  const state = wheelPointers.get(e.pointerId);
+  if(state === undefined) return;
+  const i = wedgeAt(e.clientX, e.clientY);
+  if(i < 0) return;                                // off the ring: the note keeps sounding
+  const midi = wedges[i].midi;
+  if(midi === state) return;                       // same wedge: no retrigger
+  if(state !== null) noteOff(state);               // legato: let go, then take the new one
+  noteOn(midi, 0.85);
+  wheelPointers.set(e.pointerId, midi);
+}
+wheelSvg.addEventListener('pointerdown', e => {
+  const i = wedgeAt(e.clientX, e.clientY);
+  if(i < 0) return;
+  e.preventDefault();
+  try{ wheelSvg.setPointerCapture(e.pointerId); }catch(err){}
+  wheelPointers.set(e.pointerId, null);
+  wheelMove(e);
+});
+wheelSvg.addEventListener('pointermove', wheelMove);
+function wheelEnd(e){
+  const state = wheelPointers.get(e.pointerId);
+  if(state === undefined) return;
+  if(state !== null) noteOff(state);
+  wheelPointers.delete(e.pointerId);
+  try{ wheelSvg.releasePointerCapture(e.pointerId); }catch(err){}
+}
+wheelSvg.addEventListener('pointerup', wheelEnd);
+wheelSvg.addEventListener('pointercancel', wheelEnd);
+wheelSvg.addEventListener('contextmenu', e => e.preventDefault());
+
+/* ---- keyboard / wheel view switch ---- */
+const vtabs = Array.from(document.querySelectorAll('.vtab'));
+vtabs.forEach((t, i) => {
+  t.addEventListener('click', () => {
+    vtabs.forEach((x, j) => {
+      const on = i === j;
+      x.setAttribute('aria-selected', on ? 'true' : 'false');
+      x.tabIndex = on ? 0 : -1;
+      document.getElementById(x.getAttribute('aria-controls')).hidden = !on;
+    });
+  });
+  t.addEventListener('keydown', e => {
+    const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if(!step) return;
+    e.preventDefault();
+    const n = (i + step + vtabs.length) % vtabs.length;
+    vtabs[n].click(); vtabs[n].focus();
+  });
+});
+layoutWheel();
+
+/* ======================= recording ======================= */
+let recording = false, take = [], recT0 = 0, open = new Map();
+const recBtn = document.getElementById('recBtn'),
+      playRecBtn = document.getElementById('playRecBtn'),
+      toSeqBtn = document.getElementById('toSeqBtn'),
+      clearRecBtn = document.getElementById('clearRecBtn'),
+      recMeter = document.getElementById('recMeter');
+
+function recStart(midi){
+  const ev = { midi: midi, at: (performance.now() - recT0) / 1000, dur: 0.4 };
+  take.push(ev); open.set(midi, ev);
+}
+function recEnd(midi){
+  const ev = open.get(midi);
+  if(ev){ ev.dur = Math.max(0.08, (performance.now() - recT0) / 1000 - ev.at); open.delete(midi); }
+}
+function updateRecUI(){
+  const n = take.length;
+  const len = n ? (take[n-1].at + take[n-1].dur) : 0;
+  recMeter.textContent = n ? n + ' notes · ' + len.toFixed(1) + ' s' : 'no take yet';
+  playRecBtn.disabled = toSeqBtn.disabled = clearRecBtn.disabled = !n || recording;
+}
+recBtn.addEventListener('click', () => {
+  audio();
+  recording = !recording;
+  if(recording){
+    stopAll();
+    take = []; open.clear(); recT0 = performance.now();
+    recBtn.textContent = 'Stop recording'; recBtn.classList.add('armed');
+    say('Recording. Play something.');
+  }else{
+    Array.from(open.keys()).forEach(recEnd);
+    recBtn.textContent = 'Record'; recBtn.classList.remove('armed');
+    say(take.length ? 'Take captured.' : 'Nothing was played.');
+    saveTake();
+  }
+  updateRecUI();
+});
+clearRecBtn.addEventListener('click', () => { take = []; saveTake(); updateRecUI(); say('Take cleared.'); });
+function saveTake(){
+  try{ if(take.length) localStorage.setItem('piano.take.v1', JSON.stringify(take));
+       else localStorage.removeItem('piano.take.v1'); }catch(e){}
+}
+
+let timers = [];
+function schedule(fn, ms){ timers.push(setTimeout(fn, ms)); }
+function stopAll(){
+  stopPlayer();
+  timers.forEach(clearTimeout); timers = [];
+  Array.from(held.keys()).forEach(noteOff);
+  allNotesOff();
+  document.querySelectorAll('.lit').forEach(el => el.classList.remove('lit'));
+  sounding.clear(); paintNow();
+  clearScoreMarks();
+  markLine(null);
+  armGuide();
+}
+document.getElementById('stopBtn').addEventListener('click', () => { stopAll(); say('Stopped.'); });
+
+playRecBtn.addEventListener('click', () => {
+  stopAll();
+  // A take is stored in seconds rather than beats, so run the player with one
+  // beat to the second and the recorded times become the schedule directly.
+  const events = take.map(ev => ({ notes: [ev.midi], beat: ev.at, dur: ev.dur, chip: null, line: null }));
+  if(!events.length) return;
+  startPlayer(events, 1);
+  say(document.getElementById('loop').checked
+    ? 'Playing your take, on a loop.'
+    : 'Playing your take.');
+});
+
+toSeqBtn.addEventListener('click', () => {
+  const spb = 60 / +bpmEl.value;
+  const q = x => Math.max(0.25, Math.round(x / spb * 4) / 4);
+  let out = [], cursor = 0, i = 0;
+  while(i < take.length){
+    const at = take[i].at;
+    const chord = [];
+    while(i < take.length && take[i].at - at < 0.06){ chord.push(take[i]); i++; }
+    const gap = q(at - cursor);
+    if(at - cursor > spb * 0.3) out.push('-:' + gap);
+    const dur = q(Math.max.apply(null, chord.map(c => c.dur)));
+    out.push(chord.map(c => nameOf(c.midi)).join('+') + ':' + dur);
+    cursor = at + dur * spb;
+  }
+  document.getElementById('seq').value = out.join(' ');
+  refreshScore();
+  say('Take written into the notes box, quantised to the current tempo.');
+});
+
+/* ======================= sequence ======================= */
+function parseSeq(text){
+  const events = [];
+  let beat = 0;
+  text.split(/\r?\n/).forEach((raw, li) => {
+    const tokens = raw.replace(/\|/g, ' | ').replace(/,/g, ' ').split(/\s+/).filter(Boolean);
+    tokens.forEach(tk => {
+      if(tk === '|'){ events.push({ bar: true, raw: '|', line: li }); return; }
+      const bits = tk.split(':');
+      const dur = bits[1] === undefined ? 1 : parseFloat(bits[1]);
+      if(!(dur > 0)) throw new Error('Bad length in "' + tk + '" — use a number after the colon.');
+      if(/^[-_rR]$/.test(bits[0])){
+        events.push({ rest: true, beat: beat, dur: dur, raw: tk, line: li });
+        beat += dur; return;
+      }
+      const notes = bits[0].split('+').map(n => {
+        const m = midiOf(n);
+        if(m === null || m < 0 || m > 127) throw new Error('Unknown note "' + n + '" in "' + tk + '".');
+        return m;
+      });
+      events.push({ notes: notes, beat: beat, dur: dur, raw: tk, line: li });
+      beat += dur;
+    });
+  });
+  return events;
+}
+
+/* ---- score strip: one chip per token, lit as it sounds ---- */
+const scoreEl = document.getElementById('score');
+let chips = [];
+const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function drawScore(events){
+  scoreEl.innerHTML = '';
+  chips = [];
+  events.forEach((ev, i) => {
+    const c = document.createElement('span');
+    c.className = 'chip' + (ev.bar ? ' bar' : ev.rest ? ' rest' : '');
+    c.textContent = ev.bar ? '|' : ev.raw;
+    if(!ev.bar && !ev.rest){
+      c.title = ev.notes.map(nameOf).join(' + ') + ' · ' + ev.dur + ' beat' + (ev.dur === 1 ? '' : 's');
+      c.addEventListener('click', () => {
+        ev.notes.forEach(m => {
+          const h = strike(m, audio().currentTime, 0.85);
+          schedule(() => h.release(), 700);
+          flash(m, 700);
+        });
+      });
+    }
+    scoreEl.appendChild(c);
+    chips[i] = c;
+  });
+}
+function clearScoreMarks(){
+  chips.forEach(c => c.classList.remove('now', 'done'));
+}
+function markChip(i, ms){
+  if(!hiliteEl.checked || !chips[i]) return;
+  chips[i].classList.add('now');
+  chips[i].scrollIntoView({ block: 'nearest', behavior: smooth ? 'smooth' : 'auto' });
+  setTimeout(() => {
+    if(!chips[i]) return;
+    chips[i].classList.remove('now');
+    chips[i].classList.add('done');
+  }, Math.max(120, ms));
+}
+function refreshScore(){
+  try{ drawScore(parseSeq(seqEl.value)); }
+  catch(e){ scoreEl.innerHTML = ''; chips = []; }
+  armGuide();
+}
+hiliteEl.addEventListener('change', () => {
+  if(!hiliteEl.checked){
+    clearScoreMarks();
+    document.querySelectorAll('.lit').forEach(el => el.classList.remove('lit'));
+  }
+});
+
+/* ---- the player ------------------------------------------------------
+   Notes are handed to the audio clock a fraction of a second before they are
+   due, not all at the start. Scheduling a whole song up front locks every note
+   to the instrument that existed at the moment Play was pressed, so a change
+   part-way through could not be heard; it also leaves a heap of pending timers
+   for Stop to unpick. With a short look-ahead, an instrument change is audible
+   within a beat and Stop is immediate. */
+const LOOKAHEAD = 0.2, TICK = 25;
+let player = null;
+
+function stopPlayer(){
+  if(!player) return;
+  clearInterval(player.timer);
+  player = null;
+}
+
+// In practice view the notes about to be played are shown in a cool colour, so
+// the hand can move before the note arrives rather than after it.
+let nextMarked = [];
+function markNext(midis){
+  nextMarked.forEach(m => paint(m, 'next', false));
+  nextMarked = [];
+  if(!midis || !hiliteEl.checked || !document.body.classList.contains('practice')) return;
+  midis.forEach(m => { paint(m, 'next', true); nextMarked.push(m); });
+}
+
+/* ---- the guide: the same blue key, but waiting for you ----------------
+   In practice view with nothing playing, the next note of whatever is in the
+   notes box is marked, and it moves on when you play it. Wrong notes are
+   ignored rather than punished; a chord waits until every note of it is down. */
+let guide = null;
+
+function pointChip(i){
+  if(!chips.length) return;
+  chips.forEach(c => c.classList.remove('now'));
+  const c = chips[i];
+  if(c){
+    c.classList.add('now');
+    c.scrollIntoView({ block: 'nearest', behavior: smooth ? 'smooth' : 'auto' });
+  }
+}
+
+function showGuideStep(){
+  if(!guide) return;
+  const step = guide.list[guide.idx];
+  markNext(step.notes);
+  pointChip(step.chip);
+  markLine(step.line);
+}
+
+function armGuide(){
+  guide = null;
+  if(player || !document.body.classList.contains('practice')){ markNext(null); return; }
+  let events;
+  try{ events = parseSeq(seqEl.value); }
+  catch(err){ markNext(null); return; }
+  const list = [];
+  events.forEach((ev, i) => {
+    if(ev.notes) list.push({ notes: ev.notes, chip: i, line: ev.line });
+  });
+  if(!list.length){ markNext(null); return; }
+  guide = { list: list, idx: 0, left: new Set(list[0].notes) };
+  showGuideStep();
+}
+
+function manualStep(midi){
+  if(!guide) return;
+  if(!guide.left.has(midi)) return;         // not the note being waited for
+  guide.left.delete(midi);
+  if(guide.left.size) return;               // a chord, still incomplete
+  const done = guide.list[guide.idx];
+  if(chips[done.chip]) chips[done.chip].classList.add('done');
+  guide.idx++;
+  if(guide.idx >= guide.list.length){       // round again from the top
+    guide.idx = 0;
+    clearScoreMarks();
+  }
+  guide.left = new Set(guide.list[guide.idx].notes);
+  showGuideStep();
+}
+
+function tickPlayer(){
+  if(!player) return;
+  const now = ctx.currentTime, ev = player.events;
+
+  while(player.sched < ev.length){                    // hand the next few to the clock
+    const e = ev[player.sched];
+    const at = player.t0 + e.beat * player.spb;
+    if(at > now + LOOKAHEAD) break;
+    const len = e.dur * player.spb;
+    e.notes.forEach(m => strike(m, at, 0.85).release(at + len * 0.92));
+    player.sched++;
+  }
+
+  while(player.vis < ev.length){                      // light things up as they sound
+    const e = ev[player.vis];
+    const at = player.t0 + e.beat * player.spb;
+    if(at > now) break;
+    const len = e.dur * player.spb;
+    e.notes.forEach(m => flash(m, len * 900));
+    markChip(e.chip, len * 950);
+    markLine(e.line);
+    player.vis++;
+    markNext(player.vis < ev.length ? ev[player.vis].notes : null);
+  }
+
+  if(player.sched >= ev.length && player.vis >= ev.length){
+    if(document.getElementById('loop').checked){
+      player.t0 = player.ends + player.spb;         // a beat's breath between passes
+      player.ends = player.t0 + player.total;
+      player.sched = 0; player.vis = 0;
+      player.pass++;
+      clearScoreMarks();
+      markLine(null);
+    }else if(now > player.ends + 0.3){
+      stopPlayer();
+      clearScoreMarks();
+      markLine(null);
+      armGuide();                     // hand the blue key back to the player's hands
+    }
+  }
+}
+
+function startPlayer(events, spb){
+  audio();
+  const t0 = ctx.currentTime + 0.12;
+  const last = events[events.length - 1];
+  const total = (last.beat + last.dur) * spb;
+  player = {
+    events: events, spb: spb, t0: t0, total: total,
+    sched: 0, vis: 0, pass: 1,
+    ends: t0 + total,
+    timer: setInterval(tickPlayer, TICK)
+  };
+  guide = null;                       // playback drives the marks while it runs
+  markNext(events[0].notes);          // the first note is next before it sounds
+  tickPlayer();
+}
+
+function playSequence(){
+  let events;
+  try{ events = parseSeq(document.getElementById('seq').value); }
+  catch(err){ say(err.message, true); return; }
+  const playable = [];
+  events.forEach((ev, i) => {
+    if(ev.notes) playable.push({ notes: ev.notes, beat: ev.beat, dur: ev.dur, chip: i, line: ev.line });
+  });
+  if(!playable.length){ say('Type some notes first, for example C4 E4 G4.', true); return; }
+  stopAll();
+  drawScore(events);
+  const spb = 60 / +bpmEl.value;
+  startPlayer(playable, spb);
+  const last = playable[playable.length - 1];
+  say(playable.length + ' notes · ' + ((last.beat + last.dur) * spb).toFixed(1) +
+      ' s at ' + bpmEl.value + ' BPM' +
+      (document.getElementById('loop').checked ? ', looping until you press Stop.' : '.'));
+}
+document.getElementById('playSeqBtn').addEventListener('click', playSequence);
+
+/* ======================= song library ======================= */
+/* Traditional nursery tunes and out-of-copyright classics, written as simple
+   single-line melodies in C-ish keys so they sit under one hand. */
+const SONGS = [
+  { name:'Twinkle, Twinkle, Little Star', tags:'baa black sheep star nursery', bpm:104, key:'C',
+    notes:'C4 C4 G4 G4 A4 A4 G4:2 | F4 F4 E4 E4 D4 D4 C4:2 | G4 G4 F4 F4 E4 E4 D4:2 | G4 G4 F4 F4 E4 E4 D4:2 | C4 C4 G4 G4 A4 A4 G4:2 | F4 F4 E4 E4 D4 D4 C4:2' },
+
+  { name:'The Alphabet Song (ABC)', tags:'abcd letters lmnop school', bpm:108, key:'C',
+    notes:'C4 C4 G4 G4 A4 A4 G4:2 | F4 F4 E4 E4 D4 D4 C4:2 | G4 G4 F4 F4 E4:0.5 E4:0.5 E4:0.5 E4:0.5 D4:2 | G4 G4 F4 F4 E4 E4 D4:2 | C4 C4 G4 G4 A4 A4 G4:2 | F4 F4 E4 E4 D4 D4 C4:2' },
+
+  { name:'Mary Had a Little Lamb', tags:'lamb school fleece nursery', bpm:110, key:'C',
+    notes:'E4 D4 C4 D4 E4 E4 E4:2 | D4 D4 D4:2 E4 G4 G4:2 | E4 D4 C4 D4 E4 E4 E4 E4 | D4 D4 E4 D4 C4:4' },
+
+  { name:'Hot Cross Buns', tags:'buns penny beginner first song', bpm:96, key:'C',
+    notes:'E4 D4 C4:2 | E4 D4 C4:2 | C4:0.5 C4:0.5 C4:0.5 C4:0.5 D4:0.5 D4:0.5 D4:0.5 D4:0.5 | E4 D4 C4:2' },
+
+  { name:'Three Blind Mice', tags:'mice farmer wife round', bpm:104, key:'C',
+    notes:'E4 D4 C4:2 | E4 D4 C4:2 | G4 F4:0.5 F4:0.5 E4:2 | G4 F4:0.5 F4:0.5 E4:2 | G4:0.5 C5 C5:0.5 B4 A4:0.5 B4:0.5 C5:0.5 G4:0.5 G4 | E4 D4 C4:2' },
+
+  { name:'Row, Row, Row Your Boat', tags:'boat stream dream round merrily', bpm:104, key:'C',
+    notes:'C4 C4 C4:0.75 D4:0.25 E4 | E4:0.75 D4:0.25 E4:0.75 F4:0.25 G4:2 | C5:0.33 C5:0.33 C5:0.33 G4:0.33 G4:0.33 G4:0.33 E4:0.33 E4:0.33 E4:0.33 C4:0.33 C4:0.33 C4:0.33 | G4:0.75 F4:0.25 E4:0.75 D4:0.25 C4:2' },
+
+  { name:'Frère Jacques (Are You Sleeping)', tags:'brother john bells morning round french', bpm:112, key:'C',
+    notes:'C4 D4 E4 C4 | C4 D4 E4 C4 | E4 F4 G4:2 | E4 F4 G4:2 | G4:0.5 A4:0.5 G4:0.5 F4:0.5 E4 C4 | G4:0.5 A4:0.5 G4:0.5 F4:0.5 E4 C4 | C4 G3 C4:2 | C4 G3 C4:2' },
+
+  { name:'London Bridge Is Falling Down', tags:'bridge fair lady game', bpm:112, key:'C',
+    notes:'G4 A4 G4 F4 | E4 F4 G4:2 | D4 E4 F4:2 | E4 F4 G4:2 | G4 A4 G4 F4 | E4 F4 G4:2 | D4 G4 E4 C4:2' },
+
+  { name:'Old MacDonald Had a Farm', tags:'farm animals cow duck eieio', bpm:112, key:'C',
+    notes:'C4 C4 C4 G3 | A3 A3 G3:2 | E4 E4 D4 D4 | C4:3 | G3 C4 C4 C4 G3 | A3 A3 G3:2 | E4 E4 D4 D4 | C4:3 | G4:0.5 G4:0.5 C4:0.5 C4:0.5 C4 C4:0.5 C4:0.5 C4:0.5 C4:0.5 C4:2 | C4:0.5 C4:0.5 C4:0.5 C4:0.5 C4:0.5 C4:0.5 C4:0.5 C4:0.5 C4:0.5 C4:0.5 C4:2 | C4 C4 C4 G3 | A3 A3 G3:2 | E4 E4 D4 D4 | C4:3' },
+
+  { name:'The Itsy Bitsy Spider', tags:'spider water spout rain sun', bpm:120, key:'C',
+    notes:'G3 C4 C4 C4 D4 E4:2 | E4 D4 C4 D4 E4 C4:2 | E4 E4 F4 G4:2 | G4 F4 E4 F4 G4 E4:2 | C4 C4 D4 E4:2 | E4 D4 C4 D4 E4 C4:2 | G3 G3 C4 C4 C4 D4 E4:2 | E4 D4 C4 D4 E4 C4:3' },
+
+  { name:'This Old Man', tags:'knick knack paddy whack rolling home dog bone', bpm:120, key:'C',
+    notes:'G4 E4 G4:2 | G4 E4 G4:2 | A4 G4 F4 E4 | D4 E4 F4:2 | E4 F4 G4:2 | C4 D4 E4 F4 | G4:0.5 G4:0.5 G4 F4 E4 | D4 C4:2' },
+
+  { name:'Yankee Doodle', tags:'macaroni pony feather cap america', bpm:126, key:'C',
+    notes:'C4 C4 D4 E4 | C4 E4 D4 G3 | C4 C4 D4 E4 | C4:2 B3:2 | C4 C4 D4 E4 | F4 E4 D4 C4 | B3 G3 A3 B3 | C4:2 C4:2' },
+
+  { name:'Pop Goes the Weasel', tags:'monkey mulberry bush weasel pop', bpm:132, key:'C',
+    notes:'C4:0.5 C4 D4:0.5 D4 | E4:0.5 G4:0.5 E4 C4:2 | C4:0.5 C4 D4:0.5 D4 | E4 C4:3 | C4:0.5 C4 D4:0.5 D4 | E4:0.5 G4:0.5 E4 C4:2 | A4:0.5 D4 F4:0.5 E4 | C4:3' },
+
+  { name:'Happy Birthday to You', tags:'birthday cake party celebration', bpm:104, key:'C',
+    notes:'G3:0.5 G3:0.5 A3 G3 C4 | B3:2 G3:0.5 G3:0.5 | A3 G3 D4 C4:2 | G3:0.5 G3:0.5 G4 E4 C4 | B3 A3:2 F4:0.5 F4:0.5 | E4 C4 D4 C4:3' },
+
+  { name:'Jingle Bells (chorus)', tags:'christmas sleigh snow winter santa', bpm:132, key:'C',
+    notes:'E4 E4 E4:2 | E4 E4 E4:2 | E4 G4 C4 D4 | E4:4 | F4 F4 F4 F4 | F4 E4 E4 E4:0.5 E4:0.5 | E4 D4 D4 E4 | D4:2 G4:2 | E4 E4 E4:2 | E4 E4 E4:2 | E4 G4 C4 D4 | E4:4 | F4 F4 F4 F4 | F4 E4 E4 E4:0.5 E4:0.5 | G4 G4 F4 D4 | C4:4' },
+
+  { name:'Silent Night', tags:'christmas holy night carol lullaby', bpm:76, key:'C',
+    notes:'G4:1.5 A4:0.5 G4 E4:3 | G4:1.5 A4:0.5 G4 E4:3 | D5:2 D5 B4:3 | C5:2 C5 G4:3 | A4:2 A4 C5:1.5 B4:0.5 A4 | G4:1.5 A4:0.5 G4 E4:3 | A4:2 A4 C5:1.5 B4:0.5 A4 | G4:1.5 A4:0.5 G4 E4:3 | D5:2 D5 F5:1.5 D5:0.5 B4 | C5:3 E5:3 | C5:1.5 G4:0.5 E4 G4:1.5 F4:0.5 D4 | C4:3' },
+
+  { name:'Brahms\u2019 Lullaby', tags:'cradle song bedtime sleep goodnight brahms', bpm:88, key:'C',
+    notes:'E4:0.5 E4:0.5 G4:2 | E4:0.5 E4:0.5 G4:2 | E4 G4 C5 | B4:0.5 A4:0.5 A4 G4:2 | D4:0.5 E4:0.5 F4:2 | D4:0.5 E4:0.5 F4:2 | D4 F4 B4 | A4 G4 B4 C5:3' },
+
+  { name:'Ode to Joy', tags:'beethoven ninth symphony classical joy', bpm:112, key:'C',
+    notes:'E4 E4 F4 G4 | G4 F4 E4 D4 | C4 C4 D4 E4 | E4:1.5 D4:0.5 D4:2 | E4 E4 F4 G4 | G4 F4 E4 D4 | C4 C4 D4 E4 | D4:1.5 C4:0.5 C4:2' },
+
+  { name:'F\u00fcr Elise (opening)', tags:'beethoven classical elise piano', bpm:120, key:'A minor',
+    notes:'E5:0.5 D#5:0.5 E5:0.5 D#5:0.5 E5:0.5 B4:0.5 D5:0.5 C5:0.5 A4:1.5 | C4:0.5 E4:0.5 A4:0.5 B4:1.5 | E4:0.5 G#4:0.5 B4:0.5 C5:1.5 | E4:0.5 E5:0.5 D#5:0.5 E5:0.5 D#5:0.5 E5:0.5 B4:0.5 D5:0.5 C5:0.5 A4:1.5' },
+
+  { name:'Twinkle in chords (play-along)', tags:'chords harmony accompaniment triads practice', bpm:96, key:'C',
+    notes:'C3+E3+G3:2 C3+E3+G3:2 | F3+A3+C4:2 C3+E3+G3:2 | F3+A3+C4:2 C3+E3+G3:2 | G3+B3+D4:2 C3+E3+G3:2' },
+
+  /* --- Carnatic practice: the traditional beginner's ladder, Sa = C4 --- */
+  { name:'Sarali Varisai 1 (Sa Ri Ga Ma)', tags:'carnatic tamil south indian varisai swara practice mayamalavagowla beginner', bpm:80, key:'Mayamalavagowla',
+    notes:'C4:0.5 Db4:0.5 E4:0.5 F4:0.5 G4:0.5 Ab4:0.5 B4:0.5 C5:0.5 | C5:0.5 B4:0.5 Ab4:0.5 G4:0.5 F4:0.5 E4:0.5 Db4:0.5 C4:1.5' },
+
+  { name:'Janta Varisai (paired swaras)', tags:'carnatic tamil varisai janta practice mayamalavagowla', bpm:80, key:'Mayamalavagowla',
+    notes:'C4:0.4 C4:0.4 Db4:0.4 Db4:0.4 E4:0.4 E4:0.4 F4:0.4 F4:0.4 G4:0.4 G4:0.4 Ab4:0.4 Ab4:0.4 B4:0.4 B4:0.4 C5:0.4 C5:0.4 | C5:0.4 C5:0.4 B4:0.4 B4:0.4 Ab4:0.4 Ab4:0.4 G4:0.4 G4:0.4 F4:0.4 F4:0.4 E4:0.4 E4:0.4 Db4:0.4 Db4:0.4 C4:0.4 C4:1.2' },
+
+  { name:'Alankaram (three-note groups)', tags:'carnatic tamil alankaram varisai practice mayamalavagowla', bpm:92, key:'Mayamalavagowla',
+    notes:'C4:0.33 Db4:0.33 E4:0.33 Db4:0.33 E4:0.33 F4:0.33 E4:0.33 F4:0.33 G4:0.33 F4:0.33 G4:0.33 Ab4:0.33 G4:0.33 Ab4:0.33 B4:0.33 Ab4:0.33 B4:0.33 C5:0.33 | C5:0.33 B4:0.33 Ab4:0.33 B4:0.33 Ab4:0.33 G4:0.33 Ab4:0.33 G4:0.33 F4:0.33 G4:0.33 F4:0.33 E4:0.33 F4:0.33 E4:0.33 Db4:0.33 E4:0.33 Db4:0.33 C4:1.5' },
+
+  { name:'Mohanam (five notes, bright)', tags:'carnatic tamil raga mohanam pentatonic scale', bpm:88, key:'Mohanam',
+    notes:'C4:0.5 D4:0.5 E4:0.5 G4:0.5 A4:0.5 C5:1 | C5:0.5 A4:0.5 G4:0.5 E4:0.5 D4:0.5 C4:1.5' },
+
+  { name:'Shankarabharanam (the major scale)', tags:'carnatic tamil raga shankarabharanam scale major', bpm:88, key:'Shankarabharanam',
+    notes:'C4:0.5 D4:0.5 E4:0.5 F4:0.5 G4:0.5 A4:0.5 B4:0.5 C5:1 | C5:0.5 B4:0.5 A4:0.5 G4:0.5 F4:0.5 E4:0.5 D4:0.5 C4:1.5' },
+
+  { name:'Keeravani (grave, minor)', tags:'carnatic tamil raga keeravani scale minor', bpm:80, key:'Keeravani',
+    notes:'C4:0.5 D4:0.5 Eb4:0.5 F4:0.5 G4:0.5 Ab4:0.5 B4:0.5 C5:1 | C5:0.5 B4:0.5 Ab4:0.5 G4:0.5 F4:0.5 Eb4:0.5 D4:0.5 C4:1.5' },
+
+  { name:'Hindolam (five notes, dark)', tags:'carnatic tamil raga hindolam scale pentatonic', bpm:80, key:'Hindolam',
+    notes:'C4:0.5 Eb4:0.5 F4:0.5 Ab4:0.5 Bb4:0.5 C5:1 | C5:0.5 Bb4:0.5 Ab4:0.5 F4:0.5 Eb4:0.5 C4:1.5' },
+
+  { name:'Madhyamavati (calm, five notes)', tags:'carnatic tamil raga madhyamavati scale pentatonic', bpm:84, key:'Madhyamavati',
+    notes:'C4:0.5 D4:0.5 F4:0.5 G4:0.5 Bb4:0.5 C5:1 | C5:0.5 Bb4:0.5 G4:0.5 F4:0.5 D4:0.5 C4:1.5' },
+
+  { name:'Kalyani (bright, raised fourth)', tags:'carnatic tamil raga kalyani scale lydian', bpm:88, key:'Kalyani',
+    notes:'C4:0.5 D4:0.5 E4:0.5 F#4:0.5 G4:0.5 A4:0.5 B4:0.5 C5:1 | C5:0.5 B4:0.5 A4:0.5 G4:0.5 F#4:0.5 E4:0.5 D4:0.5 C4:1.5' },
+
+  /* --- further drills in Mayamalavagowla, and more ragas as scales --- */
+  { name:'Drill: skipping in thirds', tags:'carnatic practice drill thirds mayamalavagowla varisai', bpm:76, key:'Mayamalavagowla',
+    notes:'C4:0.5 E4:0.5 Db4:0.5 F4:0.5 E4:0.5 G4:0.5 F4:0.5 Ab4:0.5 G4:0.5 B4:0.5 Ab4:0.5 C5:0.5 | C5:0.5 Ab4:0.5 B4:0.5 G4:0.5 Ab4:0.5 F4:0.5 G4:0.5 E4:0.5 F4:0.5 Db4:0.5 E4:0.5 C4:1.5' },
+
+  { name:'Drill: four-note groups', tags:'carnatic practice drill groups mayamalavagowla varisai', bpm:84, key:'Mayamalavagowla',
+    notes:'C4:0.33 Db4:0.33 E4:0.33 F4:0.33 Db4:0.33 E4:0.33 F4:0.33 G4:0.33 E4:0.33 F4:0.33 G4:0.33 Ab4:0.33 F4:0.33 G4:0.33 Ab4:0.33 B4:0.33 G4:0.33 Ab4:0.33 B4:0.33 C5:1 | C5:0.33 B4:0.33 Ab4:0.33 G4:0.33 B4:0.33 Ab4:0.33 G4:0.33 F4:0.33 Ab4:0.33 G4:0.33 F4:0.33 E4:0.33 G4:0.33 F4:0.33 E4:0.33 Db4:0.33 F4:0.33 E4:0.33 Db4:0.33 C4:1.5' },
+
+  { name:'Drill: patterns in Mohanam', tags:'carnatic practice drill mohanam pentatonic varisai', bpm:88, key:'Mohanam',
+    notes:'C4:0.4 D4:0.4 E4:0.4 D4:0.4 E4:0.4 G4:0.4 E4:0.4 G4:0.4 A4:0.4 G4:0.4 A4:0.4 C5:0.8 | C5:0.4 A4:0.4 G4:0.4 A4:0.4 G4:0.4 E4:0.4 G4:0.4 E4:0.4 D4:0.4 E4:0.4 D4:0.4 C4:1.5' },
+
+  { name:'Hamsadhwani (five notes, festive)', tags:'carnatic tamil raga hamsadhwani scale pentatonic ganesha', bpm:92, key:'Hamsadhwani',
+    notes:'C4:0.5 D4:0.5 E4:0.5 G4:0.5 B4:0.5 C5:1 | C5:0.5 B4:0.5 G4:0.5 E4:0.5 D4:0.5 C4:1.5' },
+
+  { name:'Bilahari (up plain, down full)', tags:'carnatic tamil raga bilahari scale', bpm:92, key:'Bilahari',
+    notes:'C4:0.5 D4:0.5 E4:0.5 G4:0.5 A4:0.5 C5:1 | C5:0.5 B4:0.5 A4:0.5 G4:0.5 F4:0.5 E4:0.5 D4:0.5 C4:1.5' },
+
+  { name:'Natabhairavi (the natural minor)', tags:'carnatic tamil raga natabhairavi scale minor', bpm:80, key:'Natabhairavi',
+    notes:'C4:0.5 D4:0.5 Eb4:0.5 F4:0.5 G4:0.5 Ab4:0.5 Bb4:0.5 C5:1 | C5:0.5 Bb4:0.5 Ab4:0.5 G4:0.5 F4:0.5 Eb4:0.5 D4:0.5 C4:1.5' },
+
+  { name:'Charukesi (sweet then sorrowful)', tags:'carnatic tamil raga charukesi scale', bpm:80, key:'Charukesi',
+    notes:'C4:0.5 D4:0.5 E4:0.5 F4:0.5 G4:0.5 Ab4:0.5 Bb4:0.5 C5:1 | C5:0.5 Bb4:0.5 Ab4:0.5 G4:0.5 F4:0.5 E4:0.5 D4:0.5 C4:1.5' },
+
+  { name:'Sriranjani', tags:'carnatic tamil raga sriranjani scale', bpm:84, key:'Sriranjani',
+    notes:'C4:0.5 D4:0.5 Eb4:0.5 F4:0.5 A4:0.5 Bb4:0.5 C5:1 | C5:0.5 Bb4:0.5 A4:0.5 F4:0.5 Eb4:0.5 D4:0.5 C4:1.5' },
+
+  { name:'Abhogi (five notes, gentle)', tags:'carnatic tamil raga abhogi scale pentatonic', bpm:84, key:'Abhogi',
+    notes:'C4:0.5 D4:0.5 Eb4:0.5 F4:0.5 A4:0.5 C5:1 | C5:0.5 A4:0.5 F4:0.5 Eb4:0.5 D4:0.5 C4:1.5' },
+
+  { name:'Revathi (five notes, still)', tags:'carnatic tamil raga revathi scale pentatonic', bpm:76, key:'Revathi',
+    notes:'C4:0.5 Db4:0.5 F4:0.5 G4:0.5 Bb4:0.5 C5:1 | C5:0.5 Bb4:0.5 G4:0.5 F4:0.5 Db4:0.5 C4:1.5' },
+
+  { name:'Shanmukhapriya (dark, tense)', tags:'carnatic tamil raga shanmukhapriya scale', bpm:76, key:'Shanmukhapriya',
+    notes:'C4:0.5 D4:0.5 Eb4:0.5 F#4:0.5 G4:0.5 Ab4:0.5 Bb4:0.5 C5:1 | C5:0.5 Bb4:0.5 Ab4:0.5 G4:0.5 F#4:0.5 Eb4:0.5 D4:0.5 C4:1.5' },
+
+  { name:'Simhendramadhyamam (grand, severe)', tags:'carnatic tamil raga simhendramadhyamam scale', bpm:72, key:'Simhendramadhyamam',
+    notes:'C4:0.5 D4:0.5 Eb4:0.5 F#4:0.5 G4:0.5 Ab4:0.5 B4:0.5 C5:1 | C5:0.5 B4:0.5 Ab4:0.5 G4:0.5 F#4:0.5 Eb4:0.5 D4:0.5 C4:1.5' }
+];
+
+/* ======================= song picker ======================= */
+const searchEl = document.getElementById('songSearch'),
+      listEl = document.getElementById('songList'),
+      seqEl = document.getElementById('seq');
+let shown = [], cursorIdx = -1;
+
+function matches(q){
+  const all = SONGS.concat(bookSongs);
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if(!words.length) return all;
+  return all.filter(s => {
+    const hay = (s.name + ' ' + s.tags + ' ' + s.key).toLowerCase();
+    return words.every(w => hay.indexOf(w) > -1);
+  });
+}
+function renderList(){
+  listEl.innerHTML = '';
+  if(!shown.length){
+    const li = document.createElement('li');
+    li.className = 'none';
+    li.textContent = 'No song by that name. Try “star”, “christmas” or “beethoven”.';
+    listEl.appendChild(li);
+    return;
+  }
+  shown.forEach((s, i) => {
+    const li = document.createElement('li');
+    li.setAttribute('role', 'option');
+    li.dataset.i = i;
+    if(i === cursorIdx){ li.className = 'on'; li.setAttribute('aria-selected', 'true'); }
+    li.innerHTML = '<span>' + s.name + '</span><span class="meta">' + s.key + ' · ' + s.bpm + ' BPM</span>';
+    listEl.appendChild(li);
+  });
+}
+function openList(){
+  shown = matches(searchEl.value);
+  cursorIdx = shown.length ? 0 : -1;
+  renderList();
+  listEl.hidden = false;
+  searchEl.setAttribute('aria-expanded', 'true');
+}
+function closeList(){
+  listEl.hidden = true;
+  searchEl.setAttribute('aria-expanded', 'false');
+}
+function choose(i){
+  const s = shown[i];
+  if(!s) return;
+  seqEl.value = s.notes;
+  bpmEl.value = s.bpm;
+  bpmOut.textContent = s.bpm + ' BPM';
+  searchEl.value = s.name;
+  closeList();
+  renderLyrics(s.book || null);
+  playSequence();
+  say(s.book
+    ? 'Playing ' + s.name + ' — the lines are listed below, click any one to play it alone.'
+    : 'Playing ' + s.name + ' — the notes are in the box, edit them freely.');
+}
+
+searchEl.addEventListener('focus', openList);
+searchEl.addEventListener('click', openList);
+searchEl.addEventListener('input', openList);
+searchEl.addEventListener('keydown', e => {
+  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    e.preventDefault();
+    if(listEl.hidden) return openList();
+    if(!shown.length) return;
+    cursorIdx = (cursorIdx + (e.key === 'ArrowDown' ? 1 : shown.length - 1)) % shown.length;
+    renderList();
+    const on = listEl.querySelector('.on');
+    if(on) on.scrollIntoView({ block: 'nearest' });
+  }else if(e.key === 'Enter'){
+    e.preventDefault();
+    choose(cursorIdx < 0 ? 0 : cursorIdx);
+  }else if(e.key === 'Escape'){
+    closeList();
+  }
+});
+listEl.addEventListener('mousedown', e => {
+  const li = e.target.closest('li[data-i]');
+  if(li){ e.preventDefault(); choose(+li.dataset.i); }
+});
+document.addEventListener('click', e => {
+  if(!e.target.closest('.picker')) closeList();
+});
+
+function say(msg, bad){
+  statusEl.textContent = msg;
+  statusEl.className = 'status' + (bad ? ' bad' : '');
+}
+/* ======================= instrument picker ======================= */
+const instBar = document.getElementById('instBar');
+Object.keys(INSTRUMENTS).forEach(id => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'inst';
+  b.dataset.inst = id;
+  b.textContent = INSTRUMENTS[id].label;
+  b.setAttribute('aria-pressed', id === current ? 'true' : 'false');
+  b.addEventListener('click', () => {
+    stopAll();                                    // nothing from the old voice survives the switch
+    current = id;
+    Array.from(instBar.children).forEach(x =>
+      x.setAttribute('aria-pressed', x.dataset.inst === id ? 'true' : 'false'));
+    audio();
+    const demo = strike(midiOf('C4'), ctx.currentTime, 0.7);
+    schedule(() => demo.release(), 900);          // a preview note, not a drone
+    flash(midiOf('C4'), 900);
+    say(INSTRUMENTS[id].label + ' selected.');
+  });
+  instBar.appendChild(b);
+});
+
+/* ---- converting letter sheets into playable tokens ----
+   Sheets come in two kinds. Some give pitch classes only — no octave, no
+   rhythm — and then two decisions have to be made for the reader: which octave
+   to start in, and whether each following note goes wherever it lands nearest
+   the last one. Others already write the octave (D4, A#3), and those are taken
+   exactly as given. A single sheet may mix the two, so each note is judged on
+   its own. Rhythm is never guessable and is always left to you. */
+// A line of notes, as opposed to a line of words: letters A-G with optional
+// sharp, flat and octave, plus the punctuation sheets sprinkle around them.
+function isNoteLine(t){
+  if(!/^[A-Ga-g#b0-9\s|,.\-]+$/.test(t)) return false;
+  return (t.match(/[A-Ga-g](#|b)?\d?/g) || []).length >= 2;
+}
+
+// Some sheets run words and notes together on one line. The one dependable
+// signal is case: notes are written in capitals, words are not. It is a
+// guess, not a rule — a lyric written in capitals would be read as notes.
+const NOTE_TOKEN = /^([A-G](#|b)?\d?)+$/;
+function splitTokens(t){
+  const words = [], notes = [];
+  t.split(/\s+/).filter(Boolean).forEach(tok => {
+    const clean = tok.replace(/[|,.\-–—()\[\]]/g, '');
+    if(clean && NOTE_TOKEN.test(clean)) notes.push(clean);
+    else words.push(tok);
+  });
+  return { words: words, notes: notes };
+}
+
+// What a single source line offers: its notes, and the words that go with them.
+function readLine(t){
+  if(isNoteLine(t)) return { notes: t, words: '' };
+  const sp = splitTokens(t);
+  if(sp.notes.length < 2) return null;
+  return { notes: sp.notes.join(' '), words: sp.words.join(' ') };
+}
+
+// Text pasted as one long block, with phrases separated by wide gaps rather
+// than line breaks, is split on those gaps so the structure survives.
+function unblock(text){
+  const breaks = (text.match(/\n/g) || []).length;
+  if(text.length > 200 && breaks < 3) return text.replace(/[ \t]{3,}/g, '\n');
+  return text;
+}
+
+// Sheets write a line of words, then the notes for it — or both together.
+// Keep them paired so the words can be shown beside what they sing.
+function pairLines(text){
+  const out = [];
+  let pending = '';
+  unblock(text).split(/\r?\n/).forEach(line => {
+    const t = line.trim();
+    if(!t) return;
+    const read = readLine(t);
+    if(!read){ pending = t; return; }
+    out.push({ text: (pending + ' ' + read.words).trim(), letters: read.notes });
+    pending = '';
+  });
+  return out;
+}
+
+function lettersToTokens(text, opts){
+  const lines = unblock(text).split(/\r?\n/);
+  const out = [];
+  const base = 12 * (opts.oct + 1);
+  const lo = base - 6, hi = base + 13;        // the window a hand actually works in
+  let converted = 0, skipped = 0, count = 0;
+  lines.forEach(line => {
+    const t = line.trim();
+    if(!t) return;
+    const read = readLine(t);
+    if(!read){ skipped++; return; }            // nothing but words on this line
+    const found = read.notes.match(/[A-Ga-g](#|b)?\d?/g) || [];
+    let prev = null;                          // each line starts fresh in the chosen octave,
+    const toks = found.map(n => {             // otherwise the melody creeps away over a page
+      const written = /\d$/.test(n);
+      const pc = midiOf(n[0].toUpperCase() + n.slice(1).replace(/\d/, '') + '4') % 12;
+      let m;
+      if(written){
+        m = midiOf(n[0].toUpperCase() + n.slice(1));   // the sheet says which octave
+      }else if(opts.smooth && prev !== null){
+        m = prev + (((pc - prev) % 12) + 12) % 12;     // next one up
+        if(m - prev > 6) m -= 12;                      // unless down is closer
+        while(m < lo) m += 12;
+        while(m > hi) m -= 12;
+      }else{
+        m = base + pc;
+      }
+      prev = m;
+      count++;
+      let sounded = m + opts.shift;
+      while(sounded < 24) sounded += 12;
+      while(sounded > 100) sounded -= 12;
+      return nameOf(sounded) + ':' + opts.len;
+    });
+    converted++;
+    out.push(toks.join(' '));
+  });
+  return { text: out.join('\n'), converted: converted, skipped: skipped, notes: count };
+}
+
+document.getElementById('convBtn').addEventListener('click', () => {
+  const raw = document.getElementById('rawNotes').value;
+  const st = document.getElementById('convStatus');
+  const res = lettersToTokens(raw, convOpts());
+  if(!res.converted){
+    st.className = 'status bad';
+    st.textContent = 'No note lines found. Lines need to be note names only — letters A to G, with # or b and an optional octave number.';
+    return;
+  }
+  seqEl.value = res.text;
+  refreshScore();
+  // If the paste had words above its note lines, show them as a sheet you can
+  // play a line at a time, the same way a loaded songbook behaves.
+  const pairs = pairLines(raw);
+  renderLyrics(pairs.some(p => p.text)
+    ? { title: 'Pasted sheet', lines: pairs }
+    : null);
+  st.className = 'status';
+  st.textContent = res.notes + ' notes from ' + res.converted + ' line' + (res.converted === 1 ? '' : 's') +
+    (res.skipped ? ', ' + res.skipped + ' line' + (res.skipped === 1 ? '' : 's') + ' of words kept aside' : '') +
+    '. Lengthen the held notes by hand, then press Play notes.';
+});
+
+// Pasting is the whole gesture — decode straight away rather than making the
+// person hunt for the button.
+document.getElementById('rawNotes').addEventListener('paste', () => {
+  setTimeout(() => document.getElementById('convBtn').click(), 0);
+});
+
+/* ---- songbook files ---------------------------------------------------
+   A loaded book joins the same search box as the built-in tunes. Its note
+   letters are run through the converter above, using whatever octave, length
+   and transpose are set there, so the same guesses apply and can be redone. */
+let bookSongs = [];
+const lyricsEl = document.getElementById('lyrics');
+let lyricRows = [], litLine = null;
+
+// The notes box holds one line per line of the sheet, so a token's line number
+// is also the row to light up.
+function markLine(i){
+  if(i === litLine) return;
+  if(lyricRows[litLine]) lyricRows[litLine].classList.remove('now');
+  litLine = i;
+  if(i === null || !lyricRows[i]) return;
+  lyricRows[i].classList.add('now');
+  if(hiliteEl.checked) lyricRows[i].scrollIntoView({ block: 'nearest', behavior: smooth ? 'smooth' : 'auto' });
+}
+
+function convOpts(){
+  return {
+    oct: +document.getElementById('convOct').value,
+    len: +document.getElementById('convLen').value || 0.5,
+    shift: +document.getElementById('convShift').value || 0,
+    smooth: document.getElementById('convSmooth').checked
+  };
+}
+
+function renderLyrics(entry){
+  lyricsEl.innerHTML = '';
+  lyricRows = []; litLine = null;
+  if(!entry){ lyricsEl.hidden = true; return; }
+  lyricsEl.hidden = false;
+  const head = document.createElement('div');
+  head.className = 'lyhead';
+  head.textContent = entry.title + (entry.scale ? ' · ' + entry.scale : '') +
+                     (entry.transpose ? ' · sheet says transpose ' +
+                      (entry.transpose > 0 ? '+' : '') + entry.transpose : '');
+  lyricsEl.appendChild(head);
+
+  let section = null;
+  entry.lines.forEach((ln, idx) => {
+    if(ln.section && ln.section !== section){
+      section = ln.section;
+      const s = document.createElement('div');
+      s.className = 'lysec';
+      s.textContent = section.toUpperCase();
+      lyricsEl.appendChild(s);
+    }
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'lyrow';
+    const a = document.createElement('span'); a.className = 'lytext';
+    a.textContent = ln.text || '(no words)';
+    const b = document.createElement('span'); b.className = 'lynotes';
+    b.textContent = ln.letters;
+    row.appendChild(a); row.appendChild(b);
+    row.addEventListener('click', () => {
+      const res = lettersToTokens(ln.letters, convOpts());
+      if(!res.converted) return;
+      seqEl.value = res.text;
+      refreshScore();
+      playSequence();
+    });
+    lyricsEl.appendChild(row);
+    lyricRows[idx] = row;
+  });
+}
+
+/* the book's songs are kept in this browser (localStorage) so they return after a reload */
+const LS = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k, v){ try{ localStorage.setItem(k, v); return true; }catch(e){ return false; } },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const BOOK_KEY = 'piano.songbook.v1', TAKE_KEY = 'piano.take.v1', NOTES_KEY = 'piano.notes.v1';
+
+function loadBook(list, restored){
+  const st = document.getElementById('bookStatus');
+  let added = 0, lines = 0;
+  bookSongs = [];
+  list.forEach(song => {
+    if(!song || !Array.isArray(song.lines) || !song.lines.length) return;
+    // only lines that actually yield notes, so the rows line up with the
+    // lines of the notes box and the highlight follows the right one
+    const usable = song.lines.filter(l => l && l.letters && readLine(String(l.letters).trim()));
+    if(!usable.length) return;
+    const words = usable.map(l => l.text || '').join(' ');
+    const res = lettersToTokens(usable.map(l => l.letters).join('\n'), convOpts());
+    bookSongs.push({
+      name: song.title || 'Untitled',
+      tags: ((song.scale || '') + ' ' + words + ' songbook').toLowerCase(),
+      bpm: +bpmEl.value || 100,
+      key: song.scale ? 'from sheet' : 'songbook',
+      notes: res.text,
+      book: { title: song.title || 'Untitled', scale: song.scale,
+              transpose: song.transpose, lines: usable }
+    });
+    added++; lines += usable.length;
+  });
+  if(!added){
+    st.className = 'status bad';
+    st.textContent = 'Nothing usable in that file — each song needs lines with a "letters" field.';
+    return false;
+  }
+  st.className = 'status';
+  st.textContent = added + ' songs, ' + lines + ' lines ' + (restored ? 'restored from this browser' : 'loaded') +
+    '. Search by title or by any word in the text.';
+  if(!restored) say(added + ' songs added to the search box from your file.');
+  return true;
+}
+
+document.getElementById('bookFile').addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0];
+  const st = document.getElementById('bookStatus');
+  if(!file) return;
+  const fr = new FileReader();
+  fr.onerror = () => { st.className = 'status bad'; st.textContent = 'That file could not be read.'; };
+  fr.onload = () => {
+    let data;
+    try{ data = JSON.parse(fr.result); }
+    catch(err){ st.className = 'status bad'; st.textContent = 'That is not valid JSON.'; return; }
+    const list = Array.isArray(data) ? data : (data && data.songs);
+    if(!Array.isArray(list) || !list.length){
+      st.className = 'status bad';
+      st.textContent = 'No songs in that file — it needs a "songs" list.';
+      return;
+    }
+    if(loadBook(list, false) && !LS.set(BOOK_KEY, JSON.stringify(list)))
+      st.textContent += ' (Too large to keep in this browser; load the file again next time.)';
+  };
+  fr.readAsText(file);
+});
+
+/* ---- left column: guide or converter ---- */
+const ltabs = Array.from(document.querySelectorAll('.ltab'));
+ltabs.forEach((t, i) => {
+  t.addEventListener('click', () => {
+    ltabs.forEach((x, j) => {
+      const on = i === j;
+      x.setAttribute('aria-selected', on ? 'true' : 'false');
+      x.tabIndex = on ? 0 : -1;
+      document.getElementById(x.getAttribute('aria-controls')).hidden = !on;
+    });
+  });
+  t.addEventListener('keydown', e => {
+    const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if(!step) return;
+    e.preventDefault();
+    const n = (i + step + ltabs.length) % ltabs.length;
+    ltabs[n].click(); ltabs[n].focus();
+  });
+});
+
+/* ---- practice view: the keyboard, the sheet, nothing else ---- */
+const practiceBtn = document.getElementById('practiceBtn');
+practiceBtn.addEventListener('click', () => {
+  const on = !document.body.classList.contains('practice');
+  document.body.classList.toggle('practice', on);
+  practiceBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  armGuide();
+  measureStage();
+  say(on ? 'Practice view — the guide and converter are out of the way.'
+         : 'Full view.');
+});
+
+/* ======================= help tabs ======================= */
+const tabs = Array.from(document.querySelectorAll('.tab'));
+function selectTab(i){
+  tabs.forEach((t, j) => {
+    const on = i === j;
+    t.setAttribute('aria-selected', on ? 'true' : 'false');
+    t.tabIndex = on ? 0 : -1;
+    document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+  });
+}
+tabs.forEach((t, i) => {
+  t.addEventListener('click', () => selectTab(i));
+  t.addEventListener('keydown', e => {
+    const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if(!step) return;
+    e.preventDefault();
+    const n = (i + step + tabs.length) % tabs.length;
+    selectTab(n); tabs[n].focus();
+  });
+});
+
+/* The notes column parks itself under the sticky keyboard, so it needs to know
+   how tall that is — and the keyboard's height changes with the viewport. */
+const stageEl = document.getElementById('stage');
+function measureStage(){
+  document.documentElement.style.setProperty('--stageH', stageEl.offsetHeight + 'px');
+}
+measureStage();
+window.addEventListener('resize', measureStage);
+if(window.ResizeObserver) new ResizeObserver(measureStage).observe(stageEl);
+
+document.querySelectorAll('button.try').forEach(b => {
+  b.addEventListener('click', () => {
+    seqEl.value = b.dataset.try;
+    searchEl.value = '';
+    refreshScore();
+    playSequence();
+    const r = scoreEl.getBoundingClientRect();          // already in view? leave the page alone
+    if(r.top < 0 || r.bottom > window.innerHeight){
+      scoreEl.scrollIntoView({ block: 'center', behavior: smooth ? 'smooth' : 'auto' });
+    }
+  });
+});
+
+/* ---- bring back what was kept in this browser ---- */
+(function restore(){
+  try{
+    const t = JSON.parse(LS.get(TAKE_KEY) || 'null');
+    if(Array.isArray(t) && t.length) take = t.filter(ev => ev && isFinite(ev.midi) && isFinite(ev.at) && isFinite(ev.dur));
+  }catch(e){}
+  const n = LS.get(NOTES_KEY);
+  if(n) seqEl.value = n;
+  try{
+    const b = JSON.parse(LS.get(BOOK_KEY) || 'null');
+    if(Array.isArray(b) && b.length) loadBook(b, true);
+  }catch(e){}
+})();
+function saveNotes(){ LS.set(NOTES_KEY, seqEl.value); }
+let notesTimer = 0;
+seqEl.addEventListener('input', () => { clearTimeout(notesTimer); notesTimer = setTimeout(saveNotes, 500); });
+window.addEventListener('pagehide', saveNotes);
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden') saveNotes(); });
+
+updateRecUI();
+seqEl.addEventListener('input', refreshScore);
+refreshScore();
+</script>
+</body>
+</html>

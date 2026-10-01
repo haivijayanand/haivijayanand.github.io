@@ -2,10 +2,11 @@
 <!--
 TOOL    : tools/index.html — list of public tools on haivijayanand.github.io
 FAMILY  : SITE
-VERSION : 1.2.0
+VERSION : 1.3.0
 DATE    : 2026-10-01
 CHAT    : Offline HTML inventory and online links
-CHANGES : v1.2.0  each tool shows its version and last update date, filled in from its header by _update_index.py
+CHANGES : v1.3.0  search box: filters tools by name, description, group and topic words; / to focus, Esc to clear
+          v1.2.0  each tool shows its version and last update date, filled in from its header by _update_index.py
           v1.1.0  twelve more tools, grouped into Engineering, Games and music, Astrology, General
           v1.0.0  first list: spring rate calculator, piano, AstroExplorer
 STATUS  : working
@@ -32,12 +33,26 @@ a.tool span{color:var(--muted);font-size:14px}
 h2{font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:28px 0 10px}
 footer{color:var(--muted);font-size:13px;margin-top:24px}
 footer a{color:var(--accent)}
+.search{position:sticky;top:0;z-index:2;background:var(--bg);padding:10px 0 12px;margin:0 0 4px}
+.search input{width:100%;font:16px "Segoe UI",system-ui,sans-serif;color:var(--ink);background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:11px 14px 11px 40px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%23889590' stroke-width='2'%3E%3Ccircle cx='8' cy='8' r='6'/%3E%3Cpath d='M12.5 12.5L17 17'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:13px center}
+.search input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.search .count{font-size:13px;color:var(--muted);margin-top:6px;min-height:1.2em}
+.none{color:var(--muted);padding:18px 0}
+[hidden]{display:none!important}
+mark{background:color-mix(in srgb,var(--accent) 22%,transparent);color:inherit;border-radius:2px}
 </style>
 </head>
 <body>
 <main>
   <h1>Tools</h1>
   <p class="lead">Single-page tools that run in your browser. Nothing is sent anywhere; what you save stays in your own browser.</p>
+  <div class="search" role="search">
+    <input id="q" type="search" placeholder="Search tools — try vibration, music, astrology, ISO, colour" aria-label="Search tools" autocomplete="off">
+    <div class="count" id="count" aria-live="polite"></div>
+  </div>
+  <p class="none" id="none" hidden>No tool matches that. Clear the search to see all of them.</p>
   <h2>Engineering</h2>
   <a class="tool" href="spring-rate-calculator.html"><b>Compression spring rate</b><span class="meta">v3.3.2 · updated 1 Oct 2026</span>
     <span>Rate, loads and stresses from geometry, a least-squares fit to test readings, a strut modeller and an A4 report.</span></a>
@@ -74,5 +89,68 @@ footer a{color:var(--accent)}
     <span>Measure angles between rays and inside polygons, with direction readouts.</span></a>
   <footer><a href="/">← Back to the blog</a></footer>
 </main>
+<script>
+/* topic words that help a search find a tool beyond its name and description */
+var TAGS = {
+  "spring-rate-calculator.html": "spring stiffness coil wire strut damper mechanical design kgf N/mm",
+  "psd-explorer.html": "vibration random psd g2/hz grms fft spectrum shaker test miles",
+  "bearing-explorer.html": "bearing vibration bpfo bpfi ftf bsf iso designation diagnostics fault",
+  "order-content-demo.html": "vibration orders 1x 2x misalignment unbalance coupling shaft loose",
+  "unbalance-velocity.html": "rotor balancing vibration iso 1940 20816 velocity mm/s unbalance",
+  "rotor-balancer.html": "rotor balancing bolts washers iso 1940 two-plane",
+  "rotogravure-simulator.html": "printing register gravure web tension packaging camera",
+  "colour-workbench.html": "color colour cmyk rgb hsl contrast palette print wcag",
+  "piano.html": "music keyboard notes record songs carnatic raga",
+  "sudoku.html": "game puzzle numbers logic",
+  "2048.html": "game puzzle tiles",
+  "astroexplorer.html": "astrology jyotish vedic horoscope chart nakshatra dasha transit matching",
+  "graha-bala-spider.html": "astrology planets strength ucca dik bala tamil",
+  "world-atlas-explorer.html": "map world countries geography population gdp brics saarc",
+  "angle-explorer.html": "geometry angles polygon degrees maths"
+};
+(function(){
+  var q = document.getElementById("q"), count = document.getElementById("count"), none = document.getElementById("none");
+  var cards = Array.prototype.slice.call(document.querySelectorAll("a.tool"));
+  var heads = Array.prototype.slice.call(document.querySelectorAll("main h2"));
+  var items = cards.map(function(a){
+    var h = a.previousElementSibling; while(h && h.tagName !== "H2") h = h.previousElementSibling;
+    var b = a.querySelector("b"), d = a.querySelector("span:not(.meta)");
+    return { a:a, b:b, d:d, name:b.textContent, desc:d ? d.textContent : "",
+      hay:(a.textContent + " " + (h ? h.textContent : "") + " " + (TAGS[a.getAttribute("href")] || "")).toLowerCase() };
+  });
+  function esc(s){ return s.replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+  function mark(text, words){
+    var out = esc(text);
+    words.forEach(function(w){
+      if(w.length < 2) return;
+      var re = new RegExp("(" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "ig");
+      out = out.replace(/(^|>)([^<]*)/g, function(m, g1, g2){ return g1 + g2.replace(re, "<mark>$1</mark>"); });
+    });
+    return out;
+  }
+  function run(){
+    var words = q.value.toLowerCase().trim().split(/\s+/).filter(Boolean), shown = 0;
+    items.forEach(function(it){
+      var ok = words.every(function(w){ return it.hay.indexOf(w) >= 0; });
+      it.a.hidden = !ok; if(ok) shown++;
+      it.b.innerHTML = words.length ? mark(it.name, words) : esc(it.name);
+      if(it.d) it.d.innerHTML = words.length ? mark(it.desc, words) : esc(it.desc);
+    });
+    heads.forEach(function(h){
+      var n = h.nextElementSibling, any = false;
+      while(n && n.tagName === "A"){ if(!n.hidden) any = true; n = n.nextElementSibling; }
+      h.hidden = !any;
+    });
+    none.hidden = shown > 0;
+    count.textContent = words.length ? shown + " of " + items.length + " tools" : items.length + " tools";
+  }
+  q.addEventListener("input", run);
+  q.addEventListener("keydown", function(e){ if(e.key === "Escape"){ q.value = ""; run(); } });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "/" && document.activeElement !== q){ e.preventDefault(); q.focus(); }
+  });
+  run();
+})();
+</script>
 </body>
 </html>

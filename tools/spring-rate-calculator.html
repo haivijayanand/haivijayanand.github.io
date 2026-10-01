@@ -2,10 +2,12 @@
 <!--
 TOOL    : spring-rate-calculator.html (public copy)
 FAMILY  : SPRING
-VERSION : 3.3.0
+VERSION : 3.3.1
 DATE    : 2026-10-01
 CHAT    : Compression spring rate calculator
-CHANGES : v3.3.0  public copy for haivijayanand.github.io: opens with two made-up example
+CHANGES : v3.3.1  one generic example spring and a single strut; the multi-strut picker, the
+                  side-by-side table and the Compare tab are left out of the public copy
+          v3.3.0  public copy for haivijayanand.github.io: opens with two made-up example
                   springs and three example struts; the working library is kept privately
 STATUS  : working; runs offline in any browser, no network
 -->
@@ -308,7 +310,7 @@ details.fs > summary:hover{color:var(--ink)}
 <div class="tabs" role="tablist">
   <button role="tab" id="tb1" aria-controls="pSpring" aria-selected="true">Spring</button>
   <button role="tab" id="tb6" aria-controls="p6" aria-selected="false">Strut</button>
-  <button role="tab" id="tb7" aria-controls="p7" aria-selected="false">Compare</button>
+  <button role="tab" id="tb7" aria-controls="p7" aria-selected="false" hidden>Compare</button>
   <button role="tab" id="tb5" aria-controls="p5" aria-selected="false">Save &amp; print</button>
   <button role="tab" id="tbH" aria-controls="pHelp" aria-selected="false">Help</button>
   <span class="kbhint">Alt + &larr; &rarr; tabs &nbsp;&middot;&nbsp; &larr; &rarr; slider</span>
@@ -588,11 +590,7 @@ details.fs > summary:hover{color:var(--ink)}
     <h2>Strut</h2>
     <div class="body">
 
-      <div class="seg">
-        <label><input type="radio" name="sunit" value="D1" checked><span>D1</span></label>
-        <label><input type="radio" name="sunit" value="D2"><span>D2</span></label>
-        <label><input type="radio" name="sunit" value="D3"><span>D3</span></label>
-      </div>
+      <input type="radio" name="sunit" value="Strut" checked hidden>
       <div class="seg">
         <label><input type="radio" name="slay" value="top" checked><span>Drawings on top</span></label>
         <label><input type="radio" name="slay" value="side"><span>Drawings beside</span></label>
@@ -700,8 +698,8 @@ details.fs > summary:hover{color:var(--ink)}
         </div>
       </div>
     </div>
-    <div class="panel">
-      <h2>D1, D2 and D3 side by side</h2>
+    <div class="panel" hidden>
+      <h2>Side by side</h2>
       <div style="overflow-x:auto"><table class="mat" id="sCompare"></table></div>
     </div>
   </div>
@@ -712,7 +710,7 @@ details.fs > summary:hover{color:var(--ink)}
 <!-- ==================== COMPARE ==================== -->
 <div role="tabpanel" id="p7" aria-labelledby="tb7" hidden>
 <div class="panel">
-  <h2>D1, D2 and D3 at their preloads</h2>
+  <h2>Struts at their preloads</h2>
   <div class="body" style="padding-bottom:8px">
     <p style="margin:0;font-size:13.5px;color:var(--ink2);max-width:86ch">
       Each unit is drawn at its own nominal length with its own spring and pre-compression,
@@ -1438,7 +1436,7 @@ function preComp(s){
   $("pcNotes").innerHTML=N.map(x=>"<div class=\"note "+x[0]+"\" style=\"margin-left:0;margin-right:0\">"+x[1]+"</div>").join("");
 }
 
-/* ================= strut D1 / D2 / D3 =================
+/* ================= strut =================
    The upper eye screws into the cylinder top, so "a" is the adjustment.
    The rod hangs from the lower eye, passes through the bottom end wall and
    carries a seat plate inside. The spring is trapped between the inside face
@@ -1447,9 +1445,7 @@ function preComp(s){
 const STRUT_COMMON={Lc:172, twT:10, twB:10, cylOD:34, bore:29, rod:12,
                     plateOD:26, plate:6, nut:10, pitch:1.75, pitchEye:1.75, span:3, slot:60};
 let STRUTS={
-  D1:Object.assign({},STRUT_COMMON,{L:300, a:50, c:138, spring:"Example_A_2.5mm", comp:20, mode:"nut"}),
-  D2:Object.assign({},STRUT_COMMON,{L:290, a:60, c:123, spring:"Example_A_2.5mm", comp:15, mode:"nut"}),
-  D3:Object.assign({},STRUT_COMMON,{L:420, a:70, c:235, spring:"Example_B_3.5mm", comp:8,  mode:"nut"})
+  Strut:Object.assign({},STRUT_COMMON,{L:300, a:50, c:138, spring:"Example spring", comp:20, mode:"nut"})
 };
 const SFIELDS=["L","a","Lc","cylOD","bore","twT","twB","rod","plateOD","plate","nut","pitch","pitchEye","slot","c","comp"];
 const sid=k=>"s"+k;
@@ -1969,7 +1965,7 @@ function drawSlot(u,sp,r){
   svg.innerHTML=P.join("");
 }
 
-/* ---- D1, D2 and D3 side by side, each at its own preload, all to one scale ---- */
+/* ---- struts side by side, each at its own preload, all to one scale ---- */
 function renderCompare(){
   const uu=U(), wrap=$("cmpWrap");
   const keys=Object.keys(STRUTS);
@@ -2743,22 +2739,22 @@ function strutBlock(){
   const u=readStrut(), sp=springFor(u.spring); if(!sp) return "";
   renderStrut();
   return '<section style="break-before:page;page-break-before:always">'+
-    '<h2 style="margin-top:0">Strut '+curStrut()+'</h2>'+
+    '<h2 style="margin-top:0">Strut</h2>'+
     '<div class="top"><div><table>'+$("sTabA").innerHTML+'</table></div>'+
     '<div>'+$("ssvg").outerHTML+'</div></div>'+
     '<h3 style="margin-top:3mm">Travel and load</h3><table>'+$("sTabB").innerHTML+'</table>'+
     '<h3 style="margin-top:3mm">Design checks</h3><table>'+$("sChk").innerHTML+'</table>'+
-    '<h3 style="margin-top:3mm">D1, D2 and D3</h3><table class="mat">'+$("sCompare").innerHTML+'</table>'+
     '<div class="nb">The spring is trapped between the inside face of the bottom end wall and '+
     'the seat plate on the rod, so pulling the eyes apart compresses it. Usable extension is the '+
     'smaller of coil bind and the static allowable stress.</div></section>';
 }
 function compareBlock(){
+  return "";                                     // public copy has a single strut
   if(typeof STRUTS==="undefined") return "";
   renderCompare();
   const w=$("cmpWrap"); if(!w||!w.innerHTML) return "";
   return '<section style="break-before:page;page-break-before:always">'+
-    '<h2 style="margin-top:0">D1, D2 and D3 at their preloads</h2>'+
+    '<h2 style="margin-top:0">Struts at their preloads</h2>'+
     '<div class="cmp3">'+w.innerHTML+'</div>'+
     '<div class="nb">One common scale across the three. Dashed circles mark the lower eye '+
     'with the spring free and at full compression; the amber dimension below each cylinder '+
@@ -2818,21 +2814,17 @@ document.querySelectorAll('input[name=sec]').forEach(r=>r.addEventListener("chan
 $("form").addEventListener("input",run);
 $("form").addEventListener("submit",e=>e.preventDefault());
 window.addEventListener("resize",()=>{ if(shown("p2")) fit(); });
-/* ---- two made-up example springs for the public copy ----
+/* ---- one made-up example spring for the public copy ----
    values are internal units: mm, N, MPa, kg/m3. The readings are illustrative. */
 const common={v:1, unit:"si", sec:"round", dref:"outer", endt:"pl", mat:"2", endc:"0.5",
   lsMan:true, ax:4, rad:2.5, inact:2, G:79300, E:207000, rho:7850,
   pcmode:"len", xmode:"len", model:"line",
   note:""};
 const SEED=[
-  Object.assign({},common,{name:"Example_A_2.5mm",
-    note:"Example: 2.5 mm wire, OD 25, L0 70, 9 plain coils. Readings are illustrative.",
+  Object.assign({},common,{name:"Example spring",
+    note:"2.5 mm wire, OD 25, L0 70, 9 plain coils. Readings are illustrative.",
     dia:2.5, coil:25, lf:70, ls:23, nt:9, gap:null, L1:65, L2:50, F1:20,
-    pts:[[70, 0], [66, 16.32], [62, 31.68], [58, 48.72], [54, 63.68], [50, 80.8]], saved:"2026-10-01"}),
-  Object.assign({},common,{name:"Example_B_3.5mm",
-    note:"Example: 3.5 mm wire, OD 30, L0 55, 8 plain coils. Readings are illustrative.",
-    dia:3.5, coil:30, lf:55, ls:28, nt:8, gap:null, L1:52, L2:45, F1:30,
-    pts:[[55, 0], [53, 19.7], [51, 40.4], [49, 60.0], [47, 81.6], [45, 99.0]], saved:"2026-10-01"})
+    pts:[[70, 0], [66, 16.32], [62, 31.68], [58, 48.72], [54, 63.68], [50, 80.8]], saved:"2026-10-01"})
 ];
 LIB=SEED.map(r=>Object.assign({},r));
 /* keyboard: Alt with the arrows walks the tabs, the bare arrows drive whichever
@@ -2843,7 +2835,7 @@ document.addEventListener("keydown",e=>{
   if(e.ctrlKey||e.metaKey) return;
   if(e.altKey){
     if(k!=="ArrowLeft"&&k!=="ArrowRight") return;
-    const btns=Array.prototype.slice.call(document.querySelectorAll(".tabs:not(.sub) button"));
+    const btns=Array.prototype.slice.call(document.querySelectorAll(".tabs:not(.sub) button:not([hidden])"));
     if(!btns.length) return;
     let i=btns.findIndex(b=>b.getAttribute("aria-selected")==="true");
     if(i<0) i=0;
@@ -2877,7 +2869,7 @@ labelUnits();
 restore(LIB[0]);
 refreshLib();
 writeStrut(); renderStrut();
-status("Two example springs are loaded. Enter your own spring, or use Load to switch between the examples.");
+status("An example spring is loaded. Enter your own spring's dimensions to replace it.");
 
 /* ================= online copy (v3.3.0) =================
    On the hosted page the library and the struts live in one document in the
@@ -2964,7 +2956,7 @@ document.addEventListener("visibilitychange",()=>{
   try{
     const snap=await db.doc(CLOUD_DOC).get();
     CLOUD=db;
-    $("libHelp").textContent="Your library and the D1, D2 and D3 struts are kept in your claude.ai account and "+
+    $("libHelp").textContent="Your library and the strut are kept in your claude.ai account and "+
       "save themselves a moment after each change. The master file is still there for the copy on your disk.";
     $("footNote").textContent="Calculations run in this page. Your library is saved to your claude.ai account, visible only to you.";
     if(snap.exists){

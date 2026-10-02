@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<!--
+TOOL: Offset Press
+FAMILY: games
+VERSION: 1.0.0
+DATE: 2026-10-02
+CHAT: Business sim game set (claude.ai, 2026-10-02)
+CHANGES: 1.0.0 - first release: weekly offset-press sim (job board quotes, queue + shifts, Weibull breakdowns, paper market, receivables/overdraft, 4-colour press), saves, Tech discussion tab with Monte Carlo
+STATUS: playable
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f5f2">
+<title>Offset Press</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one narrow column like a proof sheet on the press-room table. Cards carry crop marks at the corners,
+   job enquiries look like docket slips, a CMYK colour bar is the divider, magenta is the only action colour. */
+:root{
+  --bg:#f3f3ef; --paper:#ffffff; --ink:#111316; --muted:#5a5f67; --line:#d5d6d8; --chip:#ebebe7; --crop:#8f9297;
+  --acc:#c4006e; --acc-ink:#ffffff; --acc-soft:#fbe4f0; --acc-press:#8f0050;
+  --good:#17784a; --bad:#c02c2c; --warn:#955800;
+  --cy:#00a0db; --mg:#d6007e; --yl:#f4cf00; --ky:#141619;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --shadow:0 1px 0 rgba(0,0,0,.04);
+  --f-display:"Barlow Condensed","Arial Narrow","Roboto Condensed",sans-serif-condensed,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1b1c1e; --paper:#25272a; --ink:#f4f4f1; --muted:#a7acb3; --line:#3b3e43; --chip:#2e3135; --crop:#6f737a;
+  --acc:#ff4aa6; --acc-ink:#1b1c1e; --acc-soft:#4a2036; --acc-press:#c21a72;
+  --good:#45cf8b; --bad:#ff7b6d; --warn:#f0b34a;
+  --cy:#1fb4ee; --mg:#ff3d9a; --yl:#ffd935; --ky:#050506;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --shadow:0 0 0 rgba(0,0,0,0); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1b1c1e; --paper:#25272a; --ink:#f4f4f1; --muted:#a7acb3; --line:#3b3e43; --chip:#2e3135; --crop:#6f737a;
+  --acc:#ff4aa6; --acc-ink:#1b1c1e; --acc-soft:#4a2036; --acc-press:#c21a72;
+  --good:#45cf8b; --bad:#ff7b6d; --warn:#f0b34a;
+  --cy:#1fb4ee; --mg:#ff3d9a; --yl:#ffd935; --ky:#050506;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --shadow:0 0 0 rgba(0,0,0,0); color-scheme:dark}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 var(--f-body);-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+.wrap{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:0 48px}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+p{margin:0}
+h1,h2,h3{margin:0}
+h2{font-family:var(--f-display);font-weight:700;font-size:26px;line-height:1.05;text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.muted{color:var(--muted)} .small{font-size:13.5px} .pos{color:var(--good)} .neg{color:var(--bad)} .warnc{color:var(--warn)}
+section{display:flex;flex-direction:column;gap:18px}
+/* crop-marked card */
+.card{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:14px 16px;box-shadow:var(--shadow)}
+.card::before{content:"";position:absolute;inset:-8px;pointer-events:none;
+  background:
+   linear-gradient(var(--crop),var(--crop)) left 0 top 7px/5px 1px no-repeat,
+   linear-gradient(var(--crop),var(--crop)) left 7px top 0/1px 5px no-repeat,
+   linear-gradient(var(--crop),var(--crop)) right 0 top 7px/5px 1px no-repeat,
+   linear-gradient(var(--crop),var(--crop)) right 7px top 0/1px 5px no-repeat,
+   linear-gradient(var(--crop),var(--crop)) left 0 bottom 7px/5px 1px no-repeat,
+   linear-gradient(var(--crop),var(--crop)) left 7px bottom 0/1px 5px no-repeat,
+   linear-gradient(var(--crop),var(--crop)) right 0 bottom 7px/5px 1px no-repeat,
+   linear-gradient(var(--crop),var(--crop)) right 7px bottom 0/1px 5px no-repeat}
+.reg{width:16px;height:16px;flex:none;color:var(--crop)}
+.cbar{display:flex;height:6px;gap:2px}
+.cbar i{flex:1}
+.cbar .c{background:var(--cy)} .cbar .m{background:var(--mg)} .cbar .y{background:var(--yl)} .cbar .k{background:var(--ky);outline:1px solid var(--line)} .cbar .g{background:var(--line)}
+/* tabs */
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--ink);margin-block:14px 6px;border-radius:2px;overflow:hidden}
+.tabs button{border:0;background:var(--paper);padding:11px 6px;font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;color:var(--muted);min-height:44px}
+.tabs button+button{border-left:1px solid var(--ink)}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+/* status bar */
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px 8px;margin-bottom:14px}
+.bar .row{display:flex;align-items:center;gap:10px}
+.brand{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.04em;text-transform:uppercase;flex:1;min-width:0;display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden}
+.iconbtn{border:1px solid var(--ink);background:var(--paper);border-radius:2px;padding:0 14px;min-height:44px;font-family:var(--f-display);font-weight:700;font-size:16px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.stats{display:grid;grid-template-columns:.8fr 1.35fr 1fr 1fr;gap:6px;margin-top:8px}
+.stat{background:var(--paper);border:1px solid var(--line);padding:5px 8px;min-width:0}
+.stat b{display:block;font-family:var(--f-num);font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbl{font-family:var(--f-display);font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.meter{height:5px;background:var(--chip);margin-top:4px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ink)}
+.meter.acc i{background:var(--acc)}
+.meter.bad i{background:var(--bad)}
+.bar .cbar{margin-top:8px}
+/* buttons */
+.big{display:block;width:100%;border:0;border-radius:2px;padding:14px 16px;min-height:52px;font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.05em;text-transform:uppercase;background:var(--acc);color:var(--acc-ink);cursor:pointer;box-shadow:0 3px 0 var(--acc-press)}
+.big:active{transform:translateY(2px);box-shadow:0 1px 0 var(--acc-press)}
+.big:disabled{opacity:.45;cursor:not-allowed}
+.ghost{width:100%;border:1px solid var(--ink);background:var(--paper);border-radius:2px;padding:10px 12px;min-height:46px;font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+.ghost:disabled{opacity:.4;cursor:not-allowed}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.btnrow>*{flex:1 1 140px}
+.mini{border:1px solid var(--line);background:var(--chip);border-radius:2px;min-height:44px;min-width:44px;padding:0 10px;font-weight:600;cursor:pointer;font-size:14px}
+.mini[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mini:disabled{opacity:.35;cursor:not-allowed}
+.seg{display:flex;gap:0;border:1px solid var(--ink);border-radius:2px;overflow:hidden;flex-wrap:wrap}
+.seg button{flex:1 1 0;border:0;background:var(--paper);padding:6px 6px;min-height:46px;font-size:14px;font-weight:600;cursor:pointer;color:var(--muted);line-height:1.15}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button small{display:block;font-family:var(--f-num);font-size:11.5px;font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button:disabled{opacity:.35;cursor:not-allowed}
+.segrow{display:flex;flex-direction:column;gap:5px;padding-block:6px}
+.segrow>span{font-weight:600;font-size:15px}
+/* docket slip */
+.docket{position:relative;background:var(--paper);border:1px solid var(--ink);border-radius:2px;box-shadow:var(--shadow)}
+.docket.skip{opacity:.62}
+.docket .top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--ink)}
+.docket .jno{font-family:var(--f-num);font-weight:600;font-size:13px;letter-spacing:.04em}
+.tag{font-family:var(--f-display);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;padding:1px 7px;border:1px solid currentColor;border-radius:2px;white-space:nowrap}
+.tag.acc{color:var(--acc)} .tag.good{color:var(--good)} .tag.bad{color:var(--bad)} .tag.warn{color:var(--warn)} .tag.ink{color:var(--ink)}
+.docket .body{padding:10px 12px 4px}
+.docket .what{font-family:var(--f-display);font-weight:700;font-size:22px;line-height:1.05;text-transform:uppercase}
+.docket .who{font-size:14.5px;color:var(--muted);margin-top:2px}
+.fields{display:grid;grid-template-columns:1fr 1fr;margin-top:8px;border-top:1px solid var(--line)}
+.fields>div{padding:5px 0;border-bottom:1px solid var(--line);min-width:0}
+.fields>div:nth-child(odd){padding-right:8px;border-right:1px solid var(--line)}
+.fields>div:nth-child(even){padding-left:10px}
+.fields .lbl{display:block;font-size:11.5px}
+.fields b{font-family:var(--f-num);font-weight:600;font-size:14px;display:block;overflow-wrap:anywhere}
+.inks{display:inline-flex;gap:3px;vertical-align:middle;margin-right:6px}
+.inks i{width:12px;height:12px;display:inline-block;outline:1px solid var(--line)}
+.inks .c{background:var(--cy)} .inks .m{background:var(--mg)} .inks .y{background:var(--yl)} .inks .k{background:var(--ky)}
+.perf{border-top:2px dashed var(--line);margin:8px 0 0;position:relative}
+.quoterow{padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px}
+.qline{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ctl{display:flex;align-items:center;gap:6px;flex:none}
+.ctl button{width:44px;height:44px;border-radius:2px;border:1px solid var(--ink);background:var(--paper);font-size:22px;font-weight:600;cursor:pointer;line-height:1}
+.ctl output{min-width:96px;text-align:center;font-family:var(--f-num);font-size:17px;font-weight:600}
+details.costs{font-size:13.5px}
+details.costs summary{cursor:pointer;color:var(--muted);min-height:32px;display:flex;align-items:center}
+.kv{width:100%;border-collapse:collapse;font-size:14px}
+.kv td{padding:5px 0;border-bottom:1px dashed var(--line)}
+.kv td:last-child{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.kv tr.total td{font-weight:700;border-bottom:0;font-size:16px;border-top:1px solid var(--ink)}
+.kv tr.head td{font-family:var(--f-display);font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);padding-top:10px}
+/* queue rows */
+.qrow{display:grid;grid-template-columns:auto 1fr;gap:10px;padding-block:10px;border-top:1px dashed var(--line)}
+.qrow:first-of-type{border-top:0}
+.qrow .mv{display:flex;flex-direction:column;gap:4px}
+.qrow .mv button{width:44px;height:40px;border:1px solid var(--line);background:var(--chip);border-radius:2px;cursor:pointer;font-size:16px}
+.qrow .mv button:disabled{opacity:.3}
+.qrow .ttl{font-weight:600;line-height:1.25}
+.qrow .meta{font-size:13.5px;color:var(--muted);margin-top:2px}
+.qrow .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center}
+.prog{height:4px;background:var(--chip);margin-top:5px}.prog i{display:block;height:100%;background:var(--acc)}
+.row2{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-top:1px dashed var(--line)}
+.row2:first-of-type{border-top:0}
+.row2 .txt{min-width:0}
+.event{border-left:3px solid var(--acc);padding:6px 10px;background:var(--acc-soft);margin-top:10px;font-size:14.5px}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.kpi{background:var(--chip);padding:9px 11px;min-width:0;border-left:3px solid var(--line)}
+.kpi b{display:block;font-family:var(--f-num);font-size:20px;line-height:1.2;font-weight:600;overflow-wrap:anywhere}
+.kpi .small{display:block}
+/* log */
+.log{font-family:var(--f-num);font-size:13.5px;display:flex;flex-direction:column;gap:10px}
+.log .h{display:grid;grid-template-columns:76px 1fr;gap:8px}
+.log .t{color:var(--muted);font-weight:600}
+.log .q{font-family:var(--f-body);font-style:italic;color:var(--muted);font-size:14px;margin-top:2px}
+.log .warn{color:var(--bad)} .log .good{color:var(--good)}
+@keyframes pop{from{opacity:.15;transform:translateY(4px)}to{opacity:1;transform:none}}
+.log .h{animation:pop .3s ease-out}
+/* title */
+.title-card{text-align:center;padding:30px 16px 22px}
+.title-card h1{font-family:var(--f-display);font-weight:700;font-size:58px;line-height:.9;letter-spacing:.01em;text-transform:uppercase;margin:12px 0 10px}
+.title-card h1 span{color:var(--acc)}
+.title-card .regrow{display:flex;justify-content:space-between}
+.lenpick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lenpick button{border:1px solid var(--ink);background:var(--paper);border-radius:2px;padding:10px 4px;min-height:56px;cursor:pointer;font-family:var(--f-display);font-weight:700;font-size:19px;text-transform:uppercase;letter-spacing:.04em}
+.lenpick button small{display:block;font-family:var(--f-num);font-weight:500;font-size:12px;text-transform:none;letter-spacing:0;color:var(--muted)}
+.lenpick button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.lenpick button[aria-pressed="true"] small{color:var(--bg)}
+/* sheet + toast */
+.sheet{position:fixed;inset:0;background:rgba(10,10,12,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet .panel{background:var(--bg);width:100%;max-width:560px;max-height:90%;overflow:auto;border-top:3px solid var(--ink);padding:16px 16px calc(22px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:16px}
+.sheet .hrow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.slot{display:flex;gap:8px;align-items:center;padding-block:8px;border-top:1px dashed var(--line)}
+.slot:first-of-type{border-top:0}
+.slot .info{flex:1;min-width:0;font-size:14px}
+textarea{width:100%;min-height:76px;border:1px solid var(--line);border-radius:2px;background:var(--paper);color:var(--ink);padding:8px;font-family:var(--f-num);font-size:12px}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:2px;font-weight:600;z-index:30;max-width:90%}
+.help p{margin-top:8px;font-size:14.5px}
+.help p:first-child{margin-top:0}
+/* tech */
+#tech{display:flex;flex-direction:column;gap:20px;padding-top:12px}
+#tech h2{font-size:24px}
+.sec-n{font-family:var(--f-num);font-size:12px;color:var(--acc);font-weight:600;letter-spacing:.08em;margin-bottom:2px}
+.prose{display:flex;flex-direction:column;gap:8px;max-width:65ch;font-size:15px}
+.fld{display:flex;flex-direction:column;gap:0;padding-block:5px}
+.fld label{display:flex;justify-content:space-between;gap:10px;font-weight:600;font-size:14.5px}
+.fld output{font-family:var(--f-num);font-weight:600;white-space:nowrap}
+input[type=range]{width:100%;height:36px;accent-color:var(--acc);margin:0}
+.flds{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));column-gap:18px}
+.tblwrap{overflow-x:auto;margin-inline:-4px;padding-inline:4px}
+.tt{width:100%;border-collapse:collapse;font-size:13.5px;min-width:320px}
+.tt th{font-family:var(--f-display);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right;padding:6px 4px;border-bottom:1px solid var(--ink);font-weight:600}
+.tt th:first-child,.tt td:first-child{text-align:left}
+.tt td{padding:6px 4px;border-bottom:1px dashed var(--line);text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.tt td:first-child{font-family:var(--f-body)}
+.tt tr.sum td{font-weight:700;border-bottom:0;border-top:1px solid var(--ink)}
+.tt tr.hl td{background:var(--acc-soft)}
+.formula{font-family:var(--f-num);font-size:12.5px;background:var(--chip);padding:10px 12px;line-height:1.7;overflow-x:auto;white-space:pre;border-left:3px solid var(--acc)}
+.verdict{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:var(--chip);font-size:14.5px}
+.verdict i{flex:none;font-style:normal;font-family:var(--f-num);font-weight:600;font-size:12px;padding:2px 7px;margin-top:2px;border:1px solid currentColor}
+.verdict.ok i{color:var(--good)} .verdict.no i{color:var(--bad)} .verdict.mid i{color:var(--warn)}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto;touch-action:pan-y}
+.chart .readout{font-family:var(--f-num);font-size:12.5px;min-height:2.7em;color:var(--ink);padding-top:4px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--muted);margin-bottom:4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:3px;display:inline-block}
+.legend i.dash{height:0;border-top:2px dashed var(--muted);background:none}
+.legend i.band{height:10px;opacity:.3}
+svg .ax{font-family:var(--f-num);font-size:11px;fill:var(--muted)}
+svg .lab{font-family:var(--f-body);font-size:12px;font-weight:700;fill:var(--ink)}
+svg .grid{stroke:var(--line);stroke-width:1;opacity:.7}
+svg .guide{stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3}
+.swot{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.swot>div{padding:12px;background:var(--chip);min-width:0;border-top:3px solid var(--line)}
+.swot h4{margin:0 0 6px;font-family:var(--f-display);font-size:20px;line-height:1;text-transform:uppercase;letter-spacing:.04em}
+.swot ul{margin:0;padding-left:18px;font-size:13.5px;display:flex;flex-direction:column;gap:5px}
+.swot .S{border-top-color:var(--good)} .swot .W{border-top-color:var(--bad)} .swot .O{border-top-color:var(--cy)} .swot .T{border-top-color:var(--warn)}
+.busy{font-family:var(--f-num);font-size:12px;color:var(--muted)}
+@media (max-width:440px){.swot{grid-template-columns:1fr}.title-card h1{font-size:50px}}
+@media (max-width:380px){.stats{grid-template-columns:.75fr 1.4fr 1fr 1fr;gap:4px}.stat{padding:4px 6px}.stat b{font-size:13.5px}}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.log .h{animation:none}*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="tabs" role="tablist" aria-label="Sections"><button role="tab" data-act="tab" data-tab="play" id="tab_play">Play</button><button role="tab" data-act="tab" data-tab="tech" id="tab_tech">Tech discussion</button></nav>
+  <header class="bar" id="bar" hidden>
+    <div class="row">
+      <div class="brand"><svg class="reg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 1v22M1 12h22" stroke="currentColor" stroke-width="1.5"/></svg>Offset Press</div>
+      <button class="iconbtn" data-act="menu" id="menuBtn">Menu</button>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="cbar" aria-hidden="true"><i class="c"></i><i class="m"></i><i class="y"></i><i class="k"></i><i class="g"></i><i class="c"></i><i class="m"></i><i class="y"></i><i class="k"></i><i class="g"></i></div>
+  </header>
+  <main id="main"></main>
+  <div id="tech" hidden></div>
+</div>
+<div class="sheet" id="sheet" hidden><div class="panel" id="panel" role="dialog" aria-modal="true" aria-label="Menu"></div></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<script>
+"use strict";
+const VERSION="1.0.0";
+/*ENGINE-START*/
+const C={
+  START_CASH:50000, START_REP:0.5, START_AGE:140,
+  DAYS:6, SHIFT_H:8, OT_H:3,
+  RENT:7000, WAGE:4500, MISC:1500, POWER_BASE:1000, NIGHT_PREM:0.25, OT_MULT:1.5,
+  OD_BASE:150000, OD_DP:0.5, OD_MAX:600000, OD_RATE:0.15, SUP_LIMIT:300000, SUP_WEEKS:6, ADVANCE:0.3,
+  PLATE:350, INK_RS_KG:450, INK_G_M2:1.5, CUT_OWN:25, CUT_OUT:160, CUT_OUT_DAYS:1, CUT_OWN_DAYS:0.2, CUTTER_PRICE:80000,
+  PAPER0:76, PAPER_SIG:0.018, PAPER_JUMP:0.06, PAPER_JUMP_SIZE:[0.06,0.14], PAPER_UP:0.7, PAPER_REV:0.05, SMALL_LOT:0.06,
+  BULK:[[500,0],[1000,0.03],[2000,0.05],[4000,0.07]],
+  JOB_MR:1.0, PASS_MR:2.0, SPOIL_MR:80, SPOIL_RUN:0.02,
+  MKT_SPEED:1800, MKT_JOB_MR:0.8, MKT_PASS_MR:1.5, MKT_RATE:900, MKT_MARGIN:0.14, MKT_SIG:0.07,
+  OWN_RATE:750, MARG_RATE:300, MARKUP:0.10,
+  WIN_MAX:0.92, WIN_MID:1.03, WIN_S:0.06, REP_SHIFT:0.3, REG_SHIFT:0.04,
+  REJ_BASE:0.02, REJ_SKILL:0.12, REJ_AGE:0.12, REJ_FRAC:[0.08,0.25], DISCOUNT:0.10,
+  LATE_PEN:0.03, LATE_MAX:0.3, REP_ONTIME:0.012, REP_LATE:0.02, REP_LATE_MAX:0.1, REP_DISC:0.02, REP_PULL:0.02,
+  PM_H:4, PM_COST:3500, REPAIR_MED:5, REPAIR_SIG:0.6, REPAIR_COST:[4000,12000], SPARES_P:0.3, SPARES_DAYS:[1,4], SPARES_COST:[6000,18000], REPAIR_AGE:0.6,
+  HIRE_COST:2000, TRAIN_COST:7500, TRAIN_GAIN:0.12, SKILL_MAX:0.92, LEARN:0.004, NIGHT_SKILL:0.05, HELP_SPEED:1.1, HELP_MR:0.85,
+  OUT_TRADE:0.90, OUT_DAYS:4,
+  PAY_WEEKS:{0:0,30:4,60:8,90:12}, DEFAULT_AFTER:4, DEFAULT_P:0.1,
+  DEPR:0.003, LOAN_RATE:0.13, LOAN_WEEKS:156, DOWN:0.15,
+  ENQ:[3,7]
+};
+const PRESSES={
+  p2:{name:"2-colour press",short:"2-col",units:2,speed:1100,mrF:1.0,eta:230,beta:2.2,pw:55},
+  p4:{name:"4-colour press",short:"4-col",units:4,speed:2400,mrF:0.9,eta:700,beta:2.5,pw:95,price:450000}
+};
+const TYPES={
+  wedding:{n:"Wedding cards",u:"cards",ups:4,sh:[600,2600],cols:[2,4,4],sz:"18×23 in",a:0.267,g:300,cov:0.35,dl:[6,10],terms:{0:1},spf:0.8,rel:0.97},
+  notebook:{n:"Notebook covers",u:"covers",ups:6,sh:[3200,10400],cols:[4,4,2],sz:"20×30 in",a:0.387,g:170,cov:0.45,dl:[10,18],terms:{30:2,60:1},spf:0.9,rel:0.86},
+  carton:{n:"Product cartons",u:"cartons",ups:4,sh:[2000,6500],cols:[4,4,2],sz:"23×36 in",a:0.534,g:280,cov:0.5,dl:[10,21],terms:{0:1,30:2,60:2,90:1},spf:0.8,rel:0.8},
+  poster:{n:"Posters",u:"posters",ups:2,sh:[1000,3900],cols:[4,2,1],sz:"18×23 in",a:0.267,g:130,cov:0.55,dl:[3,7],terms:{0:2,30:1},spf:1,rel:0.86},
+  book:{n:"School books",u:"books",ups:0.25,sh:[7800,23400],cols:[1,1,2],sz:"20×30 in",a:0.387,g:70,cov:0.15,dl:[14,28],terms:{30:1,60:2,90:1},spf:1.05,rel:0.83},
+  calendar:{n:"Calendars",u:"calendars",ups:0.5,sh:[2000,7800],cols:[4],sz:"20×30 in",a:0.387,g:170,cov:0.5,dl:[10,20],terms:{30:2,60:1},spf:0.9,rel:0.86},
+  bill:{n:"Bill books",u:"pads",ups:0.1,sh:[1000,3900],cols:[1,2],sz:"18×23 in",a:0.267,g:70,cov:0.2,dl:[4,10],terms:{0:2,30:2},spf:1.05,rel:0.9}
+};
+const TYPE_KEYS=Object.keys(TYPES);
+for(const k of TYPE_KEYS)TYPES[k].termsA=Object.entries(TYPES[k].terms).map(([a,b])=>[+a,b]);
+/* relative enquiry weights by month, July (game start) to June */
+const SEASON={
+  wedding: [1,4,4,1,2,2,5,5,2,4,4,2],
+  notebook:[2,1,1,1,1,1,2,3,4,5,5,4],
+  carton:  [3,4,5,6,3,2,2,2,3,3,3,3],
+  poster:  [3,3,3,4,3,3,4,3,3,3,3,3],
+  book:    [2,1,1,1,1,2,2,3,5,5,4,3],
+  calendar:[0,0,1,5,7,6,0,0,0,0,0,0],
+  bill:    [3,3,3,3,3,3,4,3,4,3,3,3]
+};
+const MONTHS=["July","August","September","October","November","December","January","February","March","April","May","June"];
+const SEASON_A=Array.from({length:12},(_,m)=>TYPE_KEYS.filter(t=>SEASON[t][m]>0).map(t=>[t,SEASON[t][m]]));
+let CPOOL=null;
+const SEASON_NOTE=["Aadi month. Few weddings; carton makers start stocking for Diwali.","Aavani. Wedding season is back and Diwali carton orders build.","Weddings and cartons. Every press in the estate is busy.","Diwali rush: cartons, posters and the first calendar enquiries.","Calendar season. Shops and finance firms want next year's calendars.","Margazhi. Calendars still coming; Thai weddings ahead.","Thai month. Weddings and Pongal posters.","Weddings continue. Schools start planning next year's books.","School books and notebook covers for the new academic year.","Chithirai weddings and school book printing.","Notebook rush before schools reopen.","Schools reopen. Notebook orders tail off."];
+const CLIENTS={
+  wedding:["Ramasamy family","Mrs. Kalaiselvi","Mr. Pandian","Sundaram family","Dr. Meenakshi","Mr. Arul Doss"],
+  notebook:["Kaveri Notebooks","Sri Ganesh Stationers","Bright Note Works","Thendral Exercise Books","Anna Paper Products"],
+  carton:["Vel Crackers","Amutha Sweets","Kongu Spices","Thiru Agarbathi","Sakthi Masala Works","Golden Star Matches"],
+  poster:["Raja Talkies","Velan Textiles","City Mobiles","Murugan Silks","Kannan Furniture"],
+  book:["Vidya Publishers","Sarada Matric School","Aram Book House","Thiru Educational Trust"],
+  calendar:["Lakshmi Finance","Annai Jewellery","Sri Balaji Traders","Ponni Rice Mill","Karpagam Chit Funds"],
+  bill:["Annapoorna Mess","Selvi Medicals","KRS Hardware","Mani Auto Works","Gopal Bakery"]
+};
+const OP_NAMES=["Murugesan","Selvam","Karthik","Anbu","Ravi","Prakash","Saravanan","Ilango","Manikandan","Vignesh","Dinesh","Bala"];
+
+/* ---- random helpers (r is an injected uniform generator) ---- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function liveR(){const m=Math.random;return{b:m,q:m,p:m,f:m}}
+function seedR(seed,w){return{b:mulberry32(seed*9973+w*7919+11),q:mulberry32(seed*6007+w*3571+23),p:mulberry32(seed*4441+w*1259+37),f:mulberry32(seed*2017+w*8669+51)}}
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const uni=(r,a,b)=>a+r()*(b-a);
+const rint=(r,a,b)=>Math.floor(a+r()*(b-a+1));
+const pickR=(r,a)=>a[Math.floor(r()*a.length)];
+function normR(r){let u=r();if(u<1e-12)u=1e-12;return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*r())}
+function wpickA(r,a){let t=0;for(const x of a)t+=x[1];let u=r()*t;for(const x of a){u-=x[1];if(u<=0)return x[0]}return a[0][0]}
+function wpick(r,w){let t=0;for(const k in w)t+=w[k];let x=r()*t;for(const k in w){x-=w[k];if(x<=0)return k}return Object.keys(w)[0]}
+const r100=x=>Math.round(x/100)*100;
+
+/* ---- calendar ---- */
+const monthOf=w=>Math.min(11,Math.floor((w-1)*7/30.44));
+const DAYN=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+/* ---- job physics: the same functions feed estimates, the game and the simulator ---- */
+function passesOn(cols,pk){return Math.ceil(cols/PRESSES[pk].units)}
+function grossSheets(sheets,passes){return sheets*(1+C.SPOIL_RUN*passes)+C.SPOIL_MR*passes}
+function kgPerSheet(t){return TYPES[t].a*TYPES[t].g/1000}
+function inkCost(t,sheets,cols){const T=TYPES[t];return sheets*T.a*T.cov*cols*C.INK_G_M2/1000*C.INK_RS_KG}
+function jobHours(j,pk,helper){
+  const P=PRESSES[pk],n=passesOn(j.cols,pk),g=grossSheets(j.sheets,n);
+  return C.JOB_MR+n*C.PASS_MR*P.mrF*(helper?C.HELP_MR:1)+n*g/(P.speed*TYPES[j.t].spf*(helper?C.HELP_SPEED:1));
+}
+function directCost(j,pk,idx,cutter){
+  const n=passesOn(j.cols,pk),g=grossSheets(j.sheets,n),kg=g*kgPerSheet(j.t);
+  const paper=kg*idx,plates=j.cols*C.PLATE,ink=inkCost(j.t,j.sheets,j.cols),cut=j.sheets/1000*(cutter?C.CUT_OWN:C.CUT_OUT);
+  return{kg,paper,plates,ink,cut,direct:paper+plates+ink+cut};
+}
+function marketCost(j,idx){
+  const g=grossSheets(j.sheets,1),kg=g*kgPerSheet(j.t);
+  const h=C.MKT_JOB_MR+C.MKT_PASS_MR+g/(C.MKT_SPEED*TYPES[j.t].spf);
+  return kg*idx+j.cols*C.PLATE+inkCost(j.t,j.sheets,j.cols)+j.sheets/1000*C.CUT_OWN+h*C.MKT_RATE;
+}
+function bh(s,j){if(j._np!==s.presses.length){const b=bestPress(s,j);j._bh=b.h;j._bpk=b.pk;j._np=s.presses.length}return j._bh}
+function bestPress(s,j){let best=null,bh=1e9;for(const p of s.presses){const h=jobHours(j,p.k,false);if(h<bh){bh=h;best=p.k}}return{pk:best,h:bh}}
+function estimate(s,j){
+  const b=bestPress(s,j),d=directCost(j,b.pk,s.idx,s.cutter),mach=b.h*C.OWN_RATE,cost=d.direct+mach;
+  return Object.assign(d,{pk:b.pk,hours:b.h,mach,cost,price:r100(cost*(1+C.MARKUP))});
+}
+/* going rate the trade knows (market rate before this client's own noise) and the quote that maximises expected margin */
+function guideRate(s,j){return marketCost(j,s.idx)*(1+C.MKT_MARGIN)}
+const S_EFF=Math.sqrt(C.WIN_S*C.WIN_S+C.MKT_SIG*C.MKT_SIG);
+function winPexp(q,g,rep,regular){return C.WIN_MAX/(1+Math.exp((q/g-C.WIN_MID-C.REP_SHIFT*(rep-0.5)-(regular?C.REG_SHIFT:0))/S_EFF))}
+function bestQuote(cost,g,rep,regular){
+  const ev=x=>{const q=g*x;return q<cost?-1e9:winPexp(q,g,rep,regular)*(q-cost)};
+  let bx=0.8,be=-1e9;for(let x=0.8;x<=1.401;x+=0.03){const e=ev(x);if(e>be){be=e;bx=x}}
+  for(let x=bx-0.03;x<=bx+0.031;x+=0.005){if(x<0.8||x>1.4)continue;const e=ev(x);if(e>be){be=e;bx=x}}
+  const q=be<=-1e9?r100(cost):r100(g*bx);return{q,p:winPexp(q,g,rep,regular),em:Math.max(0,be)}}
+function winP(q,mr,rep,regular){return C.WIN_MAX/(1+Math.exp((q/mr-C.WIN_MID-C.REP_SHIFT*(rep-0.5)-(regular?C.REG_SHIFT:0))/C.WIN_S))}
+
+/* ---- new game ---- */
+function makeClients(r){
+  const out=[];
+  for(const t of TYPE_KEYS)for(const n of CLIENTS[t])out.push({n,t,rel:clamp(TYPES[t].rel+uni(r,-0.14,0.1),0.45,0.995),good:0,late:0,paid:0,slow:0});
+  return out;
+}
+function newState(weeks,R){
+  const s={v:1,weeks,week:1,cash:C.START_CASH,rep:C.START_REP,idx:C.PAPER0,idxPrev:C.PAPER0,paperKg:0,paperCost:C.PAPER0,
+    presses:[{k:"p2",age:C.START_AGE,downD:0,breaks:0,hrs:0}],
+    ops:[{n:OP_NAMES[0],sk:0.55,tw:-99},{n:OP_NAMES[1],sk:0.45,tw:-99}],nextOp:2,
+    cutter:false,loan:0,emi:0,assets:[],recv:[],pay:[],queue:[],board:[],clients:makeClients(R.b),seq:1,
+    hist:[],tot:{rev:0,quoted:0,won:0,done:0,late:0,lateDays:0,breaks:0,bad:0,rejects:0,pm:0},
+    extra:{hire:0,train:0},phase:"quote",plan:{shifts:1,rej:"reprint",pm:{},buyKg:0,out:{}},mk:1,report:null,log:[],shown:0,dead:null};
+  s.board=genBoard(s,R);
+  return s;
+}
+
+/* ---- enquiries ---- */
+function genBoard(s,R){
+  const r=R.b,m=monthOf(s.week),w=SEASON_A[m];
+  if(!CPOOL){CPOOL={};s.clients.forEach((c,k)=>(CPOOL[c.t]=CPOOL[c.t]||[]).push(k))}
+  let n=rint(r,C.ENQ[0],C.ENQ[1]);const x=r();
+  if(x<s.rep-0.55)n++;else if(x<0.45-s.rep)n--;
+  if(s.presses.some(p=>p.k==="p4")&&r()<0.6)n++;
+  n=clamp(n,C.ENQ[0],C.ENQ[1]);
+  const out=[];
+  for(let i=0;i<n;i++){
+    const t=wpickA(r,w),pool=CPOOL[t],regT=[];let ci;
+    for(const k of pool)if(s.clients[k].good>0)regT.push(k);
+    if(regT.length&&r()<Math.min(0.6,0.25*regT.length))ci=pickR(r,regT);else ci=pickR(r,pool);
+    const T=TYPES[t],lo=Math.log(T.sh[0]),hi=Math.log(T.sh[1]);
+    const sheets=Math.max(100,r100(Math.exp(uni(r,lo,hi))));
+    const j={id:s.seq++,t,c:ci,sheets,cols:pickR(r,T.cols),dl:rint(r,T.dl[0],T.dl[1]),terms:wpickA(r,T.termsA),wk:s.week};
+    j.mr=marketCost(j,s.idx)*(1+C.MKT_MARGIN)*Math.exp(C.MKT_SIG*normR(r));
+    j.e=estimate(s,j);j.est=j.e.price;j.g=guideRate(s,j);j.e.marg=j.e.direct+j.e.hours*C.MARG_RATE;const bq=bestQuote(j.e.marg,j.g,s.rep,isReg(s,j));j.sug=bq.q;j.psug=bq.p;j.quote=j.sug;j.act="quote";
+    out.push(j);
+  }
+  return out;
+}
+const isReg=(s,j)=>s.clients[j.c].good>0;
+
+/* ---- quotes go out, replies come back ---- */
+function resolveQuotes(s,R,L){
+  const r=R.q,d0=(s.week-1)*7;const res=[];
+  for(const j of s.board){
+    const u=r();
+    if(j.act!=="quote"){res.push({j,won:false,skip:true});continue}
+    s.tot.quoted++;
+    const p=winP(j.quote,j.mr,s.rep,isReg(s,j)),won=u<p;
+    if(won){s.tot.won++;j.price=j.quote;j.adv=j.terms>0?Math.round(j.quote*C.ADVANCE):0;s.cash+=j.adv;j.due=d0+j.dl;j.remH=null;j.pk=null;j.done=false;j.rej=false;j.disc=0;j.out=false;s.queue.push(j)}
+    res.push({j,won,p});
+  }
+  s.replies=res.map(x=>({j:x.j,won:x.won,skip:!!x.skip}));s.board=[];
+  return res;
+}
+
+/* ---- crew: who runs which press, how many hours a day ---- */
+function shiftHours(sh){return sh===2?[C.SHIFT_H,C.SHIFT_H]:[sh==="ot"?C.SHIFT_H+C.OT_H:C.SHIFT_H,0]}
+const CREWC=new WeakMap();
+function crew(s,sh){
+  const key=sh+"|"+s.week+"|"+s.ops.length+"|"+s.presses.length+"|"+s.ops.reduce((a,o)=>a+o.sk,0);let m=CREWC.get(s);if(!m){m={};CREWC.set(s,m)}if(m[key])return m[key];
+  return m[key]=crew0(s,sh);
+}
+function crew0(s,sh){
+  const order=s.presses.map((p,i)=>i).sort((a,b)=>(s.presses[b].k==="p4")-(s.presses[a].k==="p4"));
+  const ops=s.ops.slice().sort((a,b)=>b.sk-a.sk);let k=0;
+  const out=s.presses.map(()=>({hd:0,sk:0,n:0,helper:false,day:null,night:null}));
+  const [hd,hn]=shiftHours(sh);
+  for(const i of order){if(k<ops.length){const o=ops[k++];out[i].day=o.n;out[i].hd+=hd;out[i].sk+=o.sk;out[i].n++}}
+  if(sh===2)for(const i of order){if(k<ops.length){const o=ops[k++];out[i].night=o.n;out[i].hd+=hn;out[i].sk+=o.sk-C.NIGHT_SKILL;out[i].n++}}
+  for(const i of order){if(k<ops.length&&out[i].day&&!out[i].night){k++;out[i].helper=true}}
+  for(const c of out)c.sk=c.n?c.sk/c.n:0;
+  return out;
+}
+function weekCapacity(s,sh){return crew(s,sh).reduce((a,c)=>a+c.hd*C.DAYS,0)}
+
+/* ---- paper ---- */
+function supOwed(s){return s.pay.reduce((a,p)=>a+p.amt,0)}
+function payPaper(s,amt,acc){const room=Math.max(0,C.SUP_LIMIT-supOwed(s)),cr=Math.min(room,amt);
+  if(cr>0)s.pay.push({amt:cr,due:s.week+C.SUP_WEEKS});s.cash-=amt-cr;if(acc)acc.cashPaper+=amt-cr}
+function bulkDisc(kg){let d=0;for(const [k,x] of C.BULK)if(kg>=k)d=x;return d}
+function bookPaper(s,kg,acc){
+  const price=s.idx*(1-bulkDisc(kg)),amt=kg*price;
+  s.paperCost=(s.paperKg*s.paperCost+amt)/(s.paperKg+kg);s.paperKg+=kg;payPaper(s,amt,acc);return price;
+}
+function issuePaper(s,kg,acc){
+  const take=Math.min(kg,s.paperKg),short=kg-take;let v=take*s.paperCost;s.paperKg-=take;
+  if(short>0){const amt=short*s.idx*(1+C.SMALL_LOT);payPaper(s,amt,acc);v+=amt}
+  acc.paper+=v;return{take,short};
+}
+
+/* ---- deterministic projection (no breakdowns, no rejects): used for the plan screen and suggestions ---- */
+function project(s,plan){
+  const cr=crew(s,plan.shifts),d0=(s.week-1)*7,res={};
+  const ps=s.presses.map((p,i)=>({k:p.k,hd:cr[i].hd,helper:cr[i].helper,t:Math.min(C.DAYS,p.downD)*cr[i].hd+(plan.pm[i]?C.PM_H:0)}));
+  const cut=s.cutter?C.CUT_OWN_DAYS:C.CUT_OUT_DAYS;
+  for(const j of s.queue){
+    if(j.done)continue;
+    if(plan.out&&plan.out[j.id]&&j.remH==null){const del=d0+C.OUT_DAYS;res[j.id]={del,late:Math.max(0,Math.floor(del)-j.due),pi:-1,out:true};continue}
+    let bi=-1,bf=1e9,bh=0;
+    for(let i=0;i<ps.length;i++){if(!ps[i].hd)continue;if(j.pk!=null&&j.pi!==i&&j.remH!=null)continue;
+      const h=j.remH!=null?j.remH:jobHours(j,ps[i].k,ps[i].helper);const f=ps[i].t+h;
+      const fd=f/ps[i].hd;if(fd<bf){bf=fd;bi=i;bh=h}}
+    if(bi<0){res[j.id]={del:Infinity,late:99,pi:-1};continue}
+    const P=ps[bi];P.t+=bh;
+    const days=P.t/P.hd,wk=Math.floor(days/C.DAYS),rem=days-wk*C.DAYS;   // spill into later weeks (6 working days of 7)
+    const del=d0+wk*7+rem+cut;
+    res[j.id]={del,late:Math.max(0,Math.floor(del)-j.due),pi:bi,h:bh,thisWeek:wk===0};
+  }
+  return res;
+}
+
+/* ---- the week ---- */
+function hhmm(h){const H=Math.floor(h),M=Math.floor((h-H)*60/10)*10;return String(H).padStart(2,"0")+":"+String(M).padStart(2,"0")}
+function runWeek(s,R,L){
+  const r=R.p,w=s.week,d0=(w-1)*7,P=s.plan,sh=P.shifts,startH=sh===2?6:8;
+  const acc={rev:0,paper:0,plates:0,ink:0,cut:0,out:0,wages:0,ot:0,night:0,rent:C.RENT,power:C.POWER_BASE,misc:C.MISC,repair:0,pm:0,interest:0,bad:0,depr:0,hire:s.extra.hire,train:s.extra.train,pen:0,disc:0,cashPaper:0,collected:0,cashSales:0,paidSup:0};
+  s.extra={hire:0,train:0};
+  const ev=[];const add=(k,x,c,q)=>{ev.push({k,x,c,q})};
+  const stamp=(day,h)=>DAYN[Math.min(5,day)]+" "+hhmm(h);
+  const cl=j=>s.clients[j.c].n,jn=j=>"Job "+String(j.id).padStart(4,"0");
+  const rep0=s.rep,cash0=s.cash,kg0=s.paperKg;
+  const delivered=[],stats={late:0,onTime:0,breaks:0,rejects:0,lateDays:0};
+  if(P.buyKg>0){const pr=bookPaper(s,P.buyKg,acc);L&&add(0.1,`Paper dealer's lorry unloads ${P.buyKg.toLocaleString("en-IN")} kg at ₹${pr.toFixed(1)}/kg.`)}
+  const cr=crew(s,sh);
+  const ps=s.presses.map((p,i)=>({p,i,P:PRESSES[p.k],hd:cr[i].hd,sk:cr[i].sk,helper:cr[i].helper,t:0,cap:cr[i].hd*C.DAYS,busy:0,c:cr[i]}));
+  const tk=(x,t)=>{const day=x.hd?Math.floor(t/x.hd):5;return{day:Math.min(5,day),h:startH+(x.hd?t-day*x.hd:8)}};
+  for(const x of ps){
+    if(!x.hd){L&&add(0.2,`No operator for the ${x.P.name} this week. It stands idle.`,"warn");continue}
+    if(x.p.downD>0){const dd=Math.min(C.DAYS,x.p.downD);x.t=dd*x.hd;x.p.downD=Math.max(0,x.p.downD-C.DAYS);L&&add(0.3,`The ${x.P.name} is still waiting for spares: down for ${dd.toFixed(1).replace(/\.0$/,"")} more day${dd>1?"s":""}.`,"warn")}
+    if(P.pm[x.i]&&x.t<x.cap){x.t+=C.PM_H;x.p.age=0;acc.pm+=C.PM_COST;s.tot.pm++;L&&add(0.4+x.i*0.01,`Mechanic services the ${x.P.name}: rollers washed, grippers set, bearings greased. Back at ${hhmm(startH+Math.min(x.t,x.hd))}.`,"good")}
+  }
+  if(L){const names=cr.map((c,i)=>c.day?`${c.day} on the ${PRESSES[s.presses[i].k].short}${c.night?`, ${c.night} on nights`:""}${c.helper?" with a helper":""}`:null).filter(Boolean);
+    if(names.length)L&&add(0.05,`Crew: ${names.join("; ")}.`)}
+  // outsourced jobs
+  for(const j of s.queue){
+    if(j.done||!(P.out&&P.out[j.id])||j.remH!=null)continue;
+    j.out=true;const cost=Math.round(j.mr*C.OUT_TRADE);acc.out+=cost;s.cash-=cost;
+    deliver(j,d0+C.OUT_DAYS,{day:3,h:16},"out");
+  }
+  function deliver(j,day,t,how){
+    const late=Math.max(0,Math.floor(day)-j.due);
+    const pen=Math.min(C.LATE_MAX,C.LATE_PEN*late)*j.price,disc=j.disc*j.price,amt=Math.round(j.price-pen-disc);
+    acc.rev+=amt;acc.pen+=pen;acc.disc+=disc;j.done=true;j.late=late;s.tot.done++;
+    const c=s.clients[j.c];
+    if(late>0){s.rep=clamp(s.rep-Math.min(C.REP_LATE_MAX,C.REP_LATE*late),0.02,1);c.late++;c.good=Math.max(0,c.good-1);stats.late++;stats.lateDays+=late;s.tot.late++;s.tot.lateDays+=late}
+    else{s.rep=clamp(s.rep+C.REP_ONTIME,0.02,1);c.good++;stats.onTime++}
+    if(j.terms===0){s.cash+=amt;acc.cashSales+=amt}else if(amt-(j.adv||0)>0)s.recv.push({c:j.c,amt:amt-(j.adv||0),due:w+C.PAY_WEEKS[j.terms],od:0,id:j.id,bad:R.f()<(1-c.rel)*C.DEFAULT_P});
+    delivered.push(j);
+    if(L){const k=t.day*24+t.h;
+      const what=how==="out"?`${jn(j)} printed at a friend's press and delivered to ${cl(j)}`:`${jn(j)} (${TYPES[j.t].n.toLowerCase()}) delivered to ${cl(j)}`;
+      const when=late>0?`, ${late} day${late>1?"s":""} late. Penalty ${rs(pen)}.`:(j.due-Math.floor(day)>=1?`, ${j.due-Math.floor(day)} day${j.due-Math.floor(day)>1?"s":""} early.`:", on time.");
+      const q=late>0?pickR(r,["“We had to tell our customers to wait. Next time we go elsewhere.”","“Late again? The function was yesterday.”","“Our shop opening went ahead without them.”"]):(r()<0.35?pickR(r,["“Neat work. The colours are bright.”","“Good registration. We'll send the next order your way.”","“Right on time. Thank you, sir.”","“Pack the rest in bundles of hundred, please.”"]):null);
+      L&&add(k,what+when+(j.terms===0?` Paid ${rs(amt)} in cash.`:` Bill ${rs(amt)}, due in ${j.terms} days.`),late>0?"warn":"good",q)}
+  }
+  // production: list-schedule the queue in the chosen order
+  for(const j of s.queue){
+    if(j.done||j.out)continue;
+    let x=null;
+    if(j.pi!=null&&j.remH!=null)x=ps[j.pi];
+    else{let bf=1e9;for(const y of ps){if(!y.hd||y.t>=y.cap-1e-6)continue;const f=(y.t+jobHours(j,y.p.k,y.helper))/y.hd;if(f<bf){bf=f;x=y}}}
+    if(!x||!x.hd||x.t>=x.cap-1e-6)continue;
+    if(j.remH==null){
+      j.pi=x.i;j.pk=x.p.k;j.remH=jobHours(j,x.p.k,x.helper);
+      const n=passesOn(j.cols,x.p.k),kg=grossSheets(j.sheets,n)*kgPerSheet(j.t);
+      const is=issuePaper(s,kg,acc);acc.plates+=j.cols*C.PLATE;acc.ink+=inkCost(j.t,j.sheets,j.cols);acc.cut+=j.sheets/1000*(s.cutter?C.CUT_OWN:C.CUT_OUT);
+      if(L){const t=tk(x,x.t);L&&add(t.day*24+t.h,`${x.c.day||"The crew"} starts ${jn(j)}: ${j.sheets.toLocaleString("en-IN")} sheets, ${j.cols} colour${j.cols>1?"s":""}${n>1?` in ${n} passes`:""} on the ${x.P.short} press.`+(is.short>0?` Bought ${Math.round(is.short)} kg of paper at the counter.`:""))}
+    }
+    work(x,j);
+  }
+  function work(x,j){
+    const P=x.P,Hz=a=>Math.pow(a/P.eta,P.beta);
+    while(j.remH>1e-9&&x.t<x.cap-1e-9){
+      const c=Math.min(j.remH,x.cap-x.t),a=x.p.age,pf=1-Math.exp(-(Hz(a+c)-Hz(a))),u=r();
+      if(u<pf){
+        const y=Math.min(c,P.eta*Math.pow(Hz(a)-Math.log(1-u),1/P.beta)-a);
+        x.t+=y;x.busy+=y;j.remH-=y;x.p.age=(a+y)*C.REPAIR_AGE;x.p.breaks++;s.tot.breaks++;stats.breaks++;
+        const fix=C.REPAIR_MED*Math.exp(C.REPAIR_SIG*normR(r));let cost=uni(r,C.REPAIR_COST[0],C.REPAIR_COST[1]),down=fix,sp=0;
+        if(r()<C.SPARES_P){sp=rint(r,C.SPARES_DAYS[0],C.SPARES_DAYS[1]);down+=sp*x.hd;cost+=uni(r,C.SPARES_COST[0],C.SPARES_COST[1])}
+        acc.repair+=cost;
+        if(L){const t=tk(x,x.t);L&&add(t.day*24+t.h,`Breakdown on the ${P.short} press during ${jn(j)}: ${pickR(r,["the gripper bar jams","a dampening roller bearing seizes","the feeder sucker pump fails","the ink duct motor burns out","a delivery chain link snaps"])}. `+(sp?`Spares must come from Sivakasi: ${sp} day${sp>1?"s":""} down.`:`Fixed in ${fix.toFixed(1)} h.`)+` Repair ${rs(cost)}.`,"warn",
+          pickR(r,["“Sir, I told you that noise was not normal.”","“The mechanic says this press needs regular servicing.”","“Running it this hard, something had to give.”"]))}
+        x.t+=down;if(x.t>x.cap){x.p.downD=(x.t-x.cap)/x.hd;x.t=x.cap}
+        continue;
+      }
+      x.t+=c;x.busy+=c;x.p.age+=c;j.remH-=c;
+    }
+    if(j.remH<=1e-9){
+      j.remH=0;
+      if(!j.rej){
+        const pr=C.REJ_BASE+C.REJ_SKILL*(1-x.sk)+C.REJ_AGE*Math.min(1,x.p.age/x.P.eta);
+        if(r()<pr){
+          j.rej=true;stats.rejects++;s.tot.rejects++;const f=uni(r,C.REJ_FRAC[0],C.REJ_FRAC[1]),n=passesOn(j.cols,x.p.k);
+          const what=pickR(r,["registration drift","ink set-off on the stack","a hickey on the solid","colour too weak on one unit","sheets creased at the feeder"]);
+          if(s.plan.rej==="reprint"){
+            const ex=Math.round(j.sheets*f);issuePaper(s,grossSheets(ex,n)*kgPerSheet(j.t)-C.SPOIL_MR*n*kgPerSheet(j.t)*0.5,acc);acc.ink+=inkCost(j.t,ex,j.cols);
+            j.remH=n*C.PASS_MR*0.5+n*ex/(x.P.speed*TYPES[j.t].spf);
+            if(L){const t=tk(x,x.t);L&&add(t.day*24+t.h,`Quality check on ${jn(j)}: ${what}. ${Math.round(f*100)}% of the sheets are rejects. Reprinting ${ex.toLocaleString("en-IN")} sheets.`,"warn")}
+            work(x,j);return;
+          }else{
+            j.disc=C.DISCOUNT;s.rep=clamp(s.rep-C.REP_DISC,0.02,1);
+            if(L){const t=tk(x,x.t);L&&add(t.day*24+t.h,`Quality check on ${jn(j)}: ${what} on ${Math.round(f*100)}% of the sheets. Sent anyway with a ${Math.round(C.DISCOUNT*100)}% discount.`,"warn",`${cl(j)}: “We will pay, but this is not what we approved.”`)}
+          }
+        }
+      }
+      const t=tk(x,x.t),day=x.hd?Math.min(5.99,x.t/x.hd):5.99;
+      deliver(j,d0+day+(s.cutter?C.CUT_OWN_DAYS:C.CUT_OUT_DAYS),{day:t.day,h:t.h+(s.cutter?1:0)},"press");
+    }
+  }
+  // ---- money at the end of the week ----
+  const presH=ps.reduce((a,x)=>a+x.busy,0);
+  for(const x of ps){acc.power+=x.busy*x.P.pw;x.p.hrs+=x.busy}
+  acc.wages=s.ops.length*C.WAGE;
+  for(const c of cr){if(c.day&&sh==="ot")acc.ot+=C.OT_H*C.DAYS*C.WAGE/(C.DAYS*C.SHIFT_H)*C.OT_MULT;if(c.night)acc.night+=C.WAGE*C.NIGHT_PREM}
+  for(const o of s.ops)o.sk=Math.min(C.SKILL_MAX,o.sk+C.LEARN);
+  // receivables
+  const rf=R.f;
+  for(const e of s.recv){
+    if(e.due>w||e.gone)continue;
+    const c=s.clients[e.c],u=rf();
+    if(!e.bad&&u<c.rel){s.cash+=e.amt;acc.collected+=e.amt;e.gone=1;c.paid++;if(L&&rf()<0.6)L&&add(130+e.id%9,`${c.n} pays ${rs(e.amt)}${e.od?` after ${e.od} week${e.od>1?"s":""} of reminders`:""}.`,"good")}
+    else{e.od++;c.slow++;
+      if(e.bad&&e.od>=C.DEFAULT_AFTER){e.gone=1;acc.bad+=e.amt;s.tot.bad+=e.amt;c.rel*=0.5;L&&add(131,`${c.n} has closed down. ${rs(e.amt)} is written off as a bad debt.`,"warn","Their accountant: “There is nothing left to pay creditors with.”")}
+      else if(L&&e.od===1)L&&add(130.5,`${c.n} has not paid the ${rs(e.amt)} due this week.`,"warn",pickR(rf,["“Cheque will come Monday, sure.”","“Our buyer has not paid us, so we cannot pay you.”","“Accountant is on leave this week.”"]))}
+  }
+  s.recv=s.recv.filter(e=>!e.gone);
+  // supplier
+  const due=s.pay.filter(p=>p.due<=w),dueAmt=due.reduce((a,p)=>a+p.amt,0);s.pay=s.pay.filter(p=>p.due>w);s.cash-=dueAmt;acc.paidSup=dueAmt;
+  if(dueAmt>0)L&&add(132,`Paid the paper dealer ${rs(dueAmt)} on old bills.`);
+  // fixed costs
+  const fixed=acc.wages+acc.ot+acc.night+acc.rent+acc.power+acc.misc+acc.repair+acc.pm+acc.plates+acc.ink+acc.cut+acc.hire+acc.train;
+  s.cash-=fixed;
+  // loan
+  let princ=0;if(s.loan>0){const i=s.loan*C.LOAN_RATE/52;princ=Math.min(s.loan,s.emi-i);acc.interest+=i;s.loan-=princ;s.cash-=i+princ;if(s.loan<1){s.loan=0;s.emi=0}}
+  if(s.cash<0){const i=-s.cash*C.OD_RATE/52;acc.interest+=i;s.cash-=i}
+  for(const a of s.assets){const d=a.cost*C.DEPR;a.book=Math.max(0,a.book-d);acc.depr+=d}
+  acc.cost=acc.paper+fixed+acc.out+acc.interest+acc.bad+acc.depr;
+  acc.profit=acc.rev-acc.cost;
+  // reputation drifts slightly toward average
+  s.rep=clamp(s.rep+(C.START_REP-s.rep)*C.REP_PULL,0.02,1);
+  // utilisation and backlog
+  const capH=ps.reduce((a,x)=>a+x.cap,0),backlog=s.queue.reduce((a,j)=>a+(j.done||j.out?0:(j.remH!=null?j.remH:bh(s,j))),0);
+  s.queue=s.queue.filter(j=>!j.done);
+  const rcv=s.recv.reduce((a,e)=>a+e.amt,0),pay=supOwed(s);
+  const eq=equity(s);
+  const h={week:w,rev:acc.rev,profit:acc.profit,cash:s.cash,eq,util:capH?presH/capH:0,busy:presH,cap:capH,backlog,late:stats.late,lateDays:stats.lateDays,onTime:stats.onTime,pen:acc.pen,breaks:stats.breaks,rcv,pay,rep:s.rep};
+  s.hist.push(h);s.tot.rev+=acc.rev;
+  if(L){ev.sort((a,b)=>a.k-b.k);
+    s.log=ev.map(e=>({t:e.k<1?"Mon 07:30":e.k>=130?"Sat 18:00":stamp(Math.floor(e.k/24),e.k%24),x:e.x,c:e.c,q:e.q}));
+    const nd=delivered.length;
+    s.log.push({t:"Sat 18:30",x:`Shutters down. ${nd} job${nd===1?"":"s"} delivered this week, ${s.queue.length} still in the queue. Presses ran ${presH.toFixed(0)} of ${capH} crewed hours.`,c:""});
+  }
+  s.report={acc,stats,rep0,rep1:s.rep,cash0,cash1:s.cash,kg0,kg1:s.paperKg,delivered:delivered.map(j=>({id:j.id,t:j.t,c:j.c,late:j.late,price:j.price})),util:h.util,backlog,rcv,pay,sh,breaks:stats.breaks};
+  // bankruptcy: overdraft limit breached after payroll
+  if(s.cash<-odLimit(s)){s.breach=(s.breach||0)+1;s.report.breach=s.breach;
+    if(s.breach>=2){s.dead={week:w,cash:s.cash,limit:odLimit(s)};s.phase="bankrupt";return}
+    if(L)s.log.push({t:"Sat 19:00",x:`The bank manager calls: the overdraft is ${rs(-s.cash)}, over the ${rs(odLimit(s))} limit. Get back inside the limit by next Saturday or the wage cheques will bounce.`,c:"warn"})}
+  else s.breach=0;
+  // paper market moves for next week
+  s.idxPrev=s.idx;let lr=C.PAPER_SIG*normR(rf)+C.PAPER_REV*Math.log(C.PAPER0/s.idx);
+  if(rf()<C.PAPER_JUMP){const sz=uni(rf,C.PAPER_JUMP_SIZE[0],C.PAPER_JUMP_SIZE[1]);lr+=rf()<C.PAPER_UP?sz:-sz;s.jump=true}else s.jump=false;
+  s.idx=s.idx*Math.exp(lr);
+}
+/* bank overdraft: a base limit plus drawing power against receivables that are not badly overdue */
+function odLimit(s){let g=0;for(const e of s.recv)if(e.od<C.DEFAULT_AFTER)g+=e.amt;return Math.min(C.OD_MAX,C.OD_BASE+C.OD_DP*g)}
+/* what the owner walks away with if the bank closes the account */
+function liquidation(s){return s.cash-s.queue.reduce((a,j)=>a+(j.done?0:(j.adv||0)),0)+0.5*s.recv.reduce((a,e)=>a+e.amt,0)+0.6*s.paperKg*s.paperCost+0.5*s.assets.reduce((a,x)=>a+x.book,0)-supOwed(s)-s.loan}
+function score(s){return (s.phase==="bankrupt"?liquidation(s):equity(s))-C.START_CASH}
+function equity(s){
+  return s.cash-s.queue.reduce((a,j)=>a+(j.done?0:(j.adv||0)),0)+s.recv.reduce((a,e)=>a+e.amt,0)+s.paperKg*s.paperCost+s.assets.reduce((a,x)=>a+x.book,0)-supOwed(s)-s.loan;
+}
+function nextWeek(s,R){
+  s.week++;
+  if(s.week>s.weeks){s.phase="final";s.week=s.weeks;return}
+  s.plan.pm={};s.plan.buyKg=0;s.plan.out={};s.replies=null;
+  s.board=genBoard(s,R);s.phase="quote";
+}
+const rs=x=>(x<0?"−":"")+"₹"+Math.abs(Math.round(x)).toLocaleString("en-IN");
+
+/* ---- upgrades ---- */
+function canAfford(s,amt,keep){return s.cash-amt>=-odLimit(s)+(keep||0)}
+function buyPress4(s,how){
+  const price=PRESSES.p4.price;
+  if(s.presses.some(p=>p.k==="p4"))return"You already have a 4-colour press.";
+  if(how==="cash"){if(s.cash<price)return"Not enough cash. Use the bank loan.";s.cash-=price}
+  else{const down=price*C.DOWN;if(!canAfford(s,down,40000))return"The bank wants the down payment without stretching your overdraft that far.";
+    s.cash-=down;s.loan+=price-down;const i=C.LOAN_RATE/52,n=C.LOAN_WEEKS;s.emi=s.loan*i/(1-Math.pow(1+i,-n))}
+  s.presses.push({k:"p4",age:0,downD:3,breaks:0,hrs:0});s.assets.push({n:"4-colour press",cost:price,book:price,week:s.week});
+  return null;
+}
+function buyCutter(s){if(s.cutter)return"Already bought.";if(!canAfford(s,C.CUTTER_PRICE,50000))return"That would push the overdraft too close to the limit.";
+  s.cash-=C.CUTTER_PRICE;s.cutter=true;s.assets.push({n:"Paper cutter",cost:C.CUTTER_PRICE,book:C.CUTTER_PRICE,week:s.week});return null}
+function hireOp(s,R){const r=R?R.b:Math.random;const n=OP_NAMES[s.nextOp++%OP_NAMES.length];s.ops.push({n,sk:Math.round((0.32+0.16*r())*100)/100,tw:-99});s.cash-=C.HIRE_COST;s.extra.hire+=C.HIRE_COST;return n}
+function trainOp(s,i){const o=s.ops[i];if(!o)return"No such operator.";if(s.week-o.tw<6)return`${o.n} was trained recently. Wait until week ${o.tw+6}.`;if(o.sk>=C.SKILL_MAX-0.01)return`${o.n} is already at the top.`;
+  o.sk=Math.min(C.SKILL_MAX,o.sk+C.TRAIN_GAIN);o.tw=s.week;s.cash-=C.TRAIN_COST;s.extra.train+=C.TRAIN_COST;return null}
+function letGo(s,i){if(s.ops.length<=1)return"You need at least one operator.";const o=s.ops.splice(i,1)[0];s.cash-=C.WAGE;s.extra.hire+=C.WAGE;return null}
+
+/* ---- the suggested plan: one policy object drives the game's suggestion AND the simulator ---- */
+const POL_SENSIBLE={mk:1.0,terms:90,order:"edf",pm:0.5,shifts:"auto",cap:true,liq:true,rej:"reprint",out:true,paper:true,buy4:null,cutter:false,hire:false};
+const POL_CARELESS={mk:0.95,terms:90,order:"fcfs",pm:0,shifts:1,cap:false,liq:false,rej:"discount",out:false,paper:false,buy4:null,cutter:false,hire:false};
+function headroom(s){return s.cash+odLimit(s)+Math.max(0,C.SUP_LIMIT-supOwed(s))}
+function suggestQuotes(s,pol){
+  const maxSh=s.ops.length>=2*s.presses.length?2:"ot",cr=crew(s,maxSh),cap=cr.reduce((a,c)=>a+c.hd,0)*C.DAYS/7; // crewed hours per calendar day
+  const d0=(s.week-1)*7;
+  let load=s.queue.reduce((a,j)=>a+(j.done?0:(j.remH!=null?j.remH:bh(s,j))),0);
+  let committed=s.queue.reduce((a,j)=>a+(j.remH==null&&!j.done?(bh(s,j),directCost(j,j._bpk,s.idx,s.cutter).paper):0),0);
+  const room=headroom(s)-committed;
+  const b=s.board.slice().sort((a,c)=>a.dl-c.dl);
+  for(const j of b){
+    const e=j.e||(j.e=estimate(s,j));let ok=true;j.why="";
+    if(j.terms>pol.terms){ok=false;j.why=`Credit of ${j.terms} days is longer than you allow.`}
+    if(ok&&pol.cap){const need=load+e.hours;if(need>cap*(j.dl-0.5)*0.85){ok=false;j.why="Not enough press time before the deadline."}}
+    if(ok&&pol.liq){const od=-Math.min(0,s.cash)/odLimit(s);
+      if(j.terms===0){if(e.paper>room){ok=false;j.why="You cannot pay for the paper."}}
+      else if(j.terms>=60&&od>0.4){ok=false;j.why="Overdraft is too stretched for long credit."}
+      else if(od>0.65){ok=false;j.why="Overdraft is too stretched for any credit."}
+      else if(e.paper>room-0.25*odLimit(s)){ok=false;j.why="The paper bill would leave too little cash headroom."}}
+    j.act=ok?"quote":"skip";j.quote=r100(j.sug*pol.mk);
+    if(ok){load+=e.hours*winPexp(j.quote,j.g,s.rep,isReg(s,j))}
+  }
+}
+function orderQueue(s,how){
+  const key=how==="edf"?(j=>j.due):how==="spt"?(j=>j.remH!=null?j.remH:bh(s,j)):(j=>j.id);
+  s.queue.sort((a,b)=>{const sa=a.remH!=null&&a.remH>0?0:1,sb=b.remH!=null&&b.remH>0?0:1;return sa-sb||key(a)-key(b)});
+}
+function suggestPlan(s,pol){
+  const p=s.plan;p.rej=pol.rej;p.pm={};p.out={};p.buyKg=0;
+  orderQueue(s,pol.order);
+  s.presses.forEach((x,i)=>{if(pol.pm>0&&x.age>=pol.pm*PRESSES[x.k].eta&&x.downD<C.DAYS)p.pm[i]=true});
+  if(pol.shifts==="auto"){
+    const opts=[1,"ot"].concat(s.ops.length>=2?[2]:[]);p.shifts=opts[opts.length-1];
+    const need=s.queue.reduce((a,j)=>a+((j.remH!=null?j.remH:bh(s,j))*(j.due-(s.week-1)*7<=12?1:0.4)),0)+Object.keys(p.pm).length*C.PM_H;
+    for(const o of opts){if(weekCapacity(s,o)>=need*1.05){p.shifts=o;break}}
+  }else p.shifts=(pol.shifts===2&&s.ops.length<2)?"ot":pol.shifts;
+  if(pol.out){const pr=project(s,p);for(const j of s.queue){const x=pr[j.id];if(x&&j.remH==null&&x.late>=2&&(j.due-(s.week-1)*7)>=C.OUT_DAYS&&j.mr*C.OUT_TRADE<j.price*(1-Math.min(C.LATE_MAX,C.LATE_PEN*x.late))+400*x.late)p.out[j.id]=true}}
+  if(pol.paper){
+    const need=s.queue.reduce((a,j)=>a+(j.remH==null&&!p.out[j.id]?directCost(j,"p2",s.idx,s.cutter).kg:0),0);
+    const short=need-s.paperKg;
+    if(short>300&&s.idx<=s.idxPrev*1.02){let kg=0;for(const [k] of C.BULK)if(k<=Math.max(500,short*1.3))kg=k;if(headroom(s)-kg*s.idx>90000)p.buyKg=kg}
+  }
+}
+function applyPolicyUpgrades(s,pol,R){
+  const ev=[];
+  if(pol.buy4&&!s.presses.some(p=>p.k==="p4")&&s.hist.length>=4){
+    const h=s.hist.slice(-4),u=h.reduce((a,x)=>a+x.util,0)/4,bl=h[h.length-1].backlog;
+    if(u>=pol.buy4.util&&bl>=pol.buy4.backlog&&s.week<=s.weeks-pol.buy4.minLeft&&headroom(s)-PRESSES.p4.price*C.DOWN>=pol.buy4.reserve){
+      if(!buyPress4(s,"loan")){if(pol.hire&&s.ops.length<3)hireOp(s,R);ev.push("p4")}
+    }
+  }
+  if(pol.cutter&&!s.cutter&&s.week>=4&&headroom(s)-C.CUTTER_PRICE>=pol.cutterReserve){if(!buyCutter(s))ev.push("cut")}
+  return ev;
+}
+/* one complete simulated game with the same functions the game uses */
+function simGame(seed,weeks,pol,opt){
+  opt=opt||{};
+  const R0=seedR(seed,0),s=newState(weeks,R0);
+  const st=opt.start;
+  if(st){if(st.cash!=null)s.cash=st.cash;if(st.rep!=null)s.rep=st.rep;if(st.idx)s.idx=s.idxPrev=st.idx;if(st.age!=null)s.presses[0].age=st.age;
+    if(st.p4){s.presses.push({k:"p4",age:st.age4||0,downD:0,breaks:0,hrs:0});if(st.loan){s.loan=st.loan;s.emi=st.emi||0}}
+    if(st.cutter)s.cutter=true;while(st.ops&&s.ops.length<st.ops)hireOp(s,R0);s.extra={hire:0,train:0};s.board=genBoard(s,R0)}
+  const base=equity(s)-C.START_CASH;
+  const out={profit:[],eq:[],cash:[],rev:[],util:[],late:[],pen:[],backlog:[],dead:-1,buy4:-1,minCash:s.cash,lateJobs:0,jobs:0,lateDays:0,crunch:false};
+  while(s.phase!=="final"&&s.phase!=="bankrupt"){
+    const R=seedR(seed,s.week);
+    if(opt.order)pol=Object.assign({},pol,{order:opt.order});
+    suggestQuotes(s,pol);resolveQuotes(s,R,null);
+    const ev=applyPolicyUpgrades(s,pol,R);if(ev.includes("p4"))out.buy4=s.week;
+    suggestPlan(s,pol);runWeek(s,R,null);
+    const h=s.hist[s.hist.length-1];
+    out.profit.push(h.profit);out.eq.push(h.eq-C.START_CASH-base);out.cash.push(h.cash);out.rev.push(h.rev);out.util.push(h.util);out.late.push(h.late);out.pen.push(h.pen);out.backlog.push(h.backlog);
+    out.lateJobs+=h.late;out.jobs+=h.late+h.onTime;out.lateDays+=h.lateDays;if(h.cash<-0.8*odLimit(s))out.crunch=true;
+    if(h.cash<out.minCash)out.minCash=h.cash;
+    if(s.phase==="bankrupt"){out.dead=s.week;break}
+    nextWeek(s,R);
+  }
+  out.final=score(s)-base;out.base=base;out.weeksPlayed=s.hist.length;out.rep=s.rep;out.bad=s.tot.bad;out.breaks=s.tot.breaks;
+  return out;
+}
+/*ENGINE-END*/
+
+/* ===================== PLAY UI ===================== */
+let s=null, view="title", sel=26, revealTimer=null, confirmNew=null, sheetMode="saves", confirmBuy=null;
+const $=id=>document.getElementById(id);
+const money=rs;
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmtN=x=>Math.round(x).toLocaleString("en-IN");
+const plural=(n,w)=>`${n} ${w}${n===1?"":"s"}`;
+const LIVE=liveR();
+function dayLabel(d){d=Math.floor(d);return `${DAYN[((d%7)+7)%7]} wk ${Math.floor(d/7)+1}`}
+function inks(c){const k=c===4?["c","m","y","k"]:c===2?["k","m"]:["k"];return `<span class="inks" aria-hidden="true">${k.map(x=>`<i class="${x}"></i>`).join("")}</span>`}
+const REG=`<svg class="reg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 1v22M1 12h22" stroke="currentColor" stroke-width="1.5"/></svg>`;
+const CBAR=`<div class="cbar" aria-hidden="true"><i class="c"></i><i class="m"></i><i class="y"></i><i class="k"></i><i class="g"></i><i class="c"></i><i class="m"></i><i class="y"></i><i class="k"></i><i class="g"></i></div>`;
+
+/* ---------- storage ---------- */
+const LS={get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const K_AUTO="press.auto",K_SLOTS="press.slots",K_BEST="press.best",K_TECH="press.tech",K_THEME="press.theme";
+function autosave(){if(s)LS.set(K_AUTO,Object.assign({},s,{savedAt:Date.now()}))}
+function slots(){return LS.get(K_SLOTS)||{}}
+function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2600)}
+function applyTheme(){const t=LS.get(K_THEME);if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);else document.documentElement.removeAttribute("data-theme")}
+
+/* ---------- game flow ---------- */
+function newGame(weeks){
+  s=newState(weeks,LIVE);suggestQuotes(s,POL_SENSIBLE);applyMk();view="game";confirmNew=null;autosave();render();window.scrollTo(0,0);
+}
+function applyMk(){for(const j of s.board)j.quote=r100(j.sug*s.mk)}
+function sendQuotes(){
+  if(!s.board.some(j=>j.act==="quote")&&!s.queue.length){/* allowed: an empty week */}
+  resolveQuotes(s,LIVE,true);
+  suggestPlan(s,POL_SENSIBLE);s.plan.buyKg=0;
+  s.phase="plan";autosave();render();window.scrollTo(0,0);
+}
+function runTheWeek(){
+  clearTimeout(revealTimer);
+  runWeek(s,LIVE,true);
+  s.after=s.phase==="bankrupt"?"bankrupt":"report";s.phase="run";s.shown=0;
+  autosave();render();window.scrollTo(0,0);runReveal();
+}
+function quickWeek(){
+  if(s.phase==="quote"){suggestQuotes(s,POL_SENSIBLE);applyMkSuggested();resolveQuotes(s,LIVE,true)}
+  suggestPlan(s,POL_SENSIBLE);
+  runTheWeek();
+}
+function applyMkSuggested(){for(const j of s.board)if(j.act==="quote")j.quote=r100(j.sug*s.mk)}
+function runReveal(){
+  clearTimeout(revealTimer);
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reduce){s.shown=s.log.length;render();return}
+  const step=()=>{if(!s||s.phase!=="run"||s.shown>=s.log.length){if(s&&s.phase==="run")renderRunPart();return}s.shown++;renderRunPart();revealTimer=setTimeout(step,420)};
+  step();
+}
+function finishRun(){clearTimeout(revealTimer);s.phase=s.after||"report";if(s.phase==="bankrupt")recordBest();autosave();render();window.scrollTo(0,0)}
+function startNext(){nextWeek(s,LIVE);if(s.phase==="final")recordBest();else{suggestQuotes(s,POL_SENSIBLE);applyMk()}autosave();render();window.scrollTo(0,0)}
+function recordBest(){
+  const best=LS.get(K_BEST)||{},k=String(s.weeks),sc=Math.round(score(s));s.final=sc;
+  if(best[k]==null||sc>best[k]){best[k]=sc;LS.set(K_BEST,best);s.newBest=true}
+}
+
+/* ---------- status bar ---------- */
+function stats(){
+  if(!s)return"";
+  const lim=odLimit(s),od=Math.max(0,-s.cash),pa=s.presses[0],P=PRESSES[pa.k],wear=Math.min(1,pa.age/P.eta);
+  return `<div class="stat"><div class="lbl">Week</div><b>${s.week}/${s.weeks}</b></div>
+  <div class="stat"><div class="lbl">${s.cash<0?"Overdraft":"Cash"}</div><b class="${s.cash<0?"neg":""}">${money(s.cash)}</b><div class="meter ${od/lim>0.75?"bad":"acc"}"><i style="width:${Math.round(Math.min(1,od/lim)*100)}%"></i></div></div>
+  <div class="stat"><div class="lbl">Name</div><b>${Math.round(s.rep*100)}</b><div class="meter"><i style="width:${Math.round(s.rep*100)}%"></i></div></div>
+  <div class="stat"><div class="lbl">Wear</div><b class="${wear>0.7?"neg":""}">${Math.round(pa.age)}h</b><div class="meter ${wear>0.7?"bad":""}"><i style="width:${Math.round(wear*100)}%"></i></div></div>`;
+}
+
+/* ---------- quote phase ---------- */
+function clientLine(c){
+  if(!c.paid&&!c.slow&&!c.good&&!c.late)return"New client";
+  const bits=[];if(c.good)bits.push(`${c.good} on-time job${c.good>1?"s":""}`);if(c.paid)bits.push(`${c.paid} bill${c.paid>1?"s":""} paid`);if(c.slow)bits.push(`${c.slow} week${c.slow>1?"s":""} overdue so far`);if(c.late)bits.push(`${c.late} late job${c.late>1?"s":""}`);
+  return bits.join(", ");
+}
+function docket(j){
+  const T=TYPES[j.t],c=s.clients[j.c],e=j.e,reg=c.good>0,d0=(s.week-1)*7,n=passesOn(j.cols,e.pk),copies=Math.round(j.sheets*T.ups);
+  const p=winPexp(j.quote,j.g,s.rep,reg),skip=j.act!=="quote";
+  return `<article class="docket ${skip?"skip":""}" aria-label="Job ${j.id}">
+  <div class="top"><span class="jno">JOB No. ${String(j.id).padStart(4,"0")}</span>${reg?`<span class="tag good">Regular</span>`:c.slow>2||c.late?`<span class="tag warn">Watch</span>`:`<span class="tag ink">${j.terms===0?"Cash":"Credit"}</span>`}</div>
+  <div class="body">
+    <div class="what">${esc(T.n)}</div><div class="who">${esc(c.n)} · ${esc(clientLine(c))}</div>
+    <div class="fields">
+      <div><span class="lbl">Quantity</span><b>${fmtN(copies)} ${T.u}</b></div>
+      <div><span class="lbl">Sheets</span><b>${fmtN(j.sheets)}</b></div>
+      <div><span class="lbl">Stock</span><b>${T.sz} · ${T.g} gsm</b></div>
+      <div><span class="lbl">Colours</span><b>${inks(j.cols)}${j.cols} · ${plural(n,"pass")}</b></div>
+      <div><span class="lbl">Deadline</span><b>${j.dl} days · ${dayLabel(d0+j.dl)}</b></div>
+      <div><span class="lbl">Payment</span><b>${j.terms===0?"Cash on delivery":`${j.terms} days, ${Math.round(C.ADVANCE*100)}% advance`}</b></div>
+      <div><span class="lbl">Press time</span><b>${e.hours.toFixed(1)} h on ${PRESSES[e.pk].short}</b></div>
+      <div><span class="lbl">Paper</span><b>${fmtN(e.kg)} kg · ${money(e.paper)}</b></div>
+    </div>
+    <details class="costs"><summary>Cost sheet</summary><table class="kv">
+      <tr><td>Paper (${fmtN(e.kg)} kg at ₹${s.idx.toFixed(1)})</td><td>${money(e.paper)}</td></tr>
+      <tr><td>Plates (${j.cols} × ₹${C.PLATE})</td><td>${money(e.plates)}</td></tr>
+      <tr><td>Ink</td><td>${money(e.ink)}</td></tr>
+      <tr><td>Cutting ${s.cutter?"(own cutter)":"(sent out)"}</td><td>${money(e.cut)}</td></tr>
+      <tr><td>Press running, ${e.hours.toFixed(1)} h × ₹${C.MARG_RATE}</td><td>${money(e.hours*C.MARG_RATE)}</td></tr>
+      <tr class="total"><td>Cost to run this job</td><td>${money(e.marg)}</td></tr>
+      <tr><td>Full cost with rent and wages (₹${C.OWN_RATE}/h)</td><td>${money(e.cost)}</td></tr>
+    </table></details>
+  </div>
+  <div class="perf"></div>
+  <div class="quoterow">
+    <div class="qline"><span class="small muted">Going rate about <b class="num" style="color:var(--ink)">${money(j.g)}</b></span><span class="small ${j.quote<e.marg?"neg":"muted"}">${j.quote<e.marg?"Below cost":`Margin ${money(j.quote-e.marg)}`}</span></div>
+    <div class="qline"><div class="ctl"><button data-act="qdec" data-id="${j.id}" aria-label="Lower quote for job ${j.id}">−</button><output id="q_${j.id}">${money(j.quote)}</output><button data-act="qinc" data-id="${j.id}" aria-label="Raise quote for job ${j.id}">+</button></div>
+      <div class="small muted" style="text-align:right">${Math.round(j.quote/j.g*100)}% of rate<br>win about <b class="num" style="color:var(--ink)">${Math.round(p*100)}%</b></div></div>
+    <div class="seg"><button data-act="qact" data-id="${j.id}" data-v="quote" aria-pressed="${!skip}">Send quote</button><button data-act="qact" data-id="${j.id}" data-v="skip" aria-pressed="${skip}">Skip</button></div>
+    ${j.why?`<p class="small warnc">Suggested: skip. ${esc(j.why)}</p>`:""}
+  </div></article>`;
+}
+function queueHours(){return s.queue.reduce((a,j)=>a+(j.done?0:(j.remH!=null?j.remH:bh(s,j))),0)}
+function renderQuote(){
+  const m=monthOf(s.week),tr=(s.idx/s.idxPrev-1)*100,qh=queueHours();
+  const trTxt=Math.abs(tr)<0.5?"steady":(tr>0?`up ${tr.toFixed(1)}%`:`down ${(-tr).toFixed(1)}%`);
+  return `<section>
+  <div class="card"><h3>${REG}Week ${s.week} · ${MONTHS[m]}</h3>
+    <h2>${plural(s.board.length,"enquiry").replace("enquirys","enquiries")} on the board</h2>
+    <p class="small muted" style="margin-top:6px">${esc(SEASON_NOTE[m])}</p>
+    ${s.jump?`<div class="event">The paper mill has changed its price list. Paper is now ₹${s.idx.toFixed(1)}/kg, ${trTxt} on last week.</div>`:""}
+    <div class="kpis" style="margin-top:10px">
+      <div class="kpi"><span class="lbl">Paper</span><b>₹${s.idx.toFixed(1)}/kg</b><span class="small muted">${trTxt} · stock ${fmtN(s.paperKg)} kg</span></div>
+      <div class="kpi"><span class="lbl">Already booked</span><b>${qh.toFixed(0)} h</b><span class="small muted">${plural(s.queue.length,"job")} · one shift is ${weekCapacity(s,1)} h</span></div>
+    </div>
+  </div>
+  <div class="card"><h3>Quote level for all jobs</h3>
+    <div class="seg">${[0.9,0.95,1,1.05,1.1].map(v=>`<button data-act="mk" data-v="${v}" aria-pressed="${Math.abs(s.mk-v)<1e-6}">${Math.round(v*100)}%<small>${v===1?"suggested":v<1?"cheaper":"dearer"}</small></button>`).join("")}</div>
+    <p class="small muted" style="margin-top:6px">The suggested quote balances the chance of winning against the margin. Adjust any job below.</p>
+  </div>
+  ${s.board.map(docket).join("")}
+  <button class="big" data-act="send">Send ${plural(s.board.filter(j=>j.act==="quote").length,"quote")}</button>
+  <button class="ghost" data-act="quick">Accept suggested plan and run the week</button>
+  </section>`;
+}
+
+/* ---------- plan phase ---------- */
+function pBreak(p,hours){const P=PRESSES[p.k],H=x=>Math.pow(x/P.eta,P.beta);return 1-Math.exp(-(H(p.age+hours)-H(p.age)))}
+function renderPlan(){
+  const pr=project(s,s.plan),d0=(s.week-1)*7,cr=crew(s,s.plan.shifts);
+  const won=(s.replies||[]).filter(r=>r.won),lost=(s.replies||[]).filter(r=>!r.won&&!r.skip);
+  const opts=[[1,"1 shift"],["ot","Overtime"],[2,"2 shifts"]];
+  const qh=queueHours();
+  const planned=s.presses.map((p,i)=>{let h=0;for(const j of s.queue){const x=pr[j.id];if(x&&x.pi===i&&x.thisWeek)h+=x.h||0}return Math.min(h,cr[i].hd*C.DAYS)});
+  const needKg=s.queue.reduce((a,j)=>a+(j.remH==null&&!s.plan.out[j.id]?directCost(j,bestPress(s,j).pk,s.idx,s.cutter).kg:0),0);
+  const shiftCost=o=>{const c2=crew(s,o);let x=0;for(const c of c2){if(c.day&&o==="ot")x+=C.OT_H*C.DAYS*C.WAGE/(C.DAYS*C.SHIFT_H)*C.OT_MULT;if(c.night)x+=C.WAGE*C.NIGHT_PREM}return x};
+  const has4=s.presses.some(p=>p.k==="p4");
+  return `<section>
+  <div class="card"><h3>${REG}Replies to your quotes</h3>
+    ${won.length||lost.length?`${won.map(r=>`<div class="row2"><div class="txt"><b>Won</b> · Job ${String(r.j.id).padStart(4,"0")} ${esc(TYPES[r.j.t].n.toLowerCase())} for ${esc(s.clients[r.j.c].n)}</div><span class="num pos">${money(r.j.price)}</span></div>`).join("")}
+      ${lost.map(r=>`<div class="row2"><div class="txt muted">Lost · Job ${String(r.j.id).padStart(4,"0")} ${esc(TYPES[r.j.t].n.toLowerCase())}</div><span class="num muted">${money(r.j.quote)}</span></div>`).join("")}`:`<p class="small muted">No quotes went out this week.</p>`}
+    ${won.some(r=>r.j.adv)?`<p class="small muted" style="margin-top:6px">Advances received: ${money(won.reduce((a,r)=>a+(r.j.adv||0),0))}.</p>`:""}
+  </div>
+
+  <div class="card"><h3>Job queue · ${qh.toFixed(0)} h of work</h3>
+    ${s.queue.length?s.queue.map((j,i)=>{const x=pr[j.id]||{},T=TYPES[j.t],started=j.remH!=null,out=!!s.plan.out[j.id];
+      const lateTxt=!x.del||x.del===Infinity?`<span class="tag bad">No crew</span>`:x.late>0?`<span class="tag bad">${x.late}d late</span>`:`<span class="tag good">On time</span>`;
+      return `<div class="qrow"><div class="mv"><button data-act="up" data-i="${i}" aria-label="Move job ${j.id} up" ${i===0?"disabled":""}>▲</button><button data-act="down" data-i="${i}" aria-label="Move job ${j.id} down" ${i===s.queue.length-1?"disabled":""}>▼</button></div>
+      <div><div class="ttl">${i+1}. Job ${String(j.id).padStart(4,"0")} · ${esc(T.n)} ${inks(j.cols)}</div>
+        <div class="meta">${esc(s.clients[j.c].n)} · ${fmtN(j.sheets)} sheets · ${money(j.price)}<br>Due ${dayLabel(j.due)} · ${out?`outsourced, back ${dayLabel(d0+C.OUT_DAYS)}`:started?`${j.remH.toFixed(1)} h left on ${PRESSES[j.pk].short}`:`${(x.h||bh(s,j)).toFixed(1)} h`}${x.del&&x.del!==Infinity&&!out?` · ready ${dayLabel(x.del)}`:""}</div>
+        ${started?`<div class="prog"><i style="width:${Math.round(100*(1-j.remH/Math.max(j.remH,jobHours(j,j.pk,false))))}%"></i></div>`:""}
+        <div class="acts">${lateTxt}${!started?`<button class="mini" data-act="out" data-id="${j.id}" aria-pressed="${out}">${out?"Outsourced":"Outsource"} · ${money(j.mr*C.OUT_TRADE)}</button>`:""}</div></div></div>`}).join(""):`<p class="small muted">Nothing to print this week. Fixed costs still run.</p>`}
+    <div class="btnrow" style="margin-top:8px"><button class="mini" data-act="sort" data-v="edf">Earliest due first</button><button class="mini" data-act="sort" data-v="spt">Shortest first</button><button class="mini" data-act="sort" data-v="fcfs">Oldest first</button></div>
+  </div>
+
+  <div class="card"><h3>Shifts</h3>
+    <div class="seg">${opts.map(([v,n])=>{const dis=v===2&&s.ops.length<2;return `<button data-act="shift" data-v="${v}" aria-pressed="${s.plan.shifts===v}" ${dis?"disabled":""}>${n}<small>${weekCapacity(s,v)} h${shiftCost(v)?` +${money(shiftCost(v))}`:""}</small></button>`}).join("")}</div>
+    <p class="small muted" style="margin-top:6px">${cr.map((c,i)=>`${PRESSES[s.presses[i].k].short}: ${c.day?esc(c.day):"no operator"}${c.night?` and ${esc(c.night)} on nights`:""}${c.helper?", with a helper (faster makeready)":""}`).join(" · ")}. Two shifts need two operators per press.</p>
+  </div>
+
+  <div class="card"><h3>Presses</h3>
+    ${s.presses.map((p,i)=>{const P=PRESSES[p.k],pb=pBreak(p,planned[i]+(s.plan.pm[i]?0:0)),pb2=pBreak({k:p.k,age:0},planned[i]);
+      return `<div class="row2"><div class="txt"><b>${P.name}</b><div class="small muted">${Math.round(p.age)} h since service · ${p.breaks} breakdown${p.breaks===1?"":"s"} so far${p.downD>0?` · <span class="neg">down ${p.downD.toFixed(1)} days</span>`:""}<br>Chance of a breakdown this week: <b class="num ${pb>0.3?"neg":""}" style="color:inherit">${Math.round((s.plan.pm[i]?pb2:pb)*100)}%</b>${s.plan.pm[i]?` after service (was ${Math.round(pb*100)}%)`:` · after a service ${Math.round(pb2*100)}%`}</div></div>
+      <button class="mini" data-act="pm" data-i="${i}" aria-pressed="${!!s.plan.pm[i]}">Service<br>${money(C.PM_COST)} · ${C.PM_H} h</button></div>`}).join("")}
+  </div>
+
+  <div class="card"><h3>Paper</h3>
+    <p class="small">Stock <b class="num">${fmtN(s.paperKg)} kg</b> at ₹${s.paperCost.toFixed(1)}. Queued jobs need about <b class="num">${fmtN(needKg)} kg</b>. Anything short is bought at the counter for ${Math.round(C.SMALL_LOT*100)}% over the list price.</p>
+    <p class="small muted" style="margin-top:4px">Dealer credit used ${money(supOwed(s))} of ${money(C.SUP_LIMIT)}, payable in ${C.SUP_WEEKS} weeks.</p>
+    <div class="seg" style="margin-top:8px"><button data-act="paper" data-v="0" aria-pressed="${s.plan.buyKg===0}">None</button>${C.BULK.map(([kg,d])=>`<button data-act="paper" data-v="${kg}" aria-pressed="${s.plan.buyKg===kg}">${fmtN(kg)} kg<small>${d?"−"+Math.round(d*100)+"% ":""}${money(kg*s.idx*(1-d))}</small></button>`).join("")}</div>
+  </div>
+
+  <div class="card"><h3>If a batch comes out bad</h3>
+    <div class="seg"><button data-act="rej" data-v="reprint" aria-pressed="${s.plan.rej==="reprint"}">Reprint it<small>paper + press time</small></button><button data-act="rej" data-v="discount" aria-pressed="${s.plan.rej==="discount"}">Send it, ${Math.round(C.DISCOUNT*100)}% off<small>clients remember</small></button></div>
+  </div>
+
+  <div class="card"><h3>Workshop</h3>
+    ${s.ops.map((o,i)=>`<div class="row2"><div class="txt"><b>${esc(o.n)}</b> · operator<div class="meter" style="width:120px"><i style="width:${Math.round(o.sk*100)}%"></i></div><div class="small muted">skill ${Math.round(o.sk*100)} · ${money(C.WAGE)}/week</div></div>
+      <div class="btnrow" style="flex:none;gap:6px"><button class="mini" data-act="train" data-i="${i}" ${s.week-o.tw<6||o.sk>=C.SKILL_MAX-0.01?"disabled":""}>Train ${money(C.TRAIN_COST)}</button><button class="mini" data-act="fire" data-i="${i}" ${s.ops.length<=1?"disabled":""}>Let go</button></div></div>`).join("")}
+    <div class="row2"><div class="txt"><b>Hire an operator</b><div class="small muted">${money(C.WAGE)}/week plus ${money(C.HIRE_COST)} to hire. New hands start less skilled.</div></div><button class="mini" data-act="hire">Hire</button></div>
+    <div class="row2"><div class="txt"><b>Paper cutter</b><div class="small muted">${s.cutter?"Bought. Cutting costs ₹"+C.CUT_OWN+" per 1,000 sheets and adds no delay.":`${money(C.CUTTER_PRICE)}. Sending cutting out costs ₹${C.CUT_OUT} per 1,000 sheets and a day.`}</div></div>${s.cutter?"":`<button class="mini" data-act="cutter">Buy</button>`}</div>
+    <div class="row2"><div class="txt"><b>4-colour press</b><div class="small muted">${has4?`Installed. Loan ${money(s.loan)}, ${money(s.emi)}/week.`:`${money(PRESSES.p4.price)}. Four colours in one pass, ${PRESSES.p4.speed.toLocaleString("en-IN")} sheets an hour. Bank loan: ${Math.round(C.DOWN*100)}% down (${money(PRESSES.p4.price*C.DOWN)}), ${Math.round(C.LOAN_RATE*100)}% over 3 years, about ${money(emi4())}/week. Takes 3 days to install. Needs an operator.`}</div></div></div>
+    ${has4?"":confirmBuy?`<p class="small neg">This adds a loan of ${money(PRESSES.p4.price*(1-C.DOWN))}. Sure?</p><div class="btnrow"><button class="big" data-act="buy4ok">Buy with loan</button><button class="ghost" data-act="buy4no">Cancel</button></div>`:`<div class="btnrow"><button class="ghost" data-act="buy4">Buy with bank loan</button>${s.cash>=PRESSES.p4.price?`<button class="ghost" data-act="buy4cash">Pay cash</button>`:""}</div>`}
+  </div>
+
+  <button class="big" data-act="run">Run the week</button>
+  <button class="ghost" data-act="quick">Accept suggested plan and run</button>
+  </section>`;
+}
+function emi4(){const L=PRESSES.p4.price*(1-C.DOWN),i=C.LOAN_RATE/52;return L*i/(1-Math.pow(1+i,-C.LOAN_WEEKS))}
+
+/* ---------- run + report ---------- */
+function logHTML(n){return s.log.slice(0,n).map(l=>`<div class="h"><span class="t">${esc(l.t)}</span><div><div class="${l.c||""}">${esc(l.x)}</div>${l.q?`<div class="q">${esc(l.q)}</div>`:""}</div></div>`).join("")}
+function renderRunInner(){
+  const done=s.shown>=s.log.length;
+  return `<div class="card"><h3>${REG}Week ${s.week} on the shop floor</h3><div class="log" id="log">${logHTML(s.shown)}</div></div>
+  ${done?`<button class="big" data-act="finish">${s.after==="bankrupt"?"See what happened":"See the week's accounts"}</button>`:`<button class="ghost" data-act="skip">Skip ahead</button>`}`;
+}
+function renderRunPart(){
+  if(view!=="game"||!s||s.phase!=="run"||tab!=="play")return;
+  const sec=$("runsec");if(!sec){render();return}
+  sec.innerHTML=renderRunInner();
+  const last=sec.querySelector(".log .h:last-child");if(last&&last.scrollIntoView)last.scrollIntoView({block:"nearest",behavior:"smooth"});
+}
+function notes(){
+  const r=s.report,a=r.acc,st=r.stats,t=[];
+  if(st.late)t.push(`${plural(st.late,"job")} went out late, costing ${money(a.pen)} in penalties and some of your name. Put the earliest due date first, add overtime or a second shift, or outsource a job you can't make.`);
+  if(r.breaks)t.push(`The press broke down ${plural(r.breaks,"time")}. Wear builds with running hours, and the chance of a failure climbs faster as it ages. A ${money(C.PM_COST)} service resets it.`);
+  if(st.rejects)t.push(`${plural(st.rejects,"batch")} failed the quality check. Skilled operators and a freshly serviced press make fewer rejects.`);
+  if(r.util<0.35&&s.queue.length===0)t.push(`The press ran only ${Math.round(r.util*100)}% of its crewed hours. Idle hours still pay rent and wages, so quote a little sharper next week.`);
+  if(r.backlog>weekCapacity(s,1)*0.8)t.push(`${r.backlog.toFixed(0)} hours of work are still waiting. That needs more shifts or outsourcing to stay on time.`);
+  if(-s.cash>odLimit(s)*0.6)t.push(`The overdraft is ${Math.round(-s.cash/odLimit(s)*100)}% of the bank's limit. Prefer cash and 30-day jobs until bills come in.`);
+  if(a.bad)t.push(`A client defaulted and ${money(a.bad)} was written off. Watch clients who pay late; they are the ones who disappear.`);
+  if(s.jump&&s.idx>s.idxPrev)t.push(`Paper goes up to ₹${s.idx.toFixed(1)}/kg next week. Quotes rise with it, but stock you already hold is cheaper.`);
+  else if(s.jump)t.push(`Paper drops to ₹${s.idx.toFixed(1)}/kg next week. A good week to book a bulk lot.`);
+  if(!t.length)t.push("A clean week. Keep an eye on the press hours and the overdraft as the season changes.");
+  return t.slice(0,4);
+}
+function renderReport(){
+  const r=s.report,a=r.acc,dr=r.rep1-r.rep0;
+  const row=(n,v,cls)=>v?`<tr><td>${n}</td><td class="${cls||""}">${money(v)}</td></tr>`:"";
+  return `<section>
+  <div class="card"><h3>${REG}End of week ${s.week}</h3>
+    <h2>${plural(r.delivered.length,"job")} delivered</h2>
+    <p class="small muted" style="margin-top:4px">Presses ran ${Math.round(r.util*100)}% of crewed hours · ${r.stats.onTime} on time, ${r.stats.late} late · ${plural(r.breaks,"breakdown")}</p>
+  </div>
+  <div class="card"><h3>Accounts</h3><table class="kv">
+    <tr class="head"><td>Income</td><td></td></tr>
+    <tr><td>Jobs delivered</td><td class="pos">${money(a.rev)}</td></tr>
+    ${a.pen?`<tr><td class="small muted">after late penalties of</td><td class="small muted">${money(a.pen)}</td></tr>`:""}
+    ${a.disc?`<tr><td class="small muted">after quality discounts of</td><td class="small muted">${money(a.disc)}</td></tr>`:""}
+    <tr class="head"><td>Costs</td><td></td></tr>
+    ${row("Paper used",-a.paper,"neg")}${row("Plates and ink",-(a.plates+a.ink),"neg")}${row("Cutting",-a.cut,"neg")}${row("Outsourced printing",-a.out,"neg")}
+    ${row("Wages",-a.wages,"neg")}${row("Overtime and night allowance",-(a.ot+a.night),"neg")}${row("Rent, power and sundries",-(a.rent+a.power+a.misc),"neg")}
+    ${row("Repairs and servicing",-(a.repair+a.pm),"neg")}${row("Hiring and training",-(a.hire+a.train),"neg")}${row("Interest",-a.interest,"neg")}${row("Bad debts",-a.bad,"neg")}${row("Depreciation",-a.depr,"neg")}
+    <tr class="total"><td>Profit this week</td><td class="${a.profit>=0?"pos":"neg"}">${money(a.profit)}</td></tr>
+  </table></div>
+  <div class="card"><h3>Cash and credit</h3><table class="kv">
+    <tr><td>Bank balance</td><td>${money(r.cash0)} → <b class="${s.cash<0?"neg":""}">${money(s.cash)}</b></td></tr>
+    <tr><td>Collected from clients</td><td>${money(a.collected+a.cashSales)}</td></tr>
+    <tr><td>Owed to you</td><td>${money(r.rcv)}</td></tr>
+    <tr><td>Owed to the paper dealer</td><td>${money(r.pay)}</td></tr>
+    <tr><td>Overdraft limit</td><td>${money(odLimit(s))}</td></tr>
+    <tr><td>Paper in stock</td><td>${fmtN(r.kg0)} → ${fmtN(r.kg1)} kg</td></tr>
+    <tr><td>Name in the trade</td><td class="${dr>=0?"pos":"neg"}">${Math.round(r.rep0*100)} → ${Math.round(r.rep1*100)}</td></tr>
+  </table></div>
+  <div class="card"><h3>Notes for next time</h3>${notes().map(t=>`<p style="margin-bottom:8px">${esc(t)}</p>`).join("")}</div>
+  <button class="big" data-act="next">${s.week>=s.weeks?"See the final results":`Start week ${s.week+1}`}</button>
+  </section>`;
+}
+function grade(sc,weeks,dead){
+  if(dead)return"Shutters down";
+  const t=weeks>=52?[900000,650000,300000,0]:[300000,200000,100000,0];
+  return sc>=t[0]?"Press baron":sc>=t[1]?"Busy press":sc>=t[2]?"Steady printer":sc>t[3]?"Scraping by":"Ink on the floor";
+}
+function profitChart(){
+  const H=s.hist;if(!H.length)return"";
+  return `<div class="chart" id="c_final"></div>`;
+}
+function drawFinal(){
+  const el=$("c_final");if(!el)return;const H=s.hist,f=chartFrame(el,200);
+  const vals=H.map(h=>h.profit),mx=Math.max(1,...vals),mn=Math.min(0,...vals),tk=niceTicks(mn,mx,4);
+  const lo=tk[0],hi=tk[tk.length-1],Y=v=>f.t+(hi-v)/(hi-lo)*(f.H-f.t-f.b),gw=(f.W-f.l-f.r)/H.length,bw=Math.max(2,gw-2);
+  let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Profit by week">`;
+  tk.forEach(v=>svg+=`<line class="grid" x1="${f.l}" x2="${f.W-f.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${f.l-6}" y="${Y(v)+4}" text-anchor="end">${kfmt(v)}</text>`);
+  svg+=`<line x1="${f.l}" x2="${f.W-f.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)"/>`;
+  H.forEach((h,i)=>{const x=f.l+i*gw+1,v=h.profit;svg+=barPath(x,bw,Y(0),Y(v),v>=0?"var(--s1)":"var(--s2)")});
+  const st=H.length>26?8:4;for(let i=0;i<H.length;i+=st)svg+=`<text class="ax" x="${f.l+(i+.5)*gw}" y="${f.H-8}" text-anchor="middle">W${i+1}</text>`;
+  svg+=`<line class="guide" y1="${f.t}" y2="${f.H-f.b}" style="display:none"/></svg>`;
+  el.innerHTML=`<div class="legend"><span><i style="background:var(--s1);height:10px;width:10px"></i>Profit week</span><span><i style="background:var(--s2);height:10px;width:10px"></i>Loss week</span></div>${svg}<div class="readout"></div>`;
+  hookHover(el,x=>{const i=clamp(Math.floor((x-f.l)/gw),0,H.length-1),h=H[i];return{x:f.l+(i+.5)*gw,text:`Week ${h.week}: profit ${money(h.profit)} · sales ${money(h.rev)} · cash ${money(h.cash)}`}},"Tap a bar to read a week.");
+}
+function renderFinal(){
+  const dead=s.phase==="bankrupt",sc=s.final!=null?s.final:Math.round(score(s)),best=(LS.get(K_BEST)||{})[String(s.weeks)];
+  const tot=s.hist.reduce((a,h)=>({rev:a.rev+h.rev,late:a.late+h.late,on:a.on+h.onTime}),{rev:0,late:0,on:0});
+  return `<section>
+  <div class="card title-card"><div class="regrow">${REG}${REG}</div><div class="lbl">${dead?`Closed in week ${s.dead.week}`:`${s.weeks} weeks done`}</div><h1>${grade(sc,s.weeks,dead)}</h1>
+    ${dead?`<p>The overdraft stayed past the bank's ${money(s.dead.limit||odLimit(s))} limit for two Saturdays running and the wage cheques bounced. The bank sold the stock and called in what clients owed at half value.</p>`:""}
+    <p style="margin-top:8px">${dead?"What you walked away with":"Net worth gained"}: <b class="num ${sc>=0?"pos":"neg"}">${money(sc)}</b></p>
+    <p class="small muted" style="margin-top:8px">${money(tot.rev)} of printing delivered · ${tot.on} jobs on time, ${tot.late} late · best ${s.weeks}-week result on this phone: ${best!=null?money(best):"none yet"}${s.newBest?" (new record)":""}</p>
+    ${CBAR}</div>
+  <div class="card"><h3>Final position</h3><table class="kv">
+    <tr><td>Cash at bank</td><td>${money(s.cash)}</td></tr><tr><td>Owed to you</td><td>${money(s.recv.reduce((a,e)=>a+e.amt,0))}</td></tr>
+    <tr><td>Paper stock</td><td>${money(s.paperKg*s.paperCost)}</td></tr><tr><td>Machines (book value)</td><td>${money(s.assets.reduce((a,x)=>a+x.book,0))}</td></tr>
+    <tr><td>Owed to the paper dealer</td><td>${money(-supOwed(s))}</td></tr><tr><td>Bank loan</td><td>${money(-s.loan)}</td></tr>
+  </table></div>
+  <div class="card"><h3>Profit by week</h3>${profitChart()}</div>
+  <button class="big" data-act="title">Play again</button>
+  </section>`;
+}
+function renderTitle(){
+  const auto=LS.get(K_AUTO),best=LS.get(K_BEST)||{};
+  const canResume=auto&&auto.v===1&&auto.phase!=="final"&&auto.phase!=="bankrupt";
+  return `<section>
+  <div class="card title-card"><div class="regrow">${REG}${REG}</div>
+    <div class="lbl">A printing business game</div>
+    <h1>Offset<br><span>Press</span></h1>
+    <p class="muted">A used 2-colour press, two operators and ${money(C.START_CASH)} in a shed in the industrial estate. Quote for wedding cards, cartons and calendars, keep the press running, and get paid before the bank loses patience.</p>
+    <div style="margin-top:14px">${CBAR}</div>
+  </div>
+  ${canResume?`<button class="big" data-act="resume">Continue · week ${auto.week} of ${auto.weeks}, ${money(auto.cash)}</button>`:""}
+  <div class="card"><h3>New game</h3>
+    <div class="lenpick">${[26,52].map(d=>`<button data-act="len" data-d="${d}" aria-pressed="${sel===d}">${d} weeks<small>${d===26?"July to December":"a full year"}${best[d]!=null?` · best ${money(best[d])}`:""}</small></button>`).join("")}</div>
+    <div style="margin-top:12px">${confirmNew?`<p class="small neg" style="margin-bottom:8px">This replaces your autosave. Saved slots stay safe.</p><div class="btnrow"><button class="big" data-act="startok">Start anyway</button><button class="ghost" data-act="startno">Cancel</button></div>`:`<button class="${canResume?"ghost":"big"}" data-act="start">Start a ${sel}-week game</button>`}</div>
+  </div>
+  <div class="btnrow"><button class="ghost" data-act="menu">Saves</button><button class="ghost" data-act="help">How to play</button></div>
+  </section>`;
+}
+function render(){
+  applyTab();
+  if(tab!=="play")return;
+  const main=$("main");
+  if(view==="title"||!s){main.innerHTML=renderTitle();return}
+  $("stats").innerHTML=stats();
+  if(s.phase==="quote")main.innerHTML=renderQuote();
+  else if(s.phase==="plan")main.innerHTML=renderPlan();
+  else if(s.phase==="run")main.innerHTML=`<section id="runsec">${renderRunInner()}</section>`;
+  else if(s.phase==="report")main.innerHTML=renderReport();
+  else{main.innerHTML=renderFinal();drawFinal()}
+}
+
+/* ---------- sheet: saves, help ---------- */
+function encodeSave(o){return "PRESS1:"+btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
+function decodeSave(t){t=t.trim();if(!t.startsWith("PRESS1:"))throw 0;const o=JSON.parse(decodeURIComponent(escape(atob(t.slice(7)))));if(!o||o.v!==1||!o.presses||!o.clients||!o.weeks)throw 0;return o}
+function fmtTime(ts){try{return new Date(ts).toLocaleString("en-IN",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return""}}
+function openSheet(mode){sheetMode=mode;$("sheet").hidden=false;renderSheet();$("panel").scrollTop=0}
+function closeSheet(){$("sheet").hidden=true}
+function renderSheet(){
+  const p=$("panel");
+  if(sheetMode==="help"){
+    p.innerHTML=`<div class="hrow"><h2>How to play</h2><button class="iconbtn" data-act="close">Close</button></div>
+    <div class="card help">
+    <p><b>Each week</b> has three steps. Quote for the enquiries on the board, plan the shop floor for the jobs you won, then run the week and read the accounts.</p>
+    <p><b>Enquiries.</b> Three to seven arrive each week. The mix follows the season: weddings in Aavani, Thai and Chithirai, cartons before Diwali, calendars at the year end, books and notebooks before schools reopen. Each docket shows quantity, colours, paper, deadline and payment terms.</p>
+    <p><b>Quoting.</b> Every job has a going rate in the trade. Quote under it and you usually win; quote over it and you usually lose. Your name in the trade shifts the odds, and regular clients give you a little extra room. The suggested quote balances the chance of winning against the margin. Every client has a hidden reliability: some pay late and a few never pay.</p>
+    <p><b>Costs of a job.</b> Paper is most of it. Each colour needs a plate. Every pass through the press starts with a makeready of about two hours (plates, ink, registration), then runs at the press speed. Your 2-colour press needs two passes for 4-colour work, so it is slow and dear on colour jobs. Some sheets are spoiled on every makeready.</p>
+    <p><b>Production.</b> Jobs run in queue order; move them up or down. One shift gives 48 hours a press, overtime 66, two shifts 96 if you have the operators. Late jobs pay a penalty of ${Math.round(C.LATE_PEN*100)}% of the price a day (up to ${Math.round(C.LATE_MAX*100)}%) and cost you name. On-time jobs build name and turn clients into regulars. You can outsource a job to a friend's press at the trade price.</p>
+    <p><b>Quality.</b> Each job can come out with a bad batch. Skilled operators and a recently serviced press reject less. You choose to reprint (paper and time) or send it with a discount (clients remember).</p>
+    <p><b>Breakdowns.</b> The press wears with running hours. The chance of a failure grows faster the longer it runs since its last service (a Weibull wear-out curve). A service takes ${C.PM_H} hours and ${money(C.PM_COST)} and resets the clock. A breakdown costs repairs, lost hours, and sometimes days waiting for spares from Sivakasi.</p>
+    <p><b>Paper market.</b> The price per kg wanders week to week and the mill sometimes changes its list price sharply. Booking 1,000 kg or more gets a discount; paper bought at the counter for a single job costs ${Math.round(C.SMALL_LOT*100)}% extra.</p>
+    <p><b>Money.</b> Cash clients pay on delivery. Credit clients pay ${Math.round(C.ADVANCE*100)}% advance and the rest after 30, 60 or 90 days, if they pay. The paper dealer gives up to ${money(C.SUP_LIMIT)} of credit for ${C.SUP_WEEKS} weeks. The bank gives an overdraft of ${money(C.OD_BASE)} plus half of what clients owe you that isn't badly overdue, at ${Math.round(C.OD_RATE*100)}% a year. Rent, wages and power go out every Saturday.</p>
+    <p><b>Going bust.</b> If the overdraft is over the limit on a Saturday, the bank warns you. If it is still over the next Saturday, the wage cheques bounce and the game ends.</p>
+    <p><b>Growing.</b> In the workshop you can hire and train operators, buy a paper cutter, or buy a 4-colour press on a bank loan. The new press prints all four colours in one pass, which makes colour work faster and cheaper.</p>
+    <p><b>Taxes.</b> GST and income tax are left out to keep the sums readable. All prices are before tax.</p>
+    <p><b>Score.</b> Net worth gained: cash, money owed to you, paper stock and machines, less what you owe. If the bank closes you down, it is what is left after a forced sale.</p>
+    <p><b>Quick weeks.</b> "Accept suggested plan" quotes, plans and runs a week in one tap. The game saves after every step.</p>
+    </div>`;
+    return;
+  }
+  const sl=slots(),auto=LS.get(K_AUTO),inGame=s&&view==="game",th=LS.get(K_THEME)||"auto";
+  p.innerHTML=`<div class="hrow"><h2>Saves</h2><button class="iconbtn" data-act="close">Close</button></div>
+  <div class="card"><h3>Autosave</h3><p class="small">${auto?`Week ${auto.week} of ${auto.weeks} · ${money(auto.cash)} · ${fmtTime(auto.savedAt)}`:"Nothing yet."} Saved after every step on this phone.</p></div>
+  <div class="card"><h3>Save slots</h3>
+    ${[1,2,3].map(n=>{const o=sl[n];return `<div class="slot"><div class="info"><b>Slot ${n}</b><br><span class="muted">${o?`Week ${o.week}/${o.weeks} · ${money(o.cash)} · ${fmtTime(o.savedAt)}`:"Empty"}</span></div>
+      <button class="mini" data-act="slotsave" data-n="${n}" ${inGame?"":"disabled"}>Save</button><button class="mini" data-act="slotload" data-n="${n}" ${o?"":"disabled"}>Load</button></div>`}).join("")}
+  </div>
+  <div class="card"><h3>Save code</h3><p class="small muted" style="margin-bottom:8px">Copy this text into a note or message to keep the game safe or move it to another phone.</p>
+    ${inGame?`<label for="codeOut" class="lbl">Your code</label><textarea id="codeOut" readonly>${encodeSave(s)}</textarea><button class="ghost" data-act="copy" style="margin-top:8px">Copy code</button>`:`<p class="small muted">Start or continue a game to get a code.</p>`}
+    <label for="codeIn" class="lbl" style="display:block;margin-top:12px">Paste a code to load</label>
+    <textarea id="codeIn" placeholder="PRESS1:..."></textarea><button class="ghost" data-act="codeload" style="margin-top:8px">Load from code</button>
+  </div>
+  <div class="card"><h3>Theme</h3><div class="seg">${[["auto","Follow phone"],["light","Proof sheet"],["dark","Light table"]].map(([v,n])=>`<button data-act="theme" data-v="${v}" aria-pressed="${th===v}">${n}</button>`).join("")}</div></div>
+  ${inGame?`<button class="ghost" data-act="help">How to play</button><button class="ghost" data-act="totitle">Back to title screen</button>`:""}`;
+}
+function loadState(o){clearTimeout(revealTimer);s=JSON.parse(JSON.stringify(o));delete s.savedAt;view="game";autosave();closeSheet();render();if(s.phase==="run")runReveal();toast("Game loaded");window.scrollTo(0,0)}
+
+/* ---------- input ---------- */
+function keepScroll(fn){const y=window.scrollY;fn();window.scrollTo(0,y)}
+function jobById(id,list){return (list||[]).find(j=>j.id===+id)}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-act]");if(!b||b.disabled)return;
+  const a=b.dataset.act;
+  switch(a){
+    case "qinc":case "qdec":{const j=jobById(b.dataset.id,s.board);if(!j)break;const st=Math.max(100,r100(j.g*0.02));j.quote=Math.max(100,j.quote+(a==="qinc"?st:-st));if(j.act!=="quote"){j.act="quote";j.why=""}autosave();keepScroll(render);break}
+    case "qact":{const j=jobById(b.dataset.id,s.board);if(j){j.act=b.dataset.v;if(j.act==="quote")j.why="";autosave();keepScroll(render)}break}
+    case "mk":s.mk=+b.dataset.v;applyMk();autosave();keepScroll(render);break;
+    case "send":sendQuotes();break;
+    case "quick":quickWeek();break;
+    case "up":case "down":{const i=+b.dataset.i,k=a==="up"?i-1:i+1;if(k<0||k>=s.queue.length)break;const t=s.queue[i];s.queue[i]=s.queue[k];s.queue[k]=t;autosave();keepScroll(render);break}
+    case "sort":orderQueue(s,b.dataset.v);autosave();keepScroll(render);toast(b.textContent);break;
+    case "out":{const id=+b.dataset.id;if(s.plan.out[id])delete s.plan.out[id];else s.plan.out[id]=true;autosave();keepScroll(render);break}
+    case "shift":{const v=b.dataset.v;s.plan.shifts=v==="ot"?"ot":+v;autosave();keepScroll(render);break}
+    case "pm":{const i=+b.dataset.i;if(s.plan.pm[i])delete s.plan.pm[i];else s.plan.pm[i]=true;autosave();keepScroll(render);break}
+    case "paper":s.plan.buyKg=+b.dataset.v;autosave();keepScroll(render);break;
+    case "rej":s.plan.rej=b.dataset.v;autosave();keepScroll(render);break;
+    case "train":{const err=trainOp(s,+b.dataset.i);toast(err||"Training paid. Skill is up.");autosave();keepScroll(render);break}
+    case "fire":{const n=s.ops[+b.dataset.i].n,err=letGo(s,+b.dataset.i);toast(err||`${n} leaves with a week's wages.`);autosave();keepScroll(render);break}
+    case "hire":{const n=hireOp(s);toast(`${n} joins the crew.`);autosave();keepScroll(render);break}
+    case "cutter":{const err=buyCutter(s);toast(err||"The paper cutter is installed.");autosave();keepScroll(render);break}
+    case "buy4":confirmBuy=true;keepScroll(render);break;
+    case "buy4no":confirmBuy=null;keepScroll(render);break;
+    case "buy4ok":case "buy4cash":{confirmBuy=null;const err=buyPress4(s,a==="buy4cash"?"cash":"loan");toast(err||"The 4-colour press arrives. Fitters need 3 days.");autosave();keepScroll(render);break}
+    case "run":runTheWeek();break;
+    case "skip":clearTimeout(revealTimer);s.shown=s.log.length;renderRunPart();break;
+    case "finish":finishRun();break;
+    case "next":startNext();break;
+    case "tab":tab=b.dataset.tab;try{history.replaceState(null,"",tab==="tech"?"#tech":"#play")}catch(err){}render();if(tab==="tech")renderTech();else if(s&&s.phase==="run")runReveal();window.scrollTo(0,0);break;
+    case "len":sel=+b.dataset.d;confirmNew=null;render();break;
+    case "start":{const au=LS.get(K_AUTO);if(au&&au.phase!=="final"&&au.phase!=="bankrupt"){confirmNew=true;render()}else newGame(sel);break}
+    case "startok":newGame(sel);break;
+    case "startno":confirmNew=null;render();break;
+    case "resume":{const au=LS.get(K_AUTO);if(au)loadState(au);break}
+    case "title":view="title";confirmNew=null;render();window.scrollTo(0,0);break;
+    case "menu":openSheet("saves");break;
+    case "help":openSheet("help");break;
+    case "close":closeSheet();break;
+    case "totitle":clearTimeout(revealTimer);closeSheet();view="title";render();window.scrollTo(0,0);break;
+    case "slotsave":{const sl=slots();sl[b.dataset.n]=Object.assign({},s,{savedAt:Date.now()});toast(LS.set(K_SLOTS,sl)?"Saved to slot "+b.dataset.n:"This browser blocked saving. Use the save code.");renderSheet();break}
+    case "slotload":{const o=slots()[b.dataset.n];if(o)loadState(o);break}
+    case "copy":{const ta=$("codeOut"),txt=ta.value,fb=()=>{ta.focus();ta.select();toast("Selected. Long-press to copy")};
+      try{navigator.clipboard.writeText(txt).then(()=>toast("Code copied"),fb)}catch(err){fb()}break}
+    case "codeload":{try{loadState(decodeSave($("codeIn").value))}catch(err){toast("That code didn't load. Paste the whole thing, starting with PRESS1:")}break}
+    case "theme":{const v=b.dataset.v;if(v==="auto")LS.del(K_THEME);else LS.set(K_THEME,v);applyTheme();renderSheet();if(tab==="tech")scheduleTech();break}
+    case "tset":{const v=b.dataset.v;T[b.dataset.k]=isNaN(+v)?v:+v;saveT();renderTech();break}
+    case "tload":techFromGame();break;
+    case "treset":T=Object.assign({},TECH_DEF);saveT();renderTech();toast("Inputs reset");break;
+  }
+});
+$("sheet").addEventListener("click",e=>{if(e.target.id==="sheet")closeSheet()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("sheet").hidden)closeSheet()});
+
+/* =====================================================================
+   TECH DISCUSSION: every number here comes from the engine above
+   (same constants, same functions, seeded mulberry32 instead of Math.random)
+   ===================================================================== */
+let tab=(location.hash==="#tech")?"tech":"play";
+const TECH_DEF={startCash:50000,odBase:150000,supLimit:300000,
+  jt:"notebook",qi:9,cols:4,paper:76,
+  rep:80,basis:"marg",
+  weeks:26,runs:200,target:150000,strat:"sug",mk:100,pmT:50,terms:90,order:"edf",useGame:0,g:null,
+  sruns:40,sload:100,
+  eta:230,beta:2.2,pmCost:3500,failCost:25000,hrsWk:30,
+  sales:100000,credit:65,days:50,dpo:42,stockW:1,pshare:65,
+  xruns:100,xutil:40,xback:5,xres:150000,xleft:12};
+const QTY=[300,400,500,700,1000,1500,2000,2500,3000,4000,5000,6000,8000,10000,12000,15000,20000];
+let T=Object.assign({},TECH_DEF,LS.get(K_TECH)||{});
+function saveT(){LS.set(K_TECH,T)}
+function applyTab(){
+  $("main").hidden=tab!=="play";$("tech").hidden=tab!=="tech";
+  $("bar").hidden=tab!=="play"||view!=="game"||!s;
+  $("tab_play").setAttribute("aria-selected",tab==="play");$("tab_tech").setAttribute("aria-selected",tab==="tech");
+}
+function techFromGame(){
+  const g=s||LS.get(K_AUTO);
+  if(!g){toast("Start a game first");return}
+  const p4=g.presses.find(p=>p.k==="p4");
+  T.g={week:g.week,weeks:g.weeks,cash:g.cash,rep:g.rep,idx:g.idx,p4:!!p4,age4:p4?p4.age:0,age:g.presses[0].age,cutter:g.cutter,ops:g.ops.length,loan:g.loan,emi:g.emi};
+  Object.assign(T,{useGame:1,startCash:Math.round(clamp(g.cash,-100000,500000)/5000)*5000,rep:Math.round(g.rep*100),paper:Math.round(g.idx),weeks:Math.max(4,g.weeks-g.week+1)>26?52:26});
+  saveT();renderTech();toast(`Loaded week ${g.week}: cash, name, paper price and machines`);
+}
+
+/* ---- helpers ---- */
+const SIMCACHE={};
+function withC(over,fn){const old={};for(const k in over){old[k]=C[k];C[k]=over[k]}try{return fn()}finally{for(const k in old)C[k]=old[k]}}
+function polFromT(){
+  if(T.strat==="care")return Object.assign({},POL_CARELESS);
+  if(T.strat==="custom")return Object.assign({},POL_SENSIBLE,{mk:T.mk/100,pm:T.pmT/100,terms:T.terms,order:T.order});
+  return Object.assign({},POL_SENSIBLE);
+}
+function startOpt(){
+  if(T.useGame&&T.g)return Object.assign({},T.g,{cash:T.g.cash});
+  return{cash:T.startCash,idx:T.paper};
+}
+function simWeeks(){return T.useGame&&T.g?Math.max(4,T.g.weeks-T.g.week+1):T.weeks}
+function runBatch(key,n,fn){if(SIMCACHE[key])return SIMCACHE[key];const out=[];withC({OD_BASE:T.odBase,SUP_LIMIT:T.supLimit},()=>{for(let i=1;i<=n;i++)out.push(fn(i))});SIMCACHE[key]=out;
+  const ks=Object.keys(SIMCACHE);if(ks.length>24)delete SIMCACHE[ks[0]];return out}
+function pct(a,q){if(!a.length)return NaN;const b=Float64Array.from(a).sort();const i=(b.length-1)*q,lo=Math.floor(i);return b[lo]+(b[Math.min(lo+1,b.length-1)]-b[lo])*(i-lo)}
+function normCdf(z){const t=1/(1+0.2316419*Math.abs(z)),d=0.3989423*Math.exp(-z*z/2);const p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p}
+const P100=x=>isFinite(x)?(x>0&&x<0.01?"<1%":x<1&&x>0.99?">99%":Math.round(x*100)+"%"):"—";
+const kfmt=v=>{const a=Math.abs(v),sg=v<0?"−":"";return a>=100000?sg+"₹"+(a/100000).toFixed(a>=1000000?0:1).replace(/\.0$/,"")+"L":a>=1000?sg+"₹"+(a/1000).toFixed(a>=10000?0:1).replace(/\.0$/,"")+"k":sg+"₹"+Math.round(a)};
+function niceStep(raw){const mag=Math.pow(10,Math.floor(Math.log10(raw)));return [1,2,2.5,5,10].map(x=>x*mag).find(x=>x>=raw)}
+function niceTicks(lo,hi,n){if(hi<=lo)hi=lo+1;const st=niceStep((hi-lo)/n),a=Math.floor(lo/st)*st,out=[];for(let v=a;v<=hi+st*0.999;v+=st)out.push(Math.round(v*1e6)/1e6);return out}
+function chartFrame(el,H){const W=Math.max(280,Math.round(el.clientWidth||340));return{W,H,l:48,r:12,t:14,b:28}}
+function hookHover(el,pick,def){
+  const svg=el.querySelector("svg"),out=el.querySelector(".readout"),g=svg.querySelector(".guide");out.textContent=def;
+  const move=e=>{const bb=svg.getBoundingClientRect(),vb=svg.viewBox.baseVal,x=(e.clientX-bb.left)*vb.width/bb.width;const h=pick(x);if(!h)return;
+    if(g){g.setAttribute("x1",h.x);g.setAttribute("x2",h.x);g.style.display=""}out.textContent=h.text};
+  svg.addEventListener("pointermove",move);svg.addEventListener("pointerdown",move);
+  svg.addEventListener("pointerleave",()=>{if(g)g.style.display="none";out.textContent=def});
+}
+function linePath(pts){return pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join("")}
+function barPath(x,w,y0,y,fill,op){const h=Math.abs(y0-y),r=Math.min(3,h/2,w/2);
+  const d=y<=y0?`M${x} ${y0}V${y+r}Q${x} ${y} ${x+r} ${y}H${x+w-r}Q${x+w} ${y} ${x+w} ${y+r}V${y0}Z`:`M${x} ${y0}V${y-r}Q${x} ${y} ${x+r} ${y}H${x+w-r}Q${x+w} ${y} ${x+w} ${y-r}V${y0}Z`;
+  return `<path d="${d}" fill="${fill}"${op!=null?` opacity="${op}"`:""}/>`}
+function gridY(f,tk,Y,fmt){return tk.map(v=>`<line class="grid" x1="${f.l}" x2="${f.W-f.r}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}"/><text class="ax" x="${f.l-6}" y="${(Y(v)+4).toFixed(1)}" text-anchor="end">${fmt(v)}</text>`).join("")}
+const GUIDE=f=>`<line class="guide" y1="${f.t}" y2="${f.H-f.b}" style="display:none"/>`;
+function verdict(cls,tag,html){return `<div class="verdict ${cls}"><i>${tag}</i><div>${html}</div></div>`}
+function kpi(v,l,sub){return `<div class="kpi"><span class="lbl">${l}</span><b>${v}</b>${sub?`<span class="small muted">${sub}</span>`:""}</div>`}
+const SLF={};
+function sl(id,label,min,max,step,fmt,hint){SLF[id]=fmt;return `<div class="fld"><label for="t_${id}"><span>${label}</span><output id="v_${id}">${fmt(T[id])}</output></label><input type="range" id="t_${id}" data-t="${id}" min="${min}" max="${max}" step="${step}" value="${T[id]}">${hint?`<div class="small muted">${hint}</div>`:""}</div>`}
+function seg(k,label,opts){return `<div class="segrow"><span>${label}</span><div class="seg">${opts.map(([v,n])=>`<button data-act="tset" data-k="${k}" data-v="${v}" aria-pressed="${String(T[k])===String(v)}">${n}</button>`).join("")}</div></div>`}
+const pctf=v=>v+"%",rsf=v=>money(v),nf=v=>String(v),hf=v=>v+" h";
+
+/* ---- job costing pieces (engine functions, split for the table) ---- */
+function jobFor(){return{t:T.jt,sheets:QTY[T.qi],cols:T.cols}}
+function costSplit(j,pk,idx,rate){
+  const P=PRESSES[pk],n=passesOn(j.cols,pk),g=grossSheets(j.sheets,n),d=directCost(j,pk,idx,false);
+  const mrH=C.JOB_MR+n*C.PASS_MR*P.mrF,runH=n*g/(P.speed*TYPES[j.t].spf);
+  return Object.assign(d,{n,mrH,runH,mr:mrH*rate,run:runH*rate,total:d.direct+(mrH+runH)*rate});
+}
+function tradeSplit(j,idx){
+  const g=grossSheets(j.sheets,1),kg=g*kgPerSheet(j.t),mrH=C.MKT_JOB_MR+C.MKT_PASS_MR,runH=g/(C.MKT_SPEED*TYPES[j.t].spf);
+  const paper=kg*idx,plates=j.cols*C.PLATE,ink=inkCost(j.t,j.sheets,j.cols),cut=j.sheets/1000*C.CUT_OWN;
+  const cost=paper+plates+ink+cut+(mrH+runH)*C.MKT_RATE;
+  return{paper,plates,ink,cut,mr:mrH*C.MKT_RATE,run:runH*C.MKT_RATE,mrH,runH,total:cost,rate:cost*(1+C.MKT_MARGIN)};
+}
+
+/* ---- §3 enquiry sampling (season-averaged) ---- */
+function sampleEnquiries(n,rep){
+  const r=mulberry32(4242),mix={};let sx=0,sx2=0,sh=0,sv=0;const fake={idx:T.paper,presses:[{k:"p2"}],cutter:false};
+  for(let i=0;i<n;i++){
+    const m=Math.floor(r()*12),t=wpickA(r,SEASON_A[m]),Ty=TYPES[t];
+    const sheets=Math.max(100,r100(Math.exp(uni(r,Math.log(Ty.sh[0]),Math.log(Ty.sh[1])))));
+    const j={t,sheets,cols:pickR(r,Ty.cols)},e=estimate(fake,j),g=guideRate(fake,j);
+    const marg=e.direct+e.hours*C.MARG_RATE,bq=bestQuote(marg,g,rep,false),vc=e.direct+e.hours*PRESSES.p2.pw;
+    const mr=g*Math.exp(C.MKT_SIG*normR(r)),p=winP(bq.q,mr,rep,false),x=p*(bq.q-vc);
+    const o=mix[t]||(mix[t]={n:0,val:0,p:0,h:0,x:0,ph:0});o.n++;o.val+=g;o.p+=p;o.h+=e.hours;o.x+=x;o.ph+=p*e.hours;
+    // contribution of one enquiry is Bernoulli(p) × margin; moments for the compound sum
+    sx+=x;sx2+=p*(bq.q-vc)*(bq.q-vc);sh+=p*e.hours;sv+=p*bq.q;
+  }
+  return{mix,EX:sx/n,EX2:sx2/n,EH:sh/n,EV:sv/n};
+}
+function weeklyFixed(){return C.RENT+2*C.WAGE+C.POWER_BASE+C.MISC}
+
+/* ---- §4c reliability ---- */
+function relCurve(eta,beta,Cp,Cf){
+  const R=t=>Math.exp(-Math.pow(t/eta,beta)),pts=[];let integ=0,prevT=0,prevR=1,best={T:0,c:Infinity};
+  const dt=Math.max(1,eta/200);
+  for(let t=dt;t<=eta*2.6;t+=dt){const r=R(t);integ+=(prevR+r)/2*dt;prevR=r;const c=(Cp*r+Cf*(1-r))/integ;pts.push([t,c]);if(c<best.c)best={T:t,c,integ,R:r}}
+  // mean time to failure (run to failure) by the same integral out to the tail
+  let mttf=integ;for(let t=eta*2.6;t<eta*6;t+=dt)mttf+=R(t)*dt;
+  return{pts,best,mttf,rtf:Cf/mttf};
+}
+
+/* ---- tab layout ---- */
+function renderTech(){
+  const el=$("tech");if(tab!=="tech")return;
+  const qty=QTY[T.qi];
+  el.innerHTML=`
+  <div class="card"><div class="prose"><h2>Running a press as a business</h2>
+    <p class="muted">Every figure on this tab is computed from the rules the game plays by: the same costing functions, win curve, wear-out curve, paper market and payment rules. The simulations call the same weekly turn the game calls, with a seeded random generator instead of the live one.</p></div>
+    ${T.useGame&&T.g?`<p class="small" style="margin-top:8px">Simulations start from <b>your game at week ${T.g.week}</b>: ${money(T.g.cash)} cash, name ${Math.round(T.g.rep*100)}${T.g.p4?", 4-colour press":""}${T.g.cutter?", cutter":""}.</p>`:""}
+    <div class="btnrow" style="margin-top:10px"><button class="ghost" data-act="tload">Use my current game</button><button class="ghost" data-act="treset">Reset inputs</button></div></div>
+
+  <div class="card"><div class="sec-n">1 · STARTING POINT</div><h2>What binds in week one</h2>
+    <div class="flds">${sl("startCash","Starting cash",0,300000,5000,rsf)}${sl("odBase","Bank overdraft, base limit",50000,400000,10000,rsf)}${sl("supLimit","Paper dealer's credit",50000,500000,10000,rsf)}</div>
+    <div class="tblwrap"><table class="tt" id="o_cons"></table></div>
+    <div id="o_bind" style="margin-top:10px"></div></div>
+
+  <div class="card"><div class="sec-n">2 · JOB COSTING</div><h2>Makeready versus run: why size matters</h2>
+    <div class="segrow"><span>Job</span><div class="seg">${["wedding","notebook","carton","poster","book","calendar","bill"].map(k=>`<button data-act="tset" data-k="jt" data-v="${k}" aria-pressed="${T.jt===k}">${TYPES[k].n.split(" ")[0]}</button>`).join("")}</div></div>
+    ${seg("cols","Colours",[[1,"1"],[2,"2"],[4,"4 (CMYK)"]])}
+    <div class="flds">${sl("qi","Run length",0,QTY.length-1,1,v=>fmtN(QTY[v])+" sheets")}${sl("paper","Paper price",55,110,1,v=>"₹"+v+"/kg")}</div>
+    <p class="small muted">${esc(TYPES[T.jt].sz)}, ${TYPES[T.jt].g} gsm. Press time is costed at the full rate of ₹${C.OWN_RATE}/h (rent, wages, power spread over the hours) for your presses and ₹${C.MKT_RATE}/h for the trade.</p>
+    <div class="tblwrap" style="margin-top:6px"><table class="tt" id="o_cost"></table></div>
+    <div class="kpis" id="o_costk" style="margin-top:10px"></div>
+    <h3 style="margin-top:16px">Cost per 1,000 sheets against run length</h3>
+    <div class="chart" id="c_cost"></div></div>
+
+  <div class="card"><div class="sec-n">3 · THE PROBABILITY MODEL</div><h2>Where the randomness comes from</h2>
+    <div class="prose small"><p>A week's profit is a random sum: a random number of enquiries, each a random job, each won with a probability that falls as your quote rises above the trade's rate. The engine draws these exactly as written below.</p></div>
+    <div class="formula" style="margin-top:10px">enquiries   N ~ Uniform{3..7}, +1 if name > 0.55, −1 if < 0.45
+job type    ~ seasonal weights by month; sheets ~ LogUniform(range)
+trade rate  M = trade cost × ${(1+C.MKT_MARGIN).toFixed(2)} × e^(${C.MKT_SIG}·Z),  Z ~ N(0,1)
+P(win | q)  = ${C.WIN_MAX} / (1 + e^((q/M − ${C.WIN_MID} − ${C.REP_SHIFT}(name − 0.5) − ${C.REG_SHIFT}·regular) / ${C.WIN_S}))
+press life  F(t) = 1 − e^(−(t/η)^β),  2-col η=${PRESSES.p2.eta} h β=${PRESSES.p2.beta}; 4-col η=${PRESSES.p4.eta} h β=${PRESSES.p4.beta}
+bad batch   p = ${C.REJ_BASE} + ${C.REJ_SKILL}(1 − skill) + ${C.REJ_AGE}·min(1, age/η)
+paper ₹/kg  ln p' = ln p + ${C.PAPER_SIG}Z + ${C.PAPER_REV}·ln(${C.PAPER0}/p) + jump (${Math.round(C.PAPER_JUMP*100)}%/wk, ±${C.PAPER_JUMP_SIZE.map(x=>Math.round(x*100)).join("–")}%, ${Math.round(C.PAPER_UP*100)}% up)
+payment     each week due: pays w.p. r (reliability); defaults w.p. ${C.DEFAULT_P}(1 − r)
+weekly sum  S = Σ_{i≤N} B_i·m_i  →  E[S] = E[N]·E[X],  Var[S] = E[N]·Var[X] + Var[N]·E[X]²</div>
+    <div class="flds" style="margin-top:6px">${sl("rep","Name in the trade",5,95,5,v=>v)}</div>
+    <div class="tblwrap" style="margin-top:6px"><table class="tt" id="o_mix"></table></div>
+    ${sl("target","Profit target for the whole game",0,1000000,10000,rsf)}
+    <div class="kpis" id="o_clt"></div>
+    <p class="small muted" style="margin-top:8px">Name starts at 50 and on-time work lifts it towards 80–100 within weeks, which is why the default above is 80. The theory column treats every week as an average-season week with spare press time and no breakdowns, bad debts or interest. The simulation column plays the full game with the suggested plan (section 5).</p></div>
+
+  <div class="card"><div class="sec-n">4 · QUOTING</div><h2>The quote that earns the most on average</h2>
+    <div class="prose small"><p>A higher quote earns more if you win, but you win less often. The expected margin is P(win) × (quote − cost). It peaks where the extra rupees stop paying for the lost chance. The cost to use depends on how busy you are: with idle hours, only the running cost counts; when the press is full, every hour must also carry rent and wages.</p></div>
+    ${seg("basis","Cost basis",[["marg","Running cost (press idle)"],["full","Full cost (press full)"]])}
+    <div class="chart" id="c_quote" style="margin-top:6px"></div>
+    <div class="tblwrap"><table class="tt" id="o_quote"></table></div></div>
+
+  <div class="card"><div class="sec-n">5 · SCHEDULING</div><h2>Which job goes on the press first</h2>
+    <div class="prose small"><p>When the queue holds more work than the week, the order decides who is late. Earliest due date first (EDF) minimises the worst lateness; shortest job first (SPT) finishes the most jobs soonest; first come, first served (FCFS) ignores both. Here the full game is replayed with each rule on identical weeks (same enquiries, same breakdowns), taking every job it wins so the queue gets crowded.</p></div>
+    <div class="flds">${sl("sruns","Simulated runs (13 weeks each)",20,400,20,nf)}${sl("sload","Quote level (lower wins more work)",85,110,1,pctf)}</div>
+    <div class="tblwrap"><table class="tt" id="o_sched"><tr><td class="busy">Simulating…</td></tr></table></div>
+    <div class="chart" id="c_sched" style="margin-top:8px"></div></div>
+
+  <div class="card"><div class="sec-n">6 · RELIABILITY</div><h2>When to service the press</h2>
+    <div class="prose small"><p>With β above 1 the press wears out: the chance of failing in the next hour grows with the hours since its last service. Servicing at age T costs C<sub>p</sub>; a breakdown costs C<sub>f</sub> (repair, spares, lost hours, late penalties). The long-run cost per running hour of servicing every T hours is the age-replacement cost rate C(T) = [C<sub>p</sub>R(T) + C<sub>f</sub>F(T)] / ∫<sub>0</sub><sup>T</sup>R(t)dt.</p></div>
+    <div class="flds">${sl("eta","Scale η (characteristic life)",100,600,10,hf)}${sl("beta","Shape β (wear-out)",1,4,0.1,v=>(+v).toFixed(1))}${sl("pmCost","Service cost incl. 4 lost hours",2000,15000,500,rsf)}${sl("failCost","Cost of a breakdown",5000,80000,1000,rsf)}${sl("hrsWk","Running hours per week",10,90,5,hf)}</div>
+    <h3 style="margin-top:10px">Chance of a breakdown by hours run</h3><div class="chart" id="c_weib"></div>
+    <h3 style="margin-top:10px">Cost per running hour against service interval</h3><div class="chart" id="c_age"></div>
+    <div class="kpis" id="o_rel"></div>
+    <p class="small muted" style="margin-top:8px">The game repairs a breakdown without renewing the press (its age drops by 40%, not to zero), so servicing is worth a little more in play than this renewal formula says.</p></div>
+
+  <div class="card"><div class="sec-n">7 · WORKING CAPITAL</div><h2>Profit is not cash</h2>
+    <div class="prose small"><p>Paper is paid for within weeks; credit clients pay after one to three months. The gap is the cash conversion cycle, and the overdraft has to fund it. The bank's limit grows with what clients owe, but only by half.</p></div>
+    <div class="flds">${sl("sales","Weekly sales",30000,300000,5000,rsf)}${sl("credit","Share sold on credit",0,100,5,pctf)}${sl("days","Average credit days",30,90,5,v=>v+" days")}${sl("dpo","Dealer credit days",0,60,7,v=>v+" days")}${sl("stockW","Paper stock held",0,4,0.5,v=>v+" wk")}${sl("pshare","Paper as share of sales",40,85,5,pctf)}</div>
+    <div class="kpis" id="o_wc"></div>
+    <h3 style="margin-top:12px">Money tied up against the bank's limit, by weekly sales</h3><div class="chart" id="c_wc"></div>
+    <div id="o_wcv"></div></div>
+
+  <div class="card"><div class="sec-n">8 · MONTE CARLO</div><h2>The season, played many times</h2>
+    <div class="flds">${sl("runs","Simulated games",200,3000,100,nf)}</div>
+    ${T.useGame&&T.g?"":seg("weeks","Game length",[[26,"26 weeks"],[52,"52 weeks"]])}
+    ${seg("strat","Plan",[["sug","Suggested plan"],["care","Careless"],["custom","My own rules"]])}
+    ${T.strat==="custom"?`<div class="flds">${sl("mk","Quote level",85,115,1,pctf)}${sl("pmT","Service when wear reaches",0,100,10,v=>v?v+"% of η":"never")}</div>${seg("terms","Longest credit accepted",[[30,"30 days"],[60,"60 days"],[90,"90 days"]])}${seg("order","Queue order",[["edf","Earliest due"],["spt","Shortest"],["fcfs","Oldest"]])}`:""}
+    <div class="kpis" id="o_mck"><div class="kpi busy">Simulating…</div></div>
+    <h3 style="margin-top:12px">Net worth gained, week by week</h3><div class="chart" id="c_fan"></div>
+    <div class="tblwrap"><table class="tt" id="o_month"></table></div>
+    <h3 style="margin-top:14px">Spread of the final result</h3><div class="chart" id="c_hist"></div></div>
+
+  <div class="card"><div class="sec-n">9 · EXPANSION</div><h2>When to buy the 4-colour press</h2>
+    <div class="prose small" id="o_cap"></div>
+    <div class="flds">${sl("xutil","Buy when 4-week utilisation reaches",20,80,5,pctf)}${sl("xback","…and hours waiting at least",0,40,5,hf)}${sl("xres","…and cash plus credit headroom left",0,400000,25000,rsf)}${sl("xleft","…with at least this many weeks to go",4,30,1,v=>v+" wk")}${sl("xruns","Paired runs",50,600,50,nf)}</div>
+    <div class="kpis" id="o_exp"><div class="kpi busy">Simulating…</div></div>
+    <h3 style="margin-top:12px">Extra net worth from the rule, against not buying</h3><div class="chart" id="c_exp"></div></div>
+
+  <div class="card"><div class="sec-n">10 · STRATEGY</div><h2>SWOT</h2>
+    <p class="small muted" style="margin-bottom:10px">Figures update with the inputs above.</p><div class="swot" id="o_swot"></div></div>`;
+  updateTech();
+}
+let techTimer=null;
+function scheduleTech(){clearTimeout(techTimer);techTimer=setTimeout(updateTech,150)}
+document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.t;if(!k)return;T[k]=+e.target.value;const o=$("v_"+k);if(o)o.textContent=SLF[k](T[k]);saveT();scheduleTech()});
+let lastRW=0;window.addEventListener("resize",()=>{if(tab!=="tech")return;const w=$("tech").clientWidth;if(Math.abs(w-lastRW)>20){lastRW=w;scheduleTech()}});
+
+/* ---- live results ---- */
+const R_={};  // shared results for SWOT
+let techGen=0;
+function updateTech(){
+  if(tab!=="tech"||!$("o_cons"))return;
+  lastRW=$("tech").clientWidth;const gen=++techGen;
+  secCost();secQuote();secRel();secWC();secProb();secCons();
+  // heavier simulations run one after another so the page stays responsive
+  const steps=[secMC,secSched,secExp,secSwot];
+  const next=()=>{if(gen!==techGen||!steps.length||tab!=="tech")return;const f=steps.shift();f();setTimeout(next,0)};
+  setTimeout(next,0);
+}
+
+/* §2 job costing */
+function secCost(){
+  const j=jobFor(),a=costSplit(j,"p2",T.paper,C.OWN_RATE),b=costSplit(j,"p4",T.paper,C.OWN_RATE),m=tradeSplit(j,T.paper),k=j.sheets/1000;
+  const row=(n,x,y,z)=>`<tr><td>${n}</td><td>${money(x)}</td><td>${money(y)}</td><td>${money(z)}</td></tr>`;
+  $("o_cost").innerHTML=`<tr><th>${fmtN(j.sheets)} sheets, ${j.cols} col</th><th>Your 2-col</th><th>4-col</th><th>Trade</th></tr>
+   ${row("Paper",a.paper,b.paper,m.paper)}${row("Plates",a.plates,b.plates,m.plates)}${row("Ink",a.ink,b.ink,m.ink)}${row("Cutting",a.cut,b.cut,m.cut)}
+   <tr><td>Makeready</td><td>${a.mrH.toFixed(1)} h · ${money(a.mr)}</td><td>${b.mrH.toFixed(1)} h · ${money(b.mr)}</td><td>${m.mrH.toFixed(1)} h · ${money(m.mr)}</td></tr>
+   <tr><td>Running</td><td>${a.runH.toFixed(1)} h · ${money(a.run)}</td><td>${b.runH.toFixed(1)} h · ${money(b.run)}</td><td>${m.runH.toFixed(1)} h · ${money(m.run)}</td></tr>
+   <tr class="sum"><td>Full cost</td><td>${money(a.total)}</td><td>${money(b.total)}</td><td>${money(m.total)}</td></tr>
+   <tr><td>Per 1,000 sheets</td><td>${money(a.total/k)}</td><td>${money(b.total/k)}</td><td>${money(m.total/k)}</td></tr>
+   <tr class="hl"><td>Going rate</td><td colspan="3" style="text-align:right">${money(m.rate)} (${money(m.rate/k)} per 1,000)</td></tr>`;
+  const marg=a.direct+(a.mrH+a.runH)*C.MARG_RATE,cph=(m.rate-marg)/(a.mrH+a.runH),cph4=(m.rate-(b.direct+(b.mrH+b.runH)*C.MARG_RATE))/(b.mrH+b.runH);
+  let be=null;for(const q of QTY){const jj={t:j.t,sheets:q,cols:j.cols};if(costSplit(jj,"p2",T.paper,C.OWN_RATE).total<=tradeSplit(jj,T.paper).rate){be=q;break}}
+  $("o_costk").innerHTML=kpi(Math.round(a.mr/(a.total-a.paper-a.plates-a.ink-a.cut+a.plates)*100)+"%","Makeready share","of press + plate cost, 2-col")
+    +kpi(be?fmtN(be):"none","Smallest run you beat the rate",be?"sheets, at full cost":"at full cost, on the 2-col press")
+    +kpi(money(cph),"Contribution per press hour","2-col, at the going rate")+kpi(money(cph4),"Same on a 4-col","one pass for 4 colours");
+  R_.cost={a,b,m,cph,cph4,be};
+  drawCost();
+}
+function drawCost(){
+  const el=$("c_cost"),f=chartFrame(el,220),xs=[];for(let i=0;i<=40;i++)xs.push(Math.round(300*Math.pow(20000/300,i/40)));
+  const s2=[],s4=[],sm=[];for(const q of xs){const j={t:T.jt,sheets:q,cols:T.cols},k=q/1000;s2.push(costSplit(j,"p2",T.paper,C.OWN_RATE).total/k);s4.push(costSplit(j,"p4",T.paper,C.OWN_RATE).total/k);sm.push(tradeSplit(j,T.paper).rate/k)}
+  const hi=Math.max(...s2.slice(0,1),...sm.slice(0,1))*1.05,lo=Math.min(...s4,...sm)*0.9,tk=niceTicks(lo,hi,4);
+  const X=q=>f.l+Math.log(q/300)/Math.log(20000/300)*(f.W-f.l-f.r),Y=v=>f.t+(tk[tk.length-1]-clamp(v,tk[0],tk[tk.length-1]))/(tk[tk.length-1]-tk[0])*(f.H-f.t-f.b);
+  let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Cost per thousand sheets against run length">`+gridY(f,tk,Y,kfmt);
+  [300,1000,3000,10000,20000].forEach(q=>svg+=`<text class="ax" x="${X(q)}" y="${f.H-8}" text-anchor="middle">${q>=1000?q/1000+"k":q}</text>`);
+  [[sm,"--s3"],[s4,"--s2"],[s2,"--s1"]].forEach(([a,c])=>svg+=`<path d="${linePath(xs.map((q,i)=>[X(q),Y(a[i])]))}" fill="none" stroke="var(${c})" stroke-width="2" stroke-linejoin="round"/>`);
+  const q0=QTY[T.qi];svg+=`<line x1="${X(q0)}" x2="${X(q0)}" y1="${f.t}" y2="${f.H-f.b}" stroke="var(--acc)" stroke-width="1.5" stroke-dasharray="4 3"/><text class="lab" x="${X(q0)+(X(q0)>f.W*0.7?-4:4)}" y="${f.t+10}" text-anchor="${X(q0)>f.W*0.7?"end":"start"}">This job</text>`;
+  svg+=GUIDE(f)+`</svg>`;
+  el.innerHTML=`<div class="legend"><span><i style="background:var(--s1)"></i>Your 2-col, full cost</span><span><i style="background:var(--s2)"></i>4-col, full cost</span><span><i style="background:var(--s3)"></i>Going rate</span></div>${svg}<div class="readout"></div>`;
+  hookHover(el,x=>{const t=clamp((x-f.l)/(f.W-f.l-f.r),0,1),i=Math.round(t*40);return{x:X(xs[i]),text:`${fmtN(xs[i])} sheets: 2-col ${money(s2[i])} · 4-col ${money(s4[i])} · going rate ${money(sm[i])} per 1,000`}},
+    "Short runs are dear because makeready is a fixed cost spread over few sheets. Tap the chart to read a run length.");
+}
+
+/* §4 quote optimisation */
+function secQuote(){
+  const j=jobFor(),a=costSplit(j,"p2",T.paper,C.OWN_RATE),m=tradeSplit(j,T.paper),g=m.rate,rep=T.rep/100;
+  const cost=T.basis==="full"?a.total:a.direct+(a.mrH+a.runH)*C.MARG_RATE;
+  const xs=[];for(let k=80;k<=130;k++)xs.push(k/100);
+  const pw=xs.map(x=>winPexp(x*g,g,rep,false)),em=xs.map((x,i)=>pw[i]*(x*g-cost)),mw=xs.map(x=>x*g-cost);
+  let bi=0;em.forEach((v,i)=>{if(v>em[bi])bi=i});
+  const el=$("c_quote"),f=chartFrame(el,220),lo=Math.min(0,...em,mw[0]),hi=Math.max(...mw)*1.02,tk=niceTicks(lo,hi,4);
+  const X=x=>f.l+(x-0.8)/0.5*(f.W-f.l-f.r),Y=v=>f.t+(tk[tk.length-1]-v)/(tk[tk.length-1]-tk[0])*(f.H-f.t-f.b),Yp=p=>f.t+(1-p)*(f.H-f.t-f.b);
+  let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Expected margin against quote">`+gridY(f,tk,Y,kfmt);
+  if(tk[0]<0)svg+=`<line x1="${f.l}" x2="${f.W-f.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)"/>`;
+  [0.8,0.9,1,1.1,1.2,1.3].forEach(x=>svg+=`<text class="ax" x="${X(x)}" y="${f.H-8}" text-anchor="middle">${Math.round(x*100)}%</text>`);
+  svg+=`<path d="${linePath(xs.map((x,i)=>[X(x),Yp(pw[i])]))}" fill="none" stroke="var(--s3)" stroke-width="2" stroke-dasharray="5 4"/>`;
+  svg+=`<path d="${linePath(xs.map((x,i)=>[X(x),Y(mw[i])]))}" fill="none" stroke="var(--s2)" stroke-width="2"/>`;
+  svg+=`<path d="${linePath(xs.map((x,i)=>[X(x),Y(em[i])]))}" fill="none" stroke="var(--s1)" stroke-width="2.5"/>`;
+  const bx=X(xs[bi]),by=Y(em[bi]);svg+=`<circle cx="${bx}" cy="${by}" r="5" fill="var(--s1)" stroke="var(--paper)" stroke-width="2"/><text class="lab" x="${bx}" y="${by-10}" text-anchor="middle">Best ${Math.round(xs[bi]*100)}%</text>`;
+  svg+=GUIDE(f)+`</svg>`;
+  el.innerHTML=`<div class="legend"><span><i style="background:var(--s1)"></i>Expected margin</span><span><i style="background:var(--s2)"></i>Margin if won</span><span><i class="dash" style="border-color:var(--s3)"></i>Win chance (0–100%)</span></div>${svg}<div class="readout"></div>`;
+  hookHover(el,x=>{const i=clamp(Math.round((x-f.l)/(f.W-f.l-f.r)*50),0,50);return{x:X(xs[i]),text:`Quote ${Math.round(xs[i]*100)}% of rate (${money(xs[i]*g)}): win ${Math.round(pw[i]*100)}%, margin ${money(mw[i])}, expected ${money(em[i])}`}},
+    `Best quote ${money(xs[bi]*g)} (${Math.round(xs[bi]*100)}% of the going rate): wins ${Math.round(pw[bi]*100)}% of the time and earns ${money(em[bi])} on average.`);
+  $("o_quote").innerHTML=`<tr><th>Quote</th><th>Win</th><th>Margin if won</th><th>Expected</th></tr>`+[0.9,0.95,1,1.05,1.1].map(x=>{const q=x*g,p=winPexp(q,g,rep,false);return `<tr${Math.abs(x-xs[bi])<0.026?' class="hl"':""}><td>${Math.round(x*100)}% · ${money(q)}</td><td>${P100(p)}</td><td>${money(q-cost)}</td><td>${money(p*(q-cost))}</td></tr>`}).join("");
+  R_.quote={best:xs[bi],p:pw[bi],em:em[bi],cost,g};
+}
+
+/* §6 reliability */
+function secRel(){
+  const Cp=T.pmCost,Cf=T.failCost,rc=relCurve(T.eta,T.beta,Cp,Cf),F=t=>1-Math.exp(-Math.pow(t/T.eta,T.beta));
+  // F(t) chart
+  {const el=$("c_weib"),f=chartFrame(el,180),xm=T.eta*2,X=t=>f.l+t/xm*(f.W-f.l-f.r),Y=p=>f.t+(1-p)*(f.H-f.t-f.b),xs=[];for(let i=0;i<=80;i++)xs.push(xm*i/80);
+   const wk=t=>F(t+T.hrsWk)-F(t)>0?(F(t+T.hrsWk)-F(t))/(1-F(t)):0;
+   let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Weibull failure probability">`+gridY(f,[0,0.25,0.5,0.75,1],Y,v=>Math.round(v*100)+"%");
+   niceTicks(0,xm,4).forEach(t=>{if(t<=xm)svg+=`<text class="ax" x="${X(t)}" y="${f.H-8}" text-anchor="middle">${t}h</text>`});
+   svg+=`<path d="${linePath(xs.map(t=>[X(t),Y(F(t))]))}" fill="none" stroke="var(--s1)" stroke-width="2"/>`;
+   svg+=`<path d="${linePath(xs.map(t=>[X(t),Y(wk(t))]))}" fill="none" stroke="var(--s2)" stroke-width="2"/>`;
+   svg+=`<line x1="${X(rc.best.T)}" x2="${X(rc.best.T)}" y1="${f.t}" y2="${f.H-f.b}" stroke="var(--acc)" stroke-dasharray="4 3"/>`+GUIDE(f)+`</svg>`;
+   el.innerHTML=`<div class="legend"><span><i style="background:var(--s1)"></i>Failed by this age</span><span><i style="background:var(--s2)"></i>Fails in the next ${T.hrsWk} h, if running now</span></div>${svg}<div class="readout"></div>`;
+   hookHover(el,x=>{const t=clamp((x-f.l)/(f.W-f.l-f.r)*xm,0,xm);return{x:X(t),text:`At ${Math.round(t)} h since service: ${P100(F(t))} would have failed by now; ${P100(wk(t))} chance of failing in the next week`}},`From new, ${P100(F(T.hrsWk))} chance of a failure in the first week; at ${T.eta} h it is ${P100(wk(T.eta))} a week.`);}
+  // cost-rate chart
+  {const el=$("c_age"),f=chartFrame(el,200),pts=rc.pts.filter(p=>p[0]>=T.eta*0.08),xm=pts[pts.length-1][0],ymax=Math.min(Math.max(...pts.map(p=>p[1])),rc.best.c*4,rc.rtf*3),tk=niceTicks(0,ymax,4);
+   const X=t=>f.l+t/xm*(f.W-f.l-f.r),Y=v=>f.t+(tk[tk.length-1]-clamp(v,0,tk[tk.length-1]))/tk[tk.length-1]*(f.H-f.t-f.b);
+   let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Cost per running hour against service interval">`+gridY(f,tk,Y,v=>"₹"+Math.round(v));
+   niceTicks(0,xm,4).forEach(t=>{if(t<=xm)svg+=`<text class="ax" x="${X(t)}" y="${f.H-8}" text-anchor="middle">${t}h</text>`});
+   svg+=`<line x1="${f.l}" x2="${f.W-f.r}" y1="${Y(rc.rtf)}" y2="${Y(rc.rtf)}" stroke="var(--s2)" stroke-width="2" stroke-dasharray="6 4"/>`;
+   svg+=`<path d="${linePath(pts.map(p=>[X(p[0]),Y(p[1])]))}" fill="none" stroke="var(--s1)" stroke-width="2"/>`;
+   svg+=`<circle cx="${X(rc.best.T)}" cy="${Y(rc.best.c)}" r="5" fill="var(--s1)" stroke="var(--paper)" stroke-width="2"/><text class="lab" x="${X(rc.best.T)}" y="${Y(rc.best.c)-10}" text-anchor="middle">Service every ${Math.round(rc.best.T)} h</text>`+GUIDE(f)+`</svg>`;
+   el.innerHTML=`<div class="legend"><span><i style="background:var(--s1)"></i>Service every T hours</span><span><i class="dash" style="border-color:var(--s2)"></i>Never service (run to failure)</span></div>${svg}<div class="readout"></div>`;
+   hookHover(el,x=>{const t=clamp((x-f.l)/(f.W-f.l-f.r)*xm,pts[0][0],xm);let p=pts[0];for(const q of pts)if(Math.abs(q[0]-t)<Math.abs(p[0]-t))p=q;return{x:X(p[0]),text:`Service every ${Math.round(p[0])} h: ₹${p[1].toFixed(0)} per running hour (run to failure: ₹${rc.rtf.toFixed(0)})`}},
+     T.beta<=1?"With β ≤ 1 the press does not wear out, so servicing cannot pay: the curve never dips below the dashed line.":`Cheapest at about ${Math.round(rc.best.T)} running hours between services: ₹${rc.best.c.toFixed(0)} per hour against ₹${rc.rtf.toFixed(0)} if you never service.`);}
+  const mttr=C.REPAIR_MED*Math.exp(C.REPAIR_SIG*C.REPAIR_SIG/2)+C.SPARES_P*(C.SPARES_DAYS[0]+C.SPARES_DAYS[1])/2*C.SHIFT_H;
+  const aPM=rc.best.integ/(rc.best.integ+C.PM_H*rc.best.R+mttr*(1-rc.best.R)),aRTF=rc.mttf/(rc.mttf+mttr);
+  $("o_rel").innerHTML=kpi(Math.round(rc.best.T)+" h","Best service interval",`every ${(rc.best.T/T.hrsWk).toFixed(1)} weeks at ${T.hrsWk} h/week`)+kpi(money(rc.best.c*T.hrsWk),"Upkeep per week",`never servicing: ${money(rc.rtf*T.hrsWk)}`)
+    +kpi(P100(aPM),"Availability with service",`mean repair ${mttr.toFixed(0)} h incl. spares`)+kpi(P100(aRTF),"Availability, run to failure",`mean life ${Math.round(rc.mttf)} h`);
+  R_.rel={T:rc.best.T,saving:(rc.rtf-rc.best.c)*T.hrsWk,aPM,aRTF};
+}
+
+/* §7 working capital */
+function wcAt(sales){
+  const day=sales/7,cr=T.credit/100,adv=C.ADVANCE,dso=cr*(1-adv)*(T.days+3),dio=T.stockW*7,dpo=T.dpo,ps=T.pshare/100;
+  const recv=day*dso,stock=day*ps*dio,pay=Math.min(T.supLimit,day*ps*dpo),need=recv+stock-pay,limit=Math.min(C.OD_MAX,T.odBase+C.OD_DP*recv);
+  return{dso,dio,dpo,ccc:dso+dio*ps-dpo*ps,recv,stock,pay,need,limit};
+}
+function secWC(){
+  const w=wcAt(T.sales),cash=T.startCash,od=Math.max(0,w.need-cash),gm=0.15;
+  $("o_wc").innerHTML=kpi(w.ccc.toFixed(0)+" d","Cash conversion cycle",`receivable ${w.dso.toFixed(0)} + stock ${(w.dio*T.pshare/100).toFixed(0)} − payable ${(w.dpo*T.pshare/100).toFixed(0)}`)
+   +kpi(money(w.need),"Working capital tied up",`owed to you ${kfmt(w.recv)}, stock ${kfmt(w.stock)}, less dealer ${kfmt(w.pay)}`)
+   +kpi(money(od),"Overdraft needed","after your starting cash")+kpi(money(w.limit),"Bank's limit at this size",`${money(T.odBase)} + half of receivables`);
+  const el=$("c_wc"),f=chartFrame(el,200),xs=[];for(let v=20000;v<=300000;v+=5000)xs.push(v);
+  const need=xs.map(v=>Math.max(0,wcAt(v).need-cash)),lim=xs.map(v=>wcAt(v).limit),hi=Math.max(...need,...lim)*1.05,tk=niceTicks(0,hi,4);
+  const X=v=>f.l+(v-20000)/280000*(f.W-f.l-f.r),Y=v=>f.t+(tk[tk.length-1]-v)/tk[tk.length-1]*(f.H-f.t-f.b);
+  let cross=xs.find((v,i)=>need[i]>lim[i]);
+  let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Overdraft needed and bank limit by weekly sales">`+gridY(f,tk,Y,kfmt);
+  [50000,100000,150000,200000,250000,300000].forEach(v=>svg+=`<text class="ax" x="${X(v)}" y="${f.H-8}" text-anchor="middle">${kfmt(v)}</text>`);
+  svg+=`<path d="${linePath(xs.map((v,i)=>[X(v),Y(lim[i])]))}" fill="none" stroke="var(--s2)" stroke-width="2" stroke-dasharray="6 4"/>`;
+  svg+=`<path d="${linePath(xs.map((v,i)=>[X(v),Y(need[i])]))}" fill="none" stroke="var(--s1)" stroke-width="2"/>`;
+  svg+=`<line x1="${X(T.sales)}" x2="${X(T.sales)}" y1="${f.t}" y2="${f.H-f.b}" stroke="var(--acc)" stroke-dasharray="3 3"/>`;
+  if(cross)svg+=`<circle cx="${X(cross)}" cy="${Y(wcAt(cross).limit)}" r="5" fill="var(--s2)" stroke="var(--paper)" stroke-width="2"/>`;
+  svg+=GUIDE(f)+`</svg>`;
+  el.innerHTML=`<div class="legend"><span><i style="background:var(--s1)"></i>Overdraft needed</span><span><i class="dash" style="border-color:var(--s2)"></i>Bank's limit</span></div>${svg}<div class="readout"></div>`;
+  hookHover(el,x=>{const v=clamp(Math.round((20000+(x-f.l)/(f.W-f.l-f.r)*280000)/5000)*5000,20000,300000),i=(v-20000)/5000;return{x:X(v),text:`Sales ${money(v)}/week: overdraft needed ${money(need[i])}, limit ${money(lim[i])}`}},
+    cross?`Above about ${money(cross)} of weekly sales on these terms, the business outgrows the bank's limit. Growth has to slow or terms have to shorten.`:"On these terms the bank's limit keeps up with growth across the whole range.");
+  const pr=SIMCACHE._lastMC;
+  $("o_wcv").innerHTML=(od>w.limit?verdict("no","CASH",`At ${money(T.sales)} a week on these terms you need ${money(od)} of overdraft but the bank allows ${money(w.limit)}. Shorter credit, a smaller paper stock or more cash jobs close the gap.`)
+    :od>0.7*w.limit?verdict("mid","TIGHT",`The overdraft would run at ${Math.round(od/w.limit*100)}% of the limit. One slow payer or a breakdown week could tip it over.`)
+    :verdict("ok","OK",`The overdraft would run at ${Math.round(od/Math.max(1,w.limit)*100)}% of the limit at this size.`))
+    +(pr?`<p class="small muted" style="margin-top:8px">In the section 8 simulation, the overdraft went past 80% of the limit at some point in ${P100(pr.crunch)} of games, and ${P100(pr.dead)} went bust.</p>`:"");
+  R_.wc={w,od,cross};
+}
+
+/* §3 probability */
+function secProb(){
+  const rep=T.rep/100,sm=sampleEnquiries(3000,rep),EN=5+(rep>0.55?0.4*(rep-0.55)/0.45:0)-(rep<0.45?0.4*(0.45-rep)/0.45:0),VN=2;
+  const varX=sm.EX2-sm.EX*sm.EX,mu=EN*sm.EX,sd=Math.sqrt(EN*varX+VN*sm.EX*sm.EX),F=weeklyFixed();
+  const tot=Object.values(sm.mix).reduce((a,o)=>a+o.n,0);
+  $("o_mix").innerHTML=`<tr><th>Job (year mix)</th><th>Share</th><th>Rate</th><th>Win</th><th>Hours</th><th>Earns/enq.</th></tr>`+
+    Object.keys(sm.mix).sort((a,b)=>sm.mix[b].n-sm.mix[a].n).map(k=>{const o=sm.mix[k];return `<tr><td>${TYPES[k].n}</td><td>${P100(o.n/tot)}</td><td>${kfmt(o.val/o.n)}</td><td>${P100(o.p/o.n)}</td><td>${(o.h/o.n).toFixed(1)}</td><td>${money(o.x/o.n)}</td></tr>`}).join("")+
+    `<tr class="sum"><td>Per enquiry</td><td>100%</td><td></td><td></td><td>${sm.EH.toFixed(1)} won</td><td>${money(sm.EX)} ± ${money(Math.sqrt(varX))}</td></tr>`;
+  const H=simWeeks(),muH=H*(mu-F),sdH=Math.sqrt(H)*sd,pT=1-normCdf((T.target-muH)/sdH);
+  R_.prob={mu,sd,F,muH,sdH,pT,hrs:EN*sm.EH,sales:EN*sm.EV};
+  $("o_clt").innerHTML=kpi(money(mu)+" ± "+money(sd),"Contribution per week","theory, mean ± 1σ")+kpi(money(F),"Fixed costs per week","rent, wages, power, sundries")
+    +kpi(money(muH),`${H} weeks, theory`,`± ${money(sdH)} (1σ)`)+kpi(P100(pT),"P(≥ target), theory","normal approximation")
+    +`<div class="kpi" id="o_cltsim"><span class="lbl">${H} weeks, simulated</span><b class="busy">…</b></div><div class="kpi" id="o_cltp"><span class="lbl">P(≥ target), simulated</span><b class="busy">…</b></div>`;
+}
+
+/* §1 constraints */
+function secCons(){
+  const F=weeklyFixed(),pr=R_.prob,cash=T.startCash,runway=F>0?cash/F:0,hrs=pr?pr.hrs:0;
+  const j=jobFor(),a=costSplit(j,"p2",T.paper,C.OWN_RATE);
+  $("o_cons").innerHTML=`<tr><th>Constraint</th><th>Value</th><th>What it means</th></tr>
+   <tr><td>Fixed costs</td><td>${money(F)}/wk</td><td>rent ${kfmt(C.RENT)}, wages ${kfmt(2*C.WAGE)}, power, sundries</td></tr>
+   <tr><td>Starting cash</td><td>${money(cash)}</td><td>${runway.toFixed(1)} weeks of fixed costs</td></tr>
+   <tr><td>Press hours</td><td>48 / 66 / 96</td><td>1 shift / overtime / 2 shifts</td></tr>
+   <tr><td>Work won per week</td><td>${hrs.toFixed(0)} h</td><td>average at suggested quotes</td></tr>
+   <tr><td>Makeready per pass</td><td>${C.PASS_MR} h</td><td>4-colour work needs 2 passes</td></tr>
+   <tr><td>A ${TYPES[j.t].n.toLowerCase()} job's paper</td><td>${money(a.paper)}</td><td>${fmtN(j.sheets)} sheets, paid within ${C.SUP_WEEKS} weeks</td></tr>
+   <tr><td>Overdraft</td><td>${money(T.odBase)}+</td><td>plus half of receivables</td></tr>
+   <tr><td>Dealer credit</td><td>${money(T.supLimit)}</td><td>${C.SUP_WEEKS} weeks</td></tr>`;
+  const util=hrs/48;
+  $("o_bind").innerHTML=util<0.75
+    ?verdict("mid","DEMAND",`You win about <b>${hrs.toFixed(0)} hours</b> of work a week at the suggested quotes against 48 hours of one shift. Demand binds first: idle hours still pay ${money(F)} of fixed costs, so quoting sharper and building name matter more than adding shifts.`)
+    :verdict("no","CAPACITY",`Work won (${hrs.toFixed(0)} h a week) is close to or above one shift. Overtime, a second shift or outsourcing will be needed, and late penalties are the risk.`);
+  $("o_bind").innerHTML+=`<div style="margin-top:8px"></div>`+(cash<F*2?verdict("no","CASH",`Starting cash covers only ${runway.toFixed(1)} weeks of fixed costs. The first credit jobs will push you into the overdraft before any bills are paid.`)
+    :verdict("ok","CASH",`Starting cash covers ${runway.toFixed(1)} weeks of fixed costs; the overdraft and dealer credit carry the paper bills.`));
+  R_.cons={F,hrs,util};
+}
+
+/* §5 scheduling (Monte Carlo of the real game) */
+function secSched(){
+  const pol=Object.assign({},POL_SENSIBLE,{cap:false,out:false,mk:T.sload/100}),st=startOpt(),N=T.sruns;
+  const key=JSON.stringify(["sch",N,T.sload,st,T.odBase,T.supLimit]);
+  const rules=[["edf","Earliest due first"],["spt","Shortest first"],["fcfs","First come first served"]];
+  const res=rules.map(([o])=>runBatch(key+o,N,i=>simGame(i+5000,13,pol,{order:o,start:st})));
+  const rows=res.map((rr,k)=>{let late=0,jobs=0,ld=0,pen=0,u=0,f=[];for(const o of rr){late+=o.lateJobs;jobs+=o.jobs;ld+=o.lateDays;pen+=o.pen.reduce((a,b)=>a+b,0)/o.pen.length;u+=o.util.reduce((a,b)=>a+b,0)/o.util.length;f.push(o.final)}
+    return{n:rules[k][1],late:late/Math.max(1,jobs),days:late?ld/late:0,pen:pen/rr.length,util:u/rr.length,prof:pct(f,.5)}});
+  $("o_sched").innerHTML=`<tr><th>Rule</th><th>Late jobs</th><th>Avg late</th><th>Penalty/wk</th><th>Busy</th><th>13-wk gain</th></tr>`+rows.map(r=>`<tr><td>${r.n}</td><td>${(r.late*100).toFixed(1)}%</td><td>${r.days.toFixed(1)} d</td><td>${money(r.pen)}</td><td>${P100(r.util)}</td><td>${kfmt(r.prof)}</td></tr>`).join("");
+  const el=$("c_sched"),f=chartFrame(el,170),mx=Math.max(1,...rows.map(r=>r.late*100)),tk=niceTicks(0,mx*1.1,3),Y=v=>f.t+(tk[tk.length-1]-v)/tk[tk.length-1]*(f.H-f.t-f.b),gw=(f.W-f.l-f.r)/3,bw=Math.min(60,gw*0.5);
+  let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Share of jobs late by scheduling rule">`+gridY(f,tk,Y,v=>v+"%");
+  rows.forEach((r,i)=>{const cx=f.l+gw*(i+.5);svg+=barPath(cx-bw/2,bw,Y(0),Y(r.late*100),`var(--s${i+1})`)+`<text class="ax" x="${cx}" y="${f.H-8}" text-anchor="middle">${["EDF","SPT","FCFS"][i]}</text><text class="ax" x="${cx}" y="${Y(r.late*100)-5}" text-anchor="middle" style="fill:var(--ink)">${(r.late*100).toFixed(1)}%</text>`});
+  svg+=GUIDE(f)+`</svg>`;
+  el.innerHTML=`${svg}<div class="readout"></div>`;
+  hookHover(el,x=>{const i=clamp(Math.floor((x-f.l)/gw),0,2),r=rows[i];return{x:f.l+gw*(i+.5),text:`${r.n}: ${(r.late*100).toFixed(1)}% of jobs late, ${r.days.toFixed(1)} days on average when late, ${money(r.pen)} penalties a week`}},"Share of jobs delivered late under each rule. Tap a bar.");
+  R_.sched=rows;
+}
+
+/* §8 Monte Carlo growth */
+function secMC(){
+  const pol=polFromT(),st=startOpt(),W=simWeeks(),N=T.runs;
+  const key=JSON.stringify(["mc",N,W,pol,st,T.odBase,T.supLimit]);
+  const runs=runBatch(key,N,i=>simGame(i,W,pol,{start:st}));
+  const fin=runs.map(o=>o.final),dead=runs.filter(o=>o.dead>=0).length/N,crunch=runs.filter(o=>o.crunch).length/N,pHit=fin.filter(v=>v>=T.target).length/N;
+  SIMCACHE._lastMC={crunch,dead};
+  $("o_mck").innerHTML=kpi(money(pct(fin,.5)),"Median result",`net worth gained over ${W} weeks`)+kpi(`${kfmt(pct(fin,.1))} to ${kfmt(pct(fin,.9))}`,"8 games in 10","P10 to P90")
+    +kpi(P100(pHit),"P(≥ target)",money(T.target))+kpi(P100(dead),"P(going bust)",`overdraft over the limit 2 Saturdays running`)
+    +kpi(P100(crunch),"P(cash crunch)","overdraft past 80% of the limit")+kpi(money(pct(runs.map(o=>o.minCash),.5)),"Lowest bank balance","median game");
+  const o1=$("o_cltsim"),o2=$("o_cltp");if(o1)o1.innerHTML=`<span class="lbl">${W} weeks, simulated</span><b>${money(pct(fin,.5))}</b><span class="small muted">median, full game</span>`;if(o2)o2.innerHTML=`<span class="lbl">P(≥ target), simulated</span><b>${P100(pHit)}</b><span class="small muted">${N} games</span>`;
+  // fan chart of cumulative net worth gain
+  {const el=$("c_fan"),f=chartFrame(el,220),p10=[],p50=[],p90=[];
+   for(let w=0;w<W;w++){const v=runs.map(o=>o.eq[Math.min(w,o.eq.length-1)]);p10.push(pct(v,.1));p50.push(pct(v,.5));p90.push(pct(v,.9))}
+   const tk=niceTicks(Math.min(0,...p10),Math.max(...p90,1),4),lo=tk[0],hi=tk[tk.length-1],X=w=>f.l+w/(W-1)*(f.W-f.l-f.r),Y=v=>f.t+(hi-v)/(hi-lo)*(f.H-f.t-f.b);
+   let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Net worth gained by week, median and 80 percent band">`+gridY(f,tk,Y,kfmt);
+   svg+=`<line x1="${f.l}" x2="${f.W-f.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)"/>`;
+   const st=W>26?8:4;for(let w=0;w<W;w+=st)svg+=`<text class="ax" x="${X(w)}" y="${f.H-8}" text-anchor="middle">W${w+1}</text>`;
+   svg+=`<path d="${linePath(p90.map((v,i)=>[X(i),Y(v)]))}L${p10.map((v,i)=>[X(W-1-i),Y(p10[W-1-i])].map(n=>n.toFixed(1)).join(" ")).join("L")}Z" fill="var(--s1)" opacity=".2"/>`;
+   if(T.target>lo&&T.target<hi)svg+=`<line x1="${f.l}" x2="${f.W-f.r}" y1="${Y(T.target)}" y2="${Y(T.target)}" stroke="var(--s2)" stroke-width="1.5" stroke-dasharray="6 4"/>`;
+   svg+=`<path d="${linePath(p50.map((v,i)=>[X(i),Y(v)]))}" fill="none" stroke="var(--s1)" stroke-width="2.5"/>`+GUIDE(f)+`</svg>`;
+   el.innerHTML=`<div class="legend"><span><i style="background:var(--s1)"></i>Median</span><span><i class="band" style="background:var(--s1)"></i>8 in 10 games</span><span><i class="dash" style="border-color:var(--s2)"></i>Target</span></div>${svg}<div class="readout"></div>`;
+   hookHover(el,x=>{const w=clamp(Math.round((x-f.l)/(f.W-f.l-f.r)*(W-1)),0,W-1);return{x:X(w),text:`Week ${w+1}: median ${money(p50[w])}, 80% of games between ${money(p10[w])} and ${money(p90[w])}`}},`Week ${W}: median ${money(p50[W-1])}. The dip at the start is working capital and the first weeks' fixed costs.`);}
+  // per 4-week block table
+  const B=Math.floor(W/4),tgtB=T.target/Math.max(1,B);let prev=null;
+  $("o_month").innerHTML=`<tr><th>Weeks</th><th>Sales</th><th>Profit</th><th>Growth</th><th>P(≥ ${kfmt(tgtB)})</th><th>P(loss)</th></tr>`+
+    Array.from({length:B},(_,b)=>{const S=[],P=[];for(const o of runs){let sv=0,pv=0;for(let w=b*4;w<b*4+4;w++){sv+=o.rev[w]||0;pv+=w<o.profit.length?o.profit[w]:0}S.push(sv);P.push(pv)}
+      const med=pct(P,.5),g=prev==null||prev<=0?"—":((med/prev-1)*100>=0?"+":"")+Math.round((med/prev-1)*100)+"%";prev=med;
+      return `<tr><td>${b*4+1}–${b*4+4} · ${MONTHS[monthOf(b*4+1+(T.useGame&&T.g?T.g.week-1:0))].slice(0,3)}</td><td>${kfmt(pct(S,.5))}</td><td>${kfmt(med)}</td><td>${g}</td><td>${P100(P.filter(v=>v>=tgtB).length/N)}</td><td>${P100(P.filter(v=>v<0).length/N)}</td></tr>`}).join("");
+  // histogram
+  {const el=$("c_hist"),lo=Math.min(...fin),hi=Math.max(...fin),Bn=24,w=(hi-lo)/Bn||1,bins=new Array(Bn).fill(0);fin.forEach(v=>bins[Math.min(Bn-1,Math.floor((v-lo)/w))]++);
+   const f=chartFrame(el,190),mx=Math.max(...bins),X=v=>f.l+(v-lo)/(hi-lo||1)*(f.W-f.l-f.r),Y=c=>f.t+(1-c/mx)*(f.H-f.t-f.b),bwp=(f.W-f.l-f.r)/Bn;
+   let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Distribution of final results">`+gridY(f,niceTicks(0,mx,3).filter(v=>v<=mx),Y,v=>(v/N*100).toFixed(0)+"%");
+   bins.forEach((c,i)=>{if(!c)return;const mid=lo+(i+.5)*w;svg+=barPath(f.l+i*bwp+1,bwp-2,f.H-f.b,Y(c),mid<0?"var(--s2)":"var(--s1)",mid>=T.target?1:.5)});
+   [lo,(lo+hi)/2,hi].forEach((v,i)=>svg+=`<text class="ax" x="${X(v)}" y="${f.H-8}" text-anchor="${["start","middle","end"][i]}">${kfmt(v)}</text>`);
+   if(T.target>lo&&T.target<hi)svg+=`<line x1="${X(T.target)}" x2="${X(T.target)}" y1="${f.t}" y2="${f.H-f.b}" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 3"/><text class="lab" x="${X(T.target)+(X(T.target)>f.W*0.7?-4:4)}" y="${f.t+10}" text-anchor="${X(T.target)>f.W*0.7?"end":"start"}">Target</text>`;
+   svg+=GUIDE(f)+`</svg>`;
+   el.innerHTML=`<div class="legend"><span><i style="background:var(--s1);height:10px;width:10px"></i>Gain</span><span><i style="background:var(--s2);height:10px;width:10px"></i>Loss</span></div>${svg}<div class="readout"></div>`;
+   hookHover(el,x=>{const i=clamp(Math.floor((x-f.l)/bwp),0,Bn-1);return{x:f.l+(i+.5)*bwp,text:`${kfmt(lo+i*w)} to ${kfmt(lo+(i+1)*w)}: ${(bins[i]/N*100).toFixed(1)}% of games`}},`Solid bars reach the target. ${P100(pHit)} of ${N} games make at least ${money(T.target)}; ${P100(dead)} go bust.`);}
+  R_.mc={med:pct(fin,.5),p10:pct(fin,.1),p90:pct(fin,.9),dead,crunch,pHit,util:pct(runs.map(o=>o.util.reduce((a,b)=>a+b,0)/o.util.length),.5),late:runs.reduce((a,o)=>a+o.lateJobs,0)/Math.max(1,runs.reduce((a,o)=>a+o.jobs,0)),W};
+  if(R_.wc)secWC();
+}
+
+/* §9 expansion with paired runs (common random numbers) */
+function secExp(){
+  const pol=polFromT(),st=startOpt(),W=simWeeks(),N=T.xruns,rule={util:T.xutil/100,backlog:T.xback,reserve:T.xres,minLeft:T.xleft};
+  const has4=st.p4;
+  $("o_cap").innerHTML=`<p>One 2-colour press on one shift gives 48 crewed hours a week; ${R_.mc?`the simulated games keep it busy about <b>${P100(R_.mc.util)}</b> of those hours`:""}. A second shift doubles the hours for the same press. The 4-colour press adds a second machine and halves the passes on colour work, which also makes your quotes for colour jobs more competitive. It costs ${money(PRESSES.p4.price)} (${money(PRESSES.p4.price*C.DOWN)} down, about ${money(emi4())}/week on the loan). The rule below buys it when the last four weeks were busy, work is waiting, and there is headroom left after the down payment. Each pair of runs replays identical weeks with and without the rule.</p>`;
+  if(has4){$("o_exp").innerHTML=verdict("ok","OWNED","Your game already has the 4-colour press, so there is nothing to decide here.");$("c_exp").innerHTML="";R_.exp=null;return}
+  // the "never buy" side reuses the section 8 games (same seeds) when there are enough of them
+  const mcKey=JSON.stringify(["mc",T.runs,W,pol,st,T.odBase,T.supLimit]),keyB=JSON.stringify(["x",N,W,pol,st,rule,T.odBase,T.supLimit]);
+  const base=SIMCACHE[mcKey]&&T.runs>=N?SIMCACHE[mcKey].slice(0,N):runBatch(JSON.stringify(["mc",N,W,pol,st,T.odBase,T.supLimit]),N,i=>simGame(i,W,pol,{start:st}));
+  const alt=runBatch(keyB,N,i=>simGame(i,W,Object.assign({},pol,{buy4:rule}),{start:st}));
+  const diff=base.map((o,i)=>alt[i].final-o.final),bought=alt.filter(o=>o.buy4>=0),bw=bought.map(o=>o.buy4);
+  let pay=0;alt.forEach((o,i)=>{if(o.buy4>=0&&o.final>base[i].final)pay++});
+  const win=diff.filter(d=>d>0).length/N;
+  $("o_exp").innerHTML=kpi(P100(bought.length/N),"Rule fires",bw.length?`median week ${Math.round(pct(bw,.5))}`:"never in these runs")
+    +kpi(bought.length?P100(pay/bought.length):"—","Pays back by the end","of games where it was bought")
+    +kpi(P100(win),"Beats not buying","same weeks, paired")+kpi(money(pct(diff,.5)),"Median extra gain",`P10 ${kfmt(pct(diff,.1))}, P90 ${kfmt(pct(diff,.9))}`)
+    +kpi(P100(base.filter(o=>o.dead>=0).length/N),"Bust, never buying","")+kpi(P100(alt.filter(o=>o.dead>=0).length/N),"Bust, with the rule","");
+  const el=$("c_exp"),f=chartFrame(el,200),p10=[],p50=[],p90=[];
+  for(let w=0;w<W;w++){const v=base.map((o,i)=>(alt[i].eq[Math.min(w,alt[i].eq.length-1)]||0)-(o.eq[Math.min(w,o.eq.length-1)]||0));p10.push(pct(v,.1));p50.push(pct(v,.5));p90.push(pct(v,.9))}
+  const tk=niceTicks(Math.min(0,...p10),Math.max(1,...p90),4),lo=tk[0],hi=tk[tk.length-1],X=w=>f.l+w/(W-1)*(f.W-f.l-f.r),Y=v=>f.t+(hi-v)/(hi-lo)*(f.H-f.t-f.b);
+  let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Extra net worth from the expansion rule by week">`+gridY(f,tk,Y,kfmt);
+  svg+=`<line x1="${f.l}" x2="${f.W-f.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)"/>`;
+  const stp=W>26?8:4;for(let w=0;w<W;w+=stp)svg+=`<text class="ax" x="${X(w)}" y="${f.H-8}" text-anchor="middle">W${w+1}</text>`;
+  svg+=`<path d="${linePath(p90.map((v,i)=>[X(i),Y(v)]))}L${p10.map((v,i)=>[X(W-1-i),Y(p10[W-1-i])].map(n=>n.toFixed(1)).join(" ")).join("L")}Z" fill="var(--s2)" opacity=".2"/>`;
+  svg+=`<path d="${linePath(p50.map((v,i)=>[X(i),Y(v)]))}" fill="none" stroke="var(--s2)" stroke-width="2.5"/>`;
+  if(bw.length>N/4){const mw=pct(bw,.5)-1;svg+=`<line x1="${X(mw)}" x2="${X(mw)}" y1="${f.t}" y2="${f.H-f.b}" stroke="var(--s1)" stroke-width="2"/><text class="lab" x="${X(mw)+4}" y="${f.t+12}">Typical purchase</text>`}
+  svg+=GUIDE(f)+`</svg>`;
+  el.innerHTML=`<div class="legend"><span><i style="background:var(--s2)"></i>Median extra net worth</span><span><i class="band" style="background:var(--s2)"></i>8 in 10 pairs</span></div>${svg}<div class="readout"></div>`;
+  hookHover(el,x=>{const w=clamp(Math.round((x-f.l)/(f.W-f.l-f.r)*(W-1)),0,W-1);return{x:X(w),text:`Week ${w+1}: median ${money(p50[w])} ahead of not buying (80% between ${money(p10[w])} and ${money(p90[w])})`}},
+    `The curve dips after purchase (down payment, installation, loan interest) and climbs if colour work fills the press. By week ${W}: median ${money(p50[W-1])}.`);
+  R_.exp={fire:bought.length/N,win,med:pct(diff,.5),wk:bw.length?pct(bw,.5):null};
+}
+
+/* §10 SWOT */
+function secSwot(){
+  const c=R_.cost||{},q=R_.quote||{},r=R_.rel||{},w=R_.wc||{},m=R_.mc||{},x=R_.exp,sc=R_.sched||[],pr=R_.prob||{};
+  const edf=sc[0],fc=sc[2];
+  $("o_swot").innerHTML=`
+   <div class="S"><h4>Strengths</h4><ul><li>Each press hour earns about ${money(c.cph||0)} over running cost at the going rate</li><li>The suggested plan gains a median ${kfmt(m.med||0)} over ${m.W||T.weeks} weeks</li><li>Servicing every ${Math.round(r.T||0)} h saves about ${money(r.saving||0)} a week against waiting for breakdowns</li><li>Earliest-due-first keeps late jobs to ${edf?(edf.late*100).toFixed(1):"0"}% even with a crowded queue</li></ul></div>
+   <div class="W"><h4>Weaknesses</h4><ul><li>Fixed costs of ${money(pr.F||weeklyFixed())} a week run whether the press is busy or not</li><li>4-colour work needs two passes: ${c.a?c.a.n:2} makereadies on the 2-col press</li><li>Short runs cost ${c.a?money(c.a.total/(QTY[T.qi]/1000)):"—"} per 1,000 sheets at this size</li><li>Working capital: a ${w.w?w.w.ccc.toFixed(0):"—"}-day cash cycle at the chosen terms</li></ul></div>
+   <div class="O"><h4>Opportunities</h4><ul><li>Pricing at about ${Math.round((q.best||1)*100)}% of the going rate wins ${P100(q.p||0)} of such jobs</li><li>Diwali cartons and year-end calendars are mostly 4-colour work</li><li>${x?`The 4-colour rule beats not buying in ${P100(x.win)} of paired runs (median ${kfmt(x.med)})`:"The 4-colour press is already running"}</li><li>Regular clients give 4 points of price room and come back more often</li></ul></div>
+   <div class="T"><h4>Threats</h4><ul><li>${P100(m.dead||0)} of simulated games go bust; ${P100(m.crunch||0)} hit a cash crunch</li><li>${w.cross?`Sales above ${money(w.cross)}/week outgrow the bank's limit on these terms`:"Slow payers stretch the overdraft"}</li><li>Paper can jump ${C.PAPER_JUMP_SIZE.map(v=>Math.round(v*100)).join("–")}% in a week; it does so about ${Math.round(C.PAPER_JUMP*52)} times a year</li><li>First-come order lets ${fc?(fc.late*100).toFixed(1):"—"}% of jobs go late when busy</li></ul></div>`;
+}
+
+/* ---------- boot ---------- */
+function boot(){
+  applyTheme();
+  const au=LS.get(K_AUTO);
+  if(au&&au.v===1&&au.presses){s=au;view="title"}
+  render();
+  if(tab==="tech")renderTech();
+}
+boot();
+</script>
+</body>
+</html>

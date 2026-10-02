@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<!--
+TOOL: Test Lab
+FAMILY: games
+VERSION: 1.0.0
+DATE: 2026-10-02
+CHAT: Business sim game set (claude.ai, 2026-10-02)
+CHANGES: 1.0.0 - first release: weekly test-lab sim with Weibull rig parts, spares, calibration, bidding, shifts, staff, accreditation, loans; shift log; 3 save slots + autosave + LAB1 save code; Tech discussion tab with reliability, availability, spares, replacement, bidding, capacity, Monte Carlo and expansion analysis
+STATUS: playable
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16181b">
+<title>Test Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: an instrument panel and a test log sheet. Graphite and off-white, one amber signal colour for actions and live values. */
+:root{
+  --bg:#ebe9e3; --card:#f8f7f3; --ink:#1d2124; --muted:#5a6066; --line:#d0cdc4; --chip:#e2dfd7; --well:#dedbd2;
+  --sig:#9a5800; --sig-strong:#b86a00; --sig-ink:#ffffff; --ok:#2c7a4b; --bad:#b0352a; --off:#868b90; --glow:transparent;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --f-display:"Chakra Petch","Saira Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#16181b; --card:#1f2226; --ink:#e8e6df; --muted:#9ba1a7; --line:#343940; --chip:#2a2e33; --well:#121417;
+  --sig:#f0a83a; --sig-strong:#f0a83a; --sig-ink:#1b1200; --ok:#52c784; --bad:#ff6d5e; --off:#6f757b; --glow:currentColor;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#16181b; --card:#1f2226; --ink:#e8e6df; --muted:#9ba1a7; --line:#343940; --chip:#2a2e33; --well:#121417;
+  --sig:#f0a83a; --sig-strong:#f0a83a; --sig-ink:#1b1200; --ok:#52c784; --bad:#ff6d5e; --off:#6f757b; --glow:currentColor;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--f-body);-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+.wrap{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:0 40px}
+.num,.mono{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+h1,h2{font-family:var(--f-display);font-weight:700;margin:0;line-height:1.1;text-wrap:balance;letter-spacing:.01em}
+h2{font-size:22px}
+h3{font-family:var(--f-num);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:600}
+p{margin:0}
+.muted{color:var(--muted)} .small{font-size:13px} .tiny{font-size:12px}
+.pos{color:var(--ok)} .neg{color:var(--bad)} .sigc{color:var(--sig)}
+/* tabs */
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--well);border:1px solid var(--line);border-radius:10px;padding:4px;margin-block:12px 4px}
+.tabs button{border:0;background:transparent;border-radius:7px;min-height:40px;padding:8px 6px;font-family:var(--f-display);font-weight:700;font-size:15px;cursor:pointer;color:var(--muted);letter-spacing:.03em}
+.tabs button[aria-selected="true"]{background:var(--card);color:var(--ink);box-shadow:inset 0 -2px 0 var(--sig)}
+/* status bar */
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.bar .row{display:flex;align-items:center;gap:10px}
+.brand{font-family:var(--f-display);font-weight:700;font-size:20px;flex:1;min-width:0;letter-spacing:.06em;text-transform:uppercase}
+.brand span{color:var(--sig)}
+.iconbtn{border:1px solid var(--line);background:var(--card);border-radius:8px;min-height:44px;padding:8px 14px;font-weight:600;cursor:pointer}
+.stats{display:grid;grid-template-columns:.8fr 1.3fr 1fr;gap:6px;margin-top:8px}
+.stat{background:var(--well);border:1px solid var(--line);border-radius:8px;padding:5px 9px;min-width:0}
+.stat b{display:block;font-family:var(--f-num);font-weight:500;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--sig)}
+.lbl{font-family:var(--f-num);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.meter{height:5px;background:var(--chip);border-radius:3px;margin-top:3px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--sig)}
+/* cards and controls */
+section{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 14px}
+.card.flat{background:transparent;border-style:dashed}
+.big{display:block;width:100%;border:0;border-radius:10px;min-height:54px;padding:14px;font-family:var(--f-display);font-weight:700;font-size:19px;letter-spacing:.04em;background:var(--sig-strong);color:var(--sig-ink);cursor:pointer;text-transform:uppercase}
+.big:active{transform:translateY(1px)}
+.ghost{width:100%;min-height:46px;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 12px;font-weight:600;cursor:pointer}
+.ghost.sig{border-color:var(--sig);color:var(--sig)}
+.btn{min-height:44px;border:1px solid var(--line);background:var(--chip);border-radius:8px;padding:8px 12px;font-weight:600;font-size:14px;cursor:pointer}
+.btn.sig{background:var(--sig-strong);color:var(--sig-ink);border-color:var(--sig-strong)}
+.btn:disabled,.ghost:disabled,.big:disabled{opacity:.45;cursor:not-allowed}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.btnrow>*{flex:1 1 130px}
+.seg{display:flex;gap:3px;background:var(--well);border:1px solid var(--line);border-radius:9px;padding:3px}
+.seg button{flex:1 1 0;min-width:0;border:0;background:transparent;border-radius:6px;min-height:40px;padding:6px 4px;font-weight:600;font-size:14px;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--sig);box-shadow:inset 0 -2px 0 var(--sig)}
+.subnav{margin-block:2px}
+.subnav button{font-size:13px;padding-inline:2px}
+.subnav .badge{display:inline-block;min-width:18px;padding:0 4px;border-radius:9px;background:var(--sig-strong);color:var(--sig-ink);font-family:var(--f-num);font-size:11px;margin-left:3px}
+.step{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:6px}
+.ctl{display:flex;align-items:center;gap:6px;flex:none}
+.ctl button{width:44px;height:44px;border-radius:8px;border:1px solid var(--line);background:var(--chip);font-size:22px;font-weight:600;cursor:pointer}
+.ctl output{min-width:96px;text-align:center;font-family:var(--f-num);font-size:16px;color:var(--sig)}
+/* lamps */
+.lamp{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-num);font-size:11px;letter-spacing:.08em;font-weight:600;white-space:nowrap}
+.lamp i{width:10px;height:10px;border-radius:50%;background:var(--off);box-shadow:0 0 6px var(--glow);flex:none;color:var(--off)}
+.lamp.run i{background:var(--ok);color:var(--ok)} .lamp.run{color:var(--ok)}
+.lamp.down i{background:var(--bad);color:var(--bad)} .lamp.down{color:var(--bad)}
+.lamp.wait i{background:var(--sig);color:var(--sig)} .lamp.wait{color:var(--sig)}
+.lamp.idle{color:var(--muted)}
+.rigrow{display:flex;flex-wrap:wrap;gap:6px 14px}
+.righead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.righead .id{font-family:var(--f-display);font-weight:700;font-size:20px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;text-align:right;font-family:var(--f-num);font-size:13px}
+.bar2{height:8px;background:var(--well);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.bar2 i{display:block;height:100%;background:var(--sig)}
+.bar2 i.ok{background:var(--ok)} .bar2 i.bad{background:var(--bad)}
+.parts{display:flex;flex-direction:column}
+.part{display:grid;grid-template-columns:1fr 70px;gap:4px 10px;align-items:center;padding-block:7px;border-top:1px dashed var(--line)}
+.part:first-child{border-top:0}
+.part .nm{font-size:14px;font-weight:600}
+.part .ag{font-family:var(--f-num);font-size:12px;color:var(--muted);text-align:right}
+.part .bar2{grid-column:1/-1}
+.part .act{grid-column:1/-1;display:flex;gap:8px;align-items:center;justify-content:space-between}
+.tag{display:inline-block;font-family:var(--f-num);font-size:10px;letter-spacing:.08em;padding:2px 6px;border-radius:4px;border:1px solid var(--line);color:var(--muted);text-transform:uppercase;white-space:nowrap}
+.tag.sig{border-color:var(--sig);color:var(--sig)} .tag.bad{border-color:var(--bad);color:var(--bad)} .tag.ok{border-color:var(--ok);color:var(--ok)}
+.qrow{display:flex;justify-content:space-between;gap:8px;align-items:center;padding-block:6px;border-top:1px dashed var(--line)}
+.qrow:first-child{border-top:0}
+.alert{display:flex;gap:8px;align-items:flex-start;font-size:14px;padding-block:4px}
+.alert::before{content:"";flex:none;width:6px;height:6px;margin-top:7px;border-radius:1px;background:var(--sig)}
+.alert.bad::before{background:var(--bad)}
+.rfq .hd{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.rfq .fit{font-size:13px;padding:7px 10px;border-radius:7px;background:var(--well);margin-top:8px}
+.rfq .fit.bad{color:var(--bad)} .rfq .fit.ok{color:var(--ok)}
+/* log sheet */
+.log{display:flex;flex-direction:column;font-family:var(--f-num);font-size:13px}
+.log .h{display:grid;grid-template-columns:76px 36px 1fr;gap:8px;padding-block:6px;border-top:1px solid var(--line)}
+.log .h:first-child{border-top:0}
+.log .t{color:var(--muted)}
+.log .rg{color:var(--sig);font-weight:600}
+.log .x{font-family:var(--f-body);font-size:14px}
+.log .q{font-style:italic;color:var(--muted);font-size:13px;margin-top:2px}
+.log .warn .x{color:var(--sig)} .log .bad .x{color:var(--bad)} .log .good .x{color:var(--ok)}
+@keyframes pop{from{opacity:.15}to{opacity:1}}
+.log .h{animation:pop .35s ease-out}
+.sheetlines{background:repeating-linear-gradient(to bottom,transparent 0 31px,var(--line) 31px 32px)}
+table.acc{width:100%;border-collapse:collapse;font-size:14px}
+table.acc td{padding:6px 0;border-bottom:1px dashed var(--line)}
+table.acc td:last-child{text-align:right;font-family:var(--f-num);font-size:13px}
+table.acc tr.total td{font-weight:700;border-bottom:0;font-size:16px}
+table.acc tr.sub td{color:var(--muted);font-size:13px}
+.title-card{text-align:center;padding:28px 16px}
+.title-card h1{font-size:52px;letter-spacing:.06em;text-transform:uppercase;margin:6px 0}
+.title-card h1 span{color:var(--sig)}
+.lenpick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lenpick button{border:1px solid var(--line);background:var(--well);border-radius:8px;min-height:56px;padding:8px 4px;font-weight:600;cursor:pointer}
+.lenpick button[aria-pressed="true"]{border-color:var(--sig);color:var(--sig);box-shadow:inset 0 -2px 0 var(--sig)}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet .panel{background:var(--bg);width:100%;max-width:560px;max-height:88%;overflow:auto;border-radius:14px 14px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
+.slot{display:flex;gap:8px;align-items:center;padding-block:8px;border-top:1px dashed var(--line)}
+.slot:first-of-type{border-top:0}
+.slot .info{flex:1;min-width:0;font-size:13px}
+.slot .btn{flex:none}
+textarea{width:100%;min-height:76px;border:1px solid var(--line);border-radius:8px;background:var(--well);color:var(--ink);padding:8px;font-family:var(--f-num);font-size:12px}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;z-index:30;max-width:90%}
+.confirm{border:1px solid var(--sig);border-radius:8px;padding:10px;margin-top:8px;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.hist{display:flex;flex-direction:column;gap:3px;font-size:12px}
+.hist .r{display:grid;grid-template-columns:34px 1fr 74px;gap:8px;align-items:center}
+.hist .b{height:9px;border-radius:2px}
+/* tech tab */
+#tech{display:flex;flex-direction:column;gap:12px;padding-top:10px}
+.sec-n{font-family:var(--f-num);font-size:11px;color:var(--sig);font-weight:600;letter-spacing:.12em;margin-bottom:2px}
+.prose{display:flex;flex-direction:column;gap:8px;max-width:65ch}
+.fld{display:flex;flex-direction:column;gap:2px;padding-block:5px}
+.fld label{display:flex;justify-content:space-between;gap:10px;font-weight:600;font-size:14px}
+.fld output{font-family:var(--f-num);font-weight:500;white-space:nowrap;color:var(--sig)}
+input[type=range]{width:100%;height:36px;accent-color:var(--sig-strong);margin:0}
+.flds{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));column-gap:18px}
+.segrow{display:flex;flex-direction:column;gap:4px;padding-block:5px}
+.segrow>span{font-weight:600;font-size:14px}
+.tblwrap{overflow-x:auto}
+.tt{width:100%;border-collapse:collapse;font-size:13px;min-width:300px}
+.tt th{font-family:var(--f-num);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right;padding:6px 4px;border-bottom:1px solid var(--line);font-weight:500}
+.tt th:first-child,.tt td:first-child{text-align:left}
+.tt td{padding:6px 4px;border-bottom:1px dashed var(--line);text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.tt td:first-child{font-family:var(--f-body)}
+.tt tr.sum td{font-weight:700;border-bottom:0}
+.tt tr.hi td{color:var(--sig)}
+.formula{font-family:var(--f-num);font-size:12.5px;background:var(--well);border:1px solid var(--line);border-radius:8px;padding:10px 12px;line-height:1.7;overflow-x:auto;white-space:pre}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.kpi{background:var(--well);border:1px solid var(--line);border-radius:8px;padding:9px 11px;min-width:0}
+.kpi b{display:block;font-family:var(--f-num);font-weight:500;font-size:20px;line-height:1.2;color:var(--sig)}
+.kpi .small{display:block}
+.verdict{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:8px;background:var(--well);font-size:14px;margin-top:8px}
+.verdict i{flex:none;font-style:normal;font-family:var(--f-num);font-weight:600;font-size:11px;padding:2px 7px;border-radius:4px;margin-top:2px;letter-spacing:.06em}
+.verdict.ok i{background:var(--ok);color:#fff}
+.verdict.no i{background:var(--bad);color:#fff}
+.verdict.mid i{background:var(--sig-strong);color:var(--sig-ink)}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto;touch-action:pan-y}
+.chart .readout{font-family:var(--f-num);font-size:12px;min-height:2.6em;color:var(--ink);padding-top:4px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted);margin-bottom:4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+.legend i.dash{height:0;border-top:2px dashed var(--muted);border-radius:0;background:none}
+.legend i.band{height:10px;opacity:.3}
+svg .ax{font-family:var(--f-num);font-size:10.5px;fill:var(--muted)}
+svg .lab{font-family:var(--f-body);font-size:12px;font-weight:600;fill:var(--ink)}
+svg .grid{stroke:var(--line);stroke-width:1;opacity:.7}
+svg .guide{stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3}
+.swot{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.swot>div{border-radius:8px;padding:12px;background:var(--well);border:1px solid var(--line);min-width:0}
+.swot h4{margin:0 0 6px;font-family:var(--f-display);font-size:18px;line-height:1}
+.swot ul{margin:0;padding-left:18px;font-size:13px;display:flex;flex-direction:column;gap:5px}
+.swot .S h4{color:var(--ok)} .swot .W h4{color:var(--bad)} .swot .O h4{color:var(--sig)} .swot .T h4{color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{border:1px solid var(--line);background:var(--well);border-radius:999px;min-height:40px;padding:5px 12px;font-weight:600;font-size:13px;cursor:pointer}
+.chips button[aria-pressed="true"]{border-color:var(--sig);color:var(--sig)}
+.busy{font-family:var(--f-num);font-size:12px;color:var(--sig)}
+@media (max-width:440px){.swot{grid-template-columns:1fr}}
+:focus-visible{outline:2px solid var(--sig);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.log .h{animation:none}*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="tabs" role="tablist" aria-label="Sections"><button role="tab" data-act="tab" data-tab="play" id="tab_play">Play</button><button role="tab" data-act="tab" data-tab="tech" id="tab_tech">Tech discussion</button></nav>
+  <header class="bar" id="bar" hidden>
+    <div class="row">
+      <div class="brand">Test<span>/</span>Lab</div>
+      <button class="iconbtn" data-act="menu" id="menuBtn">Menu</button>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+  <main id="main"></main>
+  <div id="tech" hidden></div>
+</div>
+<div class="sheet" id="sheet" hidden><div class="panel" id="panel"></div></div>
+<div class="toast" id="toast" hidden></div>
+<script>
+"use strict";
+const VERSION="1.0.0";
+/*ENGINE-START*/
+/* ---------- tunables: every balance number lives here ---------- */
+const C={
+  START_CASH:800000, START_REP:0.5, RENT:42000, OVERDRAFT:300000, OD_RATE:0.004,
+  LOAN_STEP:500000, LOAN_MAX:2500000, LOAN_RATE:0.0025,           // 0.25%/week ≈ 13% a year
+  SHIFT_H:40, TECH_WAGE:8500, ENG_WAGE:15500, HIRE_COST:12000, SEVER_WEEKS:2,
+  TRAIN_COST:18000, TRAIN_GAIN:0.15, LEARN:0.004, TECH_COVER:2, OT_MULT:1.5, OT_CEIL:1.5,
+  PREM:[0,0,2500,8500],                                           // shift premium per rig-week for 0..3 shifts
+  HOLD:0.005, EMERG:1.15, WARN_H:150, PLANNED_F:0.5,
+  CAL_COST:18000, CAL_H:12, CAL_VALID:26, QA_CATCH:0.6,
+  CM_COST:120000, LOGGER_COST:40000,
+  ACC_COST:150000, ACC_FEE:4000, ACC_WAIT:3, ACC_SUSPEND:8, AUDIT_P:0.06, ACC_SKILL:0.55, ACC_SHARE:0.3, ACC_PREM:1.3,
+  SETUP_H:16, SETUP_FEE:15000,
+  RFQ_BASE:0.3, RFQ_REP:1.4, OWNED_W:1, OTHER_W:1, FIXED_SHARE:0.35,
+  BID_SLOPE:0.07, REP_PRICE:0.15,
+  ERR_P:0.05, ERR_NIGHT:2.4, DAQ_P:0.06,
+  ART_BASE:0.4, RETEST_P:0.5,
+  PEN_CAP:0.5, Q_STD:0.82, Q_HIGH:0.9,
+  RESIGN_P:0.35, ENG_COVER:3
+};
+const COMP={
+  motor:{name:"Drive motor / VFD",short:"Motor/VFD",b:1.5,eta:7000,price:85000,rep:[8,16],lead:[2,6],det:0.85},
+  brg:{name:"Bearing set",short:"Bearings",b:2.2,eta:2600,price:16000,rep:[8,20],lead:[1,3],det:0.9},
+  cpl:{name:"Coupling",short:"Coupling",b:2.6,eta:3200,price:11000,rep:[4,8],lead:[1,2],det:0.8},
+  tq:{name:"Torque sensor",short:"Torque sensor",b:1.4,eta:6000,price:60000,rep:[4,8],lead:[2,6],det:0.3},
+  slip:{name:"Slip ring",short:"Slip ring",b:1.8,eta:2200,price:24000,rep:[6,12],lead:[1,4],det:0.55},
+  daq:{name:"DAQ unit",short:"DAQ unit",b:1.3,eta:8000,price:52000,rep:[3,6],lead:[1,4],det:0.2}
+};
+const CK=Object.keys(COMP);
+const RIG={
+  GB:{name:"Gearbox endurance rig",short:"Gearbox",comps:["motor","brg","cpl","tq","slip","daq"],power:170,price:1600000,build:3},
+  PP:{name:"Pump performance rig",short:"Pump",comps:["motor","brg","cpl","tq","daq"],power:150,price:1300000,build:3},
+  BR:{name:"Bearing test rig",short:"Bearing",comps:["motor","brg","cpl","tq","daq"],power:110,price:1350000,build:2},
+  EC:{name:"Environmental chamber",short:"Chamber",comps:["motor","brg","cpl","daq"],power:190,price:1000000,build:2}
+};
+const TEST={
+  gbe:{name:"Gearbox endurance",rig:"GB",h:[300,2000],step:50,rate:980,w:0.15,fail:0.10,skew:2},
+  pump:{name:"Pump performance",rig:"PP",h:[60,320],step:10,rate:1250,w:0.40,fail:0.06,skew:1},
+  brl:{name:"Bearing life",rig:"BR",h:[400,1500],step:50,rate:920,w:0.25,fail:0.25,skew:1.5},
+  thc:{name:"Thermal cycling",rig:"EC",h:[100,600],step:20,rate:1150,w:0.20,fail:0.08,skew:1}
+};
+const TK=Object.keys(TEST);
+const PAYER={prompt:{name:"Pays promptly",w:0.45,d:[0,1]},average:{name:"Pays in 2–4 weeks",w:0.35,d:[2,4]},slow:{name:"Slow payer",w:0.2,d:[5,10]}};
+const CLIENTS=["Nilgiri Fluid Machines","Palar Transmissions","Sri Anjali Bearings","Vaigai Motion Parts","Kongu Pumpsets","Deccan Drive Components","Tamira Gearcraft","Bhavani Rotodynamics","Cauvery Hydro Works","Malabar Auto Parts","Krishna Valley Pumps","Satpura Gear Systems","Narmada Bearing Co","Thar Motor Components","Godavari Flow Controls","Hampi Precision Drives"];
+const NAMES={tech:["Murugan","Selvi","Arun","Fathima","Ramesh","Kavitha","Joseph","Priya","Dinesh","Lakshmi","Imran","Revathi","Sathish","Meena"],eng:["Ananya","Karthik","Deepa","Vikram","Nirmala","Farhan","Sowmya","Rajesh"]};
+const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const QUOTES={
+  ontime:["Report received. Clean data, thank you.","On time again. We'll send the next batch your way.","Good work on the curves. Our design team is happy."],
+  late:["We had a design review waiting on this report.","Late again. Our customer is asking questions.","Please keep us posted next time you slip."],
+  art:["So it failed at that load. That is exactly what we needed to know.","Disappointing for us, but good catch.","Send the teardown photos with the report."],
+  rebate:["Some channels look noisy. We'll hold back part of the payment.","The data gaps worry our QA team."],
+  qa:["Your torque sensor certificate had expired. Those hours don't count."],
+  resign:["I can't keep doing nights every week.","I've found a day job closer to home.","Too many double shifts. I'm done."]
+};
+
+/* ---------- maths helpers (also used by the Tech tab) ---------- */
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const U=(r,a,b)=>a+r()*(b-a);
+const UI=(r,a,b)=>a+Math.floor(r()*(b-a+1));
+const pickR=(r,a)=>a[Math.floor(r()*a.length)];
+function poisR(l,r){if(l<=0)return 0;const L=Math.exp(-l);let k=0,p=1;do{k++;p*=r()}while(p>L&&k<200);return k-1}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gammaFn(z){const g=7,p=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+  if(z<0.5)return Math.PI/(Math.sin(Math.PI*z)*gammaFn(1-z));z-=1;let x=p[0];for(let i=1;i<g+2;i++)x+=p[i]/(z+i);const t=z+g+0.5;return Math.sqrt(2*Math.PI)*Math.pow(t,z+0.5)*Math.exp(-t)*x}
+const wbR=(t,b,eta)=>Math.exp(-Math.pow(Math.max(0,t)/eta,b));
+const mttf=c=>COMP[c].eta*gammaFn(1+1/COMP[c].b);
+function wbResid(r,c,age){const k=COMP[c];return k.eta*Math.pow(Math.pow(age/k.eta,k.b)-Math.log(1-r()),1/k.b)} // life given survival to age
+function winP(bid,market,rep){return 1/(1+Math.exp((bid/market-1-C.REP_PRICE*(rep-0.5))/C.BID_SLOPE))}
+function liveRNG(){const f=Math.random;return{m:f,x:f,g:()=>f}}
+function seededRNG(seed,wk){const m=mulberry32(seed*7919+wk*104729+11),x=mulberry32(seed*7919+wk*104729+5003),gs=[];
+  return{m,x,g:i=>gs[i]||(gs[i]=mulberry32(seed*7919+wk*104729+20011*(i+1)))}}
+const repH=(r,c)=>U(r,COMP[c].rep[0],COMP[c].rep[1]);
+const leadW=(r,c)=>UI(r,COMP[c].lead[0],COMP[c].lead[1]);
+
+/* ---------- state ---------- */
+function newComp(r,c,age){age=age||0;return{age,life:age?wbResid(r,c,age):COMP[c].eta*Math.pow(-Math.log(1-r()),1/COMP[c].b),det:r()<COMP[c].det,warn:false}}
+function makeRig(s,type,r,ready,used){
+  const n=s.rigs.length+1,g={id:"R"+n,type,shifts:2,queue:[],down:null,calDue:ready+C.CAL_VALID,cm:false,logger:false,ready,comps:{},debt:0,calBook:false,ran:0,bought:used?0:RIG[type].price,boughtWk:s.week};
+  RIG[type].comps.forEach(c=>g.comps[c]=newComp(r,c,used?Math.round(U(r,0.1,0.55)*COMP[c].eta):0));
+  s.rigs.push(g);return g;
+}
+function person(s,role,r,skill){const pool=NAMES[role],used=new Set(s.staff.map(p=>p.name));const free=pool.filter(n=>!used.has(n));
+  return{id:s.nid++,role,name:free.length?pickR(r,free):pickR(r,pool)+" "+(s.nid%9+1),skill:skill!=null?skill:Math.round(U(r,0.3,0.5)*100)/100,fat:0}}
+function newState(weeks,R){
+  R=R||liveRNG();const r=R.x;
+  const s={v:1,weeks,week:1,cash:C.START_CASH,loan:0,rep:C.START_REP,acc:{st:"none",at:0,until:0},rigs:[],con:{},rfqs:[],
+    spares:{motor:0,brg:1,cpl:1,tq:0,slip:0,daq:0},orders:[],staff:[],pol:{autoCal:true,pm:0,autoBid:false,markup:100},
+    recv:[],hist:[],nid:1,phase:"plan",over:null,wk:blankWk(),tot:{rev:0,hours:0,reports:0,late:0,fails:0,planned:0,capex:0},missed:{}};
+  makeRig(s,"GB",R.g(0),1,true);makeRig(s,"PP",R.g(1),1,true);
+  s.rigs[0].calDue=5;s.rigs[1].calDue=12;
+  s.staff.push(person(s,"tech",r,0.5),person(s,"tech",r,0.45),person(s,"eng",r,0.55));
+  // two jobs carried over from the previous owner, advances already spent
+  const a=makeRFQ(s,R.m,"gbe",{hours:500,dl:9,art:0}),b=makeRFQ(s,R.m,"pump",{hours:150,dl:4,art:0});
+  [a,b].forEach(q=>{q.adv=0;acceptRFQ(s,q,q.market,true)});
+  genRFQs(s,R);return s;
+}
+function blankWk(){return{adv:0,spares:0,staff:0,capex:0,cal:0,other:0,loanIn:0,loanOut:0,notes:[]}}
+
+/* ---------- RFQs and contracts ---------- */
+function owned(s,rt){return s.rigs.some(g=>g.type===rt)}
+function makeRFQ(s,r,type,o){
+  o=o||{};const T=TEST[type];
+  const hours=o.hours||Math.round((T.h[0]+(T.h[1]-T.h[0])*Math.pow(r(),T.skew))/T.step)*T.step;
+  const acc=o.acc!=null?o.acc:r()<C.ACC_SHARE,q=r()<(acc?0.6:0.3)?"High":"Std";
+  const market=Math.round((T.rate*hours*U(r,0.9,1.1)*(acc?C.ACC_PREM:1)*(q==="High"?1.1:1)+C.SETUP_FEE)/1000)*1000;
+  const fixed=o.fixed!=null?o.fixed:r()<C.FIXED_SHARE;
+  const offer=fixed?Math.round(market*(o.offerF||U(r,0.88,1.06))/1000)*1000:null;
+  const dl=o.dl||s.week+1+Math.ceil(hours/80*U(r,1.15,1.8))+UI(r,1,3);
+  const pen=Math.max(2000,Math.round(market*U(r,0.03,0.06)/500)*500);
+  const adv=pickR(r,[0,0.1,0.2,0.3,0.4]);
+  const pw=r();const payer=pw<PAYER.prompt.w?"prompt":pw<PAYER.prompt.w+PAYER.average.w?"average":"slow";
+  const art=o.art!=null?o.art:(r()<T.fail?U(r,0.15,1):0);
+  const id=s.nid++;
+  return{id,code:"Q-"+String(1000+id).slice(-4),type,client:o.client||pickR(r,CLIENTS),hours,acc,q,market,fixed,offer,dl,pen,adv,payer,art,bid:null,retest:!!o.retest};
+}
+function genRFQs(s,R){
+  const r=R.m;const n=clamp(1+poisR(C.RFQ_BASE+C.RFQ_REP*s.rep,r),1,4);
+  const ws=TK.map(k=>TEST[k].w*(owned(s,TEST[k].rig)?C.OWNED_W:C.OTHER_W)),tw=ws.reduce((a,b)=>a+b,0);
+  const out=(s.retests||[]).map(o=>makeRFQ(s,r,o.type,{hours:o.hours,client:o.client,fixed:true,offerF:U(r,0.92,1.05),retest:true,acc:o.acc}));
+  s.retests=[];
+  for(let i=0;i<n;i++){let x=r()*tw,k=0;while(k<TK.length-1&&(x-=ws[k])>0)k++;out.push(makeRFQ(s,r,TK[k]))}
+  s.rfqs=out.slice(0,5);
+}
+function canTake(s,q){if(q.acc&&s.acc.st!=="yes")return"Needs an accredited lab";if(!owned(s,TEST[q.type].rig))return"You have no "+RIG[TEST[q.type].rig].name.toLowerCase();return""}
+function backlogH(s,g){return g.queue.reduce((a,id)=>{const c=s.con[id];return a+Math.max(0,c.hours-c.done)+c.setup},0)+(g.down?(g.down.wait?40:g.down.rep):0)}
+function rigCap(g,sh){return (sh!=null?sh:Math.max(1,g.shifts))*C.SHIFT_H*0.88}
+function bestRig(s,type){let best=null,bh=Infinity;for(const g of s.rigs)if(g.type===TEST[type].rig){const h=backlogH(s,g)/rigCap(g)+Math.max(0,g.ready-s.week);if(h<bh){bh=h;best=g}}return best}
+function finishEst(s,q){const g=bestRig(s,q.type);if(!g)return null;return s.week+Math.max(0,g.ready-s.week)+(backlogH(s,g)+q.hours+C.SETUP_H)/rigCap(g)}
+function acceptRFQ(s,q,price,silent){
+  const g=bestRig(s,q.type);if(!g)return null;
+  const c={id:q.id,code:q.code.replace("Q-","T-"),type:q.type,client:q.client,hours:q.hours,done:0,setup:C.SETUP_H,dl:q.dl,price,pen:q.pen,adv:Math.round(price*q.adv),
+    q:q.q,acc:q.acc,payer:q.payer,art:q.art,rig:g.id,err:0,sud:0,loss:0,bad:0,state:"queued",retest:q.retest};
+  s.con[c.id]=c;g.queue.push(c.id);
+  if(!silent){s.cash+=c.adv;s.wk.adv+=c.adv}
+  s.rfqs=s.rfqs.filter(x=>x.id!==q.id);return c;
+}
+
+/* ---------- plan-phase actions (shared by the UI and the simulator's bot) ---------- */
+function orderSpare(s,c,r,emerg){const p=Math.round(COMP[c].price*(emerg?C.EMERG:1));s.cash-=p;s.wk.spares+=p;const o={c,arr:s.week+leadW(r,c)+(emerg?0:0),claim:null};s.orders.push(o);return o}
+function hire(s,role,r){s.cash-=C.HIRE_COST;s.wk.staff+=C.HIRE_COST;const p=person(s,role,r);s.staff.push(p);return p}
+function fire(s,id){const p=s.staff.find(x=>x.id===id);if(!p)return;const c=C.SEVER_WEEKS*(p.role==="eng"?C.ENG_WAGE:C.TECH_WAGE);s.cash-=c;s.wk.staff+=c;s.staff=s.staff.filter(x=>x.id!==id)}
+function train(s,id){const p=s.staff.find(x=>x.id===id);if(!p||p.skill>=0.95)return;s.cash-=C.TRAIN_COST;s.wk.staff+=C.TRAIN_COST;p.skill=Math.min(1,p.skill+C.TRAIN_GAIN);p.trained=(p.trained||0)+1}
+function replaceNow(s,g,c,r){if(s.spares[c]<1)return false;s.spares[c]--;g.comps[c]=newComp(r,c);g.debt+=repH(r,c)*C.PLANNED_F;s.tot.planned++;return true}
+function buyRig(s,type,r){const p=RIG[type].price;s.cash-=p;s.wk.capex+=p;s.tot.capex+=p;const g=makeRig(s,type,r,s.week+RIG[type].build,false);return g}
+function buyCM(s,g){s.cash-=C.CM_COST;s.wk.capex+=C.CM_COST;s.tot.capex+=C.CM_COST;g.cm=true}
+function buyLogger(s,g){s.cash-=C.LOGGER_COST;s.wk.capex+=C.LOGGER_COST;s.tot.capex+=C.LOGGER_COST;g.logger=true}
+function bookCal(s,g){g.calBook=true}
+function applyAcc(s){s.cash-=C.ACC_COST;s.wk.other+=C.ACC_COST;s.acc={st:"pending",at:s.week+C.ACC_WAIT,until:0}}
+function takeLoan(s){if(s.loan+C.LOAN_STEP>C.LOAN_MAX)return false;s.loan+=C.LOAN_STEP;s.cash+=C.LOAN_STEP;s.wk.loanIn+=C.LOAN_STEP;return true}
+function repayLoan(s){const x=Math.min(C.LOAN_STEP,s.loan);if(x<=0||s.cash<x)return false;s.loan-=x;s.cash-=x;s.wk.loanOut+=x;return true}
+function pipeline(s,c){return s.orders.filter(o=>o.c===c&&!o.claim).length}
+
+/* auto-bid rule: used by the "Auto-bid" policy in the game and by the simulator */
+function autoBid(s,markup,careless){
+  for(const q of s.rfqs.slice()){
+    if(canTake(s,q)){continue}
+    const fin=finishEst(s,q),ok=careless||fin<=q.dl;
+    if(!ok){q.bid=null;const rt=TEST[q.type].rig;s.capMiss=s.capMiss||{};s.capMiss[rt]=(s.capMiss[rt]||0)+1;continue}
+    if(q.fixed){if(careless||q.offer>=q.market*0.93)acceptRFQ(s,q,q.offer)}
+    else q.bid=Math.round(q.market*markup/100/1000)*1000;
+  }
+}
+
+/* ---------- one week ---------- */
+function stamp(h,sh){sh=Math.max(1,sh||1);const per=8*sh;let d=Math.min(4,Math.floor(h/per));const hr=6+(h-d*per);const day=d+Math.floor(hr/24),hh=hr%24;
+  return{k:day*24+hh,t:DAYS[day]+" "+String(Math.floor(hh)).padStart(2,"0")+":"+String(Math.floor((hh%1)*6)*10).padStart(2,"0")}}
+function L_(L,k,t,rig,x,c,q){if(L)L.push({k,t,rig,x,c:c||"",q:q||null})}
+function lgR(L,g,h,x,c,q){if(!L)return;const st=stamp(h,g.effSh||g.shifts);L.push({k:st.k,t:st.t,rig:g.id,x,c:c||"",q:q||null})}
+
+function runWeek(s,R,L){
+  const wk=s.week,rep0=s.rep,W={inc:{adv:s.wk.adv,recv:0},cost:{wage:0,ot:0,prem:0,power:0,rent:C.RENT,hold:0,cal:0,interest:0,acc:0,spares:s.wk.spares,staff:s.wk.staff,other:s.wk.other},
+    capex:s.wk.capex,loanIn:s.wk.loanIn,loanOut:s.wk.loanOut,hours:0,reports:[],fails:0,planned:0,errors:0,loss:0,saved:0,lateRep:0,art:0,waits:[],won:[],lost:[],audit:null,resigned:[],rigHours:{},idle:[],short:0,qa:0,rep0,expired:[]};
+  const mr=R.m,xr=R.x;
+  /* 1. bids resolve */
+  for(const q of s.rfqs){const u=mr();if(q.bid==null||canTake(s,q))continue;
+    if(u<winP(q.bid,q.market,s.rep)){const c=acceptRFQ(s,q,q.bid,true);if(c){s.cash+=c.adv;W.inc.adv+=c.adv;W.won.push(c);L&&L_(L,3,"Mon 09:00","LAB",`Bid ${q.code} won at ${money(q.bid)} (${TEST[q.type].name.toLowerCase()}, ${q.hours} h). Logged as ${c.code} on ${c.rig}.`,"good")}}
+    else{W.lost.push(q);L&&L_(L,3,"Mon 09:00","LAB",`Bid ${q.code} lost to another lab (you asked ${money(q.bid)}).`)}}
+  for(const q of s.rfqs)if(!canTake(s,q)){}else{const rt=TEST[q.type].rig;if(!owned(s,rt))s.missed[rt]=(s.missed[rt]||0)+1}
+  s.rfqs=[];
+  /* 2. deliveries */
+  for(const o of s.orders)if(o.arr<=wk){s.spares[o.c]++;L&&L_(L,2,"Mon 08:00","STR",`Stores received: ${COMP[o.c].name.toLowerCase()}.`)}
+  s.orders=s.orders.filter(o=>o.arr>wk);
+  /* 3. crew */
+  const techs=s.staff.filter(p=>p.role==="tech"),engs=s.staff.filter(p=>p.role==="eng");
+  const active=s.rigs.filter(g=>g.ready<=wk&&g.queue.length&&g.shifts>0&&!(g.down&&g.down.wait&&s.spares[g.down.c]<1));
+  let need=active.reduce((a,g)=>a+g.shifts,0);const cap=techs.length*C.TECH_COVER,ceil=Math.floor(cap*C.OT_CEIL);
+  s.rigs.forEach(g=>g.effSh=g.shifts);
+  if(need>ceil){let cut=need-ceil;const by=active.slice().sort((a,b)=>b.shifts-a.shifts);while(cut>0){const g=by.find(x=>x.effSh>0&&x.effSh===Math.max(...by.map(y=>y.effSh)));if(!g)break;g.effSh--;cut--}
+    W.short=need-ceil;need=ceil;L&&L_(L,1,"Mon 06:00","LAB",`Not enough technicians: ${W.short} rig-shift${W.short>1?"s":""} left uncovered this week.`,"warn")}
+  const otShifts=Math.max(0,need-cap);W.cost.ot=Math.round(otShifts*C.TECH_WAGE/C.TECH_COVER*C.OT_MULT);
+  if(otShifts)L&&L_(L,1,"Mon 06:00","LAB",`Crew on overtime: ${otShifts} extra rig-shift${otShifts>1?"s":""} covered at 1.5× pay.`,"warn");
+  const tSkill=techs.length?techs.reduce((a,p)=>a+p.skill,0)/techs.length:0.3,tFat=techs.length?techs.reduce((a,p)=>a+p.fat,0)/techs.length:1;
+  const eSkill=engs.length?Math.max(...engs.map(p=>p.skill)):0,engNeed=Math.ceil(active.length/C.ENG_COVER),engShort=engs.length<engNeed;
+  const setupF=(engs.length?1.3-0.6*eSkill:3)*(engShort&&engs.length?1.6:1);
+  /* 4. rigs */
+  let ranBad=false;
+  for(let i=0;i<s.rigs.length;i++){
+    const g=s.rigs[i],r=R.g(i),sh=g.effSh;g.ran=0;
+    const u1=r(),u2=r(),u3=r(),u4=r();     // drawn every week so paired runs stay in step
+    if(g.ready>wk){continue}
+    if(g.ready===wk)L&&L_(L,1,"Mon 07:00",g.id,`${RIG[g.type].name} commissioned and ready for work.`,"good");
+    const busy=g.queue.length>0&&sh>0;
+    const H=busy?sh*C.SHIFT_H:0;let t=0;
+    if(g.calDue<=wk&&(s.pol.autoCal||g.calBook)||g.calBook){const c=C.CAL_COST;s.cash-=c;W.cost.cal+=c;t+=busy?C.CAL_H:0;g.calDue=wk+C.CAL_VALID;g.calBook=false;L&&lgR(L,g,0,`Calibration done on torque and DAQ channels. Next due week ${g.calDue}.`)}
+    const calOK=g.calDue>wk;if(!calOK){W.expired.push(g.id)}
+    if(g.debt>0){const x=Math.min(g.debt,Math.max(0,H-t));t+=x;g.debt-=busy?x:g.debt}
+    if(g.down){
+      if(g.down.wait){if(s.spares[g.down.c]>0){s.spares[g.down.c]--;g.down.wait=false;g.down.rep=repH(r,g.down.c);L&&lgR(L,g,t,`Spare ${COMP[g.down.c].short.toLowerCase()} issued. Repair started.`)}
+        else{W.waits.push(g.id);continue}}
+      const x=Math.min(Math.max(0,(busy?H:40)-t),g.down.rep);t+=busy?x:0;g.down.rep-=x;
+      if(g.down.rep<=0.01){g.comps[g.down.c]=newComp(r,g.down.c);L&&lgR(L,g,t,`${COMP[g.down.c].short} replaced. Rig back in service.`,"good");g.down=null}
+      else continue;
+    }
+    // preventive replacement (policy) and planned swaps after a vibration warning
+    for(const k in g.comps){const m=g.comps[k];
+      if(s.spares[k]>0&&((m.warn&&g.cm)||(s.pol.pm>0&&m.age>=s.pol.pm*COMP[k].eta))){s.spares[k]--;const h=repH(r,k)*C.PLANNED_F;t+=busy?h:0;g.comps[k]=newComp(r,k);W.planned++;s.tot.planned++;
+        L&&lgR(L,g,Math.min(t,Math.max(0,H-1)),`Planned stop: ${COMP[k].short.toLowerCase()} replaced at ${Math.round(m.age)} h${m.warn?" after the vibration warning":""}.`,"")}}
+    let worked=0,cur=null;
+    while(t<H-1e-6&&!g.down&&g.queue.length){
+      const c=s.con[g.queue[0]];cur=c;
+      if(c.state==="queued"){c.state="run";c.start=wk}
+      if(c.setup>0){const x=Math.min(H-t,c.setup*setupF);t+=x;c.setup=Math.max(0,c.setup-x/setupF);if(c.setup>0.01)break;c.setup=0;L&&lgR(L,g,t,`${c.code} set up for ${TEST[c.type].name.toLowerCase()} (${c.client}). Run started.`);continue}
+      let dt=Math.min(H-t,c.hours-c.done),ev=null,evc=null;
+      if(c.art>0){const ta=c.art*c.hours-c.done;if(ta<dt){dt=Math.max(0,ta);ev="art"}}
+      for(const k in g.comps){const m=g.comps[k],tf=m.life-m.age;if(tf<dt){dt=Math.max(0,tf);ev="fail";evc=k}
+        if(g.cm&&m.det&&!m.warn){const tw=m.life-C.WARN_H-m.age;if(tw<dt){dt=Math.max(0,tw);ev="warn";evc=k}}}
+      t+=dt;c.done+=dt;worked+=dt;for(const k in g.comps)g.comps[k].age+=dt;if(!calOK){c.bad+=dt;ranBad=true}
+      if(ev==="art"){c.art=0;W.art++;finishContract(s,c,"art",W,L,g,t,r,eSkill,engShort);g.queue.shift();continue}
+      if(ev==="warn"){const m=g.comps[evc];m.warn=true;
+        if(s.spares[evc]>0){s.spares[evc]--;const h=Math.min(H-t,repH(r,evc)*C.PLANNED_F);t+=h;g.comps[evc]=newComp(r,evc);W.planned++;s.tot.planned++;
+          L&&lgR(L,g,t,`Vibration trend rising on ${COMP[evc].short.toLowerCase()}. Planned stop, part swapped from stores.`,"good")}
+        else{const has=pipeline(s,evc)>0;if(!has){const o=orderSpare(s,evc,r,false);W.cost.spares+=COMP[evc].price;s.wk.spares-=COMP[evc].price}
+          L&&lgR(L,g,t,`Vibration trend rising on ${COMP[evc].short.toLowerCase()}. No spare in stores${has?", one is on order":", ordered one"}. Running on watch.`,"warn")}
+        continue}
+      if(ev==="fail"){const m=g.comps[evc];W.fails++;s.tot.fails++;c.sud++;
+        if(s.spares[evc]>0){s.spares[evc]--;g.down={c:evc,wait:false,rep:repH(r,evc)};L&&lgR(L,g,t,`TRIP: ${COMP[evc].short.toLowerCase()} failed at ${Math.round(m.age)} h. Spare in stores, repair started.`,"warn")}
+        else{const o=s.orders.find(x=>x.c===evc&&!x.claim);let arr;if(o){o.claim=g.id;arr=o.arr}else{const e=orderSpare(s,evc,r,true);e.claim=g.id;arr=e.arr;W.cost.spares+=Math.round(COMP[evc].price*C.EMERG);s.wk.spares-=Math.round(COMP[evc].price*C.EMERG)}
+          g.down={c:evc,wait:true,rep:0};L&&lgR(L,g,t,`TRIP: ${COMP[evc].short.toLowerCase()} failed at ${Math.round(m.age)} h. No spare. ${o?"Waiting for the open order":"Emergency order placed"}, due week ${arr}.`,"bad");break}
+        const x=Math.min(H-t,g.down.rep);t+=x;g.down.rep-=x;if(g.down.rep<=0.01){g.comps[evc]=newComp(r,evc);g.down=null;L&&lgR(L,g,t,`${COMP[evc].short} replaced. Run resumed.`)}
+        continue}
+      if(c.done>=c.hours-1e-6){c.done=c.hours;if(finishContract(s,c,"ok",W,L,g,t,r,eSkill,engShort))g.queue.shift()}
+    }
+    // operator error and DAQ dropouts on the test that is still running
+    if(worked>0&&cur&&cur.state==="run"&&g.queue[0]===cur.id){
+      const pe=C.ERR_P*(sh>=3?C.ERR_NIGHT:1)*(1+tFat)*(1.5-tSkill)*(otShifts?1.3:1);
+      if(u1<pe){const x=Math.round(6+u2*18);cur.done=Math.max(0,cur.done-x);cur.err++;W.errors++;L&&lgR(L,g,Math.max(0,t-3),`Operator error on ${cur.code}: wrong load step applied. ${x} h to rerun.`,"warn")}
+      if(u3<C.DAQ_P*worked/80){if(g.logger){W.saved++;L&&lgR(L,g,Math.max(0,t-2),`DAQ dropout. Redundant logger kept the record, no rerun.`)}
+        else{const x=Math.round(8+u4*22);cur.done=Math.max(0,cur.done-x);cur.loss++;W.loss++;L&&lgR(L,g,Math.max(0,t-2),`DAQ dropout on ${cur.code}. ${x} h of data lost, segment to rerun.`,"warn")}}
+    }
+    g.ran=worked;W.hours+=worked;W.rigHours[g.id]=worked;
+    W.cost.power+=Math.round(worked*RIG[g.type].power);
+    if(busy)W.cost.prem+=C.PREM[sh]||0;else if(!g.down)W.idle.push(g.id);
+  }
+  /* 5. money in */
+  for(const v of s.recv)if(v.wk<=wk){s.cash+=v.amt;W.inc.recv+=v.amt;if(v.amt>0)L&&L_(L,140,"Sat 11:00","ACC",`Payment received from ${v.client}: ${money(v.amt)} for ${v.code}.`,"good")}
+  s.recv=s.recv.filter(v=>v.wk>wk);
+  /* 6. money out */
+  W.cost.wage=techs.length*C.TECH_WAGE+engs.length*C.ENG_WAGE;
+  W.cost.hold=Math.round(CK.reduce((a,k)=>a+s.spares[k]*COMP[k].price*C.HOLD,0));
+  W.cost.interest=Math.round(s.loan*C.LOAN_RATE+(s.cash<0?-s.cash*C.OD_RATE:0));
+  if(s.acc.st==="yes"||s.acc.st==="susp")W.cost.acc=C.ACC_FEE;
+  const run=W.cost.wage+W.cost.ot+W.cost.prem+W.cost.power+W.cost.rent+W.cost.hold+W.cost.interest+W.cost.acc;
+  s.cash-=run;
+  /* 7. accreditation */
+  if(s.acc.st==="pending"&&wk>=s.acc.at){
+    const calAll=s.rigs.every(g=>g.ready>wk||g.calDue>wk);
+    if(calAll&&eSkill>=C.ACC_SKILL){s.acc={st:"yes",at:wk,until:0};s.rep+=0.05;W.audit="pass";L&&L_(L,130,"Fri 15:00","QA","Accreditation audit passed. Accredited RFQs are now open to you.","good",{x:"Auditor: “Traceable calibration, tidy records. Approved.”"})}
+    else{s.acc={st:"none",at:0,until:0};W.audit="fail";L&&L_(L,130,"Fri 15:00","QA",`Accreditation audit failed: ${!calAll?"a rig has an expired calibration":"no engineer with enough skill (train one)"}. Fee lost.`,"bad")}
+  }else if(s.acc.st==="yes"&&xr()<C.AUDIT_P){
+    if(ranBad||W.expired.length){s.acc={st:"susp",at:wk,until:wk+C.ACC_SUSPEND};s.rep-=0.06;W.audit="susp";L&&L_(L,131,"Fri 16:00","QA",`Surprise audit: ${W.expired.join(", ")} past calibration. Accreditation suspended until week ${wk+C.ACC_SUSPEND}.`,"bad")}
+    else{W.audit="ok";L&&L_(L,131,"Fri 16:00","QA","Surprise audit by the accreditation body. No findings.","good")}
+  }else if(s.acc.st==="susp"&&wk>=s.acc.until){s.acc={st:"yes",at:wk,until:0};L&&L_(L,131,"Fri 16:00","QA","Accreditation suspension lifted.","good")}
+  /* 8. people */
+  const load=cap>0?(need)/cap:2,nights=s.rigs.filter(g=>g.effSh>=3&&g.queue.length).length;
+  for(const p of techs){p.fat=clamp(p.fat+(load>1?0.22*(load-1)+0.05:-0.12)+(nights?0.05*nights:0),0,1);if(need>0)p.skill=Math.min(1,p.skill+C.LEARN)}
+  const eLoad=engs.length?active.length/(engs.length*C.ENG_COVER):0;
+  for(const p of engs){p.fat=clamp(p.fat+(eLoad>1?0.15*(eLoad-1)+0.05:-0.1),0,1);if(active.length)p.skill=Math.min(1,p.skill+C.LEARN)}
+  for(const p of s.staff.slice()){if(p.fat>0.6&&xr()<C.RESIGN_P*(p.fat-0.6)/0.4){s.staff=s.staff.filter(x=>x.id!==p.id);W.resigned.push(p);
+    L&&L_(L,135,"Fri 18:00","HR",`${p.name} (${p.role==="eng"?"test engineer":"technician"}) resigned.`,"bad",{x:`${p.name}: “${pickR(xr,QUOTES.resign)}”`})}}
+  /* 9. wrap up */
+  s.rep=clamp(s.rep,0.05,1);
+  const inc=W.inc.adv+W.inc.recv,cost=Object.values(W.cost).reduce((a,b)=>a+b,0);
+  W.income=inc;W.costs=cost;W.profit=inc-cost;W.cash=s.cash;W.rep1=s.rep;W.loan=s.loan;
+  s.tot.rev+=inc;s.tot.hours+=W.hours;
+  s.hist.push({wk,inc,cost,profit:inc-cost,cash:s.cash,rep:s.rep,hours:W.hours,net:netWorth(s)});
+  if(L)L.sort((a,b)=>a.k-b.k);
+  s.wk=blankWk();
+  if(s.cash<-C.OVERDRAFT)s.over="bankrupt";
+  s.week++;
+  if(!s.over)genRFQs(s,R);
+  return W;
+}
+function finishContract(s,c,how,W,L,g,t,r,eSkill,engShort){
+  const wk=s.week;let pay,msg,q=null,cls="good";
+  if(how==="art"){
+    const share=C.ART_BASE+(1-C.ART_BASE)*c.done/c.hours;pay=Math.round(c.price*share);
+    msg=`${c.code}: test article failed at ${Math.round(c.done)} h. Early report issued, client pays ${Math.round(share*100)}% of the price.`;
+    q={x:`${c.client}: “${pickR(r,QUOTES.art)}”`};cls="";
+    if(r()<C.RETEST_P){(s.retests=s.retests||[]).push({type:c.type,hours:c.hours,client:c.client,acc:c.acc});msg+=" They want a retest quote."}
+    s.rep+=0.01;
+  }else{
+    if(c.bad>0&&r()<C.QA_CATCH){const b=Math.round(c.bad);c.done=Math.max(0,c.done-c.bad);c.bad=0;s.rep-=0.06;W.qa++;
+      L&&lgR(L,g,t,`${c.code}: client QA rejected ${b} h logged with an expired calibration. Those hours must be rerun.`,"bad",{x:`${c.client}: “${QUOTES.qa[0]}”`});return false}
+    const late=Math.max(0,wk-c.dl),pen=Math.min(C.PEN_CAP*c.price,late*c.pen);
+    const qual=1-0.035*c.err-0.05*c.sud+0.06*(eSkill-0.5)-(engShort?0.04:0)-(eSkill?0:0.1);
+    const reb=qual<(c.q==="High"?C.Q_HIGH:C.Q_STD)?Math.round(0.1*c.price):0;
+    pay=Math.round(c.price-pen-reb);
+    if(late){s.rep-=0.04*Math.min(late,4);W.lateRep++;s.tot.late++;cls="warn";q={x:`${c.client}: “${pickR(r,QUOTES.late)}”`}}
+    else{s.rep+=0.025+(c.q==="High"&&!reb?0.01:0);q={x:`${c.client}: “${pickR(r,QUOTES.ontime)}”`}}
+    if(reb){s.rep-=0.04;q={x:`${c.client}: “${pickR(r,QUOTES.rebate)}”`};cls="warn"}
+    msg=`${c.code} complete, ${c.hours} h. Final report sent${late?`, ${late} week${late>1?"s":""} late (penalty ${money(pen)})`:" on time"}${reb?`, data quality below spec (rebate ${money(reb)})`:""}.`;
+  }
+  c.state="done";c.end=wk;c.paid=pay;s.tot.reports++;
+  const bal=Math.max(0,pay-c.adv),d=PAYER[c.payer].d,due=wk+UI(r,d[0],d[1]);
+  s.recv.push({amt:bal,wk:due,client:c.client,code:c.code});
+  W.reports.push({code:c.code,how,pay,bal,due});
+  L&&lgR(L,g,t,msg,cls,q);return true;
+}
+function wip(s){let v=0;for(const g of s.rigs)for(const id of g.queue){const c=s.con[id];const late=Math.max(0,s.week-c.dl);v+=Math.max(0,0.7*c.price*c.done/c.hours-c.adv-Math.min(C.PEN_CAP*c.price,late*c.pen))}return v}
+function netWorth(s){const rigs=s.rigs.reduce((a,g)=>a+g.bought*0.6,0);return s.cash-s.loan+s.recv.reduce((a,v)=>a+v.amt,0)+wip(s)+rigs}
+const NF=new Intl.NumberFormat("en-IN",{maximumFractionDigits:0});
+function money(x){return (x<0?"−":"")+"₹"+NF.format(Math.abs(Math.round(x)))}
+
+/* ---------- bot used by the Monte Carlo and the balance test ---------- */
+const BOT_DEF={shifts:2,markup:100,spares:1,autoCal:true,pm:0,cm:false,logger:false,hire:true,train:true,acc:false,careless:false,expand:null,trigger:4,reserve:300000,loan:true};
+function botPlan(s,b,R){
+  const r=R.x;
+  s.pol.autoCal=b.autoCal;s.pol.pm=b.pm;
+  s.rigs.forEach(g=>g.shifts=b.shifts);
+  // spares: keep b.spares of each cheap part (bearings, coupling, slip ring); 2 = also motor, sensor, DAQ
+  if(b.spares>0){const used=new Set();s.rigs.forEach(g=>RIG[g.type].comps.forEach(c=>used.add(c)));
+    for(const c of used){const cheap=COMP[c].price<30000,tgt=cheap?b.spares:(b.spares>=2?1:0);
+      while(s.spares[c]+pipeline(s,c)<tgt&&s.cash>b.reserve*0.3)orderSpare(s,c,r)}}
+  if(b.hire){const need=s.rigs.filter(g=>g.queue.length||g.ready>s.week).reduce((a,g)=>a+g.shifts,0),t=s.staff.filter(p=>p.role==="tech").length;
+    if(t*C.TECH_COVER<need)hire(s,"tech",r);
+    const e=s.staff.filter(p=>p.role==="eng").length;if(e<Math.ceil(s.rigs.length/C.ENG_COVER))hire(s,"eng",r)}
+  if(b.train&&s.cash>b.reserve){const p=s.staff.filter(p=>p.skill<0.65&&(p.role==="eng"||b.shifts>=2)).sort((a,b)=>a.skill-b.skill)[0];if(p&&s.week%4===1)train(s,p.id)}
+  if(b.cm)for(const g of s.rigs)if(!g.cm&&s.cash>C.CM_COST+b.reserve)buyCM(s,g);
+  if(b.logger)for(const g of s.rigs)if(!g.logger&&s.cash>C.LOGGER_COST+b.reserve)buyLogger(s,g);
+  if(b.acc&&s.acc.st==="none"&&s.cash>C.ACC_COST+b.reserve&&s.staff.some(p=>p.role==="eng"&&p.skill>=C.ACC_SKILL)&&s.rigs.every(g=>g.calDue>s.week+C.ACC_WAIT))applyAcc(s);
+  if(b.expand&&b.expand.type==="CM"){for(const g of s.rigs)if(!g.cm&&s.cash>C.CM_COST+b.reserve*0.5)buyCM(s,g)}
+  else if(b.expand&&!s.expanded&&s.week<s.weeks-8){
+    const t=b.expand.type,miss=(s.missed[t]||0)+((s.capMiss||{})[t]||0),price=RIG[t].price;
+    if(miss>=b.expand.miss){if(s.cash<price+b.reserve&&b.loan)while(s.cash<price+b.reserve&&takeLoan(s));if(s.cash>=price+b.reserve*0.5){buyRig(s,t,r);s.expanded=true}}
+  }
+  if(b.loan&&s.cash<b.reserve*0.4)takeLoan(s);
+  else if(b.loan&&s.loan>0&&s.cash>C.LOAN_STEP+b.reserve*2)repayLoan(s);
+  autoBid(s,b.markup,b.careless);
+}
+function simRun(seed,weeks,b,init){
+  const s=newState(weeks,seededRNG(seed,0));if(init)init(s);
+  const o={nc:new Float64Array(weeks),cash:new Float64Array(weeks),profit:new Float64Array(weeks),rev:new Float64Array(weeks),hours:new Float64Array(weeks),bank:-1,end:0,expAt:-1};
+  for(let w=0;w<weeks;w++){
+    const R=seededRNG(seed,w+1);const n0=s.rigs.length;botPlan(s,b,R);if(s.rigs.length>n0&&o.expAt<0)o.expAt=w;
+    const W=runWeek(s,R,null);o.cash[w]=s.cash;o.nc[w]=s.cash-s.loan;o.profit[w]=W.profit-W.capex*0;o.rev[w]=W.income;o.hours[w]=W.hours;
+    if(s.over){o.bank=w;for(let k=w+1;k<weeks;k++){o.cash[k]=s.cash;o.nc[k]=s.cash-s.loan;o.profit[k]=0}break}
+  }
+  o.end=netWorth(s)-(init?init.base||C.START_CASH:C.START_CASH);o.fails=s.tot.fails;o.late=s.tot.late;o.planned=s.tot.planned;o.rep=s.rep;o.hrs=s.tot.hours;o.rigs=s.rigs.length;return o;
+}
+/*ENGINE-END*/
+
+/* =====================================================================
+   PLAY TAB
+   ===================================================================== */
+let s=null,view="title",sel=52,sub="floor",revealTimer=null,confirmKey=null;
+const $=id=>document.getElementById(id);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const LS={get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const K_AUTO="lab.auto",K_SLOTS="lab.slots",K_BEST="lab.best",K_TECH="lab.tech",K_THEME="lab.theme",K_SUB="lab.sub";
+const PFX="LAB1:";
+function autosave(){if(s)LS.set(K_AUTO,Object.assign({},s,{savedAt:Date.now()}))}
+function slots(){return LS.get(K_SLOTS)||{}}
+function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2400)}
+function applyTheme(){const t=LS.get(K_THEME)||"auto";if(t==="auto")delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t}
+sub=LS.get(K_SUB)||"floor";
+const kfmt=v=>{const a=Math.abs(v),sg=v<0?"−":"";return a>=1e7?sg+"₹"+(a/1e7).toFixed(2)+"Cr":a>=1e5?sg+"₹"+(a/1e5).toFixed(a>=1e6?1:2).replace(/\.?0+$/,"")+"L":a>=1e3?sg+"₹"+Math.round(a/1e3)+"k":money(v)};
+const pctS=x=>Math.round(x*100)+"%";
+
+/* ---------- game flow ---------- */
+function newGame(weeks){s=newState(weeks);view="game";sub="floor";confirmKey=null;autosave();render();window.scrollTo(0,0)}
+function rigStatus(g){
+  if(g.ready>s.week)return{c:"idle",l:"INSTALLING"};
+  if(g.down&&g.down.wait)return{c:"wait",l:"WAITING SPARES"};
+  if(g.down)return{c:"down",l:"DOWN"};
+  if(!g.queue.length||g.shifts===0)return{c:"idle",l:"IDLE"};
+  return{c:"run",l:"RUNNING"};
+}
+const lamp=g=>{const st=rigStatus(g);return `<span class="lamp ${st.c}"><i></i>${st.l}</span>`};
+function runTurn(){
+  if(s.pol.autoBid)autoBid(s,s.pol.markup,false);
+  const L=[];const W=runWeek(s,liveRNG(),L);
+  s.report={wk:s.week-1,inc:W.inc,cost:W.cost,capex:W.capex,loanIn:W.loanIn,loanOut:W.loanOut,income:W.income,costs:W.costs,profit:W.profit,cash:W.cash,loan:W.loan,
+    rep0:W.rep0,rep1:W.rep1,hours:W.hours,rigHours:W.rigHours,reports:W.reports,fails:W.fails,planned:W.planned,errors:W.errors,loss:W.loss,saved:W.saved,art:W.art,
+    waits:W.waits,expired:W.expired,idle:W.idle,short:W.short,qa:W.qa,won:W.won.length,lost:W.lost.length,lateRep:W.lateRep,audit:W.audit,resigned:W.resigned.map(p=>p.name),
+    ot:W.cost.ot>0,nights:s.rigs.some(g=>g.effSh>=3)};
+  if(!L.length)L.push({t:"Mon 06:00",rig:"LAB",x:"Quiet week. Nothing on the rigs.",c:""});
+  s.log=L;s.shown=0;s.phase="log";confirmKey=null;autosave();render();window.scrollTo(0,0);runReveal();
+}
+function runReveal(){
+  clearTimeout(revealTimer);
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){s.shown=s.log.length;render();return}
+  const step=()=>{if(!s||s.phase!=="log"||s.shown>=s.log.length){renderLogOnly();return}s.shown++;renderLogOnly();revealTimer=setTimeout(step,420)};step();
+}
+function finishLog(){clearTimeout(revealTimer);s.phase=(s.over||s.week>s.weeks)?"acctFinal":"acct";autosave();render();window.scrollTo(0,0)}
+function toPlan(){s.phase="plan";confirmKey=null;autosave();render();window.scrollTo(0,0)}
+function toFinal(){s.phase="final";recordBest();autosave();render();window.scrollTo(0,0)}
+function recordBest(){const best=LS.get(K_BEST)||{},k=String(s.weeks),v=Math.round(netWorth(s)-C.START_CASH);s.final=v;
+  if(!s.over&&(best[k]==null||v>best[k])){best[k]=v;LS.set(K_BEST,best);s.newBest=true}}
+
+/* ---------- status bar ---------- */
+function stats(){
+  return `<div class="stat"><div class="lbl">Week</div><b>${Math.min(s.week,s.weeks)}/${s.weeks}</b></div>
+  <div class="stat"><div class="lbl">Cash${s.loan?` · loan ${kfmt(s.loan)}`:""}</div><b class="${s.cash<0?"neg":""}">${money(s.cash)}</b></div>
+  <div class="stat"><div class="lbl">Reputation</div><b>${pctS(s.rep)}</b><div class="meter"><i style="width:${pctS(s.rep)}"></i></div></div>`;
+}
+
+/* ---------- plan screen ---------- */
+function weeklyBurn(){
+  const techs=s.staff.filter(p=>p.role==="tech").length,engs=s.staff.length-techs;
+  let prem=0,power=0;for(const g of s.rigs)if(g.ready<=s.week&&g.queue.length&&g.shifts){prem+=C.PREM[g.shifts];power+=g.shifts*C.SHIFT_H*0.85*RIG[g.type].power}
+  return{fixed:C.RENT+techs*C.TECH_WAGE+engs*C.ENG_WAGE+s.loan*C.LOAN_RATE,prem,power:Math.round(power)};
+}
+function alerts(){
+  const a=[];
+  for(const g of s.rigs){if(g.ready>s.week)continue;
+    if(g.calDue<=s.week&&!g.calBook)a.push([s.pol.autoCal?"":"bad",`${g.id} calibration expired${s.pol.autoCal?" (auto-calibration will book it)":". Data logged now can be rejected."}`]);
+    else if(g.calDue<=s.week+2&&!g.calBook&&!s.pol.autoCal)a.push(["",`${g.id} calibration due week ${g.calDue}.`]);
+    if(g.down&&g.down.wait)a.push(["bad",`${g.id} waiting for a ${COMP[g.down.c].short.toLowerCase()}${s.spares[g.down.c]?" (one is now in stores)":""}.`]);
+    if(!g.queue.length)a.push(["",`${g.id} has no work queued.`]);
+    for(const id of g.queue){const c=s.con[id];const f=s.week+Math.max(0,g.ready-s.week)+(backlogUpTo(g,id))/rigCap(g);if(f>c.dl+0.5){a.push(["bad",`${c.code} on ${g.id} looks late: finish about week ${Math.ceil(f)}, due ${c.dl}.`]);break}}
+    if(g.cm)for(const k in g.comps)if(g.comps[k].warn&&!s.spares[k])a.push(["bad",`${g.id} ${COMP[k].short.toLowerCase()} vibration rising, no spare in stores.`]);
+  }
+  const open=s.rfqs.filter(q=>!q.declined&&q.bid==null&&!canTake(s,q)).length;if(open)a.push(["",`${open} RFQ${open>1?"s":""} waiting for your answer.`]);
+  const tired=s.staff.filter(p=>p.fat>0.6);if(tired.length)a.push(["bad",`${tired.map(p=>p.name).join(", ")} ${tired.length>1?"are":"is"} worn out and may resign.`]);
+  if(s.cash<100000)a.push(["bad","Cash is low. The bank allows an overdraft to "+money(-C.OVERDRAFT)+"; below that the lab closes."]);
+  return a;
+}
+function backlogUpTo(g,id){let h=g.down?(g.down.wait?40:g.down.rep):0;for(const x of g.queue){const c=s.con[x];h+=Math.max(0,c.hours-c.done)+c.setup;if(x===id)break}return h}
+function renderPlan(){
+  const b=weeklyBurn(),al=alerts(),nR=s.rfqs.filter(q=>!q.declined&&!canTake(s,q)&&q.bid==null).length;
+  const subs=[["floor","Floor"],["rfq","RFQs"],["stores","Stores"],["staff","Staff"],["office","Office"]];
+  return `<section>
+  <div class="card"><div class="righead"><div><h3>Week ${s.week} · planning</h3><h2>Shift plan</h2></div><span class="tag sig">${s.acc.st==="yes"?"Accredited":s.acc.st==="pending"?"Audit wk "+s.acc.at:s.acc.st==="susp"?"Suspended":"Not accredited"}</span></div>
+    <div class="rigrow" style="margin-top:10px">${s.rigs.map(g=>`<span><b class="mono">${g.id}</b> ${lamp(g)}</span>`).join("")}</div>
+    ${al.length?`<div style="margin-top:10px">${al.slice(0,6).map(([c,t])=>`<div class="alert ${c}">${esc(t)}</div>`).join("")}</div>`:""}
+    <p class="small muted" style="margin-top:8px">This week's running cost about <b class="mono sigc">${money(b.fixed+b.prem+b.power+C.ACC_FEE*(s.acc.st==="yes"?1:0))}</b>: rent and wages ${money(b.fixed)}, shift premiums ${money(b.prem)}, power ${money(b.power)}.</p>
+  </div>
+  <div class="seg subnav" role="tablist" aria-label="Planning sections">${subs.map(([k,n])=>`<button data-act="sub" data-k="${k}" id="sub_${k}" aria-pressed="${sub===k}">${n}${k==="rfq"&&nR?`<span class="badge">${nR}</span>`:""}</button>`).join("")}</div>
+  ${sub==="floor"?renderFloor():sub==="rfq"?renderRFQs():sub==="stores"?renderStores():sub==="staff"?renderStaff():renderOffice()}
+  <button class="big" data-act="run" id="runBtn">Run week ${s.week}</button>
+  </section>`;
+}
+function renderFloor(){
+  return s.rigs.map(g=>{
+    const st=rigStatus(g),head=g.queue.length?s.con[g.queue[0]]:null;
+    let now="";
+    if(g.ready>s.week)now=`<p class="small muted">Being installed. Ready in week ${g.ready}. You can queue work for it now.</p>`;
+    if(head){const f=s.week+Math.max(0,g.ready-s.week)+backlogUpTo(g,head.id)/rigCap(g),late=f>head.dl+0.5;
+      now+=`<div style="margin-top:6px"><div class="righead"><div><b class="mono">${head.code}</b> <span class="small">${TEST[head.type].name} · ${esc(head.client)}</span></div><span class="tag ${late?"bad":"ok"}">${late?"Late risk":"On track"}</span></div>
+      <div class="bar2" style="margin-top:6px"><i class="${late?"bad":"ok"}" style="width:${(head.done/head.hours*100).toFixed(1)}%"></i></div>
+      <p class="small muted mono" style="margin-top:4px">${Math.round(head.done)}/${head.hours} h${head.setup>0?" · setup pending":""} · due wk ${head.dl} · est. wk ${Math.ceil(f)}${head.bad>0?` · <span class="neg">${Math.round(head.bad)} h on expired cal</span>`:""}</p></div>`}
+    else if(g.ready<=s.week)now+=`<p class="small muted">No work queued. Win an RFQ to load this rig.</p>`;
+    const q=g.queue.slice(1).map((id,i)=>{const c=s.con[id],others=s.rigs.filter(x=>x!==g&&x.type===g.type);
+      const canUp=i>0||(head&&head.state==="queued"&&head.done===0);
+      return `<div class="qrow"><div class="small"><b class="mono">${c.code}</b> ${TEST[c.type].name.toLowerCase()} · ${c.hours} h · due wk ${c.dl}</div><div class="btnrow" style="flex:none;gap:6px">${canUp?`<button class="btn" data-act="qup" data-r="${g.id}" data-id="${id}">Up</button>`:""}${others.map(o=>`<button class="btn" data-act="qmove" data-r="${g.id}" data-to="${o.id}" data-id="${id}">To ${o.id}</button>`).join("")}</div></div>`}).join("");
+    const parts=Object.keys(g.comps).map(k=>{const m=g.comps[k],f=m.age/COMP[k].eta,cls=f<0.6?"ok":f<0.9?"":"bad";
+      return `<div class="part"><span class="nm">${COMP[k].short}</span><span class="ag">${Math.round(m.age).toLocaleString("en-IN")} h</span>
+        <div class="bar2"><i class="${cls}" style="width:${Math.min(100,f*100).toFixed(0)}%"></i></div>
+        <div class="act"><span class="tiny muted mono">${pctS(f)} of rated life${g.cm?` · trend ${m.warn?'<b class="neg">RISING</b>':"OK"}`:""}</span>${s.spares[k]>0?`<button class="btn" data-act="repl" data-r="${g.id}" data-k="${k}">Replace now</button>`:`<span class="tiny muted">no spare</span>`}</div></div>`}).join("");
+    const cal=g.calBook?`<span class="tag sig">Booked this week</span> <button class="btn" data-act="calno" data-r="${g.id}">Cancel</button>`:`<button class="btn" data-act="cal" data-r="${g.id}">Calibrate this week · ${kfmt(C.CAL_COST)}</button>`;
+    return `<div class="card"><div class="righead"><div><span class="id">${g.id}</span> <span class="small muted">${RIG[g.type].name}</span></div>${lamp(g)}</div>
+      ${g.down?`<p class="small ${g.down.wait?"sigc":"neg"}" style="margin-top:4px">${g.down.wait?`Waiting for a ${COMP[g.down.c].short.toLowerCase()}${s.spares[g.down.c]?" (in stores now, fitted at the start of the week)":` on order, due week ${(s.orders.find(o=>o.claim===g.id&&o.c===g.down.c)||s.orders.find(o=>o.c===g.down.c)||{arr:"?"}).arr}`}.`:`Repair in progress: ${COMP[g.down.c].short.toLowerCase()}, about ${Math.ceil(g.down.rep)} h left.`}</p>`:""}
+      ${now}
+      ${q?`<h3 style="margin-top:12px">Queue</h3>${q}`:""}
+      <h3 style="margin-top:12px">Shifts this week</h3>
+      <div class="seg">${[0,1,2,3].map(n=>`<button data-act="shift" data-r="${g.id}" data-n="${n}" aria-pressed="${g.shifts===n}">${n?n+(n>1?" shifts":" shift"):"Off"}</button>`).join("")}</div>
+      <p class="tiny muted mono" style="margin-top:4px">${g.shifts*C.SHIFT_H} rig hours · premium ${money(C.PREM[g.shifts])}${g.shifts===3?" · night shift raises operator errors":""}</p>
+      <h3 style="margin-top:12px">Calibration</h3>
+      <div class="step"><span class="small ${g.calDue<=s.week?"neg":g.calDue<=s.week+2?"sigc":""}">${g.calDue<=s.week?"Expired":"Due week "+g.calDue}</span><span>${cal}</span></div>
+      <h3 style="margin-top:10px">Components</h3><div class="parts">${parts}</div>
+      <p class="tiny muted" style="margin-top:6px">Vibration monitoring: ${g.cm?"fitted":"not fitted"} · Redundant logger: ${g.logger?"fitted":"not fitted"} (buy in Office)</p>
+    </div>`}).join("");
+}
+function rfqCard(q){
+  const T=TEST[q.type],why=canTake(s,q),g=bestRig(s,q.type),fin=why?null:finishEst(s,q);
+  const price=q.fixed?q.offer:(q.draft||q.market),wp=winP(price,q.market,s.rep);
+  const fit=why?`<div class="fit bad">${esc(why)}.</div>`:`<div class="fit ${fin<=q.dl?"ok":"bad"}">Best rig ${g.id}: at ${g.shifts||1} shift${(g.shifts||1)>1?"s":""} this finishes about week ${Math.ceil(fin)} (deadline ${q.dl})${fin>q.dl?". Expect penalties":""}.</div>`;
+  let ctl="";
+  if(!why){
+    if(q.fixed)ctl=`<div class="btnrow" style="margin-top:10px"><button class="btn sig" data-act="accept" data-id="${q.id}">Accept ${kfmt(q.offer)}</button><button class="btn" data-act="decline" data-id="${q.id}">Decline</button></div>`;
+    else ctl=`<div class="step"><div class="small"><b>Your bid</b><div class="tiny muted mono">${money(Math.round(price/q.hours))}/h · win chance about ${pctS(wp)}</div></div>
+      <div class="ctl"><button data-act="bdec" data-id="${q.id}" aria-label="Lower bid">−</button><output>${kfmt(price)}</output><button data-act="binc" data-id="${q.id}" aria-label="Raise bid">+</button></div></div>
+      <div class="btnrow">${q.bid!=null?`<button class="btn" data-act="unbid" data-id="${q.id}">Withdraw bid</button>`:`<button class="btn sig" data-act="bid" data-id="${q.id}">Place bid ${kfmt(price)}</button><button class="btn" data-act="decline" data-id="${q.id}">Decline</button>`}</div>`;
+  }
+  return `<div class="card rfq"><div class="hd"><b class="mono">${q.code}</b><span class="tag ${q.fixed?"sig":""}">${q.retest?"Retest offer":q.fixed?"Fixed offer":"Open bid"}</span></div>
+    <h2 style="font-size:19px;margin-top:4px">${T.name}, ${q.hours} h</h2>
+    <p class="small muted">${esc(q.client)} · ${PAYER[q.payer].name}</p>
+    <dl class="kv" style="margin-top:8px"><dt>Needs</dt><dd>${RIG[T.rig].name}</dd><dt>Deadline</dt><dd>week ${q.dl}</dd>
+    <dt>${q.fixed?"Price offered":"Market price"}</dt><dd>${money(q.fixed?q.offer:q.market)}${q.fixed?` <span class="muted">(market ${kfmt(q.market)})</span>`:""}</dd>
+    <dt>Advance</dt><dd>${pctS(q.adv)}, balance on report</dd><dt>Late penalty</dt><dd>${money(q.pen)}/week</dd>
+    <dt>Data quality</dt><dd>${q.q==="High"?"High (tighter spec)":"Standard"}</dd><dt>Accreditation</dt><dd>${q.acc?"Required":"Not needed"}</dd></dl>
+    ${fit}${q.bid!=null?`<p class="small sigc" style="margin-top:8px">Bid placed at ${money(q.bid)}. Result on Monday.</p>`:""}${ctl}</div>`;
+}
+function renderRFQs(){
+  const open=s.rfqs.filter(q=>!q.declined),dec=s.rfqs.filter(q=>q.declined);
+  return `<div class="card flat small"><p>RFQs last one week. Fixed offers are yours if you accept now. Bids are decided on Monday: the higher you bid above the market price, the lower your chance. Reputation ${pctS(s.rep)} ${s.rep>=0.5?"helps":"hurts"} your odds.${s.pol.autoBid?` Auto-bid is on at ${s.pol.markup}% of market for RFQs you leave untouched.`:""}</p></div>
+  ${open.length?open.map(rfqCard).join(""):`<div class="card"><p class="muted">No open RFQs this week.</p></div>`}
+  ${dec.length?`<div class="card flat"><h3>Declined</h3>${dec.map(q=>`<div class="qrow small"><span class="mono">${q.code} ${TEST[q.type].name.toLowerCase()}</span><button class="btn" data-act="undecline" data-id="${q.id}">Reopen</button></div>`).join("")}</div>`:""}`;
+}
+function renderStores(){
+  const used={};s.rigs.forEach(g=>RIG[g.type].comps.forEach(c=>(used[c]=used[c]||[]).push(g.id)));
+  const hold=CK.reduce((a,k)=>a+s.spares[k]*COMP[k].price*C.HOLD,0);
+  return `<div class="card"><h3>Spares in stores</h3><p class="small muted">A failed part with no spare stops the rig until an emergency order arrives (${Math.round((C.EMERG-1)*100)}% extra). Holding costs ${(C.HOLD*100).toFixed(1)}% of the part's price per week: <b class="mono sigc">${money(hold)}</b> this week.</p>
+  ${CK.map(k=>{const P=COMP[k],on=s.orders.filter(o=>o.c===k);return `<div class="qrow" style="flex-wrap:wrap"><div style="flex:1 1 180px;min-width:0"><b>${P.name}</b><div class="tiny muted mono">${money(P.price)} · lead ${P.lead[0]}–${P.lead[1]} wk · used on ${used[k]?used[k].join(", "):"no rig"}</div>
+    <div class="small">In stores <b class="mono sigc">${s.spares[k]}</b>${on.length?` · on order ${on.length} (wk ${on.map(o=>o.arr).join(", ")})`:""}</div></div>
+    <button class="btn" data-act="order" data-k="${k}" style="flex:0 0 auto">Order 1 · ${kfmt(P.price)}</button></div>`}).join("")}</div>
+  <div class="card"><h3>Preventive replacement</h3><p class="small muted">At the start of each week, swap any part older than this share of its rated life, if a spare is in stores. A planned swap takes half the repair time and never trips a test.</p>
+    <div class="seg" style="margin-top:8px">${[[0,"Off"],[0.6,"At 60%"],[0.8,"At 80%"]].map(([v,n])=>`<button data-act="pm" data-v="${v}" aria-pressed="${s.pol.pm===v}">${n}</button>`).join("")}</div></div>`;
+}
+function renderStaff(){
+  const techs=s.staff.filter(p=>p.role==="tech"),engs=s.staff.filter(p=>p.role==="eng");
+  const need=s.rigs.filter(g=>g.ready<=s.week&&g.queue.length&&!(g.down&&g.down.wait)).reduce((a,g)=>a+g.shifts,0),cap=techs.length*C.TECH_COVER;
+  const active=s.rigs.filter(g=>g.queue.length).length;
+  const row=p=>`<div class="card"><div class="righead"><div><b>${esc(p.name)}</b> <span class="small muted">${p.role==="eng"?"Test engineer":"Technician"} · ${money(p.role==="eng"?C.ENG_WAGE:C.TECH_WAGE)}/wk</span></div>${p.fat>0.6?'<span class="tag bad">Worn out</span>':""}</div>
+    <div class="step"><span class="small" style="width:70px">Skill</span><div class="bar2" style="flex:1"><i style="width:${pctS(p.skill)}"></i></div><span class="mono small" style="width:40px;text-align:right">${pctS(p.skill)}</span></div>
+    <div class="step"><span class="small" style="width:70px">Fatigue</span><div class="bar2" style="flex:1"><i class="${p.fat>0.6?"bad":"ok"}" style="width:${pctS(p.fat)}"></i></div><span class="mono small" style="width:40px;text-align:right">${pctS(p.fat)}</span></div>
+    ${confirmKey==="fire:"+p.id?`<div class="confirm">Let ${esc(p.name)} go? Severance is ${money(C.SEVER_WEEKS*(p.role==="eng"?C.ENG_WAGE:C.TECH_WAGE))}.<div class="btnrow"><button class="btn sig" data-act="fireok" data-id="${p.id}">Let go</button><button class="btn" data-act="cancel">Keep</button></div></div>`
+    :`<div class="btnrow" style="margin-top:6px"><button class="btn" data-act="train" data-id="${p.id}" ${p.skill>=0.95?"disabled":""}>Train · ${kfmt(C.TRAIN_COST)}</button><button class="btn" data-act="fire" data-id="${p.id}">Let go</button></div>`}</div>`;
+  return `<div class="card"><h3>Cover this week</h3><p class="small">Rigs with work need <b class="mono sigc">${need}</b> rig-shifts. Each technician covers ${C.TECH_COVER} (one shift on two rigs), so your ${techs.length} cover <b class="mono">${cap}</b>${need>cap?`. The gap of ${need-cap} runs on overtime at 1.5× pay${need>Math.floor(cap*C.OT_CEIL)?", and some shifts will not run":""}`:""}.</p>
+    <p class="small" style="margin-top:6px">Engineers set up tests and sign reports: one per ${C.ENG_COVER} busy rigs. You have ${engs.length} for ${active} busy rig${active===1?"":"s"}.${engs.length&&Math.max(...engs.map(p=>p.skill))<C.ACC_SKILL?" Accreditation needs an engineer at "+pctS(C.ACC_SKILL)+" skill.":""}</p>
+    <div class="btnrow" style="margin-top:10px"><button class="btn" data-act="hire" data-k="tech">Hire technician · ${kfmt(C.HIRE_COST)}</button><button class="btn" data-act="hire" data-k="eng">Hire engineer · ${kfmt(C.HIRE_COST)}</button></div></div>
+  ${s.staff.map(row).join("")}`;
+}
+function renderOffice(){
+  const A=s.acc,eSk=Math.max(0,...s.staff.filter(p=>p.role==="eng").map(p=>p.skill));
+  const missed=Object.keys(s.missed||{}).filter(k=>s.missed[k]>0);
+  return `<div class="card"><h3>Bank</h3><dl class="kv"><dt>Cash</dt><dd>${money(s.cash)}</dd><dt>Loan</dt><dd>${money(s.loan)}</dd><dt>Interest</dt><dd>${(C.LOAN_RATE*100).toFixed(2)}%/week (${money(s.loan*C.LOAN_RATE)})</dd><dt>Overdraft limit</dt><dd>${money(C.OVERDRAFT)}</dd></dl>
+    <div class="btnrow" style="margin-top:10px"><button class="btn" data-act="loan" ${s.loan+C.LOAN_STEP>C.LOAN_MAX?"disabled":""}>Borrow ${kfmt(C.LOAN_STEP)}</button><button class="btn" data-act="repay" ${s.loan<=0||s.cash<Math.min(C.LOAN_STEP,s.loan)?"disabled":""}>Repay ${kfmt(Math.min(C.LOAN_STEP,s.loan||C.LOAN_STEP))}</button></div></div>
+  <div class="card"><h3>Accreditation</h3>
+    <p class="small">${A.st==="yes"?"Accredited. About 3 in 10 RFQs need it and they pay about 30% more. Surprise audits check calibration.":A.st==="pending"?`Audit booked for week ${A.at}. Every rig must be in calibration then, and an engineer must be at ${pctS(C.ACC_SKILL)} skill (best now ${pctS(eSk)}).`:A.st==="susp"?`Suspended until week ${A.until} after an audit found expired calibration.`:`Costs ${money(C.ACC_COST)} plus ${money(C.ACC_FEE)}/week. An audit ${C.ACC_WAIT} weeks after applying checks calibration on every rig and needs an engineer at ${pctS(C.ACC_SKILL)} skill (best now ${pctS(eSk)}).`}</p>
+    ${A.st==="none"?`<button class="btn sig" data-act="acc" style="margin-top:8px;width:100%">Apply for accreditation · ${kfmt(C.ACC_COST)}</button>`:""}</div>
+  <div class="card"><h3>Standing policies</h3>
+    <div class="segrow"><span>Calibration</span><div class="seg">${[[1,"Book automatically when due"],[0,"I'll book it"]].map(([v,n])=>`<button data-act="autocal" data-v="${v}" aria-pressed="${+s.pol.autoCal===v}">${n}</button>`).join("")}</div></div>
+    <div class="segrow"><span>Auto-bid on untouched RFQs that fit a deadline</span><div class="seg">${[[0,"Off"],[1,"On"]].map(([v,n])=>`<button data-act="autobid" data-v="${v}" aria-pressed="${+s.pol.autoBid===v}">${n}</button>`).join("")}</div></div>
+    ${s.pol.autoBid?`<div class="step"><span class="small">Bid at this share of market</span><div class="ctl"><button data-act="mkdec" aria-label="Lower markup">−</button><output>${s.pol.markup}%</output><button data-act="mkinc" aria-label="Raise markup">+</button></div></div>`:""}</div>
+  <div class="card"><h3>Rig upgrades</h3><p class="small muted">Vibration monitoring warns about ${C.WARN_H} h before most mechanical failures, so the part is swapped in a planned stop. A redundant logger stops DAQ dropouts from forcing reruns.</p>
+    ${s.rigs.map(g=>`<div class="qrow" style="flex-wrap:wrap"><b class="mono">${g.id}</b><div class="btnrow" style="flex:1 1 220px">${g.cm?`<span class="tag ok">Vibration monitoring</span>`:`<button class="btn" data-act="cm" data-r="${g.id}">Vibration monitoring · ${kfmt(C.CM_COST)}</button>`}${g.logger?`<span class="tag ok">Logger</span>`:`<button class="btn" data-act="logger" data-r="${g.id}">Logger · ${kfmt(C.LOGGER_COST)}</button>`}</div></div>`).join("")}</div>
+  <div class="card"><h3>Add a rig</h3><p class="small muted">${missed.length?"RFQs you could not quote so far: "+missed.map(k=>`${RIG[k].short.toLowerCase()} ×${s.missed[k]}`).join(", ")+".":"Every RFQ so far matched a rig you own."}</p>
+    ${Object.keys(RIG).map(k=>`<div class="qrow" style="flex-wrap:wrap"><div style="flex:1 1 180px"><b>${RIG[k].name}</b><div class="tiny muted mono">${money(RIG[k].price)} · ${RIG[k].build} weeks to install · ${s.rigs.filter(g=>g.type===k).length} owned</div></div>
+      ${confirmKey==="rig:"+k?`<div class="confirm" style="flex:1 1 100%">Buy a ${RIG[k].name.toLowerCase()} for ${money(RIG[k].price)}?${s.cash<RIG[k].price?" You need to borrow first.":""}<div class="btnrow"><button class="btn sig" data-act="rigok" data-k="${k}" ${s.cash<RIG[k].price?"disabled":""}>Buy</button><button class="btn" data-act="cancel">Cancel</button></div></div>`
+      :`<button class="btn" data-act="rig" data-k="${k}">Buy</button>`}</div>`).join("")}</div>`;
+}
+
+/* ---------- log, accounts, final ---------- */
+function logHTML(n){return s.log.slice(0,n).map(l=>`<div class="h ${l.c||""}"><span class="t">${esc(l.t)}</span><span class="rg">${esc(l.rig)}</span><div><div class="x">${esc(l.x)}</div>${l.q?`<div class="q">${esc(l.q.x)}</div>`:""}</div></div>`).join("")}
+function logInner(){const done=s.shown>=s.log.length;
+  return `<div class="card"><h3>Shift log · week ${s.report.wk}</h3><div class="log" id="log">${logHTML(s.shown)}</div></div>
+  ${done?`<button class="big" data-act="acct" id="acctBtn">See the week's accounts</button>`:`<button class="ghost" data-act="skip" id="skipBtn">Skip ahead</button>`}`}
+function renderLogOnly(){if(view!=="game"||!s||s.phase!=="log"||tab!=="play")return;const sec=$("logsec");if(!sec){render();return}sec.innerHTML=logInner();
+  const last=sec.querySelector(".log .h:last-child");if(last&&last.scrollIntoView&&s.shown<s.log.length)last.scrollIntoView({block:"nearest"})}
+function advice(r){
+  const t=[];
+  if(r.waits.length)t.push(`${r.waits.join(" and ")} sat waiting for spares. A spare in stores turns a ${COMP.brg.lead[0]}–6 week wait into a few hours.`);
+  if(r.expired.length)t.push(`${r.expired.join(", ")} ran past calibration. Clients and auditors can reject those hours.`);
+  if(r.qa)t.push("A client rejected hours logged on an expired calibration. Book calibration before the due week.");
+  if(r.lateRep)t.push("A report went out late. Check the Floor for late-risk tags and add a shift or turn down tight deadlines.");
+  if(r.idle.length&&t.length<4)t.push(`${r.idle.join(", ")} stood idle. Bid a little lower or accept fixed offers to fill it.`);
+  if(r.errors&&r.nights)t.push("Operator errors are more than twice as likely on night shifts. Training and rested crews help.");
+  else if(r.errors)t.push("An operator error cost rerun hours. Training raises skill and cuts errors.");
+  if(r.loss&&t.length<4)t.push("A DAQ dropout forced a rerun. A redundant logger (Office) prevents that.");
+  if(r.ot&&t.length<4)t.push("Shifts ran on overtime. A third technician costs less than steady overtime.");
+  if(r.lost>0&&r.won===0&&t.length<4)t.push(`All ${r.lost} bid${r.lost>1?"s":""} lost. Bids near the market price win about half the time.`);
+  if(r.fails&&!r.waits.length&&t.length<4)t.push("A part failed but a spare was ready, so the rig lost only repair hours.");
+  if(r.cash<150000&&t.length<4)t.push("Cash is thin. Payments arrive weeks after reports; a bank loan can bridge the gap.");
+  if(!t.length)t.push("Clean week. Keep an eye on part ages and calibration dates.");
+  return t.slice(0,4);
+}
+function renderAcct(){
+  const r=s.report,c=r.cost,d=r.rep1-r.rep0;
+  const row=(n,v,cls)=>v?`<tr><td>${n}</td><td class="${cls||""}">${money(v)}</td></tr>`:"";
+  const fin=s.phase==="acctFinal";
+  return `<section>
+  <div class="card"><h3>Week ${r.wk} · accounts</h3><h2>${r.profit>=0?"Profit":"Loss"} ${money(r.profit)}</h2>
+    <p class="small muted mono" style="margin-top:4px">${Math.round(r.hours)} rig hours (${Object.entries(r.rigHours).map(([k,v])=>k+" "+Math.round(v)).join(", ")}) · ${r.reports.length} report${r.reports.length===1?"":"s"} · ${r.fails} trip${r.fails===1?"":"s"} · ${r.planned} planned swap${r.planned===1?"":"s"}</p></div>
+  <div class="card"><table class="acc">
+    <tr class="sub"><td>Money in</td><td></td></tr>${row("Advances on new work",r.inc.adv,"pos")}${row("Client payments",r.inc.recv,"pos")}
+    <tr class="sub"><td>Money out</td><td></td></tr>${row("Wages",-c.wage,"neg")}${row("Overtime",-c.ot,"neg")}${row("Shift premiums",-c.prem,"neg")}${row("Power",-c.power,"neg")}${row("Rent",-c.rent,"neg")}
+    ${row("Spares bought",-c.spares,"neg")}${row("Spares holding",-c.hold,"neg")}${row("Calibration",-c.cal,"neg")}${row("Hiring, training, severance",-c.staff,"neg")}${row("Interest",-c.interest,"neg")}${row("Accreditation",-(c.acc+c.other),"neg")}
+    <tr class="total"><td>Week's profit</td><td class="${r.profit>=0?"pos":"neg"}">${money(r.profit)}</td></tr>
+    ${row("Equipment bought",-r.capex,"neg")}${row("Loan drawn",r.loanIn)}${row("Loan repaid",-r.loanOut)}
+    <tr><td>Cash now</td><td>${money(r.cash)}</td></tr><tr><td>Loan</td><td>${money(r.loan)}</td></tr>
+    <tr><td>Owed to you</td><td>${money(s.recv.reduce((a,v)=>a+v.amt,0))}</td></tr>
+    <tr><td>Reputation</td><td class="${d>=0?"pos":"neg"}">${pctS(r.rep0)} → ${pctS(r.rep1)}</td></tr></table></div>
+  <div class="card"><h3>Stores and crew</h3><p class="small mono">${CK.filter(k=>s.spares[k]).map(k=>COMP[k].short+" "+s.spares[k]).join(" · ")||"No spares in stores"}${s.orders.length?" · "+s.orders.length+" on order":""}</p>
+    <p class="small muted" style="margin-top:4px">${r.won} bid${r.won===1?"":"s"} won, ${r.lost} lost${r.resigned.length?` · ${r.resigned.join(", ")} resigned`:""}${r.audit?` · audit: ${r.audit}`:""}</p></div>
+  <div class="card"><h3>Notes for next time</h3>${advice(r).map(t=>`<p style="margin-bottom:6px">${esc(t)}</p>`).join("")}</div>
+  ${fin?`<div class="card"><p>${s.over?`<b class="neg">The bank has closed the lab.</b> Cash fell below the ${money(-C.OVERDRAFT)} overdraft limit, so the rigs are sold to pay the debt.`:"That was the last week of the contract period."}</p></div><button class="big" data-act="final" id="finalBtn">See final results</button>`
+  :`<button class="big" data-act="plan" id="planBtn">Plan week ${s.week}</button><button class="ghost sig" data-act="keep" id="keepBtn">Keep plan, run week ${s.week}</button>`}
+  </section>`;
+}
+function grade(v){const w=v/s.weeks;if(s.over)return"Lights out";return w>45000?"Lab of record":w>25000?"Trusted test house":w>10000?"Steady bench":w>0?"Scraping by":"Rigs for sale"}
+function renderFinal(){
+  const v=s.final!=null?s.final:Math.round(netWorth(s)-C.START_CASH),best=(LS.get(K_BEST)||{})[String(s.weeks)];
+  const H=s.hist,mx=Math.max(1,...H.map(h=>Math.abs(h.profit)));
+  const W=340,Hh=150,bw=W/H.length,y0=Hh/2;
+  const bars=H.map((h,i)=>{const hgt=Math.abs(h.profit)/mx*(Hh/2-8),x=i*bw+bw*0.15,w=Math.max(1,bw*0.7),r=Math.min(2,w/2);
+    return h.profit>=0?`<path d="M${x} ${y0}V${y0-hgt+r}Q${x} ${y0-hgt} ${x+r} ${y0-hgt}H${x+w-r}Q${x+w} ${y0-hgt} ${x+w} ${y0-hgt+r}V${y0}Z" fill="var(--s3)"/>`:`<path d="M${x} ${y0}V${y0+hgt-r}Q${x} ${y0+hgt} ${x+r} ${y0+hgt}H${x+w-r}Q${x+w} ${y0+hgt} ${x+w} ${y0+hgt-r}V${y0}Z" fill="var(--s2)"/>`}).join("");
+  return `<section>
+  <div class="card title-card"><div class="lbl">${s.over?"Closed in week "+(s.week-1):"Contract period over · "+s.weeks+" weeks"}</div><h1 style="font-size:38px">${grade(v)}</h1>
+    <p>Net position <b class="mono ${v>=0?"pos":"neg"}">${money(v)}</b> against the ${money(C.START_CASH)} you started with.</p>
+    <p class="small muted" style="margin-top:6px">Cash ${money(s.cash)} · loan ${money(s.loan)} · owed to you ${money(s.recv.reduce((a,x)=>a+x.amt,0))} · work in progress ${money(wip(s))} · rigs bought at 60% resale ${money(s.rigs.reduce((a,g)=>a+g.bought*0.6,0))}</p>
+    <p class="small muted" style="margin-top:6px">${s.tot.reports} reports, ${Math.round(s.tot.hours).toLocaleString("en-IN")} rig hours, ${s.tot.fails} trips, ${s.tot.late} late · best ${s.weeks}-week result on this phone: ${best!=null?money(best):"none yet"}${s.newBest?" (new record)":""}</p></div>
+  <div class="card"><h3>Profit by week</h3><div class="legend"><span><i style="background:var(--s3);height:8px"></i>Profit</span><span><i style="background:var(--s2);height:8px"></i>Loss</span></div>
+    <svg viewBox="0 0 ${W} ${Hh}" style="width:100%;height:auto;display:block" role="img" aria-label="Profit by week"><line x1="0" x2="${W}" y1="${y0}" y2="${y0}" stroke="var(--muted)"/>${bars}</svg>
+    <p class="small muted mono">Best week ${money(Math.max(...H.map(h=>h.profit)))} · worst ${money(Math.min(...H.map(h=>h.profit)))}</p></div>
+  <button class="big" data-act="title" id="againBtn">Play again</button></section>`;
+}
+function renderTitle(){
+  const auto=LS.get(K_AUTO),best=LS.get(K_BEST)||{},canResume=auto&&auto.v===1&&auto.phase!=="final";
+  return `<section>
+  <div class="card title-card"><div class="lbl">An independent test laboratory</div><h1>Test<span>/</span>Lab</h1>
+    <p class="muted">You have ${money(C.START_CASH)}, a gearbox endurance rig, a pump performance rig and three staff. Win test contracts, keep the rigs running, log clean data and deliver reports on time.</p></div>
+  ${canResume?`<button class="big" data-act="resume" id="resumeBtn">Continue · week ${auto.week} of ${auto.weeks}, ${money(auto.cash)}</button>`:""}
+  <div class="card"><h3>New contract period</h3>
+    <div class="lenpick">${[26,52,104].map(d=>`<button data-act="len" data-d="${d}" aria-pressed="${sel===d}">${d} weeks${best[d]!=null?`<br><span class="tiny muted mono">best ${kfmt(best[d])}</span>`:""}</button>`).join("")}</div>
+    <div style="margin-top:12px">${confirmKey==="new"?`<div class="confirm">This replaces your autosave. Saved slots stay safe.<div class="btnrow"><button class="btn sig" data-act="startok" id="startOk">Start anyway</button><button class="btn" data-act="cancel">Cancel</button></div></div>`:`<button class="big" data-act="start" id="startBtn">Start ${sel}-week game</button>`}</div></div>
+  <div class="btnrow"><button class="ghost" data-act="menu" id="savesBtn">Saves</button><button class="ghost" data-act="help" id="helpBtn">How to play</button></div>
+  </section>`;
+}
+function render(){
+  applyTab();
+  if(tab!=="play")return;
+  const main=$("main");
+  if(view==="title"||!s){main.innerHTML=renderTitle();return}
+  $("stats").innerHTML=stats();
+  if(s.phase==="plan")main.innerHTML=renderPlan();
+  else if(s.phase==="log")main.innerHTML=`<section id="logsec">${logInner()}</section>`;
+  else if(s.phase==="acct"||s.phase==="acctFinal")main.innerHTML=renderAcct();
+  else main.innerHTML=renderFinal();
+}
+
+/* ---------- menu sheet ---------- */
+function encodeSave(o){return PFX+btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
+function decodeSave(t){t=t.trim();if(!t.startsWith(PFX))throw new Error("prefix");const o=JSON.parse(decodeURIComponent(escape(atob(t.slice(PFX.length)))));if(!o||o.v!==1||!Array.isArray(o.rigs)||!o.con)throw new Error("shape");return o}
+function fmtTime(ts){try{return new Date(ts).toLocaleString("en-IN",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return""}}
+let sheetMode="saves";
+function openSheet(m){sheetMode=m;$("sheet").hidden=false;renderSheet()}
+function closeSheet(){$("sheet").hidden=true}
+function renderSheet(){
+  const p=$("panel"),head=t=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>${t}</h2><button class="iconbtn" data-act="close" id="closeBtn">Close</button></div>`;
+  if(sheetMode==="help"){p.innerHTML=head("How to play")+`<div class="card small prose">
+    <p><b>The week.</b> Each turn is one week. Plan on the five panels, press Run week, read the shift log, then check the accounts. Keep plan runs the next week with the same settings.</p>
+    <p><b>RFQs.</b> One to four requests for quotation arrive each week. Fixed offers are yours if you accept. Open bids are decided on Monday: a bid at the market price wins about half the time, every 7% above it roughly halves your chance, and good reputation shifts the curve in your favour. Check the fit line: it estimates when the job would finish on your best rig.</p>
+    <p><b>Contracts.</b> The advance is paid when you win. The balance comes when the final report is issued, after the client's payment delay. Each week past the deadline costs the late penalty (capped at half the price) and reputation. High data-quality jobs pay more but reject noisy data: operator errors, sudden trips during the test and an untrained engineer all lower quality.</p>
+    <p><b>Rigs and shifts.</b> One shift gives 40 rig hours a week, two give 80, three give 120. Extra shifts pay a premium, need technicians (each covers one shift on two rigs) and tire the crew. Night shifts raise operator errors.</p>
+    <p><b>Parts fail at random.</b> Each part's life follows a Weibull curve: wear-out parts like bearings and couplings get more likely to fail as they age. A failure stops the rig. With a spare in stores the repair takes hours; without one an emergency order takes one to six weeks. Order spares in Stores, and use preventive replacement to swap old parts in planned stops.</p>
+    <p><b>Vibration monitoring</b> warns about ${C.WARN_H} running hours before most mechanical failures. With a spare in stores the part is swapped in a planned stop; without one, a spare is ordered at once.</p>
+    <p><b>Test article failures</b> are real results: the report goes out early, the client pays part of the price and may ask for a retest.</p>
+    <p><b>DAQ dropouts</b> lose a segment of data that must be rerun, unless the rig has a redundant logger.</p>
+    <p><b>Calibration</b> lasts ${C.CAL_VALID} weeks. Hours logged on an expired calibration can be rejected by the client, and a surprise audit will suspend accreditation.</p>
+    <p><b>Staff.</b> Training raises skill: fewer errors and faster setups. Overworked staff tire, and tired staff resign.</p>
+    <p><b>Accreditation</b> opens the accredited RFQs, which pay about 30% more.</p>
+    <p><b>Money.</b> Rent, wages and power go out every week. Borrow in steps of ${kfmt(C.LOAN_STEP)} for a new rig or to bridge slow payers. If cash falls below ${money(-C.OVERDRAFT)} the bank closes the lab.</p>
+    <p><b>Score.</b> Net position at the end: cash minus loan, plus money owed to you, work in progress and the resale value of rigs you bought.</p>
+    <p><b>Saving.</b> The game saves after every step. Three slots keep separate games, and the save code moves a game to another phone or browser.</p></div>`;return}
+  const sl=slots(),auto=LS.get(K_AUTO),inGame=s&&view==="game",th=LS.get(K_THEME)||"auto";
+  const line=o=>o?`Week ${o.week}/${o.weeks} · ${money(o.cash)} · ${fmtTime(o.savedAt)}`:"Empty";
+  p.innerHTML=head(inGame?"Menu":"Saves")+`
+  <div class="card"><h3>Autosave</h3><p class="small">${auto?line(auto):"Nothing yet."} Saved after every step on this phone.</p></div>
+  <div class="card"><h3>Save slots</h3>${[1,2,3].map(n=>`<div class="slot"><div class="info"><b>Slot ${n}</b><br><span class="muted">${line(sl[n])}</span></div>
+    <button class="btn" data-act="slotsave" data-n="${n}" id="slotsave${n}" ${inGame?"":"disabled"}>Save</button><button class="btn" data-act="slotload" data-n="${n}" id="slotload${n}" ${sl[n]?"":"disabled"}>Load</button></div>`).join("")}</div>
+  <div class="card"><h3>Save code</h3><p class="small muted" style="margin-bottom:8px">Keep this text in a note or message to carry the game to another device.</p>
+    ${inGame?`<textarea id="codeOut" readonly>${encodeSave(s)}</textarea><button class="ghost" data-act="copy" id="copyBtn" style="margin-top:8px">Copy code</button>`:`<p class="small muted">Start or continue a game to get a code.</p>`}
+    <label for="codeIn" class="lbl" style="display:block;margin-top:12px">Paste a code to load</label>
+    <textarea id="codeIn" placeholder="${PFX}..."></textarea><button class="ghost" data-act="codeload" id="codeLoadBtn" style="margin-top:8px">Load from code</button></div>
+  <div class="card"><h3>Display</h3><div class="seg">${[["auto","Follow phone"],["dark","Panel (dark)"],["light","Sheet (light)"]].map(([v,n])=>`<button data-act="theme" data-v="${v}" aria-pressed="${th===v}">${n}</button>`).join("")}</div></div>
+  <div class="btnrow"><button class="ghost" data-act="help" id="helpBtn2">How to play</button>${inGame?`<button class="ghost" data-act="totitle" id="toTitleBtn">Back to title</button>`:""}</div>`;
+}
+function loadState(o){clearTimeout(revealTimer);s=JSON.parse(JSON.stringify(o));delete s.savedAt;view="game";confirmKey=null;autosave();closeSheet();render();if(s.phase==="log")runReveal();toast("Game loaded")}
+
+/* ---------- input ---------- */
+const rigBy=id=>s.rigs.find(g=>g.id===id);
+const rfqBy=id=>s.rfqs.find(q=>q.id===+id);
+function keepScroll(fn){const y=window.scrollY;fn();autosave();render();window.scrollTo(0,y)}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-act]");if(!b)return;
+  const a=b.dataset.act,k=b.dataset.k;
+  switch(a){
+    case "tab":tab=b.dataset.tab;try{history.replaceState(null,"",tab==="tech"?"#tech":"#play")}catch(err){}render();if(tab==="tech")renderTech();window.scrollTo(0,0);break;
+    case "len":sel=+b.dataset.d;confirmKey=null;render();break;
+    case "start":{const au=LS.get(K_AUTO);if(au&&au.phase!=="final"){confirmKey="new";render()}else newGame(sel);break}
+    case "startok":confirmKey=null;newGame(sel);break;
+    case "cancel":keepScroll(()=>confirmKey=null);break;
+    case "resume":{const au=LS.get(K_AUTO);if(au)loadState(au);break}
+    case "title":view="title";confirmKey=null;render();window.scrollTo(0,0);break;
+    case "menu":openSheet("saves");break;
+    case "help":openSheet("help");break;
+    case "close":closeSheet();break;
+    case "totitle":clearTimeout(revealTimer);closeSheet();view="title";confirmKey=null;render();break;
+    case "theme":LS.set(K_THEME,b.dataset.v);applyTheme();renderSheet();break;
+    case "slotsave":{const sl=slots();sl[b.dataset.n]=Object.assign({},s,{savedAt:Date.now()});toast(LS.set(K_SLOTS,sl)?"Saved to slot "+b.dataset.n:"This browser blocked saving. Use the save code.");renderSheet();break}
+    case "slotload":{const o=slots()[b.dataset.n];if(o)loadState(o);break}
+    case "copy":{const ta=$("codeOut"),txt=ta.value,fb=()=>{ta.focus();ta.select();toast("Selected. Long-press to copy")};
+      try{navigator.clipboard.writeText(txt).then(()=>toast("Code copied"),fb)}catch(err){fb()}break}
+    case "codeload":{try{loadState(decodeSave($("codeIn").value))}catch(err){toast("That code didn't load. Paste the whole text, starting with "+PFX)}break}
+    // play flow
+    case "sub":sub=k;LS.set(K_SUB,sub);confirmKey=null;render();{const n=$("sub_"+k);if(n&&n.getBoundingClientRect().top<0)n.scrollIntoView({block:"start"})}break;
+    case "run":runTurn();break;
+    case "skip":clearTimeout(revealTimer);s.shown=s.log.length;renderLogOnly();break;
+    case "acct":finishLog();break;
+    case "plan":toPlan();break;
+    case "keep":s.phase="plan";runTurn();break;
+    case "final":toFinal();break;
+    // floor
+    case "shift":keepScroll(()=>{rigBy(b.dataset.r).shifts=+b.dataset.n});break;
+    case "cal":keepScroll(()=>bookCal(s,rigBy(b.dataset.r)));break;
+    case "calno":keepScroll(()=>{rigBy(b.dataset.r).calBook=false});break;
+    case "repl":keepScroll(()=>{const g=rigBy(b.dataset.r);if(replaceNow(s,g,k,Math.random))toast(`${COMP[k].short} swapped on ${g.id}. Planned stop this week.`)});break;
+    case "qup":keepScroll(()=>{const g=rigBy(b.dataset.r),i=g.queue.indexOf(+b.dataset.id);if(i>0){const t=g.queue[i-1];if(i-1===0&&s.con[t].state!=="queued")return;g.queue[i-1]=g.queue[i];g.queue[i]=t}});break;
+    case "qmove":keepScroll(()=>{const g=rigBy(b.dataset.r),to=rigBy(b.dataset.to),id=+b.dataset.id;g.queue=g.queue.filter(x=>x!==id);to.queue.push(id);s.con[id].rig=to.id;toast("Moved to "+to.id)});break;
+    // rfqs
+    case "binc":case "bdec":keepScroll(()=>{const q=rfqBy(b.dataset.id);const st=q.market*0.025;q.draft=clamp(Math.round(((q.draft||q.market)+(a==="binc"?st:-st))/1000)*1000,Math.round(q.market*0.7),Math.round(q.market*1.4));if(q.bid!=null)q.bid=q.draft});break;
+    case "bid":keepScroll(()=>{const q=rfqBy(b.dataset.id);q.bid=q.draft||q.market;toast("Bid placed. Result on Monday.")});break;
+    case "unbid":keepScroll(()=>{rfqBy(b.dataset.id).bid=null});break;
+    case "accept":keepScroll(()=>{const q=rfqBy(b.dataset.id);const c=acceptRFQ(s,q,q.offer);if(c)toast(`${c.code} queued on ${c.rig}. Advance ${money(c.adv)} received.`)});break;
+    case "decline":keepScroll(()=>{const q=rfqBy(b.dataset.id);q.declined=true;q.bid=null});break;
+    case "undecline":keepScroll(()=>{rfqBy(b.dataset.id).declined=false});break;
+    // stores, staff
+    case "order":keepScroll(()=>{const o=orderSpare(s,k,Math.random,false);toast(`${COMP[k].short} ordered. Due week ${o.arr}.`)});break;
+    case "pm":keepScroll(()=>{s.pol.pm=+b.dataset.v});break;
+    case "hire":keepScroll(()=>{const p=hire(s,k,Math.random);toast(`${p.name} joins as ${k==="eng"?"test engineer":"technician"}.`)});break;
+    case "train":keepScroll(()=>train(s,+b.dataset.id));break;
+    case "fire":keepScroll(()=>{confirmKey="fire:"+b.dataset.id});break;
+    case "fireok":keepScroll(()=>{fire(s,+b.dataset.id);confirmKey=null});break;
+    // office
+    case "loan":keepScroll(()=>{if(takeLoan(s))toast("Loan of "+money(C.LOAN_STEP)+" credited.")});break;
+    case "repay":keepScroll(()=>{if(repayLoan(s))toast("Repaid.")});break;
+    case "acc":keepScroll(()=>{applyAcc(s);toast("Audit booked for week "+s.acc.at+".")});break;
+    case "autocal":keepScroll(()=>{s.pol.autoCal=!!+b.dataset.v});break;
+    case "autobid":keepScroll(()=>{s.pol.autoBid=!!+b.dataset.v});break;
+    case "mkinc":case "mkdec":keepScroll(()=>{s.pol.markup=clamp(s.pol.markup+(a==="mkinc"?5:-5),70,140)});break;
+    case "cm":keepScroll(()=>buyCM(s,rigBy(b.dataset.r)));break;
+    case "logger":keepScroll(()=>buyLogger(s,rigBy(b.dataset.r)));break;
+    case "rig":keepScroll(()=>{confirmKey="rig:"+k});break;
+    case "rigok":keepScroll(()=>{const g=buyRig(s,k,Math.random);confirmKey=null;toast(`${g.id} ordered. Ready in week ${g.ready}.`)});break;
+    // tech tab
+    case "tset":{const v=b.dataset.v;T[k]=isNaN(+v)?v:+v;if(k==="comp"){T.beta=COMP[T.comp].b;T.eta=COMP[T.comp].eta}saveT();renderTech();break}
+    case "tload":techFromGame();break;
+    case "treset":T=Object.assign({},TECH_DEF);saveT();renderTech();toast("Inputs reset");break;
+  }
+});
+$("sheet").addEventListener("click",e=>{if(e.target.id==="sheet")closeSheet()});
+
+/* =====================================================================
+   TECH DISCUSSION — every number comes from the engine constants above;
+   the Monte Carlo calls the same runWeek() the game uses, with seeded RNG.
+   ===================================================================== */
+let tab=(location.hash==="#tech")?"tech":"play";
+const TECH_DEF={cash:800000,rep:50,shifts:2,markup:100,spares:1,cm:0,pm:0,autoCal:1,util:75,
+  comp:"brg",H:600,beta:COMP.brg.b,eta:COMP.brg.eta,cover:80,det:70,rigsUsing:2,lead:2,downCost:900,
+  bidRate:1100,cost:750,bidH:300,capType:"pump",demand:70,
+  runs:300,weeks:52,target:1000000,expType:"BR",miss:6,reserve:300000,loan:1};
+let T=Object.assign({},TECH_DEF,LS.get(K_TECH)||{});
+function saveT(){LS.set(K_TECH,T)}
+function applyTab(){
+  $("main").hidden=tab!=="play";$("tech").hidden=tab!=="tech";
+  $("bar").hidden=tab!=="play"||view!=="game"||!s;
+  $("tab_play").setAttribute("aria-selected",tab==="play");$("tab_tech").setAttribute("aria-selected",tab==="tech");
+}
+function techFromGame(){
+  const g=s||LS.get(K_AUTO);if(!g){toast("Start a game first");return}
+  const sh=g.rigs.map(r=>r.shifts).filter(x=>x>0);
+  Object.assign(T,{cash:Math.round(clamp(g.cash,200000,3000000)/50000)*50000,rep:Math.round(g.rep*100),shifts:sh.length?Math.round(sh.reduce((a,b)=>a+b,0)/sh.length):1,
+    markup:g.pol.markup||100,spares:(g.spares.brg+g.spares.cpl+g.spares.slip)>=4?2:(g.spares.brg+g.spares.cpl+g.spares.slip)>0?1:0,
+    cm:g.rigs.some(r=>r.cm)?1:0,pm:g.pol.pm,autoCal:g.pol.autoCal?1:0,weeks:g.weeks});
+  saveT();renderTech();toast("Loaded cash, reputation, shifts and policies from your game");
+}
+
+/* ---- shared model pieces ---- */
+const meanH=k=>{const t=TEST[k];return t.h[0]+(t.h[1]-t.h[0])/(t.skew+1)};
+const partB=c=>c===T.comp?T.beta:COMP[c].b, partEta=c=>c===T.comp?T.eta:COMP[c].eta;
+const partMTTF=c=>partEta(c)*gammaFn(1+1/partB(c));
+const repMean=c=>(COMP[c].rep[0]+COMP[c].rep[1])/2, leadMean=c=>(COMP[c].lead[0]+COMP[c].lead[1])/2;
+const leadSq=c=>{const a=COMP[c].lead[0],b=COMP[c].lead[1];let v=0;for(let x=a;x<=b;x++)v+=x*x;return v/(b-a+1)};
+const START_RIGS=["GB","PP"],START_TESTS=["gbe","pump"];
+function priceH(k,mk){return (TEST[k].rate*(mk||T.markup)/100*meanH(k)+C.SETUP_FEE)/(meanH(k)+C.SETUP_H)} // per rig hour incl. setup time
+function partsH(rt){return RIG[rt].comps.reduce((a,c)=>a+COMP[c].price/partMTTF(c),0)}
+function crew(sh){return{techs:Math.max(2,Math.ceil(2*sh/C.TECH_COVER)),engs:1}}
+function fixedWk(sh){const cr=crew(sh);return C.RENT+cr.techs*C.TECH_WAGE+cr.engs*C.ENG_WAGE}
+function unit(rt,k,sh,u){
+  const h=sh*C.SHIFT_H*u,rigs=START_RIGS.length,cr=crew(sh);
+  const r={price:priceH(k),power:RIG[rt].power,labour:(cr.techs*C.TECH_WAGE+cr.engs*C.ENG_WAGE)/rigs/h,rent:C.RENT/rigs/h,prem:C.PREM[sh]/h,
+    parts:partsH(rt)*(1+(T.spares?0.02:0)),cal:C.CAL_COST/(C.CAL_VALID*h)};
+  r.variable=r.power+r.parts+r.prem;r.cost=r.variable+r.labour+r.rent+r.cal;r.margin=r.price-r.cost;return r;
+}
+function sysMTBF(rt){return 1/RIG[rt].comps.reduce((a,c)=>a+1/partMTTF(c),0)}
+/* downtime per failure: mixture over parts, spare in stock with prob cover, CM catches share det of detectable failures */
+function downMoments(rt,Hwk,cover,det,cm){
+  const cs=RIG[rt].comps,w=cs.map(c=>1/partMTTF(c)),tw=w.reduce((a,b)=>a+b,0);let m1=0,m2=0;
+  cs.forEach((c,i)=>{const p=w[i]/tw,rm=repMean(c),rv=Math.pow(COMP[c].rep[1]-COMP[c].rep[0],2)/12;
+    const dCatch=cm?det*COMP[c].det/ (CK.reduce((a,k)=>a+COMP[k].det,0)/CK.length):0,pc=clamp(dCatch,0,1);
+    // planned: half repair, no wait (spare ordered at warning; leftover lead beyond warning window)
+    const leftL=Math.max(0,leadMean(c)*Hwk-C.WARN_H);
+    const pl1=C.PLANNED_F*rm+(1-cover)*leftL,pl2=Math.pow(C.PLANNED_F,2)*(rv+rm*rm)+(1-cover)*leftL*leftL;
+    const un1=rm+(1-cover)*leadMean(c)*Hwk,un2=rv+rm*rm+(1-cover)*(leadSq(c)*Hwk*Hwk+2*rm*leadMean(c)*Hwk);
+    m1+=p*(pc*pl1+(1-pc)*un1);m2+=p*(pc*pl2+(1-pc)*un2)});
+  return{m1,m2};
+}
+function availability(rt,sh,cover,det,cm){const H=sh*C.SHIFT_H,mt=sysMTBF(rt),d=downMoments(rt,H,cover,det,cm);
+  const mttr=RIG[rt].comps.reduce((a,c)=>a+repMean(c)/partMTTF(c),0)*mt,delay=Math.max(0,d.m1-mttr);return{mtbf:mt,mttr,delay,A:mt/(mt+d.m1),d}}
+function normCdf(z){const t=1/(1+0.2316419*Math.abs(z)),d=0.3989423*Math.exp(-z*z/2);const p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p}
+function poisCdf(k,l){if(k<0)return 0;let t=Math.exp(-l),s=t;for(let i=1;i<=k;i++){t*=l/i;s+=t}return Math.min(1,s)}
+function pct(a,q){if(!a.length)return NaN;const b=Float64Array.from(a).sort();const i=(b.length-1)*q,lo=Math.floor(i);return b[lo]+(b[Math.min(lo+1,b.length-1)]-b[lo])*(i-lo)}
+function weekModel(sh){ // expected weekly profit with a full order book, ± sigma from failure downtime
+  const H=sh*C.SHIFT_H;let mu=-fixedWk(sh),v=0,lost=0,fails=0;
+  START_RIGS.forEach((rt,i)=>{const k=START_TESTS[i],u=unit(rt,k,sh,1),m=u.price-u.variable,lam=H/sysMTBF(rt),d=downMoments(rt,H,T.spares?T.cover/100:0,T.det/100,!!T.cm);
+    const el=Math.min(H,lam*d.m1);lost+=el;fails+=lam;mu+=m*(H-el)-C.PREM[sh];v+=m*m*lam*d.m2});
+  return{H,mu,sd:Math.sqrt(v),lost,fails};
+}
+
+/* ---- capacity queue (Lindley recursion, same job sizes and deadlines as makeRFQ) ---- */
+function queueSim(k,demand,sh,A,seed){
+  const r=mulberry32(seed),t=TEST[k],cap=sh*C.SHIFT_H*A,lam=demand/(meanH(k)+C.SETUP_H),W=1200;
+  let backlog=0,late=0,n=0,served=0,bsum=0,pen=0;
+  for(let w=0;w<W;w++){
+    const a=poisR(lam,r);
+    for(let j=0;j<a;j++){const h=t.h[0]+(t.h[1]-t.h[0])*Math.pow(r(),t.skew)+C.SETUP_H,dl=1+Math.ceil((h-C.SETUP_H)/80*U(r,1.15,1.8))+UI(r,1,3);
+      const fin=(backlog+h)/cap;bsum+=backlog/cap;backlog+=h;n++;if(fin>dl+0.5){late++;pen+=Math.min(C.PEN_CAP,(fin-dl)*0.045)}}
+    const x=Math.min(cap,backlog);served+=x;backlog-=x;
+    if(backlog>cap*60)backlog=cap*60;
+  }
+  return{util:served/(cap*W),wait:n?bsum/n:0,pLate:n?late/n:0,served:served/W,pen:n?pen/n:0,lam};
+}
+
+/* ---- Monte Carlo (chunked so the page stays responsive) ---- */
+let MC={key:null,done:false,base:[],exp:[],i:0,N:0,timer:null};
+function botCfg(){return Object.assign({},BOT_DEF,{shifts:T.shifts,markup:T.markup,spares:T.spares,autoCal:!!T.autoCal,pm:T.pm,cm:!!T.cm,reserve:T.reserve,loan:!!T.loan})}
+function mcKey(){return JSON.stringify([T.cash,T.rep,T.shifts,T.markup,T.spares,T.autoCal,T.pm,T.cm,T.runs,T.weeks,T.expType,T.miss,T.reserve,T.loan])}
+function mcInit(){const f=st=>{st.cash=T.cash;st.rep=T.rep/100};f.base=T.cash;return f}
+function startMC(onDone){
+  const key=mcKey();if(MC.key===key&&MC.done){onDone();return}
+  clearTimeout(MC.timer);MC={key,done:false,base:[],exp:[],i:0,N:T.runs,timer:null};
+  const b0=botCfg(),b1=Object.assign({},b0,{expand:{type:T.expType,miss:T.miss}}),init=mcInit();
+  const chunk=()=>{const t0=performance.now();
+    while(MC.i<MC.N&&performance.now()-t0<30){const sd=MC.i+1;MC.base.push(slim(simRun(sd,T.weeks,b0,init)));MC.exp.push(slim(simRun(sd,T.weeks,b1,init)));MC.i++}
+    document.querySelectorAll(".mcbusy").forEach(e=>e.textContent=MC.i<MC.N?`Simulating ${MC.N} paired runs… ${Math.round(MC.i/MC.N*100)}%`:"");
+    if(MC.i<MC.N)MC.timer=setTimeout(chunk,0);else{MC.done=true;onDone()}};
+  chunk();
+}
+function slim(o){return{nc:o.nc,profit:o.profit,rev:o.rev,end:o.end,bank:o.bank,expAt:o.expAt,fails:o.fails,late:o.late,hrs:o.hrs}}
+
+/* ---- chart helpers ---- */
+function niceTicks(lo,hi,n){if(hi<=lo)hi=lo+1;const raw=(hi-lo)/n,mag=Math.pow(10,Math.floor(Math.log10(raw))),st=[1,2,2.5,5,10].map(x=>x*mag).find(x=>x>=raw);const out=[];for(let v=Math.floor(lo/st)*st;v<=hi+st*0.999;v+=st)out.push(+v.toFixed(10));return out}
+function frame(el,H){const W=Math.max(280,Math.round(el.clientWidth||340));return{W,H,l:52,r:12,t:14,b:28}}
+function hookHover(el,pick,def){
+  const svg=el.querySelector("svg"),out=el.querySelector(".readout"),g=svg.querySelector(".guide");out.textContent=def;
+  const move=e=>{const bb=svg.getBoundingClientRect(),vb=svg.viewBox.baseVal,x=(e.clientX-bb.left)*vb.width/bb.width;const h=pick(x);if(!h)return;g.setAttribute("x1",h.x);g.setAttribute("x2",h.x);g.style.display="";out.textContent=h.text};
+  svg.addEventListener("pointermove",move);svg.addEventListener("pointerdown",move);
+  svg.addEventListener("pointerleave",()=>{g.style.display="none";out.textContent=def});
+}
+const path=pts=>pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join("");
+/* generic line chart: o={H,xs,series:[{n,c,ys,w,dash}],band,xf,yf,xticks,ymin,ymax,marks:[{x,t}],dots:[{x,y,t}],aria,read(i),def,legendExtra} */
+function lineChart(el,o){
+  const f=frame(el,o.H||220),xs=o.xs,n=xs.length;
+  const all=o.series.flatMap(s=>s.ys).concat(o.band?o.band.lo.concat(o.band.hi):[]).filter(v=>isFinite(v));
+  let lo=o.ymin!=null?o.ymin:Math.min(0,...all),hi=o.ymax!=null?o.ymax:Math.max(...all);if(hi<=lo)hi=lo+1;
+  const tk=niceTicks(lo,hi,4);lo=Math.min(lo,tk[0]);hi=tk[tk.length-1];
+  const x0=xs[0],x1=xs[n-1],X=v=>f.l+(v-x0)/(x1-x0||1)*(f.W-f.l-f.r),Y=v=>f.t+(hi-clamp(v,lo,hi))/(hi-lo)*(f.H-f.t-f.b);
+  let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="${esc(o.aria||"")}">`;
+  tk.forEach(v=>svg+=`<line class="grid" x1="${f.l}" x2="${f.W-f.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${f.l-6}" y="${Y(v)+4}" text-anchor="end">${o.yf(v)}</text>`);
+  if(lo<0&&hi>0)svg+=`<line x1="${f.l}" x2="${f.W-f.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)"/>`;
+  (o.xticks||[x0,(x0+x1)/2,x1]).forEach((v,i,a)=>svg+=`<text class="ax" x="${X(v)}" y="${f.H-8}" text-anchor="${i===0?"start":i===a.length-1?"end":"middle"}">${o.xf(v)}</text>`);
+  if(o.band)svg+=`<path d="${path(xs.map((x,i)=>[X(x),Y(o.band.hi[i])]))}L${xs.map((x,i)=>[X(xs[n-1-i]),Y(o.band.lo[n-1-i])].join(" ")).join("L")}Z" fill="var(${o.band.c})" opacity=".2"/>`;
+  (o.hlines||[]).forEach(h=>{if(h.y>lo&&h.y<hi)svg+=`<line x1="${f.l}" x2="${f.W-f.r}" y1="${Y(h.y)}" y2="${Y(h.y)}" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="5 4"/><text class="lab" x="${f.W-f.r-4}" y="${Y(h.y)-5}" text-anchor="end">${esc(h.t)}</text>`});
+  o.series.forEach(s=>svg+=`<path d="${path(xs.map((x,i)=>[X(x),Y(s.ys[i])]).filter((p,i)=>isFinite(s.ys[i])))}" fill="none" stroke="var(${s.c})" stroke-width="${s.w||2}" ${s.dash?'stroke-dasharray="6 4"':""} stroke-linejoin="round" stroke-linecap="round"/>`);
+  (o.marks||[]).forEach(m=>svg+=`<line x1="${X(m.x)}" x2="${X(m.x)}" y1="${f.t}" y2="${f.H-f.b}" stroke="var(--sig)" stroke-width="1.5"/><text class="lab" x="${X(m.x)+(X(m.x)>f.W*0.7?-4:4)}" y="${f.t+11}" text-anchor="${X(m.x)>f.W*0.7?"end":"start"}">${esc(m.t)}</text>`);
+  (o.dots||[]).forEach(d=>svg+=`<circle cx="${X(d.x)}" cy="${Y(d.y)}" r="5" fill="var(--sig)" stroke="var(--card)" stroke-width="2"/><text class="lab" x="${X(d.x)+(X(d.x)>f.W*0.65?-8:8)}" y="${Y(d.y)-9}" text-anchor="${X(d.x)>f.W*0.65?"end":"start"}">${esc(d.t)}</text>`);
+  svg+=`<line class="guide" y1="${f.t}" y2="${f.H-f.b}" style="display:none"/></svg>`;
+  const leg=o.series.length+(o.band?1:0)>=2?`<div class="legend">${o.series.map(s=>`<span><i class="${s.dash?"dash":""}" style="${s.dash?"":`background:var(${s.c})`}"></i>${esc(s.n)}</span>`).join("")}${o.band?`<span><i class="band" style="background:var(${o.band.c})"></i>${esc(o.band.n)}</span>`:""}</div>`:"";
+  el.innerHTML=leg+svg+`<div class="readout"></div>`;
+  hookHover(el,x=>{const v=x0+(x-f.l)/(f.W-f.l-f.r)*(x1-x0);let i=0,bd=Infinity;xs.forEach((xx,j)=>{const d=Math.abs(xx-v);if(d<bd){bd=d;i=j}});return{x:X(xs[i]),text:o.read(i)}},o.def);
+}
+function barHist(el,vals,target,fmt){
+  const lo=Math.min(...vals),hi=Math.max(...vals),B=24,w=(hi-lo)/B||1,bins=new Array(B).fill(0);vals.forEach(v=>bins[Math.min(B-1,Math.floor((v-lo)/w))]++);
+  const f=frame(el,190),mx=Math.max(...bins),X=v=>f.l+(v-lo)/(hi-lo||1)*(f.W-f.l-f.r),Y=c=>f.t+(1-c/mx)*(f.H-f.t-f.b),bwp=(f.W-f.l-f.r)/B;
+  let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Distribution of final result across runs">`;
+  niceTicks(0,mx,3).filter(v=>v<=mx).forEach(v=>svg+=`<line class="grid" x1="${f.l}" x2="${f.W-f.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${f.l-6}" y="${Y(v)+4}" text-anchor="end">${(v/vals.length*100).toFixed(0)}%</text>`);
+  bins.forEach((c,i)=>{if(!c)return;const x=f.l+i*bwp+1,y=Y(c),h=f.H-f.b-y,r=Math.min(3,h/2),bw=bwp-2,mid=lo+(i+.5)*w;
+    svg+=`<path d="M${x} ${f.H-f.b}V${y+r}Q${x} ${y} ${x+r} ${y}H${x+bw-r}Q${x+bw} ${y} ${x+bw} ${y+r}V${f.H-f.b}Z" fill="var(${mid<0?"--s2":"--s1"})" opacity="${mid>=target?1:.5}"/>`});
+  [lo,(lo+hi)/2,hi].forEach((v,i)=>svg+=`<text class="ax" x="${X(v)}" y="${f.H-8}" text-anchor="${["start","middle","end"][i]}">${fmt(v)}</text>`);
+  if(target>lo&&target<hi)svg+=`<line x1="${X(target)}" x2="${X(target)}" y1="${f.t}" y2="${f.H-f.b}" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 3"/><text class="lab" x="${X(target)+(X(target)>f.W*0.7?-4:4)}" y="${f.t+11}" text-anchor="${X(target)>f.W*0.7?"end":"start"}">Target</text>`;
+  svg+=`<line class="guide" y1="${f.t}" y2="${f.H-f.b}" style="display:none"/></svg>`;
+  el.innerHTML=`<div class="legend"><span><i style="background:var(--s1);height:8px"></i>Gain</span><span><i style="background:var(--s2);height:8px"></i>Loss</span><span><i class="dash"></i>Target</span></div>${svg}<div class="readout"></div>`;
+  const pHit=vals.filter(v=>v>=target).length/vals.length;
+  hookHover(el,x=>{const i=clamp(Math.floor((x-f.l)/bwp),0,B-1);return{x:f.l+(i+.5)*bwp,text:`${fmt(lo+i*w)} to ${fmt(lo+(i+1)*w)}: ${(bins[i]/vals.length*100).toFixed(1)}% of runs`}},
+    `Solid bars reach the target. ${P100(pHit)} of runs end at least ${money(target)} up.`);
+}
+
+/* ---- layout ---- */
+const SLF={};
+function sl(id,label,min,max,step,fmt,hint){SLF[id]=fmt;return `<div class="fld"><label for="t_${id}"><span>${label}</span><output id="v_${id}">${fmt(T[id])}</output></label><input type="range" id="t_${id}" data-t="${id}" min="${min}" max="${max}" step="${step}" value="${T[id]}">${hint?`<div class="tiny muted">${hint}</div>`:""}</div>`}
+function seg(k,label,opts){return `<div class="segrow"><span>${label}</span><div class="seg">${opts.map(([v,n])=>`<button data-act="tset" data-k="${k}" data-v="${v}" aria-pressed="${String(T[k])===String(v)}">${n}</button>`).join("")}</div></div>`}
+function chips(k,opts){return `<div class="chips">${opts.map(([v,n])=>`<button data-act="tset" data-k="${k}" data-v="${v}" aria-pressed="${String(T[k])===String(v)}">${n}</button>`).join("")}</div>`}
+const pf=v=>v+"%",rs=v=>money(v),nf=v=>String(v),hf=v=>Math.round(v).toLocaleString("en-IN")+" h";
+const P100=x=>isFinite(x)?(x>0&&x<0.01?"<1%":x<1&&x>0.99?">99%":Math.round(x*100)+"%"):"—";
+function verdict(cls,tag,html){return `<div class="verdict ${cls}"><i>${tag}</i><div>${html}</div></div>`}
+function kpi(v,l,sub){return `<div class="kpi"><span class="lbl">${l}</span><b>${v}</b>${sub?`<span class="tiny muted">${sub}</span>`:""}</div>`}
+function card(n,title,body){return `<div class="card"><div class="sec-n">${n}</div><h2>${title}</h2>${body}</div>`}
+function renderTech(){
+  const el=$("tech");if(tab!=="tech")return;
+  const compChips=chips("comp",CK.map(c=>[c,COMP[c].short]));
+  el.innerHTML=`
+  <div class="card"><div class="prose"><h2>Running a test lab by the numbers</h2>
+    <p class="muted">Each section below uses the game's own rules: the Weibull part lives, repair and lead times, the bid curve, RFQ flow, shift costs and the payment terms. The Monte Carlo plays the real weekly engine many times with a simple, sensible player.</p></div>
+    <div class="btnrow" style="margin-top:10px"><button class="ghost" data-act="tload" id="tLoad">Use my current game</button><button class="ghost" data-act="treset" id="tReset">Reset inputs</button></div></div>
+
+  ${card("01 · STARTING POINT","What binds in week 1",`
+    <div class="flds">${sl("cash","Starting cash",200000,3000000,50000,rs)}${sl("rep","Starting reputation",5,100,5,pf)}</div>
+    ${seg("shifts","Shifts per rig",[[1,"1 shift"],[2,"2 shifts"],[3,"3 shifts"]])}
+    <div class="tblwrap"><table class="tt" id="o_cons"></table></div><div id="o_bind"></div>`)}
+
+  ${card("02 · UNIT ECONOMICS","What one rig hour earns",`
+    <div class="flds">${sl("util","Utilisation (hours run / hours staffed)",20,100,5,pf)}${sl("markup","Price as % of market",70,140,5,pf)}</div>
+    <div class="tblwrap"><table class="tt" id="o_unit"></table></div>
+    <div class="kpis" id="o_unitk" style="margin-top:10px"></div>
+    <h3 style="margin-top:14px">Weekly profit against utilisation</h3><div class="chart" id="c_util"></div>`)}
+
+  ${card("03 · THE PROBABILITY MODEL","Why a week's result is random",`
+    <div class="prose small"><p>The engine draws every uncertain thing from a stated distribution. Work arrives as a Poisson count of RFQs; whether a bid wins is a logistic curve in the bid-to-market ratio; parts die on Weibull clocks that only tick while the rig runs; repairs, lead times, operator slips and DAQ dropouts add their own noise.</p></div>
+    <div class="formula">RFQs/week     n = 1 + Poisson(${C.RFQ_BASE} + ${C.RFQ_REP}·rep), at most 4
+Win a bid     P = 1 / (1 + e^((b/m − 1 − ${C.REP_PRICE}·(rep − 0.5)) / ${C.BID_SLOPE}))
+Part life     T ~ Weibull(β, η),  R(t) = e^(−(t/η)^β)
+Repair        U(a, b) hours; lead time U{a..b} weeks (1–6)
+Article fail  p = 6–25% per test, at U(0.15, 1) of its hours
+Op. error     P = ${C.ERR_P} × (${C.ERR_NIGHT} on 3 shifts) × (1 + fatigue) × (1.5 − skill)
+DAQ dropout   P = ${C.DAQ_P} × hours/80 per rig-week
+Lost hours    N ~ Poisson(H / MTBF),  each costs D (repair + wait)
+Week profit   ≈ Σ margin·(H − lost) − fixed,  σ² = Σ margin²·λ·E[D²]
+Horizon       ≈ Normal(N·μ, N·σ²)</div>
+    <div class="tblwrap" style="margin-top:10px"><table class="tt" id="o_wk"></table></div>
+    ${sl("target","Target gain over the horizon",-1000000,5000000,100000,rs)}
+    <div class="kpis" id="o_clt"></div><p class="busy mcbusy"></p>
+    <p class="small muted" id="o_cltnote" style="margin-top:8px"></p>`)}
+
+  ${card("04 · RELIABILITY","Will the test finish without a trip?",`
+    <div class="prose small"><p>A rig is a series system: any one part failing stops it. For a test of H hours, the chance of no trip is the product of each part's survival, R<sub>sys</sub>(H) = Π R<sub>i</sub>(H). Shape β above 1 means wear-out, so old parts are riskier than new ones.</p></div>
+    <div style="margin-top:8px">${compChips}</div>
+    <div class="flds">${sl("H","Test length H",50,2000,50,hf)}${sl("beta","Shape β of "+COMP[T.comp].short.toLowerCase(),0.8,4,0.1,v=>(+v).toFixed(1))}${sl("eta","Scale η of "+COMP[T.comp].short.toLowerCase(),500,12000,100,hf)}</div>
+    <div class="tblwrap"><table class="tt" id="o_rel"></table></div>
+    <h3 style="margin-top:14px">Chance of finishing without a rig failure</h3><div class="chart" id="c_rel"></div><div id="o_relv"></div>`)}
+
+  ${card("05 · AVAILABILITY","Hours lost to repairs and waiting",`
+    <div class="formula">A = MTBF / (MTBF + MTTR + logistics delay)</div>
+    <div class="flds">${sl("cover","Chance a spare is in stores when needed",0,100,5,pf)}${sl("det","Failures caught early by vibration monitoring",0,100,5,pf,"Mechanical parts are easier to catch than electronics")}</div>
+    <div class="tblwrap"><table class="tt" id="o_av"></table></div><div class="kpis" id="o_avk" style="margin-top:10px"></div>`)}
+
+  ${card("06 · SPARES SIZING","How many to keep on the shelf",`
+    <div class="prose small"><p>While a used spare is being replaced, more failures can arrive. The count of failures during one lead time is Poisson with mean λL = rigs × hours/week × lead / MTTF. With S spares, a failure finds the shelf empty when S or more orders are already open: P = 1 − F(S − 1).</p></div>
+    <div style="margin-top:8px">${compChips}</div>
+    <div class="flds">${sl("rigsUsing","Rigs using this part",1,4,1,nf)}${sl("lead","Lead time",1,6,1,v=>v+" wk")}${sl("downCost","Margin lost per idle rig hour",200,2500,50,rs)}</div>
+    <div class="tblwrap"><table class="tt" id="o_sp"></table></div>
+    <h3 style="margin-top:14px">Yearly cost against spares held</h3><div class="chart" id="c_sp"></div><div id="o_spv"></div>`)}
+
+  ${card("07 · PREVENTIVE REPLACEMENT","When to swap a part before it fails",`
+    <div class="prose small"><p>Age replacement: swap at age T or on failure, whichever comes first. Cost per running hour is C(T) = (C<sub>p</sub>·R(T) + C<sub>f</sub>·F(T)) / ∫<sub>0</sub><sup>T</sup> R(t) dt, where a planned swap C<sub>p</sub> costs the part and half a repair, and a failure C<sub>f</sub> adds the full repair and any wait for a spare.</p></div>
+    <div style="margin-top:8px">${compChips}</div>
+    <div class="kpis" id="o_pmk" style="margin-top:10px"></div>
+    <h3 style="margin-top:14px">Cost per running hour against replacement age</h3><div class="chart" id="c_pm"></div><div id="o_pmv"></div>`)}
+
+  ${card("08 · BID PRICING","Where to set the bid",`
+    <div class="prose small"><p>Expected margin = P(win | bid) × (bid − cost). Higher bids earn more per win but win less often. If the rig would otherwise sit idle, only the running cost counts, so the best bid drops.</p></div>
+    <div class="flds">${sl("bidRate","Market price per test hour",500,2500,50,rs)}${sl("cost","Your full cost per rig hour",200,2000,50,rs,"Section 2 puts it at about "+money(unit("GB","gbe",T.shifts,T.util/100).cost))}${sl("bidH","Test length",60,2000,20,hf)}</div>
+    <div class="kpis" id="o_bidk"></div>
+    <h3 style="margin-top:14px">Expected margin against bid</h3><div class="chart" id="c_bid"></div>`)}
+
+  ${card("09 · CAPACITY AND SHIFTS","Backlog and missed deadlines",`
+    <div class="prose small"><p>One rig is a queue. Won work arrives at random, the rig serves it at shifts × 40 h × availability per week, and every job carries a deadline drawn the same way the game draws it. Near full utilisation the backlog, and the chance of a late report, rise steeply.</p></div>
+    ${seg("capType","Rig",[["pump","Pump rig"],["gbe","Gearbox rig"]])}
+    ${sl("demand","Work won per week (rig hours)",10,200,5,hf)}
+    <div class="tblwrap"><table class="tt" id="o_cap"></table></div>
+    <h3 style="margin-top:14px">Chance a report is late</h3><div class="chart" id="c_cap"></div><div id="o_capv"></div>`)}
+
+  ${card("10 · MONTE CARLO GROWTH","Many runs of the real weekly engine",`
+    <div class="prose small" id="o_mcp"></div>
+    <div class="flds">${sl("runs","Simulated runs",200,3000,100,nf)}${sl("reserve","Cash the player keeps in reserve",0,1500000,50000,rs)}</div>
+    ${seg("weeks","Horizon",[[26,"26 weeks"],[52,"52 weeks"],[104,"104 weeks"]])}
+    ${seg("spares","Spares policy",[[0,"None"],[1,"One of each cheap part"],[2,"One of every part"]])}
+    ${seg("pm","Preventive replacement",[[0,"Off"],[0.6,"At 60%"],[0.8,"At 80%"]])}
+    ${seg("cm","Vibration monitoring from week 1",[[0,"No"],[1,"Yes"]])}
+    ${seg("autoCal","Calibration",[[1,"Auto"],[0,"Never booked"]])}
+    <p class="busy mcbusy"></p>
+    <h3 style="margin-top:10px">Cash minus loan, week by week</h3><div class="chart" id="c_fan"></div>
+    <div class="tblwrap"><table class="tt" id="o_per"></table></div>
+    <p class="tiny muted" style="margin-top:4px">Client payments are lumpy: most periods hold no big final payment, so a typical period loses money while the average period earns. The probability columns show that split.</p>
+    <h3 style="margin-top:14px">Spread of the final result</h3><div class="chart" id="c_hist"></div><div class="kpis" id="o_mck" style="margin-top:8px"></div>`)}
+
+  ${card("11 · EXPANSION","When to add a rig or monitoring",`
+    <div class="prose small" id="o_expp"></div>
+    ${chips("expType",[["BR","Bearing test rig"],["EC","Environmental chamber"],["GB","Second gearbox rig"],["PP","Second pump rig"],["CM","Vibration monitoring"]])}
+    ${T.expType!=="CM"?sl("miss","Buy after this many RFQs turned away for that rig",1,30,1,nf,"Turned away: no such rig, or no room before the deadline"):""}
+    ${seg("loan","Borrow to fund it",[[1,"Yes"],[0,"Cash only"]])}
+    <p class="busy mcbusy"></p>
+    <div class="kpis" id="o_exp" style="margin-top:8px"></div>
+    <h3 style="margin-top:14px">Median cash minus loan</h3><div class="chart" id="c_exp"></div>`)}
+
+  ${card("12 · STRATEGY","SWOT",`<p class="small muted" style="margin-bottom:10px">Figures update with the inputs above.</p><div class="swot" id="o_swot"></div>`)}`;
+  updateTech();
+}
+let techTimer=null;
+function scheduleTech(){clearTimeout(techTimer);techTimer=setTimeout(updateTech,150)}
+document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.t;if(!k)return;T[k]=+e.target.value;const o=$("v_"+k);if(o)o.textContent=SLF[k](T[k]);saveT();scheduleTech()});
+let lastRW=0;window.addEventListener("resize",()=>{if(tab!=="tech")return;const w=$("tech").clientWidth;if(Math.abs(w-lastRW)>20){lastRW=w;scheduleTech()}});
+
+function updateTech(){
+  if(tab!=="tech"||!$("o_cons"))return;
+  lastRW=$("tech").clientWidth;
+  const sh=T.shifts,u=T.util/100,H=sh*C.SHIFT_H;
+  const uG=unit("GB","gbe",sh,u),uP=unit("PP","pump",sh,u);
+
+  /* 1 constraints */
+  const burn=fixedWk(sh),prem=2*C.PREM[sh],runway=T.cash/(burn+prem),capH=2*H;
+  const fullSet=CK.reduce((a,c)=>a+COMP[c].price,0),cycG=meanH("gbe")/(H*0.88)+2.8,cycP=meanH("pump")/(H*0.88)+2.8;
+  const cr=crew(sh);
+  $("o_cons").innerHTML=`<tr><th>Constraint</th><th>Value</th><th>Effect</th></tr>
+    <tr><td>Cash</td><td>${kfmt(T.cash)}</td><td>${runway.toFixed(1)} weeks of fixed cost</td></tr>
+    <tr><td>Fixed cost/week</td><td>${kfmt(burn+prem)}</td><td>rent, ${cr.techs} tech, ${cr.engs} eng, premiums</td></tr>
+    <tr><td>Rig capacity</td><td>${capH} h/wk</td><td>2 rigs × ${sh} shift${sh>1?"s":""}</td></tr>
+    <tr><td>Gearbox cash cycle</td><td>${cycG.toFixed(0)} wk</td><td>${Math.round(meanH("gbe"))} h test + payment delay</td></tr>
+    <tr><td>Pump cash cycle</td><td>${cycP.toFixed(0)} wk</td><td>${Math.round(meanH("pump"))} h test + payment delay</td></tr>
+    <tr><td>One spare of every part</td><td>${kfmt(fullSet)}</td><td>${P100(fullSet/T.cash)} of cash</td></tr>
+    <tr><td>R1 calibration</td><td>week 5</td><td>${kfmt(C.CAL_COST)} and ${C.CAL_H} h</td></tr>
+    <tr><td>Crew cover</td><td>${2*C.TECH_COVER} rig-shifts</td><td>${2*sh>4?"needs "+(2*sh-4)+" more: hire or overtime":"enough"}</td></tr>`;
+  $("o_bind").innerHTML=runway<cycG?verdict("no","CASH",`Fixed costs eat ${kfmt(burn+prem)} a week, and a typical gearbox test only pays its balance about <b>${cycG.toFixed(0)} weeks</b> after it starts. ${kfmt(T.cash)} lasts <b>${runway.toFixed(1)} weeks</b>, so the pump rig's short tests and advances carry the lab at first. Keep spare purchases to the cheap parts and line up a loan before buying anything big.`)
+    :verdict(runway<cycG*1.6?"mid":"ok",runway<cycG*1.6?"TIGHT":"CAPACITY",`Cash covers <b>${runway.toFixed(1)} weeks</b> of fixed cost against a gearbox cash cycle of about ${cycG.toFixed(0)} weeks. ${runway<cycG*1.6?"Enough to start, not enough to absorb a long wait for a motor. Hold one cheap spare of each kind.":"The limit is rig hours: fill both rigs and keep them running."}`);
+
+  /* 2 unit economics */
+  const r2=(n,a,b,cls)=>`<tr class="${cls||""}"><td>${n}</td><td>${money(a)}</td><td>${money(b)}</td></tr>`;
+  $("o_unit").innerHTML=`<tr><th>Per rig hour</th><th>Gearbox rig</th><th>Pump rig</th></tr>
+    ${r2("Price (with setup time)",uG.price,uP.price,"hi")}${r2("Power",uG.power,uP.power)}${r2("Parts (price ÷ MTTF)",uG.parts,uP.parts)}${r2("Shift premium",uG.prem,uP.prem)}
+    ${r2("Running cost",uG.variable,uP.variable,"sum")}${r2("Labour share",uG.labour,uP.labour)}${r2("Rent share",uG.rent,uP.rent)}${r2("Calibration",uG.cal,uP.cal)}
+    ${r2("Full cost",uG.cost,uP.cost,"sum")}<tr class="sum"><td>Margin</td><td class="${uG.margin>=0?"pos":"neg"}">${money(uG.margin)}</td><td class="${uP.margin>=0?"pos":"neg"}">${money(uP.margin)}</td></tr>`;
+  const contrib=(uG.price-uG.variable+uP.price-uP.variable)/2,beU=(burn+prem)/(contrib*capH);
+  const profitAt=(s2,uu)=>{const a=unit("GB","gbe",s2,1),b=unit("PP","pump",s2,1);return (a.price-a.variable+b.price-b.variable)*s2*C.SHIFT_H*uu-fixedWk(s2)};
+  $("o_unitk").innerHTML=kpi(money(contrib),"Contribution/rig hour","price minus running cost")+kpi(beU<=1?P100(beU):"never","Break-even utilisation",`at ${sh} shift${sh>1?"s":""}`)
+    +kpi(kfmt(profitAt(sh,u)),"Profit/week at "+T.util+"%","both rigs")+kpi(kfmt(profitAt(sh,u)*T.weeks),"Over "+T.weeks+" weeks","if utilisation holds");
+  const xs=[];for(let x=0;x<=100;x+=5)xs.push(x);
+  const ser=[1,2,3].map((n,i)=>({n:n+" shift"+(n>1?"s":""),c:"--s"+(i+1),ys:xs.map(x=>profitAt(n,x/100)),w:n===sh?3:2}));
+  const be=[1,2,3].map(n=>{const a=unit("GB","gbe",n,1),b=unit("PP","pump",n,1);return fixedWk(n)/((a.price-a.variable+b.price-b.variable)*n*C.SHIFT_H)*100});
+  lineChart($("c_util"),{H:220,xs,series:ser,xf:v=>v+"%",yf:kfmt,xticks:[0,25,50,75,100],aria:"Weekly profit against utilisation for one, two and three shifts",
+    dots:be[sh-1]<=100?[{x:be[sh-1],y:0,t:"Break-even "+Math.round(be[sh-1])+"%"}]:[],
+    read:i=>`At ${xs[i]}%: 1 shift ${kfmt(ser[0].ys[i])} · 2 shifts ${kfmt(ser[1].ys[i])} · 3 shifts ${kfmt(ser[2].ys[i])} a week`,
+    def:`Break-even utilisation: 1 shift ${be[0]>100?"never":Math.round(be[0])+"%"}, 2 shifts ${Math.round(be[1])}%, 3 shifts ${Math.round(be[2])}%. Tap the chart to read a point.`});
+
+  /* 3 probability (analytic part; MC comparison filled in later) */
+  const wm=[1,2,3].map(weekModel);
+  $("o_wk").innerHTML=`<tr><th>Shifts</th><th>Hours</th><th>Trips/wk</th><th>Lost h</th><th>Profit/week</th></tr>`+
+    wm.map((m,i)=>`<tr class="${i+1===sh?"hi":""}"><td>${i+1} shift${i?"s":""}</td><td>${2*m.H}</td><td>${m.fails.toFixed(2)}</td><td>${m.lost.toFixed(1)}</td><td>${kfmt(m.mu)} ± ${kfmt(m.sd)}</td></tr>`).join("");
+  renderCLT();
+
+  /* 4 reliability */
+  const hs=[];for(let h=0;h<=2000;h+=25)hs.push(h);
+  const Rsys=(rt,h,age)=>RIG[rt].comps.reduce((a,c)=>a*wbR(age*partEta(c)+h,partB(c),partEta(c))/wbR(age*partEta(c),partB(c),partEta(c)),1);
+  $("o_rel").innerHTML=`<tr><th>Part</th><th>β</th><th>η</th><th>MTTF</th><th>R(H) new</th><th>R(H) at ½η</th></tr>`+
+    CK.map(c=>{const b=partB(c),e=partEta(c),a=0.5*e;return `<tr class="${c===T.comp?"hi":""}"><td>${COMP[c].short}</td><td>${b.toFixed(1)}</td><td>${Math.round(e)}</td><td>${Math.round(partMTTF(c))}</td><td>${P100(wbR(T.H,b,e))}</td><td>${P100(wbR(a+T.H,b,e)/wbR(a,b,e))}</td></tr>`}).join("")+
+    `<tr class="sum"><td>Gearbox rig</td><td></td><td></td><td>${Math.round(sysMTBF("GB"))}</td><td>${P100(Rsys("GB",T.H,0))}</td><td>${P100(Rsys("GB",T.H,0.5))}</td></tr><tr class="sum"><td>Pump rig</td><td></td><td></td><td>${Math.round(sysMTBF("PP"))}</td><td>${P100(Rsys("PP",T.H,0))}</td><td>${P100(Rsys("PP",T.H,0.5))}</td></tr>`;
+  const relS=[{n:"Gearbox rig, new parts",c:"--s1",ys:hs.map(h=>Rsys("GB",h,0))},{n:"Gearbox rig, parts at ½η",c:"--s2",ys:hs.map(h=>Rsys("GB",h,0.5))},{n:COMP[T.comp].short+" alone (sliders)",c:"--s3",ys:hs.map(h=>wbR(h,T.beta,T.eta))}];
+  lineChart($("c_rel"),{H:220,xs:hs,series:relS,xf:v=>v+" h",yf:v=>Math.round(v*100)+"%",ymin:0,ymax:1,xticks:[0,500,1000,1500,2000],marks:[{x:T.H,t:"H = "+T.H+" h"}],aria:"Probability a test finishes without a rig failure against test length",
+    read:i=>`${hs[i]} h: new rig ${P100(relS[0].ys[i])} · worn rig ${P100(relS[1].ys[i])} · ${COMP[T.comp].short.toLowerCase()} ${P100(relS[2].ys[i])}`,def:"Tap the chart to read a test length."});
+  const r1000=Rsys("GB",1000,0);
+  $("o_relv").innerHTML=verdict(r1000<0.5?"no":"mid",r1000<0.5?"RISK":"PLAN",`A 1,000 h gearbox test on a new rig finishes clean only <b>${P100(r1000)}</b> of the time (${P100(Rsys("GB",1000,0.5))} with half-worn parts). Long endurance tests will see trips, so what matters is how fast the rig comes back: spares and monitoring, sections 5 to 7.${T.beta<=1?" With β ≤ 1 this part does not wear out, so replacing it early buys nothing.":""}`);
+
+  /* 5 availability */
+  const cov=T.cover/100,det=T.det/100;
+  const cases=[["No spares",0,false],["Your spares cover",cov,false],["Spares + monitoring",cov,true]].map(([n,c,cm])=>Object.assign({n},availability("GB",sh,c,det,cm)));
+  $("o_av").innerHTML=`<tr><th>Gearbox rig</th><th>MTBF</th><th>MTTR</th><th>Delay</th><th>A</th><th>Lost h/yr</th></tr>`+
+    cases.map(x=>`<tr><td>${x.n}</td><td>${Math.round(x.mtbf)}</td><td>${x.mttr.toFixed(1)}</td><td>${x.delay.toFixed(0)}</td><td>${(x.A*100).toFixed(1)}%</td><td>${Math.round(H*52*(1-x.A))}</td></tr>`).join("");
+  const gain=(cases[1].A-cases[0].A)*H*52*uG.margin,gainCM=(cases[2].A-cases[1].A)*H*52*(uG.price-uG.variable);
+  $("o_avk").innerHTML=kpi((cases[0].A*100).toFixed(0)+"%","Availability, no spares","waits dominate")+kpi((cases[2].A*100).toFixed(0)+"%","With spares + CM",`${Math.round(H*52*(cases[2].A-cases[0].A))} h/yr recovered`)
+    +kpi(kfmt(gainCM),"Monitoring, value/yr","per rig, vs "+kfmt(C.CM_COST)+" to fit")+kpi((cases[1].delay/(cases[1].mtbf+cases[1].mttr+cases[1].delay)*100).toFixed(1)+"%","Time waiting for parts","with your cover");
+
+  /* 6 spares sizing */
+  const c6=T.comp,mt=partMTTF(c6),Hr=H*T.rigsUsing,lamL=Hr*T.lead/mt,fy=Hr*52/mt,price=COMP[c6].price;
+  const Ss=[0,1,2,3,4,5],sp=Ss.map(S=>{const pOut=S===0?1:1-poisCdf(S-1,lamL),hold=S*price*C.HOLD*52,out=fy*pOut*(T.lead*H*T.downCost+price*(C.EMERG-1));return{S,pOut,hold,out,tot:hold+out}});
+  const best=sp.reduce((a,b)=>b.tot<a.tot?b:a);
+  $("o_sp").innerHTML=`<tr><th>Spares</th><th>P(empty)</th><th>Holding/yr</th><th>Waiting/yr</th><th>Total/yr</th></tr>`+sp.slice(0,5).map(x=>`<tr class="${x===best?"hi":""}"><td>${x.S}</td><td>${P100(x.pOut)}</td><td>${kfmt(x.hold)}</td><td>${kfmt(x.out)}</td><td>${kfmt(x.tot)}</td></tr>`).join("");
+  lineChart($("c_sp"),{H:200,xs:Ss,series:[{n:"Total",c:"--s1",ys:sp.map(x=>x.tot),w:3},{n:"Holding",c:"--s2",ys:sp.map(x=>x.hold)},{n:"Waiting for parts",c:"--s3",ys:sp.map(x=>x.out)}],xf:v=>v+" held",yf:kfmt,xticks:Ss,
+    dots:[{x:best.S,y:best.tot,t:"Best: "+best.S}],aria:"Yearly spares cost against number held",read:i=>`${Ss[i]} held: total ${kfmt(sp[i].tot)} · holding ${kfmt(sp[i].hold)} · waiting ${kfmt(sp[i].out)} · shelf empty ${P100(sp[i].pOut)} of failures`,def:"Tap to compare stock levels."});
+  $("o_spv").innerHTML=verdict(best.S>0?"ok":"mid",best.S+" HELD",`${COMP[c6].name}: about ${fy.toFixed(1)} failures a year across ${T.rigsUsing} rig${T.rigsUsing>1?"s":""} and λL = ${lamL.toFixed(2)} during a ${T.lead}-week lead. Holding <b>${best.S}</b> minimises yearly cost at ${kfmt(best.tot)}${best.S?`, against ${kfmt(sp[0].tot)} with none`:""}.`);
+
+  /* 7 preventive replacement */
+  const b7=T.beta,e7=T.eta,rm=repMean(c6),Cp=price+C.PLANNED_F*rm*T.downCost,Cf=price*(1+(1-cov)*(C.EMERG-1))+rm*T.downCost+(1-cov)*leadMean(c6)*H*T.downCost;
+  const Ts=[];for(let k=5;k<=200;k+=5)Ts.push(k/100*e7);
+  const crate=Tm=>{const n=60,dx=Tm/n;let I=0;for(let i=0;i<n;i++){const a=i*dx,b=a+dx;I+=dx/6*(wbR(a,b7,e7)+4*wbR((a+b)/2,b7,e7)+wbR(b,b7,e7))}const R=wbR(Tm,b7,e7);return (Cp*R+Cf*(1-R))/I};
+  const cr7=Ts.map(crate),rtf=Cf/(e7*gammaFn(1+1/b7)),ib=cr7.indexOf(Math.min(...cr7)),Topt=Ts[ib],saving=1-cr7[ib]/rtf;
+  $("o_pmk").innerHTML=kpi(money(Cp),"Planned swap C_p","part + half repair")+kpi(money(Cf),"Failure C_f","part, repair, wait")+kpi(saving>0.02?Math.round(Topt).toLocaleString("en-IN")+" h":"run to failure","Best replacement age",saving>0.02?Math.round(Topt/e7*100)+"% of η":"no gain from early swaps")+kpi(P100(Math.max(0,saving)),"Saving vs run-to-failure","per running hour");
+  lineChart($("c_pm"),{H:210,xs:Ts,series:[{n:"Replace at age T",c:"--s1",ys:cr7,w:3},{n:"Run to failure",c:"--s2",ys:Ts.map(()=>rtf),dash:true}],xf:v=>Math.round(v/e7*100)+"% η",yf:v=>"₹"+Math.round(v),ymin:0,ymax:Math.min(Math.max(...cr7),rtf*3),xticks:[Ts[0],e7*0.5,e7,e7*1.5,Ts[Ts.length-1]],
+    dots:saving>0.02?[{x:Topt,y:cr7[ib],t:"Best "+Math.round(Topt/e7*100)+"% η"}]:[],aria:"Cost per running hour against replacement age",read:i=>`Replace at ${Math.round(Ts[i]).toLocaleString("en-IN")} h (${Math.round(Ts[i]/e7*100)}% η): ₹${cr7[i].toFixed(1)}/h vs ₹${rtf.toFixed(1)}/h run to failure`,def:"Tap to read a replacement age."});
+  const pol=saving<0.02?"Off":Topt/e7<0.7?"At 60%":"At 80%";
+  $("o_pmv").innerHTML=verdict(saving>0.02?"ok":"mid",pol.toUpperCase(),saving>0.02?`For the ${COMP[c6].short.toLowerCase()} a failure costs ${(Cf/Cp).toFixed(1)}× a planned swap and β = ${b7.toFixed(1)}, so swapping at about ${Math.round(Topt/e7*100)}% of η saves ${P100(saving)}. The game's nearest policy is <b>${pol}</b>, and it only acts when a spare is in stores.`:`β = ${b7.toFixed(1)} and C<sub>f</sub>/C<sub>p</sub> = ${(Cf/Cp).toFixed(1)}: early swaps throw away good life without saving enough. Run this part to failure and keep a spare instead.`);
+
+  /* 8 bid pricing */
+  const bx=[];for(let x=70;x<=140;x+=1)bx.push(x);
+  const mkt=T.bidRate*T.bidH+C.SETUP_FEE,fullC=T.cost*(T.bidH+C.SETUP_H),varC=uG.variable*(T.bidH+C.SETUP_H);
+  const em=(x,cst)=>winP(x/100*mkt,mkt,T.rep/100)*(x/100*mkt-cst);
+  const busyY=bx.map(x=>em(x,fullC)),idleY=bx.map(x=>em(x,varC));
+  const ib1=busyY.indexOf(Math.max(...busyY)),ib2=idleY.indexOf(Math.max(...idleY));
+  $("o_bidk").innerHTML=kpi(bx[ib1]+"%","Best bid, full cost",`win ${P100(winP(bx[ib1]/100*mkt,mkt,T.rep/100))}, ${kfmt(busyY[ib1])} expected`)+kpi(bx[ib2]+"%","Best bid, idle rig",`win ${P100(winP(bx[ib2]/100*mkt,mkt,T.rep/100))}, ${kfmt(idleY[ib2])} expected`);
+  lineChart($("c_bid"),{H:210,xs:bx,series:[{n:"Rig busy (full cost)",c:"--s1",ys:busyY,w:3},{n:"Rig idle (running cost only)",c:"--s3",ys:idleY}],xf:v=>v+"%",yf:kfmt,xticks:[70,85,100,115,130,140],
+    dots:[{x:bx[ib1],y:busyY[ib1],t:"Best "+bx[ib1]+"%"}],aria:"Expected margin against bid as a share of market",read:i=>`Bid ${bx[i]}% (${kfmt(bx[i]/100*mkt)}): win ${P100(winP(bx[i]/100*mkt,mkt,T.rep/100))} · expected ${kfmt(busyY[i])} busy, ${kfmt(idleY[i])} idle`,def:`Market price ${kfmt(mkt)} for ${T.bidH} h. Tap to read a bid.`});
+
+  /* 9 capacity */
+  const ck=T.capType,rt9=TEST[ck].rig,Aav=availability(rt9,sh,T.spares?cov:0,det,!!T.cm).A,u9=unit(rt9,ck,sh,1);
+  const dem=[];for(let d=10;d<=200;d+=10)dem.push(d);
+  const qs=[1,2,3].map(n=>{const A=availability(rt9,n,T.spares?cov:0,det,!!T.cm).A;return dem.map((d,i)=>queueSim(ck,d,n,A,1000+i*7+n))});
+  const now=[1,2,3].map(n=>queueSim(ck,T.demand,n,availability(rt9,n,T.spares?cov:0,det,!!T.cm).A,4242+n));
+  $("o_cap").innerHTML=`<tr><th>Shifts</th><th>Capacity</th><th>Utilisation</th><th>Wait</th><th>P(late)</th><th>Profit/wk</th></tr>`+
+    now.map((q,i)=>{const n=i+1,uu=unit(rt9,ck,n,1),pw=q.served*(uu.price-uu.variable)-C.PREM[n]-q.lam*q.pen*TEST[ck].rate*meanH(ck);return `<tr class="${n===sh?"hi":""}"><td>${n}</td><td>${Math.round(n*C.SHIFT_H*Aav)} h</td><td>${P100(q.util)}</td><td>${q.wait.toFixed(1)} wk</td><td>${P100(q.pLate)}</td><td>${kfmt(pw)}</td></tr>`}).join("");
+  lineChart($("c_cap"),{H:210,xs:dem,series:[1,2,3].map((n,i)=>({n:n+" shift"+(n>1?"s":""),c:"--s"+(i+1),ys:qs[i].map(q=>q.pLate),w:n===sh?3:2})),xf:v=>v+" h",yf:v=>Math.round(v*100)+"%",ymin:0,ymax:1,xticks:[10,50,100,150,200],
+    marks:[{x:T.demand,t:"You: "+T.demand+" h"}],aria:"Chance of a late report against work won per week",read:i=>`${dem[i]} h/week won: late ${P100(qs[0][i].pLate)} on 1 shift · ${P100(qs[1][i].pLate)} on 2 · ${P100(qs[2][i].pLate)} on 3`,def:"Tap to read a demand level."});
+  const q2=now[sh-1];
+  $("o_capv").innerHTML=verdict(q2.pLate>0.25?"no":q2.pLate>0.1?"mid":"ok",q2.pLate>0.25?"OVERLOAD":q2.pLate>0.1?"TIGHT":"OK",`At ${T.demand} h a week won on the ${RIG[rt9].short.toLowerCase()} rig with ${sh} shift${sh>1?"s":""}, utilisation is <b>${P100(q2.util)}</b> and <b>${P100(q2.pLate)}</b> of reports go late. ${q2.pLate>0.1&&sh<3?`A further shift cuts that to ${P100(now[sh].pLate)}; otherwise bid higher so you win less.`:q2.util<0.6?"The rig has room: bid lower or accept more fixed offers.":"This is a sound load."}`);
+
+  /* 10, 11, 12 need the Monte Carlo */
+  $("o_mcp").innerHTML=`<p>The simulated player bids at ${T.markup}% of market on every RFQ it can finish before the deadline, accepts fixed offers within 7% of market, runs ${sh} shift${sh>1?"s":""}, hires a technician when cover runs short, trains staff when cash allows, borrows when cash drops below ${kfmt(T.reserve*0.4)}, and follows the spares, replacement and calibration choices below. Each run starts from ${kfmt(T.cash)} and ${T.rep}% reputation.</p>`;
+  $("o_expp").innerHTML=`<p>Two runs per seed with the same random numbers: one stays as it is, one follows the rule below. That pairing removes most of the luck from the comparison, so the share of seeds where the rule wins is a fair test. Section 9 shows the trigger: when RFQs are being turned away, capacity is the limit.</p>`;
+  startMC(renderMC);
+}
+function renderCLT(){
+  const sh=T.shifts,m=weekModel(sh),N=T.weeks,mu=N*m.mu,sg=Math.sqrt(N)*m.sd,pT=1-normCdf((T.target-mu)/(sg||1));
+  const ready=MC.done&&MC.key===mcKey();const ends=ready?MC.base.map(o=>o.end):[];
+  $("o_clt").innerHTML=kpi(kfmt(mu),N+" weeks, theory","± "+kfmt(sg)+" (1σ), full order book")+kpi(ready?kfmt(pct(ends,.5)):"…",N+" weeks, simulated","median of "+T.runs+" runs")
+    +kpi(P100(pT),"P(≥ target), theory","normal approximation")+kpi(ready?P100(ends.filter(v=>v>=T.target).length/ends.length):"…","P(≥ target), simulated","same engine as the game");
+  $("o_cltnote").textContent=ready?`The theory column assumes both rigs always have work and counts only failure downtime. The simulation also has to win the work: bids lose, RFQs miss the rig types you own, tests wait for setup, cash arrives weeks after reports, and the first weeks start nearly empty. The gap between ${kfmt(mu)} and ${kfmt(pct(ends,.5))} is the cost of selling capacity rather than just running it.`:"";
+}
+function renderMC(){
+  if(tab!=="tech"||!$("c_fan"))return;
+  renderCLT();
+  const B=MC.base,X=MC.exp,N=T.weeks,wk=[];for(let w=0;w<N;w++)wk.push(w+1);
+  const col=(runs,f)=>wk.map((_,w)=>runs.map(o=>f(o,w)));
+  const ncs=col(B,(o,w)=>o.nc[w]),p10=ncs.map(v=>pct(v,.1)),p50=ncs.map(v=>pct(v,.5)),p90=ncs.map(v=>pct(v,.9));
+  lineChart($("c_fan"),{H:230,xs:wk,series:[{n:"Median",c:"--s1",ys:p50,w:3}],band:{lo:p10,hi:p90,c:"--s1",n:"8 in 10 runs"},xf:v=>"W"+Math.round(v),yf:kfmt,xticks:[1,Math.round(N/2),N],
+    hlines:[{y:T.cash,t:"Start"}],aria:"Cash minus loan by week, median and 80 percent band",read:i=>`Week ${wk[i]}: median ${kfmt(p50[i])}, 80% between ${kfmt(p10[i])} and ${kfmt(p90[i])}`,def:`Week ${N}: median ${kfmt(p50[N-1])}. Tap to read a week.`});
+  const per=N>52?8:4,P=Math.floor(N/per),pt=T.target*per/N;let prev=null,rows="";
+  for(let k=0;k<P;k++){const inc=B.map(o=>{let s=0;for(let w=k*per;w<(k+1)*per;w++)s+=o.rev[w];return s}),pr=B.map(o=>{let s=0;for(let w=k*per;w<(k+1)*per;w++)s+=o.profit[w];return s});
+    const mi=pct(inc,.5),mp=pr.reduce((a,v)=>a+v,0)/pr.length,ma=inc.reduce((a,v)=>a+v,0)/inc.length,g=prev==null||prev<1?"—":((ma/prev-1)*100>=0?"+":"")+Math.round((ma/prev-1)*100)+"%";prev=ma;
+    rows+=`<tr><td>Weeks ${k*per+1}–${(k+1)*per}</td><td>${kfmt(mi)}</td><td>${kfmt(mp)}</td><td>${g}</td><td>${P100(pr.filter(v=>v>=pt).length/pr.length)}</td><td>${P100(pr.filter(v=>v<0).length/pr.length)}</td></tr>`}
+  $("o_per").innerHTML=`<tr><th>Period</th><th>Income (median)</th><th>Profit (mean)</th><th>Income growth</th><th>P(≥ ${kfmt(pt)})</th><th>P(loss)</th></tr>`+rows;
+  const ends=B.map(o=>o.end);barHist($("c_hist"),ends,T.target,kfmt);
+  const bank=B.filter(o=>o.bank>=0).length/B.length;
+  $("o_mck").innerHTML=kpi(kfmt(pct(ends,.5)),"Median result",`P10 ${kfmt(pct(ends,.1))} · P90 ${kfmt(pct(ends,.9))}`)+kpi(P100(bank),"Bankrupt","cash below "+money(-C.OVERDRAFT))
+    +kpi((B.reduce((a,o)=>a+o.fails,0)/B.length).toFixed(1),"Trips per run","part failures")+kpi((B.reduce((a,o)=>a+o.late,0)/B.length).toFixed(1),"Late reports per run","");
+  /* 11 expansion */
+  const trig=X.filter(o=>o.expAt>=0||T.expType==="CM"),tw=X.map(o=>o.expAt).filter(x=>x>=0);
+  let beat=0,pay=0;const diff=[];for(let i=0;i<X.length;i++){const d=X[i].end-B[i].end;diff.push(d);if(d>0)beat++;if(X[i].nc[N-1]>=B[i].nc[N-1])pay++}
+  const capx=T.expType==="CM"?2*C.CM_COST:RIG[T.expType].price;
+  $("o_exp").innerHTML=kpi(P100(trig.length/X.length),T.expType==="CM"?"Fitted":"Rule triggers",tw.length?"median week "+Math.round(pct(tw,.5)+1):T.expType==="CM"?"week 1":"never")
+    +kpi(P100(beat/X.length),"Beats not expanding","net position, same seeds")+kpi(P100(pay/X.length),"Cash paid back","cash − loan ahead by week "+N)
+    +kpi(kfmt(pct(diff,.5)),"Median gain",`outlay ${kfmt(capx)}`)+kpi(P100(X.filter(o=>o.bank>=0).length/X.length),"Bankrupt with rule","vs "+P100(bank)+" without");
+  const e50=wk.map((_,w)=>pct(X.map(o=>o.nc[w]),.5));
+  lineChart($("c_exp"),{H:220,xs:wk,series:[{n:"Stay as is",c:"--s1",ys:p50},{n:"With the rule",c:"--s2",ys:e50,w:3}],xf:v=>"W"+Math.round(v),yf:kfmt,xticks:[1,Math.round(N/2),N],
+    marks:tw.length>X.length/2?[{x:pct(tw,.5)+1,t:"Buys"}]:[],aria:"Median cash minus loan with and without the expansion rule",read:i=>`Week ${wk[i]}: stay ${kfmt(p50[i])} · with rule ${kfmt(e50[i])}`,def:`Week ${N}: stay ${kfmt(p50[N-1])}, with rule ${kfmt(e50[N-1])}.`});
+  renderSWOT(ends,bank,beat/X.length);
+}
+function renderSWOT(ends,bank,beat){
+  const sh=T.shifts,uG=unit("GB","gbe",sh,T.util/100),uP=unit("PP","pump",sh,T.util/100),A0=availability("GB",sh,0,0,false).A,A2=availability("GB",sh,T.cover/100,T.det/100,true).A;
+  const r1000=RIG.GB.comps.reduce((a,c)=>a*wbR(1000,partB(c),partEta(c)),1),acc=Math.round((C.ACC_PREM-1)*100);
+  const nm={BR:"a bearing test rig",EC:"an environmental chamber",GB:"a second gearbox rig",PP:"a second pump rig",CM:"vibration monitoring"}[T.expType];
+  $("o_swot").innerHTML=`
+   <div class="S"><h4>Strengths</h4><ul><li>Margin of ${money(uP.margin)} per pump rig hour and ${money(uG.margin)} per gearbox rig hour at ${T.util}% use</li><li>Advances of up to 40% fund work in progress</li><li>Median ${T.weeks}-week result ${kfmt(pct(ends,.5))} in simulation</li><li>Reputation lifts RFQ flow and the win curve</li></ul></div>
+   <div class="W"><h4>Weaknesses</h4><ul><li>Only ${P100(r1000)} of 1,000 h gearbox tests run trip-free on a new rig</li><li>Availability without spares is ${(A0*100).toFixed(0)}%</li><li>Fixed cost ${kfmt(fixedWk(sh)+2*C.PREM[sh])}/week runs whether rigs work or not</li><li>Payments trail reports by up to 10 weeks</li></ul></div>
+   <div class="O"><h4>Opportunities</h4><ul><li>Spares and monitoring raise availability to ${(A2*100).toFixed(0)}%</li><li>Accredited RFQs pay about ${acc}% more</li><li>${nm[0].toUpperCase()+nm.slice(1)} beats standing still in ${P100(beat)} of paired runs</li><li>A third shift adds ${C.SHIFT_H} h per rig for ${money(C.PREM[3])}</li></ul></div>
+   <div class="T"><h4>Threats</h4><ul><li>Bankruptcy in ${P100(bank)} of simulated runs</li><li>Lead times of up to 6 weeks for motors and sensors</li><li>Expired calibration: ${Math.round(C.QA_CATCH*100)}% chance a client rejects the hours</li><li>Night shifts multiply operator errors by ${C.ERR_NIGHT}</li></ul></div>`;
+}
+
+/* ---------- boot ---------- */
+function boot(){
+  applyTheme();
+  const au=LS.get(K_AUTO);if(au&&au.v===1){s=au;view="title"}
+  render();if(tab==="tech")renderTech();
+}
+boot();
+</script>
+</body>
+</html>

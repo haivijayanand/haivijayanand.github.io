@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<!--
+TOOL: Chai & Tiffin Shop
+FAMILY: games
+VERSION: 1.0.0
+DATE: 2026-10-02
+CHAT: Business sim game set (claude.ai, 2026-10-02)
+CHANGES: 1.0.0 - first release: roadside tea-and-tiffin shop sim with 3 service slots, shared-ingredient recipes, Erlang C queues, khata credit, LPG lead time, loans, saves and a Tech discussion tab (queueing, newsvendor, reorder point, credit, Monte Carlo, expansion)
+STATUS: playable
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f6b43">
+<title>Chai &amp; Tiffin Shop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Hind:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one narrow steel-and-leaf column; sticky status bar; one phase at a time; thumb-sized controls */
+:root{
+  --bg:#e4eaed; --card:#f7f9fa; --ink:#14251d; --muted:#56675f; --line:#c6d1d4; --chip:#e9eef0; --steel:#8b989d; --steel-hi:#ffffff;
+  --leaf:#1f6b43; --leaf-deep:#14492d; --leaf-ink:#ffffff; --tur:#e3a21a; --tur-deep:#b07a06; --tur-ink:#2b1d00;
+  --bad:#b5381f; --good:#1d7a48; --time:#2c6a7e; --shade:rgba(20,37,29,.12);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --f-display:"Baloo 2","Trebuchet MS",system-ui,sans-serif; --f-body:"Hind","Segoe UI",system-ui,sans-serif; --f-num:"JetBrains Mono",ui-monospace,"Cascadia Mono",monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#08130e; --card:#0f1f18; --ink:#e2ede7; --muted:#93a99f; --line:#22372d; --chip:#152820; --steel:#6f8079; --steel-hi:#a9b8b1;
+  --leaf:#3a9c64; --leaf-deep:#1f6b43; --leaf-ink:#ffffff; --tur:#f0b42c; --tur-deep:#a87a10; --tur-ink:#231700;
+  --bad:#ff7a5c; --good:#56c487; --time:#79bcd0; --shade:rgba(0,0,0,.35);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#08130e; --card:#0f1f18; --ink:#e2ede7; --muted:#93a99f; --line:#22372d; --chip:#152820; --steel:#6f8079; --steel-hi:#a9b8b1;
+  --leaf:#3a9c64; --leaf-deep:#1f6b43; --leaf-ink:#ffffff; --tur:#f0b42c; --tur-deep:#a87a10; --tur-ink:#231700;
+  --bad:#ff7a5c; --good:#56c487; --time:#79bcd0; --shade:rgba(0,0,0,.35);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; color-scheme:dark}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 var(--f-body);-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+.wrap{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:0 40px}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+/* tabs */
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--chip);border:1px solid var(--line);border-radius:14px;padding:4px;margin-block:12px 4px}
+.tabs button{border:0;background:transparent;border-radius:10px;min-height:44px;padding:8px 6px;font-weight:700;cursor:pointer;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px var(--shade)}
+/* status bar */
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px 10px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.bar .row{display:flex;align-items:center;gap:10px}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--f-display);font-weight:800;font-size:21px;line-height:1;flex:1;min-width:0;white-space:nowrap;overflow:hidden}
+.brand svg{flex:none;width:30px;height:30px}
+.brand em{font-style:normal;color:var(--tur-deep)}
+.iconbtn{border:1px solid var(--line);background:var(--card);border-radius:12px;min-height:44px;padding:8px 14px;font-weight:700;cursor:pointer}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 10px;min-width:0}
+.stat b{display:block;font-family:var(--f-num);font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.meter{height:6px;background:var(--chip);border-radius:6px;margin-top:4px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--leaf);border-radius:6px}
+.meter i.mid{background:var(--tur)} .meter i.low{background:var(--bad)}
+section{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.card.steel{background:linear-gradient(160deg,var(--card),var(--chip))}
+h2{font-family:var(--f-display);font-weight:800;font-size:24px;margin:0;text-wrap:balance;line-height:1.1}
+h3{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)} .small{font-size:14px} .tiny{font-size:12.5px}
+.pos{color:var(--good)} .neg{color:var(--bad)}
+.wx{display:flex;gap:14px;align-items:center}
+.wx svg{flex:none;width:54px;height:54px}
+.event{border-left:4px solid var(--tur);padding:8px 12px;background:var(--chip);border-radius:0 10px 10px 0;margin-top:10px;font-size:15px}
+.event.bad{border-left-color:var(--bad)}
+.stock{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chipx{background:var(--chip);border-radius:10px;padding:6px 8px;text-align:center;min-width:0}
+.chipx b{display:block;font-family:var(--f-num);font-size:16px;white-space:nowrap}
+.chipx span{display:block;font-size:12px;color:var(--muted);line-height:1.2}
+.chipx.low b{color:var(--bad)}
+.step{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:8px;border-top:1px dashed var(--line)}
+.step:first-of-type{border-top:0}
+.step .txt{min-width:0}
+.ctl{display:flex;align-items:center;gap:6px;flex:none}
+.ctl button{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--chip);font-size:22px;font-weight:700;cursor:pointer}
+.ctl output{min-width:54px;text-align:center;font-family:var(--f-num);font-size:17px;font-weight:600}
+.item{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center;padding-block:8px;border-top:1px dashed var(--line)}
+.item:first-of-type{border-top:0}
+.item .txt{min-width:0}
+.tog{min-width:56px;min-height:44px;border-radius:12px;border:2px solid var(--line);background:var(--chip);font-weight:700;cursor:pointer;font-size:14px}
+.tog[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf);color:var(--leaf-ink)}
+.item.off .txt,.item.off .ctl{opacity:.45}
+.tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:0 5px;margin-right:3px;color:var(--muted)}
+.big{display:block;width:100%;border:0;border-radius:16px;min-height:56px;padding:14px 16px;font-family:var(--f-display);font-weight:800;font-size:21px;line-height:1.15;background:var(--tur);color:var(--tur-ink);cursor:pointer;box-shadow:0 4px 0 var(--tur-deep)}
+.big small{display:block;font-family:var(--f-body);font-weight:600;font-size:13px;opacity:.85}
+.big:active{transform:translateY(3px);box-shadow:0 1px 0 var(--tur-deep)}
+.big.alt{background:var(--leaf);color:var(--leaf-ink);box-shadow:0 4px 0 var(--leaf-deep)}
+.big.alt:active{box-shadow:0 1px 0 var(--leaf-deep)}
+.ghost{width:100%;border:1px solid var(--line);background:var(--card);border-radius:14px;min-height:46px;padding:10px 12px;font-weight:700;cursor:pointer}
+.ghost:disabled{opacity:.45;cursor:not-allowed}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.btnrow>*{flex:1 1 130px}
+details.card{padding:0}
+details.card>summary{list-style:none;cursor:pointer;min-height:48px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:700}
+details.card>summary::-webkit-details-marker{display:none}
+details.card>summary::after{content:"+";font-family:var(--f-num);font-size:20px;color:var(--muted)}
+details.card[open]>summary::after{content:"−"}
+details.card>summary .sum{font-weight:500;font-size:13px;color:var(--muted);text-align:right;flex:1;min-width:0}
+details.card>.in{padding:0 16px 14px}
+.seg{display:flex;gap:4px;background:var(--chip);border-radius:12px;padding:3px;flex-wrap:wrap}
+.seg button{flex:1 1 auto;border:0;background:transparent;border-radius:9px;min-height:40px;padding:6px 8px;font-weight:700;font-size:14px;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 2px var(--shade)}
+.segrow{display:flex;flex-direction:column;gap:4px;padding-block:8px;border-top:1px dashed var(--line)}
+.segrow:first-child{border-top:0}
+.segrow>span{font-weight:600;font-size:15px}
+/* narration */
+.log{font-family:var(--f-num);font-size:13.5px;display:flex;flex-direction:column;gap:9px}
+.log .h{display:grid;grid-template-columns:50px 1fr;gap:10px}
+.log .t{color:var(--time);font-weight:600}
+.log .q{font-family:var(--f-body);font-style:italic;color:var(--muted);font-size:14.5px;margin-top:2px}
+.log .warn{color:var(--bad)} .log .good{color:var(--good)}
+.log .slot{font-family:var(--f-display);font-weight:800;font-size:18px;color:var(--leaf);border-bottom:2px solid var(--tur);padding-top:6px}
+@keyframes pop{from{opacity:.2;transform:translateY(4px)}to{opacity:1;transform:none}}
+.log .h{animation:pop .3s ease-out}
+table{width:100%;border-collapse:collapse;font-size:15px}
+td{padding:6px 0;border-bottom:1px dashed var(--line);vertical-align:top}
+td:last-child{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:8px}
+tr.total td{font-weight:700;border-bottom:0;font-size:17px}
+tr.sub td{font-size:13px;color:var(--muted)}
+.notes p{margin-bottom:8px;padding-left:14px;border-left:3px solid var(--tur)}
+.title-card{text-align:center;padding:24px 16px}
+.title-card h1{font-family:var(--f-display);font-weight:800;font-size:44px;margin:4px 0;line-height:.98}
+.title-card h1 em{font-style:normal;color:var(--tur-deep)}
+.title-card svg.hero{width:96px;height:96px;display:block;margin:0 auto}
+.lenpick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lenpick button{border:2px solid var(--line);background:var(--chip);border-radius:12px;min-height:56px;padding:8px 4px;font-weight:700;cursor:pointer}
+.lenpick button[aria-pressed="true"]{border-color:var(--leaf);background:var(--leaf);color:var(--leaf-ink)}
+.lenpick button[aria-pressed="true"] .muted{color:inherit;opacity:.85}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet .panel{background:var(--bg);width:100%;max-width:560px;max-height:88%;overflow:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.slot{display:flex;gap:8px;align-items:center;padding-block:8px;border-top:1px dashed var(--line)}
+.slot:first-of-type{border-top:0}
+.slot .info{flex:1;min-width:0;font-size:14px}
+.slot button{border:1px solid var(--line);background:var(--chip);border-radius:10px;min-height:44px;padding:8px 12px;font-weight:700;cursor:pointer}
+.slot button:disabled{opacity:.4}
+textarea{width:100%;min-height:76px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);padding:8px;font-family:var(--f-num);font-size:12px}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;z-index:30;max-width:90%}
+.help p{margin-bottom:10px}
+/* tech */
+#tech{display:flex;flex-direction:column;gap:14px;padding-top:10px}
+#tech h2{font-size:22px}
+.sec-n{font-family:var(--f-num);font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.06em}
+.prose{display:flex;flex-direction:column;gap:8px;max-width:65ch}
+.fld{display:flex;flex-direction:column;gap:2px;padding-block:6px}
+.fld label{display:flex;justify-content:space-between;gap:10px;font-weight:600;font-size:15px}
+.fld output{font-family:var(--f-num);font-weight:600;white-space:nowrap}
+input[type=range]{width:100%;height:36px;accent-color:var(--leaf);margin:0}
+.flds{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));column-gap:18px}
+.tblwrap{overflow-x:auto;margin-inline:-4px;padding-inline:4px}
+.tt{width:100%;border-collapse:collapse;font-size:13px;min-width:0}
+.tt th{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:right;padding:6px 4px;border-bottom:1px solid var(--line);font-weight:700}
+.tt th:first-child,.tt td:first-child{text-align:left}
+.tt td{padding:6px 4px;border-bottom:1px dashed var(--line);text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.tt td:first-child{font-family:var(--f-body);white-space:normal}
+.tt td{white-space:normal}.tt.txt td:last-child,.tt.txt th:last-child{text-align:left;font-family:var(--f-body)}
+.tt tr.sum td{font-weight:700;border-bottom:0}
+.tt tr.hi td{background:var(--chip)}
+.formula{font-family:var(--f-num);font-size:12.5px;background:var(--chip);border-radius:10px;padding:10px 12px;line-height:1.7;overflow-x:auto;white-space:pre}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.kpi{background:var(--chip);border-radius:12px;padding:10px 12px;min-width:0}
+.kpi b{display:block;font-family:var(--f-num);font-size:20px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .small{display:block;font-size:12.5px}
+.verdict{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--chip);font-size:15px;margin-top:8px}
+.verdict i{flex:none;font-style:normal;font-family:var(--f-num);font-weight:600;font-size:12px;padding:2px 7px;border-radius:6px;margin-top:2px}
+.verdict.ok i{background:var(--leaf);color:var(--leaf-ink)}
+.verdict.no i{background:var(--bad);color:#fff}
+.verdict.mid i{background:var(--tur);color:var(--tur-ink)}
+.chart{position:relative;min-width:0}
+.chart svg{display:block;width:100%;height:auto;touch-action:pan-y}
+.chart .readout{font-family:var(--f-num);font-size:12.5px;min-height:2.6em;color:var(--ink);padding-top:4px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--muted);margin-bottom:4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:4px;border-radius:2px;display:inline-block}
+.legend i.dash{height:0;border-top:2px dashed var(--muted);border-radius:0;background:none}
+.legend i.band{height:10px;opacity:.3}
+svg .ax{font-family:var(--f-num);font-size:11px;fill:var(--muted)}
+svg .lab{font-family:var(--f-body);font-size:12px;font-weight:700;fill:var(--ink)}
+svg .grid{stroke:var(--line);stroke-width:1}
+svg .guide{stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3}
+.swot{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.swot>div{border-radius:14px;padding:12px;background:var(--chip);min-width:0}
+.swot h4{margin:0 0 6px;font-family:var(--f-display);font-size:20px;line-height:1}
+.swot ul{margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:5px}
+.swot .S h4{color:var(--good)} .swot .W h4{color:var(--bad)} .swot .O h4{color:var(--time)} .swot .T h4{color:var(--tur-deep)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{border:1px solid var(--line);background:var(--chip);border-radius:999px;min-height:40px;padding:5px 14px;font-weight:700;font-size:13px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.prog{height:6px;background:var(--chip);border-radius:6px;overflow:hidden;margin-top:6px}
+.prog i{display:block;height:100%;background:var(--tur);width:0}
+@media (max-width:440px){.swot{grid-template-columns:1fr}}
+:focus-visible{outline:3px solid var(--tur);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.log .h{animation:none}*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="tabs" role="tablist" aria-label="Sections"><button role="tab" data-act="tab" data-tab="play" id="tab_play">Play</button><button role="tab" data-act="tab" data-tab="tech" id="tab_tech">Tech discussion</button></nav>
+  <header class="bar" id="bar" hidden>
+    <div class="row">
+      <div class="brand" id="brand"></div>
+      <button class="iconbtn" data-act="menu" id="menuBtn">Menu</button>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+  <main id="main"></main>
+  <div id="tech" hidden></div>
+</div>
+<div class="sheet" id="sheet" hidden><div class="panel" id="panel" role="dialog" aria-modal="true" aria-label="Menu"></div></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<script>
+"use strict";
+const VERSION="1.0.0";
+/* ===== ENGINE START ===== */
+/* ---------- constants: every tunable number lives here ---------- */
+const K0={
+  START_CASH:5000, START_REP:0.3, START_HYG:0.6, START_MORALE:0.7, START_BATTER:4, START_VEG:2,
+  START_DRY:{teaP:0.5,coffeeP:0.3,sugar:3,rice:8,oil:4},
+  SLOT_ORDER:["breakfast","lunch","evening"],
+  SLOTS:{breakfast:{name:"Breakfast",hours:[7,8,9],span:"7–10"},lunch:{name:"Lunch",hours:[12,13,14],span:"12–15"},evening:{name:"Evening",hours:[16,17,18],span:"16–19"}},
+  ARR:{wd:{breakfast:[17,24,18],lunch:[10,16,10],evening:[13,22,19]},we:{breakfast:[9,13,15],lunch:[14,22,16],evening:[12,17,16]}},
+  PATIENCE:{wd:{breakfast:5,lunch:8,evening:7},we:{breakfast:9,lunch:11,evening:10}},
+  REP_ARR:[0.3,1.2],          // arrivals × (a + b·overall reputation)
+  MENU_ATTR:[0.45,0.55],      // arrivals × (a + b·menu attraction)
+  LOGIT_MID:1.15, LOGIT_W:0.12, P_MAX:0.95,
+  FAIR_REP:[0.85,0.3],        // fair price × (a + b·category reputation)
+  MU:20, COOK_MU:1.5,         // customers per hour per person at the counter; a cook multiplies it
+  WX:{sunny:{name:"Sunny",arr:1,tea:1,bajji:1,pat:0,w:55},cloudy:{name:"Cloudy",arr:0.96,tea:1.1,bajji:1.2,pat:1,w:27},rain:{name:"Rain",arr:0.72,tea:1.3,bajji:1.7,pat:3,w:18}},
+  WX_ORDER:["sunny","cloudy","rain"],
+  FORECAST_OK:0.75,
+  EVENT_P:0.16,
+  EVENTS:{
+    festival:{w:2,name:"Temple festival",text:"Temple festival today. Families and devotees all afternoon and evening.",arr:{breakfast:1,lunch:1.5,evening:1.7},items:{meals:1.2,bajji:1.2}},
+    strike:{w:2,name:"Bus strike",text:"Bus strike. The stand is empty and offices are half full.",arr:{breakfast:0.5,lunch:0.55,evening:0.5}},
+    cricket:{w:2,name:"Cricket on TV",text:"India are playing tonight. Your TV will draw a crowd in the evening.",arr:{breakfast:1,lunch:1,evening:1.4},items:{tea:1.3},pat:{evening:4}},
+    vip:{w:1,name:"VIP visit",text:"A VIP convoy closes the main road this morning. Word is the VIP may stop for tea in the evening.",arr:{breakfast:0.5,lunch:1,evening:1}},
+    rival:{w:1,name:"Competitor",text:"A new tea stall has opened across the road with launch offers. It will pull customers for a while.",arr:{breakfast:1,lunch:1,evening:1}},
+    inspector:{w:2,name:"Food inspector",hidden:true,arr:{breakfast:1,lunch:1,evening:1}}
+  },
+  RIVAL_DAYS:12, RIVAL_ARR:0.86, RIVAL_FAIR:0.93,
+  ITEMS:{
+    tea:{name:"Tea",cat:"tea",fair:12,step:1,slots:{breakfast:0.55,lunch:0.2,evening:0.6},use:{milk:0.06,teaP:0.003,sugar:0.012},gas:0.004,extra:0.5},
+    coffee:{name:"Coffee",cat:"tea",fair:18,step:1,slots:{breakfast:0.3,lunch:0.1,evening:0.25},use:{milk:0.08,coffeeP:0.006,sugar:0.012},gas:0.005,extra:0.5},
+    idli:{name:"Idli (2)",cat:"tiffin",fair:25,step:1,slots:{breakfast:0.4,evening:0.12},use:{batter:0.12},gas:0.006,extra:3},
+    vada:{name:"Vada (2)",cat:"tiffin",fair:20,step:1,slots:{breakfast:0.35,lunch:0.12,evening:0.3},use:{batter:0.07,oil:0.025},gas:0.008,extra:2,fried:1},
+    dosa:{name:"Dosa",cat:"tiffin",fair:40,step:2,slots:{breakfast:0.25,evening:0.15},use:{batter:0.15,oil:0.01},gas:0.012,extra:4,fried:0.3},
+    meals:{name:"Meals plate",cat:"tiffin",fair:80,step:5,slots:{lunch:0.62},use:{rice:0.22,veg:0.15,oil:0.012},gas:0.03,extra:10},
+    bajji:{name:"Bajji (3)",cat:"tiffin",fair:25,step:1,slots:{evening:0.38},use:{veg:0.08,oil:0.03},gas:0.008,extra:4,fried:1}
+  },
+  ITEM_ORDER:["tea","coffee","idli","vada","dosa","meals","bajji"],
+  ING:{milk:{name:"Milk",unit:"L",price:54},teaP:{name:"Tea powder",unit:"kg",price:500,pack:0.25},coffeeP:{name:"Coffee powder",unit:"kg",price:800,pack:0.25},
+       sugar:{name:"Sugar",unit:"kg",price:45,pack:1},rice:{name:"Rice",unit:"kg",price:52,pack:5},oil:{name:"Oil",unit:"L",price:150,pack:1},
+       batter:{name:"Batter",unit:"kg",price:40},veg:{name:"Vegetables",unit:"kg",price:40}},
+  DRY:["teaP","coffeeP","sugar","rice","oil"],
+  DRY_DAY:{teaP:0.4,coffeeP:0.3,sugar:2.5,rice:9,oil:3},  // reference use per busy day; topped up to DRY_DAYS of it
+  DRY_DAYS:2.5, DRY_REFILL:0.5,                            // refill when below half the target
+  GRIND_MAX:[12,22], BATTER_OLD_TASTE:0.12, VEG_OLD_TASTE:0.05,
+  OIL_KADAI:2, OIL_DEG:[0.05,0.0016], OIL_TASTE:0.6, OIL_OK:0.65,
+  GAS_CYL:19, GAS_PRICE:1850, GAS_BLACK:2900, GAS_IDLE:0.15, GAS_LEAD:[1,2], GAS_ARRIVE_HOUR:12,
+  WAGE:{cook:700,server:450}, SEVER_DAYS:1, BONUS:50,
+  TASTE:{tea:0.72,tiffin:0.62,cook:0.14,noise:0.03},
+  REP:{taste:0.15,mid:0.66,walk:0.15,stock:0.06,over:0.06,overAt:1.25,hyg:0.02,hygMid:0.55,min:0.05,max:1},
+  CREDIT_REP:{none:0,regulars:0.003,anyone:0.005},
+  HYG:{base:0.25,span:0.7,scale:180,speed:0.35,oil:0.1,crowd:0.03,crowdAt:260},
+  INSPECT:{low:0.45,fine:3000,vlow:0.3,fine2:6000,good:0.75,repHit:0.05,repGood:0.03},
+  MORALE:{target:0.72,speed:0.1,over:0.25,overAt:0.85,bonus:0.06,fire:0.1,absBase:0.04,absSlope:0.25,absAt:0.6},
+  CREDIT:{none:{foot:1,share:0,stranger:0},regulars:{foot:1.06,share:0.12,stranger:0},anyone:{foot:1.12,share:0.28,stranger:0.5}},
+  DEFAULT:{regular:0.06,stranger:0.45},
+  RENT:12000, ELEC:1500, ELEC_GRIND:4, LICENCE:3000, LICENCE_DAY:60, MONTH:30,
+  BANK:{amount:25000,rate:0.0005,minDay:10}, LENDER:{chunk:5000,rate:0.008,max:30000},
+  CATER:{plates:30,price:70,minRep:0.55},
+  CLEAN_OPTS:[0,100,200,300], OIL_RULES:[0,0.3,0.5,0.7]
+};
+let K=K0;
+
+/* ---------- small helpers (rng injected) ---------- */
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function poisR(l,r){
+  if(!(l>0))return 0;
+  if(l>30){const u=1-r(),v=r();return Math.max(0,Math.round(l+Math.sqrt(l)*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)))}
+  const u=r();let p=Math.exp(-l),F=p,k=0;while(u>F&&k<200){k++;p*=l/k;F+=p}return k;
+}
+const pickR=(a,r)=>a[Math.floor(r()*a.length)];
+function weightedR(obj,key,r){let t=0;for(const k in obj)t+=obj[k][key];let x=r()*t;for(const k in obj){x-=obj[k][key];if(x<=0)return k}return Object.keys(obj)[0]}
+const DOW=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const dayType=day=>((day-1)%7)>=5?"we":"wd";
+const repAll=rep=>0.4*rep.tea+0.6*rep.tiffin;
+const logit=x=>1/(1+Math.exp((x-K.LOGIT_MID)/K.LOGIT_W));
+
+/* ---------- queueing: Erlang C and walk-aways ---------- */
+function erlangC(c,a){ // probability an arrival waits in M/M/c, a = λ/μ < c
+  if(c<=0)return 1;if(a>=c)return 1;
+  let sum=0,term=1;for(let k=0;k<c;k++){if(k>0)term*=a/k;sum+=term}
+  const top=term*a/c*c/(c-a);return top/(sum+top);
+}
+function abandonFrac(lam,mu,c,th){ // share who walk off: waiters × P(patience < wait); overflow past 98% load
+  if(!(lam>0))return 0;if(c<=0)return 1;
+  const cap=c*mu,l0=Math.min(lam,0.98*cap),C=erlangC(c,l0/mu),f0=C/(1+(cap-l0)*th);
+  return lam<=l0?f0:1-l0*(1-f0)/lam;
+}
+function waitMin(lam,mu,c){if(lam>=0.98*c*mu)return 99;return erlangC(c,lam/mu)/(c*mu-lam)*60}
+
+/* ---------- demand model ---------- */
+function fairEff(st,id){const it=K.ITEMS[id];return it.fair*(K.FAIR_REP[0]+K.FAIR_REP[1]*st.rep[it.cat])*(st.rival>0?K.RIVAL_FAIR:1)}
+/* per-config lookup tables so the hot loop indexes arrays instead of keyed objects */
+let KC=null,KCK=null;
+function kc(){if(KCK===K)return KC;KCK=K;const ids=K.ITEM_ORDER;
+  KC={ids,n:ids.length,it:ids.map(id=>K.ITEMS[id]),
+    use:ids.map(id=>Object.entries(K.ITEMS[id].use).map(([g,u])=>({g,u,k:g==="batter"?0:g==="veg"?1:g==="milk"?2:3}))),
+    slotB:K.SLOT_ORDER.map(sl=>ids.map(id=>K.ITEMS[id].slots[sl]||0)),ci:ids.map(id=>K.ITEMS[id].cat==="tea"?0:1),short:ids.map(id=>K.ITEMS[id].name.replace(/ \(.*\)/,"").toLowerCase())};
+  return KC}
+function staffCap(cook,servers){return{c:1+servers,mu:K.MU*(cook?K.COOK_MU:1)}}
+/* expected arrivals, walk-away share and order probabilities (array by item) for each of the 9 open hours */
+function hourRates(st,plan,ctx){
+  const C=kc(),n=C.n,out=[],W=K.WX[ctx.wx],E=ctx.ev&&K.EVENTS[ctx.ev],cr=K.CREDIT[plan.credit]||K.CREDIT.none,L1=logit(1);
+  const base=(K.REP_ARR[0]+K.REP_ARR[1]*repAll(st.rep))*W.arr*cr.foot*(st.rival>0?K.RIVAL_ARR:1)*(st.foot||1);
+  const A=new Float64Array(n),M=new Float64Array(n);
+  for(let j=0;j<n;j++){const id=C.ids[j],it=C.it[j];if(plan.on[id])A[j]=logit(plan.price[id]/fairEff(st,id))/L1;
+    let m=1;if(it.cat==="tea")m*=W.tea;if(id==="bajji")m*=W.bajji;M[j]=m}
+  const sc=staffCap(ctx.cook,ctx.servers);
+  for(let si=0;si<K.SLOT_ORDER.length;si++){
+    const slot=K.SLOT_ORDER[si],S=K.SLOTS[slot],bA=C.slotB[si];
+    let num=0,den=0;for(let j=0;j<n;j++)if(bA[j]){den+=bA[j];num+=bA[j]*A[j]}
+    const ma=K.MENU_ATTR[0]+K.MENU_ATTR[1]*(den?Math.min(1.15,num/den):0);
+    const th=(K.PATIENCE[ctx.dt][slot]+W.pat+(E&&E.pat&&E.pat[slot]||0))/60;
+    const p=new Float64Array(n);
+    for(let j=0;j<n;j++)if(bA[j]&&A[j]){let m=M[j];const id=C.ids[j];if(E&&E.items&&E.items[id]&&(ctx.ev!=="cricket"||slot==="evening"))m*=E.items[id];p[j]=Math.min(K.P_MAX,bA[j]*m*A[j])}
+    let cap=sc.c*sc.mu;if(slot==="lunch"&&ctx.cater)cap=Math.max(sc.mu*0.5,cap-ctx.cater/3);  // catering plates eat lunch capacity
+    const muE=cap/sc.c,arr=K.ARR[ctx.dt][slot],em=E?E.arr[slot]:1;
+    for(let i=0;i<S.hours.length;i++){
+      const lam=arr[i]*base*ma*em,w=abandonFrac(lam,muE,sc.c,th);
+      out.push({slot,hour:S.hours[i],lam,w,c:sc.c,mu:muE,th,p,util:lam/(sc.c*muE)});
+    }
+  }
+  return out;
+}
+/* expected sales per item (no stock limits): shared by suggestions and the Tech tab */
+function expectDay(st,plan,ctx){
+  const C=kc(),hr=hourRates(st,plan,ctx),U=new Float64Array(C.n),units={};let cust=0,walk=0,rev=0;
+  for(const h of hr){cust+=h.lam;walk+=h.lam*h.w;const f=h.lam*(1-h.w);for(let j=0;j<C.n;j++)U[j]+=f*h.p[j]}
+  for(let j=0;j<C.n;j++){const id=C.ids[j];units[id]=U[j];rev+=U[j]*plan.price[id]}
+  if(ctx.cater){units.meals+=ctx.cater;rev+=ctx.cater*K.CATER.price}
+  return{hr,units,cust,walk,rev};
+}
+function ingNeed(units){const C=kc(),n={milk:0,veg:0,batter:0};for(let j=0;j<C.n;j++){const v=units[C.ids[j]];if(!v)continue;const ua=C.use[j];for(let x=0;x<ua.length;x++){const e=ua[x];n[e.g]=(n[e.g]||0)+e.u*v}}return n}
+function unitCost(id){const it=K.ITEMS[id];let c=it.extra+it.gas*K.GAS_PRICE/K.GAS_CYL;for(const g in it.use)c+=it.use[g]*K.ING[g].price;return c}
+
+/* ---------- state ---------- */
+function defaultPlan(){
+  const price={};for(const id of K.ITEM_ORDER)price[id]=K.ITEMS[id].fair;
+  return{on:{tea:1,coffee:1,idli:1,vada:1,dosa:1,meals:1,bajji:1},price,milk:8,veg:4,grind:6,cook:0,servers:0,
+    clean:100,oilRule:0.5,credit:"none",reorder:8,emergency:1,bonus:0,cater:0};
+}
+function newState(days){
+  return{v:1,days,day:1,cash:K.START_CASH,rep:{tea:K.START_REP,tiffin:K.START_REP},hyg:K.START_HYG,morale:K.START_MORALE,
+    staff:{cook:0,servers:0},batter:{fresh:K.START_BATTER,old:0},veg:{fresh:0,old:K.START_VEG},milk:0,dry:Object.assign({},K.START_DRY),
+    oilQ:1,gasKg:K.GAS_CYL,spare:0,gasOrder:null,khata:[],bank:0,lender:0,rival:0,foot:1,
+    plan:defaultPlan(),lastPlan:null,history:[],forecast:"sunny",event:null,phase:"morning",
+    totals:{rev:0,cust:0,walk:0,fines:0,writeoff:0,gasOut:0},over:null};
+}
+function receivables(st){return st.khata.reduce((a,k)=>a+k.owed,0)}
+function netWorth(st){return st.cash+receivables(st)-st.bank-st.lender}
+function startDay(st,r){
+  st.forecast=weightedR(K.WX,"w",r);
+  st.event=null;
+  if(r()<K.EVENT_P){const ev=weightedR(K.EVENTS,"w",r);if(!(ev==="rival"&&st.rival>0))st.event=ev}
+  if(st.event==="rival")st.rival=K.RIVAL_DAYS;
+  st.phase="morning";
+}
+let SUG_CACHE=null; // the simulator switches on a memo for repeated expectation calls
+/* stock suggestion for today's forecast; buffer multiplies expected need */
+function suggest(st,plan,buffer){
+  buffer=buffer||1.1;
+  const ctx={dt:dayType(st.day),wx:st.forecast,ev:st.event&&!K.EVENTS[st.event].hidden?st.event:null,cook:plan.cook,servers:plan.servers,cater:plan.cater?K.CATER.plates:0};
+  const ctx2={dt:dayType(st.day+1),wx:"sunny",ev:null,cook:plan.cook,servers:plan.servers,cater:ctx.cater};
+  let n,n2,key=null;
+  if(SUG_CACHE){key=ctx.dt+ctx.wx+ctx.ev+ctx2.dt+plan.cook+plan.servers+ctx.cater+plan.credit+(st.rival>0)+(st.foot||1)+"|"+Math.round(st.rep.tea*60)+"|"+Math.round(st.rep.tiffin*60)+"|"+plan.on.meals+K.ITEM_ORDER.map(i=>plan.price[i]).join(",");
+    const c=SUG_CACHE.get(key);if(c){n=c[0];n2=c[1]}}
+  if(!n){n=ingNeed(expectDay(st,plan,ctx).units);n2=ingNeed(expectDay(st,plan,ctx2).units);if(key)SUG_CACHE.set(key,[n,n2])}
+  const batToday=n.batter||0,leftFresh=Math.max(0,st.batter.fresh-Math.max(0,batToday-st.batter.old));
+  return{milk:Math.max(0,Math.ceil((n.milk||0)*buffer)),
+    veg:Math.max(0,Math.ceil((n.veg||0)*buffer-st.veg.old)),
+    grind:clamp(Math.ceil((n2.batter||0)*buffer-leftFresh),0,K.GRIND_MAX[plan.cook?1:0]),
+    need:n,need2:n2};
+}
+
+/* ---------- names and lines for the narration ---------- */
+const PEOPLE=["An auto driver","A bank clerk","Two college boys","A bus conductor","A school teacher","A lorry driver","A flower seller","A delivery rider","A paati with her grandson","A software trainee","The pharmacy owner next door","A constable on his round","A tailor from the market","A family of four","Two nurses off shift"];
+const SAYS={
+  goodTea:["Strong tea, just right. One more.","This is proper tea, not coloured water.","Your tea is the only reason I take this bus."],
+  goodTif:["Soft idli today. Good chutney too.","Vada is crisp. Pack two for my wife.","The dosa is lovely and thin."],
+  oldOil:["The vada smells of old oil.","Bajji tastes burnt. Change the oil, anna.","This oil has been fried to death."],
+  oldBatter:["Idli is a bit sour today.","Dosa batter has gone sour, no?"],
+  price:["frowns at the price board and walks to the next stall.","asks why tea costs more here than at the bus stand."],
+  wait:["“I'll miss my bus. Forget it.”","“Ten minutes for one tea? I'm going.”","“Too much crowd. Next time.”"],
+  rain:["Rain and bajji. Perfect.","Can't beat hot tea in this rain."],
+  credit:["Write it in the book, I'll pay on the first.","Put it in my account, okay?"],
+  soldOut:["No {x}? Come on.","What, {x} finished already?"]
+};
+const KHATA_NAMES=["Murugan (auto stand)","Selvi akka","Ravi (bank office)","Karthik (college)","Lakshmi (tailor)","Senthil (conductor)","Anbu (painter)","Pandian (lorry)","Saravanan (courier)","Meena teacher","Raja (mechanic)","Ganesh (security)","Kumar sir","Vasanth (pharmacy)","Jaya (flowers)","Arul (electrician)","Bala (driver)","Devi (nurse)","Prakash (sales)","Siva (plumber)"];
+
+/* stock helpers used inside a day (top level so the hot loop avoids closures) */
+const MK={tb:[0,0],oilPen:0,fried:0};
+function canMake(st,C,j){const it=C.it[j],ua=C.use[j];let m=1e9;for(let x=0;x<ua.length;x++){const e=ua[x];const have=e.k===0?st.batter.old+st.batter.fresh:e.k===1?st.veg.old+st.veg.fresh:e.k===2?st.milk:st.dry[e.g];const c=Math.floor(have/e.u+1e-9);if(c<m)m=c}if(it.gas>0){const c=Math.floor(st.gasKg/it.gas+1e-9);if(c<m)m=c}return m>0?m:0}
+function takeLot(lot,q){const a=Math.min(lot.old,q);lot.old-=a;lot.fresh=Math.max(0,lot.fresh-(q-a));return q>0?a/q:0}
+function make(st,C,j,n){ // consume ingredients for n units; returns the taste of these units
+  const it=C.it[j],ua=C.use[j];let t=MK.tb[C.ci[j]];
+  for(let x=0;x<ua.length;x++){const e=ua[x],q=e.u*n;
+    if(e.k===0)t-=K.BATTER_OLD_TASTE*takeLot(st.batter,q);
+    else if(e.k===1)t-=K.VEG_OLD_TASTE*takeLot(st.veg,q);
+    else if(e.k===2)st.milk=Math.max(0,st.milk-q);else st.dry[e.g]=Math.max(0,st.dry[e.g]-q)}
+  st.gasKg=Math.max(0,st.gasKg-it.gas*n);
+  if(it.fried){t-=MK.oilPen*it.fried;MK.fried+=n*it.fried}
+  return t<0?0:t>1?1:t;
+}
+/* ---------- one full day: the single source of truth for the game and the simulator ---------- */
+function runDay(st,plan,r,nar){
+  const L=[],say=(t,x,c,q)=>{L.push({t,x,c,q})};
+  const nw0=netWorth(st),dt=dayType(st.day),cash0=st.cash;
+  const ex={stock:0,grind:0,gas:0,wages:0,upkeep:0,fines:0,interest:0,bills:0,sever:0};
+  const pay=(k,v)=>{ex[k]+=v;st.cash-=v};
+  let wx=st.forecast;if(r()>=K.FORECAST_OK){const o=K.WX_ORDER.filter(w=>w!==st.forecast);wx=pickR(o,r)}
+  const ev=st.event,E=ev&&K.EVENTS[ev];
+  /* staffing changes */
+  const sev=Math.max(0,st.staff.cook-plan.cook)*K.WAGE.cook+Math.max(0,st.staff.servers-plan.servers)*K.WAGE.server;
+  if(sev>0){pay("sever",sev*K.SEVER_DAYS);st.morale=clamp(st.morale-K.MORALE.fire,0,1)}
+  st.staff={cook:plan.cook,servers:plan.servers};
+  const pAbs=K.MORALE.absBase+K.MORALE.absSlope*Math.max(0,K.MORALE.absAt-st.morale);
+  const cookIn=plan.cook&&r()>=pAbs?1:0;let servIn=0;for(let i=0;i<plan.servers;i++)if(r()>=pAbs)servIn++;
+  const cater=plan.cater&&plan.cook?K.CATER.plates:0;
+  /* morning purchases: milk first, then vegetables, then dry goods */
+  const buyQty=(g,q)=>{const pr=K.ING[g].price,can=Math.max(0,Math.floor(st.cash/pr*10)/10),x=Math.min(q,can);if(x>0)pay("stock",x*pr);return x};
+  const milkB=buyQty("milk",plan.milk);st.milk=milkB;
+  const vegB=buyQty("veg",plan.veg);st.veg.fresh+=vegB;
+  let dryB=0;for(const g of K.DRY){const tgt=K.DRY_DAY[g]*K.DRY_DAYS;if(st.dry[g]<tgt*K.DRY_REFILL){const pk=K.ING[g].pack,n=Math.ceil((tgt-st.dry[g])/pk),pr=pk*K.ING[g].price,m=Math.min(n,Math.floor(st.cash/pr));if(m>0){pay("stock",m*pr);st.dry[g]+=m*pk;dryB+=m*pr}}}
+  let oilChanged=false;
+  if(plan.oilRule>0&&st.oilQ<plan.oilRule&&st.dry.oil>=K.OIL_KADAI){st.dry.oil-=K.OIL_KADAI;st.oilQ=1;oilChanged=true}
+  const clean=Math.min(plan.clean,Math.max(0,st.cash));pay("upkeep",clean);
+  const nStaff=cookIn+servIn;if(plan.bonus&&nStaff)pay("upkeep",K.BONUS*nStaff);
+  nar&&say("6:30",`${DOW[(st.day-1)%7]}. ${K.WX[wx].name}${wx!==st.forecast?` (the radio said ${K.WX[st.forecast].name.toLowerCase()})`:""}. You light the stove and boil the first milk: ${milkB} L in the vessel.`,wx!==st.forecast?"warn":"");
+  if(plan.cook&&!cookIn)nar&&say("6:40","The cook hasn't come. His phone is switched off. You'll cook and serve yourself.","warn");
+  if(plan.servers>servIn)nar&&say("6:45",`${plan.servers-servIn} of your server${plan.servers>1?"s":""} didn't turn up today.`,"warn");
+  if(oilChanged)nar&&say("6:50","You pour out the old oil and fill the kadai with fresh oil.","good");
+  if(E&&!E.hidden)nar&&say("6:55",E.text,"");
+  const ctx={dt,wx,ev,cook:cookIn,servers:servIn,cater};
+  const hr=hourRates(st,plan,ctx);
+  /* gas */
+  let gasOutAt=null,blackBuys=0,arrived=false;
+  const ensureGas=need=>{
+    if(st.gasKg>=need)return true;
+    if(st.spare>0){st.spare--;st.gasKg+=K.GAS_CYL;nar&&say("","Cylinder empty. You switch to the spare.","");return true}
+    if(plan.emergency&&st.cash>=K.GAS_BLACK){pay("gas",K.GAS_BLACK);st.gasKg+=K.GAS_CYL;blackBuys++;nar&&say("",`Gas finished. You pay ${moneyE(K.GAS_BLACK)} for a black-market cylinder.`,"warn");return true}
+    return st.gasKg>=need;
+  };
+  /* tallies */
+  const C=kc(),NI=C.n,soldA=new Float64Array(NI),lostA=new Float64Array(NI),tasteA=[0,0],cntA=[0,0],overA=[0,0];
+  const priceA=C.ids.map(id=>plan.price[id]),dearA=C.ids.map(id=>plan.price[id]>K.REP.overAt*fairEff(st,id));
+  let rev=0,cust=0,walk=0,peakUtil=0,stockLost=0,demandAll=0,goodQ=false,badQ=false;
+  const noise=()=>(r()-0.5)*2*K.TASTE.noise;
+  const tb0=K.TASTE.tea+noise(),tb1=K.TASTE.tiffin+(cookIn?K.TASTE.cook:0)+noise(),tasteBase={tea:tb0,tiffin:tb1};MK.tb[0]=tb0;MK.tb[1]=tb1;
+  const oilPen=K.OIL_TASTE*Math.max(0,K.OIL_OK-st.oilQ);
+  MK.oilPen=oilPen;MK.fried=0;
+  /* catering plates are cooked before lunch */
+  let caterMade=0;
+  for(const h of hr){
+    if(h.hour===K.SLOTS[h.slot].hours[0])nar&&say(K.SLOTS[h.slot].span,`${K.SLOTS[h.slot].name}`,"slot");
+    if(h.hour===K.GAS_ARRIVE_HOUR&&st.gasOrder&&st.gasOrder.day<=st.day){st.gasOrder=null;st.spare++;pay("gas",K.GAS_PRICE);arrived=true;nar&&say("11:45",`The gas agency delivers your refill cylinder (${moneyE(K.GAS_PRICE)}).`,"good")}
+    if(h.hour===12&&cater){ensureGas(K.ITEMS.meals.gas*cater);const jm=C.ids.indexOf("meals");caterMade=Math.min(cater,canMake(st,C,jm));if(caterMade>0){make(st,C,jm,caterMade);rev+=caterMade*K.CATER.price}
+      nar&&say("11:30",`${caterMade} catering plates packed and sent to the office${caterMade<cater?`, ${cater-caterMade} short`:""}.`,caterMade<cater?"warn":"")}
+    const offered=h.lam,nArr=poisR(offered,r),wantW=offered*h.w,nWalk=Math.min(nArr,poisR(wantW,r));
+    cust+=nArr;walk+=nWalk;peakUtil=Math.max(peakUtil,h.util);
+    let gasOk=ensureGas(K.GAS_IDLE);
+    if(gasOk)st.gasKg=Math.max(0,st.gasKg-K.GAS_IDLE);else if(gasOutAt==null){gasOutAt=h.hour;nar&&say(h.hour+":00","The gas is finished and there is no spare. The stove goes cold. Nothing more can be cooked today.","warn")}
+    const parts=[];let hrLost=0,lostItem=null,q=null;
+    const served=offered*(1-h.w);
+    for(let j=0;j<NI;j++){
+      const pi=h.p[j];if(!pi)continue;
+      const d=poisR(served*pi,r);if(!d)continue;demandAll+=d;
+      const it=C.it[j];if(st.gasKg<it.gas*d)ensureGas(it.gas*d);
+      const n=gasOutAt!=null?0:Math.min(d,canMake(st,C,j));
+      if(n>0){const t=make(st,C,j,n),ci=C.ci[j];rev+=n*priceA[j];soldA[j]+=n;tasteA[ci]+=t*n;cntA[ci]+=n;
+        if(dearA[j])overA[ci]+=n;if(nar)parts.push(`${n} ${C.short[j]}`)}
+      if(n<d){lostA[j]+=d-n;hrLost+=d-n;stockLost+=d-n;if(lostItem==null)lostItem=j}
+    }
+    if(nar){
+      const pp=pickR(PEOPLE,r);
+      if(nWalk>=3&&r()<0.6)q={x:`${pp}: ${pickR(SAYS.wait,r)}`,c:"warn"};
+      else if(lostItem&&r()<0.5)q={x:`${pp}: “${pickR(SAYS.soldOut,r).replace("{x}",C.short[lostItem])}”`,c:"warn"};
+      else if(oilPen>0.08&&(h.slot!=="lunch")&&r()<0.35&&!badQ){q={x:`${pp}: “${pickR(SAYS.oldOil,r)}”`,c:"warn"};badQ=true}
+      else if(st.batter.old>0&&h.slot==="breakfast"&&r()<0.25)q={x:`${pp}: “${pickR(SAYS.oldBatter,r)}”`,c:"warn"};
+      else if(wx==="rain"&&r()<0.25)q={x:`${pp}: “${pickR(SAYS.rain,r)}”`};
+      else if(C.ids.some(id=>plan.on[id]&&plan.price[id]>1.3*fairEff(st,id))&&r()<0.3)q={x:`${pp} ${pickR(SAYS.price,r)}`,c:"warn"};
+      else if(plan.credit!=="none"&&r()<0.15)q={x:`${pp}: “${pickR(SAYS.credit,r)}”`};
+      else if(r()<0.22&&!goodQ){const tt=tasteBase.tiffin-oilPen>0.72;q={x:`${pp}: “${pickR(tt?SAYS.goodTif:SAYS.goodTea,r)}”`,c:"good"};goodQ=true}
+      nar&&say(h.hour+":00",`${nArr} came in${nWalk?`, ${nWalk} walked off after waiting`:""}. `+(parts.length?`Sold ${parts.join(", ")}.`:"Nothing sold.")+(hrLost?` Turned away ${hrLost} order${hrLost>1?"s":""}.`:""),nWalk>=3||hrLost>2?"warn":"",q);
+    }
+    if(h.hour===9&&ev==="inspector"){ // inspector arrives between breakfast and lunch
+      let f=0;
+      if(st.hyg<K.INSPECT.vlow){f=K.INSPECT.fine2}else if(st.hyg<K.INSPECT.low){f=K.INSPECT.fine}
+      if(f){pay("fines",f);st.rep.tea=clamp(st.rep.tea-K.INSPECT.repHit,K.REP.min,1);st.rep.tiffin=clamp(st.rep.tiffin-K.INSPECT.repHit,K.REP.min,1);nar&&say("10:30",`A food safety inspector checks the kitchen. Hygiene is poor: fine of ${moneyE(f)}. People in the queue saw it.`,"warn")}
+      else if(st.hyg>=K.INSPECT.good){st.rep.tiffin=clamp(st.rep.tiffin+K.INSPECT.repGood,K.REP.min,1);nar&&say("10:30","A food safety inspector checks the kitchen and pastes a clean-kitchen sticker on your board.","good")}
+      else nar&&say("10:30","A food safety inspector looks around, notes a few things, and leaves without a fine.","")
+    }
+  }
+  if(ev==="vip"){
+    const tt=tasteBase.tea;
+    if(tt>=0.7){st.rep.tea=clamp(st.rep.tea+0.05,K.REP.min,1);nar&&say("17:30","The VIP's car stops. One tea, a smile, a photo with your tumbler. The whole street saw it.","good")}
+    else{st.rep.tea=clamp(st.rep.tea-0.03,K.REP.min,1);nar&&say("17:30","The VIP's car stops. One sip of tea, a polite nod, and the glass is left half full.","warn")}
+  }
+  const sold={},lost={};if(nar)for(let j=0;j<NI;j++){sold[C.ids[j]]=soldA[j];lost[C.ids[j]]=lostA[j]}
+  const fried=MK.fried,taste={tea:tasteA[0],tiffin:tasteA[1]},cnt={tea:cntA[0],tiffin:cntA[1]},over={tea:overA[0],tiffin:overA[1]};
+  /* night */
+  const wages=(cookIn?K.WAGE.cook:0)+servIn*K.WAGE.server+(st.extraWage||0);pay("wages",wages);
+  const cr=K.CREDIT[plan.credit]||K.CREDIT.none;
+  let credit=cr.share>0?Math.round(rev*cr.share*(0.7+0.6*r())):0;credit=Math.min(credit,Math.round(rev));
+  st.cash+=rev-credit;
+  if(credit>0){
+    const parts=1+Math.floor(r()*3);
+    for(let i=0;i<parts;i++){
+      const stranger=r()<cr.stranger,amt=Math.round(credit/parts);
+      let acc=null;
+      const pool=st.khata.filter(k=>k.stranger===stranger);
+      if(!stranger&&(pool.length>=8||(pool.length&&r()<0.7)))acc=pickR(pool,r);
+      if(stranger&&pool.length&&r()<0.4)acc=pickR(pool,r);
+      if(!acc){const used=new Set(st.khata.map(k=>k.name));const free=KHATA_NAMES.filter(n=>!used.has(n));
+        acc={name:free.length?pickR(free,r):"Customer "+(st.khata.length+1),owed:0,stranger,since:st.day};st.khata.push(acc)}
+      acc.owed+=amt;
+    }
+  }
+  const milkWaste=st.milk;st.milk=0;
+  const batterWaste=st.batter.old;st.batter.old=st.batter.fresh;
+  const gMax=K.GRIND_MAX[plan.cook?1:0],gWant=Math.min(plan.grind,gMax),gCan=Math.max(0,Math.min(gWant,Math.floor(st.cash/K.ING.batter.price)));
+  pay("grind",gCan*K.ING.batter.price);st.batter.fresh=gCan;
+  const vegWaste=st.veg.old;st.veg.old=st.veg.fresh;st.veg.fresh=0;
+  const q0=st.oilQ;st.oilQ=clamp(st.oilQ-K.OIL_DEG[0]-K.OIL_DEG[1]*fried,0,1);
+  const hyg0=st.hyg,tgt=K.HYG.base+K.HYG.span*(1-Math.exp(-plan.clean/K.HYG.scale));
+  st.hyg=clamp(st.hyg+K.HYG.speed*(tgt-st.hyg)-K.HYG.oil*Math.max(0,0.5-st.oilQ)-(cust>K.HYG.crowdAt?K.HYG.crowd:0),0,1);
+  const rep0={tea:st.rep.tea,tiffin:st.rep.tiffin},walkFrac=cust?walk/cust:0,lostFrac=demandAll?stockLost/demandAll:0;
+  for(const c of ["tea","tiffin"]){
+    let d=-K.REP.walk*walkFrac-K.REP.stock*lostFrac+K.REP.hyg*(st.hyg-K.REP.hygMid)+K.CREDIT_REP[plan.credit];
+    if(cnt[c]>0)d+=K.REP.taste*(taste[c]/cnt[c]-K.REP.mid)-K.REP.over*over[c]/cnt[c];
+    st.rep[c]=clamp(st.rep[c]+d,K.REP.min,K.REP.max);
+  }
+  const mor0=st.morale;
+  if(plan.cook+plan.servers>0)st.morale=clamp(st.morale+K.MORALE.speed*(K.MORALE.target-st.morale)-K.MORALE.over*Math.max(0,peakUtil-K.MORALE.overAt)+(plan.bonus?K.MORALE.bonus:0),0,1);
+  const intB=Math.round(st.bank*K.BANK.rate),intL=Math.round(st.lender*K.LENDER.rate);pay("interest",intB+intL);
+  /* gas reorder rule */
+  let ordered=false;
+  if(!st.gasOrder&&st.spare===0&&st.gasKg<plan.reorder){st.gasOrder={day:st.day+K.GAS_LEAD[0]+Math.floor(r()*(K.GAS_LEAD[1]-K.GAS_LEAD[0]+1))};ordered=true}
+  /* month end */
+  let month=null;
+  if(st.day%K.MONTH===0){
+    const elec=K.ELEC+Math.round(K.ELEC_GRIND*30*(plan.grind||0)),lic=st.day===K.LICENCE_DAY?K.LICENCE:0;
+    pay("bills",K.RENT+elec+lic);
+    let got=0,lostK=0;const gone=[];
+    for(const a of st.khata){if(a.owed<=0)continue;const pd=a.stranger?K.DEFAULT.stranger:K.DEFAULT.regular;
+      if(r()<pd){lostK+=a.owed;gone.push(a.name);a.owed=0;a.gone=true}else{got+=a.owed;a.owed=0}}
+    st.khata=st.khata.filter(a=>!a.gone&&!(a.stranger&&a.owed===0));
+    st.cash+=got;st.totals.writeoff+=lostK;
+    month={rent:K.RENT,elec,lic,got,lostK,gone};
+  }
+  st.rival=Math.max(0,st.rival-1);
+  /* tallies */
+  st.totals.rev+=rev;st.totals.cust+=cust;st.totals.walk+=walk;st.totals.fines+=ex.fines;if(gasOutAt!=null)st.totals.gasOut++;
+  const rep=!nar?{wx,cust,walk,rev,credit,gasOutAt,blackBuys}:{wx,ev,cust,walk,walkFrac,rev,credit,sold,lost,stockLost,lostFrac,ex,milkB,vegB,dryB,gCan,gWant,milkWaste,batterWaste,vegWaste,
+    oil:[q0,st.oilQ,oilChanged],hyg:[hyg0,st.hyg],rep0,rep1:{tea:st.rep.tea,tiffin:st.rep.tiffin},mor:[mor0,st.morale],cookIn,servIn,
+    gasOutAt,blackBuys,arrived,ordered,gasKg:st.gasKg,spare:st.spare,peakUtil,month,caterMade,
+    taste:{tea:cnt.tea?taste.tea/cnt.tea:null,tiffin:cnt.tiffin?taste.tiffin/cnt.tiffin:null},cash0};
+  if(!st.noSettle)settle(st,r,rep,nar?say:null);
+  rep.nw=netWorth(st);rep.profit=rep.nw-nw0;rep.cash=st.cash;
+  nar&&say("19:00",`Shutters down. ${cust} customers, ${moneyE(rev)} of sales${credit?`, ${moneyE(credit)} of it written in the khata book`:""}.`,"good");
+  if(nar||st.keepHist)st.history.push({day:st.day,rev:Math.round(rev),profit:Math.round(rep.profit),cash:Math.round(st.cash),nw:Math.round(rep.nw),cust,walk,wx});
+  st.report=rep;st.log=L;
+  return rep;
+}
+/* moneylender covers a negative cash balance in chunks; past the limit the shop is bankrupt */
+function settle(st,r,rep,say){
+  if(st.cash<0){
+    const need=Math.ceil(-st.cash/K.LENDER.chunk)*K.LENDER.chunk;
+    if(st.lender+need<=K.LENDER.max){st.lender+=need;st.cash+=need;rep.autoLoan=need;say&&say("21:00",`Cash ran short. The moneylender lends you ${moneyE(need)} at ${(K.LENDER.rate*100).toFixed(1)}% a day.`,"warn")}
+    else{st.over="bankrupt";rep.bankrupt=true}
+  }
+}
+function moneyE(x){return(x<0?"−":"")+"₹"+Math.abs(Math.round(x)).toLocaleString("en-IN")}
+
+/* ---------- strategy bots (balance tests and the Tech tab's Monte Carlo) ---------- */
+function botPlan(st,P){
+  const pl=defaultPlan();
+  for(const id of K.ITEM_ORDER){const f=K.ITEMS[id].fair*(K.FAIR_REP[0]+K.FAIR_REP[1]*st.rep[K.ITEMS[id].cat]),stp=K.ITEMS[id].step;pl.price[id]=Math.max(stp,Math.round(f*P.k/stp)*stp)}
+  if(P.noMeals)pl.on.meals=0;
+  pl.cook=P.cook;pl.servers=P.servers;pl.clean=P.clean;pl.oilRule=P.oilRule;pl.credit=P.credit;pl.reorder=P.reorder;pl.emergency=P.emergency;
+  pl.cater=P.cater&&P.cook&&repAll(st.rep)>=K.CATER.minRep?1:0;
+  const sg=suggest(st,pl,P.buffer);pl.milk=sg.milk;pl.veg=sg.veg;pl.grind=sg.grind;
+  if(P.fixedStock){pl.milk=P.fixedStock.milk;pl.veg=P.fixedStock.veg;pl.grind=P.fixedStock.grind}
+  return pl;
+}
+function botLoans(st){ // repay the moneylender as soon as cash allows
+  while(st.lender>0&&st.cash>K.LENDER.chunk+4000){st.lender-=K.LENDER.chunk;st.cash-=K.LENDER.chunk}
+}
+const POLICIES={
+  sensible:{k:1.1,cook:1,servers:1,clean:150,oilRule:0.5,credit:"regulars",reorder:9,emergency:1,buffer:1.1},
+  careless:{k:1.35,cook:0,servers:0,clean:0,oilRule:0,credit:"anyone",reorder:3,emergency:1,buffer:1.6},
+  naive:{k:1.0,cook:0,servers:0,clean:100,oilRule:0.3,credit:"none",reorder:5,emergency:1,buffer:1.0}
+};
+/* seeded runs of the engine. Every day has its own random stream, so two runs with the same seed
+   see the same weather, events and customers (common random numbers for paired comparisons). */
+function simCtx(days,opt){
+  const st=newState(days);if(opt&&opt.cash!=null)st.cash=opt.cash;if(opt&&opt.rep!=null)st.rep={tea:opt.rep,tiffin:opt.rep};
+  return{st,st2:null,dead:false,o:{nw:new Float32Array(days),rev:new Float32Array(days),profit:new Float32Array(days),bank:-1,crunch:false,crunchDay:-1,open:-1,end:0,gasOut:0,black:0,walk:0,cust:0}};
+}
+function expReady(c,d,ex){return!!ex&&!c.st2&&d>=7&&repAll(c.st.rep)>=ex.trigger&&c.st.cash>=ex.setup+ex.reserve}
+function simDay(c,d,P,ex,seed){
+  const st=c.st,o=c.o,days=o.nw.length;
+  const r=mulberry32((seed*2654435761+d*40503+17)>>>0);
+  const two=()=>c.st2&&!c.st2.cater;
+  const nw0=netWorth(st)+(two()?receivables(c.st2):0);
+  startDay(st,r);
+  if(expReady(c,d,ex)){
+    if(ex.type==="outlet"){st.cash-=ex.setup;const s2=newState(days);s2.day=st.day;s2.cash=0;s2.rep={tea:st.rep.tea*ex.carry,tiffin:st.rep.tiffin*ex.carry};s2.foot=ex.foot2;s2.extraWage=ex.wage;s2.noSettle=true;st.foot=1-ex.cann;c.st2=s2}
+    else{st.cash-=ex.setup;st.caterOn=true;c.st2={cater:true}}
+    o.open=d;
+  }
+  const pl=botPlan(st,P);if(st.caterOn){pl.cater=1;pl.cook=1}
+  st.noSettle=two();
+  runDay(st,pl,r,false);
+  if(two()){const s2=c.st2,r2=mulberry32((seed*2246822519+d*3266489917+99)>>>0);s2.day=st.day;startDay(s2,r2);s2.forecast=st.forecast;s2.cash=st.cash;runDay(s2,botPlan(s2,P),r2,false);st.cash=s2.cash;st.noSettle=false;settle(st,r,st.report)}
+  if(st.lender>0&&!o.crunch){o.crunch=true;o.crunchDay=d}
+  botLoans(st);
+  const nw=netWorth(st)+(two()?receivables(c.st2):0);
+  o.nw[d]=nw;o.profit[d]=nw-nw0;o.rev[d]=st.report.rev+(two()?c.st2.report.rev:0);o.walk+=st.report.walk;o.cust+=st.report.cust;
+  if(st.report.gasOutAt!=null)o.gasOut++;o.black+=st.report.blackBuys;
+  if(st.over==="bankrupt"){o.bank=d;for(let e=d+1;e<days;e++){o.nw[e]=nw;o.profit[e]=0}c.dead=true}
+  st.day++;
+}
+function simFinish(c){const o=c.o;o.end=o.nw[o.nw.length-1];o.rep=repAll(c.st.rep);return o}
+function simRun(seed,days,P,opt){
+  const c=simCtx(days,opt);for(let d=0;d<days&&!c.dead;d++)simDay(c,d,P,opt&&opt.exp,seed);return simFinish(c);
+}
+/* a run without and with an expansion rule; they share every day up to the moment the rule fires */
+function cloneCtx(c){const o=c.o;return{st:JSON.parse(JSON.stringify(c.st)),st2:null,dead:c.dead,o:Object.assign({},o,{nw:o.nw.slice(),rev:o.rev.slice(),profit:o.profit.slice()})}}
+function simPair(seed,days,P,ex){
+  const a=simCtx(days);let b=null;
+  for(let d=0;d<days;d++){
+    if(!b&&!a.dead&&expReady(a,d,ex))b=cloneCtx(a);
+    if(!a.dead)simDay(a,d,P,null,seed);
+    if(b&&!b.dead)simDay(b,d,P,ex,seed);
+  }
+  return{base:simFinish(a),exp:b?simFinish(b):Object.assign({},a.o)};
+}
+/* ===== ENGINE END ===== */
+
+/* =====================================================================
+   PLAY: rendering and input. The day itself is runDay() above.
+   ===================================================================== */
+let s=null,view="title",sel=30,revealTimer=null,confirmNew=null,tab=(location.hash==="#tech")?"tech":"play",sheetMode="saves",openCards={};
+const $=id=>document.getElementById(id);
+const money=moneyE;
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pctS=x=>Math.round(x*100)+"%";
+const f1=x=>(Math.round(x*10)/10).toLocaleString("en-IN");
+const LS={get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const K_AUTO="chai.auto",K_SLOTS="chai.slots",K_BEST="chai.best",K_TECH="chai.tech",PREFIX="CHAI1:";
+function autosave(){if(s)LS.set(K_AUTO,Object.assign({},s,{savedAt:Date.now()}))}
+function slots(){return LS.get(K_SLOTS)||{}}
+function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2400)}
+const rngLive=Math.random;
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+/* ---------- art: tumbler and davara with steam; weather ---------- */
+function tumbler(cls){return `<svg class="${cls||""}" viewBox="0 0 64 64" aria-hidden="true">
+  <path d="M24 14c-3-4 3-6 0-10M32 14c-3-4 3-6 0-10M40 14c-3-4 3-6 0-10" fill="none" stroke="var(--tur)" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M21 18h22l-3 30H24z" fill="var(--steel-hi)" stroke="var(--steel)" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="M23 23h18" stroke="var(--steel)" stroke-width="1.6"/>
+  <path d="M10 44h44l-5 12H15z" fill="var(--chip)" stroke="var(--steel)" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="M10 44h44" stroke="var(--leaf)" stroke-width="3" stroke-linecap="round"/></svg>`}
+function wxIcon(t){
+  const sun='<circle cx="30" cy="30" r="11" fill="var(--tur)"/><g stroke="var(--tur)" stroke-width="3.5" stroke-linecap="round">'+[0,45,90,135,180,225,270,315].map(a=>{const r=a*Math.PI/180;return `<line x1="${(30+Math.cos(r)*17).toFixed(1)}" y1="${(30+Math.sin(r)*17).toFixed(1)}" x2="${(30+Math.cos(r)*23).toFixed(1)}" y2="${(30+Math.sin(r)*23).toFixed(1)}"/>`}).join("")+'</g>';
+  const cloud=(y,c)=>`<path d="M14 ${y+16}h30a9 9 0 0 0 0-18 13 13 0 0 0-25-3 8 8 0 0 0-5 21z" fill="${c}"/>`;
+  const svg=b=>`<svg viewBox="0 0 60 60" aria-hidden="true">${b}</svg>`;
+  if(t==="sunny")return svg(sun);
+  if(t==="cloudy")return svg('<g transform="translate(10 -6) scale(.7)">'+sun+'</g>'+cloud(24,"var(--steel)"));
+  return svg(cloud(12,"var(--steel)")+'<g stroke="var(--time)" stroke-width="3" stroke-linecap="round"><line x1="20" y1="36" x2="17" y2="45"/><line x1="30" y1="36" x2="27" y2="47"/><line x1="40" y1="36" x2="37" y2="45"/></g>');
+}
+
+/* ---------- game flow ---------- */
+function newGame(days){
+  s=newState(days);startDay(s,rngLive);view="game";s.phase="morning";autosave();render();window.scrollTo(0,0);
+}
+function ctxToday(pl){return{dt:dayType(s.day),wx:s.forecast,ev:s.event&&!K.EVENTS[s.event].hidden?s.event:null,cook:pl.cook,servers:pl.servers,cater:pl.cater&&pl.cook?K.CATER.plates:0}}
+function openShop(repeat){
+  if(repeat&&s.lastPlan){s.plan=clone(s.lastPlan)}
+  if(!K.ITEM_ORDER.some(id=>s.plan.on[id])){toast("Put at least one item on the menu");return}
+  s.lastPlan=clone(s.plan);
+  runDay(s,s.plan,rngLive,true);
+  s.shown=0;s.phase="service";autosave();render();runReveal();window.scrollTo(0,0);
+}
+function runReveal(){
+  clearTimeout(revealTimer);
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){s.shown=s.log.length;render();return}
+  const step=()=>{if(!s||s.phase!=="service"||s.shown>=s.log.length){renderService();return}s.shown++;renderService();revealTimer=setTimeout(step,420)};
+  step();
+}
+function finishService(){clearTimeout(revealTimer);s.shown=s.log.length;
+  if(s.over==="bankrupt"||s.day>=s.days){s.phase="night";s.endNext=true}else s.phase="night";
+  autosave();render();window.scrollTo(0,0)}
+function nextDay(){
+  if(s.endNext){s.phase="final";recordBest();autosave();render();window.scrollTo(0,0);return}
+  s.day++;startDay(s,rngLive);autosave();render();window.scrollTo(0,0);
+}
+function recordBest(){
+  if(s.bestDone)return;s.bestDone=true;
+  const best=LS.get(K_BEST)||{},k=String(s.days),prof=netWorth(s)-K.START_CASH;
+  if(s.over!=="bankrupt"&&(best[k]==null||prof>best[k])){best[k]=Math.round(prof);LS.set(K_BEST,best);s.newBest=true}
+}
+
+/* ---------- status bar ---------- */
+function meter(x){const c=x<0.35?"low":x<0.6?"mid":"";return `<div class="meter"><i class="${c}" style="width:${Math.round(clamp(x,0,1)*100)}%"></i></div>`}
+function stats(){
+  const ra=repAll(s.rep);
+  return `<div class="stat"><div class="lbl">Day</div><b>${Math.min(s.day,s.days)}/${s.days}</b></div>
+  <div class="stat"><div class="lbl">Cash</div><b class="${s.cash<0?"neg":""}">${money(s.cash)}</b></div>
+  <div class="stat"><div class="lbl">Reputation</div><b>${pctS(ra)}</b>${meter(ra)}</div>`;
+}
+
+/* ---------- morning plan ---------- */
+const LIM={milk:[0,60,1],veg:[0,30,1],grind:[0,22,1],cook:[0,1,1],servers:[0,3,1],reorder:[0,19,1]};
+function stepper(id,label,sub,val){
+  return `<div class="step"><div class="txt"><b>${label}</b><div class="small muted">${sub}</div></div>
+  <div class="ctl"><button data-act="dec" data-k="${id}" aria-label="Less ${esc(label)}">−</button><output id="o_${id}">${val}</output><button data-act="inc" data-k="${id}" aria-label="More ${esc(label)}">+</button></div></div>`;
+}
+function segP(k,label,opts,cur){return `<div class="segrow"><span>${label}</span><div class="seg">${opts.map(([v,n])=>`<button data-act="pset" data-k="${k}" data-v="${v}" aria-pressed="${String(cur)===String(v)}">${n}</button>`).join("")}</div></div>`}
+function det(id,title,sum,body){return `<details class="card" id="d_${id}" ${openCards[id]?"open":""}><summary>${title}<span class="sum">${sum}</span></summary><div class="in">${body}</div></details>`}
+const SLOT_TAG={breakfast:"B",lunch:"L",evening:"E"};
+function renderMorning(){
+  const pl=s.plan,ctx=ctxToday(pl),ex=expectDay(s,pl,ctx),sg=suggest(s,pl,1.1),dt=ctx.dt;
+  const E=s.event&&K.EVENTS[s.event];
+  const evHtml=(E&&!E.hidden&&s.event!=="rival"?`<div class="event">${esc(E.text)}</div>`:"")+(s.rival>0?`<div class="event bad">${s.event==="rival"?esc(K.EVENTS.rival.text):`The rival stall across the road is still running offers (${s.rival} more day${s.rival>1?"s":""}).`}</div>`:"");
+  const need=ingNeed(ex.units);
+  const bat=s.batter.fresh+s.batter.old,veg=s.veg.fresh+s.veg.old;
+  const gasTxt=`${f1(s.gasKg)} kg`+(s.spare?` + spare`:"");
+  const dryDays=Math.min(...K.DRY.map(g=>s.dry[g]/K.DRY_DAY[g]));
+  const ordTxt=s.gasOrder?`Refill arrives day ${s.gasOrder.day}, noon`:s.spare?"Spare cylinder in hand":"No refill on order";
+  /* capacity per slot */
+  const cap=K.SLOT_ORDER.map(sl=>{const hs=ex.hr.filter(h=>h.slot===sl),pk=hs.reduce((a,h)=>h.lam>a.lam?h:a,hs[0]);const w=hs.reduce((a,h)=>a+h.lam*h.w,0)/Math.max(1e-9,hs.reduce((a,h)=>a+h.lam,0));return{sl,pk,w}});
+  const wages=pl.cook*K.WAGE.cook+pl.servers*K.WAGE.server;
+  const items=K.ITEM_ORDER.map(id=>{const it=K.ITEMS[id],fair=fairEff(s,id),on=!!pl.on[id],uc=unitCost(id);
+    return `<div class="item ${on?"":"off"}"><button class="tog" data-act="tog" data-k="${id}" aria-pressed="${on}" aria-label="${esc(it.name)} on the menu">${on?"On":"Off"}</button>
+      <div class="txt"><b>${esc(it.name)}</b> ${Object.keys(it.slots).map(x=>`<span class="tag" title="${K.SLOTS[x].name}">${SLOT_TAG[x]}</span>`).join("")}<div class="tiny muted">costs ${money(uc)} · fair about ${money(fair)}${pl.price[id]>K.REP.overAt*fair?' · <span class="neg">too dear</span>':""}</div></div>
+      <div class="ctl"><button data-act="dec" data-k="p_${id}" aria-label="Lower ${esc(it.name)} price">−</button><output id="o_p_${id}">${money(pl.price[id])}</output><button data-act="inc" data-k="p_${id}" aria-label="Raise ${esc(it.name)} price">+</button></div></div>`}).join("");
+  const canBank=s.day>=K.BANK.minDay&&netWorth(s)>K.START_CASH&&s.lender===0&&s.bank===0;
+  const cateringOk=repAll(s.rep)>=K.CATER.minRep;
+  return `<section>
+  <div class="card steel"><h3>Day ${s.day} of ${s.days} · ${DOW[(s.day-1)%7]}${dt==="we"?" · weekend":""}</h3>
+    <div class="wx">${wxIcon(s.forecast)}<div><h2>${K.WX[s.forecast].name} forecast</h2><p class="small muted">${dt==="we"?"Weekend: families come for lunch, fewer office-goers.":"Weekday: office crowd at breakfast and evening."} The forecast is right about 3 days in 4.</p></div></div>
+    ${evHtml}
+    <p class="small" style="margin-top:10px">With this plan expect about <b class="num">${Math.round(ex.cust)}</b> customers and <b class="num">${money(ex.rev)}</b> of sales${ex.walk>3?`, with about <b class="num neg">${Math.round(ex.walk)}</b> walking off from the queue`:""}.</p>
+  </div>
+  ${s.lastPlan?`<button class="big alt" data-act="repeat">Repeat yesterday's plan<small>Same menu, prices, stock and staff · open the shop</small></button>`:""}
+  <div class="card"><h3>In the shop this morning</h3>
+    <div class="stock">
+      <div class="chipx ${bat<(need.batter||0)?"low":""}"><b>${f1(bat)} kg</b><span>batter${s.batter.old>0?`, ${f1(s.batter.old)} day-old`:""}</span></div>
+      <div class="chipx ${veg+pl.veg<(need.veg||0)?"low":""}"><b>${f1(veg)} kg</b><span>vegetables${s.veg.old>0?", from yesterday":""}</span></div>
+      <div class="chipx ${s.gasKg<5&&!s.spare?"low":""}"><b>${gasTxt}</b><span>LPG</span></div>
+      <div class="chipx ${s.oilQ<0.5?"low":""}"><b>${pctS(s.oilQ)}</b><span>frying oil</span></div>
+      <div class="chipx ${s.hyg<0.5?"low":""}"><b>${pctS(s.hyg)}</b><span>hygiene</span></div>
+      <div class="chipx"><b>${dryDays>=10?"10+":f1(dryDays)} d</b><span>dry goods (auto)</span></div>
+    </div>
+    <p class="tiny muted" style="margin-top:8px">${ordTxt}. Milk is bought fresh each morning and anything left is thrown out at night.</p>
+  </div>
+  <div class="card"><h3>Buy and prepare</h3>
+    ${stepper("milk","Milk to buy",`${money(K.ING.milk.price)}/L · need about ${f1(need.milk||0)} L today`,pl.milk+" L")}
+    ${stepper("veg","Vegetables to buy",`${money(K.ING.veg.price)}/kg · need about ${f1(need.veg||0)} kg · keep 2 days`,pl.veg+" kg")}
+    ${stepper("grind","Batter to grind tonight",`for tomorrow · ${money(K.ING.batter.price)}/kg · up to ${K.GRIND_MAX[pl.cook?1:0]} kg${pl.cook?" with the cook":" without a cook"}`,pl.grind+" kg")}
+    <div class="btnrow" style="margin-top:6px"><button class="ghost" data-act="suggest">Use suggested: ${sg.milk} L milk · ${sg.veg} kg veg · grind ${sg.grind} kg</button></div>
+  </div>
+  <div class="card"><h3>Menu and prices</h3><p class="tiny muted" style="margin-bottom:4px">B breakfast 7–10 · L lunch 12–15 · E evening 16–19. Fair prices rise with your reputation.</p>${items}</div>
+  ${det("staff","Staff and queue",`${pl.cook?"cook":"no cook"}, ${pl.servers} server${pl.servers===1?"":"s"} · ${money(wages)}/day`,`
+    ${stepper("cook","Cook",`${money(K.WAGE.cook)}/day · tastier tiffin, faster counter`,pl.cook?"Yes":"No")}
+    ${stepper("servers","Servers",`${money(K.WAGE.server)}/day each · you serve too`,pl.servers)}
+    ${segP("bonus","Tea money for staff",[[0,"No"],[1,`${money(K.BONUS)} each a day`]],pl.bonus)}
+    <p class="small muted" style="margin-top:6px">Staff morale ${pctS(s.morale)}. Low morale means more no-shows.</p>
+    <div class="tblwrap" style="margin-top:8px"><table class="tt"><tr><th>Slot</th><th>Peak/hr</th><th>Can serve/hr</th><th>Walk off</th></tr>
+    ${cap.map(c=>`<tr><td>${K.SLOTS[c.sl].name}</td><td>${Math.round(c.pk.lam)}</td><td>${Math.round(c.pk.c*c.pk.mu)}</td><td class="${c.w>0.08?"neg":""}">${pctS(c.w)}</td></tr>`).join("")}</table></div>`)}
+  ${det("upkeep","Upkeep, oil and gas",`clean ${money(pl.clean)} · reorder at ${pl.reorder} kg`,`
+    ${segP("clean","Cleaning spend per day",K.CLEAN_OPTS.map(v=>[v,money(v)]),pl.clean)}
+    ${segP("oilRule","Change frying oil when quality drops below",K.OIL_RULES.map(v=>[v,v?pctS(v):"Never"]),pl.oilRule)}
+    ${stepper("reorder","LPG reorder point",`order a ${K.GAS_CYL} kg refill (${money(K.GAS_PRICE)}) when gas falls below this at night; it arrives in ${K.GAS_LEAD[0]}–${K.GAS_LEAD[1]} days`,pl.reorder+" kg")}
+    ${segP("emergency","If gas runs out mid-day",[[1,`Buy black-market (${money(K.GAS_BLACK)})`],[0,"Stop cooking"]],pl.emergency)}
+    <div class="btnrow" style="margin-top:6px"><button class="ghost" data-act="gasorder" ${s.gasOrder||s.spare?"disabled":""}>Order a refill now</button></div>
+    ${segP("cater",`Office catering contract: ${K.CATER.plates} lunch plates a day at ${money(K.CATER.price)}`,[[0,"No"],[1,"Take it"]],pl.cater)}
+    <p class="tiny muted">${cateringOk?"Needs a cook. The plates use rice, vegetables and lunch counter time.":`Offices only sign with shops above ${pctS(K.CATER.minRep)} reputation.`}</p>`)}
+  ${det("money","Khata and money",`${pl.credit==="none"?"no credit":pl.credit==="regulars"?"credit for regulars":"credit for anyone"} · owed ${money(receivables(s))}`,`
+    ${segP("credit","Khata (credit) policy",[["none","No credit"],["regulars","Regulars only"],["anyone","Anyone"]],pl.credit)}
+    <p class="small muted" style="margin-top:4px">Credit brings more customers and loyalty, but the money comes in only at month end (day ${Math.ceil(s.day/K.MONTH)*K.MONTH}), and some never pay.</p>
+    <div class="btnrow" style="margin-top:8px"><button class="ghost" data-act="khata">Open the khata book (${money(receivables(s))})</button></div>
+    <table style="margin-top:10px"><tr><td>Bank loan</td><td>${money(s.bank)}</td></tr><tr><td>Moneylender</td><td class="${s.lender?"neg":""}">${money(s.lender)}</td></tr><tr><td>Rent and bills due on day ${Math.ceil(s.day/K.MONTH)*K.MONTH}</td><td>about ${money(K.RENT+K.ELEC+K.ELEC_GRIND*30*pl.grind)}</td></tr></table>
+    <div class="btnrow" style="margin-top:8px">
+      <button class="ghost" data-act="bank" ${canBank?"":"disabled"}>Bank loan ${money(K.BANK.amount)}</button>
+      <button class="ghost" data-act="bankpay" ${s.bank>0&&s.cash>=s.bank?"":"disabled"}>Repay bank</button>
+      <button class="ghost" data-act="lend" ${s.lender+K.LENDER.chunk<=K.LENDER.max?"":"disabled"}>Moneylender ${money(K.LENDER.chunk)}</button>
+      <button class="ghost" data-act="lendpay" ${s.lender>0&&s.cash>=K.LENDER.chunk?"":"disabled"}>Repay ${money(K.LENDER.chunk)}</button></div>
+    <p class="tiny muted" style="margin-top:6px">Bank: ${(K.BANK.rate*3000).toFixed(1)}% a month, from day ${K.BANK.minDay} once you are in profit and owe the moneylender nothing. Moneylender: ${(K.LENDER.rate*100).toFixed(1)}% a day, any time, up to ${money(K.LENDER.max)}.</p>`)}
+  <button class="big" data-act="open">Open the shop<small>Morning spend about ${money(Math.min(s.cash,pl.milk*K.ING.milk.price+pl.veg*K.ING.veg.price+pl.clean))} · cash ${money(s.cash)}</small></button>
+  </section>`;
+}
+
+/* ---------- service (narration) ---------- */
+function logHTML(n){
+  return s.log.slice(0,n).map(l=>l.c==="slot"?`<div class="h"><span class="t">${esc(l.t)}</span><div class="slot">${esc(l.x)}</div></div>`:
+    `<div class="h"><span class="t">${esc(l.t||"·")}</span><div><div class="${l.c||""}">${esc(l.x)}</div>${l.q?`<div class="q ${l.q.c||""}">${esc(l.q.x)}</div>`:""}</div></div>`).join("");
+}
+function serviceInner(){
+  const done=s.shown>=s.log.length;
+  return `<div class="card"><h3>Day ${s.day} at the shop</h3><div class="log" id="log">${logHTML(s.shown)}</div></div>
+  ${done?`<button class="big alt" data-act="finish">See tonight's accounts</button>`:`<button class="ghost" data-act="skip">Skip ahead</button>`}`;
+}
+function renderService(){
+  if(view!=="game"||tab!=="play"||!s||s.phase!=="service")return;
+  const sec=$("svc");if(!sec){render();return}
+  sec.innerHTML=serviceInner();
+  const last=sec.querySelector(".log .h:last-child");if(last&&last.scrollIntoView&&s.shown<s.log.length)last.scrollIntoView({block:"nearest"});
+}
+
+/* ---------- night accounts ---------- */
+function notes(r){
+  const t=[],pl=s.lastPlan||s.plan;
+  if(r.bankrupt)return["The moneylender will not lend more. The shop is closed."];
+  if(r.walkFrac>0.08)t.push(`${Math.round(r.walk)} customers (${pctS(r.walkFrac)}) walked off from the queue. ${pl.cook?"":"A cook speeds up the counter by half. "}${pl.servers<3?"Another server adds a counter.":""}`);
+  const lostIt=K.ITEM_ORDER.filter(id=>r.lost[id]>=4).sort((a,b)=>r.lost[b]-r.lost[a]);
+  if(r.gasOutAt!=null)t.push(`The gas ran out at ${r.gasOutAt}:00 and the stove went cold. Raise the reorder point or keep the black-market option on.`);
+  else if(r.blackBuys)t.push(`You paid black-market rates for gas. A reorder point of 8–10 kg covers the 1–2 day delivery wait.`);
+  if(lostIt.length&&r.gasOutAt==null){const id=lostIt[0],g=Object.keys(K.ITEMS[id].use)[0];t.push(`You turned away ${r.lost[id]} ${K.ITEMS[id].name.replace(/ \(.*\)/,"").toLowerCase()} orders. Short of ${K.ING[g].name.toLowerCase()}${g==="batter"?": grind more tonight":""}.`)}
+  if(r.milkWaste>=2)t.push(`${f1(r.milkWaste)} L of milk was thrown away (${money(r.milkWaste*K.ING.milk.price)}). Buy closer to the suggested amount.`);
+  if(r.batterWaste>=1.5)t.push(`${f1(r.batterWaste)} kg of day-old batter went in the bin. Grind less tonight.`);
+  if(r.oil[1]<0.5&&!(pl.oilRule>=0.5))t.push(`Frying oil is down to ${pctS(r.oil[1])}. Old oil makes vada and bajji taste bad and hurts hygiene.`);
+  if(r.hyg[1]<0.5)t.push(`Hygiene is ${pctS(r.hyg[1])}. Spend more on cleaning before a food inspector walks in.`);
+  const over=K.ITEM_ORDER.filter(id=>pl.on[id]&&pl.price[id]>K.REP.overAt*fairEff(s,id));
+  if(over.length)t.push(`${over.map(id=>K.ITEMS[id].name).join(", ")} ${over.length>1?"are":"is"} priced well above fair. Customers grumble and reputation slips.`);
+  if(r.cookIn===0&&pl.cook)t.push("The cook didn't come. Morale is "+pctS(r.mor[1])+"; tea money helps.");
+  const toMonth=K.MONTH-((s.day-1)%K.MONTH)-1;
+  if(toMonth>0&&toMonth<=4&&s.cash<K.RENT+K.ELEC)t.push(`Rent and bills of about ${money(K.RENT+K.ELEC)} are due in ${toMonth} day${toMonth>1?"s":""}. Keep cash for them.`);
+  if(s.lender>0)t.push(`You owe the moneylender ${money(s.lender)} at ${(K.LENDER.rate*100).toFixed(1)}% a day. Repay it first.`);
+  if(r.taste.tiffin!=null&&r.taste.tiffin<K.REP.mid&&!pl.cook)t.push("Tiffin tastes ordinary without a cook, so tiffin reputation drifts down.");
+  if(!t.length)t.push("A steady day. Check tomorrow's forecast and the suggested stock before opening.");
+  return t.slice(0,4);
+}
+function renderNight(){
+  const r=s.report,ex=r.ex,m=r.month,d=x=>x>=0.0005?"pos":x<=-0.0005?"neg":"";
+  const rowE=(n,v)=>v?`<tr><td>${n}</td><td class="neg">${money(-v)}</td></tr>`:"";
+  const soldTxt=K.ITEM_ORDER.filter(id=>r.sold[id]).map(id=>`${r.sold[id]} ${K.ITEMS[id].name.replace(/ \(.*\)/,"").toLowerCase()}`).join(", ");
+  return `<section>
+  <div class="card steel"><h3>Night of day ${s.day} · accounts</h3>
+    <div class="wx">${wxIcon(r.wx)}<div><h2>${money(r.rev)} of sales</h2><p class="small muted">${K.WX[r.wx].name} · ${r.cust} customers · ${r.walk} walked off${r.caterMade?` · ${r.caterMade} catering plates`:""}</p></div></div>
+    <p class="small" style="margin-top:8px">${soldTxt||"Nothing sold."}</p></div>
+  <div class="card"><h3>Money</h3><table>
+    <tr><td>Sales paid in cash</td><td class="pos">${money(r.rev-r.credit)}</td></tr>
+    ${r.credit?`<tr><td>Sales written in the khata</td><td class="pos">${money(r.credit)}</td></tr>`:""}
+    ${rowE("Milk, vegetables and dry goods",ex.stock)}${rowE("Batter grinding for tomorrow",ex.grind)}${rowE("Gas",ex.gas)}
+    ${rowE("Wages",ex.wages)}${rowE("Severance",ex.sever)}${rowE("Cleaning and tea money",ex.upkeep)}${rowE("Inspector's fine",ex.fines)}${rowE("Loan interest",ex.interest)}
+    ${m?rowE(`Rent, electricity${m.lic?", licence renewal":""}`,ex.bills)+(m.lostK?rowE("Khata never repaid",m.lostK):""):""}
+    <tr class="total"><td>Today's profit</td><td class="${r.profit>=0?"pos":"neg"}">${money(r.profit)}</td></tr>
+    <tr><td>Cash in the box</td><td>${money(s.cash)}</td></tr>
+    ${m&&m.got?`<tr class="sub"><td>Khata collected tonight (already in profit when sold)</td><td>${money(m.got)}</td></tr>`:""}
+    ${r.autoLoan?`<tr class="sub"><td>Moneylender loan taken to cover cash</td><td>${money(r.autoLoan)}</td></tr>`:""}
+  </table></div>
+  ${m&&m.gone.length?`<div class="card"><h3>Month end khata</h3><p class="small">${m.gone.map(esc).join(", ")} did not pay. ${money(m.lostK)} written off.</p></div>`:""}
+  <div class="card"><h3>Overnight</h3><table>
+    <tr><td>Reputation: tea</td><td class="${d(r.rep1.tea-r.rep0.tea)}">${pctS(r.rep0.tea)} → ${pctS(r.rep1.tea)}</td></tr>
+    <tr><td>Reputation: tiffin</td><td class="${d(r.rep1.tiffin-r.rep0.tiffin)}">${pctS(r.rep0.tiffin)} → ${pctS(r.rep1.tiffin)}</td></tr>
+    <tr><td>Hygiene</td><td class="${d(r.hyg[1]-r.hyg[0])}">${pctS(r.hyg[0])} → ${pctS(r.hyg[1])}</td></tr>
+    <tr><td>Frying oil${r.oil[2]?" (changed this morning)":""}</td><td>${pctS(r.oil[1])}</td></tr>
+    <tr><td>Milk thrown away</td><td>${f1(r.milkWaste)} L</td></tr>
+    <tr><td>Day-old batter thrown away</td><td>${f1(r.batterWaste)} kg</td></tr>
+    <tr><td>Vegetables thrown away</td><td>${f1(r.vegWaste)} kg</td></tr>
+    <tr><td>Batter ground for tomorrow</td><td>${r.gCan} kg${r.gCan<r.gWant?" (cash ran short)":""}</td></tr>
+    <tr><td>LPG left</td><td>${f1(r.gasKg)} kg${r.spare?" + spare":""}${r.ordered?" · refill ordered":""}</td></tr>
+    ${r.cookIn+r.servIn+(s.staff.cook+s.staff.servers)?`<tr><td>Staff morale</td><td class="${d(r.mor[1]-r.mor[0])}">${pctS(r.mor[0])} → ${pctS(r.mor[1])}</td></tr>`:""}
+  </table></div>
+  <div class="card notes"><h3>Notes for next time</h3>${notes(r).map(t=>`<p>${esc(t)}</p>`).join("")}</div>
+  <button class="big" data-act="next">${s.endNext?"See the final result":`Start day ${s.day+1}`}</button>
+  </section>`;
+}
+
+/* ---------- final ---------- */
+function profitBars(){
+  const h=s.history;if(!h.length)return"";
+  return `<div class="chart" id="c_final"></div>`;
+}
+function drawFinal(){
+  const el=$("c_final");if(!el)return;
+  drawBars(el,{cats:s.history.map(x=>"D"+x.day),series:[{name:"Profit",color:"--s1",vals:s.history.map(x=>x.profit),signColor:true}],H:200,
+    readout:i=>`Day ${s.history[i].day}: profit ${money(s.history[i].profit)}, sales ${money(s.history[i].rev)}, ${s.history[i].cust} customers, ${K.WX[s.history[i].wx].name.toLowerCase()}`,
+    def:"Tap a day to see its profit.",labelEvery:Math.ceil(s.history.length/8)});
+}
+function renderFinal(){
+  const prof=netWorth(s)-K.START_CASH,best=(LS.get(K_BEST)||{})[String(s.days)],per=prof/s.days,bk=s.over==="bankrupt";
+  const grade=bk?"Closed by the moneylender":per>=2000?"Talk of the town":per>=1000?"Busy corner shop":per>=400?"Steady little shop":per>0?"Just about paying":"Shutters down";
+  return `<section>
+  <div class="card title-card">${tumbler("hero")}<div class="lbl">${bk?`Closed on day ${s.history.length} of ${s.days}`:`${s.days} days done`}</div><h1>${grade}</h1>
+    <p>${bk?"Cash ran out and the moneylender's limit was reached. ":""}You end with <b class="num">${money(s.cash)}</b> in cash, <b class="num">${money(receivables(s))}</b> owed in the khata and <b class="num">${money(s.bank+s.lender)}</b> of loans.</p>
+    <p style="margin-top:6px">Net result: <b class="num ${prof>=0?"pos":"neg"}">${money(prof)}</b> on the ${money(K.START_CASH)} you started with.</p>
+    <p class="small muted" style="margin-top:6px">${Math.round(s.totals.cust).toLocaleString("en-IN")} customers · ${money(s.totals.rev)} of sales · ${Math.round(s.totals.walk)} walked off · reputation ${pctS(repAll(s.rep))}<br>Best ${s.days}-day result on this phone: ${best!=null?money(best):"none yet"}${s.newBest?" (new record)":""}</p></div>
+  <div class="card"><h3>Profit by day</h3>${profitBars()}</div>
+  <button class="big" data-act="title">Play again</button>
+  </section>`;
+}
+
+/* ---------- title ---------- */
+function renderTitle(){
+  const auto=LS.get(K_AUTO),best=LS.get(K_BEST)||{};
+  const canResume=auto&&auto.v===1&&auto.phase!=="final";
+  return `<section>
+  <div class="card title-card">${tumbler("hero")}
+    <div class="lbl">A roadside business game</div>
+    <h1>Chai <em>&amp;</em><br>Tiffin Shop</h1>
+    <p class="muted">You have ${money(K.START_CASH)} and a small shop by the bus stand. Boil the milk, grind the batter, watch the gas, and keep the queue moving from 7 in the morning to 7 at night.</p>
+  </div>
+  ${canResume?`<button class="big alt" data-act="resume">Continue<small>Day ${auto.day} of ${auto.days} · ${money(auto.cash)} cash</small></button>`:""}
+  <div class="card"><h3>New game</h3>
+    <div class="lenpick">${[30,60,90].map(d=>`<button data-act="len" data-d="${d}" aria-pressed="${sel===d}">${d} days${best[d]!=null?`<br><span class="tiny muted num">best ${money(best[d])}</span>`:""}</button>`).join("")}</div>
+    <div style="margin-top:12px">${confirmNew?`<p class="small neg" style="margin-bottom:8px">This replaces your autosave. Saved slots stay safe.</p><div class="btnrow"><button class="big" data-act="startok">Start anyway</button><button class="ghost" data-act="startno">Cancel</button></div>`:`<button class="big" data-act="start">Start a ${sel}-day game</button>`}</div>
+  </div>
+  <div class="btnrow"><button class="ghost" data-act="menu">Saves</button><button class="ghost" data-act="help">How to play</button></div>
+  </section>`;
+}
+function render(){
+  applyTab();
+  if(tab!=="play")return;
+  const main=$("main");
+  if(view==="title"||!s){main.innerHTML=renderTitle();return}
+  $("stats").innerHTML=stats();
+  if(s.phase==="morning")main.innerHTML=renderMorning();
+  else if(s.phase==="service")main.innerHTML=`<section id="svc">${serviceInner()}</section>`;
+  else if(s.phase==="night")main.innerHTML=renderNight();
+  else{main.innerHTML=renderFinal();drawFinal()}
+}
+
+/* ---------- sheets: saves, help, khata ---------- */
+function encodeSave(o){return PREFIX+btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
+function decodeSave(t){t=t.trim();if(!t.startsWith(PREFIX))throw 0;const o=JSON.parse(decodeURIComponent(escape(atob(t.slice(PREFIX.length)))));if(!o||o.v!==1||!o.rep||!o.plan||!o.dry||!o.batter)throw 0;return o}
+function fmtTime(ts){try{return new Date(ts).toLocaleString("en-IN",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return""}}
+function openSheet(mode){sheetMode=mode;$("sheet").hidden=false;renderSheet();$("panel").scrollTop=0}
+function closeSheet(){$("sheet").hidden=true}
+const sheetHead=t=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>${t}</h2><button class="iconbtn" data-act="close">Close</button></div>`;
+function renderSheet(){
+  const p=$("panel");
+  if(sheetMode==="help"){
+    p.innerHTML=sheetHead("How to play")+`<div class="card help small">
+    <p><b>The day.</b> Each morning you read the forecast, buy milk and vegetables, set the menu and prices, and decide staff, cleaning, gas and credit. Then the shop opens for three slots: breakfast 7–10, lunch 12–15 and evening 16–19. The day is told hour by hour, and at night you see the accounts.</p>
+    <p><b>Customers.</b> Weekdays bring the office and bus crowd at breakfast and evening. Weekends bring families at lunch. Rain keeps people indoors but makes them want tea and bajji. A good reputation brings more people and lets you charge a little more.</p>
+    <p><b>Menu and prices.</b> Each item has a fair price. Near it, most people order; above about 1.25 times fair they start to refuse and grumble. Turning items off makes the shop less attractive for that slot. Meals are lunch only, bajji evening only.</p>
+    <p><b>Ingredients.</b> Every item uses shared stock. Milk spoils every night. Batter is ground the night before; day-old batter still works but tastes sour, and is thrown out after that. Vegetables keep two days. Tea powder, coffee, sugar, rice and oil are topped up automatically.</p>
+    <p><b>Frying oil.</b> Oil wears out with every vada and bajji. Old oil hurts taste, hygiene and reputation. Choose when to change it; a change uses ${K.OIL_KADAI} L of fresh oil.</p>
+    <p><b>Gas.</b> Everything, tea included, needs LPG. A ${K.GAS_CYL} kg cylinder lasts a few days. Refills cost ${money(K.GAS_PRICE)} and arrive at noon ${K.GAS_LEAD[0]}–${K.GAS_LEAD[1]} days after you order. Set a reorder point and the shop orders at night when gas drops below it. If gas runs out you can pay ${money(K.GAS_BLACK)} on the black market or stop cooking.</p>
+    <p><b>Staff and queues.</b> You always serve. Each server adds a counter; a cook makes every counter half again as fast and makes tiffin tastier. When the queue is long, people with a bus to catch walk off, which costs sales and reputation. Low morale means no-shows; tea money lifts morale.</p>
+    <p><b>Khata.</b> Letting regulars buy on credit brings more custom and loyalty. Credit for anyone brings even more, but strangers often vanish. Accounts are settled at each month end.</p>
+    <p><b>Hygiene.</b> Cleaning money keeps hygiene up. A food inspector visits now and then and fines dirty kitchens.</p>
+    <p><b>Bills and loans.</b> Rent ${money(K.RENT)} and electricity are due every ${K.MONTH} days, plus a licence renewal on day ${K.LICENCE_DAY}. If cash goes below zero the moneylender covers it at ${(K.LENDER.rate*100).toFixed(1)}% a day, up to ${money(K.LENDER.max)}. Past that, the shop closes. A bank loan is cheaper once you have a profitable record.</p>
+    <p><b>Quick days.</b> Your plan carries over. "Repeat yesterday's plan" opens the shop in one tap. "Use suggested" fills milk, vegetables and batter for the forecast.</p>
+    <p><b>Score.</b> Your result is cash plus khata owed minus loans, compared with the ${money(K.START_CASH)} you started with.</p>
+    <p><b>Saving.</b> The game saves after every step. Use the three slots for separate games and the save code to move a game to another phone.</p></div>`;
+    return;
+  }
+  if(sheetMode==="khata"){
+    const list=s?s.khata.filter(a=>a.owed>0).sort((a,b)=>b.owed-a.owed):[];
+    p.innerHTML=sheetHead("Khata book")+`<div class="card"><h3>Outstanding</h3>
+      ${list.length?`<table>${list.map(a=>`<tr><td>${esc(a.name)}${a.stranger?' <span class="tag">new face</span>':""}<div class="tiny muted">since day ${a.since}</div></td><td>${money(a.owed)}</td></tr>`).join("")}
+      <tr class="total"><td>Total owed to you</td><td>${money(receivables(s))}</td></tr></table>`:`<p class="small muted">Nobody owes you anything.</p>`}
+      <p class="small muted" style="margin-top:10px">Accounts are settled on day ${s?Math.ceil(s.day/K.MONTH)*K.MONTH:K.MONTH}. Regulars almost always pay (${pctS(1-K.DEFAULT.regular)}); new faces pay about ${pctS(1-K.DEFAULT.stranger)} of the time.</p></div>`;
+    return;
+  }
+  const sl=slots(),auto=LS.get(K_AUTO),inGame=s&&view==="game";
+  p.innerHTML=sheetHead("Saves")+`
+  <div class="card"><h3>Autosave</h3><p class="small">${auto?`Day ${auto.day} of ${auto.days} · ${money(auto.cash)} · ${fmtTime(auto.savedAt)}`:"Nothing yet."} Saved after every step on this phone.</p></div>
+  <div class="card"><h3>Save slots</h3>
+    ${[1,2,3].map(n=>{const o=sl[n];return `<div class="slot"><div class="info"><b>Slot ${n}</b><br><span class="muted">${o?`Day ${o.day}/${o.days} · ${money(o.cash)} · ${fmtTime(o.savedAt)}`:"Empty"}</span></div>
+      <button data-act="slotsave" data-n="${n}" id="ss${n}" ${inGame?"":"disabled"}>Save</button><button data-act="slotload" data-n="${n}" id="sl${n}" ${o?"":"disabled"}>Load</button></div>`}).join("")}
+  </div>
+  <div class="card"><h3>Save code</h3><p class="small muted" style="margin-bottom:8px">Copy this text into a note or message to keep it safe or carry the game to another device.</p>
+    ${inGame?`<label for="codeOut" class="lbl">Your code</label><textarea id="codeOut" readonly>${encodeSave(s)}</textarea><button class="ghost" data-act="copy" style="margin-top:8px">Copy code</button>`:`<p class="small muted">Start or continue a game to get a code.</p>`}
+    <label for="codeIn" class="lbl" style="display:block;margin-top:12px">Paste a code to load</label>
+    <textarea id="codeIn" placeholder="${PREFIX}..."></textarea><button class="ghost" data-act="codeload" style="margin-top:8px">Load from code</button>
+  </div>
+  ${inGame?`<div class="btnrow"><button class="ghost" data-act="help">How to play</button><button class="ghost" data-act="totitle">Back to title screen</button></div>`:""}`;
+}
+function loadState(o){clearTimeout(revealTimer);s=clone(o);delete s.savedAt;view="game";autosave();closeSheet();tab="play";try{history.replaceState(null,"","#play")}catch(e){}render();if(s.phase==="service")runReveal();toast("Game loaded")}
+
+/* ---------- input ---------- */
+function rerenderKeep(){const y=window.scrollY;render();window.scrollTo(0,y)}
+document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.id&&d.id.startsWith("d_"))openCards[d.id.slice(2)]=d.open},true);
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-act]");if(!b||b.disabled)return;
+  const a=b.dataset.act,k=b.dataset.k;
+  if((a==="inc"||a==="dec")&&s){
+    const d=a==="inc"?1:-1,pl=s.plan;
+    if(k.startsWith("p_")){const id=k.slice(2),it=K.ITEMS[id];pl.price[id]=clamp(pl.price[id]+d*it.step,it.step,it.fair*3)}
+    else{const [lo,hi,st]=LIM[k];pl[k]=clamp(pl[k]+d*st,lo,hi);if(k==="cook"&&!pl.cook)pl.cater=0}
+    autosave();rerenderKeep();return;
+  }
+  switch(a){
+    case "tog":s.plan.on[k]=s.plan.on[k]?0:1;autosave();rerenderKeep();break;
+    case "pset":{const v=b.dataset.v;s.plan[k]=isNaN(+v)?v:+v;
+      if(k==="cater"&&s.plan.cater){if(!s.plan.cook){s.plan.cater=0;toast("Catering needs a cook");}else if(repAll(s.rep)<K.CATER.minRep){s.plan.cater=0;toast("Offices want a better reputation first")}}
+      autosave();rerenderKeep();break}
+    case "suggest":{const g=suggest(s,s.plan,1.1);s.plan.milk=g.milk;s.plan.veg=g.veg;s.plan.grind=g.grind;autosave();rerenderKeep();toast("Stock set for today's forecast");break}
+    case "gasorder":if(!s.gasOrder&&!s.spare){s.gasOrder={day:s.day+K.GAS_LEAD[0]+Math.floor(Math.random()*(K.GAS_LEAD[1]-K.GAS_LEAD[0]+1))};autosave();rerenderKeep();toast("Refill ordered for day "+s.gasOrder.day)}break;
+    case "bank":s.bank+=K.BANK.amount;s.cash+=K.BANK.amount;autosave();rerenderKeep();toast("Bank loan credited");break;
+    case "bankpay":if(s.cash>=s.bank){s.cash-=s.bank;s.bank=0;autosave();rerenderKeep();toast("Bank loan repaid")}break;
+    case "lend":s.lender+=K.LENDER.chunk;s.cash+=K.LENDER.chunk;autosave();rerenderKeep();toast("Moneylender paid you "+money(K.LENDER.chunk));break;
+    case "lendpay":if(s.cash>=K.LENDER.chunk&&s.lender>0){s.lender-=K.LENDER.chunk;s.cash-=K.LENDER.chunk;autosave();rerenderKeep();toast("Repaid "+money(K.LENDER.chunk))}break;
+    case "khata":openSheet("khata");break;
+    case "open":openShop(false);break;
+    case "repeat":openShop(true);break;
+    case "skip":clearTimeout(revealTimer);s.shown=s.log.length;renderService();break;
+    case "finish":finishService();break;
+    case "next":nextDay();break;
+    case "tab":tab=b.dataset.tab;try{history.replaceState(null,"",tab==="tech"?"#tech":"#play")}catch(err){}render();if(tab==="tech")renderTech();else if(s&&s.phase==="service")runReveal();window.scrollTo(0,0);break;
+    case "tset":{const v=b.dataset.v;T[k]=isNaN(+v)?v:+v;saveT();renderTech();break}
+    case "tload":techFromGame();break;
+    case "treset":T=Object.assign({},TECH_DEF);saveT();renderTech();toast("Inputs reset");break;
+    case "len":sel=+b.dataset.d;confirmNew=null;render();break;
+    case "start":{const au=LS.get(K_AUTO);if(au&&au.phase!=="final")confirmNew=true,render();else newGame(sel);break}
+    case "startok":confirmNew=null;newGame(sel);break;
+    case "startno":confirmNew=null;render();break;
+    case "resume":{const au=LS.get(K_AUTO);if(au)loadState(au);break}
+    case "title":clearTimeout(revealTimer);view="title";confirmNew=null;render();window.scrollTo(0,0);break;
+    case "menu":openSheet("saves");break;
+    case "help":openSheet("help");break;
+    case "close":closeSheet();break;
+    case "totitle":clearTimeout(revealTimer);closeSheet();view="title";render();break;
+    case "slotsave":{const sl=slots();sl[b.dataset.n]=Object.assign({},s,{savedAt:Date.now()});toast(LS.set(K_SLOTS,sl)?"Saved to slot "+b.dataset.n:"This browser blocked saving. Use the save code.");renderSheet();break}
+    case "slotload":{const o=slots()[b.dataset.n];if(o)loadState(o);break}
+    case "copy":{const ta=$("codeOut"),txt=ta.value,fb=()=>{ta.focus();ta.select();toast("Selected. Long-press to copy")};
+      try{navigator.clipboard.writeText(txt).then(()=>toast("Code copied"),fb)}catch(err){fb()}break}
+    case "codeload":{let o=null;try{o=decodeSave($("codeIn").value)}catch(err){toast("That code didn't work. Paste the whole thing, starting with "+PREFIX);break}loadState(o);break}
+  }
+});
+$("sheet").addEventListener("click",e=>{if(e.target.id==="sheet")closeSheet()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("sheet").hidden)closeSheet()});
+
+/* =====================================================================
+   TECH DISCUSSION: analysis built on the same engine functions
+   (hourRates, expectDay, runDay, botPlan) and the same constants.
+   ===================================================================== */
+const TECH_DEF={startCash:5000,startRep:30,k:110,cook:1,servers:1,credit:"regulars",clean:150,oilRule:50,reorder:9,buffer:110,
+  qRep:60,qSlot:"breakfast",qDay:"wd",nvItem:"milk",nvKnow:0,dflt:45,
+  runs:200,horizon:60,target:40000,month:1,
+  expType:"outlet",trigger:80,setup:60000,reserve:15000,foot2:80,carry:50,cann:10,mwage:600,plates:30,cprice:70,csetup:15000};
+let T=Object.assign({},TECH_DEF,LS.get(K_TECH)||{});
+function saveT(){LS.set(K_TECH,T)}
+function applyTab(){
+  $("main").hidden=tab!=="play";$("tech").hidden=tab!=="tech";
+  $("bar").hidden=tab!=="play"||view!=="game"||!s;
+  $("tab_play").setAttribute("aria-selected",tab==="play");$("tab_tech").setAttribute("aria-selected",tab==="tech");
+}
+function techFromGame(){
+  const g=s||LS.get(K_AUTO);
+  if(!g||!g.plan){toast("Start a game first");return}
+  const pl=g.plan,ra=repAll(g.rep);let rs=0,n=0;
+  for(const id of K.ITEM_ORDER)if(pl.on[id]){rs+=pl.price[id]/(K.ITEMS[id].fair*(K.FAIR_REP[0]+K.FAIR_REP[1]*g.rep[K.ITEMS[id].cat]));n++}
+  Object.assign(T,{startCash:clamp(Math.round(g.cash/500)*500,1000,50000),startRep:clamp(Math.round(ra*20)*5,5,100),qRep:clamp(Math.round(Math.max(ra,0.3)*20)*5,10,100),
+    k:clamp(Math.round(rs/Math.max(1,n)*20)*5,70,160),cook:pl.cook,servers:pl.servers,credit:pl.credit,clean:pl.clean,oilRule:Math.round(pl.oilRule*100),reorder:pl.reorder});
+  saveT();renderTech();toast("Loaded cash, reputation, prices, staff and policies from your game");
+}
+
+/* ---- configuration seen by the engine while the tab computes ---- */
+function cfgK(){const c=JSON.parse(JSON.stringify(K0));c.START_CASH=T.startCash;c.START_REP=T.startRep/100;c.DEFAULT.stranger=T.dflt/100;c.CATER.plates=T.plates;c.CATER.price=T.cprice;return c}
+let TK=K0;
+function withK(fn){const old=K;K=TK;try{return fn()}finally{K=old}}
+function policy(){return{k:T.k/100,cook:T.cook,servers:T.servers,clean:T.clean,oilRule:T.oilRule/100,credit:T.credit,reorder:T.reorder,emergency:1,buffer:T.buffer/100}}
+function probe(rep,day){const st=newState(30);st.rep={tea:rep,tiffin:rep};st.day=day||1;st.forecast="sunny";st.event=null;st.batter={fresh:0,old:0};st.veg={fresh:0,old:0};return st}
+function planFor(st,over){const P=Object.assign(policy(),over||{});return botPlan(st,P)}
+function wagesOf(pl){return pl.cook*K.WAGE.cook+pl.servers*K.WAGE.server}
+function dayEcon(st,pl,ctx){
+  const e=expectDay(st,pl,ctx);let gross=0,v=0,gas=K.GAS_IDLE*9,gasB=K.GAS_IDLE*3,fried=0;
+  for(const id of K.ITEM_ORDER){const u=e.units[id];if(!u)continue;const m=(id==="meals"&&ctx.cater?((u-ctx.cater)*pl.price[id]+ctx.cater*K.CATER.price)/u:pl.price[id])-unitCost(id);gross+=u*m;v+=u*m*m;gas+=u*K.ITEMS[id].gas;fried+=u*(K.ITEMS[id].fried||0)}
+  for(const h of e.hr)if(h.slot==="breakfast")K.ITEM_ORDER.forEach((id,j)=>gasB+=h.lam*(1-h.w)*h.p[j]*K.ITEMS[id].gas);
+  return{e,gross,v,gas,gasB,fried,need:ingNeed(e.units)};
+}
+function fixedDay(pl,fried){
+  const deg=K.OIL_DEG[0]+K.OIL_DEG[1]*(fried||0),oil=pl.oilRule>0?K.OIL_KADAI*K.ING.oil.price*deg/(1-pl.oilRule):0;
+  return{rent:(K.RENT+K.ELEC)/K.MONTH,wages:wagesOf(pl),clean:pl.clean,oil,all:(K.RENT+K.ELEC)/K.MONTH+wagesOf(pl)+pl.clean+oil};
+}
+/* weather × weekday scenarios with probabilities */
+function scenarios(){const out=[];for(const dt of ["wd","we"])for(const w of K.WX_ORDER)out.push({dt,wx:w,p:(dt==="wd"?5/7:2/7)*K.WX[w].w/100});return out}
+function blended(rep,over){
+  const st=probe(rep),pl=planFor(st,over);let E=0,E2=0,cust=0,walk=0,rev=0,gas=0,gas2=0,gasB=0,fried=0;const rows=[];
+  for(const sc of scenarios()){const d=dayEcon(st,pl,{dt:sc.dt,wx:sc.wx,ev:null,cook:pl.cook,servers:pl.servers,cater:0});
+    E+=sc.p*d.gross;E2+=sc.p*(d.v+d.gross*d.gross);cust+=sc.p*d.e.cust;walk+=sc.p*d.e.walk;rev+=sc.p*d.e.rev;gas+=sc.p*d.gas;gas2+=sc.p*d.gas*d.gas;gasB+=sc.p*d.gasB;fried+=sc.p*d.fried;rows.push(Object.assign({},sc,{d}))}
+  return{st,pl,E,sd:Math.sqrt(Math.max(0,E2-E*E)),cust,walk,rev,gas,gasSdMix:Math.sqrt(Math.max(0,gas2-gas*gas)),gasB,fried,rows,fixed:fixedDay(pl,fried)};
+}
+function normCdf(z){const t=1/(1+0.2316419*Math.abs(z)),d=0.3989423*Math.exp(-z*z/2);const p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p}
+const normPdf=z=>0.3989423*Math.exp(-z*z/2);
+function pct(a,q){if(!a.length)return NaN;const b=Float64Array.from(a).sort();const i=(b.length-1)*q,lo=Math.floor(i);return b[lo]+(b[Math.min(lo+1,b.length-1)]-b[lo])*(i-lo)}
+
+/* ---- chart helpers ---- */
+function niceStep(range,n){const raw=range/n||1,mag=Math.pow(10,Math.floor(Math.log10(raw)));return[1,2,2.5,5,10].map(x=>x*mag).find(x=>x>=raw)}
+function niceTicks(lo,hi,n){if(hi<=lo)hi=lo+1;const st=niceStep(hi-lo,n),a=Math.floor(lo/st)*st,out=[];for(let v=a;v<=hi+st*0.999;v+=st)out.push(+v.toFixed(10));return out}
+const kfmt=v=>Math.abs(v)>=1000?(v<0?"−":"")+"₹"+(Math.abs(v)>=100000?(Math.abs(v)/100000).toFixed(Math.abs(v)>=1000000?0:1).replace(/\.0$/,"")+"L":(Math.abs(v)/1000).toFixed(Math.abs(v)>=10000?0:1).replace(/\.0$/,"")+"k"):money(v);
+function chartFrame(el,H){const W=Math.max(280,Math.round(el.clientWidth||340));return{W,H,l:48,r:12,t:14,b:28}}
+function hookHover(el,pick,def){
+  const svg=el.querySelector("svg"),out=el.querySelector(".readout"),g=svg.querySelector(".guide");out.textContent=def;
+  const move=e=>{const bb=svg.getBoundingClientRect(),vb=svg.viewBox.baseVal,x=(e.clientX-bb.left)*vb.width/bb.width;const h=pick(x);if(!h)return;
+    g.setAttribute("x1",h.x);g.setAttribute("x2",h.x);g.style.display="";out.textContent=h.text};
+  svg.addEventListener("pointermove",move);svg.addEventListener("pointerdown",move);
+  svg.addEventListener("pointerleave",()=>{g.style.display="none";out.textContent=def});
+}
+const linePath=pts=>pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join("");
+const legendHTML=items=>`<div class="legend">${items.map(([n,c,kind])=>`<span><i class="${kind||""}" style="${kind==="dash"?"":`background:var(${c})`}${kind==="sq"?";height:10px;width:10px":""}"></i>${n}</span>`).join("")}</div>`;
+function drawLines(el,o){
+  const f=chartFrame(el,o.H||220),xs=o.xs,n=xs.length,all=o.series.flatMap(s=>s.ys).filter(Number.isFinite);
+  let lo=o.ymin!=null?o.ymin:Math.min(0,...all),hi=o.ymax!=null?o.ymax:Math.max(...all);if(hi<=lo)hi=lo+1;
+  const tk=niceTicks(lo,hi,4),y0=tk[0],y1=tk[tk.length-1];
+  const X=i=>f.l+i/(n-1)*(f.W-f.l-f.r),Y=v=>f.t+(y1-clamp(v,y0,y1))/(y1-y0)*(f.H-f.t-f.b);
+  let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="${esc(o.label||"chart")}">`;
+  tk.forEach(v=>svg+=`<line class="grid" x1="${f.l}" x2="${f.W-f.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${f.l-6}" y="${Y(v)+4}" text-anchor="end">${(o.yfmt||kfmt)(v)}</text>`);
+  if(y0<0&&y1>0)svg+=`<line x1="${f.l}" x2="${f.W-f.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)"/>`;
+  const every=Math.max(1,Math.ceil(n/7));for(let i=0;i<n;i+=every)svg+=`<text class="ax" x="${X(i)}" y="${f.H-8}" text-anchor="middle">${(o.xfmt||String)(xs[i])}</text>`;
+  (o.marks||[]).forEach(m=>{svg+=`<line x1="${X(m.i)}" x2="${X(m.i)}" y1="${f.t}" y2="${f.H-f.b}" stroke="var(${m.color||"--muted"})" stroke-width="1.5" stroke-dasharray="5 4"/><text class="lab" x="${X(m.i)+(m.i>n*0.6?-4:4)}" y="${f.t+12+(m.row||0)*14}" text-anchor="${m.i>n*0.6?"end":"start"}">${esc(m.label)}</text>`});
+  o.series.forEach(s=>svg+=`<path d="${linePath(s.ys.map((v,i)=>[X(i),Y(v)]))}" fill="none" stroke="var(${s.color})" stroke-width="${s.w||2}" stroke-linejoin="round" ${s.dash?'stroke-dasharray="6 4"':""}/>`);
+  (o.dots||[]).forEach(d=>svg+=`<circle cx="${X(d.i)}" cy="${Y(d.v)}" r="5" fill="var(${d.color||"--ink"})" stroke="var(--card)" stroke-width="2"/>`);
+  svg+=`<line class="guide" y1="${f.t}" y2="${f.H-f.b}" style="display:none"/></svg>`;
+  el.innerHTML=(o.series.length>1||o.legend?legendHTML(o.legend||o.series.map(s=>[s.name,s.color,s.dash?"dash":""])):"")+svg+`<div class="readout"></div>`;
+  hookHover(el,x=>{const i=clamp(Math.round((x-f.l)/(f.W-f.l-f.r)*(n-1)),0,n-1);return{x:X(i),text:o.readout(i)}},o.def);
+}
+function drawBars(el,o){
+  const f=chartFrame(el,o.H||210),n=o.cats.length,S=o.series,all=S.flatMap(s=>s.vals).filter(Number.isFinite);
+  const tk=niceTicks(Math.min(0,...all),Math.max(1,...all),4),y0=tk[0],y1=tk[tk.length-1];
+  const Y=v=>f.t+(y1-v)/(y1-y0)*(f.H-f.t-f.b),gw=(f.W-f.l-f.r)/n,bw=Math.max(1.5,Math.min(40,(gw-Math.min(14,gw*0.25))/S.length-1));
+  let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="${esc(o.label||"bar chart")}">`;
+  tk.forEach(v=>svg+=`<line class="grid" x1="${f.l}" x2="${f.W-f.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${f.l-6}" y="${Y(v)+4}" text-anchor="end">${(o.yfmt||kfmt)(v)}</text>`);
+  const le=o.labelEvery||1;
+  for(let i=0;i<n;i++){const cx=f.l+gw*(i+.5),x0=cx-(S.length*(bw+1)-1)/2;
+    if(i%le===0)svg+=`<text class="ax" x="${cx}" y="${f.H-8}" text-anchor="middle">${esc(o.cats[i])}</text>`;
+    S.forEach((s,j)=>{const v=s.vals[i];if(!Number.isFinite(v))return;const x=x0+j*(bw+1),yb=Y(0),y=Y(v),h=Math.abs(yb-y),r=Math.min(3,h/2,bw/2);
+      const col=s.signColor&&v<0?"--bad":s.color;
+      const d=v>=0?`M${x} ${yb}V${y+r}Q${x} ${y} ${x+r} ${y}H${x+bw-r}Q${x+bw} ${y} ${x+bw} ${y+r}V${yb}Z`:`M${x} ${yb}H${x+bw}V${y-r}Q${x+bw} ${y} ${x+bw-r} ${y}H${x+r}Q${x} ${y} ${x} ${y-r}Z`;
+      svg+=`<path d="${d}" fill="var(${col})"/>`;if(o.values&&n*S.length<=8)svg+=`<text class="ax" x="${x+bw/2}" y="${v>=0?y-4:y+12}" text-anchor="middle" style="fill:var(--ink)">${kfmt(v)}</text>`})}
+  svg+=`<line x1="${f.l}" x2="${f.W-f.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)"/><line class="guide" y1="${f.t}" y2="${f.H-f.b}" style="display:none"/></svg>`;
+  el.innerHTML=(S.length>1?legendHTML(S.map(s=>[s.name,s.color,"sq"])):"")+svg+`<div class="readout"></div>`;
+  hookHover(el,x=>{const i=clamp(Math.floor((x-f.l)/gw),0,n-1);return{x:f.l+gw*(i+.5),text:o.readout(i)}},o.def);
+}
+
+/* ---- Monte Carlo jobs (time-sliced so the page stays responsive) ---- */
+let MC={key:null,done:false,base:null,exp:null,cred:null,ms:0},mcJob=null;
+function mcKey(){return JSON.stringify([T.startCash,T.startRep,T.k,T.cook,T.servers,T.credit,T.clean,T.oilRule,T.reorder,T.buffer,T.dflt,T.runs,T.horizon,T.expType,T.trigger,T.setup,T.reserve,T.foot2,T.carry,T.cann,T.mwage,T.plates,T.cprice,T.csetup])}
+function expOpt(){return T.expType==="outlet"?{type:"outlet",trigger:T.trigger/100,setup:T.setup,reserve:T.reserve,foot2:T.foot2/100,carry:T.carry/100,cann:T.cann/100,wage:T.mwage}
+  :{type:"cater",trigger:Math.max(T.trigger/100,TK.CATER.minRep),setup:T.csetup,reserve:T.reserve}}
+function startMC(){
+  const key=mcKey();if(MC.key===key&&(MC.done||mcJob))return;
+  if(mcJob)clearTimeout(mcJob.timer);
+  const P=policy(),N=T.runs,H=T.horizon,nc=Math.max(50,Math.round(N/4)),ex=expOpt();
+  const tasks=[];for(let i=0;i<N;i++)tasks.push(["pair",i]);
+  for(const c of ["none","regulars","anyone"])if(c!==T.credit||H<30)for(let i=0;i<nc;i++)tasks.push(["cred",i,c]);
+  MC={key,done:false,base:[],exp:[],cred:{none:[],regulars:[],anyone:[]},ms:0};
+  const job={tasks,k:0,cache:new Map(),t0:performance.now(),cpu:0};mcJob=job;
+  const slice=()=>{
+    if(mcJob!==job)return;
+    const a=performance.now(),oldK=K;K=TK;SUG_CACHE=job.cache;
+    try{while(job.k<tasks.length&&performance.now()-a<24){const [kind,i,c]=tasks[job.k++];
+      if(kind==="pair"){const pr=simPair(i+1,H,P,ex);MC.base.push(pr.base);MC.exp.push(pr.exp)}
+      else MC.cred[c].push(simRun(i+1,30,Object.assign({},P,{credit:c})))}}
+    finally{K=oldK;SUG_CACHE=null}
+    job.cpu+=performance.now()-a;
+    document.querySelectorAll(".mcstat").forEach(e=>e.innerHTML=`Simulating ${Math.round(job.k/tasks.length*100)}%<div class="prog"><i style="width:${job.k/tasks.length*100}%"></i></div>`);
+    if(job.k<tasks.length){job.timer=setTimeout(slice,0);return}
+    if(H>=30)MC.cred[T.credit]=MC.base.slice(0,nc); // same seeds, same first 30 days
+    MC.done=true;MC.ms=job.cpu;mcJob=null;drawMC();
+  };
+  job.timer=setTimeout(slice,0);
+}
+
+/* ---- layout ---- */
+const SLF={};
+function sl(id,label,min,max,step,fmt,hint){SLF[id]=fmt;return `<div class="fld"><label for="t_${id}"><span>${label}</span><output id="v_${id}">${fmt(T[id])}</output></label><input type="range" id="t_${id}" data-t="${id}" min="${min}" max="${max}" step="${step}" value="${T[id]}">${hint?`<div class="tiny muted">${hint}</div>`:""}</div>`}
+function seg(k,label,opts){return `<div class="segrow"><span>${label}</span><div class="seg">${opts.map(([v,n])=>`<button data-act="tset" data-k="${k}" data-v="${v}" aria-pressed="${String(T[k])===String(v)}">${n}</button>`).join("")}</div></div>`}
+const pctf=v=>v+"%",rs=v=>money(v),nf=v=>String(v),kgf=v=>v+" kg";
+function verdict(cls,tag,html){return `<div class="verdict ${cls}"><i>${tag}</i><div>${html}</div></div>`}
+function kpi(v,l,sub){return `<div class="kpi"><span class="lbl">${l}</span><b>${v}</b>${sub?`<span class="small muted">${sub}</span>`:""}</div>`}
+const P100=x=>Number.isFinite(x)?(x>0&&x<0.01?"<1%":x<1&&x>0.99?">99%":Math.round(x*100)+"%"):"–";
+function renderTech(){
+  const el=$("tech");if(tab!=="tech")return;
+  const M=Math.max(1,Math.floor(T.horizon/30));if(T.month>M)T.month=M;
+  el.innerHTML=`
+  <div class="card steel"><div class="prose"><h2>Running the shop as a business</h2>
+    <p class="muted">Every number here comes from the rules the game plays by: the same arrival rates, price curves, queue model, spoilage, gas lead time and khata defaults. The simulations call the game's own day function with a seeded random generator.</p></div>
+    <div class="btnrow" style="margin-top:10px"><button class="ghost" data-act="tload">Use my current game</button><button class="ghost" data-act="treset">Reset inputs</button></div></div>
+
+  <div class="card"><div class="sec-n">1 · STARTING POINT</div><h2>What binds on day one</h2>
+    <div class="flds">${sl("startCash","Starting cash",1000,50000,500,rs)}${sl("startRep","Starting reputation",5,100,5,pctf)}</div>
+    ${seg("cook","Cook",[[0,"None"],[1,"Hired"]])}
+    <div class="flds">${sl("servers","Servers besides you",0,3,1,nf)}</div>
+    <div class="tblwrap"><table class="tt txt" id="o_cons"></table></div><div id="o_bind"></div></div>
+
+  <div class="card"><div class="sec-n">2 · UNIT ECONOMICS</div><h2>What each plate earns</h2>
+    <div class="flds">${sl("k","Prices as % of fair",70,160,5,pctf,"Fair price rises with reputation: ×(0.85 + 0.3·rep)")}${sl("qRep","Reputation once established",10,100,5,pctf,"Used by sections 2–7")}${sl("clean","Cleaning per day",0,300,50,rs)}</div>
+    <div class="tblwrap"><table class="tt" id="o_unit"></table></div>
+    <div class="kpis" id="o_unitk" style="margin-top:10px"></div>
+    <h3 style="margin-top:16px">Expected profit per day against price level</h3><div class="chart" id="c_price"></div></div>
+
+  <div class="card"><div class="sec-n">3 · DEMAND AS A PROBABILITY</div><h2>Why every day is different</h2>
+    <div class="prose small"><p>Customers arrive at random, so each hour's count is Poisson. Each one orders an item with a probability set by a logistic curve around the fair price. Thinning a Poisson stream gives Poisson again, so the orders of every item in an hour are Poisson. A day mixes weekday or weekend with the weather, and a month adds 30 days, which the central limit theorem pulls towards a normal curve.</p></div>
+    <div class="formula" style="margin-top:10px">λ(h)  = base(slot,h,daytype) × (0.3 + 1.2·rep) × weather × credit × (0.45 + 0.55·menu)
+A_i   = 1 / (1 + e^((price_i/fair_i − 1.15)/0.12))
+p_i   = base_i(slot) × A_i / A(1)
+walk  = C(c, λ/μ) / (1 + (cμ − λ)·θ)          Erlang C × impatience
+n_i(h) ~ Poisson(λ·(1 − walk)·p_i)
+day   = Σ n_i·m_i − fixed,  Var = Σ λ_i·m_i² + weather mix
+month ≈ Normal(30·μ, 30·σ²)</div>
+    <div class="tblwrap" style="margin-top:10px"><table class="tt" id="o_scn"></table></div>
+    ${sl("target","Monthly profit target",0,150000,5000,rs)}
+    <div class="kpis" id="o_clt"></div>
+    <p class="tiny muted" style="margin-top:8px">Theory assumes the reputation above, right stock every day and no events. The simulation plays the real game from the starting reputation with forecasts that miss, events, stock limits, staff no-shows, gas waits, khata defaults and month-end bills.</p></div>
+
+  <div class="card"><div class="sec-n">4 · QUEUES</div><h2>How many hands at the counter</h2>
+    <div class="prose small"><p>Each person at the counter serves about ${K0.MU} customers an hour, ${Math.round(K0.MU*K0.COOK_MU)} with a cook in the kitchen. With <i>c</i> counters and arrival rate λ, Erlang C gives the chance a customer has to wait and the average wait. Office-goers give up after about ${K0.PATIENCE.wd.breakfast} minutes at breakfast, families after about ${K0.PATIENCE.we.lunch}. Those who give up are lost sales and a small reputation hit.</p></div>
+    ${seg("qSlot","Slot",[["breakfast","Breakfast"],["lunch","Lunch"],["evening","Evening"]])}
+    ${seg("qDay","Day",[["wd","Weekday"],["we","Weekend"]])}
+    <div class="tblwrap" style="margin-top:8px"><table class="tt" id="o_q"></table></div>
+    <h3 style="margin-top:14px">Profit per day against staff</h3><div class="chart" id="c_staff"></div><div id="o_qv"></div></div>
+
+  <div class="card"><div class="sec-n">5 · NEWSVENDOR</div><h2>How much milk, how much batter</h2>
+    <div class="prose small"><p>Milk is bought before you know the day's demand and is thrown away at night. Batter is ground the night before; leftovers are sold the next day at a taste penalty and then binned. Buying one unit too few loses its margin (underage cost c<sub>u</sub>); one too many loses its cost (overage cost c<sub>o</sub>). The best order is the demand quantile at the critical ratio c<sub>u</sub> / (c<sub>u</sub> + c<sub>o</sub>).</p></div>
+    ${seg("nvItem","Stock",[["milk","Milk (litres)"],["batter","Batter (kg)"]])}
+    ${seg("nvKnow","Weather when you buy",[[0,"Unknown (any day)"],[1,"Known sunny weekday"]])}
+    <div class="kpis" id="o_nvk" style="margin-top:8px"></div>
+    <h3 style="margin-top:14px">Expected profit from this stock against amount bought</h3><div class="chart" id="c_nv"></div></div>
+
+  <div class="card"><div class="sec-n">6 · GAS REORDER POINT</div><h2>Never let the stove go cold</h2>
+    <div class="prose small"><p>A refill arrives at noon ${K0.GAS_LEAD[0]} or ${K0.GAS_LEAD[1]} days after the night you order it. The shop orders when gas falls below the reorder point R, so the gas left must cover the wait. Stock-out risk is the chance that use during the lead time exceeds what is left.</p></div>
+    ${sl("reorder","Reorder point R",0,19,1,kgf)}
+    <div class="kpis" id="o_lpgk"></div>
+    <h3 style="margin-top:14px">Chance a refill cycle runs dry against R</h3><div class="chart" id="c_lpg"></div></div>
+
+  <div class="card"><div class="sec-n">7 · KHATA</div><h2>Is credit worth it?</h2>
+    <div class="prose small"><p>Credit brings extra footfall and loyalty, but the money arrives only at month end and some accounts never pay. The trade is extra margin now against write-offs and a thinner cash box when rent is due.</p></div>
+    ${seg("credit","Policy used in the simulations",[["none","No credit"],["regulars","Regulars"],["anyone","Anyone"]])}
+    ${sl("dflt","Share of new faces who never pay",10,80,5,pctf,`Regulars default ${Math.round(K0.DEFAULT.regular*100)}% of the time`)}
+    <div class="tblwrap"><table class="tt" id="o_cred"></table></div>
+    <h3 style="margin-top:14px">First month in the simulation, by policy</h3><div class="mcstat tiny muted"></div><div class="chart" id="c_cred"></div><div id="o_credv"></div></div>
+
+  <div class="card"><div class="sec-n">8 · MONTE CARLO</div><h2>The season, ${T.runs} times over</h2>
+    <div class="flds">${sl("runs","Simulated runs",200,3000,100,nf)}${sl("horizon","Days to simulate",30,180,30,v=>v+" days")}${sl("buffer","Milk, veg and batter vs expected need",80,200,10,pctf)}${sl("oilRule","Change oil below",0,70,10,v=>v?v+"%":"never")}</div>
+    <div class="mcstat tiny muted"></div>
+    <h3 style="margin-top:10px">Net worth by day</h3><div class="chart" id="c_fan"></div>
+    <div class="tblwrap"><table class="tt" id="o_month"></table></div>
+    <div class="kpis" id="o_mck" style="margin-top:10px"></div>
+    <h3 style="margin-top:14px">Spread of monthly profit</h3>
+    <div class="chips">${Array.from({length:M},(_,i)=>`<button data-act="tset" data-k="month" data-v="${i+1}" aria-pressed="${T.month===i+1}">Month ${i+1}</button>`).join("")}</div>
+    <div class="chart" id="c_hist" style="margin-top:6px"></div></div>
+
+  <div class="card"><div class="sec-n">9 · SCALE-UP</div><h2>When one shop is full</h2>
+    <div class="prose small" id="o_cap"></div>
+    ${seg("expType","Next step",[["outlet","Second outlet"],["cater","Catering contract"]])}
+    <div class="flds">${sl("trigger","Expand once reputation reaches",50,100,5,pctf)}${sl("reserve","…keeping this much cash after paying",0,50000,2500,rs)}
+    ${T.expType==="outlet"?`${sl("setup","Outlet setup cost",20000,150000,5000,rs)}${sl("foot2","New spot's footfall vs the first",40,150,10,pctf)}${sl("carry","Reputation carried over",0,100,10,pctf)}${sl("cann","Customers the first shop loses",0,40,5,pctf)}${sl("mwage","Manager's wage per day",0,1500,100,rs)}`
+      :`${sl("csetup","Kitchen kit and containers",0,50000,2500,rs)}${sl("plates","Plates a day",10,80,5,nf)}${sl("cprice","Price per plate",40,120,5,rs)}`}</div>
+    <div class="mcstat tiny muted"></div>
+    <div class="kpis" id="o_exp" style="margin-top:8px"></div>
+    <h3 style="margin-top:14px">Median profit per month, same luck both ways</h3><div class="chart" id="c_exp"></div></div>
+
+  <div class="card"><div class="sec-n">10 · STRATEGY</div><h2>SWOT</h2>
+    <p class="tiny muted" style="margin-bottom:10px">Figures update with the inputs above.</p><div class="swot" id="o_swot"></div></div>`;
+  updateTech();
+}
+let techTimer=null;
+function scheduleTech(){clearTimeout(techTimer);techTimer=setTimeout(updateTech,150)}
+document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.t;if(!k)return;T[k]=+e.target.value;const o=$("v_"+k);if(o)o.textContent=SLF[k](T[k]);saveT();scheduleTech()});
+let lastRW=0;window.addEventListener("resize",()=>{if(tab==="tech"){const w=$("tech").clientWidth;if(Math.abs(w-lastRW)>20){lastRW=w;scheduleTech()}}else if(s&&s.phase==="final")drawFinal()});
+
+let A=null; // analytic results shared with the Monte Carlo drawing
+function updateTech(){
+  if(tab!=="tech"||!$("o_cons"))return;
+  lastRW=$("tech").clientWidth;TK=cfgK();
+  withK(analytic);
+  if(MC.key===mcKey()&&MC.done)drawMC();else{document.querySelectorAll(".mcstat").forEach(e=>e.textContent="Simulating…");startMC()}
+}
+function analytic(){
+  const rep=T.qRep/100,B=blended(rep),st=B.st,pl=B.pl;
+  A={B};
+  /* 1 constraints */
+  const st0=probe(T.startRep/100),pl0=planFor(st0),d0=dayEcon(st0,pl0,{dt:"wd",wx:"sunny",ev:null,cook:pl0.cook,servers:pl0.servers,cater:0});
+  const n0=d0.need,cashDay=(n0.milk||0)*K.ING.milk.price+(n0.veg||0)*K.ING.veg.price+(n0.batter||0)*K.ING.batter.price+wagesOf(pl0)+pl0.clean+d0.gas*K.GAS_PRICE/K.GAS_CYL;
+  const bk=d0.e.hr.filter(h=>h.slot==="breakfast"),pk=bk.reduce((a,h)=>h.lam>a.lam?h:a,bk[0]),walk0=d0.e.walk/Math.max(1,d0.e.cust);
+  const gasDays=K.GAS_CYL/d0.gas,batNeed=n0.batter||0,bills=K.RENT+K.ELEC+K.ELEC_GRIND*30*batNeed;
+  const repMul=(K.REP_ARR[0]+K.REP_ARR[1]*T.startRep/100)/(K.REP_ARR[0]+K.REP_ARR[1]);
+  $("o_cons").innerHTML=`<tr><th>Constraint</th><th>Value</th><th>Effect</th></tr>
+   <tr><td>Starting cash</td><td>${money(T.startCash)}</td><td>${(T.startCash/cashDay).toFixed(1)} days of costs</td></tr>
+   <tr><td>Breakfast peak (8–9)</td><td>${Math.round(pk.lam)}/hr</td><td>can serve ${Math.round(pk.c*pk.mu)}/hr</td></tr>
+   <tr><td>Walk-offs, day one</td><td>${P100(walk0)}</td><td>${Math.round(d0.e.walk)} customer${Math.round(d0.e.walk)===1?"":"s"} lost</td></tr>
+   <tr><td>Batter ground last night</td><td>${K.START_BATTER} kg</td><td>day one needs ${f1(batNeed)} kg</td></tr>
+   <tr><td>Gas in the cylinder</td><td>${K.GAS_CYL} kg</td><td>${gasDays.toFixed(1)} days; refill takes ${K.GAS_LEAD[0]}–${K.GAS_LEAD[1]}</td></tr>
+   <tr><td>Rent and bills, day ${K.MONTH}</td><td>${money(bills)}</td><td>${money(bills/K.MONTH)}/day to set aside</td></tr>
+   <tr><td>Reputation ${T.startRep}%</td><td>${P100(repMul)}</td><td>of the crowd a top shop gets</td></tr>`;
+  const vs=[];
+  if(walk0>0.1)vs.push(verdict("no","CAPACITY",`At the breakfast peak about <b>${Math.round(pk.lam)}</b> people an hour arrive, but the counter handles <b>${Math.round(pk.c*pk.mu)}</b>. ${P100(walk0)} of the day's customers walk off. Staff is the first limit.`));
+  if(T.startCash<cashDay*2)vs.push(verdict("no","CASH",`${money(T.startCash)} covers only ${(T.startCash/cashDay).toFixed(1)} days of milk, batter, wages and gas at ${money(cashDay)} a day. One bad day sends you to the moneylender.`));
+  if(batNeed>K.START_BATTER)vs.push(verdict("mid","BATTER",`Day one's tiffin needs about ${f1(batNeed)} kg of batter but only ${K.START_BATTER} kg was ground. Idli and dosa sell out early on day one.`));
+  if(!vs.length)vs.push(verdict("ok","DEMAND",`Cash, staff and stock all cover day one. At ${T.startRep}% reputation the crowd is ${P100(repMul)} of what a top shop draws, so growing reputation is the job.`));
+  $("o_bind").innerHTML=vs.join("");
+
+  /* 2 unit economics */
+  const fx=B.fixed;
+  $("o_unit").innerHTML=`<tr><th>Item</th><th>Food</th><th>Other</th><th>Price</th><th>Margin</th><th>%</th></tr>`+K.ITEM_ORDER.map(id=>{const it=K.ITEMS[id],uc=unitCost(id),food=uc-it.extra-it.gas*K.GAS_PRICE/K.GAS_CYL,pr=pl.price[id];
+    return `<tr><td>${it.name}</td><td>${money2(food)}</td><td>${money2(uc-food)}</td><td>${money(pr)}</td><td class="${pr>uc?"":"neg"}">${money2(pr-uc)}</td><td>${Math.round((pr-uc)/pr*100)}%</td></tr>`}).join("");
+  const perCust=B.E/Math.max(1,B.cust-B.walk),be=fx.all/Math.max(1,perCust);
+  $("o_unitk").innerHTML=kpi(money2(perCust),"Margin per customer","after food and gas, blended day")+kpi(money(fx.all),"Fixed cost per day",`rent+bills ${money(fx.rent)}, wages ${money(fx.wages)}, cleaning ${money(fx.clean)}, oil ${money(fx.oil)}`)
+    +kpi(Math.ceil(be)+"/day","Break-even customers",`you expect ${Math.round(B.cust-B.walk)} served`)+kpi(money(B.E-fx.all),"Expected profit per day",`at ${T.qRep}% reputation`);
+  const ks=[];for(let k=70;k<=160;k+=5)ks.push(k);
+  const prof=w=>ks.map(k=>{let y=0,pw=0;for(const sc of scenarios()){if(w&&sc.dt!==w)continue;const p2=planFor(st,{k:k/100});y+=sc.p*dayEcon(st,p2,{dt:sc.dt,wx:sc.wx,ev:null,cook:p2.cook,servers:p2.servers,cater:0}).gross;pw+=sc.p}return y/pw-fx.all});
+  const yAll=prof(null),yWd=prof("wd"),yWe=prof("we"),bi=yAll.indexOf(Math.max(...yAll));A.bestK=ks[bi];A.yAll=yAll;A.ks=ks;
+  drawLines($("c_price"),{xs:ks,xfmt:v=>v+"%",series:[{name:"Blended week",color:"--ink",ys:yAll,w:3},{name:"Weekday",color:"--s1",ys:yWd},{name:"Weekend",color:"--s2",ys:yWe}],
+    marks:[{i:bi,label:`Best ${ks[bi]}%`,color:"--ink"},{i:ks.indexOf(T.k),label:`Yours ${T.k}%`,color:"--s4",row:1}].filter(m=>m.i>=0),label:"Expected profit per day against price level",
+    readout:i=>`At ${ks[i]}% of fair: blended ${money(yAll[i])}/day · weekday ${money(yWd[i])} · weekend ${money(yWe[i])}`,
+    def:`Tap the chart. Best price level ${ks[bi]}% of fair (${money(yAll[bi])}/day); yours earns ${money(yAll[Math.max(0,ks.indexOf(T.k))])}.`});
+
+  /* 3 probability */
+  $("o_scn").innerHTML=`<tr><th>Day</th><th>Chance</th><th>Customers</th><th>Sales</th><th>Gross ± σ</th></tr>`+B.rows.map(r=>`<tr><td>${r.dt==="wd"?"Weekday":"Weekend"}, ${K.WX[r.wx].name.toLowerCase()}</td><td>${P100(r.p)}</td><td>${Math.round(r.d.e.cust)}</td><td>${money(r.d.e.rev)}</td><td>${money(r.d.gross)} ± ${money(Math.sqrt(r.d.v))}</td></tr>`).join("")
+    +`<tr class="sum"><td>Blended day</td><td>100%</td><td>${Math.round(B.cust)}</td><td>${money(B.rev)}</td><td>${money(B.E)} ± ${money(B.sd)}</td></tr>`;
+  A.mu=30*(B.E-fx.all);A.sg=Math.sqrt(30)*B.sd;A.pTh=1-normCdf((T.target-A.mu)/A.sg);
+
+  /* 4 queues */
+  const qd=T.qDay,qs=T.qSlot,rowsQ=[];
+  for(let c=1;c<=5;c++){const p2=Object.assign({},pl,{servers:c-1});const hr=hourRates(st,p2,{dt:qd,wx:"sunny",ev:null,cook:pl.cook,servers:c-1,cater:0}).filter(h=>h.slot===qs);
+    const pkh=hr.reduce((a,h)=>h.lam>a.lam?h:a,hr[0]),wsl=hr.reduce((a,h)=>a+h.lam*h.w,0)/hr.reduce((a,h)=>a+h.lam,0),rho=pkh.lam/(c*pkh.mu);
+    rowsQ.push(`<tr class="${c===pl.servers+1?"hi":""}"><td>You${c>1?` + ${c-1}`:""}</td><td>${Math.round(pkh.lam)}</td><td>${rho>=1?"over":P100(rho)}</td><td>${rho>=0.98?"100%":P100(erlangC(c,pkh.lam/pkh.mu))}</td><td>${rho>=0.98?"grows":waitMin(pkh.lam,pkh.mu,c).toFixed(1)+" min"}</td><td>${P100(wsl)}</td></tr>`)}
+  $("o_q").innerHTML=`<tr><th>Counter</th><th>Peak λ/hr</th><th>Load ρ</th><th>P(wait)</th><th>Avg wait</th><th>Walk off</th></tr>`+rowsQ.join("");
+  const sv=[0,1,2,3,4],staffProfit=ck=>sv.map(n=>{let y=0;const p2=Object.assign({},pl,{servers:n,cook:ck});let fr=0;for(const sc of scenarios()){const d=dayEcon(st,p2,{dt:sc.dt,wx:sc.wx,ev:null,cook:ck,servers:n,cater:0});y+=sc.p*d.gross;fr+=sc.p*d.fried}return y-fixedDay(p2,fr).all});
+  const y0=staffProfit(0),y1=staffProfit(1);let best={v:-1e9};sv.forEach(n=>{if(y0[n]>best.v)best={v:y0[n],n,ck:0};if(y1[n]>best.v)best={v:y1[n],n,ck:1}});A.bestStaff=best;
+  drawLines($("c_staff"),{xs:sv,xfmt:v=>v+" srv",series:[{name:"No cook",color:"--s1",ys:y0},{name:"With cook",color:"--s3",ys:y1}],dots:[{i:best.n,v:best.v,color:best.ck?"--s3":"--s1"}],label:"Profit per day against number of servers",
+    readout:i=>`${i} server${i===1?"":"s"}: no cook ${money(y0[i])}/day · with cook ${money(y1[i])}/day (wages, rent and upkeep taken off)`,def:"Tap to compare staffing levels. The dot marks the best."});
+  const cur=(pl.cook?y1:y0)[pl.servers];
+  $("o_qv").innerHTML=Math.abs(best.v-cur)<50?verdict("ok","OPTIMAL",`Your staffing (${pl.cook?"cook":"no cook"}, ${pl.servers} server${pl.servers===1?"":"s"}) is at or near the best for ${T.qRep}% reputation: about ${money(cur)} a day.`)
+    :verdict("mid","RESTAFF",`At ${T.qRep}% reputation the best is ${best.ck?"a cook":"no cook"} and ${best.n} server${best.n===1?"":"s"}: ${money(best.v)} a day against ${money(cur)} now. Extra hands pay for themselves when the walk-offs they save are worth more than their wage.`);
+
+  /* 5 newsvendor */
+  newsvendor(st,pl);
+  /* 6 LPG */
+  lpg(B);
+  /* 7 credit (analytic part) */
+  creditTable(rep);
+  /* 9 capacity text */
+  const stF=probe(1),plF=planFor(stF),dF=dayEcon(stF,plF,{dt:"wd",wx:"sunny",ev:null,cook:plF.cook,servers:plF.servers,cater:0});
+  const capDay=dF.e.hr.reduce((a,h)=>a+h.c*h.mu,0),servedF=dF.e.cust-dF.e.walk;A.capDay=capDay;A.servedF=servedF;A.footF=dF.e.cust;A.profitF=dF.gross-fixedDay(plF,dF.fried).all;
+  $("o_cap").innerHTML=`<p>At full reputation a sunny weekday brings about <b class="num">${Math.round(dF.e.cust)}</b> customers to one shop. Your counter can serve <b class="num">${Math.round(capDay)}</b> across the nine open hours, but arrivals bunch at the peaks, so <b class="num">${Math.round(dF.e.walk)}</b> still walk off. That ceiling is worth about <b class="num">${money(A.profitF)}</b> a day. Past it, more staff only trims walk-offs; new demand has to come from a second spot or from orders that do not queue, like an office catering contract.</p>`;
+}
+function money2(x){return(x<0?"−":"")+"₹"+Math.abs(x).toFixed(2)}
+
+function newsvendor(st,pl){
+  const isMilk=T.nvItem==="milk",g=isMilk?"milk":"batter",c=K.ING[g].price,salv=isMilk?0:0.5*c;
+  const scs=T.nvKnow?[{dt:"wd",wx:"sunny",p:1}]:scenarios();
+  const comps=[];let netRev=0,useTot=0;
+  for(const sc of scs){const e=expectDay(st,pl,{dt:sc.dt,wx:sc.wx,ev:null,cook:pl.cook,servers:pl.servers,cater:0});let mu=0,v=0;
+    for(const id of K.ITEM_ORDER){const u=K.ITEMS[id].use[g];if(!u||!e.units[id])continue;mu+=u*e.units[id];v+=u*u*e.units[id];
+      netRev+=sc.p*e.units[id]*(pl.price[id]-(unitCost(id)-u*c));useTot+=sc.p*e.units[id]*u}
+    comps.push({p:sc.p,mu,sd:Math.sqrt(Math.max(v,1e-6))})}
+  const r=netRev/Math.max(1e-9,useTot),cu=r-c,co=c-salv,CR=cu/(cu+co);
+  const F=x=>comps.reduce((a,m)=>a+m.p*normCdf((x-m.mu)/m.sd),0);
+  const Eshort=Q=>comps.reduce((a,m)=>{const z=(Q-m.mu)/m.sd;return a+m.p*(m.sd*normPdf(z)+(m.mu-Q)*(1-normCdf(z)))},0); // E[(D−Q)+]
+  const mu=comps.reduce((a,m)=>a+m.p*m.mu,0);
+  const profit=Q=>{const sh=Eshort(Q),sold=mu-sh,left=Q-sold;return r*sold-c*Q+salv*left};
+  let lo=0,hi=mu*3+10;for(let i=0;i<50;i++){const m=(lo+hi)/2;if(F(m)<CR)lo=m;else hi=m}const Qs=(lo+hi)/2;
+  const sug=Math.ceil(mu*T.buffer/100),qmax=Math.max(Qs,sug,mu)*1.6+2,step=qmax>40?1:0.5,xs=[];for(let q=0;q<=qmax;q+=step)xs.push(q);
+  const ys=xs.map(profit),iQ=Math.round(Qs/step),iS=Math.round(sug/step),unit=isMilk?"L":"kg";
+  A.nv={CR,Qs,mu,item:g};
+  $("o_nvk").innerHTML=kpi(money2(cu),"Underage cost c_u",`lost margin per ${unit} short`)+kpi(money2(co),"Overage cost c_o",isMilk?"milk poured away":"half lost: sold day-old, then binned")
+    +kpi(P100(CR),"Critical ratio","c_u / (c_u + c_o)")+kpi(f1(Qs)+" "+unit,"Best amount",`expected need ${f1(mu)} ${unit}; P(run short) ${P100(1-CR)}`);
+  drawLines($("c_nv"),{xs,xfmt:v=>v+" "+unit,series:[{name:"Expected profit",color:"--s3",ys}],label:"Expected profit against amount bought",
+    marks:[{i:iQ,label:`Best ${f1(Qs)}`,color:"--ink"},{i:Math.min(iS,xs.length-1),label:`Your buffer ${sug}`,color:"--s4",row:1}],
+    readout:i=>`Buy ${f1(xs[i])} ${unit}: expected profit ${money(ys[i])}, P(enough) ${P100(F(xs[i]))}, expected left over ${f1(Math.max(0,xs[i]-(mu-Eshort(xs[i]))))} ${unit}`,
+    def:`Best ${f1(Qs)} ${unit} earns ${money(profit(Qs))}; your buffer of ${T.buffer}% (${sug} ${unit}) earns ${money(profit(sug))}.`});
+}
+function lpg(B){
+  const mu=B.gas,sd=Math.sqrt(Math.max(0.01,B.gasSdMix*B.gasSdMix+0.15*mu)),fb=B.gasB/mu;
+  const P=R=>{let p=0,n=0;for(const L of K.GAS_LEAD)for(let j=0;j<10;j++){const X=Math.max(0,R-mu*(j+0.5)/10),m=(L-1+fb)*mu,s2=Math.sqrt((L-1+fb)*sd*sd);p+=1-normCdf((X-m)/Math.max(0.05,s2));n++}return p/n};
+  const Rs=[];for(let r=0;r<=19;r++)Rs.push(r);const ys=Rs.map(P),cycles=30*mu/K.GAS_CYL,pc=P(T.reorder);
+  A.lpg={mu,pc,cycles};
+  const prem=K.GAS_BLACK-K.GAS_PRICE;
+  $("o_lpgk").innerHTML=kpi(f1(mu)+" kg","Gas per day",`± ${f1(sd)} kg; ${P100(fb)} of it by noon`)+kpi(cycles.toFixed(1),"Refills per month",`one ${K.GAS_CYL} kg cylinder every ${(K.GAS_CYL/mu).toFixed(1)} days`)
+    +kpi(P100(pc),"Run dry per refill",`at R = ${T.reorder} kg`)+kpi(money(pc*cycles*prem),"Expected black-market cost",`a month, at ${money(prem)} extra per emergency cylinder`);
+  drawLines($("c_lpg"),{xs:Rs,xfmt:v=>v+"kg",yfmt:v=>Math.round(v*100)+"%",ymin:0,ymax:1,series:[{name:"P(stock-out)",color:"--s2",ys}],label:"Chance of running out per refill cycle",
+    marks:[{i:T.reorder,label:`R = ${T.reorder} kg`,color:"--ink"}],readout:i=>`R = ${Rs[i]} kg: runs dry in ${P100(ys[i])} of refill cycles, about ${(ys[i]*cycles).toFixed(1)} times a month`,
+    def:`Lead-time use is ${f1(fb*mu)} kg (next-day delivery) or ${f1((1+fb)*mu)} kg (two-day). Below about ${Math.ceil((1+fb)*mu)} kg the risk climbs fast.`});
+}
+function creditTable(rep){
+  const rows=[];
+  for(const c of ["none","regulars","anyone"]){const B=blended(rep,{credit:c}),cr=K.CREDIT[c],credDay=B.rev*cr.share,recv=credDay*K.MONTH,dmix=cr.stranger*K.DEFAULT.stranger+(1-cr.stranger)*K.DEFAULT.regular,wo=cr.share?recv*dmix:0;
+    rows.push({c,B,foot:cr.foot,credDay,recv,wo,net:K.MONTH*B.E-wo})}
+  const base=rows[0].net;A.cred=rows;
+  $("o_cred").innerHTML=`<tr><th>Policy</th><th>Footfall</th><th>Sales/day</th><th>Owed, month end</th><th>Bad debt</th><th>Net/month vs none</th></tr>`+rows.map(r=>`<tr class="${r.c===T.credit?"hi":""}"><td>${{none:"No credit",regulars:"Regulars",anyone:"Anyone"}[r.c]}</td><td>×${r.foot.toFixed(2)}</td><td>${money(r.B.rev)}</td><td>${money(r.recv)}</td><td>${money(r.wo)}</td><td class="${r.net-base<0?"neg":""}">${r.c==="none"?"–":(r.net-base>=0?"+":"")+money(r.net-base)}</td></tr>`).join("");
+}
+
+/* ---- Monte Carlo drawing ---- */
+function monthStats(runs,m){const a=m*30,b=Math.min(T.horizon,a+30),S=[],Pf=[];for(const o of runs){let sv=0,p=0;for(let d=a;d<b;d++){sv+=o.rev[d];p+=o.profit[d]}S.push(sv);Pf.push(p)}return{S,Pf}}
+function drawMC(){
+  if(!$("c_fan")||!MC.done)return;
+  document.querySelectorAll(".mcstat").forEach(e=>e.textContent=`${T.runs} runs × ${T.horizon} days plus paired and credit runs, computed in ${Math.round(MC.ms)} ms.`);
+  withK(()=>{drawFan();monthTable();drawHist();expansion();creditMC();cltKpis();swot()});
+}
+function cltKpis(){
+  const M=Math.floor(T.horizon/30),last=monthStats(MC.base,M-1).Pf,pSim=last.filter(v=>v>=T.target).length/last.length;
+  $("o_clt").innerHTML=kpi(money(A.mu),"Month, theory",`± ${money(A.sg)} (1 σ)`)+kpi(money(pct(last,.5)),`Month ${M}, simulated`,"median")
+    +kpi(P100(A.pTh),"P(≥ target), theory","normal approximation")+kpi(P100(pSim),"P(≥ target), simulated",`month ${M}`)
+    +kpi(P100(last.filter(v=>v<0).length/last.length),"P(losing month)",`simulated month ${M}`)+kpi(money(A.mu-1.645*A.sg),"Bad month (1 in 20)","theory, 5th percentile");
+}
+function drawFan(){
+  const el=$("c_fan"),R=MC.base,H=T.horizon,p10=[],p50=[],p90=[];
+  for(let d=0;d<H;d++){const v=R.map(o=>o.nw[d]);p10.push(pct(v,.1));p50.push(pct(v,.5));p90.push(pct(v,.9))}
+  const f=chartFrame(el,230),tk=niceTicks(Math.min(0,...p10),Math.max(...p90),4),y0=tk[0],y1=tk[tk.length-1];
+  const X=d=>f.l+d/(H-1)*(f.W-f.l-f.r),Y=v=>f.t+(y1-v)/(y1-y0)*(f.H-f.t-f.b);
+  let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Net worth by day, median and 80 percent band">`;
+  tk.forEach(v=>svg+=`<line class="grid" x1="${f.l}" x2="${f.W-f.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${f.l-6}" y="${Y(v)+4}" text-anchor="end">${kfmt(v)}</text>`);
+  for(let d=0;d<H;d+=Math.max(10,Math.round(H/6/10)*10))svg+=`<text class="ax" x="${X(d)}" y="${f.H-8}" text-anchor="middle">D${d+1}</text>`;
+  if(y0<0)svg+=`<line x1="${f.l}" x2="${f.W-f.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)"/>`;
+  svg+=`<path d="${linePath(p90.map((v,i)=>[X(i),Y(v)]))}L${p10.map((v,i)=>[X(H-1-i),Y(p10[H-1-i])].map(n=>n.toFixed(1)).join(" ")).join("L")}Z" fill="var(--s1)" opacity=".22"/>`;
+  svg+=`<path d="${linePath(p50.map((v,i)=>[X(i),Y(v)]))}" fill="none" stroke="var(--s1)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  for(let m=1;m*30<H;m++)svg+=`<line x1="${X(m*30-1)}" x2="${X(m*30-1)}" y1="${f.t}" y2="${f.H-f.b}" stroke="var(--muted)" stroke-dasharray="2 4"/>`;
+  svg+=`<line class="guide" y1="${f.t}" y2="${f.H-f.b}" style="display:none"/></svg>`;
+  el.innerHTML=legendHTML([["Median net worth","--s1"],["8 in 10 runs","--s1","band"],["Month end (rent due)","--muted","dash"]])+svg+`<div class="readout"></div>`;
+  hookHover(el,x=>{const d=clamp(Math.round((x-f.l)/(f.W-f.l-f.r)*(H-1)),0,H-1);return{x:X(d),text:`Day ${d+1}: median ${money(p50[d])}, 80% range ${money(p10[d])} to ${money(p90[d])}`}},
+    `Day ${H}: median net worth ${money(p50[H-1])} (started at ${money(T.startCash)}).`);
+}
+function monthTable(){
+  const M=Math.floor(T.horizon/30);let prev=null;
+  $("o_month").innerHTML=`<tr><th>Month</th><th>Sales</th><th>Profit</th><th>Growth</th><th>P(≥ target)</th><th>P(loss)</th></tr>`+Array.from({length:M},(_,m)=>{const {S,Pf}=monthStats(MC.base,m),med=pct(Pf,.5);
+    const g=prev==null||prev<=0?"–":((med/prev-1)*100>=0?"+":"")+Math.round((med/prev-1)*100)+"%";prev=med;
+    return `<tr><td>Month ${m+1}</td><td>${kfmt(pct(S,.5))}</td><td class="${med<0?"neg":""}">${money(med)}</td><td>${g}</td><td>${P100(Pf.filter(v=>v>=T.target).length/Pf.length)}</td><td>${P100(Pf.filter(v=>v<0).length/Pf.length)}</td></tr>`}).join("");
+  const R=MC.base,bk=R.filter(o=>o.bank>=0).length/R.length,cr=R.filter(o=>o.crunch).length/R.length,ends=R.map(o=>o.end),walk=R.reduce((a,o)=>a+o.walk,0)/R.reduce((a,o)=>a+o.cust,0),blk=R.reduce((a,o)=>a+o.black,0)/R.length;
+  A.mc={bk,cr,endMed:pct(ends,.5),end10:pct(ends,.1),walk,blk};
+  $("o_mck").innerHTML=kpi(P100(bk),"Bankrupt","moneylender limit reached")+kpi(P100(cr),"Needed the moneylender","at least once")
+    +kpi(money(pct(ends,.5)),`Net worth, day ${T.horizon}`,`median; 1 in 10 below ${money(pct(ends,.1))}`)+kpi(P100(walk),"Customers who walked off",`black-market cylinders ${blk.toFixed(1)} a run`);
+}
+function drawHist(){
+  const el=$("c_hist"),{Pf}=monthStats(MC.base,T.month-1),lo=Math.min(...Pf),hi=Math.max(...Pf),B=22,w=(hi-lo)/B||1;
+  const bins=new Array(B).fill(0);Pf.forEach(v=>bins[Math.min(B-1,Math.floor((v-lo)/w))]++);
+  const f=chartFrame(el,190),mx=Math.max(...bins),X=v=>f.l+(v-lo)/(hi-lo||1)*(f.W-f.l-f.r),Y=c=>f.t+(1-c/mx)*(f.H-f.t-f.b),bwp=(f.W-f.l-f.r)/B;
+  let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Distribution of monthly profit across runs">`;
+  niceTicks(0,mx,3).filter(v=>v<=mx).forEach(v=>svg+=`<line class="grid" x1="${f.l}" x2="${f.W-f.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${f.l-6}" y="${Y(v)+4}" text-anchor="end">${(v/Pf.length*100).toFixed(0)}%</text>`);
+  bins.forEach((c,i)=>{if(!c)return;const x=f.l+i*bwp+1,y=Y(c),h=f.H-f.b-y,r=Math.min(3,h/2),bw=Math.max(1,bwp-2),mid=lo+(i+.5)*w;
+    svg+=`<path d="M${x} ${f.H-f.b}V${y+r}Q${x} ${y} ${x+r} ${y}H${x+bw-r}Q${x+bw} ${y} ${x+bw} ${y+r}V${f.H-f.b}Z" fill="var(${mid<0?"--s2":"--s1"})" opacity="${mid>=T.target?1:.5}"/>`});
+  [lo,(lo+hi)/2,hi].forEach((v,i)=>svg+=`<text class="ax" x="${X(v)}" y="${f.H-8}" text-anchor="${["start","middle","end"][i]}">${kfmt(v)}</text>`);
+  if(T.target>lo&&T.target<hi){const tx=X(T.target),rt=tx>f.W*0.7;svg+=`<line x1="${tx}" x2="${tx}" y1="${f.t}" y2="${f.H-f.b}" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 3"/><text class="lab" x="${tx+(rt?-4:4)}" y="${f.t+12}" text-anchor="${rt?"end":"start"}">Target</text>`}
+  svg+=`<line class="guide" y1="${f.t}" y2="${f.H-f.b}" style="display:none"/></svg>`;
+  const pHit=Pf.filter(v=>v>=T.target).length/Pf.length;
+  el.innerHTML=svg+`<div class="readout"></div>`;
+  hookHover(el,x=>{const i=clamp(Math.floor((x-f.l)/bwp),0,B-1);return{x:f.l+(i+.5)*bwp,text:`${kfmt(lo+i*w)} to ${kfmt(lo+(i+1)*w)}: ${(bins[i]/Pf.length*100).toFixed(1)}% of runs`}},
+    `Solid bars reach the target. ${P100(pHit)} of runs make at least ${money(T.target)} in month ${T.month}; ${P100(Pf.filter(v=>v<0).length/Pf.length)} lose money.`);
+}
+function creditMC(){
+  const pol=["none","regulars","anyone"],names={none:"No credit",regulars:"Regulars",anyone:"Anyone"};
+  const st=pol.map(c=>{const R=MC.cred[c];const p=R.map(o=>{let a=0;for(let d=0;d<30;d++)a+=o.profit[d];return a});return{c,med:pct(p,.5),p10:pct(p,.1),crunch:R.filter(o=>o.crunch&&o.crunchDay<30).length/R.length,bank:R.filter(o=>o.bank>=0&&o.bank<30).length/R.length}});
+  A.credMC=st;
+  drawBars($("c_cred"),{cats:pol.map(c=>names[c]),series:[{name:"Median month-1 profit",color:"--s1",vals:st.map(x=>x.med)}],values:true,H:180,label:"Median first-month profit by credit policy",
+    readout:i=>`${names[pol[i]]}: median ${money(st[i].med)}, 1 in 10 below ${money(st[i].p10)}, needed the moneylender in ${P100(st[i].crunch)} of runs`,def:"Tap a bar for the cash-crunch odds."});
+  const best=st.reduce((a,b)=>b.med>a.med?b:a),any=st[2],reg=st[1];
+  $("o_credv").innerHTML=verdict(best.c==="anyone"?"mid":"ok",best.c.toUpperCase(),`From ${T.startRep}% reputation, <b>${names[best.c]}</b> gives the best median first month (${money(best.med)}). Credit for anyone puts you with the moneylender in ${P100(any.crunch)} of runs against ${P100(reg.crunch)} for regulars only, because the money comes in after the rent is due.`);
+}
+function expansion(){
+  const B=MC.base,X=MC.exp,N=B.length,opened=X.filter(o=>o.open>=0),od=opened.map(o=>o.open);
+  let win=0;for(let i=0;i<N;i++)if(X[i].end>B[i].end)win++;
+  const gain=X.map((o,i)=>o.end-B[i].end),bkB=B.filter(o=>o.bank>=0).length/N,bkX=X.filter(o=>o.bank>=0).length/N;
+  A.exp={pOpen:opened.length/N,win:win/N,gain:pct(gain,.5)};
+  $("o_exp").innerHTML=kpi(P100(opened.length/N),`Rule met within ${T.horizon} days`,od.length?`median day ${Math.round(pct(od,.5))+1}`:"never met")
+    +kpi(P100(win/N),"Ends richer than one shop","same weather and customers")+kpi(money(pct(gain,.5)),"Median gain by day "+T.horizon,`1 in 10 below ${money(pct(gain,.1))}`)
+    +kpi(`${P100(bkB)} → ${P100(bkX)}`,"Bankruptcy","without → with");
+  const M=Math.floor(T.horizon/30),vb=[],vx=[];for(let m=0;m<M;m++){vb.push(pct(monthStats(B,m).Pf,.5));vx.push(pct(monthStats(X,m).Pf,.5))}
+  drawBars($("c_exp"),{cats:vb.map((_,i)=>"Month "+(i+1)),series:[{name:"One shop",color:"--s1",vals:vb},{name:T.expType==="outlet"?"With the outlet rule":"With the catering rule",color:"--s2",vals:vx}],values:true,label:"Median monthly profit with and without expansion",
+    readout:i=>`Month ${i+1}: one shop ${money(vb[i])} · with expansion ${money(vx[i])}`,def:"Paired runs: each pair shares the same random days."});
+}
+function swot(){
+  const B=A.B,fx=B.fixed,gm=K.ITEM_ORDER.reduce((a,id)=>a+(B.pl.price[id]-unitCost(id))/B.pl.price[id],0)/K.ITEM_ORDER.length;
+  const rain=K.WX.rain.w/100,cr=A.credMC||[];
+  $("o_swot").innerHTML=`
+   <div class="S"><h4>Strengths</h4><ul><li>Average item margin ${P100(gm)} at ${T.k}% of fair</li><li>Tiffin margins of ${P100((B.pl.price.dosa-unitCost("dosa"))/B.pl.price.dosa)} on dosa carry the slow hours</li><li>About ${Math.round(B.cust)} customers on a blended day at ${T.qRep}% reputation</li><li>Median net worth ${money(A.mc.endMed)} by day ${T.horizon}</li></ul></div>
+   <div class="W"><h4>Weaknesses</h4><ul><li>${A.nv.item==="milk"?"Milk spoils nightly":"Batter lasts two days"}: the best ${A.nv.item} order still runs short on ${P100(1-A.nv.CR)} of days</li><li>${money(fx.all)} a day of fixed cost before the first tea</li><li>${P100(A.mc.walk)} of customers walk off in the simulation</li><li>Rent lands at month end, so ${P100(A.mc.cr)} of runs need the moneylender</li></ul></div>
+   <div class="O"><h4>Opportunities</h4><ul><li>Best price level is ${A.bestK}% of fair</li><li>Best staffing: ${A.bestStaff.ck?"cook":"no cook"} + ${A.bestStaff.n} server${A.bestStaff.n===1?"":"s"} (${money(A.bestStaff.v)}/day)</li><li>Rain (${P100(rain)} of days) lifts tea ×${K.WX.rain.tea} and bajji ×${K.WX.rain.bajji}</li><li>${T.expType==="outlet"?"A second outlet":"Catering"} beats staying put in ${P100(A.exp.win)} of paired runs</li></ul></div>
+   <div class="T"><h4>Threats</h4><ul><li>Gas runs dry in ${P100(A.lpg.pc)} of refill cycles at R = ${T.reorder} kg</li><li>Bus strikes halve the crowd; a rival stall cuts it ${Math.round((1-K.RIVAL_ARR)*100)}% for ${K.RIVAL_DAYS} days</li><li>${P100(K.DEFAULT.stranger)} of new faces never pay their khata</li><li>${P100(A.mc.bk)} of runs go bankrupt; inspectors fine dirty kitchens ${money(K.INSPECT.fine)}+</li></ul></div>`;
+}
+
+/* ---------- boot ---------- */
+function boot(){
+  $("brand").innerHTML=tumbler()+`<span>Chai <em>&amp;</em> Tiffin</span>`;
+  const au=LS.get(K_AUTO);if(au&&au.v===1&&au.plan){s=au;view="title"}
+  render();
+  if(tab==="tech")renderTech();
+}
+boot();
+</script>
+</body>
+</html>

@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<!--
+TOOL: Monsoon Farm
+FAMILY: games
+VERSION: 1.0.0
+DATE: 2026-10-02
+CHAT: Business sim game set (claude.ai, 2026-10-02)
+CHANGES: 1.0.0 - first release: 5-acre Tamil Nadu farm over 3/5/10 years, Kharif/Rabi seasons, monsoon forecast, crops, soil, irrigation, mandi prices with MSP and storage, crop loan, moneylender, index insurance, upgrades, saves, Tech discussion tab with Monte Carlo
+STATUS: playable
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#3a4466">
+<title>Monsoon Farm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yeseva+One&family=Mukta:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: a field notebook under a monsoon sky. One narrow column; sticky status bar; one season step per screen */
+:root{
+  --bg:#e4ebf1; --sky:#d3dde8; --card:#fbfcfd; --ink:#1c2236; --muted:#586278; --line:#cad3de; --chip:#edf1f5; --rule:#dfe6ee;
+  --cloud:#3a4466; --cloud2:#545f86; --on-cloud:#f2f4fb; --paddy:#2f7a3a; --paddy-d:#1f5528; --laterite:#b1452a; --rain:#356aa6; --bad:#b23a2a; --good:#2f7a3a; --gold:#9a6b00;
+  --k-paddy:#62a64f; --k-gnut:#c99a4a; --k-cotton:#d8d0bb; --k-pulses:#5b5474; --k-veg:#d0553a; --k-cane:#9fb543; --k-fallow:#c0896a; --k-ink:#1c2236;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --f-display:"Yeseva One",Georgia,"Times New Roman",serif; --f-body:"Mukta","Segoe UI",system-ui,sans-serif; --f-num:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e1326; --sky:#141a33; --card:#161c35; --ink:#e3e7f3; --muted:#98a1bd; --line:#283152; --chip:#1d2442; --rule:#20284a;
+  --cloud:#2a3463; --cloud2:#3a4680; --on-cloud:#eef0fb; --paddy:#4fae58; --paddy-d:#2c6e33; --laterite:#e0784f; --rain:#79a7e0; --bad:#ff7a63; --good:#62c46b; --gold:#e0b04a;
+  --k-paddy:#4c8f3e; --k-gnut:#a97f38; --k-cotton:#9d978a; --k-pulses:#6d6590; --k-veg:#c04b32; --k-cane:#82963a; --k-fallow:#8e624b; --k-ink:#0e1326;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1326; --sky:#141a33; --card:#161c35; --ink:#e3e7f3; --muted:#98a1bd; --line:#283152; --chip:#1d2442; --rule:#20284a;
+  --cloud:#2a3463; --cloud2:#3a4680; --on-cloud:#eef0fb; --paddy:#4fae58; --paddy-d:#2c6e33; --laterite:#e0784f; --rain:#79a7e0; --bad:#ff7a63; --good:#62c46b; --gold:#e0b04a;
+  --k-paddy:#4c8f3e; --k-gnut:#a97f38; --k-cotton:#9d978a; --k-pulses:#6d6590; --k-veg:#c04b32; --k-cane:#82963a; --k-fallow:#8e624b; --k-ink:#0e1326;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);background-image:linear-gradient(to bottom,var(--sky),var(--bg) 320px);background-repeat:no-repeat;color:var(--ink);font:17px/1.45 var(--f-body);-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+.wrap{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:0 40px}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+h1,h2{font-family:var(--f-display);font-weight:400;margin:0;line-height:1.1;text-wrap:balance}
+h2{font-size:24px}
+h3{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)} .small{font-size:14px} .pos{color:var(--good)} .neg{color:var(--bad)}
+/* tabs */
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--chip);border:1px solid var(--line);border-radius:14px;padding:4px;margin-block:12px 4px}
+.tabs button{border:0;background:transparent;border-radius:10px;padding:10px 6px;font-weight:700;cursor:pointer;color:var(--muted);min-height:44px}
+.tabs button[aria-selected="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+/* status bar */
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.bar .row{display:flex;align-items:center;gap:10px}
+.brand{font-family:var(--f-display);font-size:21px;line-height:1;flex:1;min-width:0;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.brand svg{width:30px;height:22px;flex:none}
+.iconbtn{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 14px;font-weight:700;cursor:pointer;min-height:44px}
+.stats{display:grid;grid-template-columns:.9fr 1.15fr 1.15fr .8fr;gap:6px;margin-top:8px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:5px 8px;min-width:0}
+.stat b{display:block;font-family:var(--f-num);font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.meter{height:5px;background:var(--chip);border-radius:5px;margin-top:3px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--paddy);border-radius:5px}
+/* cards */
+section{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.sky-card{background:var(--cloud);color:var(--on-cloud);border-color:var(--cloud);overflow:hidden;position:relative}
+.sky-card h3{color:var(--on-cloud);opacity:.8}
+.sky-card .muted{color:var(--on-cloud);opacity:.78}
+.event{border-left:4px solid var(--laterite);padding:8px 12px;background:var(--chip);border-radius:0 10px 10px 0;margin-top:10px;font-size:15px}
+.event.good{border-left-color:var(--paddy)}
+.event.info{border-left-color:var(--rain)}
+.fc{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.fc div{background:rgba(255,255,255,.1);border-radius:10px;padding:6px 8px;text-align:center}
+.fc b{display:block;font-family:var(--f-num);font-size:20px;font-weight:600}
+.fc .bar2{height:5px;border-radius:4px;background:var(--on-cloud);opacity:.85;margin-top:4px}
+/* field map */
+.map svg{display:block;width:100%;height:auto;touch-action:manipulation}
+.map .plot{cursor:pointer}
+.map text{font-family:var(--f-body);pointer-events:none}
+.cropgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:10px}
+.cropbtn{display:flex;gap:8px;align-items:center;border:1px solid var(--line);background:var(--chip);border-radius:12px;padding:6px 10px;min-height:48px;cursor:pointer;text-align:left;font-size:15px;line-height:1.2}
+.cropbtn i{width:14px;height:14px;border-radius:4px;flex:none;border:1px solid var(--line)}
+.cropbtn small{display:block;color:var(--muted);font-size:12px;font-family:var(--f-num)}
+.cropbtn[aria-pressed="true"]{border:2px solid var(--ink);background:var(--card)}
+.cropbtn:disabled{opacity:.38;cursor:not-allowed}
+/* steppers, toggles */
+.step{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:8px;border-top:1px dashed var(--line)}
+.step:first-of-type{border-top:0}
+.step .txt{min-width:0}
+.ctl{display:flex;align-items:center;gap:6px;flex:none}
+.ctl button{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--chip);font-size:22px;font-weight:700;cursor:pointer}
+.ctl output{min-width:78px;text-align:center;font-family:var(--f-num);font-size:16px;font-weight:600}
+.seg{display:flex;gap:4px;background:var(--chip);border-radius:12px;padding:3px;flex-wrap:wrap}
+.seg button{flex:1 1 auto;border:0;background:transparent;border-radius:9px;padding:8px 10px;font-weight:700;font-size:15px;cursor:pointer;color:var(--muted);min-height:40px}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.14)}
+.big{display:block;width:100%;border:0;border-radius:16px;padding:15px 16px;font-family:var(--f-display);font-size:21px;background:var(--paddy);color:#fff;cursor:pointer;box-shadow:0 4px 0 var(--paddy-d);min-height:54px}
+.big:active{transform:translateY(3px);box-shadow:0 1px 0 var(--paddy-d)}
+.big.alt{background:var(--cloud);box-shadow:0 4px 0 var(--cloud2)}
+.ghost{width:100%;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:11px 12px;font-weight:700;cursor:pointer;min-height:46px}
+.ghost.sm{width:auto;padding:8px 12px;min-height:44px;font-size:15px}
+.ghost:disabled{opacity:.45;cursor:not-allowed}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.btnrow>*{flex:1 1 130px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+td{padding:6px 0;border-bottom:1px dashed var(--line);vertical-align:top}
+td:last-child{text-align:right;font-family:var(--f-num);white-space:nowrap;padding-left:8px}
+tr.total td{font-weight:700;border-bottom:0;font-size:17px}
+tr.head td{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;border-bottom:1px solid var(--line);padding-top:12px}
+.row2{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.upg{padding-block:10px;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:6px}
+.upg:first-of-type{border-top:0}
+details.card summary{cursor:pointer;font-weight:700;min-height:28px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.card summary::-webkit-details-marker{display:none}
+details.card summary::after{content:"+";font-family:var(--f-num);font-size:20px;color:var(--muted)}
+details.card[open] summary::after{content:"−"}
+.lot{display:flex;gap:8px;align-items:center;justify-content:space-between;padding-block:8px;border-top:1px dashed var(--line)}
+.lot:first-of-type{border-top:0}
+.mrow{padding-block:10px;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:6px}
+.mrow:first-of-type{border-top:0}
+/* notebook log */
+.log{font-size:15px;line-height:28px;background-image:repeating-linear-gradient(to bottom,transparent 0 27px,var(--rule) 27px 28px);border-left:2px solid var(--laterite);padding-left:10px;margin-left:2px;display:flex;flex-direction:column}
+.log .h{display:grid;grid-template-columns:54px 1fr;gap:8px}
+.log .t{font-family:var(--f-num);color:var(--rain);font-size:13px;font-weight:600}
+.log .q{font-style:italic;color:var(--muted)}
+.log .warn{color:var(--bad)} .log .good{color:var(--good)}
+@keyframes pop{from{opacity:.15;transform:translateY(4px)}to{opacity:1;transform:none}}
+.log .h{animation:pop .3s ease-out}
+/* title */
+.title-card{text-align:center;padding:0 0 22px}
+.title-card .art{display:block;width:100%;height:auto}
+.title-card h1{font-size:46px;margin:-8px 0 6px}
+.title-card p{padding-inline:16px}
+.lenpick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lenpick button{border:2px solid var(--line);background:var(--chip);border-radius:12px;padding:10px 4px;font-weight:700;cursor:pointer;min-height:56px;line-height:1.25}
+.lenpick button[aria-pressed="true"]{border-color:var(--ink);background:var(--card)}
+/* sheet + toast */
+.sheet{position:fixed;inset:0;background:rgba(5,8,20,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet .panel{background:var(--bg);width:100%;max-width:560px;max-height:88%;overflow:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.slot{display:flex;gap:8px;align-items:center;padding-block:8px;border-top:1px dashed var(--line)}
+.slot:first-of-type{border-top:0}
+.slot .info{flex:1;min-width:0;font-size:14px}
+.slot button{border:1px solid var(--line);background:var(--chip);border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer;min-height:44px}
+.slot button:disabled{opacity:.4}
+textarea{width:100%;min-height:76px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);padding:8px;font-family:var(--f-num);font-size:12px}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;z-index:30;max-width:90%}
+.help p{margin-top:8px} .help p:first-child{margin-top:0}
+/* end chart + tech */
+#tech{display:flex;flex-direction:column;gap:14px;padding-top:10px}
+#tech h2{font-size:23px}
+.sec-n{font-family:var(--f-num);font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.06em;margin-bottom:2px}
+.prose{display:flex;flex-direction:column;gap:8px;max-width:65ch}
+.fld{display:flex;flex-direction:column;gap:2px;padding-block:6px}
+.fld label{display:flex;justify-content:space-between;gap:10px;font-weight:600;font-size:15px}
+.fld output{font-family:var(--f-num);font-weight:600;white-space:nowrap}
+input[type=range]{width:100%;height:36px;accent-color:var(--paddy);margin:0}
+.flds{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));column-gap:18px}
+.segrow{display:flex;flex-direction:column;gap:4px;padding-block:6px}
+.segrow>span{font-weight:600;font-size:15px}
+.tblwrap{overflow-x:auto;margin-inline:-4px;padding-inline:4px}
+.tt{width:100%;border-collapse:collapse;font-size:14px;min-width:300px}
+.tt th{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:right;padding:6px 4px;border-bottom:1px solid var(--line);font-weight:700}
+.tt th:first-child,.tt td:first-child{text-align:left}
+.tt td{padding:6px 4px;border-bottom:1px dashed var(--line);text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.tt td:first-child{font-family:var(--f-body)}
+.tt tr.sum td{font-weight:700;border-bottom:0}
+.formula{font-family:var(--f-num);font-size:12.5px;background:var(--chip);border-radius:10px;padding:10px 12px;line-height:1.7;overflow-x:auto;white-space:pre}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.kpi{background:var(--chip);border-radius:12px;padding:10px 12px;min-width:0}
+.kpi b{display:block;font-family:var(--f-num);font-size:20px;line-height:1.2;font-weight:600}
+.kpi .small{display:block}
+.verdict{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--chip);font-size:15px;margin-top:8px}
+.verdict i{flex:none;font-style:normal;font-family:var(--f-num);font-weight:600;font-size:12px;padding:2px 7px;border-radius:6px;margin-top:3px}
+.verdict.ok i{background:var(--paddy);color:#fff}
+.verdict.no i{background:var(--bad);color:#fff}
+.verdict.mid i{background:var(--gold);color:#fff}
+.chart{position:relative;margin-top:6px}
+.chart svg{display:block;width:100%;height:auto;touch-action:pan-y}
+.chart .readout{font-family:var(--f-num);font-size:13px;min-height:2.6em;color:var(--ink);padding-top:4px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--muted);margin-bottom:4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:4px;border-radius:2px;display:inline-block}
+.legend i.dot{width:10px;height:10px;border-radius:50%}
+.legend i.band{height:10px;opacity:.3}
+.legend i.dash{height:0;border-top:2px dashed var(--muted);border-radius:0;background:none}
+svg .ax{font-family:var(--f-num);font-size:11px;fill:var(--muted)}
+svg .lab{font-family:var(--f-body);font-size:12px;font-weight:700;fill:var(--ink)}
+svg .grid{stroke:var(--line);stroke-width:1;opacity:.7}
+svg .guide{stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3}
+.swot{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.swot>div{border-radius:14px;padding:12px;background:var(--chip);min-width:0}
+.swot h4{margin:0 0 6px;font-family:var(--f-display);font-weight:400;font-size:20px;line-height:1}
+.swot ul{margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:5px}
+.swot .S h4{color:var(--paddy)} .swot .W h4{color:var(--bad)} .swot .O h4{color:var(--rain)} .swot .T h4{color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{border:1px solid var(--line);background:var(--chip);border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px;cursor:pointer;min-height:40px}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.planpick{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.planpick button{border:1px solid var(--line);border-radius:10px;min-height:48px;font-size:12px;font-weight:700;cursor:pointer;padding:2px;line-height:1.1;color:var(--k-ink)}
+@media (max-width:440px){.swot{grid-template-columns:1fr}}
+:focus-visible{outline:3px solid var(--rain);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.log .h{animation:none}*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="tabs" role="tablist" aria-label="Sections"><button role="tab" data-act="tab" data-tab="play" id="tab_play">Play</button><button role="tab" data-act="tab" data-tab="tech" id="tab_tech">Tech discussion</button></nav>
+  <header class="bar" id="bar" hidden>
+    <div class="row">
+      <div class="brand"><svg viewBox="0 0 30 22" aria-hidden="true"><path d="M6 14h17a5 5 0 0 0 0-10 7 7 0 0 0-13-1 5 5 0 0 0-4 11z" fill="var(--cloud)"/><g stroke="var(--rain)" stroke-width="2" stroke-linecap="round"><line x1="10" y1="17" x2="9" y2="21"/><line x1="16" y1="17" x2="15" y2="21"/><line x1="22" y1="17" x2="21" y2="21"/></g></svg>Monsoon Farm</div>
+      <button class="iconbtn" data-act="menu" id="menuBtn">Menu</button>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+  <main id="main"></main>
+  <div id="tech" hidden></div>
+</div>
+<div class="sheet" id="sheet" hidden><div class="panel" id="panel"></div></div>
+<div class="toast" id="toast" hidden></div>
+<script>
+"use strict";
+/*ENGINE-START*/
+const VERSION="1.0.0";
+/* ---------- every tunable number lives here ---------- */
+const C={
+  START_CASH:60000, ACRES:5, MAX_LEASE:3, LAND_VALUE:160000, WAGE:450, INFL:0.025,
+  HOUSEHOLD:40000,                                   // family expenses per season
+  LOAN_PER_ACRE:25000, LOAN_RATE:0.07, LOAN_MONTHS:4, OVERDUE_RATE:0.012, ML_RATE:0.02, ML_CAP:350000,
+  LEASE_RENT:14000, LEASE_FERT:[0.62,0.88], FERT_START:[0.8,0.95], FERT_MIN:0.35, FERT_MAX:1.1,
+  BORE_COST:90000, BORE_P:0.65, BORE_CAP:1.8, BORE_DRY_P:0.04, BORE_DRY_P_DEF:0.1, BORE_DEF_CUT:0.6,
+  POND_COST:35000, POND_CAP:1.2, DRIP_COST:45000, DRIP_SAVE:0.7, DRIP_BOOST:0.08, IRR_COST:900,
+  TRACTOR_COST:420000, TRACTOR_DOWN:70000, TRACTOR_RATE:0.095, TRACTOR_N:10, TRACTOR_LAB:0.65, DIESEL:1200, HIRE:[8000,22000], TRACTOR_DEP:0.85,
+  COW_COST:55000, COW_MAX:3, MILK_DAYS:150, MILK_L:[5,8], MILK_PRICE:34, FEED:13000, FEED_DROUGHT:1.35, COW_DRY_P:0.2, COW_SICK_P:0.08, VET:6000, COW_VALUE:0.75,
+  SPRAY_COST:2400, SPRAY_CUT:0.2, PEST_P:0.4, PEST_LOSS:[0.3,0.55], WEED_DAYS:6, WEED_BOOST:0.07,
+  RAIN_SD:0.25, FC_NOISE:0.9, RABI_BASE:0.5, RABI_SD:0.25, RABI_CORR:0.4, RABI_FC_NOISE:0.8,
+  LATE_P:0.2, LATE_CUT:0.92, DRY_P:0.25, DRY_CUT:0.85, FLOOD_AT:1.25, DEF_AT:0.85, EXC_AT:1.15,
+  CYCLONE_P:0.1, CYCLONE_EXC:0.2, HAIL_P:0.06, LABOUR_P:0.2, LABOUR_PREM:0.4,
+  SUBSIDY_P:0.12, SUBSIDY_CUT:0.3, GOODPX_P:0.08, GOODPX_JUMP:0.22, SHOCK_P:0.02, BAN_JUMP:-0.25, CRASH_JUMP:-0.45,
+  YIELD_SD_COMMON:0.10, YIELD_SD_PLOT:0.06, INS_TRIG:0.7
+};
+/* per acre per season. need = water units; supply 1.0 = a normal Kharif monsoon. yield in quintals, prices per quintal */
+const CROPS={
+  paddy:{name:"Paddy",seasons:"KR",input:14000,labour:32,need:1.1,sens:1.6,flood:0,yield:24,base:2300,sd:0.05,rho:0.9,msp:2180,quota:30,rent:20,loss:0.01,susc:0.6,fert:-0.05,si:35000,prem:[0.02,0.015],sf:"two",pest:"Stem borer"},
+  gnut:{name:"Groundnut",seasons:"KR",input:12000,labour:20,need:0.6,sens:0.9,flood:0.8,yield:6.5,base:6200,sd:0.06,rho:0.9,msp:5900,quota:8,rent:40,loss:0.008,susc:0.45,fert:0.02,si:30000,prem:[0.02,0.015],sf:"two",pest:"Leaf miner"},
+  cotton:{name:"Cotton",seasons:"K",input:17000,labour:38,need:0.8,sens:1.0,flood:0.6,yield:9,base:7000,sd:0.06,rho:0.9,msp:6700,quota:10,rent:30,loss:0.005,susc:0.9,fert:-0.07,si:40000,prem:[0.05,0.05],sf:"cotton",pest:"Pink bollworm"},
+  pulses:{name:"Black gram",seasons:"KR",input:6500,labour:12,need:0.45,sens:0.7,flood:0.9,yield:3.3,base:7400,sd:0.06,rho:0.9,msp:7000,quota:5,rent:40,loss:0.01,susc:0.4,fert:0.07,si:20000,prem:[0.02,0.015],sf:"two",pest:"Pod borer"},
+  veg:{name:"Vegetables",seasons:"KR",input:28000,labour:60,need:0.9,sens:1.4,flood:1.0,yield:80,base:1400,sd:0.2,rho:0.8,msp:0,quota:0,rent:15,loss:0.07,susc:0.7,fert:-0.03,si:50000,prem:[0.05,0.05],sf:"veg",pest:"Fruit borer"},
+  cane:{name:"Sugarcane",seasons:"K",input:32000,inputR:6000,labour:35,need:1.0,sens:1.2,flood:0.2,yield:380,base:330,sd:0,rho:0,msp:0,quota:0,rent:0,loss:0,susc:0.3,fert:-0.08,si:30000,prem:[0.05,0.05],sf:"flat",pest:"Early shoot borer",mill:true},
+  fallow:{name:"Fallow",seasons:"KR",input:0,labour:0,need:0,sens:0,flood:0,yield:0,base:0,sd:0,rho:0,msp:0,quota:0,rent:0,loss:0,susc:0,fert:0.1,si:0,prem:[0,0],sf:"flat"}
+};
+const CROP_KEYS=["paddy","gnut","cotton","pulses","veg","cane","fallow"];
+const SELL_KEYS=["paddy","gnut","cotton","pulses","veg"];
+/* seasonal price factor by calendar month, index 0 = June */
+const SF={
+  two:   [1.05,1.07,1.08,1.02,0.88,0.91,0.96,1.00,0.97,0.90,0.95,1.00],
+  cotton:[1.06,1.07,1.08,1.04,0.87,0.88,0.92,0.96,1.00,1.02,1.04,1.05],
+  veg:   [1.15,1.25,1.20,1.00,0.80,0.85,1.00,1.05,0.95,0.80,0.95,1.10],
+  flat:  [1,1,1,1,1,1,1,1,1,1,1,1]
+};
+const MONTHS=["Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr","May"];
+const STEP_M={K:{plan:0,mid:2,harvest:4},R:{plan:5,mid:7,harvest:9}};
+
+/* ---------- small maths ---------- */
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+function nrm(r){let u,v,q;do{u=2*r()-1;v=2*r()-1;q=u*u+v*v}while(q>=1||q===0);return u*Math.sqrt(-2*Math.log(q)/q)}
+function uni(r,a,b){return a+r()*(b-a)}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function normCdf(z){const t=1/(1+0.2316419*Math.abs(z)),d=0.3989423*Math.exp(-z*z/2);const p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p}
+/* random streams: live game uses Math.random for all; the simulator seeds each stream per season (common random numbers) */
+function liveR(){const m=Math.random;return{w:m,p:m,e:m,y:m}}
+function seedR(seed,s){const b=(seed*7919+s*104729)|0;return{w:mulberry32(b+11),p:mulberry32(b+222),e:mulberry32(b+3333),y:mulberry32(b+44444)}}
+
+/* ---------- calendar ---------- */
+const kindOf=s=>s%2?"R":"K";
+const monthAt=(s,step)=>Math.floor(s/2)*12+STEP_M[kindOf(s)][step];
+const INFL_T=[];
+const infl=m=>Number.isInteger(m)&&m>=0?(INFL_T[m]!==undefined?INFL_T[m]:(INFL_T[m]=Math.pow(1+C.INFL,m/12))):Math.pow(1+C.INFL,m/12);
+const seasonName=k=>k==="K"?"Kharif":"Rabi";
+
+/* ---------- prices ---------- */
+function price(g,c,m){const k=CROPS[c];m=m==null?g.month:m;if(k.mill)return k.base*infl(m);return k.base*infl(m)*SF[k.sf][m%12]*Math.exp(g.px[c]||0)}
+function expPrice(g,c,m){const k=CROPS[c];if(k.mill)return k.base*infl(m);const h=Math.max(0,m-g.month);return k.base*infl(m)*SF[k.sf][m%12]*Math.exp((g.px[c]||0)*Math.pow(k.rho,h))}
+function mspOf(c,m){return CROPS[c].msp*infl(m)}
+function stepPrices(g,r,news){
+  for(const c of SELL_KEYS){const k=CROPS[c];g.px[c]=k.rho*(g.px[c]||0)+k.sd*nrm(r)}
+  const u=r(),w=r();
+  if(u<C.SHOCK_P){g.px.veg+=C.CRASH_JUMP;news&&news.push({c:"veg",x:"Tomato and onion prices crash as every village harvests at once.",bad:1})}
+  else if(u<2*C.SHOCK_P){const c=w<0.5?"paddy":"veg";g.px[c]+=C.BAN_JUMP;news&&news.push({c,x:`An export ban on ${c==="paddy"?"rice":"onion"} knocks the ${CROPS[c].name.toLowerCase()} price down.`,bad:1})}
+  else if(u<2.6*C.SHOCK_P){const c=SELL_KEYS[Math.floor(w*SELL_KEYS.length)];g.px[c]+=C.GOODPX_JUMP;news&&news.push({c,x:`Traders report short supply of ${CROPS[c].name.toLowerCase()} in other states. Prices firm up.`})}
+}
+/* move the clock forward month by month: prices and interest */
+function advance(g,m,R,news){
+  while(g.month<m){
+    stepPrices(g,R.p,news);g.month++;
+    if(g.debt.ml>0){const i=g.debt.ml*C.ML_RATE;g.debt.ml+=i;g.acc.int_ml=(g.acc.int_ml||0)-i}
+    if(g.debt.overdue>0){const i=g.debt.overdue*C.OVERDUE_RATE;g.debt.overdue+=i;g.acc.int_od=(g.acc.int_od||0)-i}
+  }
+}
+
+/* ---------- weather ---------- */
+function fcProbs(sig,sd,noise){
+  const mu=sig/(1+noise*noise),sp=Math.sqrt(noise*noise/(1+noise*noise));
+  const zd=(C.DEF_AT-1)/sd,ze=(C.EXC_AT-1)/sd;
+  const pd=normCdf((zd-mu)/sp),pe=1-normCdf((ze-mu)/sp);return[pd,1-pd-pe,pe];
+}
+const catOf=idx=>idx<C.DEF_AT?0:idx>C.EXC_AT?2:1;
+const CAT=["deficient","normal","excess"];
+function drawYear(g,R){
+  const r=R.w,z=nrm(r),zr=C.RABI_CORR*z+Math.sqrt(1-C.RABI_CORR*C.RABI_CORR)*nrm(r);
+  const idxK=clamp(1+C.RAIN_SD*z,0.4,1.8),idxR=clamp(1+C.RABI_SD*zr,0.3,1.8);
+  const late=r()<C.LATE_P+(z<0?0.15:0),dry=r()<clamp(C.DRY_P-0.2*z,0.05,0.7);
+  const sK=z+C.FC_NOISE*nrm(r),sR=zr+C.RABI_FC_NOISE*nrm(r);
+  const h1K=clamp(idxK*(1+0.08*nrm(r)),0.3,2),h1R=clamp(idxR*(1+0.1*nrm(r)),0.2,2);
+  const boreU=r();
+  g.wx={z,zr,idxK,idxR,late,dry,fcK:fcProbs(sK,C.RAIN_SD,C.FC_NOISE),fcR:fcProbs(sR,C.RABI_SD,C.RABI_FC_NOISE),h1K,h1R,boreU};
+}
+function rainSupply(g,kind){const w=g.wx;return kind==="K"?w.idxK*(w.late?C.LATE_CUT:1)*(w.dry?C.DRY_CUT:1):C.RABI_BASE*w.idxR}
+function seasonIdx(g,kind){return kind==="K"?g.wx.idxK:g.wx.idxR}
+
+/* ---------- yield model (shared by the game and the Tech tab) ---------- */
+function needOf(c,drip){const k=CROPS[c];return k.need*(drip&&c!=="paddy"?C.DRIP_SAVE:1)}
+function waterFactor(c,supply,drip){const k=CROPS[c];if(!k.need)return 1;const r=supply/needOf(c,drip);return r>=1?1:Math.pow(Math.max(0,r),k.sens)}
+function floodFactor(c,idx,kind){return kind==="K"&&idx>C.FLOOD_AT?Math.max(0.1,1-CROPS[c].flood*(idx-C.FLOOD_AT)*2):1}
+const fertFactor=F=>0.5+0.55*F;
+
+/* ---------- new game ---------- */
+function newFarm(years,R){
+  const g={v:1,years,s:0,month:0,cash:C.START_CASH,plots:[],lease:0,
+    assets:{bore:0,drip:0,pond:0,tractor:0,tractorAt:0,cows:0},pondWater:0,
+    debt:{crop:0,overdue:0,ml:0,tractor:0},defaulted:false,
+    px:{},store:[],wx:null,plan:{ins:true,loan:0,loanTouched:false},lastPlan:{},
+    phase:"plan",ev:{},mid:{spray:true,irrigate:true,weed:false},harv:{},harvRows:[],acc:{},
+    history:[],log:[],shown:0,news:[],ruin:null,totals:{sales:0,payout:0,premium:0},boreTries:0};
+  for(let i=0;i<C.ACRES;i++)g.plots.push({F:uni(R.e,C.FERT_START[0],C.FERT_START[1]),crop:i<2?"gnut":i<4?"paddy":"pulses",leased:false,locked:false,caneFw:0});
+  for(const c of SELL_KEYS)g.px[c]=CROPS[c].sd/Math.sqrt(1-CROPS[c].rho*CROPS[c].rho)*nrm(R.p)*0.6;
+  beginSeason(g,R);
+  return g;
+}
+
+/* ---------- money helpers ---------- */
+function book(g,key,v){g.acc[key]=(g.acc[key]||0)+v;g.cash+=v;if(g.cash<0)borrowML(g,-g.cash)}
+function borrowML(g,need){
+  const room=Math.max(0,C.ML_CAP-g.debt.ml),take=Math.min(room,need);
+  g.debt.ml+=take;g.cash+=take;g.acc.ml_new=(g.acc.ml_new||0)+take;
+  if(take<need-0.5&&!g.ruin)g.ruin="credit";
+}
+function totalDebt(g){return g.debt.crop+g.debt.overdue+g.debt.ml+g.debt.tractor}
+function loanLimit(g){return g.defaulted?0:C.LOAN_PER_ACRE*g.plots.length*infl(g.month)}
+function landValue(g){return C.ACRES*C.LAND_VALUE*infl(g.month)}
+function lotNow(g,l){const age=g.month-l.m,k=CROPS[l.c];const q=l.q*Math.pow(1-k.loss,age);return{q,age,rent:l.q*k.rent*age*infl(g.month),gross:q*price(g,l.c)}}
+function stockValue(g){let v=0;for(const l of g.store){const n=lotNow(g,l);v+=n.gross-n.rent}for(const c in g.harv)v+=g.harv[c]*price(g,c);return v}
+function assetValue(g){const a=g.assets;let v=a.cows*C.COW_COST*C.COW_VALUE*infl(g.month);if(a.tractor)v+=C.TRACTOR_COST*Math.pow(C.TRACTOR_DEP,(g.month-a.tractorAt)/12);return v}
+function netWorth(g){return g.cash+stockValue(g)+assetValue(g)-totalDebt(g)}
+
+/* ---------- season start ---------- */
+function beginSeason(g,R){
+  const kind=kindOf(g.s);g.news=[];
+  advance(g,monthAt(g.s,"plan"),R,g.news);
+  g.acc={};g.ev={};g.harv={};g.quotaUsed={};g.sold=null;g.harvRows=[];g.log=[];g.shown=0;g.report=null;
+  if(kind==="K"){
+    drawYear(g,R);
+    if(g.assets.bore&&g.wx.boreU<(g.wx.idxK<C.DEF_AT?C.BORE_DRY_P_DEF:C.BORE_DRY_P)){g.assets.bore=0;g.ev.boreDry=true}
+    g.pondWater=g.assets.pond?C.POND_CAP*Math.min(1,g.wx.idxK):0;
+    for(const p of g.plots){p.locked=false;if(p.crop==="cane")p.crop="fallow"}
+  }else{
+    if(g.assets.pond)g.pondWater=Math.min(C.POND_CAP,g.pondWater+0.5*C.POND_CAP*Math.min(1,g.wx.idxR));
+    for(const p of g.plots){if(p.crop==="cane")p.locked=true;else if(!CROPS[p.crop].seasons.includes("R"))p.crop="pulses"}
+  }
+  const u1=R.e(),u2=R.e(),u3=R.e();
+  if(u1<C.SUBSIDY_P)g.ev.subsidy=true;
+  if(u2<C.GOODPX_P){const c=SELL_KEYS[Math.floor(u3*SELL_KEYS.length)];g.px[c]+=C.GOODPX_JUMP;g.ev.goodpx=c}
+  g.plan.loanTouched=false;g.plan.loan=suggestLoan(g);
+  g.mid={spray:true,irrigate:true,weed:false};
+  g.nw0=netWorth(g);g.phase="plan";
+}
+function suggestLoan(g){const need=sowCost(g).total+C.HOUSEHOLD*infl(g.month)*0.5-g.cash;return clamp(Math.ceil(Math.max(0,need)/5000)*5000,0,Math.floor(loanLimit(g)/5000)*5000)}
+
+/* ---------- costs ---------- */
+function labourMult(g){return g.assets.tractor?C.TRACTOR_LAB:1}
+function sowCost(g){
+  const kind=kindOf(g.s),cm=infl(g.month),o={input:0,labour:0,prem:0,lease:0,acres:0,byCrop:{}};
+  for(const p of g.plots){
+    const c=p.crop,k=CROPS[c];if(c==="fallow")continue;
+    let inp=(c==="cane"&&kind==="R"?k.inputR:k.input)*cm;
+    if(g.ev.subsidy&&(c==="pulses"||c==="gnut"))inp*=1-C.SUBSIDY_CUT;
+    const lab=k.labour*0.5*C.WAGE*cm*labourMult(g),pr=g.plan.ins?k.si*k.prem[kind==="K"?0:1]*cm:0;
+    o.input+=inp;o.labour+=lab;o.prem+=pr;o.acres++;
+    const b=o.byCrop[c]||(o.byCrop[c]={acres:0,cost:0});b.acres++;b.cost+=inp+lab+pr;
+  }
+  if(kind==="K")o.lease=g.lease*C.LEASE_RENT*cm;
+  o.total=o.input+o.labour+o.prem+o.lease;return o;
+}
+function setLease(g,n,R){
+  n=clamp(n,0,C.MAX_LEASE);if(kindOf(g.s)!=="K")return;
+  while(g.lease<n){g.plots.push({F:uni(R.e,C.LEASE_FERT[0],C.LEASE_FERT[1]),crop:"pulses",leased:true,locked:false,caneFw:0});g.lease++}
+  while(g.lease>n){const i=g.plots.map(p=>p.leased).lastIndexOf(true);g.plots.splice(i,1);g.lease--}
+}
+function canPlant(g,c){return CROPS[c].seasons.includes(kindOf(g.s))}
+
+/* ---------- investments ---------- */
+function buy(g,item,R){
+  const cm=infl(g.month),a=g.assets,r=R.e();
+  if(item==="bore"){if(a.bore)return null;book(g,"inv",-C.BORE_COST*cm);g.boreTries++;if(r<C.BORE_P){a.bore=1;return"ok"}return"dry"}
+  if(item==="pond"){if(a.pond)return null;book(g,"inv",-C.POND_COST*cm);a.pond=1;g.pondWater=C.POND_CAP*0.5;return"ok"}
+  if(item==="drip"){if(a.drip)return null;book(g,"inv",-C.DRIP_COST*cm);a.drip=1;return"ok"}
+  if(item==="cow"){if(a.cows>=C.COW_MAX)return null;book(g,"inv",-C.COW_COST*cm);a.cows++;return"ok"}
+  if(item==="tractor"){if(a.tractor||g.defaulted)return null;book(g,"inv",-C.TRACTOR_DOWN*cm);g.debt.tractor=(C.TRACTOR_COST-C.TRACTOR_DOWN)*cm;a.tractor=1;a.tractorAt=g.month;return"ok"}
+  return null;
+}
+function tractorEmi(g){const r=C.TRACTOR_RATE/2,P=(C.TRACTOR_COST-C.TRACTOR_DOWN)*infl(g.assets.tractorAt);return P*r/(1-Math.pow(1+r,-C.TRACTOR_N))}
+
+/* ---------- sow -> mid-season ---------- */
+function sow(g,R){
+  const kind=kindOf(g.s),cost=sowCost(g);
+  const loan=Math.min(g.plan.loan,loanLimit(g));
+  if(loan>0){g.debt.crop+=loan;g.cash+=loan;g.loanTaken=loan}else g.loanTaken=0;
+  g.insured=g.plan.ins&&cost.prem>0;
+  if(cost.lease)book(g,"lease",-cost.lease);
+  book(g,"input",-cost.input);book(g,"labour",-cost.labour);
+  if(cost.prem){book(g,"prem",-cost.prem);g.totals.premium+=cost.prem}
+  g.lastPlan[kind]={crops:g.plots.map(p=>p.crop),ins:g.plan.ins,loan:g.plan.loan,lease:g.lease};
+  advance(g,monthAt(g.s,"mid"),R,g.news);
+  /* pest draw: always the same number of draws */
+  const u1=R.e(),u2=R.e(),u3=R.e();
+  const planted=[...new Set(g.plots.map(p=>p.crop).filter(c=>c!=="fallow"))];
+  if(u1<C.PEST_P&&planted.length){
+    const tot=planted.reduce((a,c)=>a+CROPS[c].susc,0);let x=u2*tot,pc=planted[0];
+    for(const c of planted){x-=CROPS[c].susc;if(x<=0){pc=c;break}}
+    g.ev.pest={c:pc,loss:CROPS[pc].susc*uni(()=>u3,C.PEST_LOSS[0],C.PEST_LOSS[1]),acres:g.plots.filter(p=>p.crop===pc).length};
+  }
+  g.mid={spray:true,irrigate:true,weed:false};
+  g.phase="mid";
+}
+function irrigationAvail(g){
+  const kind=kindOf(g.s);let a=0;
+  if(g.assets.bore)a+=C.BORE_CAP*(g.wx.idxK<C.DEF_AT?C.BORE_DEF_CUT:1);
+  return{bore:a,pond:g.assets.pond?g.pondWater:0,total:a+(g.assets.pond?g.pondWater:0),kind};
+}
+function midCost(g){
+  const cm=infl(g.month),o={spray:0,weed:0};
+  if(g.ev.pest&&g.mid.spray)o.spray=C.SPRAY_COST*cm*g.ev.pest.acres;
+  if(g.mid.weed){const n=g.plots.filter(p=>p.crop!=="fallow").length;o.weed=n*C.WEED_DAYS*C.WAGE*cm*labourMult(g)}
+  return o;
+}
+
+/* ---------- harvest ---------- */
+function harvest(g,R){
+  const kind=kindOf(g.s),cm0=infl(g.month),mc=midCost(g);
+  if(mc.spray)book(g,"spray",-mc.spray);
+  if(mc.weed)book(g,"labour",-mc.weed);
+  advance(g,monthAt(g.s,"harvest"),R,g.news);
+  const cm=infl(g.month),idx=seasonIdx(g,kind),supply=rainSupply(g,kind),drip=!!g.assets.drip,log=[];
+  /* events: fixed number of draws */
+  const e=[R.e(),R.e(),R.e(),R.e(),R.e(),R.e(),R.e(),R.e()];
+  const cyclone=kind==="K"&&e[0]<C.CYCLONE_P+(idx>C.EXC_AT?C.CYCLONE_EXC:0);
+  const hail=kind==="R"&&e[1]<C.HAIL_P;
+  const shortage=e[2]<C.LABOUR_P;
+  const evF={paddy:1,gnut:1,cotton:1,pulses:1,veg:1,cane:1,fallow:1};
+  if(cyclone)Object.assign(evF,{paddy:0.85,gnut:0.75,cotton:0.8,pulses:0.75,veg:0.65,cane:0.9});
+  if(hail)for(const c in evF)evF[c]*=c==="veg"||c==="gnut"?0.8:0.88;
+  g.ev.cyclone=cyclone;g.ev.hail=hail;g.ev.shortage=shortage;
+  /* yield noise: common per crop + per plot, fixed draw counts */
+  const comm={};for(const c of CROP_KEYS)comm[c]=nrm(R.y)*C.YIELD_SD_COMMON;
+  const pn=[];for(let i=0;i<8;i++)pn.push(nrm(R.y)*C.YIELD_SD_PLOT);
+  /* irrigation: share available water over the plots in deficit */
+  const av=irrigationAvail(g),def=g.plots.map(p=>p.crop==="fallow"?0:Math.max(0,needOf(p.crop,drip)-supply));
+  const D=def.reduce((a,b)=>a+b,0);let used=0;
+  if(g.mid.irrigate&&av.total>0&&D>0){used=Math.min(av.total,D);const fromBore=Math.min(av.bore,used);if(g.assets.pond)g.pondWater=Math.max(0,g.pondWater-(used-fromBore));book(g,"irr",-used*C.IRR_COST*cm)}
+  g.irrUsed=used;
+  /* plot by plot */
+  const rows=[];let payout=0;const insRows={};
+  g.plots.forEach((p,i)=>{
+    const c=p.crop,k=CROPS[c],F0=p.F;
+    if(c!=="fallow"){
+      const w=supply+(D>0?used*def[i]/D:0),fw=waterFactor(c,w,drip),ff=floodFactor(c,idx,kind);
+      const pest=g.ev.pest&&g.ev.pest.c===c?g.ev.pest.loss*(g.mid.spray?C.SPRAY_CUT:1):0;
+      let mult=fw*ff*fertFactor(p.F)*(g.mid.weed?1+C.WEED_BOOST:1)*(drip&&(c==="veg"||c==="cane"||c==="cotton")?1+C.DRIP_BOOST:1)*(1-pest)*evF[c]*Math.max(0.2,1+comm[c]+pn[i%8]);
+      /* index insurance: area yield for this crop from rain and common shocks only */
+      if(g.insured){
+        const area=waterFactor(c,supply,false)/waterFactor(c,kind==="K"?1:C.RABI_BASE,false)*ff*evF[c]*Math.max(0.2,1+comm[c]);
+        if(area<C.INS_TRIG){const po=k.si*cm*(C.INS_TRIG-area)/C.INS_TRIG;payout+=po;insRows[c]=(insRows[c]||0)+po}
+      }
+      let q=0;
+      if(c==="cane"){
+        if(kind==="K"){p.caneFw=mult;mult=0}
+        else{q=k.yield*(p.caneFw+mult)/2;mult=(p.caneFw+mult)/2}
+      }else q=k.yield*mult;
+      rows.push({i,c,q,mult,fw,pest,F:F0,cane:c==="cane"&&kind==="K"});
+      if(q>0){if(k.mill){const v=q*price(g,c);book(g,"sales",v);g.totals.sales+=v}else g.harv[c]=(g.harv[c]||0)+q}
+    }
+    p.F=clamp(p.F+k.fert,C.FERT_MIN,C.FERT_MAX);
+  });
+  /* second half of the labour bill */
+  let lab=0;for(const p of g.plots)if(p.crop!=="fallow")lab+=CROPS[p.crop].labour*0.5*C.WAGE*cm*labourMult(g)*(shortage?1+C.LABOUR_PREM*(g.assets.tractor?0.5:1):1);
+  if(lab)book(g,"labour",-lab);
+  if(payout){book(g,"payout",payout);g.totals.payout+=payout}
+  /* sidelines */
+  let tr=null;
+  if(g.assets.tractor){const n=g.plots.filter(p=>p.crop!=="fallow").length;const hire=uni(R.e,C.HIRE[0],C.HIRE[1])*cm;book(g,"hire",hire);book(g,"diesel",-n*C.DIESEL*cm);tr={hire,diesel:n*C.DIESEL*cm}}else{R.e()}
+  const cows=[];
+  for(let j=0;j<C.COW_MAX;j++){const a=R.e(),b=R.e(),d=R.e();if(j>=g.assets.cows)continue;
+    const dry=a<C.COW_DRY_P,milk=dry?0:C.MILK_DAYS*uni(()=>b,C.MILK_L[0],C.MILK_L[1])*C.MILK_PRICE*cm,feed=C.FEED*cm*(g.wx.idxK<C.DEF_AT?C.FEED_DROUGHT:1),sick=d<C.COW_SICK_P?C.VET*cm:0;
+    book(g,"milk",milk);book(g,"feed",-feed-sick);cows.push({dry,milk,feed,sick})}
+  if(kind==="K"&&g.assets.pond)g.pondWater=Math.min(C.POND_CAP,g.pondWater+0.4*C.POND_CAP*Math.min(1.2,idx));
+  g.harvRows=rows;g.insRows=insRows;g.season={kind,idx,supply,cyclone,hail,shortage,payout,tr,cows,used};
+  g.phase="harvest";
+  return rows;
+}
+
+/* ---------- market ---------- */
+function saleQuote(g,c,q){
+  const p=price(g,c),k=CROPS[c],msp=k.msp?mspOf(c,g.month):0;let atMsp=0;
+  if(msp>p&&k.quota&&!g.quotaUsed?.[c]){atMsp=Math.min(q,k.quota)}
+  return{p,msp,atMsp,value:atMsp*msp+(q-atMsp)*p};
+}
+function sellHarvest(g,orders){
+  g.quotaUsed=g.quotaUsed||{};
+  const out=[];
+  for(const c in g.harv){
+    const q=g.harv[c],f=orders&&orders[c]!=null?orders[c]:1,qs=q*f;
+    if(qs>0){const sq=saleQuote(g,c,qs);book(g,"sales",sq.value);g.totals.sales+=sq.value;if(sq.atMsp){g.quotaUsed[c]=true;g.acc.msp=(g.acc.msp||0)+sq.atMsp*(sq.msp-sq.p)}out.push({c,q:qs,value:sq.value,atMsp:sq.atMsp})}
+    if(q-qs>0.01)g.store.push({c,q:q-qs,m:g.month});
+  }
+  g.harv={};g.sold=out;return out;
+}
+function sellLot(g,i){
+  const l=g.store[i];if(!l)return 0;const n=lotNow(g,l);
+  book(g,"sales",n.gross);g.totals.sales+=n.gross;if(n.rent)book(g,"rent",-n.rent);
+  g.store.splice(i,1);return n.gross-n.rent;
+}
+
+/* ---------- close the season ---------- */
+function closeSeason(g){
+  const cm=infl(g.month),kind=kindOf(g.s);
+  /* crop loan: principal plus interest is due now; any shortfall becomes an overdue loan */
+  let due=0,paid=0;
+  const caneRoll=kind==="K"&&g.plots.some(p=>p.crop==="cane");
+  if(g.debt.crop>0&&caneRoll){const int=g.debt.crop*C.LOAN_RATE*5/12;g.acc.int_crop=(g.acc.int_crop||0)-int;g.debt.crop+=int;g.ev.rolled=g.debt.crop}
+  else if(g.debt.crop>0){const int=g.debt.crop*C.LOAN_RATE*C.LOAN_MONTHS/12;due=g.debt.crop+int;g.acc.int_crop=(g.acc.int_crop||0)-int;
+    paid=Math.min(due,Math.max(0,g.cash));g.cash-=paid;
+    if(paid<due-0.5){g.debt.overdue+=due-paid;g.defaulted=true;g.ev.defaulted=due-paid}
+    g.debt.crop=0;
+  }
+  /* tractor instalment */
+  if(g.debt.tractor>0){const emi=Math.min(tractorEmi(g),g.debt.tractor*(1+C.TRACTOR_RATE/2));const int=g.debt.tractor*C.TRACTOR_RATE/2;g.debt.tractor=Math.max(0,g.debt.tractor+int-emi);g.acc.int_tr=(g.acc.int_tr||0)-int;g.cash-=emi;if(g.cash<0)borrowML(g,-g.cash);g.emiPaid=emi}
+  book(g,"home",-C.HOUSEHOLD*cm);
+  const nw=netWorth(g),profit=nw-g.nw0;
+  g.history.push({s:g.s,kind,profit,nw,idx:seasonIdx(g,kind),cat:catOf(seasonIdx(g,kind)),cash:g.cash,debt:totalDebt(g)});
+  g.report={due,paid,profit,nw,fert:g.plots.map(p=>p.F)};
+  if(totalDebt(g)>landValue(g)&&!g.ruin)g.ruin="debt";
+  g.phase="accounts";
+}
+function nextSeason(g,R){
+  if(g.ruin||g.s+1>=g.years*2){g.phase="final";return}
+  g.s++;beginSeason(g,R);
+}
+function repay(g,which,amt){
+  amt=Math.min(amt,g.debt[which],Math.max(0,g.cash));if(amt<=0)return 0;
+  g.debt[which]-=amt;g.cash-=amt;if(g.debt[which]<1)g.debt[which]=0;
+  if(which==="overdue"&&g.debt.overdue===0)g.defaulted=false;return amt;
+}
+function finalScore(g){return netWorth(g)-C.START_CASH}
+
+/* ---------- automatic player for the Monte Carlo (same engine calls as the buttons) ---------- */
+/* P: {kh:[crops], rb:[crops], ins, sell:"harvest"|"store", thr, rotate, spray, weed, reserve, exp, repay} */
+function polPlan(g,P,R){
+  const kind=kindOf(g.s);
+  if(g.s===0&&P.give){for(const k in P.give)g.assets[k]=P.give[k];if(P.give.pond)g.pondWater=C.POND_CAP*Math.min(1,g.wx.idxK)}
+  if(g.s===0&&P.exp){for(const x of [].concat(P.exp)){if(x==="lease1")setLease(g,1,R);else if(x==="lease2")setLease(g,2,R);else if(x==="cows2"){buy(g,"cow",R);buy(g,"cow",R)}else buy(g,x,R)}}
+  const plan=kind==="K"?P.kh:P.rb;
+  g.plots.forEach((p,i)=>{if(p.locked)return;let c=plan[i%plan.length];
+    if(P.rotate&&p.F<0.7&&c!=="fallow"&&c!=="pulses")c="pulses";
+    if(!canPlant(g,c))c="pulses";p.crop=c});
+  g.plan.ins=!!P.ins;
+  /* repay costly debt first */
+  if(P.repay!==false){const spare=g.cash-sowCost(g).total-(P.reserve||0);if(spare>0){repay(g,"overdue",spare);repay(g,"ml",Math.max(0,g.cash-sowCost(g).total-(P.reserve||0)))}}
+  g.plan.loan=suggestLoan(g);
+  /* stored crop: threshold rule */
+  polSellStore(g,P);
+}
+function refPrice(g,c){return CROPS[c].base*infl(g.month)}
+function polSellStore(g,P,force){
+  for(let i=g.store.length-1;i>=0;i--){const l=g.store[i],age=g.month-l.m;
+    if(force||P.sell==="harvest"||price(g,l.c)>=P.thr*refPrice(g,l.c)||age>=7)sellLot(g,i)}
+}
+function polMid(g,P){g.mid.spray=P.spray!==false;g.mid.irrigate=true;g.mid.weed=!!P.weed}
+function polMarket(g,P){
+  const orders={};
+  for(const c in g.harv){if(P.sell==="harvest"){orders[c]=1;continue}
+    const sq=saleQuote(g,c,g.harv[c]);orders[c]=(sq.atMsp>0||sq.p>=P.thr*refPrice(g,c))?1:0}
+  sellHarvest(g,orders);
+  polSellStore(g,P);
+  /* make sure the crop loan and the household bill can be paid: sell stock first */
+  const need=g.debt.crop*(1+C.LOAN_RATE*C.LOAN_MONTHS/12)+C.HOUSEHOLD*infl(g.month)+(g.debt.tractor>0?tractorEmi(g):0);
+  while(g.cash<need&&g.store.length)sellLot(g,0);
+}
+/* one full game, seeded: returns per-season net worth and profit */
+function runGame(seed,years,P){
+  const R0=seedR(seed,999),g=newFarm(years,R0);
+  /* replay the first season start with the season-0 streams so every policy sees the same weather */
+  const out={nw:[],profit:[],ruin:null,ruinAt:-1,payout:0,premium:0,end:0,defaulted:false};
+  for(let s=0;s<years*2;s++){
+    const R=seedR(seed,s);
+    if(s===0){g.s=0;g.month=0;g.wx=null;beginSeason(g,R)}
+    polPlan(g,P,R);sow(g,R);polMid(g,P);harvest(g,R);polMarket(g,P);closeSeason(g);
+    out.nw.push(netWorth(g));out.profit.push(g.history[g.history.length-1].profit);
+    if(g.defaulted)out.defaulted=true;
+    if(g.ruin){out.ruin=g.ruin;out.ruinAt=s;for(let t=s+1;t<years*2;t++){out.nw.push(out.nw[s]);out.profit.push(0)}break}
+    if(s+1<years*2){g.s++;beginSeason(g,seedR(seed,s+1))}
+  }
+  out.end=netWorth(g)-C.START_CASH;out.payout=g.totals.payout;out.premium=g.totals.premium;out.g=g;
+  return out;
+}
+/*ENGINE-END*/
+
+/* =====================================================================
+   PLAY TAB: rendering and input. All game rules live in the engine above.
+   ===================================================================== */
+let g=null,view="title",sel=5,confirmNew=false,selPlot=0,revealTimer=null,pendingBuy=null,sheetMode="saves";
+const $=id=>document.getElementById(id);
+const money=x=>(x<0?"−":"")+"₹"+Math.abs(Math.round(x)).toLocaleString("en-IN");
+const moneyS=x=>Math.abs(x)>=1e5?(x<0?"−":"")+"₹"+(Math.abs(x)/1e5).toFixed(Math.abs(x)>=1e7?0:2)+"L":money(x);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pc=x=>Math.round(x*100)+"%";
+const q1=x=>(Math.round(x*10)/10).toLocaleString("en-IN");
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const R_LIVE=liveR();
+
+/* ---------- storage ---------- */
+const LS={get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const K_AUTO="farm.auto",K_SLOTS="farm.slots",K_BEST="farm.best",K_TECH="farm.tech";
+function autosave(){if(g)LS.set(K_AUTO,Object.assign({},g,{savedAt:Date.now()}))}
+function slots(){return LS.get(K_SLOTS)||{}}
+function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2400)}
+const yearOf=s=>Math.floor(s/2)+1;
+const seasonLabel=o=>`Year ${yearOf(o.s)} ${seasonName(kindOf(o.s))}`;
+const cropName=c=>CROPS[c].name;
+const cropVar=c=>`var(--k-${c})`;
+/* how often the pre-season forecast names the right category */
+const FC_ACC=(()=>{const r=mulberry32(4242);let hit=0;const N=6000;for(let i=0;i<N;i++){const z=nrm(r),s=z+C.FC_NOISE*nrm(r),p=fcProbs(s,C.RAIN_SD,C.FC_NOISE),cat=catOf(1+C.RAIN_SD*z);if(p.indexOf(Math.max(...p))===cat)hit++}return hit/N})();
+
+/* ---------- new game / flow ---------- */
+function newGame(years){
+  clearTimeout(revealTimer);g=newFarm(years,R_LIVE);g.orders={};selPlot=0;pendingBuy=null;view="game";autosave();render();window.scrollTo(0,0);
+}
+function doSow(){
+  const cost=sowCost(g);sow(g,R_LIVE);g.orders={};autosave();render();window.scrollTo(0,0);
+  if(g.cash<0)toast("The moneylender covered the shortfall");
+}
+function doHarvest(){harvest(g,R_LIVE);g.log=harvestLog(g);g.shown=0;g.orders={};autosave();render();runReveal();window.scrollTo(0,0)}
+function runReveal(){
+  clearTimeout(revealTimer);
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){g.shown=g.log.length;render();return}
+  const step=()=>{if(!g||g.phase!=="harvest"||g.shown>=g.log.length){renderHarvestInner();return}g.shown++;renderHarvestInner();revealTimer=setTimeout(step,560)};
+  step();
+}
+function doClose(){
+  clearTimeout(revealTimer);
+  sellHarvest(g,g.orders);closeSeason(g);g.notes=notesFor(g);autosave();render();window.scrollTo(0,0);
+}
+function doNext(){
+  nextSeason(g,R_LIVE);g.orders={};pendingBuy=null;
+  if(g.phase==="final")recordBest();
+  autosave();render();window.scrollTo(0,0);
+}
+function recordBest(){
+  if(g.bestDone)return;g.bestDone=true;
+  const best=LS.get(K_BEST)||{},k=String(g.years),sc=finalScore(g);
+  if(!g.ruin&&(best[k]==null||sc>best[k])){best[k]=sc;LS.set(K_BEST,best);g.newBest=true}
+}
+function applySame(){
+  const kind=kindOf(g.s),lp=g.lastPlan[kind];
+  if(!lp){toast("No "+seasonName(kind)+" plan yet. This is your first one.");return}
+  if(kind==="K"&&lp.lease!==g.lease)setLease(g,lp.lease,R_LIVE);
+  g.plots.forEach((p,i)=>{if(p.locked)return;const c=lp.crops[i];if(c&&canPlant(g,c))p.crop=c});
+  g.plan.ins=lp.ins;g.plan.loanTouched=false;g.plan.loan=suggestLoan(g);
+  toast("Same crops as last "+seasonName(kind));
+}
+
+/* ---------- harvest narrative ---------- */
+const PEOPLE=["Murugan, your neighbour","Selvi, who leads the weeding gang","Ramasamy from the next field","Valli, the harvest gang's leader","Kannan the tractor driver","Lakshmi amma at the tea shop","Arumugam, the commission agent","Pandian from the co-op","Muthu, your cousin"];
+const SAY={
+  good:["The heads are heavy this year. A good crop.","Rain came when the crop needed it. Look at those fields.","Best harvest on this side of the tank in years."],
+  ok:["Not bad, not great. The rain was so-so.","It'll pay the bills, at least.","Average crop. Same as everyone."],
+  bad:["The rain let us down. Half the village has thin crops.","Dry fields everywhere. Pray for next year.","My plot looks just like yours. Nothing to do."],
+  flood:["Too much water. The low fields rotted.","The bunds broke twice this month."],
+  price:["Traders are offering less every day this week.","Everyone harvested at once. The mandi is full."]
+};
+function harvestLog(g){
+  const S=g.season,kind=S.kind,L=[],M=kind==="K"?["Aug","Sep","Oct"]:["Jan","Feb","Mar"];
+  const t=(m,d)=>`${M[m]} ${d}`;
+  const cat=catOf(S.idx),rain=Math.round(S.idx*100);
+  L.push({t:t(0,24),x:`${kind==="K"?"The monsoon":"The northeast rains and stored moisture"} carry on. Rain for the season ends at ${rain}% of normal: ${CAT[cat]}.`,c:cat===0?"warn":cat===2?"":"good"});
+  if(S.used>0)L.push({t:t(1,3),x:`The ${g.assets.bore?"borewell pump":"pond"} runs on the thirsty plots: ${q1(S.used)} water units, ${money(S.used*C.IRR_COST*infl(g.month))} for power and repairs.`});
+  else if(g.irrNeeded)L.push({t:t(1,3),x:"The fields want more water than the rain gives. You have no well or pond to help.",c:"warn"});
+  if(g.ev.pest){const p=g.ev.pest;L.push({t:t(1,12),x:g.mid.spray?`${CROPS[p.c].pest} hits the ${cropName(p.c).toLowerCase()}. The spray holds the loss to about ${pc(p.loss*C.SPRAY_CUT)}.`:`${CROPS[p.c].pest} eats through the unsprayed ${cropName(p.c).toLowerCase()}: about ${pc(p.loss)} of the crop is gone.`,c:g.mid.spray?"":"warn"})}
+  if(g.mid.weed)L.push({t:t(1,18),x:"The weeding gang clears the plots. The crop grows cleaner."});
+  for(const n of g.news.slice(0,2))L.push({t:t(1,22),x:n.x,c:n.bad?"warn":"good"});
+  if(S.cyclone)L.push({t:t(2,2),x:"A cyclone crosses the coast. Two days of wind and rain flatten standing crops.",c:"warn",q:{x:`${pick(PEOPLE)}: “${pick(SAY.flood)}”`}});
+  if(S.hail)L.push({t:t(1,26),x:"A freak hailstorm shreds leaves and knocks pods to the ground.",c:"warn"});
+  if(S.shortage)L.push({t:t(2,5),x:`Harvest gangs are short this week. You pay ${Math.round(C.LABOUR_PREM*(g.assets.tractor?50:100))}% more on harvest wages${g.assets.tractor?" (the tractor does part of the work)":""}.`,c:"warn"});
+  const by={};for(const r of g.harvRows){const b=by[r.c]||(by[r.c]={plots:[],q:0,m:0,n:0,cane:r.cane});b.plots.push(r.i+1);b.q+=r.q;b.m+=r.mult;b.n++}
+  let day=8;
+  for(const c in by){const b=by[c],share=b.m/b.n,pl=b.plots.length>1?"plots "+b.plots.join(", "):"plot "+b.plots[0];
+    if(b.cane){L.push({t:t(2,day),x:`Sugarcane on ${pl} is growing well into the Rabi months. It is cut in March.`});day+=3;continue}
+    const line=c==="cane"?`Sugarcane on ${pl} goes to the mill: ${q1(b.q)} quintals at ${money(price(g,c))}.`:`${cropName(c)}, ${pl}: ${q1(b.q)} quintals, ${pc(share)} of a full crop.`;
+    L.push({t:t(2,day),x:line,c:share>0.85?"good":share<0.55?"warn":""});day+=3}
+  if(!Object.keys(by).length)L.push({t:t(2,8),x:"Every plot rested this season. Nothing to harvest."});
+  const ov=g.harvRows.length?g.harvRows.reduce((a,r)=>a+r.mult,0)/g.harvRows.length:1;
+  L.push({t:t(2,day),x:"Neighbours walk the bunds to see how the crops came in.",q:{x:`${pick(PEOPLE)}: “${pick(cat===2&&S.cyclone?SAY.flood:ov>0.85?SAY.good:ov>0.6?SAY.ok:SAY.bad)}”`}});
+  if(S.payout>0)L.push({t:t(2,day+2),x:`The insurance index for the village falls below ${pc(C.INS_TRIG)}. Payout: ${money(S.payout)}.`,c:"good"});
+  else if(g.insured)L.push({t:t(2,day+2),x:"The village yield index stays above the trigger. No insurance payout this season."});
+  if(S.tr)L.push({t:t(2,day+3),x:`The tractor earns ${money(S.tr.hire)} ploughing and hauling for neighbours. Diesel costs ${money(S.tr.diesel)}.`});
+  S.cows.forEach((c,i)=>L.push({t:t(2,day+4),x:c.dry?`Cow ${i+1} is dry this season. Feed still costs ${money(c.feed)}.`:`Cow ${i+1} gives milk worth ${money(c.milk)} to the dairy. Feed costs ${money(c.feed)}${c.sick?", plus "+money(c.sick)+" for the vet":""}.`,c:c.dry||c.sick?"warn":""}));
+  const glut=Object.keys(g.harv).some(c=>SF[CROPS[c].sf][g.month%12]<0.93);
+  if(glut)L.push({t:t(2,day+5),x:"Every farm in the taluk is selling now. Mandi prices are at their seasonal low.",q:{x:`${PEOPLE[6]}: “${pick(SAY.price)}”`}});
+  return L;
+}
+
+/* ---------- notes ---------- */
+function notesFor(g){
+  const n=[],S=g.season,cat=catOf(S.idx);
+  if(cat===0&&!g.insured&&g.harvRows.length)n.push(`A ${CAT[0]} season with no insurance. The premium is only 1.5 to 5% of the cover, and it pays out when the village yield index drops below ${pc(C.INS_TRIG)}.`);
+  if(g.ev.pest&&!g.mid.spray)n.push(`The unsprayed ${cropName(g.ev.pest.c).toLowerCase()} lost about ${pc(g.ev.pest.loss)}. Spraying costs ${money(C.SPRAY_COST)} an acre and cuts the loss by ${pc(1-C.SPRAY_CUT)}.`);
+  const low=g.plots.map((p,i)=>[i+1,p.F]).filter(x=>x[1]<0.7);
+  if(low.length)n.push(`Soil on plot${low.length>1?"s":""} ${low.map(x=>x[0]).join(", ")} is down to ${pc(Math.min(...low.map(x=>x[1])))}. Black gram or a fallow season rebuilds it.`);
+  if(g.debt.ml>1)n.push(`Moneylender debt of ${money(g.debt.ml)} grows ${pc(C.ML_RATE)} every month (${pc(Math.pow(1+C.ML_RATE,12)-1)} a year). Clear it before anything else.`);
+  if(g.ev.defaulted)n.push(`You could not repay the crop loan. ${money(g.ev.defaulted)} is overdue at ${(C.OVERDUE_RATE*100).toFixed(1)}% a month, and the bank will not lend again until it is cleared.`);
+  if(g.sold&&g.sold.some(x=>SF[CROPS[x.c].sf][g.month%12]<0.93&&!x.atMsp))n.push("You sold at the harvest glut. Prices usually recover 10 to 20% within five months; storage costs about 2% a month for grain.");
+  if(kindOf(g.s)==="R"&&!g.assets.bore&&!g.assets.pond&&g.harvRows.some(r=>(r.c==="paddy"||r.c==="veg")&&r.fw<0.6))n.push("Rabi paddy and vegetables need a well or pond. On stored moisture alone, black gram and groundnut do far better.");
+  if(g.ruin)n.unshift(g.ruin==="debt"?"Your debts are now larger than the value of the land. The lenders take the farm.":"No one will lend you more, and the household bills cannot be paid.");
+  if(!n.length)n.push("A steady season. Check the forecast and soil before you sow next.");
+  return n.slice(0,4);
+}
+
+/* ---------- small renderers ---------- */
+function stats(){
+  const kind=kindOf(g.s),debt=totalDebt(g),soil=g.plots.reduce((a,p)=>a+p.F,0)/g.plots.length;
+  return `<div class="stat"><div class="lbl" style="white-space:nowrap">Yr ${yearOf(g.s)}/${g.years}</div><b>${seasonName(kind)}</b></div>
+  <div class="stat"><div class="lbl">Cash</div><b>${moneyS(g.cash)}</b></div>
+  <div class="stat"><div class="lbl">Debt</div><b class="${debt>1?"neg":""}">${moneyS(debt)}</b></div>
+  <div class="stat"><div class="lbl">Soil</div><b>${pc(soil)}</b><div class="meter"><i style="width:${Math.min(100,soil/C.FERT_MAX*100)}%"></i></div></div>`;
+}
+function seg(act,opts,cur,extra){return `<div class="seg">${opts.map(([v,n])=>`<button data-act="${act}" data-v="${v}" ${extra||""} aria-pressed="${String(cur)===String(v)}">${n}</button>`).join("")}</div>`}
+function stepper(k,label,sub,val){
+  return `<div class="step"><div class="txt"><b>${label}</b><div class="small muted">${sub}</div></div>
+  <div class="ctl"><button data-act="dec" data-k="${k}" aria-label="Less ${label}">−</button><output id="o_${k}">${val}</output><button data-act="inc" data-k="${k}" aria-label="More ${label}">+</button></div></div>`;
+}
+function fieldMap(){
+  const n=g.plots.length,cols=3,rows=Math.ceil((n+1)/cols),gap=8,W=340,cw=(W-gap*(cols+1))/cols,ch=84,H=rows*(ch+gap)+gap;
+  let o=`<svg viewBox="0 0 ${W} ${H}" role="group" aria-label="Field map. Tap a plot to choose its crop."><rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="var(--k-fallow)" opacity=".28"/>`;
+  for(let i=0;i<=n;i++){
+    const col=i%cols,row=Math.floor(i/cols),x=gap+col*(cw+gap),y=gap+row*(ch+gap),j=k=>(((i+3)*37+k*17)%7-3)*0.7;
+    const pts=[[x+j(1),y+j(2)],[x+cw+j(3),y+j(4)],[x+cw+j(5),y+ch+j(6)],[x+j(7),y+ch+j(8)]].map(p=>p.map(v=>v.toFixed(1)).join(",")).join(" ");
+    if(i===n){
+      o+=`<polygon points="${pts}" fill="var(--chip)" stroke="var(--line)" stroke-dasharray="4 3"/>`;
+      o+=`<path d="M${x+14} ${y+44}l16-14 16 14v22h-32z" fill="var(--laterite)"/><rect x="${x+25}" y="${y+54}" width="9" height="12" fill="var(--chip)"/>`;
+      let ix=x+56;
+      if(g.assets.bore){o+=`<circle cx="${ix+8}" cy="${y+56}" r="8" fill="none" stroke="var(--rain)" stroke-width="3"/><line x1="${ix+8}" y1="${y+40}" x2="${ix+8}" y2="${y+48}" stroke="var(--ink)" stroke-width="2"/>`;ix+=22}
+      if(g.assets.pond)o+=`<ellipse cx="${x+cw/2}" cy="${y+18}" rx="22" ry="8" fill="var(--rain)" opacity=".75"/>`;
+      if(g.assets.tractor)o+=`<circle cx="${ix+6}" cy="${y+62}" r="5" fill="var(--ink)"/><rect x="${ix}" y="${y+48}" width="14" height="9" rx="2" fill="var(--paddy)"/>`,ix+=20;
+      for(let k=0;k<g.assets.cows;k++)o+=`<ellipse cx="${x+14+k*13}" cy="${y+76}" rx="5" ry="3.5" fill="var(--ink)" opacity=".75"/>`;
+      o+=`<text x="${x+cw-6}" y="${y+16}" text-anchor="end" font-size="11" fill="var(--muted)">${g.assets.drip?"Drip lines":""}</text>`;
+      continue;
+    }
+    const p=g.plots[i],c=p.crop,selc=i===selPlot&&g.phase==="plan";
+    o+=`<polygon class="plot" data-act="plot" data-i="${i}" points="${pts}" fill="${cropVar(c)}" stroke="${selc?"var(--ink)":"var(--card)"}" stroke-width="${selc?3.5:1.5}" ${p.leased?'stroke-dasharray="6 4"':""}/>`;
+    if(c!=="fallow"){for(let yy=y+10;yy<y+ch-6;yy+=9)o+=`<line x1="${x+6}" x2="${x+cw-6}" y1="${yy}" y2="${yy+(c==="cane"?0:1.5)}" stroke="var(--card)" stroke-opacity=".3" stroke-width="${c==="cane"?2.5:1.5}" pointer-events="none"/>`}
+    else for(let k=0;k<14;k++)o+=`<circle cx="${x+10+((k*29)%(cw-20))}" cy="${y+12+((k*41)%(ch-24))}" r="1.6" fill="var(--ink)" opacity=".25" pointer-events="none"/>`;
+    o+=`<rect x="${x+5}" y="${y+ch-37}" width="${cw-10}" height="32" rx="7" fill="var(--card)" opacity=".92" pointer-events="none"/>`;
+    o+=`<text x="${x+11}" y="${y+ch-22}" font-size="12" font-weight="700" fill="var(--ink)">${i+1} ${esc(cropName(c))}</text>`;
+    o+=`<text x="${x+11}" y="${y+ch-9}" font-size="11" fill="var(--muted)">Soil ${pc(p.F)}${p.leased?" · leased":""}${p.locked?" · growing":""}</text>`;
+  }
+  return o+"</svg>";
+}
+function typical(c){
+  const kind=kindOf(g.s),k=CROPS[c];if(c==="fallow")return 0;
+  const sup=(kind==="K"?1:C.RABI_BASE)+(g.assets.bore?C.BORE_CAP/Math.max(1,g.plots.length):0)+(g.assets.pond?g.pondWater/Math.max(1,g.plots.length):0);
+  const hm=c==="cane"?monthAt(g.s,"harvest")+5:monthAt(g.s,"harvest"),fw=c==="cane"?(waterFactor(c,1,g.assets.drip)+waterFactor(c,C.RABI_BASE+(g.assets.bore?C.BORE_CAP/g.plots.length:0),g.assets.drip))/2:waterFactor(c,sup,g.assets.drip);
+  const cm=infl(g.month),cost=(k.input+(c==="cane"?k.inputR:0))*cm+k.labour*C.WAGE*cm*labourMult(g)*(c==="cane"?2:1);
+  const pr=Math.max(expPrice(g,c,hm),k.msp?mspOf(c,hm)*0.5+expPrice(g,c,hm)*0.5:0);
+  return k.yield*fw*0.995*pr-cost;
+}
+function lotsCard(title){
+  if(!g.store.length)return"";
+  return `<div class="card"><h3>${title||"In the warehouse"}</h3>${g.store.map((l,i)=>{const n=lotNow(g,l);
+    return `<div class="lot"><div class="small"><b>${cropName(l.c)}</b> · ${q1(n.q)} q stored ${n.age} month${n.age===1?"":"s"}<br><span class="muted">${money(price(g,l.c))}/q today · rent so far ${money(n.rent)}</span></div><button class="ghost sm" data-act="sellLot" data-i="${i}">Sell ${moneyS(n.gross-n.rent)}</button></div>`}).join("")}</div>`;
+}
+function forecastBox(){
+  const kind=kindOf(g.s),f=kind==="K"?g.wx.fcK:g.wx.fcR,best=f.indexOf(Math.max(...f));
+  return `<div class="fc">${["Deficient","Normal","Excess"].map((n,i)=>`<div><span class="small">${n}</span><b>${pc(f[i])}</b><div class="bar2" style="width:${Math.max(4,f[i]*100)}%;opacity:${i===best?.95:.45}"></div></div>`).join("")}</div>
+  <p class="small muted" style="margin-top:8px">${kind==="K"?"The pre-monsoon forecast":"The northeast monsoon outlook"} names the right category about ${pc(FC_ACC)} of the time. Deficient means under ${pc(C.DEF_AT)} of normal rain; excess means over ${pc(C.EXC_AT)}.</p>`;
+}
+function skyArt(h){
+  let o=`<svg viewBox="0 0 360 ${h}" class="art" aria-hidden="true" preserveAspectRatio="xMidYMid slice"><rect width="360" height="${h}" fill="var(--cloud)"/>`;
+  o+=`<path d="M-10 ${h*0.55}q40-34 90-14q30-34 80-8q40-28 90 4q40-16 70 10q30-4 50 14v${h}h-380z" fill="var(--cloud2)"/>`;
+  for(let i=0;i<26;i++){const x=(i*53)%370,y=(i*31)%(h*0.6)+h*0.3;o+=`<line x1="${x}" y1="${y}" x2="${x-5}" y2="${y+14}" stroke="var(--on-cloud)" stroke-opacity=".35" stroke-width="1.5" stroke-linecap="round"/>`}
+  o+=`<path d="M0 ${h-18}q60-10 120 0t120 0t120 0v18h-360z" fill="var(--k-paddy)"/><path d="M0 ${h-8}h360v8h-360z" fill="var(--laterite)"/>`;
+  return o+"</svg>";
+}
+
+/* ---------- screens ---------- */
+function renderPlan(){
+  const kind=kindOf(g.s),cost=sowCost(g),lim=loanLimit(g),cm=infl(g.month);
+  if(!g.plan.loanTouched)g.plan.loan=suggestLoan(g);
+  const after=g.cash+Math.min(g.plan.loan,lim)-cost.total,p=g.plots[selPlot]||g.plots[0];
+  const evs=[];
+  if(g.ev.boreDry)evs.push(`<div class="event">The water table has dropped. Your borewell has run dry.</div>`);
+  if(g.ev.subsidy)evs.push(`<div class="event good">Seed subsidy at the agri office: black gram and groundnut inputs cost ${pc(C.SUBSIDY_CUT)} less this season.</div>`);
+  if(g.ev.goodpx)evs.push(`<div class="event good">Word from the mandi: ${cropName(g.ev.goodpx).toLowerCase()} buyers are paying well this year.</div>`);
+  for(const n of g.news.slice(0,2))evs.push(`<div class="event ${n.bad?"":"good"}">${esc(n.x)}</div>`);
+  if(kind==="R"&&g.debt.crop>0)evs.push(`<div class="event info">The bank rolled your Kharif crop loan over to March because the sugarcane is still growing.</div>`);
+  const ins=g.plan.ins;
+  const upg=[
+    ["bore","Drill a borewell",C.BORE_COST,g.assets.bore?"Working":`${pc(C.BORE_P)} chance of finding water${g.boreTries?` · ${g.boreTries} tr${g.boreTries>1?"ies":"y"} so far`:""}`,`Irrigates about ${q1(C.BORE_CAP)} water units a season (a thirsty acre needs 0.5 to 1). Yields ${pc(C.BORE_DEF_CUT)} in a drought year and can dry up.`,!g.assets.bore],
+    ["pond","Dig a farm pond",C.POND_COST,g.assets.pond?`Holding ${q1(g.pondWater)} units`:"Fills with the monsoon",`Stores up to ${q1(C.POND_CAP)} water units of rain for dry spells and Rabi.`,!g.assets.pond],
+    ["drip","Lay drip lines",C.DRIP_COST,g.assets.drip?"Installed":"Needs a well or pond to matter",`Cuts water need ${pc(1-C.DRIP_SAVE)} for every crop except paddy; +${pc(C.DRIP_BOOST)} yield on vegetables, cotton and cane.`,!g.assets.drip],
+    ["tractor","Buy a tractor",C.TRACTOR_DOWN,g.assets.tractor?`Bought · loan left ${money(g.debt.tractor)}`:`Price ${money(C.TRACTOR_COST*cm)}; bank loan for the rest`,`Cuts labour ${pc(1-C.TRACTOR_LAB)}, earns hire work, costs ${money(C.DIESEL*cm)} diesel per acre. Instalment about ${money(((C.TRACTOR_COST-C.TRACTOR_DOWN)*cm)*(C.TRACTOR_RATE/2)/(1-Math.pow(1+C.TRACTOR_RATE/2,-C.TRACTOR_N)))} a season for ${C.TRACTOR_N} seasons.`,!g.assets.tractor&&!g.defaulted],
+    ["cow","Buy a dairy cow",C.COW_COST,`${g.assets.cows} of ${C.COW_MAX}`,`Milk to the village dairy, about ${money(C.MILK_DAYS*6.5*C.MILK_PRICE*cm)} a season when in milk; feed ${money(C.FEED*cm)}, more in drought years.`,g.assets.cows<C.COW_MAX]
+  ];
+  return `<section>
+  <div class="card sky-card"><h3>${seasonLabel(g)} · ${kind==="K"?"June":"November"}</h3>
+    <h2>${kind==="K"?"Will the monsoon come?":"Rabi on stored moisture"}</h2>
+    ${forecastBox()}${evs.join("")}</div>
+  <div class="card map"><div class="row2"><h3>Your fields · ${g.plots.length} acres</h3><button class="ghost sm" data-act="same">Same as last year</button></div>
+    ${fieldMap()}
+    <p class="small" style="margin-top:8px"><b>Plot ${selPlot+1}</b> · soil ${pc(p.F)}${p.locked?" · sugarcane growing until March":""}. Tap a plot, then a crop.</p>
+    <div class="cropgrid">${CROP_KEYS.map(c=>{const ok=canPlant(g,c)&&!p.locked,k=CROPS[c],cc=(c==="cane"&&kind==="R"?k.inputR:k.input)*cm+k.labour*C.WAGE*cm*labourMult(g);const ty=ok?typical(c):0;
+      return `<button class="cropbtn" data-act="crop" data-c="${c}" aria-pressed="${p.crop===c}" ${ok?"":"disabled"}><i style="background:${cropVar(c)}"></i><span>${k.name}<small>${c==="fallow"?"rest · soil +"+pc(k.fert):ok?moneyS(cc)+"/ac · ~"+moneyS(ty):k.seasons==="K"?"Kharif only":"not now"}</small></span></button>`}).join("")}</div>
+    <button class="ghost" style="margin-top:8px" data-act="cropall" ${p.locked?"disabled":""}>Plant ${esc(cropName(p.crop).toLowerCase())} on every free plot</button>
+    <p class="small muted" style="margin-top:8px">The second figure is a rough profit per acre in a normal season at today's prices, before insurance and interest.</p></div>
+  <div class="card"><h3>Sowing costs</h3><table>
+    <tr><td>Seed, fertiliser, sprays (${cost.acres} acre${cost.acres===1?"":"s"})</td><td>${money(cost.input)}</td></tr>
+    <tr><td>Labour to sow and tend (first half)</td><td>${money(cost.labour)}</td></tr>
+    ${cost.lease?`<tr><td>Lease rent for ${g.lease} acre${g.lease>1?"s":""}, one year</td><td>${money(cost.lease)}</td></tr>`:""}
+    <tr><td>Insurance premium</td><td>${money(cost.prem)}</td></tr>
+    <tr class="total"><td>Due at sowing</td><td>${money(cost.total)}</td></tr></table>
+    <p class="small muted" style="margin-top:6px">The other half of the labour bill comes at harvest.</p>
+    <div style="margin-top:10px">${seg("ins",[[1,"Insure the crops"],[0,"No insurance"]],ins?1:0)}</div>
+    <p class="small muted" style="margin-top:6px">Index insurance pays when the village's rain-driven yield falls below ${pc(C.INS_TRIG)} of normal, whatever your own field does.</p></div>
+  <div class="card"><h3>Money</h3>
+    <table><tr><td>Cash in hand</td><td>${money(g.cash)}</td></tr>
+    ${g.debt.crop>0?`<tr><td>Crop loan still running</td><td class="neg">${money(g.debt.crop)}</td></tr>`:""}
+    ${g.debt.overdue>0?`<tr><td>Overdue crop loan</td><td class="neg">${money(g.debt.overdue)}</td></tr>`:""}
+    ${g.debt.ml>0?`<tr><td>Moneylender (${pc(C.ML_RATE)}/month)</td><td class="neg">${money(g.debt.ml)}</td></tr>`:""}
+    ${g.debt.tractor>0?`<tr><td>Tractor loan</td><td>${money(g.debt.tractor)}</td></tr>`:""}</table>
+    ${g.defaulted?`<p class="small neg" style="margin-top:8px">The bank will not lend until the overdue loan is repaid.</p>`:
+      stepper("loan","Crop loan",`${(C.LOAN_RATE*100).toFixed(0)}% a year, due at harvest · limit ${money(lim)}`,moneyS(Math.min(g.plan.loan,lim)))+`<button class="ghost" data-act="loanneed">Borrow what I need</button>`}
+    ${g.debt.overdue>0?`<div class="btnrow" style="margin-top:8px"><button class="ghost" data-act="repay" data-k="overdue" ${g.cash<1?"disabled":""}>Repay overdue ${moneyS(Math.min(g.cash,g.debt.overdue))}</button></div>`:""}
+    ${g.debt.ml>0?`<div class="btnrow" style="margin-top:8px"><button class="ghost" data-act="repay" data-k="ml" data-a="10000" ${g.cash<1?"disabled":""}>Repay ₹10,000</button><button class="ghost" data-act="repay" data-k="ml" ${g.cash<1?"disabled":""}>Repay ${moneyS(Math.min(g.cash,g.debt.ml))}</button></div>`:""}
+    <p class="small ${after<0?"neg":"muted"}" style="margin-top:8px">Cash after sowing: <b class="num">${money(after)}</b>.${after<0?` The moneylender covers the gap at ${pc(C.ML_RATE)} a month.`:` Household costs of ${money(C.HOUSEHOLD*cm)} fall due at season end.`}</p></div>
+  <details class="card" id="upgDetails" ${g.upgOpen?"open":""}><summary>Farm upgrades${kind==="K"?" and leasing":""}</summary>
+    ${kind==="K"?stepper("lease","Lease extra land",`${money(C.LEASE_RENT*cm)} an acre a year, paid at sowing · up to ${C.MAX_LEASE}`,g.lease+" ac"):""}
+    ${upg.map(([k,name,c,status,desc,can])=>`<div class="upg"><div class="row2"><b>${name}</b><span class="num">${money(c*cm)}</span></div><div class="small muted">${desc}</div><div class="small">${status}</div>
+      ${can?(pendingBuy===k?`<div class="btnrow"><button class="big" style="font-size:17px;min-height:46px;padding:10px" data-act="buyok" data-k="${k}">Pay ${money(c*cm)}</button><button class="ghost" data-act="buyno">Cancel</button></div>`:`<button class="ghost" data-act="buy" data-k="${k}">${name}</button>`):""}</div>`).join("")}
+  </details>
+  ${lotsCard()}
+  <button class="big" data-act="sow">${cost.acres?`Sow ${cost.acres} acre${cost.acres>1?"s":""} · ${money(cost.total)}`:"Leave every plot fallow"}</button>
+  </section>`;
+}
+function renderMid(){
+  const kind=kindOf(g.s),w=g.wx,h1=kind==="K"?w.h1K:w.h1R,cat=catOf(h1),mc=midCost(g),av=irrigationAvail(g);
+  const sup=kind==="K"?h1*(w.late?C.LATE_CUT:1)*(w.dry?C.DRY_CUT:1):C.RABI_BASE*h1;
+  const def=g.plots.reduce((a,p)=>a+(p.crop==="fallow"?0:Math.max(0,needOf(p.crop,g.assets.drip)-sup)),0);
+  g.irrNeeded=def>0.05;
+  const pest=g.ev.pest;
+  return `<section>
+  <div class="card sky-card"><h3>${seasonLabel(g)} · ${kind==="K"?"August":"January"}</h3>
+    <h2>Rain so far: ${pc(h1)} of normal</h2>
+    <p class="muted" style="margin-top:6px">${kind==="K"?(w.late?"The monsoon arrived two weeks late. ":"The monsoon arrived on time. ")+(w.dry?"Then a three-week dry spell in July left the fields cracking.":"Showers have been well spread."):(h1<C.DEF_AT?"The northeast rains were thin. Stored moisture is running low.":"The northeast rains topped up the soil well.")}</p>
+    <p class="muted small" style="margin-top:6px">So far this looks ${CAT[cat]}. The rest of the season usually follows the same pattern, give or take ${pc(0.08)}.</p></div>
+  ${pest?`<div class="card"><h3>Pest alert</h3><p><b>${CROPS[pest.c].pest}</b> is in your ${cropName(pest.c).toLowerCase()} (${pest.acres} acre${pest.acres>1?"s":""}). Left alone it could take about <b>${pc(pest.loss)}</b> of the crop.</p>
+    <div style="margin-top:10px">${seg("spray",[[1,`Spray · ${money(C.SPRAY_COST*infl(g.month)*pest.acres)}`],[0,"Don't spray"]],g.mid.spray?1:0)}</div></div>`:""}
+  <div class="card"><h3>Water</h3>
+    ${av.total>0?`<p>Crops need about <b class="num">${q1(def)}</b> water units more than the rain gives. Your ${[g.assets.bore?"borewell":"",g.assets.pond?"pond":""].filter(Boolean).join(" and ")} can supply <b class="num">${q1(av.total)}</b>.</p>
+      <div style="margin-top:10px">${seg("irr",[[1,`Run the pumps · about ${money(Math.min(def,av.total)*C.IRR_COST*infl(g.month))}`],[0,"Save the cost"]],g.mid.irrigate?1:0)}</div>`
+    :`<p>${def>0.05?`Your crops need about <b class="num">${q1(def)}</b> water units more than the rain is giving. With no well or pond, they live on the rain.`:"The rain is covering what your crops need."}</p>`}</div>
+  <div class="card"><h3>Weeding</h3><p class="small">Hire a weeding gang for ${C.WEED_DAYS} days an acre. Cleaner fields yield about ${pc(C.WEED_BOOST)} more.</p>
+    <div style="margin-top:10px">${seg("weed",[[1,`Hire weeders · ${money(midCost(Object.assign({},g,{mid:{weed:true}})).weed)}`],[0,"No"]],g.mid.weed?1:0)}</div></div>
+  ${lotsCard()}
+  <button class="big" data-act="harvest">Carry on to harvest${mc.spray+mc.weed>0?` · ${money(mc.spray+mc.weed)}`:""}</button>
+  </section>`;
+}
+function renderHarvestInner(){
+  const sec=$("harvsec");if(!sec||!g||g.phase!=="harvest")return;
+  const done=g.shown>=g.log.length;
+  sec.innerHTML=`<div class="card"><h3>${seasonLabel(g)} · harvest notebook</h3><div class="log">${g.log.slice(0,g.shown).map(l=>`<div class="h"><span class="t">${esc(l.t)}</span><div><div class="${l.c||""}">${esc(l.x)}</div>${l.q?`<div class="q">${esc(l.q.x)}</div>`:""}</div></div>`).join("")}</div></div>
+  ${done?`<button class="big" data-act="market">Take the crop to the mandi</button>`:`<button class="ghost" data-act="skip">Skip ahead</button>`}`;
+  if(!done){const last=sec.querySelector(".log .h:last-child");if(last&&last.scrollIntoView)last.scrollIntoView({block:"nearest"})}
+}
+function renderMarket(){
+  const cm=infl(g.month),crops=Object.keys(g.harv);
+  let saleV=0;
+  const rows=crops.map(c=>{const q=g.harv[c],k=CROPS[c],f=g.orders[c]!=null?g.orders[c]:1,sq=saleQuote(g,c,q*f);saleV+=f>0?sq.value:0;
+    const pm=[1,2,3,4,5,6].map(h=>[h,SF[k.sf][(g.month+h)%12]]).reduce((a,b)=>b[1]>a[1]?b:a),gain=pm[1]/SF[k.sf][g.month%12]-1;
+    const stCost=k.rent*cm*pm[0]/price(g,c)+(1-Math.pow(1-k.loss,pm[0]));
+    return `<div class="mrow"><div class="row2"><b>${k.name}</b><span class="num">${q1(q)} q</span></div>
+      <div class="small">Mandi today <b class="num">${money(price(g,c))}</b>/q${k.msp?` · support price ${money(mspOf(c,g.month))} for up to ${k.quota} q${g.quotaUsed&&g.quotaUsed[c]?" (quota used)":""}`:""}</div>
+      <div class="small muted">Prices usually run ${gain>=0?"+":""}${pc(gain)} by ${MONTHS[(g.month+pm[0])%12]}; storing that long costs about ${pc(stCost)} in rent and losses.</div>
+      ${seg("order",[[1,"Sell all"],[0.5,"Sell half"],[0,"Store all"]],f,`data-c="${c}"`)}</div>`}).join("");
+  const due=g.debt.crop>0&&!(kindOf(g.s)==="K"&&g.plots.some(p=>p.crop==="cane"))?g.debt.crop*(1+C.LOAN_RATE*C.LOAN_MONTHS/12):0;
+  const bills=C.HOUSEHOLD*cm+(g.debt.tractor>0?tractorEmi(g):0),after=g.cash+saleV;
+  return `<section>
+  <div class="card sky-card"><h3>${seasonLabel(g)} · ${MONTHS[g.month%12]} · mandi day</h3><h2>${crops.length?"Sell now or store?":"Nothing to sell"}</h2>
+    <p class="muted small" style="margin-top:6px">Government procurement buys at the support price up to a quota, at harvest only. Stored crop pays warehouse rent and slowly loses weight, but can be sold at any later step.</p></div>
+  ${crops.length?`<div class="card"><h3>This harvest</h3>${rows}</div>`:""}
+  ${lotsCard("Already in the warehouse")}
+  <div class="card"><h3>Season-end bills</h3><table>
+    <tr><td>Cash now</td><td>${money(g.cash)}</td></tr>
+    <tr><td>Sales you have chosen</td><td class="pos">${money(saleV)}</td></tr>
+    ${due?`<tr><td>Crop loan with interest</td><td class="neg">${money(-due)}</td></tr>`:""}
+    <tr><td>Household${g.debt.tractor>0?" and tractor instalment":""}</td><td class="neg">${money(-bills)}</td></tr>
+    <tr class="total"><td>Left after the bills</td><td class="${after-due-bills<0?"neg":""}">${money(after-due-bills)}</td></tr></table>
+    ${after<due?`<p class="small neg" style="margin-top:8px">Not enough to repay the crop loan. Sell more, or the unpaid part becomes overdue and the bank stops lending.</p>`:after-due-bills<0?`<p class="small neg" style="margin-top:8px">The household bill will go on the moneylender's book.</p>`:""}</div>
+  <button class="big" data-act="close">${saleV>0?`Sell for ${money(saleV)} and close the season`:"Close the season"}</button>
+  </section>`;
+}
+function accRow(label,v){return v?`<tr><td>${label}</td><td class="${v<0?"neg":"pos"}">${money(v)}</td></tr>`:""}
+function renderAccounts(){
+  const a=g.acc,r=g.report,last=g.ruin||g.s+1>=g.years*2;
+  const inc=(a.sales||0)+(a.payout||0)+(a.milk||0)+(a.hire||0);
+  const ops=["input","labour","spray","irr","prem","lease","rent","feed","diesel"].reduce((s,k)=>s+(a[k]||0),0);
+  const fin=["int_crop","int_ml","int_od","int_tr"].reduce((s,k)=>s+(a[k]||0),0);
+  const f0=g.harvRows.length?g.harvRows.reduce((s,x)=>s+x.F,0)/g.harvRows.length:null;
+  return `<section>
+  <div class="card"><h3>${seasonLabel(g)} · accounts</h3><h2 class="${r.profit>=0?"pos":"neg"}">${r.profit>=0?"Net worth up":"Net worth down"} ${money(Math.abs(r.profit))}</h2>
+    <p class="small muted" style="margin-top:4px">Rain ${pc(g.season.idx)} of normal (${CAT[catOf(g.season.idx)]}) · ${g.harvRows.length} acre${g.harvRows.length===1?"":"s"} harvested</p></div>
+  <div class="card"><table>
+    <tr class="head"><td>Money in</td><td></td></tr>
+    ${accRow("Crop sales"+(a.msp?` (support price added ${money(a.msp)})`:""),a.sales)}${accRow("Insurance payout",a.payout)}${accRow("Milk",a.milk)}${accRow("Tractor hire work",a.hire)}
+    <tr class="head"><td>Farm costs</td><td></td></tr>
+    ${accRow("Seed, fertiliser, sprays",a.input)}${accRow("Labour",a.labour)}${accRow("Pest spraying",a.spray)}${accRow("Pumping",a.irr)}${accRow("Insurance premium",a.prem)}${accRow("Lease rent",a.lease)}${accRow("Warehouse rent",a.rent)}${accRow("Cattle feed and vet",a.feed)}${accRow("Diesel",a.diesel)}
+    <tr class="total"><td>Farm result</td><td class="${inc+ops>=0?"pos":"neg"}">${money(inc+ops)}</td></tr>
+    <tr class="head"><td>Household and finance</td><td></td></tr>
+    ${accRow("Household expenses",a.home)}${accRow("Interest",fin)}${accRow("Upgrades bought",a.inv)}
+    <tr class="total"><td>Change in net worth</td><td class="${r.profit>=0?"pos":"neg"}">${money(r.profit)}</td></tr>
+    <tr><td>Cash</td><td>${money(g.cash)}</td></tr>
+    <tr><td>Crop in store (value today)</td><td>${money(stockValue(g))}</td></tr>
+    <tr><td>Debt</td><td class="${totalDebt(g)>1?"neg":""}">${money(totalDebt(g))}</td></tr>
+    ${f0!=null?`<tr><td>Soil on harvested plots</td><td>${pc(f0)} → ${pc(g.plots.filter((p,i)=>g.harvRows.some(x=>x.i===i)).reduce((s,p)=>s+p.F,0)/g.harvRows.length)}</td></tr>`:""}
+  </table><p class="small muted" style="margin-top:8px">Net worth counts cash, stored crop, cows and the tractor at resale value, minus all debts. Wells, ponds and drip lines count as zero: they pay only through the crops.</p></div>
+  <div class="card"><h3>Notes for next time</h3>${g.notes.map(t=>`<p style="margin-bottom:6px">${esc(t)}</p>`).join("")}</div>
+  <button class="big" data-act="next">${g.ruin?"See what happened":last?"See how the farm did":`Start ${seasonName(kindOf(g.s+1))}, year ${yearOf(g.s+1)}`}</button>
+  </section>`;
+}
+function gradeOf(sc,years){const y=sc/years;return g.ruin?"The lenders took the farm":y>120000?"Master of the monsoon":y>70000?"Village model farmer":y>30000?"Steady hand":y>0?"Scraping through":"Back to the drawing board"}
+function seasonBars(hist){
+  const W=340,H=170,l=40,r=8,t=12,b=24,mx=Math.max(1,...hist.map(h=>Math.abs(h.profit))),n=hist.length,bw=Math.max(4,(W-l-r)/n-4);
+  const lo=Math.min(0,...hist.map(h=>h.profit)),hi=Math.max(1,...hist.map(h=>h.profit)),Y=v=>t+(hi-v)/(hi-lo)*(H-t-b);
+  let o=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Change in net worth each season">`;
+  [hi,0,lo].filter((v,i,a)=>a.indexOf(v)===i).forEach(v=>o+=`<line class="grid" x1="${l}" x2="${W-r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${l-4}" y="${Y(v)+4}" text-anchor="end">${kf(v)}</text>`);
+  hist.forEach((h,i)=>{const x=l+i*(W-l-r)/n+2,y0=Y(0),y=Y(h.profit),hh=Math.abs(y-y0),rr=Math.min(3,hh/2,bw/2);
+    o+=h.profit>=0?`<path d="M${x} ${y0}V${y+rr}Q${x} ${y} ${x+rr} ${y}H${x+bw-rr}Q${x+bw} ${y} ${x+bw} ${y+rr}V${y0}Z" fill="${h.kind==="K"?"var(--s1)":"var(--s3)"}"/>`:`<path d="M${x} ${y0}H${x+bw}V${y-rr}Q${x+bw} ${y} ${x+bw-rr} ${y}H${x+rr}Q${x} ${y} ${x} ${y-rr}Z" fill="var(--s2)"/>`;
+    if(h.kind==="K")o+=`<text class="ax" x="${x+bw}" y="${H-6}" text-anchor="middle">Y${yearOf(h.s)}</text>`});
+  return o+"</svg>";
+}
+function renderFinal(){
+  const sc=finalScore(g),best=(LS.get(K_BEST)||{})[String(g.years)],kN=g.history.filter(h=>h.kind==="K"),rN=g.history.filter(h=>h.kind==="R");
+  const sum=a=>a.reduce((s,h)=>s+h.profit,0);
+  return `<section>
+  <div class="card sky-card title-card" style="padding:0 0 18px">${skyArt(120)}<div class="lbl" style="color:var(--on-cloud);opacity:.8;margin-top:10px">${g.ruin?"Game over":"Farm handed on"} · ${g.history.length} of ${g.years*2} seasons</div><h1 style="font-size:34px;margin:6px 0">${gradeOf(sc,g.years)}</h1>
+    <p>You ${g.ruin?"lost the farm with":"finished with"} a net worth of <b class="num">${money(netWorth(g))}</b>, ${sc>=0?"up":"down"} <b class="num">${money(Math.abs(sc))}</b> from the ${money(C.START_CASH)} you started with.</p>
+    <p class="small muted" style="margin-top:6px">Best ${g.years}-year result on this phone: ${best!=null?money(best):"none yet"}${g.newBest?" (new record)":""}</p></div>
+  <div class="card"><h3>Season by season</h3><div class="legend"><span><i style="background:var(--s1)"></i>Kharif gain</span><span><i style="background:var(--s3)"></i>Rabi gain</span><span><i style="background:var(--s2)"></i>Loss</span></div>${seasonBars(g.history)}
+    <table style="margin-top:8px"><tr><td>Kharif seasons, total</td><td>${money(sum(kN))}</td></tr><tr><td>Rabi seasons, total</td><td>${money(sum(rN))}</td></tr>
+    <tr><td>Crop sales over the game</td><td>${money(g.totals.sales)}</td></tr><tr><td>Insurance: premiums paid / payouts</td><td>${moneyS(g.totals.premium)} / ${moneyS(g.totals.payout)}</td></tr>
+    <tr><td>Debt at the end</td><td>${money(totalDebt(g))}</td></tr><tr><td>Average soil at the end</td><td>${pc(g.plots.reduce((a,p)=>a+p.F,0)/g.plots.length)}</td></tr></table></div>
+  <button class="big" data-act="title">Play again</button>
+  </section>`;
+}
+const kf=v=>Math.abs(v)>=1e5?(v<0?"−":"")+"₹"+(Math.abs(v)/1e5).toFixed(1).replace(/\.0$/,"")+"L":Math.abs(v)>=1000?(v<0?"−":"")+"₹"+Math.round(Math.abs(v)/1000)+"k":money(v);
+function renderTitle(){
+  const auto=LS.get(K_AUTO),best=LS.get(K_BEST)||{},canResume=auto&&auto.v===1&&auto.phase!=="final";
+  return `<section>
+  <div class="card sky-card title-card">${skyArt(150)}
+    <div class="lbl" style="color:var(--on-cloud);opacity:.8;margin-top:12px">A farming game from a Tamil Nadu village</div>
+    <h1 style="margin-top:4px">Monsoon Farm</h1>
+    <p class="muted">Five acres of red earth and ${money(C.START_CASH)} in the tin. Each season you bet on the rain and the mandi: what to sow, whether to insure, when to sell, and how much to borrow.</p></div>
+  ${canResume?`<button class="big alt" data-act="resume">Continue · ${seasonLabel(auto)}, ${money(auto.cash)}</button>`:""}
+  <div class="card"><h3>New farm</h3>
+    <div class="lenpick">${[3,5,10].map(y=>`<button data-act="len" data-y="${y}" aria-pressed="${sel===y}">${y} years<br><span class="small muted num">${best[y]!=null?"best "+moneyS(best[y]):(y*2)+" seasons"}</span></button>`).join("")}</div>
+    <div style="margin-top:12px">${confirmNew?`<p class="small neg" style="margin-bottom:8px">This replaces your autosave. Saved slots stay safe.</p><div class="btnrow"><button class="big" data-act="startok">Start anyway</button><button class="ghost" data-act="startno">Cancel</button></div>`:`<button class="big" data-act="start">Start a ${sel}-year farm</button>`}</div></div>
+  <div class="btnrow"><button class="ghost" data-act="menu">Saves</button><button class="ghost" data-act="help">How to play</button></div>
+  </section>`;
+}
+function render(){
+  applyTab();if(tab!=="play")return;
+  const main=$("main");
+  if(view==="title"||!g){main.innerHTML=renderTitle();return}
+  $("stats").innerHTML=stats();
+  if(g.phase==="plan")main.innerHTML=renderPlan();
+  else if(g.phase==="mid")main.innerHTML=renderMid();
+  else if(g.phase==="harvest"){main.innerHTML=`<section id="harvsec"></section>`;renderHarvestInner()}
+  else if(g.phase==="market")main.innerHTML=renderMarket();
+  else if(g.phase==="accounts")main.innerHTML=renderAccounts();
+  else main.innerHTML=renderFinal();
+}
+
+/* ---------- menu sheet: saves + help ---------- */
+function encodeSave(o){return "FARM1:"+btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
+function decodeSave(t){t=t.trim();if(!t.startsWith("FARM1:"))throw 0;const o=JSON.parse(decodeURIComponent(escape(atob(t.slice(6)))));if(!o||o.v!==1||!Array.isArray(o.plots)||typeof o.cash!=="number"||!o.debt||!o.px)throw 0;return o}
+function fmtTime(ts){try{return new Date(ts).toLocaleString("en-IN",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return""}}
+function openSheet(mode){sheetMode=mode;$("sheet").hidden=false;renderSheet()}
+function closeSheet(){$("sheet").hidden=true}
+function slotInfo(o){return `${seasonLabel(o)} · ${money(o.cash)} · ${fmtTime(o.savedAt)}`}
+function renderSheet(){
+  const p=$("panel");
+  if(sheetMode==="help"){
+    p.innerHTML=`<div class="row2"><h2>How to play</h2><button class="iconbtn" data-act="closeSheet">Close</button></div>
+    <div class="card small help">
+    <p><b>Seasons.</b> Each year has two: Kharif (June to October) lives on the southwest monsoon; Rabi (November to March) lives on stored moisture and the northeast rains, or on irrigation. Each season runs: plan and sow, mid-season decisions, harvest, then the mandi.</p>
+    <p><b>The forecast</b> gives the odds of a deficient, normal or excess season. It is right about ${pc(FC_ACC)} of the time. In August or January you see how much rain has fallen so far; the rest of the season usually follows.</p>
+    <p><b>Crops.</b> Paddy is thirsty but has a support price. Groundnut and black gram cope with dry spells and dislike floods. Cotton pays well but pests love it. Vegetables can double your money or lose it, because their price swings wildly. Sugarcane takes the plot for a whole year, needs water in Rabi, and is sold to the mill at a fixed price. Fallow rests the soil.</p>
+    <p><b>Soil.</b> Each plot has a fertility score. Paddy, cotton, cane and vegetables use it up; black gram and fallow build it back. Low soil means low yields, so rotate.</p>
+    <p><b>Water.</b> Without a well or pond, crops get only the rain. A borewell may come up dry (you still pay) and can run dry in droughts. A farm pond stores monsoon water. Drip lines make water go further.</p>
+    <p><b>Pests and weather.</b> Pest attacks show up mid-season: spraying costs money but saves most of the crop. Cyclones, hail and harvest labour shortages strike without warning.</p>
+    <p><b>The mandi.</b> Prices follow a random walk with a seasonal pattern: they fall at harvest when everyone sells, and recover over the following months. Paddy, groundnut, cotton and black gram have a support price that the government pays for a limited quantity at harvest. You can store crop in the warehouse and sell later at any step; rent and weight loss add up.</p>
+    <p><b>Money.</b> The crop loan is cheap (${(C.LOAN_RATE*100).toFixed(0)}% a year) and due at season end. If you cannot repay, it becomes overdue and the bank stops lending until you clear it. Any other shortfall goes to the moneylender at ${pc(C.ML_RATE)} a month. The household needs ${money(C.HOUSEHOLD)} every season.</p>
+    <p><b>Insurance</b> is index-based: it pays when the village yield, driven by rain and storms, falls below ${pc(C.INS_TRIG)} of normal. It does not cover your own pests or poor soil.</p>
+    <p><b>Growing.</b> Lease extra acres each Kharif, buy a tractor on a bank loan, or keep dairy cows for steady milk money.</p>
+    <p><b>Ruin.</b> If your debts grow larger than the value of the land, or no one will lend you more, the game ends.</p>
+    <p><b>Score.</b> Your result is the change in net worth: cash, stored crop, cows and tractor, minus debts.</p>
+    <p><b>Saving.</b> The game saves itself after every step. Use the three slots for separate farms and the save code to move a game to another phone.</p></div>`;
+    return;
+  }
+  const sl=slots(),auto=LS.get(K_AUTO),inGame=g&&view==="game";
+  p.innerHTML=`<div class="row2"><h2>Saves</h2><button class="iconbtn" data-act="closeSheet">Close</button></div>
+  <div class="card"><h3>Autosave</h3><p class="small">${auto&&auto.v===1?slotInfo(auto):"Nothing yet."} Saved after every step on this phone.</p></div>
+  <div class="card"><h3>Save slots</h3>
+    ${[1,2,3].map(n=>{const o=sl[n];return `<div class="slot"><div class="info"><b>Slot ${n}</b><br><span class="muted">${o?slotInfo(o):"Empty"}</span></div>
+      <button data-act="slotsave" data-n="${n}" ${inGame?"":"disabled"}>Save</button><button data-act="slotload" data-n="${n}" ${o?"":"disabled"}>Load</button></div>`}).join("")}</div>
+  <div class="card"><h3>Save code</h3><p class="small muted" style="margin-bottom:8px">Copy this text into a note or message to keep it safe or carry the farm to another device.</p>
+    ${inGame?`<label for="codeOut" class="lbl">Your code</label><textarea id="codeOut" readonly>${encodeSave(g)}</textarea><button class="ghost" data-act="copy" style="margin-top:8px">Copy code</button>`:`<p class="small muted">Start or continue a game to get a code.</p>`}
+    <label for="codeIn" class="lbl" style="display:block;margin-top:12px">Paste a code to load</label>
+    <textarea id="codeIn" placeholder="FARM1:..."></textarea><button class="ghost" data-act="codeload" style="margin-top:8px">Load from code</button></div>
+  ${inGame?`<button class="ghost" data-act="help">How to play</button><button class="ghost" data-act="totitle">Back to title screen</button>`:""}`;
+}
+function loadState(o){clearTimeout(revealTimer);g=JSON.parse(JSON.stringify(o));delete g.savedAt;g.orders=g.orders||{};view="game";selPlot=0;pendingBuy=null;autosave();closeSheet();render();if(g.phase==="harvest")runReveal();toast("Farm loaded")}
+
+/* ---------- input ---------- */
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-act]");if(!b)return;
+  const a=b.dataset.act,k=b.dataset.k,v=b.dataset.v,keep=()=>{const y=window.scrollY;autosave();render();window.scrollTo(0,y)};
+  switch(a){
+    case "tab":tab=b.dataset.tab;try{history.replaceState(null,"",tab==="tech"?"#tech":"#play")}catch(err){}render();if(tab==="tech")renderTech();window.scrollTo(0,0);break;
+    case "plot":selPlot=+b.dataset.i;keep();break;
+    case "crop":{const p=g.plots[selPlot];if(p&&!p.locked&&canPlant(g,b.dataset.c)){p.crop=b.dataset.c;if(selPlot<g.plots.length-1&&!g.plots[selPlot+1].locked)selPlot++}keep();break}
+    case "cropall":{const c=g.plots[selPlot].crop;g.plots.forEach(p=>{if(!p.locked&&canPlant(g,c))p.crop=c});keep();break}
+    case "same":applySame();keep();break;
+    case "ins":g.plan.ins=v==="1";keep();break;
+    case "inc":case "dec":{const d=a==="inc"?1:-1;
+      if(k==="loan"){g.plan.loanTouched=true;g.plan.loan=clamp(Math.min(g.plan.loan,loanLimit(g))+d*5000,0,Math.floor(loanLimit(g)/5000)*5000)}
+      if(k==="lease"){setLease(g,g.lease+d,R_LIVE);if(selPlot>=g.plots.length)selPlot=0}
+      keep();break}
+    case "loanneed":g.plan.loanTouched=false;g.plan.loan=suggestLoan(g);keep();break;
+    case "repay":{const amt=b.dataset.a?+b.dataset.a:Infinity;const paid=repay(g,k,amt);toast(paid>0?"Repaid "+money(paid):"No cash to repay with");keep();break}
+    case "buy":pendingBuy=k;g.upgOpen=true;keep();break;
+    case "buyno":pendingBuy=null;keep();break;
+    case "buyok":{const r=buy(g,k,R_LIVE);pendingBuy=null;g.upgOpen=true;
+      toast(r==="ok"?(k==="bore"?"Water at 180 feet. The borewell works.":"Done. "+({pond:"The pond is dug.",drip:"Drip lines laid.",tractor:"The tractor is yours.",cow:"A cow joins the farm."}[k]||"")):r==="dry"?"Dry hole. The drillers found no water.":"Not possible right now");
+      keep();break}
+    case "sow":doSow();break;
+    case "spray":g.mid.spray=v==="1";keep();break;
+    case "irr":g.mid.irrigate=v==="1";keep();break;
+    case "weed":g.mid.weed=v==="1";keep();break;
+    case "harvest":doHarvest();break;
+    case "skip":clearTimeout(revealTimer);g.shown=g.log.length;renderHarvestInner();autosave();break;
+    case "market":clearTimeout(revealTimer);g.phase="market";autosave();render();window.scrollTo(0,0);break;
+    case "order":g.orders[b.dataset.c]=+v;keep();break;
+    case "sellLot":{const n=sellLot(g,+b.dataset.i);toast("Sold for "+money(n)+" after rent");keep();break}
+    case "close":doClose();break;
+    case "next":doNext();break;
+    case "len":sel=+b.dataset.y;confirmNew=false;render();break;
+    case "start":{const au=LS.get(K_AUTO);if(au&&au.v===1&&au.phase!=="final"){confirmNew=true;render()}else newGame(sel);break}
+    case "startok":confirmNew=false;newGame(sel);break;
+    case "startno":confirmNew=false;render();break;
+    case "resume":{const au=LS.get(K_AUTO);if(au)loadState(au);break}
+    case "title":view="title";confirmNew=false;render();window.scrollTo(0,0);break;
+    case "menu":openSheet("saves");break;
+    case "help":openSheet("help");break;
+    case "close_sheet":case "closeSheet":closeSheet();break;
+    case "totitle":clearTimeout(revealTimer);closeSheet();view="title";render();break;
+    case "slotsave":{const sl=slots();sl[b.dataset.n]=Object.assign({},g,{savedAt:Date.now()});toast(LS.set(K_SLOTS,sl)?"Saved to slot "+b.dataset.n:"This browser blocked saving. Use the save code.");renderSheet();break}
+    case "slotload":{const o=slots()[b.dataset.n];if(o)loadState(o);break}
+    case "copy":{const ta=$("codeOut"),txt=ta.value,fb=()=>{ta.focus();ta.select();toast("Selected. Long-press to copy")};
+      try{navigator.clipboard.writeText(txt).then(()=>toast("Code copied"),fb)}catch(err){fb()}break}
+    case "codeload":{try{loadState(decodeSave($("codeIn").value))}catch(err){toast("That code didn't work. Paste the whole thing, starting with FARM1:")}break}
+    case "tset":{if(k==="togcrop"){const i=T.crops.indexOf(v);if(i>=0){if(T.crops.length>1)T.crops.splice(i,1)}else{T.crops.push(v);if(T.crops.length>4)T.crops.shift()}}else T[k]=isNaN(+v)?v:+v;saveT();renderTech();break}
+    case "tplan":{const arr=T[k],i=+b.dataset.i,opts=k==="kh"?["paddy","gnut","cotton","pulses","veg","cane","fallow"]:["paddy","gnut","pulses","veg","fallow"];arr[i]=opts[(opts.indexOf(arr[i])+1)%opts.length];saveT();renderTech();break}
+    case "tload":techFromGame();break;
+    case "treset":T=JSON.parse(JSON.stringify(TECH_DEF));saveT();renderTech();toast("Defaults restored");break;
+  }
+});
+document.addEventListener("toggle",e=>{if(e.target.id==="upgDetails"&&g)g.upgOpen=e.target.open},true);
+$("sheet").addEventListener("click",e=>{if(e.target.id==="sheet")closeSheet()});
+
+/* =====================================================================
+   TECH DISCUSSION: every number comes from the engine above.
+   The Monte Carlo calls runGame(), which plays the same beginSeason / sow /
+   harvest / sellHarvest / closeSeason functions as the Play buttons,
+   with seeded mulberry32 streams instead of Math.random.
+   ===================================================================== */
+let tab=(location.hash==="#tech")?"tech":"play";
+const TECH_DEF={years:5,cash:60000,hh:40000,kh:["gnut","gnut","paddy","pulses","cotton"],rb:["pulses","pulses","pulses","gnut","fallow"],
+  ins:1,sell:"store",thr:100,rotate:1,spray:1,water:"rain",season:"K",runs:250,target:200000,crops:["paddy","gnut","cotton","pulses"],
+  stc:"gnut",stm:4,fert0:90,exp:"lease2"};
+let T=Object.assign(JSON.parse(JSON.stringify(TECH_DEF)),LS.get(K_TECH)||{});
+function saveT(){LS.set(K_TECH,T)}
+function applyTab(){
+  $("main").hidden=tab!=="play";$("tech").hidden=tab!=="tech";
+  $("bar").hidden=tab!=="play"||view!=="game"||!g;
+  $("tab_play").setAttribute("aria-selected",tab==="play");$("tab_tech").setAttribute("aria-selected",tab==="tech");
+}
+function techFromGame(){
+  const o=g||LS.get(K_AUTO);if(!o){toast("Start a game first");return}
+  const own=o.plots.slice(0,5),kh=o.lastPlan&&o.lastPlan.K?o.lastPlan.K.crops.slice(0,5):null,rb=o.lastPlan&&o.lastPlan.R?o.lastPlan.R.crops.slice(0,5):null;
+  T.kh=kh||own.map(p=>CROPS[p.crop].seasons.includes("K")?p.crop:"pulses");
+  T.rb=(rb||own.map(p=>p.crop)).map(c=>["paddy","gnut","pulses","veg","fallow"].includes(c)?c:"pulses");
+  T.cash=clamp(Math.round(o.cash/10000)*10000,10000,300000);T.ins=o.plan.ins?1:0;T.years=o.years;
+  T.water=o.assets.bore&&o.assets.drip?"boredrip":o.assets.bore?"bore":o.assets.pond?"pond":"rain";
+  saveT();renderTech();toast("Loaded cash, crop plans, insurance and water from your game");
+}
+const WATER_GIVE={rain:null,bore:{bore:1},boredrip:{bore:1,drip:1},pond:{pond:1}};
+const WATER_NAME={rain:"Rain-fed",bore:"Borewell",boredrip:"Borewell + drip",pond:"Farm pond"};
+function polOf(over){return Object.assign({kh:T.kh,rb:T.rb,ins:!!T.ins,sell:T.sell,thr:T.thr/100,rotate:!!T.rotate,spray:!!T.spray,reserve:10000,give:WATER_GIVE[T.water]},over||{})}
+function withC(fn){const a=C.START_CASH,b=C.HOUSEHOLD;C.START_CASH=T.cash;C.HOUSEHOLD=T.hh;try{return fn()}finally{C.START_CASH=a;C.HOUSEHOLD=b}}
+function pct(a,q){if(!a.length)return NaN;const b=Float64Array.from(a).sort();const i=(b.length-1)*q,lo=Math.floor(i);return b[lo]+(b[Math.min(lo+1,b.length-1)]-b[lo])*(i-lo)}
+const mean=a=>{let s=0;for(const x of a)s+=x;return s/(a.length||1)};
+const sdev=a=>{const m=mean(a);let s=0;for(const x of a)s+=(x-m)*(x-m);return Math.sqrt(s/(a.length||1))};
+const P100=x=>isFinite(x)?(x*100<1&&x>0?"<1%":x*100>99&&x<1?">99%":Math.round(x*100)+"%"):"–";
+
+/* ---- engine-driven samplers ---- */
+function runMany(N,P,years){const out=[];for(let i=1;i<=N;i++)out.push(runGame(i,years,P));return out}
+function cropSamples(kind,N){
+  const crops=CROP_KEYS.filter(c=>c!=="fallow"&&CROPS[c].seasons.includes(kind)),out={crops,cat:new Int8Array(N),idx:new Float64Array(N)};
+  const give=WATER_GIVE[T.water];
+  for(const c of crops){
+    const p=new Float64Array(N),pay=new Float64Array(N),prem=new Float64Array(N);
+    for(let i=0;i<N;i++){
+      const seed=i+1,g1=newFarm(1,seedR(seed,999));g1.cash=1e8;
+      const prep=()=>{if(give)for(const k in give)g1.assets[k]=give[k];if(g1.assets.pond)g1.pondWater=C.POND_CAP*Math.min(1,g1.wx.idxK);
+        g1.plots.forEach(pl=>{if(!pl.locked)pl.crop=c;pl.F=T.fert0/100});g1.plan.ins=true;g1.plan.loan=0};
+      const one=s=>{const R=seedR(seed,s);if(s>0){g1.s=s;beginSeason(g1,R)}prep();sow(g1,R);g1.mid.spray=!!T.spray;g1.mid.irrigate=true;harvest(g1,R);sellHarvest(g1,{});
+        pay[i]+=(g1.acc.payout||0)/5;prem[i]+=-(g1.acc.prem||0)/5};
+      const nw0=netWorth(g1);
+      if(c==="cane"){one(0);one(1);p[i]=(netWorth(g1)-nw0)/5/2;pay[i]/=2;prem[i]/=2}
+      else{if(kind==="R"){g1.s=1;beginSeason(g1,seedR(seed,1));prep()}const n0=netWorth(g1);one(kind==="K"?0:1);p[i]=(netWorth(g1)-n0)/5}
+      out.idx[i]=kind==="K"?g1.wx.idxK:g1.wx.idxR;out.cat[i]=catOf(out.idx[i]);
+    }
+    out[c]={p,pay,prem,noins:p.map((v,i)=>v-pay[i]+prem[i])};
+  }
+  return out;
+}
+function storeSim(c,hm,N){
+  const k=CROPS[c],H=8,gains=Array.from({length:H+1},()=>new Float64Array(N)),thr={gain:new Float64Array(N),held:new Float64Array(N)};
+  for(let i=0;i<N;i++){
+    const r=mulberry32(90001+i*7),gg={px:{}};
+    for(const s of SELL_KEYS){const q=CROPS[s];gg.px[s]=q.sd/Math.sqrt(1-q.rho*q.rho)*nrm(r)}
+    let m=12+hm;const p0=price(gg,c,m);let sold=false;
+    if(p0>=T.thr/100*k.base*infl(m)){thr.gain[i]=0;thr.held[i]=0;sold=true}
+    for(let h=1;h<=H;h++){stepPrices(gg,r,null);m++;const ph=price(gg,c,m),net=ph*Math.pow(1-k.loss,h)-k.rent*infl(m)*h;gains[h][i]=net/p0-1;
+      if(!sold&&(ph>=T.thr/100*k.base*infl(m)||h===H)){thr.gain[i]=net/p0-1;thr.held[i]=h;sold=true}}
+  }
+  return{gains,thr,H};
+}
+/* analytic season model: integrate the same yield functions over the rain distribution */
+function analyticSeason(kind,plan){
+  const give=WATER_GIVE[T.water]||{},F=T.fert0/100,cm=1,drip=!!give.drip,crops=plan.filter(c=>c!=="fallow");
+  const sd=kind==="K"?C.RAIN_SD:C.RABI_SD,cap=(give.bore?C.BORE_CAP:0)+(give.pond?C.POND_CAP*0.6:0);
+  const hm=kind==="K"?4:9,pest=c=>{const tot=[...new Set(crops)].reduce((a,x)=>a+CROPS[x].susc,0);return tot?C.PEST_P*CROPS[c].susc/tot*CROPS[c].susc*(C.PEST_LOSS[0]+C.PEST_LOSS[1])/2*(T.spray?C.SPRAY_CUT:1):0};
+  let cost=0;for(const c of crops){const k=CROPS[c];cost+=((c==="cane"&&kind==="R"?k.inputR:k.input)+k.labour*C.WAGE+(T.ins?k.si*k.prem[kind==="K"?0:1]:0)+(T.spray&&0))*cm}
+  const EP={},VP={};for(const c of SELL_KEYS.concat(["cane"])){const k=CROPS[c];const sx=k.sd?k.sd/Math.sqrt(1-k.rho*k.rho):0;EP[c]=k.base*SF[k.sf][hm]*Math.exp(sx*sx/2)*(k.mill?1:1);VP[c]=EP[c]*EP[c]*(Math.exp(sx*sx)-1)}
+  const EF={};for(const c of SELL_KEYS){const k=CROPS[c];if(!k.msp){EF[c]=EP[c];continue}const sx=k.sd/Math.sqrt(1-k.rho*k.rho),m0=k.base*SF[k.sf][hm];let a=0,w=0;for(let e=-4;e<=4.001;e+=0.05){const wt=Math.exp(-e*e/2);a+=wt*Math.max(k.msp,m0*Math.exp(sx*e));w+=wt}EF[c]=a/w}
+  const zs=[];for(let z=-3.5;z<=3.5001;z+=0.1)zs.push(z);
+  let W=0,M=0,M2=0,Vin=0;const cats=[{p:0,rev:0,prof:0,idx:0},{p:0,rev:0,prof:0,idx:0},{p:0,rev:0,prof:0,idx:0}];
+  for(const z of zs){
+    const w=Math.exp(-z*z/2),idx=clamp(1+sd*z,kind==="K"?0.4:0.3,1.8);
+    let sup;if(kind==="K"){const pl=C.LATE_P+(z<0?0.15:0),pd=clamp(C.DRY_P-0.2*z,0.05,0.7);sup=idx*(1-pl*(1-C.LATE_CUT))*(1-pd*(1-C.DRY_CUT))}else sup=C.RABI_BASE*idx;
+    const def=crops.map(c=>Math.max(0,needOf(c,drip)-sup)),D=def.reduce((a,b)=>a+b,0),used=Math.min(cap,D);
+    const cyc=kind==="K"?C.CYCLONE_P+(idx>C.EXC_AT?C.CYCLONE_EXC:0):0;
+    const evF={paddy:0.85,gnut:0.75,cotton:0.8,pulses:0.75,veg:0.65,cane:0.9};
+    let rev=0,vin=0;const tot={};
+    crops.forEach((c,j)=>{const k=CROPS[c];let f=waterFactor(c,sup+(D>0?used*def[j]/D:0),drip)*floodFactor(c,idx,kind)*fertFactor(F)*(1-pest(c))*(1-cyc*(1-evF[c]))*(kind==="R"?1-C.HAIL_P*0.14:1)*(drip&&(c==="veg"||c==="cane"||c==="cotton")?1+C.DRIP_BOOST:1);
+      if(T.ins){const area=waterFactor(c,sup,false)/waterFactor(c,kind==="K"?1:C.RABI_BASE,false)*floodFactor(c,idx,kind)*(1-cyc*(1-evF[c]));rev+=k.si*Math.max(0,C.INS_TRIG-area)/C.INS_TRIG}
+      if(c==="cane")f=kind==="K"?0:f;const q=k.yield*f;tot[c]=(tot[c]||0)+q;vin+=q*q*(VP[c]*(1+C.YIELD_SD_COMMON**2)+EP[c]*EP[c]*C.YIELD_SD_COMMON**2)});
+    for(const c in tot){const k=CROPS[c],qq=Math.min(tot[c],k.quota||0);rev+=qq*(EF[c]||EP[c])+(tot[c]-qq)*EP[c]}
+    const prof=rev-cost-used*C.IRR_COST,ci=catOf(idx);
+    W+=w;M+=w*prof;M2+=w*prof*prof;Vin+=w*vin;cats[ci].p+=w;cats[ci].rev+=w*rev;cats[ci].prof+=w*prof;cats[ci].idx+=w*idx;
+  }
+  const mu=M/W,v=M2/W-mu*mu+Vin/W;cats.forEach(c=>{c.rev/=c.p||1;c.prof/=c.p||1;c.idx/=c.p||1;c.p/=W});
+  return{mu,sd:Math.sqrt(Math.max(0,v)),cats,cost};
+}
+
+/* ---- chart helpers ---- */
+function ticks(lo,hi,n){if(hi<=lo)hi=lo+1;const raw=(hi-lo)/n,mag=Math.pow(10,Math.floor(Math.log10(raw))),st=[1,2,2.5,5,10].map(x=>x*mag).find(x=>x>=raw);const out=[];let v=Math.floor(lo/st+1e-9)*st;if(v>lo+1e-9)v-=st;for(;v<hi+st-1e-9;v+=st)out.push(Math.abs(v)<1e-9?0:v);return out}
+function frame(el,H){const W=Math.max(280,Math.round(el.clientWidth||340));return{W,H,l:50,r:12,t:14,b:28}}
+function hookHover(el,pick,def){
+  const svg=el.querySelector("svg"),out=el.querySelector(".readout"),gd=svg.querySelector(".guide");out.textContent=def;
+  const move=e=>{const bb=svg.getBoundingClientRect(),vb=svg.viewBox.baseVal,x=(e.clientX-bb.left)*vb.width/bb.width;const h=pick(x);if(!h)return;
+    gd.setAttribute("x1",h.x);gd.setAttribute("x2",h.x);gd.style.display="";out.textContent=h.text};
+  svg.addEventListener("pointermove",move);svg.addEventListener("pointerdown",move);
+  svg.addEventListener("pointerleave",()=>{gd.style.display="none";out.textContent=def});
+}
+const lp=pts=>pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join("");
+const SER=["var(--s1)","var(--s2)","var(--s3)","var(--s4)"];
+/* generic line chart: xs numeric, series [{name,ys,color,dash,w}], optional band {lo,hi,color} */
+function lineChart(el,o){
+  const f=frame(el,o.H||220),xs=o.xs,n=xs.length;
+  const all=o.series.flatMap(s=>s.ys).concat(o.band?o.band.lo.concat(o.band.hi):[]).concat(o.refY!=null?[o.refY]:[]).filter(isFinite);
+  let lo=o.ylo!=null?o.ylo:Math.min(...all),hi=o.yhi!=null?o.yhi:Math.max(...all);if(o.zero){lo=Math.min(lo,0);hi=Math.max(hi,0)}
+  const tk=ticks(lo,hi,4);lo=Math.min(lo,tk[0]);hi=Math.max(hi,tk[tk.length-1]);
+  const X=x=>f.l+(x-xs[0])/(xs[n-1]-xs[0]||1)*(f.W-f.l-f.r),Y=v=>f.t+(hi-v)/(hi-lo||1)*(f.H-f.t-f.b);
+  let s=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="${esc(o.aria||"chart")}">`;
+  tk.forEach(v=>s+=`<line class="grid" x1="${f.l}" x2="${f.W-f.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${f.l-6}" y="${Y(v)+4}" text-anchor="end">${o.yfmt(v)}</text>`);
+  if(lo<0&&hi>0)s+=`<line x1="${f.l}" x2="${f.W-f.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)" stroke-width="1"/>`;
+  const xt=o.xticks||xs.filter((x,i)=>i%Math.max(1,Math.ceil(n/7))===0);
+  xt.forEach(x=>s+=`<text class="ax" x="${X(x)}" y="${f.H-8}" text-anchor="middle">${o.xfmt(x)}</text>`);
+  if(o.band)s+=`<path d="${lp(xs.map((x,i)=>[X(x),Y(o.band.hi[i])]))}L${xs.map((x,i)=>[X(xs[n-1-i]),Y(o.band.lo[n-1-i])].join(" ")).join("L")}Z" fill="${o.band.color}" opacity=".2"/>`;
+  if(o.refY!=null)s+=`<line x1="${f.l}" x2="${f.W-f.r}" y1="${Y(o.refY)}" y2="${Y(o.refY)}" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="5 4"/><text class="lab" x="${f.W-f.r}" y="${Y(o.refY)-5}" text-anchor="end">${esc(o.refLabel||"")}</text>`;
+  if(o.refX!=null)s+=`<line x1="${X(o.refX)}" x2="${X(o.refX)}" y1="${f.t}" y2="${f.H-f.b}" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4"/>`;
+  o.series.forEach(se=>s+=`<path d="${lp(xs.map((x,i)=>[X(x),Y(se.ys[i])]))}" fill="none" stroke="${se.color}" stroke-width="${se.w||2}" stroke-linejoin="round" stroke-linecap="round" ${se.dash?'stroke-dasharray="6 4"':""}/>`);
+  s+=`<line class="guide" y1="${f.t}" y2="${f.H-f.b}" style="display:none"/></svg>`;
+  el.innerHTML=`<div class="legend">${o.series.map(se=>`<span><i style="background:${se.color}${se.dash?";opacity:.7":""}"></i>${esc(se.name)}</span>`).join("")}${o.band?`<span><i class="band" style="background:${o.band.color}"></i>${esc(o.band.name)}</span>`:""}</div>${s}<div class="readout"></div>`;
+  hookHover(el,x=>{const xv=xs[0]+(x-f.l)/(f.W-f.l-f.r)*(xs[n-1]-xs[0]);let bi=0;xs.forEach((v,i)=>{if(Math.abs(v-xv)<Math.abs(xs[bi]-xv))bi=i});return{x:X(xs[bi]),text:o.read(bi)}},o.def);
+}
+function scatterChart(el,pts,o){
+  const f=frame(el,240),xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);
+  const tx=ticks(0,Math.max(...xs)*1.08,4),ty=ticks(Math.min(0,...ys),Math.max(...ys)*1.08,4),xh=tx[tx.length-1],ylo=ty[0],yh=ty[ty.length-1];
+  const X=v=>f.l+v/xh*(f.W-f.l-f.r),Y=v=>f.t+(yh-v)/(yh-ylo)*(f.H-f.t-f.b);
+  let s=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Expected profit against risk for each crop">`;
+  ty.forEach(v=>s+=`<line class="grid" x1="${f.l}" x2="${f.W-f.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${f.l-6}" y="${Y(v)+4}" text-anchor="end">${kf(v)}</text>`);
+  tx.forEach(v=>s+=`<text class="ax" x="${X(v)}" y="${f.H-8}" text-anchor="middle">${kf(v)}</text>`);
+  if(ylo<0)s+=`<line x1="${f.l}" x2="${f.W-f.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)"/>`;
+  pts.forEach(p=>{s+=`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="${p.r||7}" fill="${p.color}" stroke="var(--card)" stroke-width="2"/><text class="lab" x="${X(p.x)+(X(p.x)>f.W*0.72?-11:11)}" y="${Y(p.y)+4}" text-anchor="${X(p.x)>f.W*0.72?"end":"start"}">${esc(p.label)}</text>`});
+  s+=`<text class="ax" x="${f.W-f.r}" y="${f.t+8}" text-anchor="end">risk (σ) →</text><line class="guide" y1="${f.t}" y2="${f.H-f.b}" style="display:none"/></svg>`;
+  el.innerHTML=s+`<div class="readout"></div>`;
+  hookHover(el,x=>{let b=pts[0];for(const p of pts)if(Math.abs(X(p.x)-x)<Math.abs(X(b.x)-x))b=p;return{x:X(b.x),text:o.read(b)}},o.def);
+}
+function histChart(el,vals,target,label){
+  const lo=pct(vals,0.01),hi=pct(vals,0.99),B=24,w=(hi-lo)/B||1,bins=new Array(B).fill(0);
+  vals.forEach(v=>bins[clamp(Math.floor((v-lo)/w),0,B-1)]++);
+  const f=frame(el,190),mx=Math.max(...bins),X=v=>f.l+(v-lo)/(hi-lo||1)*(f.W-f.l-f.r),Y=c=>f.t+(1-c/mx)*(f.H-f.t-f.b),bwp=(f.W-f.l-f.r)/B;
+  let s=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="${esc(label)}">`;
+  ticks(0,mx,3).forEach(v=>s+=`<line class="grid" x1="${f.l}" x2="${f.W-f.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${f.l-6}" y="${Y(v)+4}" text-anchor="end">${(v/vals.length*100).toFixed(0)}%</text>`);
+  bins.forEach((c,i)=>{if(!c)return;const x=f.l+i*bwp+1,y=Y(c),h=f.H-f.b-y,r=Math.min(3,h/2),bw=bwp-2,mid=lo+(i+.5)*w;
+    s+=`<path d="M${x} ${f.H-f.b}V${y+r}Q${x} ${y} ${x+r} ${y}H${x+bw-r}Q${x+bw} ${y} ${x+bw} ${y+r}V${f.H-f.b}Z" fill="${mid<0?"var(--s2)":"var(--s1)"}" opacity="${mid>=target?1:.5}"/>`});
+  [lo,(lo+hi)/2,hi].forEach((v,i)=>s+=`<text class="ax" x="${X(v)}" y="${f.H-8}" text-anchor="${["start","middle","end"][i]}">${kf(v)}</text>`);
+  if(target>lo&&target<hi){const tx=X(target),right=tx>f.W*0.7;s+=`<line x1="${tx}" x2="${tx}" y1="${f.t}" y2="${f.H-f.b}" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 3"/><text class="lab" x="${tx+(right?-4:4)}" y="${f.t+10}" text-anchor="${right?"end":"start"}">Target</text>`}
+  s+=`<line class="guide" y1="${f.t}" y2="${f.H-f.b}" style="display:none"/></svg>`;
+  el.innerHTML=s+`<div class="readout"></div>`;
+  const pHit=vals.filter(v=>v>=target).length/vals.length;
+  hookHover(el,x=>{const i=clamp(Math.floor((x-f.l)/bwp),0,B-1);return{x:f.l+(i+.5)*bwp,text:`${kf(lo+i*w)} to ${kf(lo+(i+1)*w)}: ${(bins[i]/vals.length*100).toFixed(1)}% of runs`}},
+    `Solid bars reach the target. ${P100(pHit)} of runs gain at least ${money(target)}; orange bars are losses.`);
+}
+
+/* ---- layout ---- */
+const SLF={};
+function sl(id,label,min,max,step,fmt,hint){SLF[id]=fmt;return `<div class="fld"><label for="t_${id}"><span>${label}</span><output id="v_${id}">${fmt(T[id])}</output></label><input type="range" id="t_${id}" data-t="${id}" min="${min}" max="${max}" step="${step}" value="${T[id]}">${hint?`<div class="small muted">${hint}</div>`:""}</div>`}
+function tseg(k,label,opts){return `<div class="segrow"><span>${label}</span><div class="seg">${opts.map(([v,n])=>`<button data-act="tset" data-k="${k}" data-v="${v}" aria-pressed="${String(T[k])===String(v)}">${n}</button>`).join("")}</div></div>`}
+function planPick(k){return `<div class="planpick">${T[k].map((c,i)=>`<button data-act="tplan" data-k="${k}" data-i="${i}" style="background:${cropVar(c)};color:${c==="pulses"||c==="veg"?"#fff":"var(--k-ink)"}" aria-label="Plot ${i+1}: ${CROPS[c].name}, tap to change">${i+1}<br>${CROPS[c].name.split(" ")[0]}</button>`).join("")}</div>`}
+const rs=v=>money(v),pctf=v=>v+"%",nf=v=>String(v);
+function verdict(cls,tag,html){return `<div class="verdict ${cls}"><i>${tag}</i><div>${html}</div></div>`}
+function kpi(v,l,sub){return `<div class="kpi"><span class="lbl">${l}</span><b>${v}</b>${sub?`<span class="small muted">${sub}</span>`:""}</div>`}
+function renderTech(){
+  const el=$("tech");if(tab!=="tech")return;
+  const sk=T.season==="K"?["paddy","gnut","cotton","pulses","veg","cane"]:["paddy","gnut","pulses","veg"];
+  T.crops=T.crops.filter(c=>sk.includes(c));if(!T.crops.length)T.crops=sk.slice(0,4);
+  el.innerHTML=`
+  <div class="card"><div class="prose"><h2>Running five acres as a business</h2>
+    <p class="muted">Every figure here comes from the rules the game plays by: the rainfall draw, the yield and soil functions, the mandi random walk, the loans and the insurance index. The simulations call the same season functions as the Play buttons.</p></div>
+    <h3 style="margin-top:12px">The plan being tested (tap a plot to change its crop)</h3>
+    <div class="small muted" style="margin-bottom:4px">Kharif</div>${planPick("kh")}
+    <div class="small muted" style="margin:8px 0 4px">Rabi</div>${planPick("rb")}
+    ${tseg("water","Water",Object.entries(WATER_NAME))}
+    <div class="btnrow" style="margin-top:10px"><button class="ghost" data-act="tload">Use my current game</button><button class="ghost" data-act="treset">Reset inputs</button></div></div>
+
+  <div class="card"><div class="sec-n">1 · STARTING POINT</div><h2>What binds in the first season</h2>
+    <div class="flds">${sl("cash","Starting cash",10000,300000,10000,rs)}${sl("hh","Household spending per season",20000,60000,2000,rs)}</div>
+    <div class="tblwrap"><table class="tt" id="o_cons"></table></div><div id="o_bind"></div></div>
+
+  <div class="card"><div class="sec-n">2 · UNIT ECONOMICS</div><h2>What one acre earns</h2>
+    ${tseg("season","Season",[["K","Kharif"],["R","Rabi"]])}
+    ${sl("fert0","Soil fertility",40,110,5,pctf,"Yield multiplier = 0.5 + 0.55 × fertility")}
+    <div class="tblwrap"><table class="tt" id="o_unit"></table></div>
+    <h3 style="margin-top:14px">Profit per acre against the season's rain</h3>
+    <div class="chips">${sk.map(c=>`<button data-act="tset" data-k="togcrop" data-v="${c}" aria-pressed="${T.crops.includes(c)}">${CROPS[c].name}</button>`).join("")}</div>
+    <div class="chart" id="c_unit"></div></div>
+
+  <div class="card"><div class="sec-n">3 · THE PROBABILITY MODEL</div><h2>Rain, yield and price as random variables</h2>
+    <div class="prose small"><p>Each year draws one standard normal z for the southwest monsoon. The Rabi index is correlated with it. Yield responds to water through a power curve, so a dry season hurts thirsty crops more than proportionally. Prices follow a mean-reverting random walk in logs on top of a seasonal pattern. A season's profit is a mixture over the rain outcomes; a whole game adds up many seasons, so its total is close to normal.</p></div>
+    <div class="formula" style="margin-top:10px">z ~ N(0,1);  Kharif rain  R = 1 + ${C.RAIN_SD}·z
+Rabi: zR = ${C.RABI_CORR}·z + ${Math.sqrt(1-C.RABI_CORR**2).toFixed(2)}·ε;  R = 1 + ${C.RABI_SD}·zR
+forecast signal s = z + ${C.FC_NOISE}·ε  →  z | s ~ N(s/${(1+C.FC_NOISE**2).toFixed(2)}, ${Math.sqrt(C.FC_NOISE**2/(1+C.FC_NOISE**2)).toFixed(2)}²)
+water W = rain supply + irrigation share
+yield = Ymax · min(1, W/need)^k · flood · (0.5+0.55F) · (1−pest) · (1+ε), ε~N(0,${C.YIELD_SD_COMMON}²+${C.YIELD_SD_PLOT}²)
+log-price x(t+1) = ρ·x(t) + σ·ε + shocks;  P = base · season(month) · e^x
+pest outbreak ~ Bernoulli(${C.PEST_P}); loss ~ U(${C.PEST_LOSS[0]},${C.PEST_LOSS[1]})·susceptibility
+insurance payout = SI · max(0, ${C.INS_TRIG} − area index)/${C.INS_TRIG}
+game total ≈ Normal(n·μ_year, n·σ²_year)</div>
+    <div class="tblwrap" style="margin-top:10px"><table class="tt" id="o_scn"></table></div>
+    ${sl("target","Target gain over the game",0,1000000,10000,rs)}
+    <div class="kpis" id="o_clt"></div>
+    <p class="small muted" style="margin-top:8px">The analytic column sells at the expected harvest price (with the support price as a floor on the quota), adds the expected insurance payout, uses today's prices without inflation, and ignores storage, soil change and interest, and treats Kharif and Rabi as independent. The simulated column plays full games with your plan and selling rule.</p></div>
+
+  <div class="card"><div class="sec-n">4 · CROP CHOICE UNDER RISK</div><h2>Expected profit against risk</h2>
+    <div class="prose small"><p>Each dot is one crop grown on all five acres for one ${T.season==="K"?"Kharif":"Rabi"} season, ${WATER_NAME[T.water].toLowerCase()}, simulated ${CS_N} times with the game engine. Up and to the left is better: more profit for less spread. Sugarcane is shown per season, averaged over its year.</p></div>
+    <div class="chart" id="c_mv"></div>
+    <div class="tblwrap"><table class="tt" id="o_mv"></table></div></div>
+
+  <div class="card"><div class="sec-n">5 · DIVERSIFICATION</div><h2>Mixing crops that fail in different years</h2>
+    <div class="prose small" id="o_divp"></div>
+    <div class="chart" id="c_div"></div>
+    <div class="tblwrap"><table class="tt" id="o_div"></table></div></div>
+
+  <div class="card"><div class="sec-n">6 · INSURANCE</div><h2>Premium against payout, and the chance of ruin</h2>
+    ${tseg("ins","Insurance in the plan",[[1,"Insured"],[0,"Uninsured"]])}
+    <div class="tblwrap"><table class="tt" id="o_ins"></table></div>
+    <h3 style="margin-top:14px">Final gain, insured against uninsured (same weather)</h3>
+    <div class="chart" id="c_ins"></div><div class="kpis" id="o_insk"></div><div id="o_insv"></div></div>
+
+  <div class="card"><div class="sec-n">7 · STORE OR SELL</div><h2>Holding the crop through the price cycle</h2>
+    <div class="chips">${SELL_KEYS.map(c=>`<button data-act="tset" data-k="stc" data-v="${c}" aria-pressed="${T.stc===c}">${CROPS[c].name}</button>`).join("")}</div>
+    ${tseg("stm","Harvest month",[[4,"October"],[9,"March"]])}
+    ${sl("thr","Sell when the price reaches",80,130,5,v=>v+"% of normal","Normal = the off-season base price. This rule is also used by the Monte Carlo when selling is set to 'Store'.")}
+    ${tseg("sell","Selling rule in the Monte Carlo",[["store","Store with the rule"],["harvest","Sell at harvest"]])}
+    <div class="chart" id="c_store"></div>
+    <div class="tblwrap"><table class="tt" id="o_store"></table></div><div class="kpis" id="o_storek" style="margin-top:8px"></div></div>
+
+  <div class="card"><div class="sec-n">8 · SOIL AND ROTATION</div><h2>Fertility over the years</h2>
+    <div class="prose small"><p>Each season a crop moves the plot's fertility by a fixed step: paddy ${CROPS.paddy.fert}, cotton ${CROPS.cotton.fert}, sugarcane ${CROPS.cane.fert}, vegetables ${CROPS.veg.fert}, groundnut +${CROPS.gnut.fert}, black gram +${CROPS.pulses.fert}, fallow +${CROPS.fallow.fert}, kept between ${C.FERT_MIN} and ${C.FERT_MAX}. Yield scales with 0.5 + 0.55 × fertility.</p></div>
+    ${tseg("rotate","Monte Carlo player switches tired plots (under 70%) to black gram",[[1,"Yes"],[0,"No"]])}
+    <div class="chart" id="c_soil"></div><div class="tblwrap"><table class="tt" id="o_soil"></table></div></div>
+
+  <div class="card"><div class="sec-n">9 · MONTE CARLO OF THE GAME</div><h2>Net worth season by season</h2>
+    <div class="flds">${sl("runs","Simulated games",200,3000,100,nf)}</div>
+    ${tseg("years","Game length",[[3,"3 years"],[5,"5 years"],[10,"10 years"]])}
+    ${tseg("spray","Spray when pests appear",[[1,"Yes"],[0,"No"]])}
+    <div class="chart" id="c_fan"></div>
+    <div class="tblwrap"><table class="tt" id="o_year"></table></div>
+    <h3 style="margin-top:14px">Spread of the final gain</h3><div class="chart" id="c_hist"></div><div class="kpis" id="o_mck"></div></div>
+
+  <div class="card"><div class="sec-n">10 · EXPANSION</div><h2>Lease land, buy a tractor, or dig for water?</h2>
+    ${tseg("exp","Step taken in the first season",[["lease2","Lease 2 acres"],["tractor","Tractor"],["bore","Borewell"],["cows2","2 cows"],["pond","Pond"]])}
+    <div class="prose small" id="o_expp"></div>
+    <div class="chart" id="c_exp"></div><div class="kpis" id="o_expk"></div><div id="o_expv"></div></div>
+
+  <div class="card"><div class="sec-n">11 · STRATEGY</div><h2>SWOT</h2>
+    <p class="small muted" style="margin-bottom:10px">Figures update with the inputs above.</p><div class="swot" id="o_swot"></div></div>`;
+  updateTech();
+}
+const CS_N=300;
+let techTimer=null;
+function scheduleTech(){clearTimeout(techTimer);techTimer=setTimeout(updateTech,150)}
+document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.t;if(!k)return;T[k]=+e.target.value;const o=$("v_"+k);if(o)o.textContent=SLF[k](T[k]);saveT();scheduleTech()});
+let lastRW=0;window.addEventListener("resize",()=>{if(tab!=="tech")return;const w=$("tech").clientWidth;if(Math.abs(w-lastRW)>20){lastRW=w;scheduleTech()}});
+
+function updateTech(){
+  if(tab!=="tech"||!$("o_cons"))return;
+  lastRW=$("tech").clientWidth;
+  const t0=performance.now();
+  withC(()=>updateInner());
+  window.__techMs=performance.now()-t0;
+}
+function updateInner(){
+  const kind=T.season,give=WATER_GIVE[T.water]||{},Y=T.years;
+  /* ---------- 1 constraints ---------- */
+  const g1=newFarm(1,seedR(1,999));g1.cash=T.cash;g1.plots.forEach((p,i)=>{p.crop=T.kh[i]});g1.plan.ins=!!T.ins;
+  if(give.bore)g1.assets.bore=1;
+  const cK=sowCost(g1),lim=loanLimit(g1),labH=g1.plots.reduce((a,p)=>a+CROPS[p.crop].labour*0.5*C.WAGE,0);
+  const need1=cK.total+labH+T.hh;
+  g1.s=1;g1.plots.forEach((p,i)=>{if(p.crop!=="cane")p.crop=T.rb[i];p.locked=p.crop==="cane"});const cR=sowCost(g1);
+  const rbNeed=T.rb.filter(c=>c!=="fallow").reduce((a,c)=>a+CROPS[c].need,0),rbSup=C.RABI_BASE*T.rb.filter(c=>c!=="fallow").length+(give.bore?C.BORE_CAP:0)+(give.pond?C.POND_CAP*0.6:0);
+  $("o_cons").innerHTML=`<tr><th>Constraint</th><th>Value</th><th>Note</th></tr>
+   <tr><td>Cash at start</td><td>${money(T.cash)}</td><td>plus crop loan</td></tr>
+   <tr><td>Crop loan limit</td><td>${money(lim)}</td><td>${money(C.LOAN_PER_ACRE)}/acre, ${(C.LOAN_RATE*100).toFixed(0)}%/yr</td></tr>
+   <tr><td>Kharif sowing bill</td><td>${money(cK.total)}</td><td>${cK.acres} acres</td></tr>
+   <tr><td>Harvest wages + household</td><td>${money(labH+T.hh)}</td><td>due before sales clear</td></tr>
+   <tr><td>Rabi sowing bill</td><td>${money(cR.total)}</td><td>from Kharif earnings</td></tr>
+   <tr><td>Rabi water need / supply</td><td>${rbNeed.toFixed(1)} / ${rbSup.toFixed(1)}</td><td>units, normal year</td></tr>
+   <tr><td>Moneylender</td><td>${pc(C.ML_RATE)}/mo</td><td>${pc(Math.pow(1+C.ML_RATE,12)-1)} a year</td></tr>`;
+  const avail=T.cash+lim;
+  $("o_bind").innerHTML=(avail<need1?verdict("no","CASH",`Cash plus the crop loan (${money(avail)}) falls ${money(need1-avail)} short of the first season's bills (${money(need1)}). The gap goes to the moneylender at ${pc(C.ML_RATE)} a month. Plant cheaper crops or fewer acres first.`)
+    :avail<need1*1.25?verdict("mid","TIGHT",`Cash plus the crop loan (${money(avail)}) covers the first season's ${money(need1)} with only ${money(avail-need1)} spare. One failed crop pushes you to the moneylender.`)
+    :verdict("ok","OK",`Cash plus the crop loan (${money(avail)}) covers the first season's ${money(need1)}. Credit is not the limit; the rain is.`))
+    +(rbNeed>rbSup*1.05?verdict("no","WATER",`The Rabi plan needs ${rbNeed.toFixed(1)} water units but a normal Rabi supplies about ${rbSup.toFixed(1)}. Expect thirsty crops to yield well below potential.`):verdict("ok","WATER",`The Rabi plan's water need (${rbNeed.toFixed(1)} units) fits a normal Rabi supply (${rbSup.toFixed(1)}).`));
+
+  /* ---------- 2 unit economics ---------- */
+  const sk=kind==="K"?["paddy","gnut","cotton","pulses","veg","cane"]:["paddy","gnut","pulses","veg"],F=T.fert0/100,hm=kind==="K"?4:9;
+  const supN=kind==="K"?1:C.RABI_BASE,irrPer=(give.bore?C.BORE_CAP/5:0)+(give.pond?C.POND_CAP*0.6/5:0);
+  const EPr=c=>{const k=CROPS[c];if(k.mill)return k.base;const sx=k.sd/Math.sqrt(1-k.rho*k.rho);return Math.max(k.base*SF[k.sf][hm]*Math.exp(sx*sx/2),0)};
+  const ue=c=>{const k=CROPS[c],cane=c==="cane";const cost=(k.input+(cane?k.inputR:0))+k.labour*C.WAGE*(cane?2:1)+(T.ins?k.si*k.prem[kind==="K"?0:1]*(cane?2:1):0);
+    const fw=cane?(waterFactor(c,1+Math.max(0,irrPer-0),give.drip)+waterFactor(c,C.RABI_BASE+irrPer,give.drip))/2:waterFactor(c,supN+irrPer,give.drip);
+    const q=k.yield*fw*fertFactor(F)*(give.drip&&(c==="veg"||c==="cane"||c==="cotton")?1+C.DRIP_BOOST:1),p=EPr(c),rev=q*p;
+    return{cost:cane?cost/2:cost,q,p,rev:cane?rev/2:rev,prof:(rev-cost)/(cane?2:1),beQ:cost/p,beP:cost/(q||1)}};
+  $("o_unit").innerHTML=`<tr><th>Per acre</th><th>Cost</th><th>Yield</th><th>Price/q</th><th>Profit</th><th>B/E yield</th><th>B/E price</th></tr>`+
+    sk.map(c=>{const u=ue(c);return `<tr><td>${CROPS[c].name}</td><td>${kf(u.cost)}</td><td>${q1(u.q)} q</td><td>${money(u.p)}</td><td class="${u.prof<0?"neg":""}">${kf(u.prof)}</td><td>${q1(u.beQ)} q</td><td>${money(u.beP)}</td></tr>`}).join("")+
+    `<tr><td colspan="7" class="small muted" style="font-family:var(--f-body);text-align:left">Normal ${kind==="K"?"Kharif":"Rabi"}, ${WATER_NAME[T.water].toLowerCase()}, expected harvest-month price, no pests. Sugarcane per season (half its year).</td></tr>`;
+  const rx=[];for(let r=0.5;r<=1.6001;r+=0.05)rx.push(+r.toFixed(2));
+  const curve=c=>rx.map(r=>{const k=CROPS[c],cane=c==="cane",u=ue(c);const sup=(kind==="K"?r:C.RABI_BASE*r)+irrPer;
+    const fw=cane?(waterFactor(c,r+irrPer,give.drip)*floodFactor(c,r,"K")+waterFactor(c,C.RABI_BASE+irrPer,give.drip))/2:waterFactor(c,sup,give.drip)*floodFactor(c,r,kind);
+    const q=k.yield*fw*fertFactor(F)*(give.drip&&(c==="veg"||c==="cane"||c==="cotton")?1+C.DRIP_BOOST:1);return (q*u.p)/(cane?2:1)-u.cost});
+  const cs=T.crops.slice(0,4).map((c,i)=>({name:CROPS[c].name,ys:curve(c),color:SER[i]}));
+  lineChart($("c_unit"),{xs:rx,series:cs,xfmt:v=>Math.round(v*100)+"%",yfmt:kf,zero:true,refX:1,aria:"Profit per acre against rainfall index",
+    read:i=>`Rain ${Math.round(rx[i]*100)}% of normal: `+cs.map(s=>`${s.name} ${kf(s.ys[i])}`).join(" · "),def:"Tap the chart to read a rainfall level. The dashed line marks a normal season."});
+
+  /* ---------- 4 crop samples (used by 4, 5, 6) ---------- */
+  const S=cropSamples(kind,CS_N),crops=S.crops;
+  const stat={};for(const c of crops){const a=S[c].noins,ai=S[c].p;stat[c]={m:mean(a),sd:sdev(a),pl:a.filter(v=>v<0).length/a.length,mi:mean(ai),sdi:sdev(ai),pli:ai.filter(v=>v<0).length/ai.length,pay:mean(S[c].pay),prem:mean(S[c].prem),pp:S[c].pay.filter(v=>v>0).length/CS_N,
+    byCat:[0,1,2].map(k=>{let s=0,n=0;for(let i=0;i<CS_N;i++)if(S.cat[i]===k){s+=a[i];n++}return n?s/n:NaN})}}
+  const cpal=c=>cropVar(c);
+  scatterChart($("c_mv"),crops.map(c=>({x:stat[c].sd,y:stat[c].m,label:CROPS[c].name,color:cpal(c),c})),{read:p=>`${CROPS[p.c].name}: mean ${money(p.y)} an acre, σ ${money(p.x)}, loses money ${P100(stat[p.c].pl)} of seasons`,def:"Tap near a dot for its numbers."});
+  const catP=[0,1,2].map(k=>{let n=0;for(let i=0;i<CS_N;i++)if(S.cat[i]===k)n++;return n/CS_N});
+  $("o_mv").innerHTML=`<tr><th>Crop, per acre</th><th>Mean</th><th>σ</th><th>P(loss)</th><th>Deficient</th><th>Normal</th><th>Excess</th></tr>`+
+    crops.map(c=>{const s=stat[c];return `<tr><td>${CROPS[c].name}</td><td>${kf(s.m)}</td><td>${kf(s.sd)}</td><td>${P100(s.pl)}</td>${s.byCat.map(v=>`<td class="${v<0?"neg":""}">${kf(v)}</td>`).join("")}</tr>`}).join("")+
+    `<tr class="sum"><td>Chance of the season</td><td></td><td></td><td></td>${catP.map(p=>`<td>${P100(p)}</td>`).join("")}</tr>`;
+  const bestM=crops.reduce((a,c)=>stat[c].m>stat[a].m?c:a,crops[0]),bestR=crops.reduce((a,c)=>stat[c].m/stat[c].sd>stat[a].m/stat[a].sd?c:a,crops[0]);
+
+  /* ---------- 5 diversification ---------- */
+  const combos=[];const rec=(st,arr)=>{if(arr.length)combos.push(arr.slice());for(let i=st;i<crops.length;i++){arr.push(crops[i]);rec(i+1,arr);arr.pop()}};rec(0,[]);
+  const byK=[];for(let k=1;k<=Math.min(5,crops.length);k++){const list=combos.filter(x=>x.length===k).map(cb=>{const v=new Float64Array(CS_N);for(let i=0;i<CS_N;i++){let s=0;for(const c of cb)s+=S[c].noins[i]*5/cb.length;v[i]=s}return{cb,m:mean(v),sd:sdev(v)}});
+    const best=list.reduce((a,b)=>b.m-1.0*b.sd>a.m-1.0*a.sd?b:a);byK.push({k,sd:mean(list.map(x=>x.sd)),m:mean(list.map(x=>x.m)),minsd:Math.min(...list.map(x=>x.sd)),best,cv:mean(list.map(x=>x.sd/Math.abs(x.m)))})}
+  const corr=(a,b)=>{const ma=mean(a),mb=mean(b);let s=0,sa=0,sb=0;for(let i=0;i<a.length;i++){s+=(a[i]-ma)*(b[i]-mb);sa+=(a[i]-ma)**2;sb+=(b[i]-mb)**2}return s/Math.sqrt(sa*sb||1)};
+  const rc=crops.map(c=>[c,corr(S[c].noins,S.idx)]);
+  $("o_divp").innerHTML=`<p>Five acres of one crop rise and fall together. Crops that respond to rain differently cancel part of each other's swings. Profit correlation with the rain index this ${kind==="K"?"Kharif":"Rabi"}: ${rc.map(([c,r])=>`${CROPS[c].name.toLowerCase()} <b class="num">${r.toFixed(2)}</b>`).join(", ")}. Negative means the crop does worse in wet years.</p>`;
+  lineChart($("c_div"),{xs:byK.map(b=>b.k),series:[{name:"Average σ of farm profit",ys:byK.map(b=>b.sd),color:SER[0]},{name:"Average mean profit",ys:byK.map(b=>b.m),color:SER[1],dash:true}],
+    xfmt:v=>v+" crop"+(v>1?"s":""),yfmt:kf,ylo:0,H:210,aria:"Farm risk against number of crop types",
+    read:i=>`${byK[i].k} crop type${byK[i].k>1?"s":""}: average σ ${money(byK[i].sd)}, average mean ${money(byK[i].m)}, σ per rupee of profit ${byK[i].cv.toFixed(2)}`,def:"Five acres split evenly between the crop types. Tap for values."});
+  $("o_div").innerHTML=`<tr><th>Types</th><th>Best mix (mean − σ)</th><th>Mean</th><th>σ</th></tr>`+byK.map(b=>`<tr><td>${b.k}</td><td style="font-family:var(--f-body);text-align:right">${b.best.cb.map(c=>CROPS[c].name).join(", ")}</td><td>${kf(b.best.m)}</td><td>${kf(b.best.sd)}</td></tr>`).join("");
+
+  /* ---------- 9 Monte Carlo (and paired runs for 6 and 10) ---------- */
+  const N=T.runs,P=polOf(),base=runMany(N,P,Y),N2=Math.min(N,250);
+  const alt=runMany(N2,polOf({ins:!T.ins}),Y);
+  const ins1=T.ins?base.slice(0,N2):alt,ins0=T.ins?alt:base.slice(0,N2);
+  const expP=polOf({exp:T.exp==="pond"?["pond","drip"]:[T.exp]}),ex=runMany(N2,expP,Y);
+  const ends=base.map(o=>o.end),seasons=Y*2;
+  const fan={lo:[],md:[],hi:[]},xsS=[];for(let s=0;s<=seasons;s++){xsS.push(s);const v=s===0?[T.cash]:base.map(o=>o.nw[s-1]);fan.lo.push(pct(v,.1));fan.md.push(pct(v,.5));fan.hi.push(pct(v,.9))}
+  lineChart($("c_fan"),{xs:xsS,series:[{name:"Median net worth",ys:fan.md,color:SER[0],w:2.5}],band:{lo:fan.lo,hi:fan.hi,color:SER[0],name:"8 in 10 games"},xfmt:s=>s===0?"Start":s%2===0?"Y"+(s/2):"",yfmt:kf,refY:T.cash,refLabel:"Start",
+    xticks:xsS.filter(s=>s%2===0&&(Y<10||s%4===0)),aria:"Net worth by season, median and 80 percent band",
+    read:i=>i===0?`Start: ${money(T.cash)}`:`After ${seasonName(kindOf(i-1))} of year ${yearOf(i-1)}: median ${money(fan.md[i])}, 80% range ${kf(fan.lo[i])} to ${kf(fan.hi[i])}`,def:`Median net worth after ${Y} years: ${money(fan.md[seasons])}.`});
+  let prevNW=T.cash;
+  $("o_year").innerHTML=`<tr><th>Year</th><th>Net worth</th><th>Year's gain</th><th>Growth</th><th>P(≥ target/yr)</th><th>P(loss)</th></tr>`+
+    Array.from({length:Y},(_,y)=>{const nw=base.map(o=>o.nw[2*y+1]),gain=base.map(o=>o.nw[2*y+1]-(y?o.nw[2*y-1]:T.cash)),md=pct(nw,.5),gr=(md/prevNW-1)*100;prevNW=md;
+      return `<tr><td>Year ${y+1}</td><td>${kf(md)}</td><td>${kf(pct(gain,.5))}</td><td>${(gr>=0?"+":"")+Math.round(gr)}%</td><td>${P100(gain.filter(v=>v>=T.target/Y).length/N)}</td><td>${P100(gain.filter(v=>v<0).length/N)}</td></tr>`}).join("");
+  histChart($("c_hist"),ends,T.target,"Distribution of final gain across simulated games");
+  const pRuin=base.filter(o=>o.ruin).length/N,pHit=ends.filter(v=>v>=T.target).length/N,pLoss=ends.filter(v=>v<0).length/N;
+  $("o_mck").innerHTML=kpi(money(pct(ends,.5)),"Median final gain",`P10 ${kf(pct(ends,.1))} · P90 ${kf(pct(ends,.9))}`)+kpi(P100(pHit),"P(gain ≥ target)",money(T.target))
+    +kpi(P100(pLoss),"P(net loss)","after "+Y+" years")+kpi(P100(pRuin),"P(ruin)","debt above land value or credit gone");
+
+  /* ---------- 3 analytic vs simulated ---------- */
+  const aK=analyticSeason("K",T.kh),aR=analyticSeason("R",T.rb.map((c,i)=>T.kh[i]==="cane"?"cane":c));
+  $("o_scn").innerHTML=`<tr><th>Season</th><th>Chance</th><th>Rain</th><th>Kharif</th><th>Rabi</th></tr>`+[0,1,2].map(k=>`<tr><td>${CAT[k][0].toUpperCase()+CAT[k].slice(1)}</td><td>${P100(aK.cats[k].p)}</td><td>${pc(aK.cats[k].idx)}</td><td class="${aK.cats[k].prof<0?"neg":""}">${kf(aK.cats[k].prof)}</td><td class="${aR.cats[k].prof<0?"neg":""}">${kf(aR.cats[k].prof)}</td></tr>`).join("")+
+    `<tr class="sum"><td>Expected</td><td>100%</td><td></td><td>${kf(aK.mu)}</td><td>${kf(aR.mu)}</td></tr><tr><td>σ</td><td></td><td></td><td>${kf(aK.sd)}</td><td>${kf(aR.sd)}</td></tr>`;
+  const muY=aK.mu+aR.mu-2*T.hh,sdY=Math.sqrt(aK.sd**2+aR.sd**2),muG=Y*muY,sdG=Math.sqrt(Y)*sdY,pA=1-normCdf((T.target-muG)/sdG);
+  $("o_clt").innerHTML=kpi(kf(muY),"Year, analytic","± "+kf(sdY)+" (1σ), after household")+kpi(kf(muG)+" ± "+kf(sdG),Y+"-year gain, analytic","normal approximation")
+    +kpi(P100(pA),"P(≥ target), analytic",money(T.target))+kpi(P100(pHit),"P(≥ target), simulated",N+" full games")
+    +kpi(kf(mean(ends)),"Mean gain, simulated",`σ ${kf(sdev(ends))}`)+kpi(kf(muG-1.645*sdG),"Bad game (1 in 20)","analytic 5th percentile");
+
+  /* ---------- 6 insurance ---------- */
+  $("o_ins").innerHTML=`<tr><th>Per acre, ${kind==="K"?"Kharif":"Rabi"}</th><th>Premium</th><th>Mean payout</th><th>Payout ÷ premium</th><th>P(payout)</th><th>σ insured / not</th></tr>`+
+    crops.map(c=>{const s=stat[c];return `<tr><td>${CROPS[c].name}</td><td>${money(s.prem)}</td><td>${money(s.pay)}</td><td class="${s.pay<s.prem?"neg":"pos"}">${(s.pay/(s.prem||1)).toFixed(2)}×</td><td>${P100(s.pp)}</td><td>${kf(s.sdi)} / ${kf(s.sd)}</td></tr>`}).join("");
+  const e1=ins1.map(o=>o.end),e0=ins0.map(o=>o.end),qs=[];for(let q=0.02;q<=0.981;q+=0.02)qs.push(+q.toFixed(2));
+  lineChart($("c_ins"),{xs:qs,series:[{name:"Insured",ys:qs.map(q=>pct(e1,q)),color:SER[0]},{name:"Uninsured",ys:qs.map(q=>pct(e0,q)),color:SER[1]}],xfmt:q=>Math.round(q*100)+"%",yfmt:kf,zero:true,H:210,aria:"Final gain by percentile, insured and uninsured",
+    xticks:[0.1,0.25,0.5,0.75,0.9],read:i=>`${Math.round(qs[i]*100)}th percentile game: insured ${money(pct(e1,qs[i]))}, uninsured ${money(pct(e0,qs[i]))}`,def:"Each point is a percentile of final gain: the left end is the unluckiest games."});
+  const r1=ins1.filter(o=>o.ruin).length/N2,r0=ins0.filter(o=>o.ruin).length/N2;let wins=0;for(let i=0;i<N2;i++)if(ins1[i].end>ins0[i].end)wins++;
+  const prem=mean(ins1.map(o=>o.premium)),pay=mean(ins1.map(o=>o.payout));
+  $("o_insk").innerHTML=kpi(P100(r1)+" / "+P100(r0),"P(ruin) insured / not",N2+" paired games")+kpi(kf(pct(e1,.1))+" / "+kf(pct(e0,.1)),"Bad-luck game (P10)","insured / not")
+    +kpi(kf(prem)+" → "+kf(pay),"Premiums → payouts","mean per game")+kpi(P100(wins/N2),"Insured ends richer","same weather and prices");
+  $("o_insv").innerHTML=pay>=prem?verdict("ok","BUY",`The premium is subsidised: each rupee of premium returns about ₹${(pay/(prem||1)).toFixed(2)} on average, and the worst games improve (P10 ${kf(pct(e1,.1))} against ${kf(pct(e0,.1))}). Insuring is both cheaper and safer here.`)
+    :verdict("mid","HEDGE",`Each rupee of premium returns about ₹${(pay/(prem||1)).toFixed(2)}, so insurance costs money on average, but it moves the P10 game from ${kf(pct(e0,.1))} to ${kf(pct(e1,.1))} and ruin from ${P100(r0)} to ${P100(r1)}.`);
+
+  /* ---------- 7 store or sell ---------- */
+  const st=storeSim(T.stc,T.stm,800),hs=Array.from({length:st.H+1},(_,h)=>h),k=CROPS[T.stc];
+  const med=hs.map(h=>h?pct(st.gains[h],.5)*100:0),plo=hs.map(h=>h?pct(st.gains[h],.1)*100:0),phi=hs.map(h=>h?pct(st.gains[h],.9)*100:0),pb=hs.map(h=>h?st.gains[h].filter(v=>v>0).length/800:0);
+  lineChart($("c_store"),{xs:hs,series:[{name:"Median gain from storing",ys:med,color:SER[0]}],band:{lo:plo,hi:phi,color:SER[0],name:"8 in 10 paths"},xfmt:h=>h?MONTHS[(T.stm+h)%12]:"Harvest",yfmt:v=>Math.round(v)+"%",zero:true,H:210,aria:"Net gain from storing against months held",
+    read:i=>i?`Hold to ${MONTHS[(T.stm+i)%12]}: median ${med[i].toFixed(1)}% after rent and losses, 80% range ${plo[i].toFixed(0)}% to ${phi[i].toFixed(0)}%, beats selling ${P100(pb[i])}`:"Sell at harvest: 0% by definition",def:`Rent ${money(k.rent)}/q a month, ${(k.loss*100).toFixed(1)}% weight loss a month, monthly price σ ${pc(k.sd)}.`});
+  $("o_store").innerHTML=`<tr><th>Hold to</th><th>Median</th><th>Mean</th><th>P(beats selling)</th></tr>`+[1,2,3,5,8].map(h=>`<tr><td>${MONTHS[(T.stm+h)%12]} (${h} mo)</td><td>${med[h].toFixed(1)}%</td><td>${(mean(st.gains[h])*100).toFixed(1)}%</td><td>${P100(pb[h])}</td></tr>`).join("");
+  const tg=st.thr.gain,bestH=hs.slice(1).reduce((a,h)=>mean(st.gains[h])>mean(st.gains[a])?h:a,1);
+  $("o_storek").innerHTML=kpi((mean(tg)*100).toFixed(1)+"%","Rule: mean gain",`sell at ≥ ${T.thr}% of normal`)+kpi(P100(tg.filter(v=>v>0).length/800),"Rule beats harvest sale","")
+    +kpi(mean(st.thr.held).toFixed(1)+" mo","Average months held","capped at 8")+kpi(MONTHS[(T.stm+bestH)%12],"Best fixed month",`mean ${(mean(st.gains[bestH])*100).toFixed(1)}%`);
+
+  /* ---------- 8 soil ---------- */
+  const rots=[["Paddy every season",["paddy","paddy"]],["Vegetables every season",["veg","veg"]],["Paddy then black gram",["paddy","pulses"]],["Cotton then fallow",["cotton","fallow"]]];
+  const sx=[];for(let s=0;s<=20;s++)sx.push(s);
+  const fs=rots.map(([n,r])=>{let f=F;const ys=[f];for(let s=0;s<20;s++){f=clamp(f+CROPS[r[s%2]].fert,C.FERT_MIN,C.FERT_MAX);ys.push(f)}return{name:n,ys:ys.map(v=>v*100),raw:ys}});
+  lineChart($("c_soil"),{xs:sx,series:fs.map((s,i)=>({name:s.name,ys:s.ys,color:SER[i]})),xfmt:s=>s%2===0?"Y"+s/2:"",xticks:sx.filter(s=>s%4===0),yfmt:v=>Math.round(v)+"%",ylo:30,yhi:110,H:210,aria:"Soil fertility over ten years for four rotations",
+    read:i=>`After ${i} seasons: `+fs.map(s=>`${s.name.split(" ")[0].toLowerCase()} ${Math.round(s.ys[i])}% (yield ×${fertFactor(s.raw[i]).toFixed(2)})`).join(" · "),def:"Tap for fertility and the yield multiplier it gives."});
+  $("o_soil").innerHTML=`<tr><th>Rotation</th><th>3 yr</th><th>5 yr</th><th>10 yr</th><th>Yield ×, 10 yr</th></tr>`+fs.map(s=>`<tr><td>${s.name}</td><td>${Math.round(s.ys[6])}%</td><td>${Math.round(s.ys[10])}%</td><td>${Math.round(s.ys[20])}%</td><td>${fertFactor(s.raw[20]).toFixed(2)}</td></tr>`).join("");
+
+  /* ---------- 10 expansion ---------- */
+  const dif=[];for(let s=0;s<seasons;s++)dif.push(ex.map((o,i)=>o.nw[s]-base[i].nw[s]));
+  const dmd=dif.map(v=>pct(v,.5)),dlo=dif.map(v=>pct(v,.1)),dhi=dif.map(v=>pct(v,.9));
+  let paid=0;const payS=[];for(let i=0;i<N2;i++){let ps=-1;for(let s=seasons-1;s>=0;s--){if(dif[s][i]>=0)ps=s;else break}if(ps>=0){paid++;payS.push(ps+1)}}
+  const better=ex.filter((o,i)=>o.end>base[i].end).length/N2,rE=ex.filter(o=>o.ruin).length/N2,rB=base.slice(0,N2).filter(o=>o.ruin).length/N2;
+  const EXN={lease2:"Leasing 2 extra acres",tractor:"Buying a tractor",bore:"Drilling a borewell",cows2:"Buying 2 dairy cows",pond:"A pond with drip lines"}[T.exp];
+  const cm0=1,expCost={lease2:2*C.LEASE_RENT+"/yr rent",tractor:money(C.TRACTOR_DOWN)+" down + "+money(tractorEmi({assets:{tractorAt:0}}))+"/season for "+C.TRACTOR_N,bore:money(C.BORE_COST)+", "+pc(C.BORE_P)+" chance of water",cows2:money(2*C.COW_COST),pond:money(C.POND_COST+C.DRIP_COST)}[T.exp];
+  $("o_expp").innerHTML=`<p>${EXN} costs ${T.exp==="lease2"?money(2*C.LEASE_RENT)+" a year in rent":expCost}. The chart shows how much richer (or poorer) the farm is than the same farm without it, in the same weather and prices: common random numbers, so the difference is the decision, not luck. Five acres cap what one family's cash and labour can earn; growth comes from more land, cheaper labour or a second income.</p>`;
+  lineChart($("c_exp"),{xs:Array.from({length:seasons},(_,s)=>s+1),series:[{name:"Median difference in net worth",ys:dmd,color:SER[1]}],band:{lo:dlo,hi:dhi,color:SER[1],name:"8 in 10 paired games"},xfmt:s=>s%2===0?"Y"+s/2:"",yfmt:kf,zero:true,H:210,aria:"Net worth difference from the expansion over time",
+    xticks:Array.from({length:seasons},(_,s)=>s+1).filter(s=>s%2===0&&(Y<10||s%4===0)),read:i=>`After season ${i+1}: median ${money(dmd[i])}, 80% range ${kf(dlo[i])} to ${kf(dhi[i])}`,def:"Above zero means the expansion has paid back so far."});
+  $("o_expk").innerHTML=kpi(P100(better),"Ends richer than not",N2+" paired games")+kpi(P100(paid/N2),"Pays back and stays ahead",payS.length?"median by season "+Math.round(pct(payS,.5)):"within "+Y+" years: rarely")
+    +kpi(money(pct(dif[seasons-1],.5)),"Median extra net worth","at the end")+kpi(P100(rE)+" / "+P100(rB),"P(ruin) with / without","");
+  $("o_expv").innerHTML=better>=0.6&&rE<=rB+0.02?verdict("ok","EXPAND",`${EXN} leaves the farm richer in ${P100(better)} of paired games over ${Y} years.`)
+    :better>=0.4?verdict("mid","MAYBE",`${EXN} wins in ${P100(better)} of paired games. It pays only with longer horizons or luck; try a longer game length.`)
+    :verdict("no","WAIT",`${EXN} leaves the farm poorer in ${P100(1-better)} of paired games over ${Y} years. Not at this size or horizon.`);
+
+  /* ---------- 11 SWOT ---------- */
+  const lowSoil=fs[0].raw[10],mvc=crops.filter(c=>c!=="cane");
+  const volat=mvc.reduce((a,c)=>stat[c].sd>stat[a].sd?c:a,mvc[0]);
+  $("o_swot").innerHTML=`
+   <div class="S"><h4>Strengths</h4><ul><li>Median gain of ${kf(pct(ends,.5))} over ${Y} years with this plan</li><li>${CROPS[bestR].name} earns ${kf(stat[bestR].m)} an acre for only ${kf(stat[bestR].sd)} of risk</li><li>Crop loan at ${(C.LOAN_RATE*100).toFixed(0)}% covers ${money(lim)} of sowing</li><li>Support prices put a floor under paddy, groundnut, cotton and black gram</li></ul></div>
+   <div class="W"><h4>Weaknesses</h4><ul><li>${Math.round(catP[0]*100)}% of ${kind==="K"?"Kharif":"Rabi"} seasons are deficient${T.water==="rain"?" and nothing is irrigated":""}</li><li>${money(T.hh)} of household spending every season, rain or not</li><li>Paddy every season drops soil to ${pc(lowSoil)} in 5 years</li><li>${P100(pLoss)} of games end with less than they started</li></ul></div>
+   <div class="O"><h4>Opportunities</h4><ul><li>Storing ${CROPS[T.stc].name.toLowerCase()} with the ${T.thr}% rule adds ${(mean(tg)*100).toFixed(1)}% on average</li><li>Insurance returns ₹${(pay/(prem||1)).toFixed(2)} per rupee of premium</li><li>${EXN} wins in ${P100(better)} of paired games</li><li>Mixing ${byK.length>1?byK[1].best.cb.map(c=>CROPS[c].name.toLowerCase()).join(" and "):"crops"} cuts farm σ to ${kf(byK.length>1?byK[1].best.sd:0)}</li></ul></div>
+   <div class="T"><h4>Threats</h4><ul><li>${CROPS[volat].name} swings by ${kf(stat[volat].sd)} an acre (σ)</li><li>Pests strike ${pc(C.PEST_P)} of seasons; unsprayed losses reach ${pc(C.PEST_LOSS[1])}</li><li>Moneylender debt compounds at ${pc(Math.pow(1+C.ML_RATE,12)-1)} a year</li><li>Ruin in ${P100(pRuin)} of games with this plan</li></ul></div>`;
+}
+
+/* ---------- boot ---------- */
+function start(){
+  const au=LS.get(K_AUTO);
+  if(au&&au.v===1&&au.phase!=="final"){g=au;delete g.savedAt;g.orders=g.orders||{};view="title"}
+  render();
+  if(tab==="tech")renderTech();
+}
+start();
+</script>
+</body>
+</html>

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<!--
+TOOL: Lemonade Stand
+FAMILY: games
+VERSION: 1.0.0
+DATE: 2026-10-01
+CHAT: Lemonade stand text game (claude.ai, 2026-10-01)
+CHANGES: 1.0.0 - first release: 7/14/30-day season, weather + forecast, street events, shop, recipe, pricing, posters, hourly sales log, 3 save slots + autosave, save-code copy/load
+STATUS: playable
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6cf1d">
+<title>Lemonade Stand</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gluten:wght@600;800&family=Nunito:wght@400;600;800&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one narrow column like a phone ledger; sticky status bar on top, one phase card at a time, big thumb buttons */
+:root{
+  --bg:#e9f4f1; --card:#ffffff; --ink:#15322d; --muted:#5b746e; --line:#cfe1dc;
+  --lemon:#f6cf1d; --lemon-ink:#3a2f00; --leaf:#22844a; --bad:#c2412d; --sky:#2a7f9e;
+  --chip:#f2f8f6;
+  --f-display:"Gluten","Comic Sans MS",cursive; --f-body:"Nunito",system-ui,sans-serif; --f-num:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e1d1a; --card:#162b27; --ink:#e6f2ee; --muted:#9bb5ae; --line:#2a4540;
+  --lemon:#f3cc2a; --lemon-ink:#2a2200; --leaf:#4cc27a; --bad:#ff7a63; --sky:#64bfdc; --chip:#1c3530; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1d1a; --card:#162b27; --ink:#e6f2ee; --muted:#9bb5ae; --line:#2a4540;
+  --lemon:#f3cc2a; --lemon-ink:#2a2200; --leaf:#4cc27a; --bad:#ff7a63; --sky:#64bfdc; --chip:#1c3530; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--f-body);-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+.wrap{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:0 40px}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.bar .row{display:flex;align-items:center;gap:10px}
+.brand{font-family:var(--f-display);font-weight:800;font-size:22px;line-height:1;flex:1;min-width:0}
+.brand span{background:var(--lemon);color:var(--lemon-ink);padding:2px 8px 0;border-radius:8px;display:inline-block;transform:rotate(-2deg)}
+.iconbtn{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 12px;font-weight:800;cursor:pointer}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 10px;min-width:0}
+.stat b{display:block;font-family:var(--f-num);font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.meter{height:6px;background:var(--chip);border-radius:6px;margin-top:4px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--leaf);border-radius:6px}
+section{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+h2{font-family:var(--f-display);font-weight:800;font-size:24px;margin:0;text-wrap:balance;line-height:1.1}
+h3{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:800}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.wx{display:flex;gap:14px;align-items:center}
+.wx svg{flex:none;width:58px;height:58px}
+.event{border-left:4px solid var(--sky);padding:8px 12px;background:var(--chip);border-radius:0 10px 10px 0;margin-top:10px}
+.stock{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.chip{background:var(--chip);border-radius:10px;padding:6px 8px;text-align:center;min-width:0}
+.chip b{display:block;font-family:var(--f-num);font-size:18px}
+.chip.low b{color:var(--bad)}
+.shoprow{display:grid;grid-template-columns:1fr;gap:6px;padding-block:10px;border-top:1px dashed var(--line)}
+.shoprow:first-of-type{border-top:0}
+.shoprow .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.packs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pack{border:1px solid var(--line);background:var(--chip);border-radius:10px;padding:8px 4px;cursor:pointer;font-family:var(--f-num);font-size:13px;line-height:1.25;min-height:46px}
+.pack small{display:block;color:var(--muted);font-family:var(--f-body);font-size:11px}
+.pack:disabled{opacity:.4;cursor:not-allowed}
+.pack:not(:disabled):active{background:var(--lemon);color:var(--lemon-ink)}
+.step{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:8px;border-top:1px dashed var(--line)}
+.step:first-of-type{border-top:0}
+.step .txt{min-width:0}
+.ctl{display:flex;align-items:center;gap:6px;flex:none}
+.ctl button{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--chip);font-size:22px;font-weight:800;cursor:pointer}
+.ctl output{min-width:52px;text-align:center;font-family:var(--f-num);font-size:18px;font-weight:600}
+.big{display:block;width:100%;border:0;border-radius:16px;padding:16px;font-family:var(--f-display);font-weight:800;font-size:22px;background:var(--lemon);color:var(--lemon-ink);cursor:pointer;box-shadow:0 4px 0 #c9a40c}
+.big:active{transform:translateY(3px);box-shadow:0 1px 0 #c9a40c}
+.big.alt{background:var(--leaf);color:#fff;box-shadow:0 4px 0 #165c33}
+.ghost{width:100%;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:12px;font-weight:800;cursor:pointer}
+.log{font-family:var(--f-num);font-size:14px;display:flex;flex-direction:column;gap:10px}
+.log .h{display:grid;grid-template-columns:52px 1fr;gap:10px}
+.log .t{color:var(--sky);font-weight:600}
+.log .q{font-family:var(--f-body);font-style:italic;color:var(--muted);font-size:14px;margin-top:2px}
+.log .warn{color:var(--bad)}
+.log .good{color:var(--leaf)}
+@keyframes pop{from{opacity:.2;transform:translateY(4px)}to{opacity:1;transform:none}}
+.log .h{animation:pop .3s ease-out}
+table{width:100%;border-collapse:collapse;font-size:15px}
+td{padding:6px 0;border-bottom:1px dashed var(--line)}
+td:last-child{text-align:right;font-family:var(--f-num)}
+tr.total td{font-weight:800;border-bottom:0;font-size:17px}
+.pos{color:var(--leaf)} .neg{color:var(--bad)}
+.hist{display:flex;flex-direction:column;gap:4px;font-size:13px}
+.hist .r{display:grid;grid-template-columns:42px 1fr 70px;gap:8px;align-items:center}
+.hist .b{height:12px;border-radius:4px}
+.title-card{text-align:center;padding:26px 16px}
+.title-card h1{font-family:var(--f-display);font-weight:800;font-size:44px;margin:6px 0;line-height:1}
+.lenpick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lenpick button{border:2px solid var(--line);background:var(--chip);border-radius:12px;padding:10px 4px;font-weight:800;cursor:pointer}
+.lenpick button[aria-pressed="true"]{border-color:var(--ink);background:var(--lemon);color:var(--lemon-ink)}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet .panel{background:var(--bg);width:100%;max-width:560px;max-height:88%;overflow:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.slot{display:flex;gap:8px;align-items:center;padding-block:8px;border-top:1px dashed var(--line)}
+.slot:first-of-type{border-top:0}
+.slot .info{flex:1;min-width:0;font-size:14px}
+.slot button{border:1px solid var(--line);background:var(--chip);border-radius:10px;padding:8px 10px;font-weight:800;cursor:pointer}
+.slot button:disabled{opacity:.4}
+textarea{width:100%;min-height:76px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);padding:8px;font-family:var(--f-num);font-size:12px}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:800;z-index:30;max-width:90%}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.btnrow>*{flex:1 1 120px}
+:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.log .h{animation:none}}
+</style>
+
+<style>[hidden]{display:none!important}body{margin:0}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="bar" id="bar" hidden>
+    <div class="row">
+      <div class="brand"><span>Lemonade</span> Stand</div>
+      <button class="iconbtn" data-act="menu" id="menuBtn">Menu</button>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+  <main id="main"></main>
+</div>
+<div class="sheet" id="sheet" hidden><div class="panel" id="panel"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+"use strict";
+const VERSION="1.0.0";
+const START_CASH=300, CUPS_PER_PITCHER=10, POSTER_COST=10;
+const HOURS=[9,10,11,12,13,14,15,16];
+const HOUR_SHAPE=[0.6,0.8,1.0,1.25,1.3,1.1,0.9,0.75];
+const PACKS={lemons:[[12,48],[30,108],[60,198]],sugar:[[25,20],[60,42],[150,90]],cups:[[25,25],[60,54],[150,120]],ice:[[50,20],[120,42],[300,90]]};
+const ITEMS={lemons:{label:"Lemons",unit:"lemons",note:"About 1 in 7 go bad each night"},sugar:{label:"Sugar",unit:"spoons",note:"Keeps fine"},cups:{label:"Paper cups",unit:"cups",note:"One per sale"},ice:{label:"Ice",unit:"cubes",note:"Melts every night"}};
+const WX={
+  sunny:{name:"Sunny",t:[30,34],mult:1.0},
+  hot:{name:"Scorching",t:[36,41],mult:1.35},
+  cloudy:{name:"Cloudy",t:[25,29],mult:0.72},
+  rain:{name:"Rainy",t:[22,26],mult:0.38},
+  storm:{name:"Thunderstorms",t:[21,24],mult:0.5}
+};
+const WX_ORDER=["hot","sunny","cloudy","rain","storm"];
+const WX_WEIGHT={sunny:34,hot:20,cloudy:26,rain:14,storm:6};
+const EVENTS=[
+  {id:"cricket",text:"Street cricket final at the maidan today. Expect a big, thirsty crowd.",mult:1.6},
+  {id:"festival",text:"The temple festival procession passes your corner this afternoon.",mult:1.8},
+  {id:"digging",text:"The corporation is digging up your road. Fewer people will walk past.",mult:0.5},
+  {id:"holiday",text:"School holiday. Lots of kids about, but they carry less money.",mult:1.3,priceMult:0.8}
+];
+const PEOPLE=["An auto driver","A college student","A jogger","The postman","Two schoolkids","A vegetable vendor","A delivery rider","An office-goer","A grandmother","A cricket fan","A tired tourist","The security guard next door"];
+const SAYS={
+  perfect:["Perfect. I'll be back tomorrow.","Best nimbu pani on this street!","Just right. Here, keep the change."],
+  good:["Nice and refreshing.","Good stuff.","That hit the spot."],
+  watery:["Tastes like water with a rumour of lemon.","Is there any lemon in this?"],
+  sour:["Aiyo, too sour!","My whole face just folded."],
+  plain:["Needs more sugar.","Bit flat. Sweeten it up."],
+  sweet:["Way too sweet.","This is sugar syrup, not lemonade."],
+  warm:["It's warm! Get some ice.","Lukewarm lemonade on a day like this?"],
+  icy:["All ice, no drink.","My teeth are freezing."],
+  price:["frowns at the price and walks on.","checks the board, shakes their head, keeps walking."]
+};
+
+let s=null, view="title", sel=30, revealTimer=null, confirmNew=null;
+const $=id=>document.getElementById(id);
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const rint=(a,b)=>Math.floor(rnd(a,b+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const money=x=>(x<0?"−":"")+"₹"+Math.abs(Math.round(x)).toLocaleString("en-IN");
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function poisson(l){if(l<=0)return 0;if(l>40)return Math.max(0,Math.round(l+Math.sqrt(l)*(Math.random()+Math.random()+Math.random()-1.5)*1.4));let L=Math.exp(-l),k=0,p=1;do{k++;p*=Math.random()}while(p>L);return k-1}
+function weighted(w){let t=0;for(const k in w)t+=w[k];let r=Math.random()*t;for(const k in w){r-=w[k];if(r<=0)return k}return Object.keys(w)[0]}
+
+/* ---------- storage (wrapped: may be unavailable) ---------- */
+const LS={get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const K_AUTO="lemonade.auto", K_SLOTS="lemonade.slots", K_BEST="lemonade.best";
+function autosave(){if(s)LS.set(K_AUTO,Object.assign({},s,{savedAt:Date.now()}))}
+function slots(){return LS.get(K_SLOTS)||{}}
+function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2200)}
+
+/* ---------- game setup ---------- */
+function newGame(days){
+  s={v:1,days,day:1,cash:START_CASH,rep:0.3,inv:{lemons:0,sugar:0,cups:0,ice:0},
+     recipe:{lemons:4,sugar:4,ice:3},price:15,posters:2,
+     totals:{cups:0,revenue:0,spent:0},history:[],phase:"morning",today:{spent:0},log:[],shown:0,report:null};
+  startDay();view="game";autosave();render();
+}
+function startDay(){
+  s.forecast=weighted(WX_WEIGHT);
+  s.event=Math.random()<0.22?pick(EVENTS).id:null;
+  s.phase="morning";s.today={spent:0};s.log=[];s.shown=0;s.report=null;
+}
+function cupsPossible(){
+  const r=s.recipe,i=s.inv;
+  const byL=Math.floor(i.lemons/r.lemons)*CUPS_PER_PITCHER;
+  const byS=r.sugar>0?Math.floor(i.sugar/r.sugar)*CUPS_PER_PITCHER:Infinity;
+  return Math.min(byL,byS,i.cups);
+}
+function unitCost(){
+  const u=k=>PACKS[k][0][1]/PACKS[k][0][0];
+  return (s.recipe.lemons*u("lemons")+s.recipe.sugar*u("sugar"))/CUPS_PER_PITCHER+u("cups")+s.recipe.ice*u("ice");
+}
+function buy(item,idx){
+  const [n,c]=PACKS[item][idx];
+  if(s.cash<c){toast("Not enough cash");return}
+  s.cash-=c;s.inv[item]+=n;s.today.spent+=c;s.totals.spent+=c;autosave();render();
+}
+
+/* ---------- the day's simulation ---------- */
+function shiftWx(f){const i=WX_ORDER.indexOf(f);const j=clamp(i+(Math.random()<0.5?-1:1),0,WX_ORDER.length-1);return WX_ORDER[j]}
+function idealIce(t){return t>=36?4:t>=30?3:t>=26?2:1}
+function taste(ice,temp){
+  const r=s.recipe,dl=r.lemons-4,ds=r.sugar-4,di=ice-idealIce(temp);
+  const sc=clamp(1-0.11*Math.abs(dl)-0.09*Math.abs(ds)-0.1*Math.abs(di),0,1);
+  const faults=[[Math.abs(dl)*1.1,dl<0?"watery":"sour"],[Math.abs(ds),ds<0?"plain":"sweet"],[Math.abs(di),di<0?"warm":"icy"]].sort((a,b)=>b[0]-a[0]);
+  const why=faults[0][0]>=2?faults[0][1]:sc>0.86?"perfect":"good";
+  return {sc,why};
+}
+function openStand(){
+  const posterCost=s.posters*POSTER_COST;
+  if(posterCost>s.cash){toast("Not enough cash for that many posters");return}
+  s.cash-=posterCost;s.today.spent+=posterCost;s.totals.spent+=posterCost;
+  const actual=Math.random()<0.75?s.forecast:shiftWx(s.forecast);
+  const w=WX[actual],temp=rint(w.t[0],w.t[1]);
+  const ev=EVENTS.find(e=>e.id===s.event);
+  const crowd=w.mult*(ev?ev.mult:1);
+  const ads=1+0.55*(1-Math.exp(-s.posters/4));
+  const fair=(8+Math.max(0,temp-22)*0.7)*(ev&&ev.priceMult||1);
+  const surprise=Math.random()<0.14?pick(["rival","blogger","ants"]):null;
+  const rep0=s.rep,inv0=Object.assign({},s.inv);
+  const log=[];let pitcher=0,pitchers=0,sold=0,rev=0,soldOut=null,noIce=0,tasteSum=0,passers=0;
+  log.push({t:"8:30",x:`You set up the stand. It's ${w.name.toLowerCase()}, ${temp}°C.`+(actual!==s.forecast?` (The forecast said ${WX[s.forecast].name.toLowerCase()}.)`:""),c:actual!==s.forecast?"warn":""});
+  if(s.posters>0)log.push({t:"8:45",x:`${s.posters} poster${s.posters>1?"s":""} go up on the lamp posts nearby.`});
+  for(let h=0;h<HOURS.length;h++){
+    const hr=HOURS[h];
+    if(actual==="storm"&&hr>=13){log.push({t:hr+":00",x:"Thunder cracks overhead. Everyone runs for cover and you pack up early.",c:"warn"});break}
+    if(surprise==="rival"&&hr===12)log.push({t:"12:00",x:"A rival cart sets up across the road, selling cheaper sherbet.",c:"warn"});
+    const n=poisson(13*crowd*ads*(0.6+0.8*s.rep)*HOUR_SHAPE[h]);passers+=n;
+    let buyers=0,quote=null;
+    for(let i=0;i<n;i++){
+      let p=1/(1+Math.exp((s.price-fair*1.15)/(fair*0.2)))*(0.72+0.38*s.rep);
+      if(surprise==="rival"&&hr>=12)p*=0.7;
+      if(Math.random()>=p){if(!quote&&s.price>fair*1.4&&Math.random()<0.05)quote={x:`${pick(PEOPLE)} ${pick(SAYS.price)}`};continue}
+      if(pitcher===0){
+        if(s.inv.lemons>=s.recipe.lemons&&s.inv.sugar>=s.recipe.sugar){s.inv.lemons-=s.recipe.lemons;s.inv.sugar-=s.recipe.sugar;pitcher=CUPS_PER_PITCHER;pitchers++}
+        else{soldOut=s.inv.lemons<s.recipe.lemons?"lemons":"sugar";break}
+      }
+      if(s.inv.cups<1){soldOut="cups";break}
+      let ice=0;if(s.inv.ice>=s.recipe.ice){ice=s.recipe.ice;s.inv.ice-=ice}else if(s.recipe.ice>0)noIce++;
+      s.inv.cups--;pitcher--;sold++;rev+=s.price;buyers++;
+      const tt=taste(ice,temp);tasteSum+=tt.sc;
+      s.rep=clamp(s.rep+(tt.sc-0.62)*0.012-(s.price>fair*1.35?0.004:0),0.05,1);
+      if(!quote&&Math.random()<0.14)quote={x:`${pick(PEOPLE)}: “${pick(SAYS[tt.why])}”`,c:tt.why==="perfect"?"good":["good"].includes(tt.why)?"":"warn"};
+    }
+    let line=`${n} walked past, ${buyers} bought.`;
+    log.push({t:hr+":00",x:line,q:quote});
+    if(soldOut){log.push({t:(hr+1)+":00",x:`Out of ${soldOut}. You close the stand early.`,c:"warn"});break}
+  }
+  if(noIce>0&&s.recipe.ice>0)log.push({t:"—",x:`${noIce} cup${noIce>1?"s":""} went out without ice after it ran out.`,c:"warn"});
+  const avgTaste=sold?tasteSum/sold:0;
+  if(surprise==="blogger"&&sold>0){
+    if(avgTaste>0.75){s.rep=clamp(s.rep+0.12,0.05,1);log.push({t:"16:30",x:"A food blogger films your lemonade and loves it. Word will spread.",c:"good"})}
+    else{s.rep=clamp(s.rep-0.08,0.05,1);log.push({t:"16:30",x:"A food blogger tries a cup, pulls a face, and posts about it.",c:"warn"})}
+  }
+  // night
+  const melt=s.inv.ice;s.inv.ice=0;
+  const rot=Math.floor(s.inv.lemons*0.15);s.inv.lemons-=rot;
+  let ants=0;if(surprise==="ants"){ants=Math.floor(s.inv.sugar*0.4);s.inv.sugar-=ants;}
+  const wasted=pitcher;
+  log.push({t:"17:00",x:`Closing time. ${sold} cups sold for ${money(rev)}.`,c:"good"});
+  s.cash+=rev;s.totals.cups+=sold;s.totals.revenue+=rev;
+  const used={lemons:inv0.lemons-s.inv.lemons-rot,sugar:inv0.sugar-s.inv.sugar-ants,cups:inv0.cups-s.inv.cups};
+  s.report={wx:actual,temp,passers,sold,rev,spent:s.today.spent,profit:rev-s.today.spent,melt,rot,ants,wasted,pitchers,soldOut,rep0,rep1:s.rep,avgTaste,fair,used};
+  s.history.push({day:s.day,wx:actual,sold,rev,profit:rev-s.today.spent});
+  s.log=log;s.shown=0;s.phase="selling";autosave();render();runReveal();
+}
+function runReveal(){
+  clearTimeout(revealTimer);
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reduce){s.shown=s.log.length;render();return}
+  const step=()=>{if(s.phase!=="selling"||s.shown>=s.log.length){render();return}s.shown++;renderSelling();revealTimer=setTimeout(step,520)};
+  step();
+}
+function finishDay(){clearTimeout(revealTimer);s.phase=s.day>=s.days?"final":"evening";if(s.phase==="final")recordBest();autosave();render()}
+function nextDay(){s.day++;startDay();autosave();render();window.scrollTo(0,0)}
+function recordBest(){
+  const best=LS.get(K_BEST)||{};const k=String(s.days);const prof=s.cash-START_CASH;
+  if(best[k]==null||prof>best[k]){best[k]=prof;LS.set(K_BEST,best);s.newBest=true}
+}
+
+/* ---------- weather icons ---------- */
+function wxIcon(t){
+  const sun='<circle cx="30" cy="30" r="12" fill="var(--lemon)"/><g stroke="var(--lemon)" stroke-width="4" stroke-linecap="round">'+[0,45,90,135,180,225,270,315].map(a=>{const r=a*Math.PI/180;return `<line x1="${30+Math.cos(r)*18}" y1="${30+Math.sin(r)*18}" x2="${30+Math.cos(r)*25}" y2="${30+Math.sin(r)*25}"/>`}).join("")+'</g>';
+  const cloud=(y,c)=>`<path d="M14 ${y+16}h30a9 9 0 0 0 0-18 13 13 0 0 0-25-3 8 8 0 0 0-5 21z" fill="${c}"/>`;
+  const svg=b=>`<svg viewBox="0 0 60 60" aria-hidden="true">${b}</svg>`;
+  if(t==="sunny")return svg(sun);
+  if(t==="hot")return svg(sun.replace('r="12" fill="var(--lemon)"','r="13" fill="#f08a24"')+'<circle cx="30" cy="30" r="7" fill="var(--lemon)"/>');
+  if(t==="cloudy")return svg('<g transform="translate(8 -6) scale(.7)">'+sun+'</g>'+cloud(26,"var(--muted)"));
+  if(t==="rain")return svg(cloud(14,"var(--muted)")+'<g stroke="var(--sky)" stroke-width="3" stroke-linecap="round"><line x1="20" y1="38" x2="17" y2="46"/><line x1="30" y1="38" x2="27" y2="48"/><line x1="40" y1="38" x2="37" y2="46"/></g>');
+  return svg(cloud(14,"var(--ink)")+'<path d="M31 34l-7 12h6l-3 10 10-14h-6l4-8z" fill="var(--lemon)"/>');
+}
+
+/* ---------- rendering ---------- */
+function stats(){
+  if(!s)return"";
+  return `<div class="stat"><div class="lbl">Day</div><b>${s.day}/${s.days}</b></div>
+  <div class="stat"><div class="lbl">Cash</div><b class="${s.cash<START_CASH?"":""}">${money(s.cash)}</b></div>
+  <div class="stat"><div class="lbl">Popularity</div><b>${Math.round(s.rep*100)}%</b><div class="meter"><i style="width:${Math.round(s.rep*100)}%"></i></div></div>`;
+}
+function stepper(id,label,sub,val,suffix){
+  return `<div class="step"><div class="txt"><b>${label}</b><div class="small muted">${sub}</div></div>
+  <div class="ctl"><button data-act="dec" data-k="${id}" aria-label="Less ${label}">−</button><output id="o_${id}">${val}${suffix||""}</output><button data-act="inc" data-k="${id}" aria-label="More ${label}">+</button></div></div>`;
+}
+function renderMorning(){
+  const f=WX[s.forecast],ev=EVENTS.find(e=>e.id===s.event),r=s.recipe;
+  const can=cupsPossible(),uc=unitCost(),margin=s.price-uc;
+  const low=k=>{const need={lemons:r.lemons,sugar:r.sugar,cups:10,ice:r.ice*10}[k];return s.inv[k]<need};
+  return `<section>
+  <div class="card"><h3>Morning of day ${s.day}</h3>
+    <div class="wx">${wxIcon(s.forecast)}<div><h2>${f.name}, ${f.t[0]}–${f.t[1]}°C</h2><p class="small muted">The radio forecast is right about 3 days in 4.</p></div></div>
+    ${ev?`<div class="event">${esc(ev.text)}</div>`:""}
+  </div>
+  <div class="card"><h3>In your crate</h3>
+    <div class="stock">${Object.keys(ITEMS).map(k=>`<div class="chip ${low(k)?"low":""}"><b>${s.inv[k]}</b><span class="small muted">${ITEMS[k].unit}</span></div>`).join("")}</div>
+    <p class="small ${can<10?"neg":"muted"}" style="margin-top:8px">Enough to sell about <b class="num">${can}</b> cups with today's recipe${s.inv.ice<r.ice*Math.min(can,40)&&r.ice>0?". Ice will run short":""}.</p>
+  </div>
+  <div class="card"><h3>Market</h3>
+    ${Object.keys(ITEMS).map(k=>`<div class="shoprow"><div class="top"><b>${ITEMS[k].label}</b><span class="small muted">${ITEMS[k].note}</span></div>
+      <div class="packs">${PACKS[k].map((p,i)=>`<button class="pack" data-act="buy" data-k="${k}" data-i="${i}" ${s.cash<p[1]?"disabled":""}>${p[0]} ${ITEMS[k].unit}<small>${money(p[1])}</small></button>`).join("")}</div></div>`).join("")}
+  </div>
+  <div class="card"><h3>Recipe</h3><p class="small muted">One pitcher fills ${CUPS_PER_PITCHER} cups.</p>
+    ${stepper("lemons","Lemons","per pitcher",r.lemons)}
+    ${stepper("sugar","Sugar","spoons per pitcher",r.sugar)}
+    ${stepper("ice","Ice","cubes per cup",r.ice)}
+  </div>
+  <div class="card"><h3>Selling</h3>
+    ${stepper("price","Price","per cup · costs you about "+money(uc),money(s.price))}
+    ${stepper("posters","Posters","₹"+POSTER_COST+" each, today only",s.posters)}
+    <p class="small ${margin<0?"neg":"muted"}">Margin about ${money(margin)} a cup.</p>
+  </div>
+  <button class="big" data-act="open">Open the stand${s.posters?` · ${money(s.posters*POSTER_COST)} posters`:""}</button>
+  </section>`;
+}
+function logHTML(n){
+  return s.log.slice(0,n).map(l=>`<div class="h"><span class="t">${esc(l.t)}</span><div><div class="${l.c||""}">${esc(l.x)}</div>${l.q?`<div class="q ${l.q.c||""}">${esc(l.q.x)}</div>`:""}</div></div>`).join("");
+}
+function renderSellingInner(){
+  const done=s.shown>=s.log.length;
+  return `<div class="card"><h3>Day ${s.day} at the stand</h3><div class="log" id="log">${logHTML(s.shown)}</div></div>
+  ${done?`<button class="big alt" data-act="finish">See today's accounts</button>`:`<button class="ghost" data-act="skip">Skip ahead</button>`}`;
+}
+function renderSelling(){
+  if(view!=="game"||s.phase!=="selling")return;
+  const sec=$("sellsec");if(!sec){render();return}
+  sec.innerHTML=renderSellingInner();
+  const last=sec.querySelector(".log .h:last-child");if(last&&last.scrollIntoView)last.scrollIntoView({block:"nearest",behavior:"smooth"});
+}
+function advice(r){
+  const tips=[];
+  if(r.soldOut)tips.push(`You ran out of ${r.soldOut}. Buy more before opening tomorrow.`);
+  if(r.sold>0&&r.avgTaste<0.7)tips.push("Customers weren't happy with the taste. Check the comments and adjust the recipe.");
+  if(s.price>r.fair*1.35)tips.push("Many people thought your price was too high for the weather.");
+  else if(s.price<r.fair*0.8&&r.sold>20)tips.push("People bought happily. You could probably charge a bit more.");
+  if(r.melt>40)tips.push(`${r.melt} ice cubes melted overnight. Buy ice to match the day.`);
+  if(!tips.length)tips.push("Steady day. Watch tomorrow's forecast and plan stock to match.");
+  return tips;
+}
+function renderEvening(){
+  const r=s.report,d=r.rep1-r.rep0;
+  return `<section>
+  <div class="card"><h3>Evening of day ${s.day}</h3>
+    <div class="wx">${wxIcon(r.wx)}<div><h2>${r.sold} cups sold</h2><p class="small muted">${WX[r.wx].name}, ${r.temp}°C · ${r.passers} people walked past · ${r.pitchers} pitcher${r.pitchers===1?"":"s"} made</p></div></div>
+  </div>
+  <div class="card"><h3>Accounts</h3><table>
+    <tr><td>Sales (${r.sold} × ${money(s.price)})</td><td class="pos">${money(r.rev)}</td></tr>
+    <tr><td>Spent on stock and posters</td><td class="neg">${money(-r.spent)}</td></tr>
+    <tr class="total"><td>Today's profit</td><td class="${r.profit>=0?"pos":"neg"}">${money(r.profit)}</td></tr>
+    <tr><td>Cash in the tin</td><td>${money(s.cash)}</td></tr>
+    <tr><td>Popularity</td><td class="${d>=0?"pos":"neg"}">${Math.round(r.rep0*100)}% → ${Math.round(r.rep1*100)}%</td></tr>
+  </table></div>
+  <div class="card"><h3>Overnight</h3><table>
+    <tr><td>Ice melted</td><td>${r.melt} cubes</td></tr>
+    <tr><td>Lemons gone bad</td><td>${r.rot}</td></tr>
+    ${r.ants?`<tr><td class="neg">Ants got into the sugar</td><td class="neg">${r.ants} spoons</td></tr>`:""}
+    ${r.wasted?`<tr><td>Lemonade poured away</td><td>${r.wasted} cups</td></tr>`:""}
+  </table></div>
+  <div class="card"><h3>Notes for tomorrow</h3>${advice(r).map(t=>`<p style="margin-bottom:6px">${esc(t)}</p>`).join("")}</div>
+  <button class="big" data-act="next">Start day ${s.day+1}</button>
+  </section>`;
+}
+function renderFinal(){
+  const prof=s.cash-START_CASH,best=(LS.get(K_BEST)||{})[String(s.days)];
+  const grade=prof>s.days*400?"Lemonade tycoon":prof>s.days*200?"Street favourite":prof>s.days*60?"Steady seller":prof>0?"Small earner":"Back to the drawing board";
+  const max=Math.max(1,...s.history.map(h=>Math.abs(h.profit)));
+  return `<section>
+  <div class="card title-card"><div class="lbl">Season over · ${s.days} days</div><h1>${grade}</h1>
+    <p>You finished with <b class="num">${money(s.cash)}</b>, a profit of <b class="num ${prof>=0?"pos":"neg"}">${money(prof)}</b>.</p>
+    <p class="small muted" style="margin-top:6px">${s.totals.cups} cups sold · ${money(s.totals.revenue)} taken · best ${s.days}-day profit on this phone: ${best!=null?money(best):"—"}${s.newBest?" (new record!)":""}</p></div>
+  <div class="card"><h3>Profit by day</h3><div class="hist">${s.history.map(h=>`<div class="r"><span class="num muted">D${h.day}</span><div class="b" style="width:${Math.max(3,Math.abs(h.profit)/max*100)}%;background:${h.profit>=0?"var(--leaf)":"var(--bad)"}"></div><span class="num" style="text-align:right">${money(h.profit)}</span></div>`).join("")}</div></div>
+  <button class="big" data-act="title">Play again</button>
+  </section>`;
+}
+function renderTitle(){
+  const auto=LS.get(K_AUTO),best=LS.get(K_BEST)||{};
+  const canResume=auto&&auto.phase!=="final";
+  return `<section>
+  <div class="card title-card">
+    <div class="lbl">A summer business game</div>
+    <h1><span style="background:var(--lemon);color:var(--lemon-ink);padding:0 10px;border-radius:12px;display:inline-block;transform:rotate(-2deg)">Lemonade</span><br>Stand</h1>
+    <p class="muted">You have ${money(START_CASH)} and a folding table. Buy lemons, sugar, cups and ice, set your recipe and price, and watch the street decide.</p>
+  </div>
+  ${canResume?`<button class="big alt" data-act="resume">Continue · day ${auto.day} of ${auto.days}, ${money(auto.cash)}</button>`:""}
+  <div class="card"><h3>New season</h3>
+    <div class="lenpick">${[7,14,30].map(d=>`<button data-act="len" data-d="${d}" aria-pressed="${sel===d}">${d} days${best[d]!=null?`<br><span class="small muted num">best ${money(best[d])}</span>`:""}</button>`).join("")}</div>
+    <div style="margin-top:12px">${confirmNew?`<p class="small neg" style="margin-bottom:8px">This replaces your autosave. Saved slots stay safe.</p><div class="btnrow"><button class="big" data-act="startok">Start anyway</button><button class="ghost" data-act="startno">Cancel</button></div>`:`<button class="big" data-act="start">Start ${sel}-day season</button>`}</div>
+  </div>
+  <div class="btnrow"><button class="ghost" data-act="menu">Saves</button><button class="ghost" data-act="help">How to play</button></div>
+  </section>`;
+}
+function render(){
+  const main=$("main");
+  $("bar").hidden=view!=="game";
+  if(view==="title"){main.innerHTML=renderTitle();return}
+  $("stats").innerHTML=stats();
+  if(s.phase==="morning")main.innerHTML=renderMorning();
+  else if(s.phase==="selling")main.innerHTML=`<section id="sellsec">${renderSellingInner()}</section>`;
+  else if(s.phase==="evening")main.innerHTML=renderEvening();
+  else main.innerHTML=renderFinal();
+}
+
+/* ---------- menu sheet ---------- */
+function encodeSave(o){return "LMN1:"+btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
+function decodeSave(t){t=t.trim();if(!t.startsWith("LMN1:"))throw 0;const o=JSON.parse(decodeURIComponent(escape(atob(t.slice(5)))));if(!o||o.v!==1||!o.inv)throw 0;return o}
+function fmtTime(ts){try{return new Date(ts).toLocaleString("en-IN",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return""}}
+let sheetMode="saves";
+function openSheet(mode){sheetMode=mode;$("sheet").hidden=false;renderSheet()}
+function closeSheet(){$("sheet").hidden=true}
+function renderSheet(){
+  const p=$("panel");
+  if(sheetMode==="help"){
+    p.innerHTML=`<div class="row" style="display:flex;justify-content:space-between;align-items:center"><h2>How to play</h2><button class="iconbtn" data-act="close">Close</button></div>
+    <div class="card small"><p><b>Each morning</b> read the forecast, buy stock, set the recipe, price and posters, then open the stand.</p>
+    <p style="margin-top:8px"><b>Recipe.</b> Most people like about 4 lemons and 4 spoons of sugar per pitcher. Hot days want more ice per cup; cool days want less.</p>
+    <p style="margin-top:8px"><b>Price.</b> The hotter the day, the more people will pay. Charge too much and they walk on, and your popularity slips.</p>
+    <p style="margin-top:8px"><b>Popularity</b> brings more people to your stand. Good lemonade raises it; bad lemonade and greedy prices lower it.</p>
+    <p style="margin-top:8px"><b>Spoilage.</b> Ice melts every night and some lemons go bad. Sugar and cups keep.</p>
+    <p style="margin-top:8px"><b>Saving.</b> The game saves itself after every step. Use the three slots to keep separate games, and the save code to move a game to another phone or browser.</p></div>`;
+    return;
+  }
+  const sl=slots(),auto=LS.get(K_AUTO);
+  p.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><h2>Saves</h2><button class="iconbtn" data-act="close">Close</button></div>
+  <div class="card"><h3>Autosave</h3><p class="small">${auto?`Day ${auto.day} of ${auto.days} · ${money(auto.cash)} · ${fmtTime(auto.savedAt)}`:"Nothing yet."} Saved after every step on this phone.</p></div>
+  <div class="card"><h3>Save slots</h3>
+    ${[1,2,3].map(n=>{const o=sl[n];return `<div class="slot"><div class="info"><b>Slot ${n}</b><br><span class="muted">${o?`Day ${o.day}/${o.days} · ${money(o.cash)} · ${fmtTime(o.savedAt)}`:"Empty"}</span></div>
+      <button data-act="slotsave" data-n="${n}" ${s&&view==="game"?"":"disabled"}>Save</button><button data-act="slotload" data-n="${n}" ${o?"":"disabled"}>Load</button></div>`}).join("")}
+  </div>
+  <div class="card"><h3>Save code</h3><p class="small muted" style="margin-bottom:8px">Copy this text into a note or message to keep it safe or carry the game to another device.</p>
+    ${s&&view==="game"?`<textarea id="codeOut" readonly>${encodeSave(s)}</textarea><button class="ghost" data-act="copy" style="margin-top:8px">Copy code</button>`:`<p class="small muted">Start or continue a game to get a code.</p>`}
+    <label for="codeIn" class="lbl" style="display:block;margin-top:12px">Paste a code to load</label>
+    <textarea id="codeIn" placeholder="LMN1:..."></textarea><button class="ghost" data-act="codeload" style="margin-top:8px">Load from code</button>
+  </div>
+  ${view==="game"?`<button class="ghost" data-act="totitle">Back to title screen</button>`:""}`;
+}
+function loadState(o){clearTimeout(revealTimer);s=JSON.parse(JSON.stringify(o));delete s.savedAt;view="game";autosave();closeSheet();render();if(s.phase==="selling")runReveal();toast("Game loaded")}
+
+/* ---------- input ---------- */
+const LIM={lemons:[1,10],sugar:[0,12],ice:[0,6],price:[1,80],posters:[0,12]};
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-act]");if(!b)return;
+  const a=b.dataset.act,k=b.dataset.k;
+  if(a==="inc"||a==="dec"){
+    const d=a==="inc"?1:-1,[lo,hi]=LIM[k];
+    if(k in s.recipe)s.recipe[k]=clamp(s.recipe[k]+d,lo,hi);else s[k]=clamp(s[k]+d,lo,hi);
+    autosave();const y=window.scrollY;render();window.scrollTo(0,y);return;
+  }
+  switch(a){
+    case "buy":{const y=window.scrollY;buy(k,+b.dataset.i);window.scrollTo(0,y);break}
+    case "open":openStand();window.scrollTo(0,0);break;
+    case "skip":clearTimeout(revealTimer);s.shown=s.log.length;render();break;
+    case "finish":finishDay();window.scrollTo(0,0);break;
+    case "next":nextDay();break;
+    case "len":sel=+b.dataset.d;confirmNew=null;render();break;
+    case "start":{const au=LS.get(K_AUTO);if(au&&au.phase!=="final"){confirmNew=true;render()}else newGame(sel);break}
+    case "startok":confirmNew=null;newGame(sel);break;
+    case "startno":confirmNew=null;render();break;
+    case "resume":{const au=LS.get(K_AUTO);if(au)loadState(au);break}
+    case "title":view="title";confirmNew=null;render();window.scrollTo(0,0);break;
+    case "menu":openSheet("saves");break;
+    case "help":openSheet("help");break;
+    case "close":closeSheet();break;
+    case "totitle":clearTimeout(revealTimer);closeSheet();view="title";render();break;
+    case "slotsave":{const sl=slots();sl[b.dataset.n]=Object.assign({},s,{savedAt:Date.now()});toast(LS.set(K_SLOTS,sl)?"Saved to slot "+b.dataset.n:"This browser blocked saving. Use the save code.");renderSheet();break}
+    case "slotload":{const o=slots()[b.dataset.n];if(o)loadState(o);break}
+    case "copy":{const ta=$("codeOut");const txt=ta.value;
+      const fb=()=>{ta.focus();ta.select();toast("Selected. Long-press to copy")};
+      try{navigator.clipboard.writeText(txt).then(()=>toast("Code copied"),fb)}catch(err){fb()}break}
+    case "codeload":{try{loadState(decodeSave($("codeIn").value))}catch(err){toast("That code didn't work. Paste the whole thing, starting with LMN1:")}break}
+  }
+});
+$("sheet").addEventListener("click",e=>{if(e.target.id==="sheet")closeSheet()});
+
+/* ---------- boot ---------- */
+function start(data){
+  if(data&&data.s){s=data.s;view=data.view||"game"}
+  else{const au=LS.get(K_AUTO);if(au&&au.v===1){s=au;view="title"}}
+  render();
+  if(view==="game"&&s&&s.phase==="selling")runReveal();
+}
+window.claude?.hot?.snapshot?.(()=>({s,view}));
+window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
+</script>
+
+</body>
+</html>

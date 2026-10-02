@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<!--
+TOOL    : Personality Models Explorer (public copy)
+FAMILY  : learning-tools
+VERSION : 1.0.1
+DATE    : 2026-10-02
+CHAT    : claude.ai chat on the Q1-Q4 dimensional model and other popular personality models
+CHANGES : v1.0.1  wrapped as a full HTML document for haivijayanand.github.io
+          v1.0.0  seven tabs (Q1-Q4, DISC, Social Styles, Blake-Mouton grid, MBTI, Big Five, Belbin, Enneagram) with interactive charts
+STATUS  : Stable
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Personality Models Explorer</title>
+<meta name="description" content="Interactive offline explorer of seven popular personality and behaviour models">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky tab rail on top; each tab = chart (left) + detail panel (right), stacking on phones */
+:root{
+  --bg:#f5f6f4; --surface:#ffffff; --fg:#1d2420; --muted:#5d6a63; --line:#d6dcd8; --accent:#0f6b5c; --accent-soft:#dcefe9;
+  --coral:#f6ddd3; --coral-ink:#8a3a1c; --coral-line:#d9825f;
+  --teal:#d6efe7; --teal-ink:#0b5a4a; --teal-line:#3fa489;
+  --slate:#e3e6ea; --slate-ink:#3b4552; --slate-line:#8b96a3;
+  --violet:#e6e2f6; --violet-ink:#463a8f; --violet-line:#8a7fd6;
+  --amber:#f6ead0; --amber-ink:#6e4b0a; --amber-line:#c99a3a;
+  --font-display:"Archivo","Segoe UI",system-ui,sans-serif;
+  --font-body:"Public Sans","Segoe UI",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141917; --surface:#1c2320; --fg:#e4ebe7; --muted:#9aa8a1; --line:#33403a; --accent:#5cc9ae; --accent-soft:#1f3a33;
+  --coral:#4a2a1f; --coral-ink:#f6c7b4; --coral-line:#c4704d;
+  --teal:#173b33; --teal-ink:#a8e6d4; --teal-line:#3fa489;
+  --slate:#2a3038; --slate-ink:#cfd6de; --slate-line:#7b8794;
+  --violet:#2c2850; --violet-ink:#d2ccf6; --violet-line:#8a7fd6;
+  --amber:#3d311a; --amber-ink:#f1d9a4; --amber-line:#b98a2c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141917; --surface:#1c2320; --fg:#e4ebe7; --muted:#9aa8a1; --line:#33403a; --accent:#5cc9ae; --accent-soft:#1f3a33;
+  --coral:#4a2a1f; --coral-ink:#f6c7b4; --coral-line:#c4704d;
+  --teal:#173b33; --teal-ink:#a8e6d4; --teal-line:#3fa489;
+  --slate:#2a3038; --slate-ink:#cfd6de; --slate-line:#7b8794;
+  --violet:#2c2850; --violet-ink:#d2ccf6; --violet-line:#8a7fd6;
+  --amber:#3d311a; --amber-ink:#f1d9a4; --amber-line:#b98a2c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.6 var(--font-body);margin:0;padding-inline:16px;padding-block:0 40px}
+.wrap{max-width:1120px;margin:0 auto}
+header{padding-block:28px 14px;display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:8px 24px}
+h1{font:700 1.7rem/1.15 var(--font-display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:60ch}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);display:flex;gap:4px;overflow-x:auto;padding-block:8px}
+nav button{font:600 .88rem var(--font-display);border:1px solid transparent;background:none;color:var(--muted);padding:7px 12px;border-radius:6px;cursor:pointer;white-space:nowrap}
+nav button:hover{color:var(--fg);background:var(--surface)}
+nav button[aria-selected="true"]{color:var(--accent);background:var(--accent-soft);border-color:var(--accent)}
+button:focus-visible,input:focus-visible,.hit:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+section{padding-block:20px}
+.intro{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:baseline;margin-bottom:16px}
+.intro h2{font:700 1.3rem var(--font-display);margin:0}
+.intro p{margin:0;color:var(--muted);max-width:75ch;flex:1 1 360px}
+.chip{font:500 .72rem var(--font-mono);letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:4px;border:1px solid var(--line);color:var(--muted)}
+.chip.good{color:var(--teal-ink);background:var(--teal);border-color:var(--teal-line)}
+.chip.mid{color:var(--amber-ink);background:var(--amber);border-color:var(--amber-line)}
+.chip.weak{color:var(--coral-ink);background:var(--coral);border-color:var(--coral-line)}
+.grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:var(--font-body)}
+svg .axis-t{font:600 13px var(--font-display);fill:var(--muted)}
+svg .small{font-size:11px;fill:var(--muted);font-family:var(--font-mono)}
+.hit{cursor:pointer}
+.hit:hover rect,.hit:hover circle.pt{filter:brightness(.97)}
+.f-coral{fill:var(--coral);stroke:var(--coral-line)} .t-coral{fill:var(--coral-ink)!important}
+.f-teal{fill:var(--teal);stroke:var(--teal-line)} .t-teal{fill:var(--teal-ink)!important}
+.f-slate{fill:var(--slate);stroke:var(--slate-line)} .t-slate{fill:var(--slate-ink)!important}
+.f-violet{fill:var(--violet);stroke:var(--violet-line)} .t-violet{fill:var(--violet-ink)!important}
+.f-amber{fill:var(--amber);stroke:var(--amber-line)} .t-amber{fill:var(--amber-ink)!important}
+.sel rect,.sel circle.pt{stroke-width:3!important}
+.sliders{display:grid;gap:10px;margin-top:14px}
+.sl label{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);gap:8px}
+.sl label b{color:var(--fg);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.detail h3{font:700 1.15rem var(--font-display);margin:0 0 2px}
+.detail .tag{color:var(--muted);margin:0 0 12px}
+.detail dl{margin:0;display:grid;gap:10px}
+.detail dt{font:500 .72rem var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.detail dd{margin:2px 0 0}
+.badge{display:inline-block;font:600 .75rem var(--font-mono);padding:2px 8px;border-radius:4px;margin-bottom:8px}
+.hint{font-size:.82rem;color:var(--muted);margin:10px 0 0}
+.note{border-left:3px solid var(--accent);padding:4px 0 4px 12px;color:var(--muted);font-size:.88rem;margin-top:16px;border-radius:0}
+.mbti-row{display:grid;grid-template-columns:5.5rem minmax(0,1fr) 5.5rem;align-items:center;gap:10px;font-size:.85rem}
+.mbti-row span:last-child{text-align:right}
+.mbti-row span.on{color:var(--accent);font-weight:600}
+.typecode{font:700 3rem/1 var(--font-mono);letter-spacing:.08em;color:var(--accent);margin:4px 0}
+.belbin{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:560px){.belbin{grid-template-columns:1fr}}
+.belbin h4{font:600 .8rem var(--font-mono);text-transform:uppercase;letter-spacing:.06em;margin:0 0 6px;color:var(--muted)}
+.role{display:flex;align-items:center;gap:8px;width:100%;text-align:left;font:500 .9rem var(--font-body);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin-bottom:6px;cursor:pointer}
+.role input{margin:0;accent-color:var(--accent)}
+.role.active{border-color:var(--accent);background:var(--accent-soft)}
+.bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .2s}
+.cov{display:grid;grid-template-columns:7rem minmax(0,1fr) 2.5rem;gap:10px;align-items:center;font-size:.85rem;margin-top:6px}
+.cov span:last-child{font-family:var(--font-mono);text-align:right}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.8rem;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px;border:1px solid}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Personality Models Explorer</h1>
+  <p>Seven popular ways of describing how people behave at work. Click any part of a chart, or move the sliders, to see what it means.</p>
+</header>
+<nav role="tablist" aria-label="Models" id="tabs"></nav>
+<main id="panels"></main>
+</div>
+
+<script>
+/* ---------- data ---------- */
+const MODELS = [
+ {id:"q4", tab:"Q1–Q4 model", title:"Dimensional Model of Behaviour (Q1–Q4)", ev:["mid","Training model"],
+  blurb:"Lefton & Buzzotta. Behaviour is placed on two axes: how much a person tries to control (dominance) and how much they respect others' views (warmth). Q4 is the target style at every level.",
+  kind:"quad", axes:{left:"Hostile",right:"Warm",top:"Dominant",bottom:"Submissive"},
+  sx:["Hostile","Warm"], sy:["Submissive","Dominant"], start:[55,50],
+  quads:{
+   tl:{name:"Q1 · Dominant-hostile",sub:"The autocrat",hue:"coral",rows:[
+     ["Behaviour","Controls, tells rather than asks, distrusts others, blames when things fail."],
+     ["Roles that drift here","Director in crisis mode, production or shop-floor head, project lead near a hard deadline."],
+     ["Effect on the team","Compliance, not commitment. People stop reporting bad news early."],
+     ["Moving towards Q4","Ask before telling. Explain the reason behind a decision. Listen to the person closest to the problem."]]},
+   tr:{name:"Q4 · Dominant-warm",sub:"The collaborator",hue:"teal",rows:[
+     ["Behaviour","Sets clear direction, involves people, faces conflict openly, follows through."],
+     ["Roles that belong here","Director setting direction, effective middle manager, senior engineer who mentors."],
+     ["Effect on the team","Results with real buy-in. Problems surface early because people feel safe raising them."],
+     ["Keeping it","The test is behaviour under pressure: a test-rig failure, an audit, a slipped milestone."]]},
+   bl:{name:"Q2 · Submissive-hostile",sub:"The avoider",hue:"slate",rows:[
+     ["Behaviour","Withdrawn, cautious, does the minimum, hides behind rules and procedure."],
+     ["Roles that drift here","Long-tenure operator, clerk in a rule-bound setup, supervisor who avoids decisions."],
+     ["Effect on the team","Slow progress, issues go unreported, little initiative."],
+     ["Moving towards Q4","Give ownership of small decisions. Ask for their view and act on it visibly."]]},
+   br:{name:"Q3 · Submissive-warm",sub:"The pleaser",hue:"violet",rows:[
+     ["Behaviour","Friendly, agreeable, avoids conflict, says yes too often."],
+     ["Roles that drift here","Manager keen to be liked, welfare or admin role, newly promoted team lead."],
+     ["Effect on the team","Pleasant atmosphere, but standards slip and hard calls get postponed."],
+     ["Moving towards Q4","Say no with reasons. Base reviews on facts and agreed targets."]]}}},
+ {id:"disc", tab:"DISC", title:"DISC", ev:["mid","Training model"],
+  blurb:"Based on William Marston's work. Two axes, pace (outgoing vs reserved) and focus (task vs people), give four styles. Most people show a blend with one or two dominant.",
+  kind:"quad", axes:{left:"Task-focused",right:"People-focused",top:"Outgoing / fast-paced",bottom:"Reserved / steady-paced"},
+  sx:["Task","People"], sy:["Reserved","Outgoing"], start:[-40,45],
+  quads:{
+   tl:{name:"D · Dominance",sub:"Direct, decisive",hue:"coral",rows:[
+     ["Strengths","Drives results, makes quick decisions, takes on challenges."],
+     ["Fear","Being taken advantage of, losing control."],
+     ["Under stress","Demanding, impatient, blunt."],
+     ["How to work with them","Be brief, lead with the bottom line, offer options rather than detail."],
+     ["Typical fit","Programme head, troubleshooter, commissioning lead."]]},
+   tr:{name:"I · Influence",sub:"Enthusiastic, persuasive",hue:"amber",rows:[
+     ["Strengths","Builds networks, motivates, communicates ideas well."],
+     ["Fear","Rejection, being ignored."],
+     ["Under stress","Disorganised, talks more than acts."],
+     ["How to work with them","Be friendly, share the big picture, recognise contributions publicly."],
+     ["Typical fit","Liaison officer, trainer, customer or user interface role."]]},
+   br:{name:"S · Steadiness",sub:"Patient, dependable",hue:"teal",rows:[
+     ["Strengths","Reliable, calm, loyal, good listener, keeps routines running."],
+     ["Fear","Sudden change, loss of stability."],
+     ["Under stress","Goes quiet, resists change passively."],
+     ["How to work with them","Give time to adjust, explain why a change is needed, be sincere."],
+     ["Typical fit","Rig operator, maintenance, support and stores functions."]]},
+   bl:{name:"C · Conscientiousness",sub:"Accurate, analytical",hue:"violet",rows:[
+     ["Strengths","High standards, careful analysis, follows procedure, spots errors."],
+     ["Fear","Criticism of their work, being wrong."],
+     ["Under stress","Over-critical, slow, stuck on detail."],
+     ["How to work with them","Bring data, be precise, give time to check."],
+     ["Typical fit","Test engineer, QA, data analyst, documentation."]]}}},
+ {id:"social", tab:"Social Styles", title:"Social Styles (Merrill & Reid)", ev:["mid","Training model"],
+  blurb:"Assertiveness (asks vs tells) is crossed with responsiveness (controls vs shows emotion). Each style has a typical 'backup behaviour' under stress, which closely echoes Q1–Q3.",
+  kind:"quad", axes:{left:"Asks",right:"Tells",top:"Controls emotions",bottom:"Shows emotions"},
+  sx:["Asks","Tells"], sy:["Shows emotions","Controls emotions"], start:[50,40],
+  quads:{
+   tl:{name:"Analytical",sub:"Thinks it through",hue:"violet",rows:[
+     ["Traits","Logical, systematic, cautious, prefers facts and process."],
+     ["Need","To be right."],
+     ["Backup under stress","Avoids: withdraws and delays the decision."],
+     ["Working with them","Give data and time. Do not rush them to commit."]]},
+   tr:{name:"Driver",sub:"Gets it done",hue:"coral",rows:[
+     ["Traits","Decisive, efficient, independent, results first."],
+     ["Need","Results."],
+     ["Backup under stress","Autocratic: takes over and dictates (close to Q1)."],
+     ["Working with them","Be brief, focus on outcomes, let them choose between options."]]},
+   bl:{name:"Amiable",sub:"Keeps it together",hue:"teal",rows:[
+     ["Traits","Supportive, cooperative, patient, relationship first."],
+     ["Need","Personal security and harmony."],
+     ["Backup under stress","Acquiesces: gives in to keep the peace (close to Q3)."],
+     ["Working with them","Show personal interest, invite their view, reassure on change."]]},
+   br:{name:"Expressive",sub:"Sells the vision",hue:"amber",rows:[
+     ["Traits","Enthusiastic, imaginative, outgoing, likes recognition."],
+     ["Need","Personal approval."],
+     ["Backup under stress","Attacks: emotional outbursts."],
+     ["Working with them","Engage their ideas, then help pin down the detail."]]}}},
+ {id:"grid", tab:"Managerial Grid", title:"Blake–Mouton Managerial Grid", ev:["mid","Leadership model"],
+  blurb:"Leadership style plotted as concern for production (x) against concern for people (y), each from 1 to 9. Five named styles; 9,9 is the ideal and lines up with Q4.", kind:"grid"},
+ {id:"mbti", tab:"MBTI", title:"Myers–Briggs Type Indicator (MBTI)", ev:["weak","Popular, weak evidence"],
+  blurb:"Four preference pairs give 16 types. Widely used in workshops, but many people get a different type on retest, so treat it as a conversation starter, not a measurement.", kind:"mbti"},
+ {id:"big5", tab:"Big Five", title:"Big Five (OCEAN)", ev:["good","Strong evidence"],
+  blurb:"The model research psychology relies on most. Five traits are measured on continuous scales, so people get a profile, not a box. Move the sliders to shape a profile.", kind:"big5"},
+ {id:"belbin", tab:"Belbin", title:"Belbin Team Roles", ev:["mid","Team model"],
+  blurb:"Nine roles people tend to play in a team. A balanced team covers all three groups. Click a role to read about it, and tick the roles your team already has to check coverage.", kind:"belbin"},
+ {id:"ennea", tab:"Enneagram", title:"Enneagram", ev:["weak","Popular, little evidence"],
+  blurb:"Nine types arranged on a circle, grouped into three centres (gut, heart, head). The inner lines show how types are said to shift under stress and growth.", kind:"ennea"}
+];
+
+/* ---------- helpers ---------- */
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs={},parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+function txt(parent,x,y,s,attrs={}){const t=el("text",Object.assign({x,y},attrs),parent);t.textContent=s;return t}
+function h(html){const d=document.createElement("div");d.innerHTML=html.trim();return d.firstElementChild}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function detailHTML(item,badge){
+  return `${badge?`<span class="badge" style="background:var(--${item.hue});color:var(--${item.hue}-ink)">${esc(badge)}</span>`:""}
+  <h3>${esc(item.name)}</h3><p class="tag">${esc(item.sub)}</p>
+  <dl>${item.rows.map(r=>`<div><dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd></div>`).join("")}</dl>`;
+}
+function arrowDefs(svg){const d=el("defs",{},svg);const m=el("marker",{id:"ah"+Math.random().toString(36).slice(2,7),viewBox:"0 0 10 10",refX:"8",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d);el("path",{d:"M1 1L9 5L1 9z",style:"fill:var(--muted)"},m);return m.id}
+
+/* ---------- quadrant chart ---------- */
+function buildQuad(m,chartCard,detail){
+  const svg=el("svg",{viewBox:"0 0 460 430",role:"img","aria-label":m.title+" quadrant chart"});
+  chartCard.appendChild(svg);
+  const aid=arrowDefs(svg);
+  const X0=60,X1=400,Y0=40,Y1=380,cx=(X0+X1)/2,cy=(Y0+Y1)/2,g=5;
+  const pos={tl:[X0,Y0],tr:[cx+g,Y0],bl:[X0,cy+g],br:[cx+g,cy+g]};
+  const w=cx-X0-g,hh=cy-Y0-g, groups={};
+  for(const k in m.quads){const q=m.quads[k];const [x,y]=pos[k];
+    const gr=el("g",{class:"hit",tabindex:"0",role:"button","aria-label":q.name},svg);
+    el("rect",{x,y,width:w,height:hh,rx:8,class:"f-"+q.hue,"stroke-width":1},gr);
+    txt(gr,x+w/2,y+hh/2-6,q.name,{"text-anchor":"middle",class:"t-"+q.hue,style:"font:600 14px var(--font-display)"});
+    txt(gr,x+w/2,y+hh/2+14,q.sub,{"text-anchor":"middle",class:"t-"+q.hue,style:"font-size:12px"});
+    gr.addEventListener("click",()=>select(k)); gr.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();select(k)}});
+    groups[k]=gr;}
+  el("line",{x1:cx,y1:Y1+6,x2:cx,y2:Y0-6,style:"stroke:var(--muted)","stroke-width":1.2,"marker-end":`url(#${aid})`,"marker-start":`url(#${aid})`},svg);
+  el("line",{x1:X0-6,y1:cy,x2:X1+6,y2:cy,style:"stroke:var(--muted)","stroke-width":1.2,"marker-end":`url(#${aid})`,"marker-start":`url(#${aid})`},svg);
+  txt(svg,cx,22,m.axes.top,{"text-anchor":"middle",class:"axis-t"});
+  txt(svg,cx,408,m.axes.bottom,{"text-anchor":"middle",class:"axis-t"});
+  txt(svg,X0-14,cy,m.axes.left,{"text-anchor":"middle",class:"axis-t",transform:`rotate(-90 ${X0-14} ${cy})`});
+  txt(svg,X1+16,cy,m.axes.right,{"text-anchor":"middle",class:"axis-t",transform:`rotate(90 ${X1+16} ${cy})`});
+  const dot=el("circle",{r:8,style:"fill:var(--fg);stroke:var(--surface)","stroke-width":3},svg);
+  const sl=h(`<div class="sliders">
+    <div class="sl"><label for="${m.id}-x"><span>${esc(m.sx[0])}</span><b>Horizontal</b><span>${esc(m.sx[1])}</span></label><input type="range" id="${m.id}-x" min="-100" max="100" value="${m.start[0]}"></div>
+    <div class="sl"><label for="${m.id}-y"><span>${esc(m.sy[0])}</span><b>Vertical</b><span>${esc(m.sy[1])}</span></label><input type="range" id="${m.id}-y" min="-100" max="100" value="${m.start[1]}"></div></div>`);
+  chartCard.appendChild(sl);
+  chartCard.appendChild(h(`<p class="hint">Move the sliders to place a person on the chart, or click a quadrant.</p>`));
+  const xs=sl.querySelector(`#${m.id}-x`),ys=sl.querySelector(`#${m.id}-y`);
+  function select(k){for(const q in groups)groups[q].classList.toggle("sel",q===k);detail.innerHTML=detailHTML(m.quads[k]);}
+  function fromSliders(){const x=+xs.value,y=+ys.value;
+    dot.setAttribute("cx",cx+x/100*(cx-X0-14));dot.setAttribute("cy",cy-y/100*(cy-Y0-14));
+    select((y>=0?"t":"b")+(x>=0?"r":"l"));}
+  xs.oninput=ys.oninput=fromSliders; fromSliders();
+}
+
+/* ---------- Blake-Mouton grid ---------- */
+const BM={
+ tm:{name:"9,9 · Team management",sub:"High results through committed people",hue:"teal",rows:[["Approach","Goals are shared; people are involved in planning and own the outcome."],["Matches","Q4 in the Q1–Q4 model."],["Typical result","High output and high morale. The style the grid treats as best."]]},
+ ac:{name:"9,1 · Authority-compliance",sub:"Produce or perish",hue:"coral",rows:[["Approach","Work is arranged so people interfere as little as possible; orders flow down."],["Matches","Q1 in the Q1–Q4 model."],["Typical result","Short-term output, high turnover and hidden problems."]]},
+ cc:{name:"1,9 · Country club",sub:"Comfort first",hue:"violet",rows:[["Approach","Attention to people's needs and a friendly atmosphere; pace and targets come second."],["Matches","Q3 in the Q1–Q4 model."],["Typical result","Happy team, missed deadlines."]]},
+ im:{name:"1,1 · Impoverished",sub:"Minimum effort",hue:"slate",rows:[["Approach","Exerts just enough effort to keep the job; avoids responsibility."],["Matches","Q2 in the Q1–Q4 model."],["Typical result","Low output, low morale, drifting team."]]},
+ mr:{name:"5,5 · Middle of the road",sub:"Balance and compromise",hue:"amber",rows:[["Approach","Adequate performance by balancing work against morale."],["Matches","A mix; often a cautious version of Q3/Q4."],["Typical result","Acceptable but rarely outstanding results."]]}
+};
+function bmStyle(p,q){if(p>=7&&q>=7)return"tm";if(p>=7&&q<=3)return"ac";if(p<=3&&q>=7)return"cc";if(p<=3&&q<=3)return"im";return"mr"}
+function buildGrid(m,chartCard,detail){
+  const svg=el("svg",{viewBox:"0 0 440 410",role:"img","aria-label":"Managerial grid"});chartCard.appendChild(svg);
+  const C=36,GX=74,GY=16,cells=[];
+  for(let q=9;q>=1;q--)for(let p=1;p<=9;p++){
+    const s=bmStyle(p,q),x=GX+(p-1)*C,y=GY+(9-q)*C;
+    const gr=el("g",{class:"hit"},svg);
+    const r=el("rect",{x:x+1,y:y+1,width:C-2,height:C-2,rx:3,class:"f-"+BM[s].hue,"stroke-width":.6},gr);
+    gr.addEventListener("click",()=>{ps.value=p;qs.value=q;upd()});cells.push({p,q,gr});}
+  for(let i=1;i<=9;i++){txt(svg,GX+(i-.5)*C,GY+9*C+16,i,{"text-anchor":"middle",class:"small"});txt(svg,GX-10,GY+(9-i+.5)*C+4,i,{"text-anchor":"end",class:"small"});}
+  txt(svg,GX+4.5*C,GY+9*C+40,"Concern for production →",{"text-anchor":"middle",class:"axis-t"});
+  txt(svg,22,GY+4.5*C,"Concern for people →",{"text-anchor":"middle",class:"axis-t",transform:`rotate(-90 22 ${GY+4.5*C})`});
+  [[1,1,"1,1"],[1,9,"1,9"],[9,1,"9,1"],[5,5,"5,5"],[9,9,"9,9"]].forEach(([p,q,l])=>txt(svg,GX+(p-.5)*C,GY+(9-q+.5)*C+4,l,{"text-anchor":"middle",style:"font:600 11px var(--font-mono)",class:"t-"+BM[bmStyle(p,q)].hue,"pointer-events":"none"}));
+  const dot=el("circle",{r:9,style:"fill:none;stroke:var(--fg)","stroke-width":3,"pointer-events":"none"},svg);
+  const sl=h(`<div class="sliders">
+   <div class="sl"><label for="bm-p"><span>Low</span><b>Concern for production: <span id="bm-pv"></span></b><span>High</span></label><input type="range" id="bm-p" min="1" max="9" value="8"></div>
+   <div class="sl"><label for="bm-q"><span>Low</span><b>Concern for people: <span id="bm-qv"></span></b><span>High</span></label><input type="range" id="bm-q" min="1" max="9" value="3"></div></div>`);
+  chartCard.appendChild(sl);chartCard.appendChild(h(`<p class="hint">Click any cell or use the sliders. Colours show the five named regions.</p>`));
+  const ps=sl.querySelector("#bm-p"),qs=sl.querySelector("#bm-q");
+  function upd(){const p=+ps.value,q=+qs.value;sl.querySelector("#bm-pv").textContent=p;sl.querySelector("#bm-qv").textContent=q;
+    dot.setAttribute("cx",GX+(p-.5)*C);dot.setAttribute("cy",GY+(9-q+.5)*C);
+    detail.innerHTML=detailHTML(BM[bmStyle(p,q)],`Position ${p},${q}`);}
+  ps.oninput=qs.oninput=upd;upd();
+}
+
+/* ---------- MBTI ---------- */
+const MB_PAIRS=[["E","Extraversion","Energised by people and action","I","Introversion","Energised by reflection and quiet"],
+ ["S","Sensing","Trusts facts and concrete detail","N","Intuition","Looks for patterns and possibilities"],
+ ["T","Thinking","Decides by logic and consistency","F","Feeling","Decides by values and impact on people"],
+ ["J","Judging","Likes plans, closure, schedules","P","Perceiving","Likes flexibility, keeps options open"]];
+const MB_TYPES={ISTJ:"Dependable organiser",ISFJ:"Quiet protector",INFJ:"Insightful counsellor",INTJ:"Strategic planner",ISTP:"Hands-on troubleshooter",ISFP:"Gentle craftsperson",INFP:"Idealistic mediator",INTP:"Theory builder",ESTP:"Action-oriented fixer",ESFP:"Lively performer",ENFP:"Enthusiastic campaigner",ENTP:"Inventive debater",ESTJ:"Practical administrator",ESFJ:"Supportive host",ENFJ:"Inspiring mentor",ENTJ:"Decisive commander"};
+function buildMBTI(m,chartCard,detail){
+  const init=[-40,-55,-60,-45];
+  chartCard.appendChild(h(`<div class="sliders">${MB_PAIRS.map((pr,i)=>`
+   <div class="mbti-row"><span id="mb-l${i}"><b>${pr[0]}</b> ${pr[1]}</span>
+   <input type="range" id="mb-${i}" min="-100" max="100" value="${init[i]}" aria-label="${pr[1]} versus ${pr[4]}">
+   <span id="mb-r${i}">${pr[4]} <b>${pr[3]}</b></span></div>`).join("")}</div>`));
+  chartCard.appendChild(h(`<p class="hint">Slide each row towards the preference that fits better. The middle means no clear preference.</p>`));
+  function upd(){let code="",rows=[];
+    MB_PAIRS.forEach((pr,i)=>{const v=+document.getElementById("mb-"+i).value,left=v<=0;code+=left?pr[0]:pr[3];
+      document.getElementById("mb-l"+i).classList.toggle("on",left);document.getElementById("mb-r"+i).classList.toggle("on",!left);
+      const strength=Math.abs(v)<20?"slight":Math.abs(v)<60?"moderate":"clear";
+      rows.push([`${left?pr[1]:pr[4]} (${strength})`,left?pr[2]:pr[5]]);});
+    detail.innerHTML=`<span class="badge" style="background:var(--accent-soft);color:var(--accent)">Your type</span>
+     <div class="typecode">${code}</div><p class="tag">${MB_TYPES[code]}</p>
+     <dl>${rows.map(r=>`<div><dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd></div>`).join("")}</dl>
+     <p class="note">A "slight" preference can easily flip on another day. Read the four letters as tendencies.</p>`;}
+  chartCard.querySelectorAll("input").forEach(i=>i.oninput=upd);upd();
+}
+
+/* ---------- Big Five ---------- */
+const B5=[["O","Openness","Curious, imaginative, enjoys new ideas","Practical, prefers the familiar and proven"],
+ ["C","Conscientiousness","Organised, careful, dependable, goal-driven","Flexible, spontaneous, can be careless with detail"],
+ ["E","Extraversion","Sociable, energetic, talkative","Reserved, prefers small groups and quiet work"],
+ ["A","Agreeableness","Cooperative, trusting, helpful","Competitive, sceptical, blunt"],
+ ["N","Neuroticism","Feels stress and worry strongly","Calm, emotionally steady under pressure"]];
+function buildBig5(m,chartCard,detail){
+  const init=[70,80,40,60,30];
+  const svg=el("svg",{viewBox:"0 0 420 370",role:"img","aria-label":"Big Five radar chart"});chartCard.appendChild(svg);
+  const cx=210,cy=190,R=130,ang=i=>(-90+i*72)*Math.PI/180,pt=(i,v)=>[cx+Math.cos(ang(i))*R*v/100,cy+Math.sin(ang(i))*R*v/100];
+  [25,50,75,100].forEach(v=>el("polygon",{points:B5.map((_,i)=>pt(i,v).join(",")).join(" "),style:"fill:none;stroke:var(--line)"},svg));
+  B5.forEach((b,i)=>{const [x,y]=pt(i,100);el("line",{x1:cx,y1:cy,x2:x,y2:y,style:"stroke:var(--line)"},svg);
+    const [lx,ly]=pt(i,118);const c=Math.cos(ang(i));
+    txt(svg,lx,ly+4,b[1],{"text-anchor":c>.3?"start":c<-.3?"end":"middle",class:"axis-t"});});
+  [50,100].forEach(v=>txt(svg,cx+4,cy-R*v/100-3,v,{class:"small"}));
+  const poly=el("polygon",{style:"fill:var(--accent);fill-opacity:.22;stroke:var(--accent)","stroke-width":2},svg);
+  const dots=B5.map(()=>el("circle",{r:4,style:"fill:var(--accent)"},svg));
+  chartCard.appendChild(h(`<div class="sliders">${B5.map((b,i)=>`
+    <div class="sl"><label for="b5-${i}"><span>Low</span><b>${b[1]}: <span id="b5v-${i}"></span></b><span>High</span></label><input type="range" id="b5-${i}" min="0" max="100" value="${init[i]}"></div>`).join("")}</div>`));
+  function upd(){const vals=B5.map((_,i)=>+document.getElementById("b5-"+i).value);
+    poly.setAttribute("points",vals.map((v,i)=>pt(i,v).join(",")).join(" "));
+    vals.forEach((v,i)=>{const [x,y]=pt(i,v);dots[i].setAttribute("cx",x);dots[i].setAttribute("cy",y);document.getElementById("b5v-"+i).textContent=v});
+    detail.innerHTML=`<span class="badge" style="background:var(--accent-soft);color:var(--accent)">Profile reading</span><h3>Your OCEAN profile</h3>
+     <p class="tag">Scores near 50 are average. Each trait is independent.</p>
+     <dl>${B5.map((b,i)=>{const v=vals[i],lvl=v>=65?"High":v<=35?"Low":"Moderate";
+       return `<div><dt>${b[1]} · ${lvl} (${v})</dt><dd>${lvl==="High"?b[2]:lvl==="Low"?b[3]:"A balance of both ends: "+b[2].split(",")[0].toLowerCase()+" at times, "+b[3].split(",")[0].toLowerCase()+" at others."}</dd></div>`}).join("")}</dl>
+     <p class="note">High Conscientiousness is the trait most consistently linked to job performance across roles.</p>`;}
+  chartCard.querySelectorAll("input").forEach(i=>i.oninput=upd);upd();
+}
+
+/* ---------- Belbin ---------- */
+const BEL=[
+ {g:"Action",hue:"coral",roles:[["Shaper","Drives the team, thrives on pressure, pushes past obstacles.","Can provoke others and hurt feelings."],
+   ["Implementer","Turns ideas into practical plans and gets the work done.","Somewhat inflexible, slow to accept new ideas."],
+   ["Completer Finisher","Searches out errors, polishes and finishes on time.","Worries too much, reluctant to delegate."]]},
+ {g:"People",hue:"teal",roles:[["Coordinator","Clarifies goals, delegates well, brings the team together.","Can be seen as manipulative or offloading work."],
+   ["Teamworker","Cooperative and diplomatic, smooths friction.","Indecisive in tight situations."],
+   ["Resource Investigator","Explores outside contacts and opportunities.","Loses interest after the first enthusiasm."]]},
+ {g:"Thinking",hue:"violet",roles:[["Plant","Creative problem solver, generates new ideas.","Ignores detail, may communicate poorly."],
+   ["Monitor Evaluator","Sober, strategic, weighs all options fairly.","Can lack drive and the ability to inspire."],
+   ["Specialist","Brings deep knowledge in a key area.","Contributes on a narrow front only."]]}];
+function buildBelbin(m,chartCard,detail){
+  const start=new Set(["Shaper","Implementer","Specialist","Teamworker"]);
+  chartCard.appendChild(h(`<div class="belbin">${BEL.map(gr=>`<div><h4>${gr.g}</h4>${gr.roles.map(r=>`
+    <label class="role" data-role="${r[0]}"><input type="checkbox" ${start.has(r[0])?"checked":""} aria-label="${r[0]} present in my team">${r[0]}</label>`).join("")}</div>`).join("")}</div>`));
+  const cov=h(`<div style="margin-top:14px"><h4 style="font:600 .8rem var(--font-mono);text-transform:uppercase;letter-spacing:.06em;margin:0;color:var(--muted)">Team coverage</h4>${BEL.map((gr,i)=>`
+    <div class="cov"><span>${gr.g}</span><div class="bar"><i id="bel-b${i}" style="background:var(--${gr.hue}-line)"></i></div><span id="bel-n${i}"></span></div>`).join("")}<p class="hint" id="bel-msg"></p></div>`);
+  chartCard.appendChild(cov);
+  function show(name){chartCard.querySelectorAll(".role").forEach(r=>r.classList.toggle("active",r.dataset.role===name));
+    for(const gr of BEL)for(const r of gr.roles)if(r[0]===name)detail.innerHTML=detailHTML({name:r[0],sub:gr.g+"-oriented role",hue:gr.hue,rows:[["Contribution",r[1]],["Allowable weakness",r[2]]]},gr.g);}
+  function upd(){const missing=[];BEL.forEach((gr,i)=>{const n=gr.roles.filter(r=>chartCard.querySelector(`[data-role="${r[0]}"] input`).checked).length;
+      document.getElementById("bel-b"+i).style.width=(n/3*100)+"%";document.getElementById("bel-n"+i).textContent=n+"/3";if(!n)missing.push(gr.g);});
+    document.getElementById("bel-msg").textContent=missing.length?"No "+missing.join(" or ")+"-oriented role yet. Someone may need to cover it deliberately.":"All three groups are covered. One person often plays two or three roles.";}
+  chartCard.querySelectorAll(".role").forEach(l=>{l.addEventListener("click",()=>show(l.dataset.role));l.querySelector("input").addEventListener("change",upd)});
+  upd();show("Shaper");
+}
+
+/* ---------- Enneagram ---------- */
+const EN={1:["Reformer","gut","Principled, purposeful, perfectionist","To be good and right","Being corrupt or wrong","Holds high standards; can be critical of self and others."],
+ 2:["Helper","heart","Caring, generous, people-pleasing","To be loved and needed","Being unwanted","Builds goodwill; may neglect own work to help others."],
+ 3:["Achiever","heart","Driven, adaptable, image-aware","To be valuable and successful","Being worthless","Delivers results; can overwork and chase recognition."],
+ 4:["Individualist","heart","Expressive, sensitive, creative","To be unique and authentic","Having no identity","Brings originality; may feel misunderstood."],
+ 5:["Investigator","head","Analytical, private, perceptive","To be capable and competent","Being helpless or ignorant","Deep expertise; can withdraw from people."],
+ 6:["Loyalist","head","Committed, responsible, anxious","Security and support","Being without guidance","Spots risks early; may over-prepare or doubt."],
+ 7:["Enthusiast","head","Spontaneous, versatile, optimistic","To be satisfied and free","Being trapped in pain","Generates ideas; may scatter and avoid tedium."],
+ 8:["Challenger","gut","Self-confident, decisive, protective","To control their own path","Being controlled or harmed","Takes charge; can be confrontational."],
+ 9:["Peacemaker","gut","Easy-going, receptive, steady","Inner peace and harmony","Loss and conflict","Mediates well; may avoid hard decisions."]};
+const CENTRE={gut:["Gut (instinctive)","coral"],heart:["Heart (feeling)","violet"],head:["Head (thinking)","teal"]};
+function buildEnnea(m,chartCard,detail){
+  const svg=el("svg",{viewBox:"0 0 520 420",role:"img","aria-label":"Enneagram"});chartCard.appendChild(svg);
+  const cx=260,cy=208,R=150,P=k=>{const a=(-90+k*40)*Math.PI/180;return[cx+Math.cos(a)*R,cy+Math.sin(a)*R,Math.cos(a),Math.sin(a)]};
+  el("circle",{cx,cy,r:R,style:"fill:none;stroke:var(--line)","stroke-width":1.5},svg);
+  const path=seq=>seq.map((k,i)=>(i?"L":"M")+P(k)[0].toFixed(1)+" "+P(k)[1].toFixed(1)).join(" ");
+  el("path",{d:path([1,4,2,8,5,7,1]),style:"fill:none;stroke:var(--muted)","stroke-width":1,"stroke-dasharray":"4 4"},svg);
+  el("path",{d:path([3,6,9,3]),style:"fill:none;stroke:var(--muted)","stroke-width":1},svg);
+  const nodes={};
+  for(let k=1;k<=9;k++){const [x,y,c,s]=P(k),hue=CENTRE[EN[k][1]][1];
+    const gr=el("g",{class:"hit",tabindex:"0",role:"button","aria-label":"Type "+k+" "+EN[k][0]},svg);
+    el("circle",{cx:x,cy:y,r:20,class:"pt f-"+hue,"stroke-width":1.2},gr);
+    txt(gr,x,y+5,k,{"text-anchor":"middle",class:"t-"+hue,style:"font:700 15px var(--font-mono)"});
+    const lx=cx+c*(R+32),ly=cy+s*(R+32)+4;
+    txt(gr,lx,ly,EN[k][0],{"text-anchor":c>.3?"start":c<-.3?"end":"middle",style:"font:600 13px var(--font-display)"});
+    gr.addEventListener("click",()=>pick(k));gr.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(k)}});nodes[k]=gr;}
+  chartCard.appendChild(h(`<div class="legend">${Object.values(CENTRE).map(c=>`<span><i style="background:var(--${c[1]});border-color:var(--${c[1]}-line)"></i>${c[0]}</span>`).join("")}<span>Solid line: 3-6-9 · Dashed: 1-4-2-8-5-7</span></div>`));
+  chartCard.appendChild(h(`<p class="hint">Click a number to read about that type.</p>`));
+  function pick(k){for(const n in nodes)nodes[n].classList.toggle("sel",+n===k);const e=EN[k],c=CENTRE[e[1]];
+    detail.innerHTML=detailHTML({name:"Type "+k+" · "+e[0],sub:e[2],hue:c[1],rows:[["Core desire",e[3]],["Core fear",e[4]],["At work",e[5]],["Centre",c[0]]]},c[0]);}
+  pick(8);
+}
+
+/* ---------- tabs ---------- */
+const tabs=document.getElementById("tabs"),panels=document.getElementById("panels");
+const builders={quad:buildQuad,grid:buildGrid,mbti:buildMBTI,big5:buildBig5,belbin:buildBelbin,ennea:buildEnnea};
+MODELS.forEach(m=>{
+  const b=h(`<button role="tab" id="tab-${m.id}" aria-controls="p-${m.id}" aria-selected="false">${esc(m.tab)}</button>`);
+  b.onclick=()=>activate(m.id);tabs.appendChild(b);
+  const p=h(`<section role="tabpanel" id="p-${m.id}" aria-labelledby="tab-${m.id}" hidden>
+    <div class="intro"><h2>${esc(m.title)}</h2><span class="chip ${m.ev[0]}">${esc(m.ev[1])}</span><p>${esc(m.blurb)}</p></div>
+    <div class="grid"><div class="card chart"></div><div class="card detail" aria-live="polite"></div></div></section>`);
+  panels.appendChild(p);
+  builders[m.kind](m,p.querySelector(".chart"),p.querySelector(".detail"));
+});
+function activate(id,push=true){
+  MODELS.forEach(m=>{const on=m.id===id;document.getElementById("tab-"+m.id).setAttribute("aria-selected",on);document.getElementById("p-"+m.id).hidden=!on;});
+  try{localStorage.setItem("pme-tab",id)}catch(e){}
+  if(push)try{history.replaceState(null,"","#"+id)}catch(e){}
+}
+tabs.addEventListener("keydown",e=>{if(!["ArrowRight","ArrowLeft"].includes(e.key))return;const i=MODELS.findIndex(m=>document.getElementById("tab-"+m.id).getAttribute("aria-selected")==="true");
+  const n=MODELS[(i+(e.key==="ArrowRight"?1:MODELS.length-1))%MODELS.length].id;activate(n);document.getElementById("tab-"+n).focus();});
+let first=(location.hash||"").slice(1);
+if(!MODELS.some(m=>m.id===first)){first="q4";try{const s=localStorage.getItem("pme-tab");if(MODELS.some(m=>m.id===s))first=s}catch(e){}}
+activate(first,false);
+</script>
+</body>
+</html>

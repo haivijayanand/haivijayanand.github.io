@@ -2,10 +2,11 @@
 <!--
 TOOL: Lemonade Stand
 FAMILY: games
-VERSION: 1.0.0
-DATE: 2026-10-01
+VERSION: 1.1.0
+DATE: 2026-10-02
 CHAT: Lemonade stand text game (claude.ai, 2026-10-01)
-CHANGES: 1.0.0 - first release: 7/14/30-day season, weather + forecast, street events, shop, recipe, pricing, posters, hourly sales log, 3 save slots + autosave, save-code copy/load
+CHANGES: 1.1.0 - added Tech discussion tab: constraints, unit economics, Poisson/CLT demand model, Monte Carlo monthly growth, market capacity + second-shop rule, live SWOT
+         1.0.0 - first release: 7/14/30-day season, weather + forecast, street events, shop, recipe, pricing, posters, hourly sales log, 3 save slots + autosave, save-code copy/load
 STATUS: playable
 -->
 <html lang="en">
@@ -23,14 +24,15 @@ STATUS: playable
   --bg:#e9f4f1; --card:#ffffff; --ink:#15322d; --muted:#5b746e; --line:#cfe1dc;
   --lemon:#f6cf1d; --lemon-ink:#3a2f00; --leaf:#22844a; --bad:#c2412d; --sky:#2a7f9e;
   --chip:#f2f8f6;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; /* chart series: rain, hot, cloudy, sunny */
   --f-display:"Gluten","Comic Sans MS",cursive; --f-body:"Nunito",system-ui,sans-serif; --f-num:"IBM Plex Mono",ui-monospace,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0e1d1a; --card:#162b27; --ink:#e6f2ee; --muted:#9bb5ae; --line:#2a4540;
-  --lemon:#f3cc2a; --lemon-ink:#2a2200; --leaf:#4cc27a; --bad:#ff7a63; --sky:#64bfdc; --chip:#1c3530; color-scheme:dark}}
+  --lemon:#f3cc2a; --lemon-ink:#2a2200; --leaf:#4cc27a; --bad:#ff7a63; --sky:#64bfdc; --chip:#1c3530; --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0e1d1a; --card:#162b27; --ink:#e6f2ee; --muted:#9bb5ae; --line:#2a4540;
-  --lemon:#f3cc2a; --lemon-ink:#2a2200; --leaf:#4cc27a; --bad:#ff7a63; --sky:#64bfdc; --chip:#1c3530; color-scheme:dark}
+  --lemon:#f3cc2a; --lemon-ink:#2a2200; --leaf:#4cc27a; --bad:#ff7a63; --sky:#64bfdc; --chip:#1c3530; --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--f-body);-webkit-tap-highlight-color:transparent}
 button{font:inherit;color:inherit}
@@ -111,6 +113,62 @@ textarea{width:100%;min-height:76px;border:1px solid var(--line);border-radius:1
 .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:800;z-index:30;max-width:90%}
 .btnrow{display:flex;gap:8px;flex-wrap:wrap}
 .btnrow>*{flex:1 1 120px}
+/* ---- tabs + tech discussion ---- */
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--chip);border:1px solid var(--line);border-radius:14px;padding:4px;margin-block:12px 4px}
+.tabs button{border:0;background:transparent;border-radius:10px;padding:9px 6px;font-weight:800;cursor:pointer;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+#tech{display:flex;flex-direction:column;gap:14px;padding-top:10px}
+#tech h2{font-size:22px}
+.sec-n{font-family:var(--f-num);font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.06em}
+.prose{display:flex;flex-direction:column;gap:8px;max-width:65ch}
+.fld{display:flex;flex-direction:column;gap:2px;padding-block:6px}
+.fld label{display:flex;justify-content:space-between;gap:10px;font-weight:700;font-size:15px}
+.fld output{font-family:var(--f-num);font-weight:600;white-space:nowrap}
+input[type=range]{width:100%;height:32px;accent-color:var(--leaf);margin:0}
+.flds{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));column-gap:18px}
+.seg{display:flex;gap:4px;background:var(--chip);border-radius:10px;padding:3px;flex-wrap:wrap}
+.seg button{flex:1 1 auto;border:0;background:transparent;border-radius:8px;padding:7px 10px;font-weight:800;font-size:14px;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.segrow{display:flex;flex-direction:column;gap:4px;padding-block:6px}
+.segrow>span{font-weight:700;font-size:15px}
+.tblwrap{overflow-x:auto;margin-inline:-4px;padding-inline:4px}
+.tt{width:100%;border-collapse:collapse;font-size:14px;min-width:300px}
+.tt th{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:right;padding:6px 4px;border-bottom:1px solid var(--line);font-weight:800}
+.tt th:first-child,.tt td:first-child{text-align:left}
+.tt td{padding:6px 4px;border-bottom:1px dashed var(--line);text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.tt td:first-child{font-family:var(--f-body)}
+.tt tr.sum td{font-weight:800;border-bottom:0}
+.formula{font-family:var(--f-num);font-size:13px;background:var(--chip);border-radius:10px;padding:10px 12px;line-height:1.7;overflow-x:auto;white-space:pre}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.kpi{background:var(--chip);border-radius:12px;padding:10px 12px;min-width:0}
+.kpi b{display:block;font-family:var(--f-num);font-size:22px;line-height:1.15}
+.kpi .small{display:block}
+.verdict{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--chip);font-size:15px}
+.verdict i{flex:none;font-style:normal;font-family:var(--f-num);font-weight:600;font-size:12px;padding:2px 7px;border-radius:6px;margin-top:2px}
+.verdict.ok i{background:var(--leaf);color:#fff}
+.verdict.no i{background:var(--bad);color:#fff}
+.verdict.mid i{background:var(--lemon);color:var(--lemon-ink)}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto;touch-action:pan-y}
+.chart .readout{font-family:var(--f-num);font-size:13px;min-height:2.6em;color:var(--ink);padding-top:4px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--muted);margin-bottom:4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:4px;border-radius:2px;display:inline-block}
+.legend i.dash{height:0;border-top:2px dashed var(--muted);border-radius:0;background:none}
+.legend i.band{height:10px;opacity:.3}
+svg .ax{font-family:var(--f-num);font-size:11px;fill:var(--muted)}
+svg .lab{font-family:var(--f-body);font-size:12px;font-weight:800;fill:var(--ink)}
+svg .grid{stroke:var(--line);stroke-width:1}
+svg .guide{stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3}
+.swot{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.swot>div{border-radius:14px;padding:12px;background:var(--chip);min-width:0}
+.swot h4{margin:0 0 6px;font-family:var(--f-display);font-size:20px;line-height:1}
+.swot ul{margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:5px}
+.swot .S h4{color:var(--leaf)} .swot .W h4{color:var(--bad)} .swot .O h4{color:var(--sky)} .swot .T h4{color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{border:1px solid var(--line);background:var(--chip);border-radius:999px;padding:5px 12px;font-weight:800;font-size:13px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+@media (max-width:440px){.swot{grid-template-columns:1fr}}
 :focus-visible{outline:3px solid var(--sky);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.log .h{animation:none}}
 </style>
@@ -119,6 +177,7 @@ textarea{width:100%;min-height:76px;border:1px solid var(--line);border-radius:1
 </head>
 <body>
 <div class="wrap">
+  <nav class="tabs" role="tablist" aria-label="Sections"><button role="tab" data-act="tab" data-tab="play" id="tab_play">Play</button><button role="tab" data-act="tab" data-tab="tech" id="tab_tech">Tech discussion</button></nav>
   <header class="bar" id="bar" hidden>
     <div class="row">
       <div class="brand"><span>Lemonade</span> Stand</div>
@@ -127,13 +186,14 @@ textarea{width:100%;min-height:76px;border:1px solid var(--line);border-radius:1
     <div class="stats" id="stats"></div>
   </header>
   <main id="main"></main>
+  <div id="tech" hidden></div>
 </div>
 <div class="sheet" id="sheet" hidden><div class="panel" id="panel"></div></div>
 <div class="toast" id="toast" hidden></div>
 
 <script>
 "use strict";
-const VERSION="1.0.0";
+const VERSION="1.1.0";
 const START_CASH=300, CUPS_PER_PITCHER=10, POSTER_COST=10;
 const HOURS=[9,10,11,12,13,14,15,16];
 const HOUR_SHAPE=[0.6,0.8,1.0,1.25,1.3,1.1,0.9,0.75];
@@ -426,7 +486,8 @@ function renderTitle(){
 }
 function render(){
   const main=$("main");
-  $("bar").hidden=view!=="game";
+  applyTab();
+  if(tab!=="play")return;
   if(view==="title"){main.innerHTML=renderTitle();return}
   $("stats").innerHTML=stats();
   if(s.phase==="morning")main.innerHTML=renderMorning();
@@ -486,6 +547,10 @@ document.addEventListener("click",e=>{
     case "skip":clearTimeout(revealTimer);s.shown=s.log.length;render();break;
     case "finish":finishDay();window.scrollTo(0,0);break;
     case "next":nextDay();break;
+    case "tab":tab=b.dataset.tab;try{history.replaceState(null,"",tab==="tech"?"#tech":"#play")}catch(err){}render();if(tab==="tech")renderTech();window.scrollTo(0,0);break;
+    case "tset":{const v=b.dataset.v;T[k]=isNaN(+v)?v:+v;saveT();renderTech();break}
+    case "tload":techFromGame();break;
+    case "treset":T=Object.assign({},TECH_DEF);saveT();renderTech();toast("Defaults restored");break;
     case "len":sel=+b.dataset.d;confirmNew=null;render();break;
     case "start":{const au=LS.get(K_AUTO);if(au&&au.phase!=="final"){confirmNew=true;render()}else newGame(sel);break}
     case "startok":confirmNew=null;newGame(sel);break;
@@ -506,11 +571,393 @@ document.addEventListener("click",e=>{
 });
 $("sheet").addEventListener("click",e=>{if(e.target.id==="sheet")closeSheet()});
 
+/* =====================================================================
+   TECH DISCUSSION — same demand, weather and spoilage maths as the game
+   ===================================================================== */
+let tab=(location.hash==="#tech")?"tech":"play";
+const TECH_DEF={startCash:300,startRep:30,lemons:4,sugar:4,ice:3,adapt:1,mode:"fair",k:100,fixed:15,posters:3,buffer:120,
+  runs:1000,horizon:90,target:40000,shop2:1,trigger:80,setup:5000,wage:400,foot2:70,cann:10,carry:50,reserve:3000,month:1};
+let T=Object.assign({},TECH_DEF,LS.get("lemonade.tech")||{});
+function saveT(){LS.set("lemonade.tech",T)}
+function applyTab(){
+  $("main").hidden=tab!=="play";$("tech").hidden=tab!=="tech";
+  $("bar").hidden=tab!=="play"||view!=="game";
+  $("tab_play").setAttribute("aria-selected",tab==="play");$("tab_tech").setAttribute("aria-selected",tab==="tech");
+}
+function techFromGame(){
+  const g=s||LS.get(K_AUTO);
+  if(!g){toast("Start a game first");return}
+  Object.assign(T,{startCash:Math.round(clamp(g.cash,100,5000)/50)*50,startRep:Math.round(g.rep*100),lemons:g.recipe.lemons,sugar:g.recipe.sugar,ice:g.recipe.ice,adapt:0,mode:"fixed",fixed:g.price,posters:g.posters});
+  saveT();renderTech();toast("Loaded cash, popularity, recipe and price from your game");
+}
+
+/* ---- model pieces (mirror the game engine) ---- */
+const SHAPE_SUM=HOUR_SHAPE.reduce((a,b)=>a+b,0);                                  // 7.7 "hour-equivalents" a day
+const STORM_FRAC=HOUR_SHAPE.slice(0,4).reduce((a,b)=>a+b,0)/SHAPE_SUM;              // storm closes at 13:00
+const RIVAL_F=1-0.3*HOUR_SHAPE.slice(3).reduce((a,b)=>a+b,0)/SHAPE_SUM;             // rival from 12:00, -30% buying
+const P_SUR=0.14/3;                                                                  // each surprise (rival/blogger/ants)
+const RIVAL_MEAN=1-P_SUR*(1-RIVAL_F);
+const BASE=13*SHAPE_SUM;
+const fairOf=(temp,ev)=>(8+Math.max(0,temp-22)*0.7)*(ev&&ev.priceMult||1);
+const buyP=(price,f,rep)=>1/(1+Math.exp((price-1.15*f)/(0.2*f)))*(0.72+0.38*rep);
+const adsF=P=>1+0.55*(1-Math.exp(-P/4));
+const midT=w=>(WX[w].t[0]+WX[w].t[1])/2;
+const crowdOf=(w,ev)=>(w==="storm"?WX.storm.mult*STORM_FRAC:WX[w].mult)*(ev?ev.mult:1);
+const tierFor=c=>c>=1200?2:c>=500?1:0;
+const TIER_NAME=["small","medium","large"];
+function tasteOf(ice,temp){const dl=T.lemons-4,ds=T.sugar-4,di=ice-idealIce(temp);return clamp(1-0.11*Math.abs(dl)-0.09*Math.abs(ds)-0.1*Math.abs(di),0,1)}
+function priceFor(tPlan,ev){return T.mode==="fair"?Math.max(1,Math.round(T.k/100*fairOf(tPlan,ev))):T.fixed}
+function iceFor(tPlan){return T.adapt?idealIce(tPlan):T.ice}
+function costs(tier,ice){const u=k=>PACKS[k][tier][1]/PACKS[k][tier][0];
+  const c={L:T.lemons*u("lemons")/CUPS_PER_PITCHER,S:T.sugar*u("sugar")/CUPS_PER_PITCHER,C:u("cups"),I:ice*u("ice")};c.all=c.L+c.S+c.C+c.I;c.dry=c.L+c.S+c.C;return c}
+const SCN=(()=>{const out=[],evs=[[null,0.78]].concat(EVENTS.map(e=>[e,0.22/EVENTS.length]));
+  for(const w in WX){const pw=WX_WEIGHT[w]/100,[a,b]=WX[w].t,n=b-a+1;for(const [ev,pe] of evs)for(let t=a;t<=b;t++)out.push({w,ev,temp:t,p:pw*pe/n})}return out})();
+
+/* Steady state: known weather each morning, enough stock, given popularity. Poisson mixture moments. */
+function steady(rep,P,tier,priceOverride){
+  let ES=0,ES2=0,EM=0,EM2=0,Q=0,over=0;const byW={};
+  for(const sc of SCN){
+    const tp=midT(sc.w),price=priceOverride||priceFor(tp,sc.ev),ice=iceFor(tp),c=costs(tier,ice),f=fairOf(sc.temp,sc.ev);
+    const lam=BASE*crowdOf(sc.w,sc.ev)*adsF(P)*(0.6+0.8*rep)*buyP(price,f,rep)*RIVAL_MEAN;
+    const m=price-c.all;
+    ES+=sc.p*lam;ES2+=sc.p*(lam+lam*lam);EM+=sc.p*m*lam;EM2+=sc.p*m*m*(lam+lam*lam);
+    Q+=sc.p*lam*tasteOf(ice,sc.temp);if(price>1.35*f)over+=sc.p*lam;
+    const g=byW[sc.w]||(byW[sc.w]={p:0,S:0,Y:0,price:0});g.p+=sc.p;g.S+=sc.p*lam;g.Y+=sc.p*m*lam;g.price+=sc.p*price;
+  }
+  const F=P*POSTER_COST;
+  for(const w in byW){const g=byW[w];g.S/=g.p;g.Y=g.Y/g.p-F;g.price/=g.p}
+  return {ES,sdS:Math.sqrt(Math.max(0,ES2-ES*ES)),EY:EM-F,sdY:Math.sqrt(Math.max(0,EM2-EM*EM)),q:ES?Q/ES:0,overShare:ES?over/ES:0,byW};
+}
+function profitAtPrice(price,P,onlyW){let y=0,pw=0;
+  for(const sc of SCN){if(onlyW&&sc.w!==onlyW)continue;const tp=midT(sc.w),c=costs(2,iceFor(tp));
+    y+=sc.p*((price-c.all)*BASE*crowdOf(sc.w,sc.ev)*adsF(P)*1.4*buyP(price,fairOf(sc.temp,sc.ev),1)*RIVAL_MEAN);pw+=sc.p}
+  return y/pw-P*POSTER_COST}
+function popDays(){ // deterministic popularity path from the start value
+  const pts=[T.startRep/100];let r=pts[0];
+  for(let d=0;d<60;d++){const st=steady(r,T.posters,d<3?0:2);const dr=st.ES*(0.012*(st.q-0.62)-0.004*st.overShare);r=clamp(r+dr,0.05,1);pts.push(r)}
+  return pts}
+function normCdf(z){const t=1/(1+0.2316419*Math.abs(z)),d=0.3989423*Math.exp(-z*z/2);const p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p}
+
+/* ---- Monte Carlo ---- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function poisR(l,r){if(l<=0)return 0;if(l>30){const u=1-r(),v=r();return Math.max(0,Math.round(l+Math.sqrt(l)*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)))}
+  const L=Math.exp(-l);let k=0,p=1;do{k++;p*=r()}while(p>L);return k-1}
+function wR(r){let x=r()*100;for(const k in WX_WEIGHT){x-=WX_WEIGHT[k];if(x<=0)return k}return"sunny"}
+function dayCtx(r){const fc=wR(r);let act=fc;if(r()>=0.75){const i=WX_ORDER.indexOf(fc);act=WX_ORDER[clamp(i+(r()<0.5?-1:1),0,4)]}
+  const w=WX[act];return{fc,act,temp:w.t[0]+Math.floor(r()*(w.t[1]-w.t[0]+1)),ev:r()<0.22?EVENTS[Math.floor(r()*EVENTS.length)]:null}}
+function shopDay(sh,ctx,cash,r,foot,dm){
+  const tp=midT(ctx.fc),price=priceFor(tp,ctx.ev),ice=iceFor(tp),c=costs(tierFor(cash.v),ice);
+  const posters=Math.max(0,Math.min(T.posters,Math.floor(cash.v/POSTER_COST)));
+  const k=BASE*foot*dm*adsF(posters);
+  const expD=k*crowdOf(ctx.fc,ctx.ev)*(0.6+0.8*sh.rep)*buyP(price,fairOf(tp,ctx.ev),sh.rep);
+  const afford=Math.floor((cash.v-posters*POSTER_COST+sh.carry*c.dry)/(c.dry+c.I));
+  const target=Math.max(0,Math.min(Math.ceil(T.buffer/100*expD),afford));
+  const need=Math.max(0,target-sh.carry),stock=sh.carry+need;
+  let spend=posters*POSTER_COST+need*c.dry+target*c.I;
+  const f=fairOf(ctx.temp,ctx.ev),x=r(),sur=x<P_SUR?"rival":x<2*P_SUR?"blogger":x<3*P_SUR?"ants":null;
+  let p=buyP(price,f,sh.rep);if(sur==="rival")p*=RIVAL_F;
+  const crowd=crowdOf(ctx.act,ctx.ev),D=poisR(k*crowd*(0.6+0.8*sh.rep)*p,r),sales=Math.min(D,target);
+  const used=Math.min(stock,Math.ceil(sales/CUPS_PER_PITCHER)*CUPS_PER_PITCHER);
+  sh.carry=stock-used;
+  spend+=(used-sales)*(c.L+c.S)+0.15*sh.carry*c.L+(sur==="ants"?0.4*sh.carry*c.S:0);   // poured away, rotten lemons, ants
+  const q=tasteOf(ice,ctx.temp);
+  sh.rep=clamp(sh.rep+sales*(0.012*(q-0.62)-(price>1.35*f?0.004:0))+(sur==="blogger"&&sales>0?(q>0.75?0.12:-0.08):0),0.05,1);
+  const rev=sales*price;cash.v+=rev-spend;
+  const cap=k*crowd*1.4*buyP(price,f,1)*(sur==="rival"?RIVAL_F:1);
+  return{sales,rev,spend,cap,short:D>target}
+}
+function runOne(seed,two){
+  const cash={v:T.startCash},s1={rep:T.startRep/100,carry:0};let s2=null,net2=0;const util=[];
+  const o={sales:new Float32Array(T.horizon),profit:new Float32Array(T.horizon),open:-1,pay:-1,crunch:false,short:0};
+  for(let d=0;d<T.horizon;d++){
+    const r=mulberry32(seed*7919+d*104729+1),r2=mulberry32(seed*7919+d*104729+55555);
+    const ctx=dayCtx(r),c0=cash.v;
+    if(two&&!s2&&d>=7){const u=util.slice(-7).reduce((a,b)=>a+b,0)/7;
+      if(u>=T.trigger/100&&cash.v>=T.setup+T.reserve){cash.v-=T.setup;s2={rep:s1.rep*T.carry/100,carry:0};o.open=d;net2=-T.setup}}
+    const a=shopDay(s1,ctx,cash,r,1,s2?1-T.cann/100:1);
+    util.push(a.cap>0?a.sales/a.cap:1);if(a.short)o.short++;
+    let sold=a.sales;
+    if(s2){const b=shopDay(s2,ctx,cash,r2,T.foot2/100,1);cash.v-=T.wage;sold+=b.sales;
+      net2+=b.rev-b.spend-T.wage; if(o.pay<0&&net2>=0)o.pay=d-o.open}
+    if(cash.v<0)o.crunch=true;
+    o.sales[d]=sold;o.profit[d]=cash.v-c0;
+  }
+  o.end=cash.v;return o;
+}
+function pct(a,q){if(!a.length)return NaN;const b=Float64Array.from(a).sort();const i=(b.length-1)*q,lo=Math.floor(i);return b[lo]+(b[Math.min(lo+1,b.length-1)]-b[lo])*(i-lo)}
+function simulate(){
+  const N=T.runs,base=[],two=[];
+  for(let i=0;i<N;i++){base.push(runOne(i+1,false));if(T.shop2)two.push(runOne(i+1,true))}
+  return{base,two:T.shop2?two:null};
+}
+
+/* ---- chart helpers ---- */
+function ticks(max,n){if(max<=0)return[0];const raw=max/n,mag=Math.pow(10,Math.floor(Math.log10(raw))),st=[1,2,2.5,5,10].map(x=>x*mag).find(x=>x>=raw);const out=[];for(let v=0;v<=max+1e-9;v+=st)out.push(v);return out}
+const kfmt=v=>Math.abs(v)>=1000?(v<0?"−":"")+"₹"+(Math.abs(v)/1000).toFixed(Math.abs(v)>=10000?0:1).replace(/\.0$/,"")+"k":money(v);
+function chartFrame(el,H){const W=Math.max(280,Math.round(el.clientWidth||340));return{W,H,l:46,r:12,t:12,b:28}}
+function hookHover(el,pick,def){
+  const svg=el.querySelector("svg"),out=el.querySelector(".readout"),g=svg.querySelector(".guide");out.textContent=def;
+  const move=e=>{const bb=svg.getBoundingClientRect(),vb=svg.viewBox.baseVal,x=(e.clientX-bb.left)*vb.width/bb.width;const h=pick(x);if(!h)return;
+    g.setAttribute("x1",h.x);g.setAttribute("x2",h.x);g.style.display="";out.textContent=h.text};
+  svg.addEventListener("pointermove",move);svg.addEventListener("pointerdown",move);
+  svg.addEventListener("pointerleave",()=>{g.style.display="none";out.textContent=def});
+}
+function linePath(pts){return pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join("")}
+
+function drawPrice(el){
+  const f=chartFrame(el,230),xs=[];for(let p=5;p<=40;p++)xs.push(p);
+  const ser=[["rain","Rainy","--s1"],["hot","Scorching","--s2"],["cloudy","Cloudy","--s3"],["sunny","Sunny","--s4"]];
+  const ys={};ser.forEach(([w])=>ys[w]=xs.map(p=>profitAtPrice(p,T.posters,w)));ys.all=xs.map(p=>profitAtPrice(p,T.posters));
+  let ymax=Math.max(...Object.values(ys).flat()),ymin=Math.min(0,...Object.values(ys).flat());ymin=Math.max(ymin,-ymax*0.25);
+  const tk=ticks(ymax,4),top=tk[tk.length-1];
+  const X=p=>f.l+(p-5)/35*(f.W-f.l-f.r),Y=v=>f.t+(top-clamp(v,ymin,top))/(top-ymin)*(f.H-f.t-f.b);
+  let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Expected profit per day against cup price, by weather">`;
+  tk.forEach(v=>svg+=`<line class="grid" x1="${f.l}" x2="${f.W-f.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${f.l-6}" y="${Y(v)+4}" text-anchor="end">${kfmt(v)}</text>`);
+  if(ymin<0)svg+=`<line x1="${f.l}" x2="${f.W-f.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)"/>`;
+  [5,10,15,20,25,30,35,40].forEach(p=>svg+=`<text class="ax" x="${X(p)}" y="${f.H-8}" text-anchor="middle">₹${p}</text>`);
+  ser.forEach(([w,,c])=>svg+=`<path d="${linePath(xs.map((p,i)=>[X(p),Y(ys[w][i])]))}" fill="none" stroke="var(${c})" stroke-width="2" stroke-linejoin="round"/>`);
+  svg+=`<path d="${linePath(xs.map((p,i)=>[X(p),Y(ys.all[i])]))}" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>`;
+  const bi=ys.all.indexOf(Math.max(...ys.all)),bx=X(xs[bi]),by=Y(ys.all[bi]);
+  svg+=`<circle cx="${bx}" cy="${by}" r="5" fill="var(--ink)" stroke="var(--card)" stroke-width="2"/><text class="lab" x="${bx}" y="${by-10}" text-anchor="${bi>25?"end":"middle"}">Best fixed ₹${xs[bi]}</text>`;
+  svg+=`<line class="guide" y1="${f.t}" y2="${f.H-f.b}" style="display:none"/></svg>`;
+  el.innerHTML=`<div class="legend"><span><i style="background:var(--ink);height:5px"></i>All weather (average)</span>${ser.map(([,n,c])=>`<span><i style="background:var(${c})"></i>${n}</span>`).join("")}</div>${svg}<div class="readout"></div>`;
+  hookHover(el,x=>{const p=clamp(Math.round(5+(x-f.l)/(f.W-f.l-f.r)*35),5,40),i=p-5;
+    return{x:X(p),text:`At ₹${p}: average ${money(ys.all[i])}/day · scorching ${money(ys.hot[i])} · sunny ${money(ys.sunny[i])} · cloudy ${money(ys.cloudy[i])} · rainy ${money(ys.rain[i])}`}},
+    `Tap or drag on the chart to read a price. Best single price for all weather: ₹${xs[bi]} (${money(ys.all[bi])}/day).`);
+  return xs[bi];
+}
+function drawFan(el,sim,cap1,cap2){
+  const runs=sim.two||sim.base,W=Math.floor(T.horizon/7);if(W<2){el.innerHTML="";return}
+  const p10=[],p50=[],p90=[];
+  for(let w=0;w<W;w++){const v=runs.map(o=>{let s=0;for(let d=w*7;d<w*7+7;d++)s+=o.sales[d];return s});p10.push(pct(v,.1));p50.push(pct(v,.5));p90.push(pct(v,.9))}
+  const f=chartFrame(el,230),capW1=cap1*7,capW2=cap2*7;
+  const tk=ticks(Math.max(...p90,capW1,sim.two?capW2:0)*1.05,4),top=tk[tk.length-1];
+  const X=w=>f.l+w/(W-1)*(f.W-f.l-f.r),Y=v=>f.t+(top-v)/top*(f.H-f.t-f.b);
+  let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Cups sold per week, median and 80 percent range">`;
+  tk.forEach(v=>svg+=`<line class="grid" x1="${f.l}" x2="${f.W-f.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${f.l-6}" y="${Y(v)+4}" text-anchor="end">${v>=1000?(v/1000)+"k":v}</text>`);
+  const step=W>14?4:W>7?2:1;for(let w=0;w<W;w+=step)svg+=`<text class="ax" x="${X(w)}" y="${f.H-8}" text-anchor="middle">W${w+1}</text>`;
+  svg+=`<path d="${linePath(p90.map((v,i)=>[X(i),Y(v)]))}L${p10.map((v,i)=>[X(W-1-i),Y(p10[W-1-i])].join(" ")).join("L")}Z" fill="var(--s1)" opacity=".2"/>`;
+  svg+=`<line x1="${f.l}" x2="${f.W-f.r}" y1="${Y(capW1)}" y2="${Y(capW1)}" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="6 4"/><text class="ax" x="${f.l+4}" y="${Y(capW1)-5}">One-street capacity</text>`;
+  if(sim.two)svg+=`<line x1="${f.l}" x2="${f.W-f.r}" y1="${Y(capW2)}" y2="${Y(capW2)}" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="2 4"/><text class="ax" x="${f.l+4}" y="${Y(capW2)-5}">Two-street capacity</text>`;
+  svg+=`<path d="${linePath(p50.map((v,i)=>[X(i),Y(v)]))}" fill="none" stroke="var(--s1)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  if(sim.two){const od=sim.two.map(o=>o.open).filter(x=>x>=0);if(od.length>sim.two.length/2){const ow=pct(od,.5)/7;svg+=`<line x1="${X(ow)}" x2="${X(ow)}" y1="${f.t}" y2="${f.H-f.b}" stroke="var(--s2)" stroke-width="2"/><text class="lab" x="${X(ow)+4}" y="${f.t+12}">Shop 2 opens</text>`}}
+  svg+=`<line class="guide" y1="${f.t}" y2="${f.H-f.b}" style="display:none"/></svg>`;
+  el.innerHTML=`<div class="legend"><span><i style="background:var(--s1)"></i>Median cups/week</span><span><i class="band" style="background:var(--s1)"></i>8 in 10 runs fall here</span><span><i class="dash"></i>Capacity</span></div>${svg}<div class="readout"></div>`;
+  hookHover(el,x=>{const w=clamp(Math.round((x-f.l)/(f.W-f.l-f.r)*(W-1)),0,W-1);return{x:X(w),text:`Week ${w+1}: median ${Math.round(p50[w])} cups, 80% range ${Math.round(p10[w])}–${Math.round(p90[w])}`}},
+    `Week 1 median ${Math.round(p50[0])} cups → week ${W} median ${Math.round(p50[W-1])} cups.`);
+}
+function monthStats(runs,m){const a=m*30,b=Math.min(T.horizon,a+30);const S=[],Pf=[];
+  for(const o of runs){let s=0,p=0;for(let d=a;d<b;d++){s+=o.sales[d];p+=o.profit[d]}S.push(s);Pf.push(p)}return{S,Pf}}
+function drawMonths(el,sim){
+  const M=Math.floor(T.horizon/30),sets=[["One shop","--s1",sim.base]].concat(sim.two?[["With second-shop rule","--s2",sim.two]]:[]);
+  const vals=sets.map(([, ,r])=>{const v=[];for(let m=0;m<M;m++)v.push(pct(monthStats(r,m).Pf,.5));return v});
+  const f=chartFrame(el,210),mx=Math.max(1,...vals.flat()),mn=Math.min(0,...vals.flat()),tk=ticks(mx*1.1,4),top=tk[tk.length-1];
+  const Y=v=>f.t+(top-v)/(top-mn)*(f.H-f.t-f.b),gw=(f.W-f.l-f.r)/M,bw=Math.min(34,(gw-14)/sets.length-2);
+  let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Median profit per month">`;
+  tk.forEach(v=>svg+=`<line class="grid" x1="${f.l}" x2="${f.W-f.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${f.l-6}" y="${Y(v)+4}" text-anchor="end">${kfmt(v)}</text>`);
+  for(let m=0;m<M;m++){const cx=f.l+gw*(m+.5),x0=cx-(sets.length*(bw+2)-2)/2;
+    svg+=`<text class="ax" x="${cx}" y="${f.H-8}" text-anchor="middle">Month ${m+1}</text>`;
+    sets.forEach(([, c],i)=>{const v=vals[i][m],x=x0+i*(bw+2),y0=Y(0),y=Y(v),h=Math.abs(y0-y),r=Math.min(4,h/2,bw/2);
+      const d=v>=0?`M${x} ${y0}V${y+r}Q${x} ${y} ${x+r} ${y}H${x+bw-r}Q${x+bw} ${y} ${x+bw} ${y+r}V${y0}Z`:`M${x} ${y0}H${x+bw}V${y}H${x}Z`;
+      svg+=`<path d="${d}" fill="var(${c})"/>`;if(M<=4||sets.length===1)svg+=`<text class="ax" x="${x+bw/2}" y="${Math.min(y,y0)-4}" text-anchor="middle" style="fill:var(--ink)">${kfmt(v)}</text>`})}
+  svg+=`<line class="guide" y1="${f.t}" y2="${f.H-f.b}" style="display:none"/></svg>`;
+  el.innerHTML=`<div class="legend">${sets.map(([n,c])=>`<span><i style="background:var(${c});height:10px;width:10px"></i>${n}</span>`).join("")}</div>${svg}<div class="readout"></div>`;
+  hookHover(el,x=>{const m=clamp(Math.floor((x-f.l)/gw),0,M-1);return{x:f.l+gw*(m+.5),text:`Month ${m+1}: `+sets.map(([n],i)=>`${n.toLowerCase()} ${money(vals[i][m])}`).join(" · ")}},"Median profit per month. Tap a month for values.");
+}
+function drawHist(el,runs){
+  const {Pf}=monthStats(runs,T.month-1);const lo=Math.min(...Pf),hi=Math.max(...Pf),B=22,w=(hi-lo)/B||1;
+  const bins=new Array(B).fill(0);Pf.forEach(v=>bins[Math.min(B-1,Math.floor((v-lo)/w))]++);
+  const f=chartFrame(el,190),mx=Math.max(...bins),X=v=>f.l+(v-lo)/(hi-lo||1)*(f.W-f.l-f.r),Y=c=>f.t+(1-c/mx)*(f.H-f.t-f.b),bwp=(f.W-f.l-f.r)/B;
+  let svg=`<svg viewBox="0 0 ${f.W} ${f.H}" role="img" aria-label="Distribution of monthly profit across simulated runs">`;
+  ticks(mx,3).forEach(v=>svg+=`<line class="grid" x1="${f.l}" x2="${f.W-f.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${f.l-6}" y="${Y(v)+4}" text-anchor="end">${(v/Pf.length*100).toFixed(0)}%</text>`);
+  bins.forEach((c,i)=>{if(!c)return;const x=f.l+i*bwp+1,y=Y(c),h=f.H-f.b-y,r=Math.min(3,h/2),bw=bwp-2,mid=lo+(i+.5)*w;
+    svg+=`<path d="M${x} ${f.H-f.b}V${y+r}Q${x} ${y} ${x+r} ${y}H${x+bw-r}Q${x+bw} ${y} ${x+bw} ${y+r}V${f.H-f.b}Z" fill="var(--s1)" opacity="${mid>=T.target?1:.45}"/>`});
+  [lo,(lo+hi)/2,hi].forEach((v,i)=>svg+=`<text class="ax" x="${X(v)}" y="${f.H-8}" text-anchor="${["start","middle","end"][i]}">${kfmt(v)}</text>`);
+  if(T.target>lo&&T.target<hi)svg+=`<line x1="${X(T.target)}" x2="${X(T.target)}" y1="${f.t}" y2="${f.H-f.b}" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 3"/><text class="lab" x="${X(T.target)+(X(T.target)>f.W*0.7?-4:4)}" y="${f.t+12}" text-anchor="${X(T.target)>f.W*0.7?"end":"start"}">Target</text>`;
+  svg+=`<line class="guide" y1="${f.t}" y2="${f.H-f.b}" style="display:none"/></svg>`;
+  const pHit=Pf.filter(v=>v>=T.target).length/Pf.length;
+  el.innerHTML=`${svg}<div class="readout"></div>`;
+  hookHover(el,x=>{const i=clamp(Math.floor((x-f.l)/bwp),0,B-1);return{x:f.l+(i+.5)*bwp,text:`${kfmt(lo+i*w)} to ${kfmt(lo+(i+1)*w)}: ${(bins[i]/Pf.length*100).toFixed(1)}% of runs`}},
+    `Darker bars reach the target. ${(pHit*100).toFixed(0)}% of runs make at least ${money(T.target)} in month ${T.month}.`);
+}
+
+/* ---- tab layout ---- */
+const SLF={};
+function sl(id,label,min,max,step,fmt,hint){SLF[id]=fmt;return `<div class="fld"><label for="t_${id}"><span>${label}</span><output id="v_${id}">${fmt(T[id])}</output></label><input type="range" id="t_${id}" data-t="${id}" min="${min}" max="${max}" step="${step}" value="${T[id]}">${hint?`<div class="small muted">${hint}</div>`:""}</div>`}
+function seg(k,label,opts){return `<div class="segrow"><span>${label}</span><div class="seg">${opts.map(([v,n])=>`<button data-act="tset" data-k="${k}" data-v="${v}" aria-pressed="${String(T[k])===String(v)}">${n}</button>`).join("")}</div></div>`}
+const pctf=v=>v+"%",rs=v=>money(v),nf=v=>String(v);
+function renderTech(){
+  const el=$("tech");if(tab!=="tech")return;
+  const M=Math.floor(T.horizon/30);if(T.month>M)T.month=M;
+  el.innerHTML=`
+  <div class="card"><div class="prose"><h2>Running the stand as a business</h2>
+    <p class="muted">Every number on this tab comes from the same rules the game uses: the hourly crowd, the price-sensitivity curve, weather odds, spoilage and popularity. Change an input and the analysis reruns.</p></div>
+    <div class="btnrow" style="margin-top:10px"><button class="ghost" data-act="tload">Use my current game</button><button class="ghost" data-act="treset">Reset inputs</button></div></div>
+
+  <div class="card"><div class="sec-n">1 · STARTING POINT</div><h2>Initial constraints</h2>
+    <div class="flds">${sl("startCash","Starting cash",100,3000,50,rs)}${sl("startRep","Starting popularity",5,100,5,pctf)}</div>
+    <div class="tblwrap"><table class="tt" id="o_cons"></table></div>
+    <div id="o_bind" style="margin-top:10px"></div></div>
+
+  <div class="card"><div class="sec-n">2 · UNIT ECONOMICS</div><h2>What one cup earns</h2>
+    <div class="flds">${sl("lemons","Lemons per pitcher",1,10,1,nf)}${sl("sugar","Sugar spoons per pitcher",0,12,1,nf)}</div>
+    ${seg("adapt","Ice per cup",[[1,"Match the forecast"],[0,"Fixed"]])}
+    ${T.adapt?"":sl("ice","Ice cubes per cup",0,6,1,nf)}
+    ${seg("mode","Pricing",[["fair","Follow the weather"],["fixed","One fixed price"]])}
+    ${T.mode==="fair"?sl("k","Price as % of the fair price",60,160,5,pctf,"Fair price = ₹8 + ₹0.70 for every °C above 22 °C"):sl("fixed","Price per cup",5,40,1,rs)}
+    ${sl("posters","Posters per day",0,12,1,nf,"₹10 each")}
+    <div class="tblwrap" style="margin-top:6px"><table class="tt" id="o_unit"></table></div>
+    <div class="kpis" id="o_unitk" style="margin-top:10px"></div>
+    <h3 style="margin-top:16px">Profit per day against price, once popular</h3>
+    <div class="chart" id="c_price"></div>
+    <p class="small muted" id="o_pricenote"></p></div>
+
+  <div class="card"><div class="sec-n">3 · DEMAND AS A PROBABILITY</div><h2>Why sales are random, and how random</h2>
+    <div class="prose small"><p>People pass the stand at random, so the count in an hour follows a Poisson distribution. Each passer buys with a probability that falls as the price rises above what the weather makes fair. Picking buyers at random from a Poisson stream gives another Poisson stream, so <b>cups per day, for a given weather, are Poisson</b>. Weather and street events then mix those days together, and a month adds up 30 of them, which by the central limit theorem is close to a normal curve.</p></div>
+    <div class="formula" style="margin-top:10px">λ  = 13 × 7.7 × crowd(weather, event) × ads(posters) × (0.6 + 0.8·pop)
+p  = 1 / (1 + e^((price − 1.15F) / 0.2F)) × (0.72 + 0.38·pop)
+cups/day | weather ~ Poisson(λ·p)
+month ≈ Normal(30·μ, 30·σ²)</div>
+    <div class="tblwrap" style="margin-top:10px"><table class="tt" id="o_wx"></table></div>
+    ${sl("target","Monthly profit target",0,100000,1000,rs)}
+    <div class="kpis" id="o_clt"></div>
+    <p class="small muted" style="margin-top:8px">The theory column assumes full popularity, the right stock every morning and a correct forecast. The simulation column plays the real game rules: forecasts that miss, cash limits, stock-outs, melted ice and poured-away lemonade.</p></div>
+
+  <div class="card"><div class="sec-n">4 · GROWTH MONTH BY MONTH</div><h2>Monte Carlo of the season</h2>
+    <div class="prose small" id="o_pop"></div>
+    <div class="flds">${sl("runs","Simulated runs",200,4000,200,nf)}${sl("horizon","Days to simulate",30,180,30,v=>v+" days")}${sl("buffer","Stock bought vs expected demand",80,200,10,pctf,"Above 100% avoids running out but wastes more ice and lemons")}</div>
+    <h3 style="margin-top:10px">Cups sold per week</h3><div class="chart" id="c_fan"></div>
+    <div class="tblwrap"><table class="tt" id="o_month"></table></div>
+    <h3 style="margin-top:14px">Spread of monthly profit</h3>
+    <div class="chips">${Array.from({length:M},(_,i)=>`<button data-act="tset" data-k="month" data-v="${i+1}" aria-pressed="${T.month===i+1}">Month ${i+1}</button>`).join("")}</div>
+    <div class="chart" id="c_hist" style="margin-top:6px"></div></div>
+
+  <div class="card"><div class="sec-n">5 · MARKET CAPACITY</div><h2>When one street is full, open a second shop</h2>
+    <div class="prose small" id="o_cap"></div>
+    ${seg("shop2","Second shop",[[1,"Model it"],[0,"Single shop only"]])}
+    ${T.shop2?`<div class="flds">
+      ${sl("trigger","Open when last 7 days reach this % of capacity",50,100,5,pctf)}
+      ${sl("reserve","…and cash left after setup is at least",0,10000,500,rs)}
+      ${sl("setup","Setup cost (table, cooler, signboard)",500,10000,500,rs)}
+      ${sl("wage","Helper's wage per day",0,800,50,rs)}
+      ${sl("foot2","Second street footfall vs first",30,150,10,pctf)}
+      ${sl("carry","Popularity carried to the new shop",0,100,10,pctf)}
+      ${sl("cann","Customers shop 1 loses to shop 2",0,50,5,pctf)}</div>`:""}
+    <div class="kpis" id="o_exp" style="margin-top:8px"></div>
+    <h3 style="margin-top:14px">Median profit per month</h3><div class="chart" id="c_month"></div></div>
+
+  <div class="card"><div class="sec-n">6 · STRATEGY</div><h2>SWOT</h2>
+    <p class="small muted" style="margin-bottom:10px">Figures update with the inputs above.</p><div class="swot" id="o_swot"></div></div>`;
+  updateTech();
+}
+let techTimer=null;
+function scheduleTech(){clearTimeout(techTimer);techTimer=setTimeout(updateTech,160)}
+document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.t;if(!k)return;T[k]=+e.target.value;const o=$("v_"+k);if(o)o.textContent=SLF[k](T[k]);saveT();scheduleTech()});
+let lastRW=0;window.addEventListener("resize",()=>{if(tab!=="tech")return;const w=$("tech").clientWidth;if(Math.abs(w-lastRW)>20){lastRW=w;scheduleTech()}});
+
+function verdict(cls,tag,html){return `<div class="verdict ${cls}"><i>${tag}</i><div>${html}</div></div>`}
+function kpi(v,l,sub){return `<div class="kpi"><span class="lbl">${l}</span><b>${v}</b>${sub?`<span class="small muted">${sub}</span>`:""}</div>`}
+const P100=x=>isFinite(x)?(x*100<1&&x>0?"<1%":x*100>99&&x<1?">99%":Math.round(x*100)+"%"):"—";
+
+function updateTech(){
+  if(tab!=="tech"||!$("o_cons"))return;
+  lastRW=$("tech").clientWidth;
+  const ref=32,refPrice=priceFor(ref,null),refIce=iceFor(ref),c0=costs(0,refIce),c2=costs(2,refIce);
+  const st=steady(1,T.posters,2),st0=steady(T.startRep/100,T.posters,0);
+
+  /* 1 constraints */
+  const d1cap=Math.max(0,Math.floor((T.startCash-T.posters*POSTER_COST)/c0.all));
+  const d1dem=BASE*crowdOf("sunny",null)*adsF(T.posters)*(0.6+0.8*T.startRep/100)*buyP(refPrice,fairOf(ref,null),T.startRep/100);
+  const bulkCash=["lemons","sugar","cups","ice"].reduce((a,k)=>a+PACKS[k][2][1],0);
+  $("o_cons").innerHTML=`<tr><th>Constraint</th><th>Value</th><th>Effect</th></tr>
+   <tr><td>Starting cash</td><td>${money(T.startCash)}</td><td>${d1cap} cups of stock</td></tr>
+   <tr><td>Bulk-pack premium</td><td>+${Math.round((c0.all/c2.all-1)*100)}%</td><td>needs ${money(bulkCash)} at once</td></tr>
+   <tr><td>Ice melts overnight</td><td>100%</td><td>${money(c0.I)}/cup lost if unsold</td></tr>
+   <tr><td>Lemons spoil overnight</td><td>15%</td><td>leftovers lose value</td></tr>
+   <tr><td>Pitcher size</td><td>10 cups</td><td>up to 9 poured away</td></tr>
+   <tr><td>Selling hours</td><td>9–17</td><td>storm closes at 13:00</td></tr>
+   <tr><td>One street's footfall</td><td>${Math.round(BASE*adsF(T.posters)*1.4)}/day</td><td>sunny, full popularity</td></tr>`;
+  $("o_bind").innerHTML=d1cap<d1dem
+    ?verdict("no","CASH","On a sunny first day about <b>"+Math.round(d1dem)+"</b> people want a cup at "+money(refPrice)+", but "+money(T.startCash)+" only stocks <b>"+d1cap+"</b>. Cash is the limit, so keep posters low until the tin fills up.")
+    :d1cap<d1dem*1.4?verdict("mid","TIGHT","Your cash stocks <b>"+d1cap+"</b> cups against about <b>"+Math.round(d1dem)+"</b> sunny-day buyers. That just covers a normal day, but a scorching day or a festival (up to 1.8× the crowd) will sell you out. Cash and demand are both limits until the first good day.")
+    :verdict("ok","DEMAND","Your cash stocks <b>"+d1cap+"</b> cups and a sunny first day brings about <b>"+Math.round(d1dem)+"</b> buyers, so demand is the limit. The job early on is raising popularity.");
+
+  /* 2 unit economics */
+  const row=(n,a,b)=>`<tr><td>${n}</td><td>${money2(a)}</td><td>${money2(b)}</td></tr>`;
+  $("o_unit").innerHTML=`<tr><th>Per cup (sunny, 32 °C)</th><th>Small packs</th><th>Large packs</th></tr>
+    ${row("Lemons",c0.L,c2.L)}${row("Sugar",c0.S,c2.S)}${row("Paper cup",c0.C,c2.C)}${row("Ice ("+refIce+" cubes)",c0.I,c2.I)}
+    <tr class="sum"><td>Ingredient cost</td><td>${money2(c0.all)}</td><td>${money2(c2.all)}</td></tr>
+    <tr><td>Your price</td><td>${money2(refPrice)}</td><td>${money2(refPrice)}</td></tr>
+    <tr class="sum"><td>Margin per cup</td><td class="${refPrice>c0.all?"pos":"neg"}">${money2(refPrice-c0.all)}</td><td class="${refPrice>c2.all?"pos":"neg"}">${money2(refPrice-c2.all)}</td></tr>`;
+  const gm=(refPrice-c2.all)/refPrice,be=T.posters*POSTER_COST/Math.max(.01,refPrice-c0.all);
+  $("o_unitk").innerHTML=kpi(Math.round(gm*100)+"%","Gross margin","large packs, before waste")+kpi(refPrice>c0.all?Math.ceil(be)+" cups":"never","Break-even per day","covers "+money(T.posters*POSTER_COST)+" of posters")
+    +kpi(money(st.EY),"Expected profit/day","full popularity, all weather")+kpi(Math.round(st.q*100)+"%","Customer taste score","popularity grows above 62%");
+  const best=drawPrice($("c_price"));
+  $("o_pricenote").textContent=`Your current pricing earns ${money(st.EY)}/day on average once popular; the best single price is ₹${best} (${money(profitAtPrice(best,T.posters))}). Following the weather beats one fixed price because a scorching day can carry about ₹${Math.round(fairOf(38)-fairOf(24))} more per cup than a rainy one.`;
+
+  /* 3 probability */
+  const names={hot:"Scorching",sunny:"Sunny",cloudy:"Cloudy",rain:"Rainy",storm:"Storm"};
+  $("o_wx").innerHTML=`<tr><th>Weather</th><th>Chance</th><th>Avg price</th><th>Cups/day</th><th>Profit/day</th></tr>`+
+    WX_ORDER.map(w=>{const g=st.byW[w];return `<tr><td>${names[w]}</td><td>${WX_WEIGHT[w]}%</td><td>${money(g.price)}</td><td>${Math.round(g.S)}</td><td class="${g.Y>=0?"":"neg"}">${money(g.Y)}</td></tr>`}).join("")+
+    `<tr class="sum"><td>Blended day</td><td>100%</td><td></td><td>${Math.round(st.ES)} ± ${Math.round(st.sdS)}</td><td>${money(st.EY)} ± ${money(st.sdY)}</td></tr>`;
+
+  const sim=simulate(),runs=sim.two||sim.base,M=Math.floor(T.horizon/30);
+  const lastB=monthStats(sim.base,M-1).Pf,mu=30*st.EY,sg=Math.sqrt(30)*st.sdY,pTheory=1-normCdf((T.target-mu)/sg);
+  const pSim=lastB.filter(v=>v>=T.target).length/lastB.length;
+  let lossDays=0,nd=0;for(const o of sim.base)for(let d=Math.max(0,T.horizon-30);d<T.horizon;d++){nd++;if(o.profit[d]<0)lossDays++}
+  $("o_clt").innerHTML=kpi(money(mu),"Month, theory","± "+money(sg)+" (1 σ)")+kpi(money(pct(lastB,.5)),"Month "+M+", simulated","median, one shop")
+    +kpi(P100(pTheory),"P(≥ target), theory","normal approximation")+kpi(P100(pSim),"P(≥ target), simulated","month "+M+", one shop")
+    +kpi(P100(lossDays/nd),"Chance a day loses money","month "+M+", one shop")+kpi(money(mu-1.645*sg),"Bad month (1 in 20)","theory, 5th percentile");
+
+  /* 4 growth */
+  const pp=popDays(),d90=pp.findIndex(r=>r>=0.9),dr0=pp[1]-pp[0];
+  $("o_pop").innerHTML=`<p>Popularity is what grows. Each cup moves it by <span class="num">0.012 × (taste − 0.62)</span>, minus <span class="num">0.004</span> if the price is more than 1.35× fair. More popularity brings more passers and more buyers, which means more cups and faster growth: an S-curve that flattens at 100%.</p>`+
+    (dr0<0?verdict("no","SHRINK","Your recipe and price score "+Math.round(st.q*100)+"%, below the 62% line, so popularity <b>falls</b> every day you sell. Fix the recipe before anything else.")
+    :d90<0?verdict("mid","SLOW","Popularity rises, but it won't reach 90% within 60 days at this taste score ("+Math.round(st.q*100)+"%).")
+    :verdict("ok",d90+" DAYS","From "+T.startRep+"% popularity you reach 90% in about <b>"+d90+" days</b>. After that, one street's sales stop growing. Monthly growth then comes only from price, events, or a second shop."));
+  const cap1=st.ES,cap2=cap1*(1-T.cann/100)+st.ES*T.foot2/100;
+  drawFan($("c_fan"),sim,cap1,cap2);
+  let prev=null;
+  $("o_month").innerHTML=`<tr><th>${sim.two?"With rule":"One shop"}</th><th>Cups</th><th>Profit</th><th>Growth</th><th>P(≥ target)</th><th>P(loss)</th></tr>`+
+    Array.from({length:M},(_,m)=>{const {S,Pf}=monthStats(runs,m),med=pct(Pf,.5),g=prev==null?"—":((med/prev-1)*100>=0?"+":"")+Math.round((med/prev-1)*100)+"%";prev=med;
+      return `<tr><td>Month ${m+1}</td><td>${Math.round(pct(S,.5))}</td><td>${money(med)}</td><td>${g}</td><td>${P100(Pf.filter(v=>v>=T.target).length/Pf.length)}</td><td>${P100(Pf.filter(v=>v<0).length/Pf.length)}</td></tr>`}).join("");
+  drawHist($("c_hist"),runs);
+
+  /* 5 capacity + expansion */
+  const margin=refPrice-c2.all,dPoster=steady(1,T.posters+1,2).ES-st.ES;
+  let stopP=0;for(let P=0;P<20;P++){if((steady(1,P+1,2).ES-steady(1,P,2).ES)*margin<POSTER_COST){stopP=P;break}}
+  $("o_cap").innerHTML=`<p>The street's ceiling is the expected demand at full popularity with your price and posters: about <b class="num">${Math.round(st.ES)}</b> cups a day, or <b class="num">${money(30*st.EY)}</b> profit a month. Below it, the cheapest growth is a better recipe and price. Near it, the only levers left are more posters, which stop paying for themselves after about <b class="num">${stopP}</b> (the next one adds ${dPoster.toFixed(1)} cups/day, worth ${money(dPoster*margin)}, for ₹10), and new customers on a new street.</p>`;
+  if(sim.two){
+    const tw=sim.two,opened=tw.filter(o=>o.open>=0),od=opened.map(o=>o.open),by30=tw.filter(o=>o.open>=0&&o.open<30).length/tw.length;
+    const paid=opened.filter(o=>o.pay>=0&&o.pay<=60).length/(opened.length||1),pays=opened.filter(o=>o.pay>=0).map(o=>o.pay);
+    let win=0;for(let i=0;i<tw.length;i++)if(tw[i].end>sim.base[i].end)win++;
+    $("o_exp").innerHTML=kpi(P100(opened.length/tw.length),"Opens within "+T.horizon+" days",od.length?"median day "+Math.round(pct(od,.5)+1):"rule never met")
+      +kpi(P100(by30),"Opens in month 1","")
+      +kpi(opened.length?P100(paid):"—","Pays back setup in 60 days",pays.length?"median "+Math.round(pct(pays,.5))+" days":"")
+      +kpi(P100(win/tw.length),"Two shops end richer","same weather, day "+T.horizon)
+      +kpi(money(pct(sim.base.map(o=>o.end),.5)),"Cash at end, one shop","median")+kpi(money(pct(tw.map(o=>o.end),.5)),"Cash at end, with rule","median")
+      +kpi(P100(tw.filter(o=>o.crunch).length/tw.length),"Cash runs out some day","wages and stock exceed the tin")+kpi(P100(tw.reduce((a,o)=>a+o.short,0)/tw.length/T.horizon),"Shop 1 sells out","share of days");
+  }else{
+    $("o_exp").innerHTML=kpi(money(pct(sim.base.map(o=>o.end),.5)),"Cash at end","median, day "+T.horizon)+kpi(P100(sim.base.reduce((a,o)=>a+o.short,0)/sim.base.length/T.horizon),"Sells out","share of days");
+  }
+  drawMonths($("c_month"),sim);
+
+  /* 6 SWOT */
+  const pBad=(WX_WEIGHT.rain+WX_WEIGHT.storm)/100,evUp=0.22*0.5,ex=sim.two?(()=>{let w=0;for(let i=0;i<sim.two.length;i++)if(sim.two[i].end>sim.base[i].end)w++;return w/sim.two.length})():null;
+  $("o_swot").innerHTML=`
+   <div class="S"><h4>Strengths</h4><ul><li>${Math.round(gm*100)}% gross margin per cup at bulk prices</li><li>Starts with only ${money(T.startCash)}; no rent or wages</li><li>Popularity compounds: ${d90>0?d90+" days":"weeks"} to 90% with a good recipe</li><li>Price can follow the weather every morning</li></ul></div>
+   <div class="W"><h4>Weaknesses</h4><ul><li>Ice is lost every night; lemons lose 15%</li><li>Small packs cost ${Math.round((c0.all/c2.all-1)*100)}% more until cash reaches about ${money(bulkCash)}</li><li>One street caps sales near ${Math.round(st.ES)} cups/day</li><li>${P100(lossDays/nd)} of days lose money even when popular</li></ul></div>
+   <div class="O"><h4>Opportunities</h4><ul><li>Festivals and cricket finals lift crowds 60–80% (${P100(evUp)} of days)</li><li>Scorching days (20%) allow ₹${Math.round(fairOf(38)-fairOf(32))} more per cup</li><li>Bulk buying cuts cost per cup to ${money2(c2.all)}</li><li>${ex!=null?"A second street beats staying put in "+P100(ex)+" of runs":"A second street can lift the ceiling"}</li></ul></div>
+   <div class="T"><h4>Threats</h4><ul><li>Rain or storm on ${P100(pBad)} of days; storms close at 13:00</li><li>The forecast is wrong 1 day in 4</li><li>Rival carts cut afternoon buying by 30%</li><li>Bad taste or greedy prices drain popularity; a blogger can swing it ±10%</li></ul></div>`;
+}
+function money2(x){return (x<0?"−":"")+"₹"+Math.abs(x).toFixed(2)}
+
 /* ---------- boot ---------- */
 function start(data){
   if(data&&data.s){s=data.s;view=data.view||"game"}
   else{const au=LS.get(K_AUTO);if(au&&au.v===1){s=au;view="title"}}
   render();
+  if(tab==="tech")renderTech();
   if(view==="game"&&s&&s.phase==="selling")runReveal();
 }
 window.claude?.hot?.snapshot?.(()=>({s,view}));

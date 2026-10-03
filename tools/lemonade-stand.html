@@ -2,10 +2,11 @@
 <!--
 TOOL: Lemonade Stand
 FAMILY: games
-VERSION: 1.2.0
+VERSION: 1.3.0
 DATE: 2026-10-03
 CHAT: Lemonade stand text game (claude.ai, 2026-10-01)
-CHANGES: 1.2.0 - animated street view for young players: customers of all ages walk in, ask, queue, get served and leave happy/okay/unhappy with emoji and comments; fast-forward to next hour or closing; stop-and-acknowledge comments with a small popularity bonus
+CHANGES: 1.3.0 - full-screen theatre (street left, comments flowing in on the right, compact speed bar); synthesised background music whose chords follow customer mood and tempo follows game speed; sounds for sales, happy/okay/unhappy customers, sold out, grumbles, pouring, thunder, closing bell; music and sound toggles
+         1.2.0 - animated street view for young players: customers of all ages walk in, ask, queue, get served and leave happy/okay/unhappy with emoji and comments; fast-forward to next hour or closing; stop-and-acknowledge comments with a small popularity bonus
          1.1.0 - added Tech discussion tab: constraints, unit economics, Poisson/CLT demand model, Monte Carlo monthly growth, market capacity + second-shop rule, live SWOT
          1.0.0 - first release: 7/14/30-day season, weather + forecast, street events, shop, recipe, pricing, posters, hourly sales log, 3 save slots + autosave, save-code copy/load
 STATUS: playable
@@ -111,7 +112,7 @@ tr.total td{font-weight:800;border-bottom:0;font-size:17px}
 .slot button{border:1px solid var(--line);background:var(--chip);border-radius:10px;padding:8px 10px;font-weight:800;cursor:pointer}
 .slot button:disabled{opacity:.4}
 textarea{width:100%;min-height:76px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);padding:8px;font-family:var(--f-num);font-size:12px}
-.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:800;z-index:30;max-width:90%}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:800;z-index:60;max-width:90%}
 .btnrow{display:flex;gap:8px;flex-wrap:wrap}
 .btnrow>*{flex:1 1 120px}
 /* ---- tabs + tech discussion ---- */
@@ -196,6 +197,31 @@ svg .guide{stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3}
 .donecard{display:flex;flex-direction:column;gap:6px;text-align:center}
 .donebig{font-family:var(--f-display);font-size:26px;font-weight:800}
 .donemoods{font-size:18px}
+/* ---- full-screen theatre ---- */
+.sell{display:flex;flex-direction:column;gap:14px}
+.stagewrap{position:relative}
+.fsbtn{position:absolute;right:8px;bottom:8px;width:40px;height:40px;border-radius:12px;border:0;background:rgba(255,255,255,.88);color:#15322d;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+html.noscroll,html.noscroll body{overflow:hidden}
+#main:fullscreen{background:var(--bg);overflow:hidden}
+.theatre{position:fixed;inset:0;z-index:40;background:var(--bg);padding:max(8px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(210px,31%);gap:10px;overflow:hidden}
+.th-main{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;min-height:0}
+.theatre .stagewrap{width:min(100%,calc((100vh - 80px)*1.538));width:min(100%,calc((100dvh - 80px)*1.538))}
+.th-side{display:flex;flex-direction:column;gap:10px;min-width:0;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.ctl.tight{width:100%}
+.ctl.tight .ctlrow{flex-wrap:wrap;gap:6px;justify-content:center}
+.ctl.tight .cbtn{flex:0 0 auto;min-width:46px;min-height:40px;padding:6px 10px;font-size:16px;white-space:nowrap}
+.sidectl{display:flex;flex-direction:column;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px}
+.sidectl .seg button{padding:6px 6px;font-size:13px}
+.sidectl .cbtn{min-height:38px;font-size:14px;padding:6px}
+.vcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.theatre .ovl{margin-top:0}
+.theatre .donecard{padding:12px}
+.theatre .donebig{font-size:22px}
+@keyframes vin{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.voice.new{animation:vin .45s ease-out}
+@media (orientation:portrait){.theatre{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}.theatre .stagewrap{width:100%}}
+@media (prefers-reduced-motion:reduce){.voice.new{animation:none}}
 :focus-visible{outline:3px solid var(--sky);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.log .h{animation:none}}
 </style>
@@ -220,7 +246,7 @@ svg .guide{stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3}
 
 <script>
 "use strict";
-const VERSION="1.2.0";
+const VERSION="1.3.0";
 const START_CASH=300, CUPS_PER_PITCHER=10, POSTER_COST=10;
 const HOURS=[9,10,11,12,13,14,15,16];
 const HOUR_SHAPE=[0.6,0.8,1.0,1.25,1.3,1.1,0.9,0.75];
@@ -386,7 +412,7 @@ function runReveal(){
 }
 function finishDay(){clearTimeout(revealTimer);
   if(s.report&&s.anim&&s.report.acks==null){const v=s.anim.voices||[],acks=v.filter(x=>x.ack).length,bonus=Math.min(0.04,acks*0.004);s.rep=clamp(s.rep+bonus,0.05,1);Object.assign(s.report,{rep1:s.rep,acks,voices:v.length,bonus})}
-  s.crowd=null;s.anim=null;A.key=null;s.phase=s.day>=s.days?"final":"evening";if(s.phase==="final")recordBest();autosave();render()}
+  exitTheatre(true);s.crowd=null;s.anim=null;A.key=null;s.phase=s.day>=s.days?"final":"evening";if(s.phase==="final")recordBest();autosave();render()}
 function nextDay(){s.day++;startDay();autosave();render();window.scrollTo(0,0)}
 function recordBest(){
   const best=LS.get(K_BEST)||{};const k=String(s.days);const prof=s.cash-START_CASH;
@@ -701,11 +727,12 @@ const tipFor=P=>TIPS[P.mood===-2?"soldout":P.mood===-1?"price":P.why]||TIPS.good
 function fmtClock(gm){const t=540+Math.floor(gm),h=Math.floor(t/60),m=t%60;return `${(h+11)%12+1}:${String(m).padStart(2,"0")} ${h<12?"am":"pm"}`}
 
 /* ---------- playback state ---------- */
-const A={key:null,speed:1,raf:0};
+const A={key:null,speed:1,raf:0,theatre:false};
 function startAnim(from){
   const fx=s.dayFx||{};
   Object.assign(A,{key:s.dayId,gm:from,ffTo:null,paused:false,done:false,next:0,sprites:[],queue:[],server:{cur:null,ph:"",t:0},
-    bubbles:[],floats:[],earned:0,sold:0,moods:[0,0,0],soldOut:false,veh:[],vehT:0.5,flash:0,ltT:3,lastSave:Math.floor(from/60),pending:null,fx,bg:null,sky:null,grumbles:0});
+    bubbles:[],floats:[],earned:0,sold:0,moods:[0,0,0],soldOut:false,veh:[],vehT:0.5,flash:0,ltT:3,lastSave:Math.floor(from/60),pending:null,fx,bg:null,sky:null,grumbles:0,moodWin:[]});
+  A.vShown=s.anim?s.anim.voices.length:0;
   const bh=new Array(8).fill(0);for(const P of s.crowd)if(P.b)bh[Math.min(7,Math.floor(P.m/60))]++;
   A.svc=bh.map(n=>clamp(50/Math.max(1,n),0.6,3.6));
   while(A.next<s.crowd.length&&s.crowd[A.next].m<from){const P=s.crowd[A.next++];if(P.b===1&&P.mood>=0){A.earned+=fx.price;A.sold++;A.moods[2-P.mood]++}if(P.mood===-2)A.soldOut=true}
@@ -755,7 +782,7 @@ function stepSim(d){
   for(const p of A.sprites)moveSprite(p,d);
   A.sprites=A.sprites.filter(p=>!p.gone);
   serverStep(d);
-  if(allIn&&!A.sprites.length&&!A.server.cur&&(A.gm>=end||A.soldOut)){A.done=true;s.anim.h=8;autosave();updateCtl();renderDone()}
+  if(allIn&&!A.sprites.length&&!A.server.cur&&(A.gm>=end||A.soldOut)){A.done=true;s.anim.h=8;autosave();updateCtl();renderDone();sfx("bell")}
 }
 function spawn(P,i){
   const T=PT[P.t]||PT.man,dir=Math.random()<0.5?1:-1,rainy=A.fx.wx==="rain"||A.fx.wx==="storm";
@@ -769,7 +796,7 @@ function moveSprite(p,d){
   if(p.st==="walk"||p.st==="leave"){
     p.x+=p.dir*v;p.ph+=v*0.35;p.mv=1;
     if(p.ly!=null)p.y+=(p.ly-p.y)*Math.min(1,d*1.5);
-    if(p.st==="walk"&&p.P.say&&!p.said&&Math.abs(p.x-BOARD_X)<v+1){p.st="look";p.t=1.4;p.said=1;p.mood=p.P.mood;speak(p)}
+    if(p.st==="walk"&&p.P.say&&!p.said&&Math.abs(p.x-BOARD_X)<v+1){p.st="look";p.t=1.4;p.said=1;p.mood=p.P.mood;sfx("grumble");speak(p)}
     if(p.x<-34||p.x>SW+34)p.gone=true;
   }else if(p.st==="look"){p.t-=d;if(p.t<=0)p.st="walk"}
   else if(p.st==="approach"){const tg=slotPos(A.queue.length);if(goTo(p,tg.x,tg.y,v)){p.st="queue";A.queue.push(p)}}
@@ -777,26 +804,31 @@ function moveSprite(p,d){
 }
 function serverStep(d){
   const S=A.server;
-  if(!S.cur){const h=A.queue[0];if(h&&h.st==="queue"){const tg=slotPos(0);if(Math.abs(h.x-tg.x)<0.6&&Math.abs(h.y-tg.y)<0.6){S.cur=h;S.ph="ask";S.t=0;h.st="served";bubble(h,pick(ASKS),1300,true)}}return}
+  if(!S.cur){const h=A.queue[0];if(h&&h.st==="queue"){const tg=slotPos(0);if(Math.abs(h.x-tg.x)<0.6&&Math.abs(h.y-tg.y)<0.6){S.cur=h;S.ph="ask";S.t=0;h.st="served";bubble(h,pick(ASKS),1300,true);if(effSpeed()<=2)sfx("ask")}}return}
   const h=S.cur,T=A.svc[Math.min(7,Math.floor(h.P.m/60))];S.t+=d;
-  if(S.ph==="ask"&&S.t>=T*0.25){if(h.P.mood===-2){A.queue.shift();S.cur=null;A.soldOut=true;leave(h);return}S.ph="pour";S.t=0}
+  if(S.ph==="ask"&&S.t>=T*0.25){if(h.P.mood===-2){A.queue.shift();S.cur=null;A.soldOut=true;leave(h);return}S.ph="pour";S.t=0;if(effSpeed()<=4)sfx("pour")}
   else if(S.ph==="pour"&&S.t>=T*0.55){S.ph="hand";S.t=0}
   else if(S.ph==="hand"&&S.t>=T*0.2){
     A.queue.shift();S.cur=null;h.cup=1;
-    if(h.P.b===1){A.earned+=A.fx.price;A.sold++;A.moods[2-h.P.mood]++;A.floats.push({x:291,y:134,txt:"+"+money(A.fx.price),age:0})}
+    if(h.P.b===1){A.earned+=A.fx.price;A.sold++;A.moods[2-h.P.mood]++;A.floats.push({x:291,y:134,txt:"+"+money(A.fx.price),age:0});sfx("cash")}
     else A.flash=0.25;
     leave(h);
   }
 }
-function leave(h){h.st="leave";h.mood=h.P.mood;h.dir=Math.random()<0.65?1:-1;h.ly=205+Math.random()*16;if(h.P.say)speak(h)}
-function bubble(p,text,life,temp){A.bubbles=A.bubbles.filter(b=>b.p!==p);A.bubbles.push({p,text,age:0,life,temp})}
+function leave(h){h.st="leave";h.mood=h.P.mood;
+  if(h.P.b){const m=h.P.mood;A.moodWin.push(Math.max(0,m));if(A.moodWin.length>8)A.moodWin.shift();sfx(m===2?"happy":m===1?"okay":m===-2?"soldout":"sad")}
+  h.dir=Math.random()<0.65?1:-1;h.ly=205+Math.random()*16;if(h.P.say)speak(h)}
+function bubble(p,text,life,temp){A.bubbles=A.bubbles.filter(b=>b.p!==p);
+  if(temp&&A.bubbles.some(b=>b.temp))return;                       // one "ask" bubble at a time
+  const said=A.bubbles.filter(b=>!b.temp);if(!temp&&said.length>=3)A.bubbles.splice(A.bubbles.indexOf(said[0]),1);
+  A.bubbles.push({p,text,age:0,life,temp})}
 function speak(p){
   const P=p.P;bubble(p,P.say,3000,false);
   const v={i:p.i,ack:0};s.anim.voices.push(v);renderVoices();
   if(P.mood===-1){A.grumbles=(A.grumbles||0)+1;if(A.grumbles>2)return}   // only the first two "too pricey" remarks stop the play
   if(stopPref==="all"||(stopPref==="sad"&&P.mood<=0)){A.paused=true;A.pending=v;showOverlay();updateCtl()}
 }
-function ackVoice(v){if(!v||v.ack)return;v.ack=1;A.floats.push({x:SW/2,y:60,txt:"⭐",age:0});toast("⭐ You listened! A small popularity boost tonight.");renderVoices();autosave()}
+function ackVoice(v){if(!v||v.ack)return;v.ack=1;sfx("ack");A.floats.push({x:SW/2,y:60,txt:"⭐",age:0});toast("⭐ You listened! A small popularity boost tonight.");renderVoices();autosave()}
 function finishAnimNow(){
   Object.assign(A,{next:s.crowd.length,sprites:[],queue:[],pending:null,paused:false,ffTo:null,bubbles:[],
     earned:s.report.rev,sold:s.report.sold,moods:(s.report.moods||[0,0,0]).slice(),soldOut:!!s.report.soldOut,gm:Math.min(480,A.fx.closeAt),done:true});
@@ -807,7 +839,7 @@ function finishAnimNow(){
 function ambient(dt){
   for(const c of A.clouds){c.x+=5*c.s*dt;if(c.x>SW+40)c.x=-40}
   if(A.fx.wx==="rain"||A.fx.wx==="storm")for(const r of A.rain){r.y+=r.v*dt;r.x-=40*dt;if(r.y>SH){r.y=-8;r.x=Math.random()*(SW+40)}}
-  if(A.fx.wx==="storm"){A.ltT-=dt;if(A.ltT<=0){A.flash=0.2;A.ltT=2.5+Math.random()*5}}
+  if(A.fx.wx==="storm"){A.ltT-=dt;if(A.ltT<=0){A.flash=0.2;A.ltT=2.5+Math.random()*5;sfx("thunder")}}
   A.flash=Math.max(0,A.flash-dt);
   A.vehT-=dt;
   if(A.vehT<=0){A.vehT=1.3+Math.random()*3;const kind=weighted({auto:5,car:4,scooter:4,bus:1}),dir=Math.random()<0.5?1:-1;
@@ -1040,10 +1072,100 @@ function stageTap(e){
   for(const p of ps){if(p.top!=null&&Math.abs(x-p.x)<9*p.sc&&y>=p.top&&y<=p.y){toast(whoLabel(p.P)+(p.mood!=null?" "+emo(p.P):""));return}}
 }
 
-/* ---------- DOM around the stage ---------- */
+/* ---------- full-screen theatre ---------- */
+function enterTheatre(){
+  if(!$("sellsec"))return;
+  A.theatre=true;document.documentElement.classList.add("noscroll");render();
+  const m=$("main"),req=m.requestFullscreen||m.webkitRequestFullscreen;
+  if(req){try{const p=req.call(m,{navigationUI:"hide"});if(p&&p.then)p.then(()=>{try{screen.orientation.lock("landscape").catch(()=>{})}catch(e){}}).catch(()=>{})}catch(e){}}
+}
+function exitTheatre(noRender){
+  if(!A.theatre)return;
+  A.theatre=false;document.documentElement.classList.remove("noscroll");
+  if(document.fullscreenElement||document.webkitFullscreenElement){try{(document.exitFullscreen||document.webkitExitFullscreen).call(document)}catch(e){}}
+  try{screen.orientation.unlock()}catch(e){}
+  if(!noRender&&s&&s.phase==="selling")render();
+}
+function onFsChange(){if(!(document.fullscreenElement||document.webkitFullscreenElement)&&A.theatre)exitTheatre();else if(A.cv)requestAnimationFrame(sizeStage)}
+document.addEventListener("fullscreenchange",onFsChange);document.addEventListener("webkitfullscreenchange",onFsChange);
+
+/* ---------- sound: everything is synthesised with Web Audio, no files ---------- */
+const MUS_KEY="lemonade.music",SFX_KEY="lemonade.sfx";
+let musicOn=LS.get(MUS_KEY)!==0,sfxOn=LS.get(SFX_KEY)!==0;
+const AU={ctx:null,next:0,step:0,mi:3,last:{}};
+function audioInit(){
+  if(AU.ctx){if(AU.ctx.state==="suspended"&&!document.hidden)AU.ctx.resume().catch(()=>{});return}
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  try{AU.ctx=new AC()}catch(e){return}
+  const c=AU.ctx;
+  AU.master=c.createGain();AU.master.gain.value=0.6;AU.master.connect(c.destination);
+  AU.mus=c.createGain();AU.mus.gain.value=0.32;AU.mus.connect(AU.master);
+  AU.sfx=c.createGain();AU.sfx.gain.value=0.7;AU.sfx.connect(AU.master);
+  const b=c.createBuffer(1,c.sampleRate,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;AU.noise=b;
+}
+["click","touchend","keydown"].forEach(ev=>document.addEventListener(ev,()=>{if(musicOn||sfxOn)audioInit()},{capture:true,passive:true}));
+document.addEventListener("visibilitychange",()=>{if(!AU.ctx)return;if(document.hidden)AU.ctx.suspend().catch(()=>{});else AU.ctx.resume().catch(()=>{})});
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+function tone(f,t,dur,type,vol,bus,slideTo){
+  const c=AU.ctx,o=c.createOscillator(),g=c.createGain();o.type=type||"sine";o.frequency.setValueAtTime(f,t);
+  if(slideTo)o.frequency.exponentialRampToValueAtTime(slideTo,t+dur);
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+0.015);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g);g.connect(bus||AU.sfx);o.start(t);o.stop(t+dur+0.05);
+}
+function noise(t,dur,vol,freq,q,bus){
+  const c=AU.ctx,src=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();src.buffer=AU.noise;f.type="bandpass";f.frequency.value=freq;f.Q.value=q||1;
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);src.connect(f);f.connect(g);g.connect(bus||AU.sfx);src.start(t);src.stop(t+dur+0.05);
+}
+const SFX_GAP={cash:0.12,happy:0.25,okay:0.25,sad:0.3,soldout:1,pour:0.5,grumble:0.5,ask:0.3,ack:0.2,thunder:1.5,bell:2};
+function sfx(kind){
+  if(!sfxOn||!AU.ctx||AU.ctx.state!=="running")return;
+  const now=AU.ctx.currentTime;if(AU.last[kind]&&now-AU.last[kind]<(SFX_GAP[kind]||0.1))return;AU.last[kind]=now;
+  const t=now+0.01;
+  switch(kind){
+    case "cash":tone(1318,t,0.08,"square",0.03);tone(1760,t+0.07,0.2,"triangle",0.06);noise(t,0.05,0.06,6000,2);break;   // ka-ching
+    case "happy":[84,88,91].forEach((m,i)=>tone(mtof(m),t+i*0.07,0.16,"triangle",0.05));break;                       // rising chirp
+    case "okay":tone(mtof(76),t,0.15,"sine",0.045);break;
+    case "sad":tone(mtof(67),t,0.24,"triangle",0.05,null,mtof(64));tone(mtof(63),t+0.24,0.4,"triangle",0.05,null,mtof(59));break; // wah-wah
+    case "soldout":[67,63,60,55].forEach((m,i)=>tone(mtof(m),t+i*0.17,0.26,"triangle",0.05));break;
+    case "grumble":tone(150,t,0.2,"sawtooth",0.018,null,115);break;                                                    // hmph
+    case "pour":noise(t,0.5,0.03,1600,0.8);break;
+    case "ask":tone(mtof(81),t,0.07,"sine",0.025);break;
+    case "ack":[84,88,91,96].forEach((m,i)=>tone(mtof(m),t+i*0.05,0.14,"sine",0.045));break;                           // sparkle
+    case "thunder":noise(t,1.8,0.2,110,0.6);break;
+    case "bell":tone(880,t,1.4,"sine",0.06);tone(1320,t,1,"sine",0.035);tone(1760,t+0.02,0.6,"sine",0.02);break;
+  }
+}
+/* background music: mood picks the chords and scale, game speed picks the tempo */
+const PROG={happy:[[60,64,67],[57,60,64],[53,57,60],[55,59,62]],okay:[[60,64,67],[53,57,60],[57,60,64],[55,59,62]],sad:[[57,60,64],[50,53,57],[57,60,64],[52,56,59]]};
+const SCALE={happy:[60,62,64,67,69,72,74,76],okay:[60,62,64,65,67,69,71,72],sad:[57,59,60,62,64,65,67,69]};
+function musicMood(){const w=A.moodWin||[];if(A.fx&&A.fx.storm&&A.gm>=A.fx.closeAt-30)return "sad";if(!w.length)return "okay";const a=w.reduce((x,y)=>x+y,0)/w.length;return a>=1.5?"happy":a>=0.9?"okay":"sad"}
+function musicBpm(mood){let b=A.ffTo!=null?(A.ffTo===Infinity?150:132):({1:80,2:94,4:108}[A.speed]||80);return b*(mood==="sad"?0.85:mood==="happy"?1.05:1)}
+function scheduleStep(step,t,mood,e,fast){
+  const bar=Math.floor(step/8)%4,pos=step%8,ch=PROG[mood][bar],sc=SCALE[mood];
+  if(pos===0||pos===4)tone(mtof(ch[0]-12),t,e*3.4,"sine",0.08,AU.mus);
+  if(pos===0)ch.forEach(m=>tone(mtof(m),t,e*7.5,"sine",0.014,AU.mus));
+  if(Math.random()<(mood==="sad"?0.35:0.55)){AU.mi=clamp(AU.mi+rint(-2,2),0,sc.length-1);tone(mtof(sc[AU.mi]+(mood==="happy"?12:0)),t,e*1.7,mood==="sad"?"sine":"triangle",0.03,AU.mus)}
+  if(fast&&pos%2===1)noise(t,0.03,0.012,8000,1,AU.mus);
+}
+function musicTick(){
+  const c=AU.ctx;if(!c||!musicOn||c.state!=="running")return;
+  const playing=s&&s.phase==="selling"&&animMode()&&s.crowd&&A.cv&&document.body.contains(A.cv)&&!A.paused&&!A.done&&tab==="play"&&view==="game"&&!document.hidden;
+  if(!playing){AU.next=0;return}
+  const mood=musicMood(),e=60/musicBpm(mood)/2,fast=A.ffTo!=null||A.speed>=4;
+  if(AU.next<c.currentTime)AU.next=c.currentTime+0.06;
+  while(AU.next<c.currentTime+0.25){scheduleStep(AU.step,AU.next,mood,e,fast);AU.next+=e;AU.step++}
+}
+setInterval(musicTick,70);
+
+/* ---------- DOM around the stage (normal and full-screen theatre layouts) ---------- */
 function renderAnimInner(){
-  return `<section id="sellsec">
-  <div class="stagewrap"><canvas id="stage" role="img" aria-label="Animated street with your lemonade stand and customers"></canvas></div>
+  if(A.theatre)return `<section id="sellsec" class="theatre">
+  <div class="th-main"><div class="stagewrap"><canvas id="stage" role="img" aria-label="Animated street with your lemonade stand and customers"></canvas></div><div class="ctl tight" id="ctl"></div></div>
+  <div class="th-side"><div class="ovl" id="ovl" hidden></div><div id="donebox" hidden></div>
+    <div class="vcard"><h3 id="vhead">What customers said</h3><div class="voices" id="voices"></div></div><div id="sidectl"></div></div>
+  </section>`;
+  return `<section id="sellsec" class="sell">
+  <div class="stagewrap"><canvas id="stage" role="img" aria-label="Animated street with your lemonade stand and customers"></canvas><button class="fsbtn" data-act="afs" aria-label="Full screen" title="Full screen">⛶</button></div>
   <div class="ovl" id="ovl" hidden></div>
   <div id="donebox" hidden></div>
   <div class="ctl" id="ctl"></div>
@@ -1051,14 +1173,22 @@ function renderAnimInner(){
   <div class="btnrow"><button class="ghost" data-act="viewstory">Read the day as a story</button><button class="ghost" data-act="skipanim" id="skipbtn">Skip to the end of the day</button></div>
   </section>`;
 }
+function stopSeg(){return `<div class="seg">${[["off","Never"],["sad","Unhappy ones"],["all","Every comment"]].map(([v,n])=>`<button data-act="astop" data-v="${v}" aria-pressed="${stopPref===v}">${n}</button>`).join("")}</div>`}
+function soundBtns(){return `<button class="cbtn" data-act="amus" aria-pressed="${musicOn}">🎵 Music</button><button class="cbtn" data-act="asfx" aria-pressed="${sfxOn}">🔔 Sounds</button>`}
 function updateCtl(){
   const el=$("ctl");if(!el)return;
-  if(A.done){el.innerHTML="";const sb=$("skipbtn");if(sb)sb.hidden=true;return}
-  const ffh=A.ffTo!=null&&A.ffTo!==Infinity,ffd=A.ffTo===Infinity;
-  el.innerHTML=`<div class="ctlrow"><button class="cbtn" data-act="apause">${A.paused&&!A.pending?"▶ Play":"⏸ Pause"}</button>
-    <div class="seg" style="flex:1.4">${[1,2,4].map(v=>`<button data-act="aspd" data-v="${v}" aria-pressed="${A.speed===v&&A.ffTo==null}">${v}×</button>`).join("")}</div></div>
+  const ffh=A.ffTo!=null&&A.ffTo!==Infinity,ffd=A.ffTo===Infinity,run=!A.done;
+  const pauseB=`<button class="cbtn" data-act="apause" aria-label="${A.paused&&!A.pending?"Play":"Pause"}">${A.paused&&!A.pending?"▶":"⏸"}${A.theatre?"":(A.paused&&!A.pending?" Play":" Pause")}</button>`;
+  const spd=[1,2,4].map(v=>`<button class="cbtn" data-act="aspd" data-v="${v}" aria-pressed="${A.speed===v&&A.ffTo==null}">${v}×</button>`).join("");
+  if(A.theatre){
+    el.innerHTML=`<div class="ctlrow">${run?pauseB+spd+`<button class="cbtn" data-act="affh" aria-pressed="${ffh}" title="Fast to next hour" aria-label="Fast to next hour">⏩</button><button class="cbtn" data-act="affd" aria-pressed="${ffd}" title="Fast to closing" aria-label="Fast to closing">⏭</button>`:""}<button class="cbtn" data-act="afsx" title="Exit full screen" aria-label="Exit full screen">✕</button></div>`;
+    const sc=$("sidectl");if(sc)sc.innerHTML=`<div class="sidectl"><span class="lbl">Stop to read</span>${stopSeg()}<div class="ctlrow">${soundBtns()}</div></div>`;
+    return}
+  if(!run){el.innerHTML=`<div class="ctlrow">${soundBtns()}</div>`;const sb=$("skipbtn");if(sb)sb.hidden=true;return}
+  el.innerHTML=`<div class="ctlrow">${pauseB}<div class="seg" style="flex:1.4">${[1,2,4].map(v=>`<button data-act="aspd" data-v="${v}" aria-pressed="${A.speed===v&&A.ffTo==null}">${v}×</button>`).join("")}</div><button class="cbtn" data-act="afs" style="flex:.8">⛶ Full</button></div>
   <div class="ctlrow"><button class="cbtn" data-act="affh" aria-pressed="${ffh}">⏩ Fast to next hour</button><button class="cbtn" data-act="affd" aria-pressed="${ffd}">⏭ Fast to closing</button></div>
-  <div class="segrow"><span>Stop to read what customers say</span><div class="seg">${[["off","Never"],["sad","Unhappy ones"],["all","Every comment"]].map(([v,n])=>`<button data-act="astop" data-v="${v}" aria-pressed="${stopPref===v}">${n}</button>`).join("")}</div></div>`;
+  <div class="segrow"><span>Stop to read what customers say</span>${stopSeg()}</div>
+  <div class="ctlrow">${soundBtns()}</div>`;
 }
 function showOverlay(){
   const o=$("ovl");if(!o)return;
@@ -1083,8 +1213,8 @@ function renderVoices(){
   const v=s.anim.voices,acks=v.filter(x=>x.ack).length;
   $("vhead").textContent=v.length?`What customers said · listened ${acks} of ${v.length}`:"What customers said";
   if(!v.length){el.innerHTML=`<p class="small muted">Customers who speak up appear here. Tap Got it to show you are listening. Each one you listen to adds a little popularity tonight.</p>`;return}
-  const rows=[];for(let k=v.length-1;k>=0&&rows.length<40;k--){const x=v[k],P=s.crowd[x.i];
-    rows.push(`<div class="voice${x.ack?" done":""}"><span class="vemo">${emo(P)}</span><div class="vtx"><b>${esc(whoLabel(P))}</b> <span class="small muted num">${fmtClock(P.m)}</span><p>“${esc(P.say)}”</p>${x.ack?`<p class="small tipline">Tip: ${esc(tipFor(P))}</p>`:""}</div>${x.ack?`<span class="vok" aria-label="Listened">⭐</span>`:`<button class="vbtn" data-act="aackv" data-i="${k}">Got it</button>`}</div>`)}
+  const rows=[],fresh=A.vShown||0;A.vShown=v.length;for(let k=v.length-1;k>=0&&rows.length<(A.theatre?25:40);k--){const x=v[k],P=s.crowd[x.i];
+    rows.push(`<div class="voice${x.ack?" done":""}${k>=fresh?" new":""}"><span class="vemo">${emo(P)}</span><div class="vtx"><b>${esc(whoLabel(P))}</b> <span class="small muted num">${fmtClock(P.m)}</span><p>“${esc(P.say)}”</p>${x.ack?`<p class="small tipline">Tip: ${esc(tipFor(P))}</p>`:""}</div>${x.ack?`<span class="vok" aria-label="Listened">⭐</span>`:`<button class="vbtn" data-act="aackv" data-i="${k}">Got it</button>`}</div>`)}
   el.innerHTML=rows.join("");
 }
 function animAction(a,b){
@@ -1098,7 +1228,11 @@ function animAction(a,b){
     case "aackskip":A.pending=null;A.paused=false;showOverlay();updateCtl();return true;
     case "aackv":{const v=s.anim.voices[+b.dataset.i];ackVoice(v);if(A.pending===v){A.pending=null;A.paused=false;showOverlay();updateCtl()}renderDone();return true}
     case "skipanim":finishAnimNow();return true;
-    case "viewstory":viewPref="story";LS.set(VIEW_KEY,viewPref);s.shown=s.log.length;render();return true;
+    case "afs":enterTheatre();return true;
+    case "afsx":exitTheatre();return true;
+    case "amus":musicOn=!musicOn;LS.set(MUS_KEY,musicOn?1:0);if(musicOn)audioInit();updateCtl();return true;
+    case "asfx":sfxOn=!sfxOn;LS.set(SFX_KEY,sfxOn?1:0);if(sfxOn){audioInit();sfx("ack")}updateCtl();return true;
+    case "viewstory":exitTheatre(true);viewPref="story";LS.set(VIEW_KEY,viewPref);s.shown=s.log.length;render();return true;
     case "viewanim":viewPref="anim";LS.set(VIEW_KEY,viewPref);clearTimeout(revealTimer);render();return true;
     case "setview":viewPref=b.dataset.v;LS.set(VIEW_KEY,viewPref);render();return true;
   }

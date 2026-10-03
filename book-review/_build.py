@@ -2,10 +2,11 @@
 """
 TOOL:    book-review/_build.py
 FAMILY:  SITE
-VERSION: 1.0.0
+VERSION: 1.1.0
 DATE:    2026-10-03
 CHAT:    Daily management book review on GitHub Pages
-CHANGES: 1.0.0 - renders each _content/<slug>.json into <slug>.html (cover, 300-word summary, 10-question quiz) and rebuilds index.html
+CHANGES: 1.1.0 - certificate after the quiz: name remembered per device, A4 PDF to save or share (WhatsApp, email)
+         1.0.0 - renders each _content/<slug>.json into <slug>.html (cover, 300-word summary, 10-question quiz) and rebuilds index.html
 STATUS:  working
 
 Run:  python3 book-review/_build.py            (checks every content file, rebuilds all pages and the index)
@@ -17,7 +18,12 @@ Content file (_content/<slug>.json):
   takeaway: one sentence,
   questions: 10 x {q, options: [4 strings], answer: 0-3, why}
 """
-__version__ = "1.0.0"
+__version__ = "1.1.0"
+
+# review page template version; each page's header lists these plus its own first line
+PAGE_VERSION = "1.1.0"
+PAGE_DATE = "2026-10-03"     # date of the last template change
+PAGE_CHANGES = ["v1.1.0  certificate after the quiz: name remembered on this device, A4 PDF to save or share"]
 
 import datetime as dt
 import hashlib
@@ -153,15 +159,26 @@ ol.quiz>li>p::before{content:counter(q) ". ";color:var(--brand)}
 li.done .why{display:block}
 .score{font:15px Verdana,sans-serif;position:sticky;bottom:0;background:var(--bg);padding:10px 0;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .score button{font:14px Verdana,sans-serif;background:var(--brand);color:#fff;border:0;border-radius:6px;padding:7px 12px;cursor:pointer}
+.cert{display:none;background:var(--card);border:2px solid var(--brand);border-radius:12px;padding:16px;margin:22px 0}
+.cert.show{display:block}
+.cert h2{margin-top:4px}
+.cert label{display:block;font:14px Verdana,sans-serif;color:var(--muted);margin:0 0 6px}
+.cert input{width:100%;font:18px Georgia,serif;padding:9px 12px;border:1px solid var(--rule);border-radius:7px;background:var(--bg);color:var(--ink)}
+.cert .row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
+.cert button,.cert a.btn{font:14px Verdana,sans-serif;border:1px solid var(--brand);border-radius:7px;padding:9px 14px;cursor:pointer;background:transparent;color:var(--brand);text-decoration:none}
+.cert button.main{background:var(--brand);color:#fff}
+.cert img{display:block;width:100%;height:auto;margin:14px 0 4px;border:1px solid var(--rule);border-radius:4px;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.cert .note{font:13px/1.5 Verdana,sans-serif;color:var(--muted);margin:10px 0 0}
+.cert .hidden{display:none}
 footer{font:13px/1.5 Verdana,sans-serif;color:var(--muted);padding:26px 0 40px}
-@media print{.cover{min-height:auto;page-break-after:always}.score,nav.top,.scroll{display:none}.why{display:block}body{background:#fff}}
+@media print{.cover{min-height:auto;page-break-after:always}.cert,.score,nav.top,.scroll{display:none}.why{display:block}body{background:#fff}}
 """
 
 QUIZ_JS = """
 (function(){
   var KEY=window.QUIZ_KEY,total=KEY.length,got=0,done=0;
   var out=document.getElementById('score');
-  function show(){out.textContent='Score: '+got+' / '+done+' answered, '+total+' questions';}
+  function show(){out.textContent='Score: '+got+' / '+done+' answered, '+total+' questions';if(window.onQuizChange)window.onQuizChange(got,done,total);}
   document.querySelectorAll('ol.quiz>li').forEach(function(li,i){
     li.querySelectorAll('.opt').forEach(function(b,j){
       b.addEventListener('click',function(){
@@ -187,6 +204,146 @@ QUIZ_JS = """
 """
 
 
+CERT_JS = """
+(function(){
+  var C=window.CERT;C.when=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  var KEY_NAME='bookReview.name',W=2339,H=1654;
+  var box=document.getElementById('cert'),inp=document.getElementById('cert-name'),
+      prev=document.getElementById('cert-img'),acts=document.getElementById('cert-acts'),
+      note=document.getElementById('cert-note'),last=null;
+  function getName(){try{return localStorage.getItem(KEY_NAME)||'';}catch(e){return '';}}
+  function setName(n){try{localStorage.setItem(KEY_NAME,n);}catch(e){}}
+  inp.value=getName();
+  window.onQuizChange=function(got,done,total){
+    if(done<total){box.classList.remove('show');return;}
+    box.classList.add('show');
+    document.getElementById('cert-score').textContent=got+' / '+total;
+    if(inp.value.trim())make();
+  };
+  function coverImage(){
+    return new Promise(function(ok){
+      var svg=document.querySelector('.cover .cover-art');
+      if(!svg)return ok(null);
+      var src=new XMLSerializer().serializeToString(svg);
+      var img=new Image();img.onload=function(){ok(img);};img.onerror=function(){ok(null);};
+      img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(src);
+    });
+  }
+  function fit(ctx,text,font,size,maxW){
+    do{ctx.font=font.replace('$',size);size-=4;}while(ctx.measureText(text).width>maxW&&size>30);
+  }
+  function draw(name,got,total,cover){
+    var cv=document.createElement('canvas');cv.width=W;cv.height=H;
+    var x=cv.getContext('2d'),G='#1f6f5c',GOLD='#b8892d',INK='#1d2421',MUTE='#5d6763';
+    var SERIF="Georgia,'Noto Serif','Noto Serif Tamil','Latha','Nirmala UI',serif",SANS="Verdana,'Noto Sans','Nirmala UI',sans-serif";
+    x.fillStyle='#fbf7ee';x.fillRect(0,0,W,H);
+    x.strokeStyle=G;x.lineWidth=34;x.strokeRect(40,40,W-80,H-80);
+    x.strokeStyle=GOLD;x.lineWidth=6;x.strokeRect(92,92,W-184,H-184);
+    x.lineWidth=2;x.strokeRect(112,112,W-224,H-224);
+    [[112,112],[W-112,112],[112,H-112],[W-112,H-112]].forEach(function(p){
+      x.save();x.translate(p[0],p[1]);x.rotate(Math.PI/4);x.fillStyle=GOLD;x.fillRect(-22,-22,44,44);
+      x.fillStyle='#fbf7ee';x.fillRect(-10,-10,20,20);x.restore();});
+    var L=230,cx;
+    if(cover){var ch=860,cw=ch*400/600;x.save();x.shadowColor='rgba(0,0,0,.3)';x.shadowBlur=40;x.shadowOffsetY=18;
+      x.drawImage(cover,L,(H-ch)/2,cw,ch);x.restore();cx=L+cw+(W-140-(L+cw))/2;}
+    else cx=W/2;
+    var maxW=W-140-(cover?L+600:L)-120;
+    x.textAlign='center';x.textBaseline='alphabetic';
+    x.fillStyle=G;x.font='bold 40px '+SANS;
+    if(x.letterSpacing!==undefined)x.letterSpacing='10px';
+    x.fillText('BOOK REVIEW · DAY '+C.day,cx,300);
+    if(x.letterSpacing!==undefined)x.letterSpacing='0px';
+    var top=got>=8?'Certificate of Excellence':'Certificate of Completion';
+    x.fillStyle=INK;x.font='bold 112px '+SERIF;x.fillText(top,cx,430);
+    x.strokeStyle=GOLD;x.lineWidth=5;x.beginPath();x.moveTo(cx-260,480);x.lineTo(cx+260,480);x.stroke();
+    x.fillStyle=MUTE;x.font='italic 50px '+SERIF;x.fillText('This is to certify that',cx,590);
+    x.fillStyle=G;fit(x,name,'italic bold $px '+SERIF,124,maxW);x.fillText(name,cx,735);
+    x.strokeStyle=MUTE;x.lineWidth=2;x.beginPath();x.moveTo(cx-maxW/2,775);x.lineTo(cx+maxW/2,775);x.stroke();
+    x.fillStyle=MUTE;x.font='italic 48px '+SERIF;x.fillText('has studied the review of',cx,870);
+    x.fillStyle=INK;fit(x,C.title,'bold $px '+SERIF,80,maxW);x.fillText(C.title,cx,975);
+    fit(x,'by '+C.author,'$px '+SERIF,52,maxW);x.fillStyle=MUTE;x.fillText('by '+C.author,cx,1050);
+    x.fillStyle=INK;x.font='50px '+SERIF;
+    x.fillText('and answered '+got+' of '+total+' questions correctly',cx,1150);
+    var sx=cx+maxW/2-130,sy=1390;
+    x.fillStyle=G;x.beginPath();x.arc(sx,sy,120,0,7);x.fill();
+    x.strokeStyle=GOLD;x.lineWidth=8;x.beginPath();x.arc(sx,sy,102,0,7);x.stroke();
+    x.fillStyle='#fff';x.font='bold 72px '+SERIF;x.fillText(got+'/'+total,sx,sy+20);
+    x.font='bold 24px '+SANS;x.fillText('SCORE',sx,sy+62);
+    var lx=cx-maxW/2+190;
+    x.fillStyle=INK;x.font='46px '+SERIF;x.fillText(C.when,lx,1370);
+    x.strokeStyle=MUTE;x.lineWidth=2;x.beginPath();x.moveTo(lx-190,1395);x.lineTo(lx+190,1395);x.stroke();
+    x.fillStyle=MUTE;x.font='30px '+SANS;x.fillText('Date',lx,1440);
+    x.font='28px '+SANS;x.fillText('haivijayanand.github.io/book-review',cx,H-150);
+    return cv;
+  }
+  function make(){
+    var name=inp.value.trim().replace(/\\s+/g,' ');
+    if(!name){inp.focus();note.textContent='Please type your name first.';return;}
+    setName(name);
+    var parts=document.getElementById('cert-score').textContent.split(' / ');
+    coverImage().then(function(cover){
+      var cv=draw(name,+parts[0],+parts[1],cover);
+      prev.src=cv.toDataURL('image/jpeg',0.9);prev.classList.remove('hidden');
+      acts.classList.remove('hidden');last={cv:cv,name:name,got:parts[0]};
+      note.textContent=navigator.share?'Tap Share to send the PDF to WhatsApp, Gmail or any app.':'Save the PDF, then attach it to WhatsApp or email.';
+    });
+  }
+  var jspdf=null;
+  function loadPdf(){
+    if(window.jspdf)return Promise.resolve(window.jspdf);
+    if(jspdf)return jspdf;
+    jspdf=new Promise(function(ok,bad){
+      var s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s.onload=function(){ok(window.jspdf);};s.onerror=function(){jspdf=null;bad();};
+      document.head.appendChild(s);
+    });
+    return jspdf;
+  }
+  function fileName(){return ('Certificate - '+C.title+' - '+last.name).replace(/[\\\\/:*?"<>|]+/g,'')+'.pdf';}
+  function pdfFile(){
+    return loadPdf().then(function(lib){
+      var d=new lib.jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+      d.setProperties({title:'Certificate: '+C.title,author:'haivijayanand.github.io',subject:'Book Review Day '+C.day});
+      d.addImage(last.cv.toDataURL('image/jpeg',0.92),'JPEG',0,0,297,210);
+      return new File([d.output('blob')],fileName(),{type:'application/pdf'});
+    });
+  }
+  function download(blob,name){
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+    document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
+  }
+  function msg(){return 'I scored '+last.got+'/10 on the "'+C.title+'" book review quiz. '+C.url;}
+  document.getElementById('cert-make').addEventListener('click',make);
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter')make();});
+  document.getElementById('cert-pdf').addEventListener('click',function(){
+    if(!last)return;
+    pdfFile().then(function(f){download(f,f.name);},function(){
+      note.textContent='PDF tool could not load (offline?). Saving as an image instead.';
+      last.cv.toBlob(function(b){download(b,fileName().replace(/pdf$/,'jpg'));},'image/jpeg',0.92);
+    });
+  });
+  var sh=document.getElementById('cert-share');
+  if(!navigator.share)sh.classList.add('hidden');
+  sh.addEventListener('click',function(){
+    if(!last)return;
+    pdfFile().then(function(f){
+      if(navigator.canShare&&navigator.canShare({files:[f]}))
+        return navigator.share({files:[f],title:'Certificate: '+C.title,text:msg()});
+      download(f,f.name);
+      return navigator.share({title:'Certificate: '+C.title,text:msg(),url:C.url});
+    }).catch(function(e){if(e&&e.name!=='AbortError')note.textContent='Sharing did not work here. Use Save PDF and attach the file.';});
+  });
+  document.getElementById('cert-wa').addEventListener('click',function(){
+    if(last)window.open('https://wa.me/?text='+encodeURIComponent(msg()),'_blank');
+  });
+  document.getElementById('cert-mail').addEventListener('click',function(){
+    if(last)location.href='mailto:?subject='+encodeURIComponent('My certificate: '+C.title)+'&body='+encodeURIComponent(msg()+'\\n\\n(The certificate PDF is attached.)');
+  });
+})();
+"""
+
+
 def header(path, version, chat, changes, date=None):
     return (f"<!DOCTYPE html>\n<!--\nTOOL    : {path}\nFAMILY  : SITE\nVERSION : {version}\n"
             f"DATE    : {date or dt.date.today().isoformat()}\nCHAT    : {chat}\nCHANGES : {changes}\nSTATUS  : working\n"
@@ -202,11 +359,14 @@ def render_page(c, prev_c, next_c):
         opts = "".join(f'<button class="opt" type="button">{"ABCD"[k]}. {esc(o)}</button>' for k, o in enumerate(q["options"]))
         qs.append(f'<li><p>{esc(q["q"])}</p>{opts}<div class="why"><b>Answer {"ABCD"[q["answer"]]}.</b> {esc(q["why"])}</div></li>')
     key = json.dumps([q["answer"] for q in c["questions"]])
+    cert = json.dumps({"title": c["title"], "author": c["author"], "day": c["day"],
+                       "url": f"https://haivijayanand.github.io/book-review/{c['slug']}.html"}, ensure_ascii=False).replace("</", "<\\/")
     when = dt.date.fromisoformat(c["date"]).strftime("%d %B %Y").lstrip("0")
     prev = f'<a href="{prev_c["slug"]}.html">← Day {prev_c["day"]}: {esc(prev_c["title"])}</a>' if prev_c else "<span></span>"
     nxt = f'<a href="{next_c["slug"]}.html">Day {next_c["day"]}: {esc(next_c["title"])} →</a>' if next_c else "<span></span>"
-    return header(f"book-review/{c['slug']}.html — Book Review Day {c['day']}: {c['title']}", "1.0.0",
-                  "Daily management book review on GitHub Pages", f"v1.0.0  review of {c['title']} ({c['author']})", c["date"]) + f"""<html lang="en">
+    changes = "\n          ".join(PAGE_CHANGES + [f"v1.0.0  review of {c['title']} ({c['author']})"])
+    return header(f"book-review/{c['slug']}.html — Book Review Day {c['day']}: {c['title']}", PAGE_VERSION,
+                  "Daily management book review on GitHub Pages", changes, max(c["date"], PAGE_DATE)) + f"""<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -241,12 +401,27 @@ def render_page(c, prev_c, next_c):
 {chr(10).join(qs)}
 </ol>
 <div class="score"><span id="score"></span><button id="reset" type="button">Try again</button></div>
+
+<section class="cert" id="cert" aria-live="polite">
+<h2>Your certificate — <span id="cert-score"></span></h2>
+<label for="cert-name">Name to print on the certificate (remembered on this device)</label>
+<input id="cert-name" type="text" maxlength="60" autocomplete="name" placeholder="Your full name">
+<div class="row"><button id="cert-make" class="main" type="button">Make certificate</button></div>
+<img id="cert-img" class="hidden" alt="Certificate preview">
+<div id="cert-acts" class="row hidden">
+<button id="cert-share" class="main" type="button">Share PDF</button>
+<button id="cert-pdf" type="button">Save PDF</button>
+<button id="cert-wa" type="button">WhatsApp</button>
+<button id="cert-mail" type="button">Email</button>
+</div>
+<p class="note" id="cert-note"></p>
+</section>
 </article>
 
 <nav class="top" style="padding-top:22px">{prev}{nxt}</nav>
 <footer>A short personal summary written for study and discussion. The cover above is an original design for this page, not the publisher's cover. Read the book itself for the full argument.</footer>
 </div>
-<script>window.QUIZ_KEY={key};{QUIZ_JS}</script>
+<script>window.QUIZ_KEY={key};window.CERT={cert};{CERT_JS}{QUIZ_JS}</script>
 </body>
 </html>
 """

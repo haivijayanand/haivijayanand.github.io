@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<!--
+TOOL:    special_numbers.html — π, e, i & Other Special Numbers (interactive explainer)
+FAMILY:  mathematics
+VERSION: 1.0.0
+DATE:    2026-10-04
+CHAT:    Interactive HTML on pi, e, i and special numbers for the GitHub Pages Mathematics section
+CHANGES: 1.0.0 — first release: π, e, i, Euler's formula, φ, √2 sections with live demos, special-number gallery, Kaprekar routine, quiz
+STATUS:  public
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>π, e, i &amp; Friends</title>
+<meta name="description" content="Interactive explainer on π, e, i, Euler's formula, the golden ratio, √2 and other special numbers — what they mean and where engineers, scientists and students meet them.">
+<style>
+:root{
+  --bg:#f7f6f2;--card:#ffffff;--fg:#1d2330;--muted:#5b6474;--line:#e2e0d8;--soft:#eef1f6;
+  --pi:#2563eb;--e:#059669;--i:#7c3aed;--eu:#dc2626;--phi:#b7791f;--r2:#0891b2;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#11141a;--card:#191d26;--fg:#e6e9ef;--muted:#9aa3b2;--line:#2a303c;--soft:#202634;
+    --pi:#60a5fa;--e:#34d399;--i:#a78bfa;--eu:#f87171;--phi:#f6c453;--r2:#22d3ee;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11141a;--card:#191d26;--fg:#e6e9ef;--muted:#9aa3b2;--line:#2a303c;--soft:#202634;
+  --pi:#60a5fa;--e:#34d399;--i:#a78bfa;--eu:#f87171;--phi:#f6c453;--r2:#22d3ee;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+header.hero{padding:40px 0 24px}
+.hero h1{font-size:clamp(28px,5vw,46px);line-height:1.15;margin:0 0 10px;letter-spacing:-.5px}
+.hero h1 .s{font-family:Georgia,"Times New Roman",serif;font-style:italic}
+.hero p{color:var(--muted);max-width:760px;margin:0 0 18px;font-size:17px}
+.trio{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:18px}
+.trio a{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;border-top:4px solid var(--c)}
+.trio .sym{font:italic 700 36px/1 Georgia,serif;color:var(--c)}
+.trio .val{font:13px/1.4 ui-monospace,Consolas,monospace;color:var(--muted);word-break:break-all;margin:6px 0}
+.trio .what{font-size:14.5px}
+nav.tabs{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
+nav.tabs .wrap{display:flex;gap:6px;overflow-x:auto;padding-top:8px;padding-bottom:8px;scrollbar-width:none}
+nav.tabs a{flex:0 0 auto;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--fg);text-decoration:none;font-size:14px;white-space:nowrap}
+nav.tabs a:hover{border-color:var(--muted)}
+#themeBtn{flex:0 0 auto;margin-left:auto;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--soft);color:var(--fg);font-size:14px;cursor:pointer}
+section.sec{padding:36px 0 8px;border-bottom:1px solid var(--line)}
+.sec>h2{font-size:clamp(22px,3.4vw,32px);margin:0 0 4px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.sec>h2 .big{font:italic 700 1.5em/1 Georgia,serif;color:var(--c)}
+.lead{color:var(--muted);max-width:820px;margin:4px 0 18px}
+.digits{font:14px/1.5 ui-monospace,Consolas,monospace;background:var(--soft);border-radius:10px;padding:8px 12px;margin:0 0 18px;word-break:break-all;color:var(--fg)}
+.grid2{display:grid;grid-template-columns:1fr;gap:16px}
+@media (min-width:860px){.grid2{grid-template-columns:1fr 1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+.card h3{margin:0 0 6px;font-size:18px}
+.card p{margin:6px 0}
+.small{font-size:14px;color:var(--muted)}
+canvas{display:block;width:100%;height:240px;background:var(--soft);border-radius:10px;margin:10px 0;touch-action:none}
+canvas.tall{height:320px}
+canvas.short{height:200px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.row label{font-size:14px;color:var(--muted);min-width:110px}
+input[type=range]{flex:1;min-width:140px;accent-color:var(--c)}
+input[type=number],input[type=text],select{background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit;font-size:15px;width:110px}
+button.b{background:var(--c,var(--pi));color:#fff;border:0;border-radius:8px;padding:7px 14px;font:inherit;font-size:14px;cursor:pointer}
+button.b.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+.out{font:14px/1.6 ui-monospace,Consolas,monospace;background:var(--soft);border-radius:10px;padding:10px 12px;margin-top:8px;white-space:pre-wrap;word-break:break-word}
+.out b{color:var(--c)}
+.apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:16px 0 8px}
+.app{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:10px;padding:10px 12px;font-size:14.5px}
+.app b{display:block;margin-bottom:2px}
+.formula{font:italic 18px/1.5 Georgia,"Times New Roman",serif;text-align:center;margin:8px 0;color:var(--fg)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:right;font-variant-numeric:tabular-nums}
+th{color:var(--muted);font-weight:600}
+td:first-child,th:first-child{text-align:left}
+.bar{height:8px;background:var(--c);border-radius:4px;min-width:2px}
+.tw{overflow-x:auto}
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.gcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.gcard .gs{font:italic 700 26px/1.1 Georgia,serif;color:var(--c)}
+.gcard .gv{font:13px ui-monospace,Consolas,monospace;color:var(--muted);margin:2px 0 6px}
+.gcard p{margin:0;font-size:14.5px}
+.quiz .q{margin:14px 0}
+.quiz .q p{margin:0 0 6px;font-weight:600}
+.quiz label{display:block;padding:6px 10px;border:1px solid var(--line);border-radius:8px;margin:4px 0;cursor:pointer;font-size:15px}
+.quiz label.ok{border-color:var(--e);background:color-mix(in srgb,var(--e) 14%,transparent)}
+.quiz label.bad{border-color:var(--eu);background:color-mix(in srgb,var(--eu) 14%,transparent)}
+.quiz .why{font-size:14px;color:var(--muted);display:none;margin-top:4px}
+footer{padding:28px 0 40px;color:var(--muted);font-size:14px}
+.pill{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;background:var(--soft);color:var(--muted);margin-left:4px;vertical-align:middle}
+</style>
+</head>
+<body>
+
+<header class="hero wrap">
+  <h1>Why do <span class="s">π</span>, <span class="s">e</span> and <span class="s">i</span> keep showing up everywhere?</h1>
+  <p>Three numbers turn up in bridges, bank loans, bearings, electrical circuits, sound, light and spinning shafts. They are not random constants someone made up — each is the answer to a very simple question. Play with the live demos below to see where each one comes from and where you will meet it at school, college and work.</p>
+  <div class="trio">
+    <a href="#pi" style="--c:var(--pi)"><div class="sym">π</div><div class="val">3.14159 26535 89793…</div><div class="what"><b>The number of turning.</b> How far a wheel of diameter 1 travels in one turn.</div></a>
+    <a href="#e" style="--c:var(--e)"><div class="sym">e</div><div class="val">2.71828 18284 59045…</div><div class="what"><b>The number of natural growth.</b> Growth that is proportional to what you already have.</div></a>
+    <a href="#i" style="--c:var(--i)"><div class="sym">i</div><div class="val">√−1</div><div class="what"><b>The number of rotation.</b> Multiply by <i>i</i> and you turn 90°.</div></a>
+  </div>
+</header>
+
+<nav class="tabs"><div class="wrap">
+  <a href="#pi">π Pi</a><a href="#e">e Euler's number</a><a href="#i">i Imaginary unit</a><a href="#euler">e<sup>iπ</sup>+1=0</a><a href="#phi">φ Golden ratio</a><a href="#root2">√2</a><a href="#more">More numbers</a><a href="#quiz">Quiz</a>
+  <button id="themeBtn" type="button" title="Switch light / dark">◐ Theme</button>
+</div></nav>
+
+<main class="wrap">
+
+<!-- ============================ PI ============================ -->
+<section class="sec" id="pi" style="--c:var(--pi)">
+  <h2><span class="big">π</span> Pi — the ratio of turning</h2>
+  <p class="lead">Take any circle. Divide its circumference by its diameter. You always get the same number, π. Because everything that rotates — wheels, shafts, gears, planets, alternating current — moves along a circle, π appears whenever something turns or repeats.</p>
+  <div class="digits">π = 3.14159 26535 89793 23846 26433 83279 50288 41971 69399 37510 …  (never ends, never repeats)</div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>1 · Unroll a circle</h3>
+      <p class="small">A wheel of diameter 1 rolls along the ruler. The red line is the paint its rim leaves behind. After exactly one turn, where does it stop?</p>
+      <canvas id="cRoll" class="short"></canvas>
+      <div class="row"><button class="b" id="bRoll">▶ Roll one turn</button><button class="b ghost" id="bRollReset">Reset</button></div>
+      <div class="out" id="oRoll"></div>
+      <p class="small">The purple curve is a <i>cycloid</i> — the path of a point on the rim. It also gives the fastest slide between two points (the brachistochrone).</p>
+    </div>
+
+    <div class="card">
+      <h3>2 · Find π by throwing darts</h3>
+      <p class="small">Throw random darts at a square. The quarter-circle covers π/4 of it, so π ≈ 4 × (darts inside ÷ all darts). This "Monte Carlo" idea is used to estimate risk, reliability and radiation shielding.</p>
+      <canvas id="cMC"></canvas>
+      <div class="row"><button class="b" data-mc="100">+100</button><button class="b" data-mc="1000">+1 000</button><button class="b" data-mc="10000">+10 000</button><button class="b ghost" id="bMCReset">Reset</button></div>
+      <div class="out" id="oMC"></div>
+    </div>
+
+    <div class="card">
+      <h3>3 · Race of the π formulas</h3>
+      <p class="small">Kerala's Madhava of Sangamagrama (c. 1400) found an infinite series for π two centuries before Europe. Later formulas converge far faster. Slide to add terms.</p>
+      <div class="row"><label for="rSer">Terms used</label><input type="range" id="rSer" min="1" max="1000" value="10"><span id="vSer">10</span></div>
+      <div class="tw"><table id="tSer"></table></div>
+      <p class="small">Aryabhata (499 CE) wrote that a circle of diameter 20 000 has circumference about 62 832 → π ≈ 3.1416. Easy fractions: 22/7 = 3.142857 (2 decimals right), 355/113 = 3.1415929 (6 decimals right).</p>
+    </div>
+
+    <div class="card">
+      <h3>4 · π at the workbench</h3>
+      <p class="small">Every rotating-machinery calculation hides a π. Change the numbers.</p>
+      <div class="row"><label for="nN">Speed N (rpm)</label><input type="number" id="nN" value="6000" min="0"></div>
+      <div class="row"><label for="nD">Diameter D (mm)</label><input type="number" id="nD" value="50" min="0"></div>
+      <div class="row"><label for="nT">Torque T (N·m)</label><input type="number" id="nT" value="20" min="0"></div>
+      <div class="out" id="oCalc"></div>
+    </div>
+  </div>
+
+  <div class="apps">
+    <div class="app"><b>Rotating machines</b>ω = 2πN/60, power P = 2πNT/60, cutting speed v = πDN — gearboxes, lathes, turbines, pumps.</div>
+    <div class="app"><b>Waves &amp; vibration</b>sin(2πft): every sound, AC supply (50 Hz in India), radio wave and machine vibration.</div>
+    <div class="app"><b>Statistics</b>The bell curve has √(2π) in it — exam marks, measurement errors, manufacturing tolerances.</div>
+    <div class="app"><b>Structures</b>Euler buckling load P = π²EI/L² for columns; area and stress in round shafts.</div>
+    <div class="app"><b>Space &amp; GPS</b>Orbits, satellite paths and map projections are built from circles and ellipses.</div>
+    <div class="app"><b>Signal processing</b>The Fourier transform (used in MP3, JPEG, vibration spectra) uses e<sup>−2πift</sup>.</div>
+  </div>
+</section>
+
+<!-- ============================ e ============================ -->
+<section class="sec" id="e" style="--c:var(--e)">
+  <h2><span class="big">e</span> Euler's number — natural growth and decay</h2>
+  <p class="lead">Whenever something changes at a rate proportional to its own size — money earning interest, bacteria multiplying, a hot cup cooling, a capacitor charging, a vibration dying out — the answer contains e. It is the only base whose curve has a slope exactly equal to its own height.</p>
+  <div class="digits">e = 2.71828 18284 59045 23536 02874 71352 66249 77572 47093 69995 …</div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>1 · Where e comes from: compound interest</h3>
+      <p class="small">A bank pays 100% interest a year. If it adds interest <i>n</i> times a year, ₹1 becomes (1 + 1/n)<sup>n</sup>. More frequent compounding helps — but only up to a limit. That limit is e.</p>
+      <div class="row"><label for="rComp">Compounding</label><input type="range" id="rComp" min="0" max="60" value="0"><span id="vComp"></span></div>
+      <canvas id="cComp" class="short"></canvas>
+      <div class="out" id="oComp"></div>
+    </div>
+
+    <div class="card">
+      <h3>2 · The curve that is its own slope</h3>
+      <p class="small">Move the point. The tangent's slope of y = e<sup>x</sup> always equals the height of the curve. That is why calculus loves e: d/dx(e<sup>x</sup>) = e<sup>x</sup>.</p>
+      <div class="row"><label for="rTan">x</label><input type="range" id="rTan" min="-2" max="2.2" step="0.01" value="1"><span id="vTan"></span></div>
+      <canvas id="cTan"></canvas>
+      <div class="out" id="oTan"></div>
+    </div>
+
+    <div class="card">
+      <h3>3 · Time constant τ (RC circuits, sensors, cooling)</h3>
+      <p class="small">A first-order system rises as 1 − e<sup>−t/τ</sup> and falls as e<sup>−t/τ</sup>. After one τ it has done 63.2% of its change; after 5τ, 99.3% — the engineer's "practically settled".</p>
+      <div class="row"><label for="rTau">τ (seconds)</label><input type="range" id="rTau" min="0.3" max="3" step="0.1" value="1"><span id="vTau"></span></div>
+      <canvas id="cTau"></canvas>
+      <p class="small">Meet it in: thermocouple response time, capacitor charging, motor speed run-up, filter design, tank draining, drug levels in blood.</p>
+    </div>
+
+    <div class="card">
+      <h3>4 · Damped vibration</h3>
+      <p class="small">A struck bell, a car suspension, a machine on its mounts: the vibration shrinks inside an envelope e<sup>−ζωt</sup>. Change the damping ratio ζ.</p>
+      <div class="row"><label for="rZeta">Damping ζ</label><input type="range" id="rZeta" min="0" max="1" step="0.01" value="0.08"><span id="vZeta"></span></div>
+      <canvas id="cDamp"></canvas>
+      <div class="out" id="oDamp"></div>
+    </div>
+  </div>
+
+  <div class="apps">
+    <div class="app"><b>Finance</b>Continuous compounding A = Pe<sup>rt</sup>; "rule of 70" for doubling time comes from ln 2 ≈ 0.693.</div>
+    <div class="app"><b>Electronics</b>RC and RL circuits, diode equation I = I<sub>s</sub>(e<sup>V/V<sub>T</sub></sup>−1), filters.</div>
+    <div class="app"><b>Radioactivity &amp; medicine</b>N = N₀e<sup>−λt</sup>; carbon dating, drug dosing, X-ray attenuation.</div>
+    <div class="app"><b>Heat transfer</b>Newton's law of cooling; fin efficiency; heat exchangers.</div>
+    <div class="app"><b>Probability</b>Normal distribution e<sup>−x²/2</sup>, Poisson failures, exponential reliability R(t) = e<sup>−λt</sup>.</div>
+    <div class="app"><b>Machine learning</b>Softmax, sigmoid 1/(1+e<sup>−x</sup>), log-loss — all built on e and ln.</div>
+  </div>
+</section>
+
+<!-- ============================ i ============================ -->
+<section class="sec" id="i" style="--c:var(--i)">
+  <h2><span class="big">i</span> The imaginary unit — a number that rotates</h2>
+  <p class="lead">i is defined by i² = −1. The name "imaginary" is unfortunate: i is best seen as an instruction, "turn 90° anticlockwise". Doing it twice turns you 180°, which is the same as multiplying by −1. Anything that rotates or oscillates — AC power, vibrations, waves, control loops — becomes simple arithmetic with i. Electrical engineers write it <b>j</b> because i is already used for current.</p>
+  <div class="digits">i¹ = i   ·   i² = −1   ·   i³ = −i   ·   i⁴ = 1   ·   then the cycle repeats</div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>1 · Multiply by i = turn 90°</h3>
+      <p class="small">Drag the purple point z anywhere. The faded points are i·z, i²·z = −z and i³·z. They always sit at right angles, on the same circle.</p>
+      <canvas id="cPlane" class="tall"></canvas>
+      <div class="out" id="oPlane"></div>
+    </div>
+
+    <div class="card">
+      <h3>2 · Phasors: a rotating arrow makes a sine wave</h3>
+      <p class="small">A vector spinning at constant speed casts a sine wave. Two arrows with a phase angle between them give two shifted waves — exactly how AC voltage vs current, or two vibration sensors, are compared.</p>
+      <div class="row"><label for="rPh">Phase of B</label><input type="range" id="rPh" min="-180" max="180" value="60"><span id="vPh"></span></div>
+      <canvas id="cPhasor"></canvas>
+      <div class="row"><button class="b ghost" id="bPhPause">❚❚ Pause</button></div>
+    </div>
+
+    <div class="card">
+      <h3>3 · AC circuit impedance with j</h3>
+      <p class="small">Resistors, coils and capacitors combine as one complex number Z = R + j(X<sub>L</sub> − X<sub>C</sub>). Its length gives the current; its angle gives the phase.</p>
+      <div class="row"><label for="zR">R (Ω)</label><input type="number" id="zR" value="10" min="0"></div>
+      <div class="row"><label for="zL">L (mH)</label><input type="number" id="zL" value="50" min="0"></div>
+      <div class="row"><label for="zC">C (µF)</label><input type="number" id="zC" value="200" min="0"></div>
+      <div class="row"><label for="zF">f (Hz)</label><input type="number" id="zF" value="50" min="0"></div>
+      <div class="row"><label for="zV">V (volts)</label><input type="number" id="zV" value="230" min="0"></div>
+      <div class="out" id="oZ"></div>
+    </div>
+
+    <div class="card">
+      <h3>Why not just use angles?</h3>
+      <p>With complex numbers, <b>rotating</b> becomes <b>multiplying</b>, and <b>differentiating</b> a wave becomes <b>multiplying by iω</b>. A differential equation turns into ordinary algebra. That one trick powers:</p>
+      <ul class="small">
+        <li>Frequency response, Bode plots and the s-plane in control engineering</li>
+        <li>The FFT that turns a vibration signal into a spectrum of frequencies</li>
+        <li>Phase between accelerometers to find unbalance and misalignment</li>
+        <li>Quantum mechanics (Schrödinger's equation has an i in it)</li>
+        <li>Airfoil design by conformal mapping (Joukowski transform)</li>
+        <li>Fractals like the Mandelbrot set: z → z² + c</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ EULER ============================ -->
+<section class="sec" id="euler" style="--c:var(--eu)">
+  <h2><span class="big">e<sup>iπ</sup>+1=0</span> Where π, e and i meet</h2>
+  <p class="lead">Euler's formula e<sup>iθ</sup> = cos θ + i sin θ says that "growing" in the imaginary direction does not make you bigger — it makes you go round a circle. Put θ = π (half a turn) and you land on −1, giving the identity that links the five most important numbers: 0, 1, π, e and i.</p>
+  <div class="formula">e<sup>iθ</sup> = cos θ + i sin θ &nbsp;&nbsp;⟹&nbsp;&nbsp; e<sup>iπ</sup> + 1 = 0</div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Watch e<sup>iθ</sup> being built</h3>
+      <p class="small">Just as e = lim (1 + 1/n)<sup>n</sup>, we can compute e<sup>iθ</sup> = lim (1 + iθ/n)<sup>n</sup>: take n tiny steps, each one "a little bit sideways". The red path is those n steps. As n grows, it hugs the unit circle and ends at cos θ + i sin θ.</p>
+      <div class="row"><label for="rTh">Angle θ</label><input type="range" id="rTh" min="0" max="360" value="180"><span id="vTh"></span></div>
+      <div class="row"><label for="rEn">Steps n</label><input type="range" id="rEn" min="1" max="200" value="6"><span id="vEn"></span></div>
+      <canvas id="cEuler" class="tall"></canvas>
+    </div>
+    <div class="card">
+      <h3>Reading the result</h3>
+      <div class="out" id="oEuler" style="min-height:150px"></div>
+      <p>Two everyday consequences:</p>
+      <ul class="small">
+        <li><b>cos θ = (e<sup>iθ</sup> + e<sup>−iθ</sup>)/2</b> — every real vibration is two counter-rotating phasors. This is why an FFT shows "negative frequencies".</li>
+        <li><b>Trig identities for free:</b> e<sup>i(a+b)</sup> = e<sup>ia</sup>e<sup>ib</sup> gives cos(a+b) and sin(a+b) in one line.</li>
+        <li><b>Powers of complex numbers:</b> (r e<sup>iθ</sup>)<sup>n</sup> = rⁿ e<sup>inθ</sup> (De Moivre) — used for roots of polynomials and filter design.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ PHI ============================ -->
+<section class="sec" id="phi" style="--c:var(--phi)">
+  <h2><span class="big">φ</span> The golden ratio — the most irrational number</h2>
+  <p class="lead">Split a line so that the whole is to the long part as the long part is to the short part. That ratio is φ = (1 + √5)/2. It satisfies φ² = φ + 1, and ratios of consecutive Fibonacci numbers (1, 1, 2, 3, 5, 8, 13…) home in on it. Because φ is the number hardest to approximate by fractions, nature uses it to pack seeds and leaves without overlap. (Indian poet-mathematicians like Virahanka and Hemachandra described this sequence centuries before Fibonacci.)</p>
+  <div class="digits">φ = 1.61803 39887 49894 84820 45868 34365 63811 77203 …   ·   1/φ = 0.61803…   ·   φ² = 2.61803…</div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>1 · Sunflower seed packing</h3>
+      <p class="small">Each new seed is placed at a fixed turning angle from the previous one. At the golden angle 360°/φ² ≈ 137.508° the seeds fill the disc evenly. Nudge the angle by a fraction of a degree and gaps or spokes appear.</p>
+      <div class="row"><label for="rSun">Turn angle</label><input type="range" id="rSun" min="130" max="145" step="0.001" value="137.508"><span id="vSun"></span></div>
+      <div class="row"><button class="b" data-sun="137.508">137.508° (golden)</button><button class="b ghost" data-sun="137">137°</button><button class="b ghost" data-sun="138">138°</button><button class="b ghost" data-sun="144">144° (2/5 turn)</button></div>
+      <canvas id="cSun" class="tall"></canvas>
+    </div>
+    <div class="card">
+      <h3>2 · Golden rectangle and spiral</h3>
+      <p class="small">Cut a square off a golden rectangle and what remains is again a golden rectangle — forever. Quarter-circles through the squares trace the golden spiral.</p>
+      <canvas id="cGold"></canvas>
+      <h3 style="margin-top:12px">3 · Fibonacci ratios → φ</h3>
+      <div class="tw"><table id="tFib"></table></div>
+    </div>
+  </div>
+  <div class="apps">
+    <div class="app"><b>Optimisation</b>Golden-section search finds the minimum of a function by shrinking the interval by 0.618 each step — used in design optimisation and line searches.</div>
+    <div class="app"><b>Computer science</b>Fibonacci hashing, Fibonacci heaps, and the worst case of Euclid's GCD algorithm.</div>
+    <div class="app"><b>Nature</b>Pinecones, pineapples, sunflowers and leaf arrangement (phyllotaxis) use Fibonacci spirals.</div>
+    <div class="app"><b>Design</b>Often used for pleasing proportions in layouts and logos — though many popular "golden ratio" claims about art are myths.</div>
+  </div>
+</section>
+
+<!-- ============================ ROOT 2 ============================ -->
+<section class="sec" id="root2" style="--c:var(--r2)">
+  <h2><span class="big">√2</span> The first number proven irrational</h2>
+  <p class="lead">The diagonal of a unit square is √2. The Baudhayana Sulba Sutra (c. 800 BCE) gives it as 1 + 1/3 + 1/(3·4) − 1/(3·4·34) ≈ 1.4142157, correct to five decimals. The Greeks proved no fraction can equal it: if √2 = p/q in lowest terms, then p² = 2q², so p is even, so q is even too — a contradiction.</p>
+  <div class="digits">√2 = 1.41421 35623 73095 04880 16887 24209 69807 …   ·   1/√2 = 0.70710 67811 …</div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>The paper in your printer is built on √2</h3>
+      <p class="small">ISO 216 paper has sides in the ratio 1 : √2. Fold it in half and the half has <i>the same shape</i>. A0 has an area of 1 m²; each next size is half. That is why an A4 page shrinks perfectly onto A5 at 71% (= 1/√2) on a photocopier.</p>
+      <div class="row"><label for="sA">Highlight</label><select id="sA"></select></div>
+      <canvas id="cPaper" class="tall"></canvas>
+    </div>
+    <div class="card">
+      <h3>A-series sizes</h3>
+      <div class="tw"><table id="tPaper"></table></div>
+      <h3 style="margin-top:14px">√2 and 1/√2 elsewhere</h3>
+      <ul class="small">
+        <li><b>RMS value:</b> AC peak = √2 × RMS, so 230 V mains peaks at about 325 V.</li>
+        <li><b>−3 dB point:</b> a filter's cut-off is where amplitude falls to 1/√2 (half power).</li>
+        <li><b>45° geometry:</b> sin 45° = cos 45° = 1/√2 — bracing, chamfers, vector components.</li>
+        <li><b>Music:</b> the tritone in equal temperament is a frequency ratio of √2.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ MORE ============================ -->
+<section class="sec" id="more" style="--c:var(--pi)">
+  <h2>More special numbers you will meet</h2>
+  <p class="lead">A gallery of numbers that quietly run engineering, science and daily life.</p>
+  <div class="gallery">
+    <div class="gcard" style="--c:var(--muted)"><div class="gs">0</div><div class="gv">Brahmagupta, 628 CE</div><p>Zero as a number with its own rules (Brahmasphutasiddhanta) made the place-value decimal system — and all of computing — possible.</p></div>
+    <div class="gcard" style="--c:var(--r2)"><div class="gs">√3</div><div class="gv">1.73205 08075 …</div><p>Three-phase power: line voltage = √3 × phase voltage, so 230 V phase gives 400 V line. Also the height of an equilateral triangle and hexagonal nut geometry.</p></div>
+    <div class="gcard" style="--c:var(--e)"><div class="gs">ln 2</div><div class="gv">0.69314 71805 …</div><p>Half-life = 0.693/λ. Doubling time ≈ 70 ÷ growth % ("rule of 70"). 3 dB ≈ factor of 2 in power.</p></div>
+    <div class="gcard" style="--c:var(--pi)"><div class="gs">2π</div><div class="gv">6.28318 53071 …</div><p>One full turn in radians. Converts hertz to rad/s: ω = 2πf. Some people argue it should have been "the" circle constant (τ).</p></div>
+    <div class="gcard" style="--c:var(--pi)"><div class="gs">π² ≈ g</div><div class="gv">9.8696 vs 9.81 m/s²</div><p>Not a coincidence: the metre was once proposed as the length of a pendulum that beats seconds, T = 2π√(L/g) = 2 s ⇒ g = π² m/s² for L = 1 m.</p></div>
+    <div class="gcard" style="--c:var(--e)"><div class="gs">γ</div><div class="gv">0.57721 56649 …</div><p>Euler–Mascheroni constant: the gap between 1 + 1/2 + 1/3 + … + 1/n and ln n. Appears in number theory, Bessel functions and the coupon-collector problem. Nobody knows yet if it is irrational!</p></div>
+    <div class="gcard" style="--c:var(--phi)"><div class="gs">1729</div><div class="gv">Ramanujan's taxi-cab number</div><p>The smallest number expressible as a sum of two cubes in two ways: 1³ + 12³ = 9³ + 10³. Ramanujan noticed this instantly when G. H. Hardy called it "dull".</p></div>
+    <div class="gcard" style="--c:var(--i)"><div class="gs">∞</div><div class="gv">not a number, a direction</div><p>Limits, asymptotes, infinite series and Cantor's discovery that some infinities are bigger than others.</p></div>
+    <div class="gcard" style="--c:var(--eu)"><div class="gs">c, h, k…</div><div class="gv">physical constants</div><p>Speed of light c = 299 792 458 m/s (exact by definition since 1983), Planck's h, Boltzmann's k — since 2019 the SI units themselves are defined from these.</p></div>
+    <div class="gcard" style="--c:var(--muted)"><div class="gs">2¹⁰ = 1024</div><div class="gv">kibi vs kilo</div><p>Why "1 KB" was once 1024 bytes. Powers of two set memory sizes, ADC resolution (a 16-bit ADC has 65 536 levels) and FFT block lengths.</p></div>
+  </div>
+
+  <div class="card" style="--c:var(--phi);margin-top:16px">
+    <h3>Try it: Kaprekar's magic 6174</h3>
+    <p class="small">D. R. Kaprekar, a school teacher from Devlali, Maharashtra, found this in 1949. Take any 4-digit number with at least two different digits. Arrange the digits largest-first and smallest-first, subtract, and repeat. You always reach 6174 within 7 steps.</p>
+    <div class="row"><label for="kIn">Your number</label><input type="text" id="kIn" value="2026" maxlength="4" inputmode="numeric"><button class="b" id="kGo">Run</button></div>
+    <div class="out" id="kOut"></div>
+  </div>
+</section>
+
+<!-- ============================ QUIZ ============================ -->
+<section class="sec quiz" id="quiz" style="--c:var(--e)">
+  <h2>Quick check</h2>
+  <p class="lead">Pick an answer — you'll see why right away.</p>
+  <div id="quizBox"></div>
+  <div class="out" id="quizScore">Score: 0 / 0</div>
+</section>
+
+</main>
+
+<footer class="wrap">
+  π, e, i &amp; Friends · v1.0.0 · Mathematics section · Works fully offline — a single HTML file with no external libraries.
+</footer>
+
+<script>
+"use strict";
+const APP_VERSION = "1.0.0";
+const $ = s => document.querySelector(s);
+const col = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const TAU = 2 * Math.PI;
+
+function fit(c){
+  const r = c.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+  c.width = Math.max(1, Math.round(r.width * d)); c.height = Math.max(1, Math.round(r.height * d));
+  const g = c.getContext('2d'); g.setTransform(d, 0, 0, d, 0, 0);
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  return { g, W: r.width, H: r.height };
+}
+function fmt(v, d){ return Number(v).toLocaleString('en-IN', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+
+/* Generic plot axes: returns mappers */
+function axes(g, W, H, x0, x1, y0, y1, opt){
+  opt = opt || {};
+  const L = 36, R = 10, T = 10, B = 24;
+  const X = v => L + (v - x0) / (x1 - x0) * (W - L - R);
+  const Y = v => H - B - (v - y0) / (y1 - y0) * (H - T - B);
+  g.font = '11px system-ui'; g.lineWidth = 1;
+  const xs = opt.xs || niceStep(x1 - x0), ys = opt.ys || niceStep(y1 - y0);
+  g.strokeStyle = col('--line'); g.fillStyle = col('--muted');
+  g.textAlign = 'center';
+  for (let v = Math.ceil(x0 / xs) * xs; v <= x1 + 1e-9; v += xs){
+    g.beginPath(); g.moveTo(X(v), T); g.lineTo(X(v), H - B); g.stroke();
+    g.fillText(+v.toFixed(3), X(v), H - 8);
+  }
+  g.textAlign = 'right';
+  for (let v = Math.ceil(y0 / ys) * ys; v <= y1 + 1e-9; v += ys){
+    g.beginPath(); g.moveTo(L, Y(v)); g.lineTo(W - R, Y(v)); g.stroke();
+    g.fillText(+v.toFixed(3), L - 4, Y(v) + 4);
+  }
+  g.strokeStyle = col('--muted');
+  if (y0 <= 0 && y1 >= 0){ g.beginPath(); g.moveTo(L, Y(0)); g.lineTo(W - R, Y(0)); g.stroke(); }
+  if (x0 <= 0 && x1 >= 0){ g.beginPath(); g.moveTo(X(0), T); g.lineTo(X(0), H - B); g.stroke(); }
+  if (opt.xl){ g.textAlign = 'right'; g.fillText(opt.xl, W - R, H - B - 4); }
+  return { X, Y };
+}
+function niceStep(span){
+  const raw = span / 6, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p;
+  return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p;
+}
+function curve(g, X, Y, f, a, b, color, lw, dash){
+  g.strokeStyle = color; g.lineWidth = lw || 2; g.setLineDash(dash || []);
+  g.beginPath(); const n = 300;
+  for (let k = 0; k <= n; k++){ const x = a + (b - a) * k / n; const y = f(x); k ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y)); }
+  g.stroke(); g.setLineDash([]);
+}
+function dot(g, x, y, r, color){ g.fillStyle = color; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); }
+function arrow(g, x0, y0, x1, y1, color, lw){
+  g.strokeStyle = color; g.fillStyle = color; g.lineWidth = lw || 2;
+  g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+  const a = Math.atan2(y1 - y0, x1 - x0), s = 8;
+  if (Math.hypot(x1 - x0, y1 - y0) < 4) return;
+  g.beginPath(); g.moveTo(x1, y1);
+  g.lineTo(x1 - s * Math.cos(a - 0.4), y1 - s * Math.sin(a - 0.4));
+  g.lineTo(x1 - s * Math.cos(a + 0.4), y1 - s * Math.sin(a + 0.4)); g.closePath(); g.fill();
+}
+
+const redraws = [];
+function reg(fn){ redraws.push(fn); fn(); }
+
+/* ======================= π : rolling wheel ======================= */
+const roll = { t: 0, raf: 0 };
+function drawRoll(){
+  const { g, W, H } = fit($('#cRoll'));
+  const u = (W - 40) / 4.3, x0 = 20, base = H - 32, r = 0.5 * u, th = roll.t * TAU;
+  g.clearRect(0, 0, W, H);
+  g.strokeStyle = col('--muted'); g.lineWidth = 1; g.font = '12px system-ui'; g.textAlign = 'center'; g.fillStyle = col('--muted');
+  g.beginPath(); g.moveTo(x0, base); g.lineTo(W - 10, base); g.stroke();
+  for (let k = 0; k <= 4; k++){ const X = x0 + k * u; g.beginPath(); g.moveTo(X, base - 5); g.lineTo(X, base + 5); g.stroke(); g.fillText(k, X, base + 19); }
+  const XP = x0 + Math.PI * u;
+  g.strokeStyle = col('--pi'); g.setLineDash([4, 4]); g.beginPath(); g.moveTo(XP, base + 6); g.lineTo(XP, 18); g.stroke(); g.setLineDash([]);
+  g.fillStyle = col('--pi'); g.font = 'bold 13px system-ui'; g.fillText('π = 3.14159…', Math.min(XP, W - 50), 14);
+  g.strokeStyle = col('--eu'); g.lineWidth = 4; g.beginPath(); g.moveTo(x0, base); g.lineTo(x0 + r * th, base); g.stroke();
+  g.strokeStyle = col('--i'); g.lineWidth = 1.5; g.beginPath();
+  for (let a = 0; a <= th + 1e-9; a += 0.02){ const cx = x0 + r * a; const px = cx - r * Math.sin(a), py = base - r + r * Math.cos(a); a ? g.lineTo(px, py) : g.moveTo(px, py); }
+  g.stroke();
+  const cx = x0 + r * th, cy = base - r;
+  g.strokeStyle = col('--pi'); g.lineWidth = 2.5; g.beginPath(); g.arc(cx, cy, r, 0, TAU); g.stroke();
+  const mx = cx - r * Math.sin(th), my = cy + r * Math.cos(th);
+  g.strokeStyle = col('--fg'); g.lineWidth = 1.5; g.beginPath(); g.moveTo(mx, my); g.lineTo(2 * cx - mx, 2 * cy - my); g.stroke();
+  dot(g, mx, my, 4, col('--eu')); dot(g, cx, cy, 2.5, col('--fg'));
+  g.fillStyle = col('--fg'); g.font = '12px system-ui'; g.fillText('d = 1', cx, cy - r - 6);
+  $('#oRoll').innerHTML = `Turns completed: <b>${fmt(roll.t, 3)}</b>   Distance travelled = π·d·turns = <b>${fmt(Math.PI * roll.t, 5)}</b>`;
+}
+$('#bRoll').onclick = () => {
+  cancelAnimationFrame(roll.raf); const t0 = performance.now(); roll.t = 0;
+  const step = now => { roll.t = Math.min(1, (now - t0) / 3500); drawRoll(); if (roll.t < 1) roll.raf = requestAnimationFrame(step); };
+  roll.raf = requestAnimationFrame(step);
+};
+$('#bRollReset').onclick = () => { cancelAnimationFrame(roll.raf); roll.t = 0; drawRoll(); };
+
+/* ======================= π : Monte Carlo ======================= */
+const mc = { pts: [], n: 0, inn: 0 };
+function mcAdd(k){
+  for (let j = 0; j < k; j++){
+    const x = Math.random(), y = Math.random(), ins = x * x + y * y <= 1;
+    mc.n++; if (ins) mc.inn++;
+    if (mc.pts.length < 40000) mc.pts.push(x, y, ins ? 1 : 0); else { const idx = (Math.random() * 40000 / 3 | 0) * 3; mc.pts[idx] = x; mc.pts[idx + 1] = y; mc.pts[idx + 2] = ins ? 1 : 0; }
+  }
+  drawMC();
+}
+function drawMC(){
+  const { g, W, H } = fit($('#cMC'));
+  const S = Math.min(W - 20, H - 20), ox = (W - S) / 2, oy = (H - S) / 2;
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = col('--card'); g.fillRect(ox, oy, S, S);
+  const cin = col('--pi'), cout = col('--eu');
+  for (let k = 0; k < mc.pts.length; k += 3){
+    g.fillStyle = mc.pts[k + 2] ? cin : cout;
+    g.fillRect(ox + mc.pts[k] * S - 1, oy + S - mc.pts[k + 1] * S - 1, 2, 2);
+  }
+  g.strokeStyle = col('--fg'); g.lineWidth = 1.5; g.strokeRect(ox, oy, S, S);
+  g.beginPath(); g.arc(ox, oy + S, S, -Math.PI / 2, 0); g.stroke();
+  const est = mc.n ? 4 * mc.inn / mc.n : 0;
+  $('#oMC').innerHTML = mc.n ? `Darts: ${mc.n.toLocaleString('en-IN')}   inside: ${mc.inn.toLocaleString('en-IN')}\nπ ≈ 4 × ${mc.inn}/${mc.n} = <b>${est.toFixed(5)}</b>   error ${((est - Math.PI) / Math.PI * 100).toFixed(3)} %\nError shrinks only like 1/√n — 100× more darts for 10× accuracy.` : 'Press a button to throw darts.';
+}
+document.querySelectorAll('[data-mc]').forEach(b => b.onclick = () => mcAdd(+b.dataset.mc));
+$('#bMCReset').onclick = () => { mc.pts = []; mc.n = 0; mc.inn = 0; drawMC(); };
+
+/* ======================= π : series race ======================= */
+function fact(n){ let f = 1; for (let k = 2; k <= n; k++) f *= k; return f; }
+function seriesTable(){
+  const n = +$('#rSer').value; $('#vSer').textContent = n;
+  let L = 0; for (let k = 0; k < n; k++) L += (k % 2 ? -4 : 4) / (2 * k + 1);
+  let N = 3; for (let k = 1; k <= n; k++) N += (k % 2 ? 4 : -4) / ((2 * k) * (2 * k + 1) * (2 * k + 2));
+  let s = 0; const m = Math.min(n, 3);
+  for (let k = 0; k < m; k++) s += fact(4 * k) * (1103 + 26390 * k) / (Math.pow(fact(k), 4) * Math.pow(396, 4 * k));
+  const R = 1 / (2 * Math.SQRT2 / 9801 * s);
+  const rows = [
+    ['Madhava–Leibniz', '4(1 − 1/3 + 1/5 − …)', L],
+    ['Nilakantha (1500)', '3 + 4/(2·3·4) − 4/(4·5·6) + …', N],
+    ['Ramanujan (1914)', '≈ 8 new digits per term', R]
+  ];
+  let h = '<tr><th>Series</th><th>Value</th><th>Correct digits</th><th style="width:30%"></th></tr>';
+  for (const [nm, f, v] of rows){
+    const err = Math.abs(v - Math.PI), dg = err < 1e-15 ? 15 : Math.max(0, -Math.log10(err));
+    h += `<tr><td>${nm}<div class="small">${f}</div></td><td>${v.toFixed(12)}</td><td>${err < 1e-15 ? '15+' : dg.toFixed(1)}</td><td><div class="bar" style="width:${Math.min(100, dg / 15 * 100)}%"></div></td></tr>`;
+  }
+  $('#tSer').innerHTML = h;
+}
+$('#rSer').oninput = seriesTable;
+
+/* ======================= π : workbench calc ======================= */
+function piCalc(){
+  const N = +$('#nN').value || 0, D = +$('#nD').value || 0, T = +$('#nT').value || 0;
+  const w = TAU * N / 60, v = Math.PI * D * N / 60000, P = w * T;
+  $('#oCalc').innerHTML =
+`Rotation frequency  f = N/60      = <b>${fmt(N / 60, 2)}</b> Hz
+Angular velocity    ω = 2πN/60    = <b>${fmt(w, 2)}</b> rad/s
+Surface speed       v = πDN/60000 = <b>${fmt(v, 2)}</b> m/s
+Circumference       πD            = <b>${fmt(Math.PI * D, 2)}</b> mm
+Cross-section area  πD²/4         = <b>${fmt(Math.PI * D * D / 4, 1)}</b> mm²
+Power               P = ωT        = <b>${fmt(P / 1000, 2)}</b> kW`;
+}
+['#nN', '#nD', '#nT'].forEach(s => $(s).oninput = piCalc);
+
+/* ======================= e : compound interest ======================= */
+function compN(){ const s = +$('#rComp').value; return Math.max(1, Math.round(Math.pow(10, s / 10))); }
+function nName(n){ return ({1:'yearly',2:'half-yearly',4:'quarterly',12:'monthly',52:'weekly',365:'daily',8760:'hourly'})[n] || ''; }
+function drawComp(){
+  const n = compN(); $('#vComp').textContent = n.toLocaleString('en-IN') + '×/yr';
+  const v = Math.pow(1 + 1 / n, n);
+  const { g, W, H } = fit($('#cComp'));
+  g.clearRect(0, 0, W, H);
+  const { X, Y } = axes(g, W, H, 0, 6, 1.9, 2.8, { ys: 0.1, xl: 'log₁₀ n' });
+  g.strokeStyle = col('--eu'); g.setLineDash([5, 4]); g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(X(0), Y(Math.E)); g.lineTo(X(6), Y(Math.E)); g.stroke(); g.setLineDash([]);
+  g.fillStyle = col('--eu'); g.font = '12px system-ui'; g.textAlign = 'left'; g.fillText('e = 2.71828…', X(0.1), Y(Math.E) - 5);
+  curve(g, X, Y, x => { const m = Math.pow(10, x); return Math.pow(1 + 1 / m, m); }, 0, 6, col('--e'), 2.5);
+  dot(g, X(Math.log10(n)), Y(v), 5, col('--e'));
+  $('#oComp').innerHTML = `n = ${n.toLocaleString('en-IN')} ${nName(n) ? '(' + nName(n) + ')' : ''}\n(1 + 1/n)ⁿ = <b>${v.toFixed(8)}</b>   gap to e = ${(Math.E - v).toExponential(2)}\n₹1,00,000 at 100% → ₹${fmt(100000 * v, 0)} after 1 year`;
+}
+$('#rComp').oninput = drawComp;
+
+/* ======================= e : tangent ======================= */
+function drawTan(){
+  const a = +$('#rTan').value, ea = Math.exp(a); $('#vTan').textContent = a.toFixed(2);
+  const { g, W, H } = fit($('#cTan'));
+  g.clearRect(0, 0, W, H);
+  const { X, Y } = axes(g, W, H, -2, 2.5, 0, 10, { xs: 0.5, ys: 2 });
+  curve(g, X, Y, x => Math.pow(2, x), -2, 2.5, col('--muted'), 1.2, [4, 4]);
+  curve(g, X, Y, x => Math.pow(3, x), -2, 2.1, col('--muted'), 1.2, [1, 4]);
+  curve(g, X, Y, Math.exp, -2, 2.3, col('--e'), 2.5);
+  curve(g, X, Y, x => ea * (x - a) + ea, Math.max(-2, a - 10 / ea), Math.min(2.5, a + 10 / ea), col('--eu'), 2);
+  g.strokeStyle = col('--e'); g.setLineDash([3, 3]); g.lineWidth = 1; g.beginPath(); g.moveTo(X(a), Y(0)); g.lineTo(X(a), Y(ea)); g.stroke(); g.setLineDash([]);
+  dot(g, X(a), Y(ea), 5, col('--e'));
+  g.font = '11px system-ui'; g.fillStyle = col('--muted'); g.textAlign = 'left';
+  g.fillText('dashed: 2ˣ   dotted: 3ˣ', X(-1.95), Y(9.2));
+  $('#oTan').innerHTML = `height eˣ = <b>${ea.toFixed(4)}</b>   slope = <b>${ea.toFixed(4)}</b>  ✔ equal\nFor 2ˣ: slope = 0.693 × height.  For 3ˣ: slope = 1.099 × height.\nOnly e gives exactly 1 × height (because ln e = 1).`;
+}
+$('#rTan').oninput = drawTan;
+
+/* ======================= e : time constant ======================= */
+function drawTau(){
+  const tau = +$('#rTau').value; $('#vTau').textContent = tau.toFixed(1) + ' s';
+  const { g, W, H } = fit($('#cTau'));
+  g.clearRect(0, 0, W, H);
+  const { X, Y } = axes(g, W, H, 0, 10, 0, 1.05, { xs: 1, ys: 0.2, xl: 't (s)' });
+  curve(g, X, Y, t => 1 - Math.exp(-t / tau), 0, 10, col('--e'), 2.5);
+  curve(g, X, Y, t => Math.exp(-t / tau), 0, 10, col('--eu'), 2.5);
+  g.font = '11px system-ui';
+  [[1, '1τ'], [5, '5τ']].forEach(([m, lbl]) => {
+    const t = m * tau; if (t > 10) return;
+    g.strokeStyle = col('--muted'); g.setLineDash([3, 3]); g.lineWidth = 1; g.beginPath(); g.moveTo(X(t), Y(0)); g.lineTo(X(t), Y(1.03)); g.stroke(); g.setLineDash([]);
+    const up = 1 - Math.exp(-m);
+    dot(g, X(t), Y(up), 4, col('--e')); dot(g, X(t), Y(1 - up), 4, col('--eu'));
+    g.fillStyle = col('--fg'); g.textAlign = 'left';
+    g.fillText(`${lbl}: ${(up * 100).toFixed(1)}%`, X(t) + 4, Y(up) + 14);
+  });
+  g.fillStyle = col('--e'); g.textAlign = 'right'; g.fillText('charging 1 − e^(−t/τ)', X(9.9), Y(0.9));
+  g.fillStyle = col('--eu'); g.fillText('decay e^(−t/τ)', X(9.9), Y(0.12));
+}
+$('#rTau').oninput = drawTau;
+
+/* ======================= e : damped vibration ======================= */
+function drawDamp(){
+  const z = +$('#rZeta').value; $('#vZeta').textContent = z.toFixed(2);
+  const wn = TAU * 1.5, wd = wn * Math.sqrt(Math.max(0, 1 - z * z));
+  const x = t => z >= 1 ? Math.exp(-wn * t) * (1 + wn * t) : Math.exp(-z * wn * t) * (Math.cos(wd * t) + z / Math.sqrt(1 - z * z) * Math.sin(wd * t));
+  const { g, W, H } = fit($('#cDamp'));
+  g.clearRect(0, 0, W, H);
+  const { X, Y } = axes(g, W, H, 0, 4, -1.1, 1.1, { xs: 0.5, ys: 0.5, xl: 't (s)' });
+  curve(g, X, Y, t => Math.exp(-z * wn * t), 0, 4, col('--eu'), 1.5, [5, 4]);
+  curve(g, X, Y, t => -Math.exp(-z * wn * t), 0, 4, col('--eu'), 1.5, [5, 4]);
+  curve(g, X, Y, x, 0, 4, col('--e'), 2.2);
+  const delta = z < 1 ? TAU * z / Math.sqrt(1 - z * z) : Infinity;
+  $('#oDamp').innerHTML = z >= 1 ? 'ζ ≥ 1: critically / over-damped — returns without oscillating (door closers, gauges).' :
+    `Logarithmic decrement δ = ln(xₙ/xₙ₊₁) = <b>${delta.toFixed(3)}</b>\nEach cycle the amplitude shrinks to <b>${(Math.exp(-delta) * 100).toFixed(1)}%</b>.\nMeasure δ from a tap test → ζ ≈ δ/2π for light damping.`;
+}
+$('#rZeta').oninput = drawDamp;
+
+/* ======================= i : complex plane ======================= */
+const cz = { re: 2, im: 1 };
+function planeMap(W, H){ const S = Math.min(W, H) / 2 - 16, sc = S / 3; return { cx: W / 2, cy: H / 2, sc }; }
+function drawPlane(){
+  const c = $('#cPlane'), { g, W, H } = fit(c), { cx, cy, sc } = planeMap(W, H);
+  g.clearRect(0, 0, W, H);
+  g.strokeStyle = col('--line'); g.lineWidth = 1;
+  for (let k = -3; k <= 3; k++){ g.beginPath(); g.moveTo(cx + k * sc, cy - 3 * sc); g.lineTo(cx + k * sc, cy + 3 * sc); g.stroke(); g.beginPath(); g.moveTo(cx - 3 * sc, cy + k * sc); g.lineTo(cx + 3 * sc, cy + k * sc); g.stroke(); }
+  g.strokeStyle = col('--muted'); g.beginPath(); g.moveTo(cx - 3.2 * sc, cy); g.lineTo(cx + 3.2 * sc, cy); g.moveTo(cx, cy - 3.2 * sc); g.lineTo(cx, cy + 3.2 * sc); g.stroke();
+  g.fillStyle = col('--muted'); g.font = '12px system-ui'; g.textAlign = 'left';
+  g.fillText('Re', cx + 3 * sc - 14, cy - 6); g.fillText('Im', cx + 6, cy - 3 * sc + 12);
+  const r = Math.hypot(cz.re, cz.im);
+  g.strokeStyle = col('--i'); g.setLineDash([3, 4]); g.beginPath(); g.arc(cx, cy, r * sc, 0, TAU); g.stroke(); g.setLineDash([]);
+  const pts = [[cz.re, cz.im, 'z'], [-cz.im, cz.re, 'i·z'], [-cz.re, -cz.im, 'i²·z = −z'], [cz.im, -cz.re, 'i³·z']];
+  pts.forEach(([a, b, lbl], k) => {
+    g.globalAlpha = k ? 0.45 : 1;
+    arrow(g, cx, cy, cx + a * sc, cy - b * sc, col('--i'), k ? 2 : 3);
+    g.fillStyle = col('--fg'); g.fillText(lbl, cx + a * sc + 7, cy - b * sc - 7);
+  });
+  g.globalAlpha = 1;
+  dot(g, cx + cz.re * sc, cy - cz.im * sc, 7, col('--i'));
+  const ang = Math.atan2(cz.im, cz.re) * 180 / Math.PI;
+  const sgn = v => (v < 0 ? '− ' : '+ ') + Math.abs(v).toFixed(2);
+  $('#oPlane').innerHTML = `z     = ${cz.re.toFixed(2)} ${sgn(cz.im)}i     |z| = <b>${r.toFixed(3)}</b>   angle = <b>${ang.toFixed(1)}°</b>\ni·z   = ${(-cz.im).toFixed(2)} ${sgn(cz.re)}i     angle = ${(((ang + 90 + 540) % 360) - 180).toFixed(1)}°   (+90°)\nz²    = ${(cz.re * cz.re - cz.im * cz.im).toFixed(2)} ${sgn(2 * cz.re * cz.im)}i     |z|² = ${(r * r).toFixed(2)}, angle doubled`;
+}
+(function(){
+  const c = $('#cPlane'); let drag = false;
+  const set = e => { const rc = c.getBoundingClientRect(), { cx, cy, sc } = planeMap(rc.width, rc.height);
+    cz.re = Math.max(-3, Math.min(3, (e.clientX - rc.left - cx) / sc)); cz.im = Math.max(-3, Math.min(3, -(e.clientY - rc.top - cy) / sc));
+    cz.re = Math.round(cz.re * 20) / 20; cz.im = Math.round(cz.im * 20) / 20; drawPlane(); };
+  c.addEventListener('pointerdown', e => { drag = true; c.setPointerCapture(e.pointerId); set(e); });
+  c.addEventListener('pointermove', e => { if (drag) set(e); });
+  c.addEventListener('pointerup', () => drag = false);
+  c.addEventListener('pointercancel', () => drag = false);
+})();
+
+/* ======================= i : phasors ======================= */
+const ph = { t: 0, run: true, last: 0, visible: false };
+function drawPhasor(){
+  const phi = +$('#rPh').value * Math.PI / 180;
+  $('#vPh').textContent = (+$('#rPh').value > 0 ? '+' : '') + $('#rPh').value + '°';
+  const { g, W, H } = fit($('#cPhasor'));
+  g.clearRect(0, 0, W, H);
+  const R = Math.min(H / 2 - 14, 80), cx = R + 14, cy = H / 2, x0 = 2 * R + 40, k = 0.045;
+  g.strokeStyle = col('--line'); g.lineWidth = 1;
+  g.beginPath(); g.arc(cx, cy, R, 0, TAU); g.stroke();
+  g.beginPath(); g.moveTo(x0, cy); g.lineTo(W - 6, cy); g.moveTo(cx - R, cy); g.lineTo(cx + R, cy); g.stroke();
+  const A = ph.t, B = ph.t + phi;
+  [[A, '--i', 'A'], [B, '--e', 'B']].forEach(([a, cv, lbl]) => {
+    const px = cx + R * Math.cos(a), py = cy - R * Math.sin(a);
+    arrow(g, cx, cy, px, py, col(cv), 3);
+    g.strokeStyle = col(cv); g.globalAlpha = 0.4; g.setLineDash([3, 3]); g.lineWidth = 1;
+    g.beginPath(); g.moveTo(px, py); g.lineTo(x0, py); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
+    g.strokeStyle = col(cv); g.lineWidth = 2.2; g.beginPath();
+    for (let x = x0; x <= W - 6; x += 2){ const y = cy - R * Math.sin(a - (x - x0) * k); x === x0 ? g.moveTo(x, y) : g.lineTo(x, y); }
+    g.stroke();
+    g.fillStyle = col(cv); g.font = 'bold 12px system-ui'; g.fillText(lbl, px + 6 * Math.cos(a), py - 6 * Math.sin(a));
+  });
+  g.fillStyle = col('--muted'); g.font = '12px system-ui'; g.textAlign = 'left';
+  const d = +$('#rPh').value;
+  g.fillText(d === 0 ? 'In phase' : `B ${d > 0 ? 'leads' : 'lags'} A by ${Math.abs(d)}°  (factor e^(i·${(phi).toFixed(2)}))`, x0, 14);
+}
+function phLoop(now){
+  if (ph.run && ph.visible){ const dt = ph.last ? (now - ph.last) / 1000 : 0; ph.t = (ph.t + dt * 1.6) % TAU; drawPhasor(); }
+  ph.last = now; requestAnimationFrame(phLoop);
+}
+$('#rPh').oninput = drawPhasor;
+$('#bPhPause').onclick = () => { ph.run = !ph.run; $('#bPhPause').textContent = ph.run ? '❚❚ Pause' : '▶ Play'; };
+new IntersectionObserver(es => es.forEach(e => ph.visible = e.isIntersecting)).observe($('#cPhasor'));
+
+/* ======================= i : impedance ======================= */
+function zCalc(){
+  const R = +$('#zR').value || 0, L = (+$('#zL').value || 0) / 1000, C = (+$('#zC').value || 0) / 1e6, f = +$('#zF').value || 0, V = +$('#zV').value || 0;
+  const w = TAU * f, XL = w * L, XC = (C > 0 && w > 0) ? 1 / (w * C) : Infinity, X = XL - XC;
+  if (!isFinite(X)){ $('#oZ').innerHTML = 'Capacitor blocks DC (X_C → ∞): no current flows.'; return; }
+  const mag = Math.hypot(R, X), ang = Math.atan2(X, R) * 180 / Math.PI, I = mag ? V / mag : Infinity;
+  const fr = (L > 0 && C > 0) ? 1 / (TAU * Math.sqrt(L * C)) : null;
+  $('#oZ').innerHTML =
+`ω = 2πf = ${fmt(w, 1)} rad/s
+X_L = ωL = ${fmt(XL, 2)} Ω     X_C = 1/ωC = ${fmt(XC, 2)} Ω
+Z = ${fmt(R, 2)} ${X < 0 ? '−' : '+'} j${fmt(Math.abs(X), 2)} Ω
+|Z| = <b>${fmt(mag, 2)} Ω</b>   angle = <b>${ang.toFixed(1)}°</b> (${ang > 0.05 ? 'inductive, current lags' : ang < -0.05 ? 'capacitive, current leads' : 'resistive'})
+Current I = V/|Z| = <b>${isFinite(I) ? fmt(I, 2) : '∞'} A</b>   power factor cos φ = ${Math.cos(ang * Math.PI / 180).toFixed(3)}${fr ? `\nResonance at f₀ = 1/(2π√LC) = ${fmt(fr, 1)} Hz` : ''}`;
+}
+['#zR', '#zL', '#zC', '#zF', '#zV'].forEach(s => $(s).oninput = zCalc);
+
+/* ======================= Euler ======================= */
+function drawEuler(){
+  const thd = +$('#rTh').value, th = thd * Math.PI / 180, n = +$('#rEn').value;
+  $('#vTh').textContent = thd + '°' + (thd === 180 ? ' = π' : thd === 90 ? ' = π/2' : thd === 360 ? ' = 2π' : '');
+  $('#vEn').textContent = n;
+  const pts = [[1, 0]]; let re = 1, im = 0, maxM = 1;
+  for (let k = 0; k < n; k++){ const nr = re - im * th / n, ni = im + re * th / n; re = nr; im = ni; pts.push([re, im]); maxM = Math.max(maxM, Math.hypot(re, im)); }
+  const { g, W, H } = fit($('#cEuler'));
+  g.clearRect(0, 0, W, H);
+  const lim = Math.min(Math.max(1.35, maxM * 1.08), 4.5), sc = (Math.min(W, H) / 2 - 14) / lim, cx = W / 2, cy = H / 2;
+  const P = (a, b) => [cx + a * sc, cy - b * sc];
+  g.strokeStyle = col('--muted'); g.lineWidth = 1;
+  g.beginPath(); g.moveTo(0, cy); g.lineTo(W, cy); g.moveTo(cx, 0); g.lineTo(cx, H); g.stroke();
+  g.strokeStyle = col('--line'); g.lineWidth = 1.5; g.beginPath(); g.arc(cx, cy, sc, 0, TAU); g.stroke();
+  g.fillStyle = col('--muted'); g.font = '12px system-ui'; g.textAlign = 'center';
+  g.fillText('1', ...P(1.06, -0.1)); g.fillText('−1', ...P(-1.1, -0.1)); g.fillText('i', ...P(0.07, 1.06)); g.fillText('−i', ...P(0.1, -1.12));
+  // exact arc
+  g.strokeStyle = col('--i'); g.lineWidth = 3; g.beginPath(); g.arc(cx, cy, sc, 0, -th, true); g.stroke();
+  // polygon
+  g.strokeStyle = col('--eu'); g.lineWidth = 2; g.beginPath();
+  pts.forEach(([a, b], k) => { const [x, y] = P(a, b); k ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke();
+  if (n <= 60) pts.forEach(([a, b]) => { const [x, y] = P(a, b); dot(g, x, y, 2.5, col('--eu')); });
+  const ex = Math.cos(th), ey = Math.sin(th), [X1, Y1] = P(ex, ey), [X0, Y0] = P(0, 0), [Xc] = P(ex, 0);
+  g.strokeStyle = col('--pi'); g.lineWidth = 3; g.beginPath(); g.moveTo(X0, Y0); g.lineTo(Xc, Y0); g.stroke();
+  g.strokeStyle = col('--e'); g.beginPath(); g.moveTo(Xc, Y0); g.lineTo(Xc, Y1); g.stroke();
+  arrow(g, X0, Y0, X1, Y1, col('--i'), 2);
+  dot(g, X1, Y1, 6, col('--i'));
+  const hit = thd === 180;
+  if (hit){ g.fillStyle = col('--eu'); g.font = 'bold 16px Georgia,serif'; g.textAlign = 'left'; g.fillText('e^(iπ) = −1', X1 + 8, Y1 + 22); }
+  $('#oEuler').innerHTML =
+`θ = ${thd}° = ${th.toFixed(4)} rad
+cos θ = <b style="color:var(--pi)">${ex.toFixed(4)}</b>   (blue: real part)
+sin θ = <b style="color:var(--e)">${ey.toFixed(4)}</b>   (green: imaginary part)
+e^(iθ) = ${ex.toFixed(4)} ${ey < 0 ? '−' : '+'} ${Math.abs(ey).toFixed(4)} i
+(1 + iθ/${n})^${n} = ${re.toFixed(4)} ${im < 0 ? '−' : '+'} ${Math.abs(im).toFixed(4)} i   (gap ${Math.hypot(re - ex, im - ey).toFixed(4)})` +
+  (hit ? `\n\n<b>θ = π :  e^(iπ) = −1,  so  e^(iπ) + 1 = 0</b>` : '\n\nSet θ to 180° to see Euler\'s identity.');
+}
+$('#rTh').oninput = drawEuler; $('#rEn').oninput = drawEuler;
+
+/* ======================= φ ======================= */
+const PHI = (1 + Math.sqrt(5)) / 2;
+function drawSun(){
+  const ang = +$('#rSun').value; $('#vSun').textContent = ang.toFixed(3) + '°';
+  const { g, W, H } = fit($('#cSun'));
+  g.clearRect(0, 0, W, H);
+  const N = 650, Rm = Math.min(W, H) / 2 - 10, c = Rm / Math.sqrt(N), a = ang * Math.PI / 180, cx = W / 2, cy = H / 2;
+  const cphi = col('--phi'), cfg = col('--e');
+  for (let k = 1; k <= N; k++){
+    const r = c * Math.sqrt(k), t = k * a;
+    dot(g, cx + r * Math.cos(t), cy + r * Math.sin(t), Math.max(1.6, c * 0.42), k % 21 === 0 ? cfg : cphi);
+  }
+}
+document.querySelectorAll('[data-sun]').forEach(b => b.onclick = () => { $('#rSun').value = b.dataset.sun; drawSun(); });
+$('#rSun').oninput = drawSun;
+
+function drawGold(){
+  const { g, W, H } = fit($('#cGold'));
+  g.clearRect(0, 0, W, H);
+  const Wr = Math.min(W - 20, (H - 20) * PHI), Hr = Wr / PHI;
+  let x = (W - Wr) / 2, y = (H - Hr) / 2, w = Wr, h = Hr;
+  g.lineWidth = 1.2;
+  for (let k = 0; k < 11; k++){
+    const d = k % 4; let s, sq, c0, a0;
+    if (d === 0){ s = h; sq = [x, y]; c0 = [x + s, y + s]; a0 = Math.PI; x += s; w -= s; }
+    else if (d === 1){ s = w; sq = [x, y]; c0 = [x, y + s]; a0 = 1.5 * Math.PI; y += s; h -= s; }
+    else if (d === 2){ s = h; sq = [x + w - s, y]; c0 = [x + w - s, y]; a0 = 0; w -= s; }
+    else { s = w; sq = [x, y + h - s]; c0 = [x + s, y + h - s]; a0 = 0.5 * Math.PI; h -= s; }
+    g.fillStyle = col('--phi'); g.globalAlpha = 0.06 + 0.05 * (k % 3); g.fillRect(sq[0], sq[1], s, s); g.globalAlpha = 1;
+    g.strokeStyle = col('--muted'); g.lineWidth = 1; g.strokeRect(sq[0], sq[1], s, s);
+    g.strokeStyle = col('--phi'); g.lineWidth = 2.5; g.beginPath(); g.arc(c0[0], c0[1], s, a0, a0 + Math.PI / 2); g.stroke();
+  }
+}
+function fibTable(){
+  let a = 1, b = 1, h = '<tr><th>n</th><th>Fₙ</th><th>Fₙ₊₁ / Fₙ</th><th>error</th></tr>';
+  for (let n = 1; n <= 16; n++){
+    const r = b / a; h += `<tr><td>${n}</td><td>${a}</td><td>${r.toFixed(8)}</td><td>${(r - PHI).toExponential(1)}</td></tr>`;
+    [a, b] = [b, a + b];
+  }
+  $('#tFib').innerHTML = h;
+}
+
+/* ======================= √2 paper ======================= */
+const ISO = [[841,1189],[594,841],[420,594],[297,420],[210,297],[148,210],[105,148],[74,105],[52,74]];
+function paperInit(){
+  $('#sA').innerHTML = ISO.map((_, k) => `<option value="${k}" ${k === 4 ? 'selected' : ''}>A${k}</option>`).join('');
+  $('#tPaper').innerHTML = '<tr><th>Size</th><th>mm</th><th>Area (m²)</th><th>Ratio</th></tr>' +
+    ISO.map(([s, l], k) => `<tr><td>A${k}</td><td>${s} × ${l}</td><td>${(1 / Math.pow(2, k)).toFixed(4)}</td><td>${(l / s).toFixed(4)}</td></tr>`).join('');
+  $('#sA').onchange = drawPaper;
+}
+function drawPaper(){
+  const sel = +$('#sA').value;
+  const { g, W, H } = fit($('#cPaper'));
+  g.clearRect(0, 0, W, H);
+  const s = Math.min((W - 20) / 1189, (H - 20) / 841);
+  let x = (W - 1189 * s) / 2, y = (H - 841 * s) / 2, w = 1189 * s, h = 841 * s;
+  const rects = [];
+  for (let k = 1; k <= 8; k++){
+    if (w >= h){ rects.push([k, x, y, w / 2, h]); x += w / 2; w /= 2; }
+    else { rects.push([k, x, y, w, h / 2]); y += h / 2; h /= 2; }
+  }
+  rects.push([8, x, y, w, h]);
+  g.fillStyle = col('--card'); g.fillRect((W - 1189 * s) / 2, (H - 841 * s) / 2, 1189 * s, 841 * s);
+  if (sel === 0){ g.fillStyle = col('--r2'); g.globalAlpha = 0.3; g.fillRect((W - 1189 * s) / 2, (H - 841 * s) / 2, 1189 * s, 841 * s); g.globalAlpha = 1; }
+  rects.forEach(([k, rx, ry, rw, rh], idx) => {
+    if (k === sel && idx < 8 || (sel === 8 && idx === 8)){ g.fillStyle = col('--r2'); g.globalAlpha = 0.35; g.fillRect(rx, ry, rw, rh); g.globalAlpha = 1; }
+    g.strokeStyle = col('--fg'); g.lineWidth = 1.2; g.strokeRect(rx, ry, rw, rh);
+    const fs = Math.max(8, Math.min(22, Math.min(rw, rh) / 3));
+    if (Math.min(rw, rh) > 10 && idx < 8){ g.fillStyle = col('--fg'); g.font = `${fs}px system-ui`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('A' + k, rx + rw / 2, ry + rh / 2); }
+  });
+  g.textBaseline = 'alphabetic';
+  g.fillStyle = col('--muted'); g.font = '12px system-ui'; g.textAlign = 'left';
+  g.fillText('A0 = 841 × 1189 mm = 1 m²', (W - 1189 * s) / 2 + 4, (H - 841 * s) / 2 - 4 > 10 ? (H - 841 * s) / 2 - 4 : 12);
+}
+
+/* ======================= Kaprekar ======================= */
+function kaprekar(){
+  const raw = $('#kIn').value.replace(/\D/g, '').padStart(4, '0').slice(-4);
+  if (new Set(raw).size < 2){ $('#kOut').textContent = 'Use at least two different digits (1111, 2222 … just give 0).'; return; }
+  let n = raw, out = [], k = 0;
+  while (n !== '6174' && k < 10){
+    const d = n.split('').sort(), lo = d.join(''), hi = d.slice().reverse().join('');
+    const r = String(+hi - +lo).padStart(4, '0');
+    out.push(`${++k}.  ${hi} − ${lo} = ${r}`); n = r;
+  }
+  out.push(n === '6174' ? `\nReached <b>6174</b> in ${k} step${k === 1 ? '' : 's'} — and 7641 − 1467 = 6174 forever after.` : '');
+  $('#kOut').innerHTML = k ? out.join('\n') : 'You started at 6174 itself — 7641 − 1467 = 6174.';
+}
+$('#kGo').onclick = kaprekar; $('#kIn').onkeydown = e => { if (e.key === 'Enter') kaprekar(); };
+
+/* ======================= Quiz ======================= */
+const QUIZ = [
+  ['A shaft runs at 3000 rpm. Its angular velocity is about…', ['50 rad/s', '314 rad/s', '188 rad/s', '3000 rad/s'], 1, 'ω = 2πN/60 = 2π × 3000/60 = 100π ≈ 314.16 rad/s.'],
+  ['After one time constant τ, a charging capacitor has reached…', ['50%', '63.2%', '86.5%', '100%'], 1, '1 − e⁻¹ = 0.632. It needs about 5τ (99.3%) to be practically full.'],
+  ['Multiplying a complex number by i…', ['doubles its length', 'reflects it about the real axis', 'rotates it 90° anticlockwise', 'makes it negative'], 2, 'i has length 1 and angle 90°, so it only rotates.'],
+  ['e^(iπ) equals…', ['0', '1', '−1', 'i'], 2, 'cos π + i sin π = −1 + 0i, hence e^(iπ) + 1 = 0.'],
+  ['The long side / short side of A4 paper is…', ['1.5', '√2 ≈ 1.414', 'φ ≈ 1.618', '4/3'], 1, 'Only 1 : √2 keeps the same shape when folded in half.'],
+  ['Sunflower seeds are spaced by roughly…', ['90°', '120°', '137.5°', '180°'], 2, 'The golden angle 360°/φ² ≈ 137.508° packs seeds without gaps.'],
+  ['In a 3-phase supply with 230 V phase voltage, the line voltage is about…', ['230 V', '325 V', '400 V', '690 V'], 2, 'V_line = √3 × V_phase = 1.732 × 230 ≈ 400 V.'],
+  ['(1 + 1/n)ⁿ for very large n approaches…', ['1', '2', 'e ≈ 2.718', 'infinity'], 2, 'This limit is one definition of e.']
+];
+const qs = { done: 0, right: 0 };
+function quizInit(){
+  $('#quizBox').innerHTML = QUIZ.map((q, i) => `<div class="q" data-q="${i}"><p>${i + 1}. ${q[0]}</p>${q[1].map((o, j) => `<label><input type="radio" name="q${i}" value="${j}"> ${o}</label>`).join('')}<div class="why">${q[3]}</div></div>`).join('');
+  document.querySelectorAll('.quiz .q').forEach(box => {
+    const i = +box.dataset.q;
+    box.querySelectorAll('input').forEach(inp => inp.onchange = () => {
+      if (box.dataset.answered) return; box.dataset.answered = 1;
+      const j = +inp.value, ok = j === QUIZ[i][2];
+      qs.done++; if (ok) qs.right++;
+      box.querySelectorAll('label').forEach((l, k) => { if (k === QUIZ[i][2]) l.classList.add('ok'); else if (k === j) l.classList.add('bad'); l.querySelector('input').disabled = true; });
+      box.querySelector('.why').style.display = 'block';
+      $('#quizScore').textContent = `Score: ${qs.right} / ${qs.done}` + (qs.done === QUIZ.length ? (qs.right === QUIZ.length ? '  — perfect!' : '  — reload the page to try again.') : '');
+    });
+  });
+}
+
+/* ======================= Theme ======================= */
+(function(){
+  let t = null; try { t = localStorage.getItem('sn-theme'); } catch(e){}
+  if (t) document.documentElement.dataset.theme = t;
+  $('#themeBtn').onclick = () => {
+    const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    const nt = dark ? 'light' : 'dark';
+    document.documentElement.dataset.theme = nt;
+    try { localStorage.setItem('sn-theme', nt); } catch(e){}
+    redraws.forEach(f => f());
+  };
+  matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => redraws.forEach(f => f()));
+})();
+
+/* ======================= Init ======================= */
+paperInit(); fibTable(); quizInit(); seriesTable(); piCalc(); zCalc();
+[drawRoll, drawMC, drawComp, drawTan, drawTau, drawDamp, drawPlane, drawPhasor, drawEuler, drawSun, drawGold, drawPaper].forEach(reg);
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => redraws.forEach(f => f()), 120); });
+requestAnimationFrame(phLoop);
+</script>
+</body>
+</html>

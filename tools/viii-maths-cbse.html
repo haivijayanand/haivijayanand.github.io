@@ -2,11 +2,11 @@
 <!--
 TOOL: VIII Maths CBSE
 FAMILY: edu-tools
-VERSION: 1.8.1
+VERSION: 1.9.1
 DATE: 2026-10-04
 CHAT: Offline Math Explorer for Class 8
-CHANGES: 1.8.1 - page heading and title renamed to VIII Maths CBSE for the public site
-         1.8.0 - Every animation can now be stepped through: Step back / Step forward buttons (and ← → keys while stepping), Play / Pause, step counter; replays use the same numbers when going back; fixed lab ID clashes
+CHANGES: 1.9.1 - page heading, title and certificates renamed to VIII Maths CBSE for the public site
+         1.9.0 - Chapter-wise certificates (earned by solving 5 Warm-up, 5 Practice and 3 Challenge questions; 1-3 stars from first-time accuracy), My Certificates page, grand Champion certificate, print / save as PDF / save picture; chapters numbered 1-25 in learning order everywhere (sidebar, phone tabs, home, certificates); roadmap chips now open their chapter
 STATUS: Foundations 1-7, Geometry basics 23-24, Class 8 chapters 8-22 and 25, plus Mixed Revision
 -->
 <html lang="en">
@@ -772,6 +772,50 @@ kbd{display:inline-block;min-width:1.6em;padding:0 5px;border:1px solid var(--li
 .anim-fast,.anim-fast *{transition:none!important;animation-duration:0s!important;animation-delay:0s!important}
 .anim-fast .drw{stroke-dashoffset:0}
 @media (max-width:640px){ .anim-ctl .btn{padding:8px 10px} .a-keys{display:none} }
+
+/* ===================== v1.9 certificates ===================== */
+.certbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;padding:10px 14px;border-radius:12px;background:var(--surface);border:1px dashed var(--line)}
+.cb-lbl{font-weight:800}
+.cb-req{padding:3px 10px;border-radius:999px;background:var(--surface2);font-weight:650;font-size:.92rem}
+.cb-req.ok{background:var(--good-soft)}
+.cb-tip{font-size:.85rem}
+.cb-done{font-weight:800}
+.scount{margin-left:auto;font-size:.72rem;border:1px solid var(--line);border-radius:999px;padding:0 7px;color:var(--muted)}
+.certgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.certcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
+.certcard.on{border:2px solid #c8962e;background:linear-gradient(135deg,color-mix(in srgb,#f6d77a 22%,var(--surface)),var(--surface))}
+.cc-top{display:flex;gap:10px;align-items:center}
+.cc-ic{font-size:2rem}
+.cc-top small{display:block;color:var(--muted);font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em}
+.cc-need{display:flex;flex-wrap:wrap;gap:6px;font-size:.85rem}
+.cc-need span{padding:2px 8px;border-radius:999px;background:var(--surface2)} .cc-need span.ok{background:var(--good-soft)}
+.cc-earned{font-weight:700}
+.certcard .btn{align-self:flex-start}
+.grandcert{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:14px;border:2px dashed var(--line);margin-top:12px;font-size:1.05rem}
+.grandcert.on{border:2px solid #c8962e;background:color-mix(in srgb,#f6d77a 25%,var(--surface))}
+.gc-ic{font-size:2.4rem} .grandcert > div{flex:1}
+#certToast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,160%);display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:16px;background:var(--surface);border:2px solid #c8962e;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:60;transition:transform .45s cubic-bezier(.3,1.4,.5,1);max-width:calc(100% - 32px)}
+#certToast.show{transform:translate(-50%,0)}
+.ct-medal{font-size:2.2rem}
+#certModal{position:fixed;inset:0;z-index:70;background:rgba(15,20,30,.6);display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:20px}
+#certModal.show{display:flex}
+.cm-box{background:var(--surface);border-radius:16px;padding:14px;width:min(1180px,100%);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.cm-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:12px}
+.cm-name{flex:1;min-width:220px}
+.cm-name input{width:100%!important}
+.cm-paper svg{width:100%;height:auto;display:block;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+@media print{
+  @page{size:A4 landscape;margin:0}
+  body.printing-cert > *:not(#certModal){display:none!important}
+  body.printing-cert #certModal{position:static;display:block!important;background:none;padding:0;overflow:visible}
+  body.printing-cert .cm-box{box-shadow:none;padding:0;width:auto;background:none}
+  body.printing-cert .cm-bar{display:none}
+  body.printing-cert .cm-paper svg{width:297mm;height:210mm;box-shadow:none;border-radius:0}
+}
+
+.road button{font:inherit;font-size:.9rem;padding:6px 12px;border-radius:999px;border:1px solid var(--good);background:var(--good-soft);color:var(--good);font-weight:650;cursor:pointer}
+.road button:hover,.road button:focus-visible{background:var(--good);color:#fff}
+#certToast:not(.show){visibility:hidden;pointer-events:none}
 </style>
 </head>
 <body>
@@ -786,6 +830,7 @@ kbd{display:inline-block;min-width:1.6em;padding:0 5px;border:1px solid var(--li
     <nav class="tabs">
       <button class="navtab active" data-go="home">Home</button>
       <button class="navtab" data-go="review">🔁 Revision</button>
+      <button class="navtab" data-go="certs">🏅 Certificates</button>
       <button class="navtab" data-go="ch1">1 · Place Value</button>
       <button class="navtab" data-go="ch2">2 · Operations</button>
       <button class="navtab" data-go="ch3">3 · Factors &amp; Primes</button>
@@ -832,21 +877,13 @@ kbd{display:inline-block;min-width:1.6em;padding:0 5px;border:1px solid var(--li
     </div>
   </div>
   <div class="card revcta"><span style="font-size:2.6rem">🔁</span><p><b>Mixed Revision</b><br><span class="muted">Shuffled questions from every chapter, like a real test. Your answers are tracked so you can find and fix your weak topics.</span></p><button class="btn primary" data-go="review">Start revision →</button></div>
+  <div class="card revcta"><span style="font-size:2.6rem">🏅</span><p><b>Chapter certificates</b><br><span class="muted">Solve 5 Warm-up, 5 Practice and 3 Challenge questions in a chapter to earn its certificate. Print it or save it as a picture!</span></p><button class="btn primary" data-go="certs">My certificates →</button></div>
   <h3>📚 Your chapters</h3>
   <div class="chgrid" id="homeCards"></div>
   <div class="card">
     <h3>🗺️ The road ahead</h3>
-    <p class="muted">Foundations first, then the Class 8 chapters. Everything is ready: 7 number foundations, 2 geometry basics and all 16 Class 8 chapters, plus Mixed Revision 🎉🏆</p>
-    <h4>Foundations</h4>
-    <div class="road" style="margin-bottom:12px">
-      <span class="on">1 Place Value</span><span class="on">2 Operations</span><span class="on">3 Factors &amp; Primes</span>
-      <span class="on">4 Fractions</span><span class="on">5 Decimals &amp; Percentages</span><span class="on">6 Integers</span><span class="on">7 Order of Operations</span><span class="on">Lines &amp; Angles</span><span class="on">Triangles</span>
-    </div>
-    <h4>Class 8 core</h4>
-    <div class="road">
-      <span class="on">Rational Numbers</span><span class="on">Exponents &amp; Powers</span><span class="on">Squares &amp; Roots</span><span class="on">Cubes &amp; Roots</span><span class="on">Algebraic Identities</span><span class="on">Factorisation</span><span class="on">Linear Equations</span><span class="on">Proportion</span><span class="on">Comparing Quantities</span><span class="on">Quadrilaterals</span><span class="on">Mensuration</span><span class="on">Data &amp; Probability</span><span class="on">Graphs</span><span class="on">Playing with Numbers</span><span class="on">Solid Shapes</span><span class="on">Practical Geometry</span>
-    </div>
-  </div>
+    <p class="muted">Foundations first, then the Class 8 chapters. Tap any chapter to open it. Everything is ready: 7 number foundations, 2 geometry basics and all 16 Class 8 chapters, plus Mixed Revision 🎉🏆</p>
+    <div id="roadAll"></div>
 </section>
 
 <!-- ===================== CHAPTER 1 ===================== -->
@@ -2699,6 +2736,13 @@ kbd{display:inline-block;min-width:1.6em;padding:0 5px;border:1px solid var(--li
   </div>
 </section>
 
+<!-- ===================== CERTIFICATES ===================== -->
+<section id="certs" class="chapter" hidden>
+  <div class="ch-head c16"><span class="floaty" style="left:8%;animation-duration:9s;animation-delay:-3s">⭐</span><span class="floaty" style="left:30%;animation-duration:11s;animation-delay:-6s">🏅</span><span class="floaty" style="left:55%;animation-duration:8s;animation-delay:-1s">★</span><span class="floaty" style="left:75%;animation-duration:10s;animation-delay:-5s">✦</span><span class="ch-num">Rewards</span><h2>My Certificates</h2><p class="lede">Every chapter has its own certificate. Solve 5 Warm-up, 5 Practice and 3 Challenge questions to earn it. Stars show how many you got right first time: ⭐⭐⭐ for 80% or more.</p><span class="ch-emoji">🏅</span></div>
+  <div class="card"><h3>✍️ Name on the certificates</h3><label class="fld"><span>Student's name</span><input class="ans wide" id="certNameMain" autocomplete="off" placeholder="Type the student's name"></label><div id="certSum" style="margin-top:14px"></div></div>
+  <div class="certgrid" id="certGrid"></div>
+</section>
+
 <!-- ===================== MIXED REVISION ===================== -->
 <section id="review" class="chapter" hidden>
   <div class="ch-head c9"><span class="floaty" style="left:8%;animation-duration:9s;animation-delay:-5s">🔁</span><span class="floaty" style="left:22%;animation-duration:12s;animation-delay:-8s">✓</span><span class="floaty" style="left:30%;animation-duration:10s;animation-delay:-3s">?</span><span class="floaty" style="left:48%;animation-duration:7s;animation-delay:-2s">★</span><span class="floaty" style="left:56%;animation-duration:9s;animation-delay:-7s">%</span><span class="floaty" style="left:70%;animation-duration:10s;animation-delay:-8s">x²</span><span class="floaty" style="left:82%;animation-duration:11s;animation-delay:-3s">½</span><span class="ch-num">Revision · all chapters</span><h2>Mixed Revision</h2><p class="lede">Questions from every chapter, shuffled like a real test. Every answer is tracked, so you can see your weak topics and practise exactly those.</p><span class="ch-emoji">🔁</span></div>
@@ -2717,7 +2761,7 @@ kbd{display:inline-block;min-width:1.6em;padding:0 5px;border:1px solid var(--li
 <!-- ===================== ENGINE (pure functions: generators + checker) ===================== -->
 <script id="engine">
 "use strict";
-const APP_VERSION = '1.8.1';
+const APP_VERSION = '1.9.1';
 const R = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
@@ -5301,14 +5345,28 @@ const CHAPTERS = [
   { id: 'ch15', n: 15, icon: '📈', title: 'Direct & Inverse Proportion', blurb: 'When two quantities grow together, or one grows as the other shrinks.' },
   { id: 'ch16', n: 16, icon: '💰', title: 'Comparing Quantities', blurb: 'Percentages in real life: discounts, profit and loss, GST, and simple and compound interest.' },
   { id: 'ch17', n: 17, icon: '🔷', title: 'Understanding Quadrilaterals', blurb: 'Polygon angle sums, exterior angles, and the family of special quadrilaterals.' },
+  { id: 'ch25', n: 25, icon: '✏️', title: 'Practical Geometry', blurb: 'Compass-and-ruler constructions: bisectors, special angles and quadrilaterals from five measurements.' },
   { id: 'ch18', n: 18, icon: '📏', title: 'Mensuration', blurb: 'Areas of trapeziums and rhombuses, then surface area and volume of cubes, cuboids and cylinders.' },
   { id: 'ch19', n: 19, icon: '🎲', title: 'Data Handling &amp; Probability', blurb: 'Mean, median and mode, tally tables, pie charts, and the chance of things happening.' },
   { id: 'ch20', n: 20, icon: '📊', title: 'Introduction to Graphs', blurb: 'Coordinates, plotting points, line graphs, and reading distance–time stories.' },
   { id: 'ch21', n: 21, icon: '🔍', title: 'Playing with Numbers', blurb: 'Numbers in general form, digit-reversal tricks, letter puzzles, and why the divisibility tests work.' },
-  { id: 'ch22', n: 22, icon: '🧱', title: 'Visualising Solid Shapes', blurb: 'Top, front and side views, nets that fold into solids, and Euler\'s formula F + V − E = 2.' },
-  { id: 'ch25', n: 25, icon: '✏️', title: 'Practical Geometry', blurb: 'Compass-and-ruler constructions: bisectors, special angles and quadrilaterals from five measurements.' }
+  { id: 'ch22', n: 22, icon: '🧱', title: 'Visualising Solid Shapes', blurb: 'Top, front and side views, nets that fold into solids, and Euler\'s formula F + V − E = 2.' }
 ];
+CHAPTERS.forEach((c, i) => { c.dn = i + 1; });
+const dnOf = n => (CHAPTERS.find(c => c.n === n) || {}).dn || n;
 $('#ver').textContent = APP_VERSION;
+/* show chapter numbers in learning order everywhere */
+$$('section.chapter').forEach(s => { const c = CHAPTERS.find(x => x.id === s.id), el = c && $('.ch-num', s); if (el) el.innerHTML = el.innerHTML.replace(/Chapter \d+/, 'Chapter ' + c.dn); });
+(function () {
+  const first = $('.navtab[data-go]'); if (!first) return; const nav = first.parentElement;
+  CHAPTERS.forEach(c => { const b = $(`.navtab[data-go="${c.id}"]`, nav); if (!b) return; const lab = b.textContent.split('·').pop().trim(); b.textContent = `${c.dn} · ${lab}`; nav.appendChild(b); });
+})();
+function renderRoad() {
+  const box = $('#roadAll'); if (!box) return;
+  const chip = c => `<button class="on" data-go="${c.id}" type="button">${c.dn} · ${c.title}</button>`;
+  box.innerHTML = `<h4>Foundations</h4><div class="road" style="margin-bottom:12px">${CHAPTERS.filter(c => c.n <= 7).map(chip).join('')}</div><h4>Geometry basics</h4><div class="road" style="margin-bottom:12px">${CHAPTERS.filter(c => c.grp === 'geo').map(chip).join('')}</div><h4>Class 8 core</h4><div class="road">${CHAPTERS.filter(c => c.n >= 8 && c.grp !== 'geo').map(chip).join('')}</div>`;
+}
+renderRoad();
 
 /* ---------- theme ---------- */
 const root = document.documentElement, tbtn = $('#themeBtn');
@@ -5384,7 +5442,7 @@ function renderHome() {
     const lv = LEVELS.map(([k, name]) => { const s = stat(c.n, k); return `${name}: ${s.s} solved${s.t ? ` of ${s.t}` : ''}`; }).join(' · ');
     const tot = LEVELS.reduce((a, [k]) => a + stat(c.n, k).s, 0);
     const pct = Math.min(100, Math.round(tot / 30 * 100));
-    return `<button class="chcard" data-go="${c.id}"><span class="chicon">${c.icon}</span><span class="ch-num">Chapter ${c.n}</span><h3>${c.title}</h3><div class="muted" style="font-size:.9rem">${c.blurb}</div><div class="pbar"><i style="width:${pct}%"></i></div><div class="plines">${lv}</div></button>`;
+    return `<button class="chcard" data-go="${c.id}"><span class="chicon">${c.icon}</span><span class="ch-num">Chapter ${c.dn}</span><h3>${c.title}</h3><div class="muted" style="font-size:.9rem">${c.blurb}</div><div class="pbar"><i style="width:${pct}%"></i></div><div class="plines">${lv}</div></button>`;
   }).join('');
 }
 
@@ -5410,7 +5468,7 @@ function renderWeak() {
   const box = $('#weakBox'); if (!box) return;
   const all = Object.values(topics).filter(r => r.t > 0), strong = all.filter(r => r.t >= 2 && r.f / r.t >= 0.7), weak = weakList();
   const col = p => p >= 0.7 ? 'var(--good)' : p >= 0.4 ? 'var(--c4)' : 'var(--bad)';
-  const row = r => { const p = r.f / r.t; return `<div class="wrow"><div><b>${esc(r.topic)}</b><small>Chapter ${r.ch} · ${chTitle(r.ch)} · ${r.f} of ${r.t} right first time</small></div><div class="wbar"><i style="width:${Math.max(4, p * 100)}%;background:${col(p)}"></i></div><button class="btn wpr" data-k="${esc(r.ch + '|' + r.topic)}">🎯 Practise</button></div>`; };
+  const row = r => { const p = r.f / r.t; return `<div class="wrow"><div><b>${esc(r.topic)}</b><small>Chapter ${dnOf(r.ch)} · ${chTitle(r.ch)} · ${r.f} of ${r.t} right first time</small></div><div class="wbar"><i style="width:${Math.max(4, p * 100)}%;background:${col(p)}"></i></div><button class="btn wpr" data-k="${esc(r.ch + '|' + r.topic)}">🎯 Practise</button></div>`; };
   box.innerHTML = `<div class="wsum"><div><b>${all.length}</b>topics tried</div><div><b>${strong.length}</b>strong 💪</div><div><b>${weak.length}</b>need practice 🎯</div></div>` +
     (weak.length ? `<h4>🎯 Practise these next (weakest first)</h4>${weak.slice(0, 10).map(row).join('')}` : `<p class="muted">${all.length ? 'No weak topics right now. Brilliant! 🌟 Keep mixing to stay sharp.' : 'Answer a few questions anywhere in the explorer and your topics will appear here. A topic counts as weak when fewer than 7 out of 10 answers are right first time.'}</p>`) +
     (strong.length ? `<details style="margin-top:12px"><summary><b>💪 Strong topics (${strong.length})</b></summary>${strong.sort((a, b) => b.f / b.t - a.f / a.t).map(row).join('')}</details>` : '');
@@ -5419,12 +5477,116 @@ function renderWeak() {
 function mixWidget() { return WIDGETS.find(w => w.ch === 'mix'); }
 function renderFocus() {
   const f = $('#mixFocus'); if (!f) return;
-  f.innerHTML = MIX.focus ? `🎯 Focusing on <b>${esc(MIX.focus.topic)}</b> (Chapter ${MIX.focus.ch}) <button class="btn ghost" id="mixUnfocus">✕ Back to mixed questions</button>` : '';
+  f.innerHTML = MIX.focus ? `🎯 Focusing on <b>${esc(MIX.focus.topic)}</b> (Chapter ${dnOf(MIX.focus.ch)}) <button class="btn ghost" id="mixUnfocus">✕ Back to mixed questions</button>` : '';
   const u = $('#mixUnfocus'); if (u) u.onclick = () => { MIX.focus = null; renderFocus(); const w = mixWidget(); if (w) w.reset(); };
 }
 function focusTopic(r) {
   if (!r) return; MIX.focus = r; go('review'); renderSide(); renderFocus();
   const w = mixWidget(); if (w) { w.reset(); setTimeout(() => { w.host.scrollIntoView({ block: 'start' }); w.focus(); }, 60); }
+}
+
+/* ---------- v1.9 chapter certificates ---------- */
+const CKEY = 'mathExplorer.certs.v1', NKEY = 'mathExplorer.name';
+let certs = store.get(CKEY, {});
+const CERT_REQ = [['warm', 5, 'Warm-up'], ['practice', 5, 'Practice'], ['challenge', 3, 'Challenge']];
+const certNeed = n => CERT_REQ.map(([k, req, nm]) => ({ k, req, nm, got: Math.min(req, stat(n, k).s) }));
+const certReady = n => certNeed(n).every(x => x.got >= x.req);
+function certStats(n) { let s = 0, f = 0; LEVELS.forEach(([k]) => { const x = stat(n, k); s += x.s; f += x.f; }); return { solved: s, pct: s ? Math.round(f / s * 100) : 0 }; }
+const starsFor = pct => pct >= 80 ? 3 : pct >= 50 ? 2 : 1;
+const fmtDate = d => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+function certCheck(n) {
+  if (typeof n !== 'number' || !certReady(n)) return;
+  const st = certStats(n), stars = starsFor(st.pct), c = certs[n];
+  if (!c) { certs[n] = { date: Date.now(), stars }; store.set(CKEY, certs); certToast(n); renderCerts(); renderSide(); }
+  else if (stars > c.stars) { c.stars = stars; store.set(CKEY, certs); }
+}
+function certBar(host, n) {
+  const box = $('.certbar', host); if (!box || typeof n !== 'number') return;
+  const need = certNeed(n), c = certs[n];
+  box.innerHTML = c ? `<span class="cb-done">🏅 Certificate earned on ${fmtDate(c.date)} ${'⭐'.repeat(c.stars)}</span><button class="btn cb-view" type="button">View certificate</button>`
+    : `<span class="cb-lbl">🏅 Certificate:</span>${need.map(x => `<span class="cb-req${x.got >= x.req ? ' ok' : ''}">${x.got >= x.req ? '✅' : ''} ${x.nm} ${x.got}/${x.req}</span>`).join('')}<span class="muted cb-tip">Solve these to earn this chapter's certificate.</span>`;
+  const v = $('.cb-view', box); if (v) v.onclick = () => showCert(n);
+}
+function certToast(n) {
+  const c = CHAPTERS.find(x => x.n === n); let t = $('#certToast');
+  if (!t) { t = document.createElement('div'); t.id = 'certToast'; document.body.appendChild(t); }
+  t.innerHTML = `<span class="ct-medal">🏅</span><div><b>Certificate unlocked!</b><br>${c.icon} ${c.title}</div><button class="btn primary" type="button">View</button><button class="btn ghost ct-x" type="button" aria-label="Close">✕</button>`;
+  t.className = 'show'; $('.btn.primary', t).onclick = () => { t.className = ''; showCert(n); }; $('.ct-x', t).onclick = () => { t.className = ''; };
+  clearTimeout(t._h); t._h = setTimeout(() => { t.className = ''; }, 9000);
+}
+/* the certificate itself: one SVG (A4 landscape), with literal colours so it prints and saves as a picture */
+function certSVG(o) {
+  const W = 1123, H = 794, gold = '#c8962e', ink = '#24324a', acc = o.grand ? '#7b3fe4' : '#2f6fdb';
+  const tx = (x, y, s, sz, opt = '') => `<text x="${x}" y="${y}" text-anchor="middle" font-size="${sz}" ${opt}>${s}</text>`;
+  const name = esc(o.name || 'Your Name'), nsz = name.length > 26 ? 46 : name.length > 18 ? 56 : 64, tsz = o.title.length > 34 ? 32 : 38;
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" class="certsvg" font-family="Georgia, 'Times New Roman', serif">
+  <defs><linearGradient id="cg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${acc}"/><stop offset="1" stop-color="#e2558b"/></linearGradient>
+  <radialGradient id="cg2" cx=".5" cy=".4" r=".6"><stop offset="0" stop-color="#fff8e1"/><stop offset="1" stop-color="#fdf1d6"/></radialGradient>
+  <pattern id="cgp" width="36" height="36" patternUnits="userSpaceOnUse"><text x="4" y="24" font-size="16" fill="${gold}" fill-opacity=".09">${o.grand ? '∑' : '+'}</text><text x="22" y="34" font-size="12" fill="${acc}" fill-opacity=".07">×</text></pattern></defs>
+  <rect width="${W}" height="${H}" fill="url(#cg2)"/><rect width="${W}" height="${H}" fill="url(#cgp)"/>
+  <rect x="22" y="22" width="${W - 44}" height="${H - 44}" fill="none" stroke="url(#cg1)" stroke-width="14" rx="18"/>
+  <rect x="44" y="44" width="${W - 88}" height="${H - 88}" fill="none" stroke="${gold}" stroke-width="2.5" rx="10"/>
+  <rect x="52" y="52" width="${W - 104}" height="${H - 104}" fill="none" stroke="${gold}" stroke-width="1" stroke-dasharray="2 5" rx="8"/>`;
+  [[70, 70, 0], [W - 70, 70, 90], [W - 70, H - 70, 180], [70, H - 70, 270]].forEach(([x, y, r]) => { s += `<g transform="translate(${x} ${y}) rotate(${r})"><path d="M0 0 L46 0 M0 0 L0 46" stroke="${gold}" stroke-width="4"/><circle cx="0" cy="0" r="7" fill="${gold}"/><circle cx="20" cy="20" r="4" fill="${acc}"/></g>`; });
+  s += tx(W / 2, 128, o.grand ? 'MATH EXPLORER CHAMPION' : 'CERTIFICATE OF ACHIEVEMENT', 40, `fill="${ink}" font-weight="700" letter-spacing="6"`);
+  s += `<path d="M${W / 2 - 230} 150 H${W / 2 - 30} M${W / 2 + 30} 150 H${W / 2 + 230}" stroke="${gold}" stroke-width="2"/><text x="${W / 2}" y="158" text-anchor="middle" font-size="22" fill="${gold}">✦</text>`;
+  s += tx(W / 2, 212, 'This certificate is proudly presented to', 22, `fill="#5b6475" font-style="italic"`);
+  s += tx(W / 2, 290, name, nsz, `fill="${acc}" font-weight="700" font-style="italic"`);
+  s += `<line x1="${W / 2 - 300}" y1="310" x2="${W / 2 + 300}" y2="310" stroke="${gold}" stroke-width="1.5"/>`;
+  if (o.grand) {
+    s += tx(W / 2, 362, 'for earning a certificate in every chapter of', 22, `fill="#5b6475" font-style="italic"`);
+    s += tx(W / 2, 418, '∑ VIII Maths CBSE', 44, `fill="${ink}" font-weight="700"`);
+    s += tx(W / 2, 462, `${o.count} chapters · ${o.solved} questions solved · ${o.pct}% right first time`, 20, `fill="#5b6475" font-family="'Segoe UI', Arial, sans-serif"`);
+  } else {
+    s += tx(W / 2, 360, 'for successfully mastering', 22, `fill="#5b6475" font-style="italic"`);
+    s += tx(W / 2, 414, `Chapter ${o.dn}: ${esc(o.title)}`, tsz, `fill="${ink}" font-weight="700"`);
+    s += tx(W / 2, 456, `${o.solved} questions solved · ${o.pct}% right first time · Warm-up, Practice and Challenge levels`, 18, `fill="#5b6475" font-family="'Segoe UI', Arial, sans-serif"`);
+  }
+  s += tx(W / 2, 512, '★'.repeat(o.stars) + '☆'.repeat(3 - o.stars), 42, `fill="${gold}" letter-spacing="10"`);
+  s += tx(W / 2, 546, o.stars === 3 ? 'WITH DISTINCTION' : o.stars === 2 ? 'WITH MERIT' : 'WELL DONE', 16, `fill="${gold}" font-weight="700" letter-spacing="4" font-family="'Segoe UI', Arial, sans-serif"`);
+  // seal
+  const sx = W / 2, sy = 640;
+  s += `<g transform="translate(${sx} ${sy})">${Array.from({ length: 24 }, (_, i) => `<path d="M0 -62 L7 -48 L-7 -48 Z" fill="${gold}" transform="rotate(${i * 15})"/>`).join('')}<circle r="50" fill="url(#cg1)"/><circle r="42" fill="none" stroke="#fff" stroke-width="1.5" stroke-dasharray="3 3"/><text y="14" text-anchor="middle" font-size="40" fill="#fff" font-weight="700">∑</text><text y="-22" text-anchor="middle" font-size="9" fill="#fff" letter-spacing="2" font-family="Arial, sans-serif">MATH</text><text y="31" text-anchor="middle" font-size="8" fill="#fff" letter-spacing="1.5" font-family="Arial, sans-serif">EXPLORER</text></g>`;
+  // signature and date lines
+  s += `<line x1="140" y1="660" x2="400" y2="660" stroke="${ink}" stroke-width="1.2"/>${tx(270, 640, fmtDate(o.date), 22, `fill="${ink}" font-style="italic"`)}${tx(270, 684, 'Date', 16, `fill="#5b6475" font-family="'Segoe UI', Arial, sans-serif" letter-spacing="2"`)}`;
+  s += `<line x1="${W - 400}" y1="660" x2="${W - 140}" y2="660" stroke="${ink}" stroke-width="1.2"/>${tx(W - 270, 684, 'Parent / Teacher', 16, `fill="#5b6475" font-family="'Segoe UI', Arial, sans-serif" letter-spacing="2"`)}`;
+  return s + '</svg>';
+}
+function certData(n) {
+  if (n === 'grand') { let solved = 0, f = 0; CHAPTERS.forEach(c => LEVELS.forEach(([k]) => { const x = stat(c.n, k); solved += x.s; f += x.f; })); const pct = solved ? Math.round(f / solved * 100) : 0; const last = Math.max(...CHAPTERS.map(c => (certs[c.n] || {}).date || 0)); return { grand: true, name: store.get(NKEY, ''), count: CHAPTERS.length, solved, pct, stars: starsFor(pct), date: last || Date.now(), title: 'VIII Maths CBSE' }; }
+  const c = CHAPTERS.find(x => x.n === n), st = certStats(n), cr = certs[n] || {};
+  return { n, dn: c.dn, title: c.title.replace(/&amp;/g, '&'), icon: c.icon, name: store.get(NKEY, ''), solved: st.solved, pct: st.pct, stars: Math.max(cr.stars || 1, starsFor(st.pct)), date: cr.date || Date.now() };
+}
+function showCert(n) {
+  let m = $('#certModal');
+  if (!m) { m = document.createElement('div'); m.id = 'certModal'; document.body.appendChild(m); }
+  const draw = () => { $('.cm-paper', m).innerHTML = certSVG(certData(n)); };
+  m.innerHTML = `<div class="cm-box"><div class="cm-bar"><label class="fld cm-name"><span>Name on the certificate</span><input class="ans wide" id="certName" autocomplete="off" placeholder="Type the student's name"></label><button class="btn primary" id="certPrint" type="button">🖨️ Print / Save as PDF</button><button class="btn" id="certPng" type="button">🖼️ Save picture</button><button class="btn ghost" id="certClose" type="button">✕ Close</button></div><div class="cm-paper"></div></div>`;
+  m.className = 'show'; $('#certName').value = store.get(NKEY, ''); draw();
+  $('#certName').oninput = e => { store.set(NKEY, e.target.value.trim()); draw(); renderCerts(); };
+  $('#certClose').onclick = () => { m.className = ''; };
+  m.onclick = e => { if (e.target === m) m.className = ''; };
+  $('#certPrint').onclick = () => { document.body.classList.add('printing-cert'); setTimeout(() => { window.print(); document.body.classList.remove('printing-cert'); }, 50); };
+  $('#certPng').onclick = () => {
+    const svg = $('.cm-paper svg', m), xml = new XMLSerializer().serializeToString(svg), img = new Image();
+    img.onload = () => { const cv = document.createElement('canvas'); cv.width = 2246; cv.height = 1588; const g = cv.getContext('2d'); g.drawImage(img, 0, 0, cv.width, cv.height); cv.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `certificate-${n === 'grand' ? 'math-explorer-champion' : 'chapter-' + n}.png`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }); };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+  };
+  if (!$('#certName').value) setTimeout(() => $('#certName').focus(), 50);
+}
+document.addEventListener('keydown', e => { const m = $('#certModal'); if (e.key === 'Escape' && m && m.className === 'show') m.className = ''; });
+function renderCerts() {
+  const box = $('#certGrid'); if (!box) return;
+  const earned = CHAPTERS.filter(c => certs[c.n]).length, all = earned === CHAPTERS.length;
+  $('#certSum').innerHTML = `<div class="wsum"><div><b>${earned}</b>of ${CHAPTERS.length} certificates</div><div><b>${CHAPTERS.reduce((a, c) => a + ((certs[c.n] || {}).stars || 0), 0)}</b>stars ⭐</div><div><b>${all ? '🏆' : CHAPTERS.length - earned}</b>${all ? 'Champion!' : 'still to earn'}</div></div>
+    <div class="grandcert${all ? ' on' : ''}"><span class="gc-ic">🏆</span><div><b>VIII Maths CBSE Champion</b><br><span class="muted">${all ? 'Every chapter certificate earned. Amazing!' : `Earn all ${CHAPTERS.length} chapter certificates to unlock the grand certificate.`}</span></div>${all ? '<button class="btn primary" id="grandView" type="button">View</button>' : '🔒'}</div>`;
+  const g = $('#grandView'); if (g) g.onclick = () => showCert('grand');
+  box.innerHTML = CHAPTERS.map(c => {
+    const cr = certs[c.n], need = certNeed(c.n), pct = Math.round(need.reduce((a, x) => a + x.got, 0) / need.reduce((a, x) => a + x.req, 0) * 100);
+    return `<div class="certcard${cr ? ' on' : ''}"><div class="cc-top"><span class="cc-ic">${cr ? '🏅' : c.icon}</span><div><small>Chapter ${c.dn}</small><b>${c.title}</b></div></div>${cr ? `<div class="cc-earned">${'⭐'.repeat(cr.stars)} · ${fmtDate(cr.date)}</div><button class="btn primary cc-view" data-n="${c.n}" type="button">View certificate</button>` : `<div class="pbar"><i style="width:${pct}%"></i></div><div class="cc-need">${need.map(x => `<span class="${x.got >= x.req ? 'ok' : ''}">${x.nm} ${x.got}/${x.req}</span>`).join('')}</div><button class="btn ghost cc-go" data-go="${c.id}" type="button">Practise →</button>`}</div>`;
+  }).join('');
+  $$('.cc-view', box).forEach(b => b.onclick = () => showCert(+b.dataset.n));
+  $$('.cc-go', box).forEach(b => b.addEventListener('click', () => setTimeout(() => { const ch = $('#' + b.dataset.go); const t = ch && $('.subtab[data-pane="practice"]', ch); if (t) t.click(); }, 30)));
 }
 
 /* ---------- practice widget ---------- */
@@ -5449,7 +5611,8 @@ function makePractice(host, ch) {
       <ol class="steps"></ol>
       <div class="kbdhint">⌨️ <kbd>Enter</kbd> check / next · <kbd>←</kbd> <kbd>→</kbd> previous / next question · <kbd>1</kbd>–<kbd>4</kbd> pick a choice · <kbd>H</kbd> hint and <kbd>S</kbd> next step (when the cursor is not in the answer box; press <kbd>Esc</kbd> to leave it)</div>
     </div>
-    <div class="score"></div>`;
+    <div class="score"></div>
+    <div class="certbar"></div>`;
   const el = s => $(s, host), cur = () => st.hist[st.pos];
   $$('.lvl', host).forEach(b => b.onclick = () => { st.level = b.dataset.l; $$('.lvl', host).forEach(x => x.classList.toggle('active', x === b)); st.hist = []; st.pos = -1; go(1); });
   el('.b-check').onclick = () => doCheck();
@@ -5462,6 +5625,7 @@ function makePractice(host, ch) {
   function hint() { const it = cur(); it.hinted = true; const h = el('.hintbox'); h.hidden = false; h.innerHTML = `💡 <b>Hint:</b> ${it.Q.hint}`; }
   function count() { const it = cur(); if (!it.counted) { it.counted = true; stat(ch, st.level).t++; topicRec(it).t++; save(); saveT(); updScore(); renderWeak(); } }
   function updScore(bump) {
+    certBar(host, ch);
     const s = stat(ch, st.level);
     el('.score').innerHTML = `${LNAME[st.level]}: ${s.s} solved of ${s.t} tried · ${s.f} right first time, without help${st.streak >= 2 ? ` <span class="streak${bump ? ' bump' : ''}">🔥 Streak ${st.streak}</span>` : ''}`;
   }
@@ -5499,7 +5663,7 @@ function makePractice(host, ch) {
   function stepLi(s) { const li = document.createElement('li'); li.innerHTML = `<div>${s.t}</div>${s.why ? `<div class="why">💡 ${s.why}</div>` : ''}`; return li; }
   function render() {
     const it = cur(), Q = it.Q, inp = el('.qinput');
-    el('.qtopic').textContent = `${Q.topic}${ch === 'mix' ? ` · Chapter ${it.gch}` : ''} · ${ch === 'mix' && (MIX.focus || MIX.scope === 'weak') ? LNAME[it.glv] : LNAME[st.level]}`;
+    el('.qtopic').textContent = `${Q.topic}${ch === 'mix' ? ` · Chapter ${dnOf(it.gch)}` : ''} · ${ch === 'mix' && (MIX.focus || MIX.scope === 'weak') ? LNAME[it.glv] : LNAME[st.level]}`;
     el('.qtext').innerHTML = Q.q;
     if (Q.type === 'choice') {
       inp.innerHTML = Q.choices.map((c, i) => `<button class="choice" data-c="${esc(c)}"><small class="ck">${i + 1}</small>${esc(c)}</button>`).join('');
@@ -5551,7 +5715,7 @@ function makePractice(host, ch) {
     if (r.ok) {
       it.done = it.solved = true; if (Q.type === 'choice') it.picked = choice;
       const clean = !it.wrong && !it.shown && !it.hinted;
-      const s = stat(ch, st.level); s.s++; if (clean) s.f++; save(); const tr = topicRec(it); tr.s++; if (clean) tr.f++; saveT(); renderWeak();
+      const s = stat(ch, st.level); s.s++; if (clean) s.f++; save(); const tr = topicRec(it); tr.s++; if (clean) tr.f++; saveT(); renderWeak(); if (ch !== 'mix') certCheck(ch);
       st.streak = clean ? st.streak + 1 : 0; updScore(clean);
       const MILE = { 3: ' Hat-trick! 🎩', 5: ' High five! 🖐️', 10: ' Unstoppable! 🚀', 15: ' Maths champion! 🏆' };
       fb.className = 'feedback good';
@@ -5588,6 +5752,10 @@ function makePractice(host, ch) {
 $$('.practice').forEach(h => makePractice(h, h.dataset.ch === 'mix' ? 'mix' : +h.dataset.ch));
 $$('.mscopes .segb').forEach(b => b.onclick = () => { MIX.scope = b.dataset.s; MIX.focus = null; $$('.mscopes .segb').forEach(x => x.classList.toggle('active', x === b)); renderFocus(); const w = mixWidget(); if (w) { w.reset(); w.focus(); } });
 renderWeak();
+CHAPTERS.forEach(c => { if (!certs[c.n] && certReady(c.n)) certs[c.n] = { date: Date.now(), stars: starsFor(certStats(c.n).pct) }; }); store.set(CKEY, certs);
+(function () { const i = $('#certNameMain'); if (!i) return; i.value = store.get(NKEY, ''); i.oninput = () => store.set(NKEY, i.value.trim()); })();
+renderCerts();
+document.addEventListener('click', e => { if (e.target.closest('[data-go="certs"]')) { const i = $('#certNameMain'); if (i) i.value = store.get(NKEY, ''); renderCerts(); } });
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const w = WIDGETS.find(x => x.host.offsetParent !== null); if (!w) return;
@@ -6697,9 +6865,10 @@ ANIM.cubetrick = {
 const SOON = [];
 function renderSide() {
   const side = $('#side'); if (!side) return;
-  const item = c => { const tot = LEVELS.reduce((a, [k]) => a + stat(c.n, k).s, 0), pct = Math.min(100, Math.round(tot / 30 * 100)); return `<button class="sitem" data-go="${c.id}"><span class="sic">${c.icon}</span><span class="stx"><small>${c.n}</small> ${c.title}</span><span class="sbar"><i style="width:${pct}%"></i></span></button>`; };
+  const item = c => { const tot = LEVELS.reduce((a, [k]) => a + stat(c.n, k).s, 0), pct = Math.min(100, Math.round(tot / 30 * 100)); return `<button class="sitem" data-go="${c.id}"><span class="sic">${c.icon}</span><span class="stx"><small>${c.dn}</small> ${c.title}</span><span class="sbar"><i style="width:${pct}%"></i></span></button>`; };
   side.innerHTML = `<button class="sitem" data-go="home"><span class="sic">🏠</span><span class="stx">Home</span></button>
     <button class="sitem" data-go="review"><span class="sic">🔁</span><span class="stx">Mixed Revision</span></button>
+    <button class="sitem" data-go="certs"><span class="sic">🏅</span><span class="stx">My Certificates</span><small class="scount">${CHAPTERS.filter(c => certs[c.n]).length}/${CHAPTERS.length}</small></button>
     <div class="sgrp">Foundations</div>${CHAPTERS.filter(c => c.n <= 7).map(item).join('')}
     <div class="sgrp">Geometry basics</div>${CHAPTERS.filter(c => c.grp === 'geo').map(item).join('')}
     <div class="sgrp">Class 8</div>${CHAPTERS.filter(c => c.n >= 8 && c.grp !== 'geo').map(item).join('')}

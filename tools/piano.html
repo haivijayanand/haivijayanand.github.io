@@ -2,10 +2,12 @@
 <!--
 TOOL    : piano.html (public copy)
 FAMILY  : MUSIC
-VERSION : 1.2.0
+VERSION : 1.3.0
 DATE    : 2026-10-05
 CHAT    : Piano - play, record, replay
-CHANGES : v1.2.0  Sheet music tab: staff engraver and player (clefs, keys, time, beams, ties, TAB),
+CHANGES : v1.3.0  Tamil songs (out of copyright) in Sheet music, with Tamil words under the notes;
+                  note names can be shown as swaras (Sa = C)
+          v1.2.0  Sheet music tab: staff engraver and player (clefs, keys, time, beams, ties, TAB),
                   six sheet pieces, scale/arpeggio builder, seven lessons, note and key-signature drills
           v1.1.0  the loaded songbook, the last recorded take and the notes box are kept in
                   this browser and come back after a reload
@@ -470,7 +472,7 @@ STATUS  : working; runs offline in any browser, no network
       <label>Time <select id="shTime">
         <option value="">Auto</option><option>2/4</option><option>3/4</option><option>4/4</option><option>6/8</option>
       </select></label>
-      <label><input type="checkbox" id="shNames"> Note names</label>
+      <label>Note names <select id="shNames"><option value="">Off</option><option value="letters">Letters</option><option value="swaras">Swaras (Sa = C)</option></select></label>
       <label><input type="checkbox" id="shTab"> Guitar TAB</label>
       <button class="sbtn" id="shZoomOut" type="button" aria-label="Smaller">−</button>
       <span class="meter" id="shZoom">100%</span>
@@ -2457,6 +2459,8 @@ function spell(midi, f){
   return null;
 }
 const pname = p => p.step + (p.alter ? ACC[p.alter] : '');
+const SWARA = ['Sa','Ri₁','Ri₂','Ga₂','Ga₃','Ma₁','Ma₂','Pa','Da₁','Da₂','Ni₂','Ni₃'];
+const sname = p => SWARA[((p.midi % 12) + 12) % 12];
 const tokenOf = p => p.step + (p.alter === 1 ? '#' : p.alter === -1 ? 'b' : p.alter === 2 ? '##' : p.alter === -2 ? 'bb' : '') + p.oct;
 
 /* ---------------- parsing ---------------- */
@@ -2535,7 +2539,7 @@ function buildMeasures(events, meter, pickup){
       if((v === 3 || v === 1.5) && Math.abs(pos % 1) > 1e-6 && take >= v / 1.5) v = v / 1.5;
       const more = left - v > 1e-6;
       cur.items.push({ ei: ei, rest: !!ev.rest, pitches: ev.pitches || [], dur: v, pos: pos,
-                       tieIn: !first && !ev.rest, tieOut: more && !ev.rest, chord: first ? ev.chord : null });
+                       tieIn: !first && !ev.rest, tieOut: more && !ev.rest, chord: first ? ev.chord : null, lyric: first ? ev.lyric : null });
       first = false; left -= v; pos += v;
     }
   });
@@ -2639,8 +2643,10 @@ function engrave(host, model, opts){
 
   // widths
   const hasAcc = it => it.pitches.some(p => p.alter !== keyAlter(model.fifths, p.step));
+  const hasLyr = items.some(it => it.lyric);
   items.forEach(it => {
-    it.w = 15 + 25 * Math.sqrt(it.dur) + (hasAcc(it) ? 8 : 0) + (opts.names ? 4 : 0) + (it.chord ? 10 : 0);
+    it.w = 15 + 25 * Math.sqrt(it.dur) + (hasAcc(it) ? 8 : 0) + (opts.names ? (opts.names === 'swaras' ? 9 : 4) : 0) + (it.chord ? 10 : 0);
+    if(it.lyric) it.w = Math.max(it.w, it.lyric.length * 8 + 12);
   });
   const mw = model.measures.map(m => 12 + m.items.reduce((s, it) => s + it.w, 0));
   const headW = first => 40 + Math.abs(model.fifths) * 9 + 6 + (first && opts.showTime !== false ? 26 : 0);
@@ -2672,6 +2678,7 @@ function engrave(host, model, opts){
       geo[c] = cursor + above;
       cursor = geo[c] + 4 * SP + (i === staves.length - 1 ? below : Math.min(below, 40));
     });
+    if(hasLyr){ geo.lyr = cursor - 2; cursor += 18; }
     if(opts.names){ geo.names = cursor - 8; cursor += 12; }
     if(opts.tab){ geo.tab = cursor + 6; cursor = geo.tab + 5 * 11 + 22; }
     geo.bottom = cursor;
@@ -2836,8 +2843,11 @@ function engrave(host, model, opts){
         }
         // chord symbol, note names, TAB
         if(it.chord && c === staves[0]) el('text', { x: x - 6, y: geo[staves[0]] - 26 - Math.max(0, (Math.max.apply(null, sorted.map(p => p.d)) - REF[c] - 6) * SP / 2), 'font-size': 13, 'font-weight': 700, class: 'nm' }, g, it.chord);
+        if(it.lyric && c === staves[staves.length - 1]){
+          el('text', { x: x, y: geo.lyr, 'font-size': 14, 'text-anchor': 'middle', class: 'nm', 'font-family': '"Noto Sans Tamil","Nirmala UI","Latha","Tamil MN",sans-serif' }, g, it.lyric);
+        }
         if(opts.names && !it.tieIn && c === staves[staves.length - 1]){
-          const label = it.pitches.slice().sort((a, b) => b.midi - a.midi).map(pname).join(' ');
+          const label = it.pitches.slice().sort((a, b) => b.midi - a.midi).map(opts.names === 'swaras' ? sname : pname).join(' ');
           el('text', { x: x, y: geo.names, 'font-size': 11, 'text-anchor': 'middle', fill: '#5c5566', class: 'nm', 'font-family': 'Segoe UI,system-ui,sans-serif' }, g, label);
         }
         if(opts.tab && c === staves[staves.length - 1] && !it.tieIn){
@@ -2967,7 +2977,47 @@ const PIECES = [
     notes: 'E4+C3:2 E4 F4 | G4+G2:2 G4 F4 | E4+C3:2 E4 D4 | C4+G2:2 C4 D4 | E4+C3:2 E4 D4 | D4+G2:1.5 D4:0.5 D4:2 | E4+C3:2 E4 F4 | G4+G2:2 G4 F4 | E4+C3:2 E4 D4 | C4+G2:2 C4 D4 | E4+G2:2 D4 C4 | C4+C3:4' }
 ];
 
-const view = { zoom: store.get('piano.sheet.zoom', 1), names: false, tab: false };
+/* Tamil songs that are out of copyright: composers who died long ago, and
+   traditional rhymes. No single written tune exists for these — each is sung
+   in many ways — so every melody below is a simple practice setting written
+   for this page in the song's raga, with Sa = C. "_" in the words holds the
+   previous syllable over the next note. */
+const TAMIL = [
+  { name: 'அலைபாயுதே — Alaipayuthey', bpm: 72, meter: '4/4', fifths: -2,
+    about: 'Oothukkadu Venkata Kavi (1700–1765) · raga Kanada · Adi talam. Pallavi only, sung twice.',
+    notes: 'C4 D4 Eb4 F4:0.5 D4:0.5 | Eb4:2 F4 A4 | Bb4:0.5 A4:0.5 G4 F4 Eb4 | F4 D4 Eb4:0.5 D4:0.5 C4 | G4 A4 Bb4 C5:0.5 Bb4:0.5 | A4:2 G4 F4 | Eb4:0.5 F4:0.5 D4 C4 D4 | Eb4 F4 D4 Bb3 | C4:4',
+    words: 'அ லை பா யு _ தே கண் ணா என் ம னம் மி க அ லை பா யு தே அ லை பா யு _ தே கண் ணா என் ம னம் மி க அ லை பா யு தே' },
+  { name: 'தாயே யசோதா — Thaaye Yashoda', bpm: 70, meter: '4/4', fifths: -4,
+    about: 'Oothukkadu Venkata Kavi · raga Todi · Adi talam. The opening line.',
+    notes: 'Eb4:1.5 F4:0.5 G4 Ab4 | G4:2 F4 Eb4 | F4 G4 Ab4:0.5 Bb4:0.5 Ab4:0.5 G4:0.5 | F4 Eb4:0.5 F4:0.5 G4 Ab4 | Bb4:0.5 C5:0.5 Bb4 Ab4 G4 | Ab4:0.5 G4:0.5 F4 Eb4:2 | Db4 C4:3',
+    words: 'தா யே ய சோ தா உந் தன் ஆ யர் கு லத் து தித் த மா யன் கோ பா ல கிருஷ் ணன் செய் யும் ஜா லத் தைக் கே ளாய் _' },
+  { name: 'சபாபதிக்கு வேறு தெய்வம் — Sabhapathikku', bpm: 84, meter: '3/4', fifths: 0,
+    about: 'Gopalakrishna Bharathi (1810–1896) · raga Abhogi (Sa Ri₂ Ga₂ Ma₁ Da₂) · Rupakam. Pallavi, sung twice.',
+    notes: 'C4 D4 Eb4 | F4:2 Eb4 | F4 A4 C5 | A4:2 F4 | Eb4 F4 D4 | Eb4:0.5 D4:0.5 C4:2 | C5 A4 F4 | A4:2 F4 | Eb4 F4 A4 | C5:2 A4 | F4 Eb4 D4 | D4:0.5 Eb4:0.5 C4:2',
+    words: 'ச பா ப திக் கு வே று தெய் வம் ச மா ன மா கு மா _ ச பா ப திக் கு வே று தெய் வம் ச மா ன மா கு மா _' },
+  { name: 'வருகலாமோ ஐயா — Varugalamo', bpm: 76, meter: '3/4', fifths: -3,
+    about: 'Gopalakrishna Bharathi, from Nandanar Charithram · raga Manji · Rupakam. The opening line.',
+    notes: 'G4 Ab4 G4 | F4:2 Eb4 | F4 G4:0.5 F4:0.5 Eb4 | D4:3 | C4 D4 Eb4 | F4 G4 An4 | G4 F4 Eb4 | D4 C4:2',
+    words: 'வ ரு க லா மோ ஐ _ _ யா _ உந் தன் அ ரு கில் நான் _ _ _ _ _' },
+  { name: 'ஓடி விளையாடு பாப்பா — Odi Vilaiyadu Paappa', bpm: 108, meter: '4/4', fifths: 1,
+    about: 'Subramania Bharathiyar (1882–1921), Paappa Paattu. Simple setting in G major.',
+    notes: 'D4 E4:0.5 G4:0.5 G4 A4 | B4 A4 G4:2 | G4:0.5 A4:0.5 B4 B4:0.5 A4:0.5 G4 | A4:0.5 B4:0.5 A4 G4:2 | D4 E4:0.5 G4:0.5 G4 A4 | B4 A4 G4:2 | E4:0.5 E4:0.5 G4 G4:0.5 A4:0.5 B4 | A4:0.5 G4:0.5 E4:0.5 D4:0.5 G4:2',
+    words: 'ஓ டி வி ளை யா டு பாப் பா நீ ஓய்ந் தி ருக் க லா கா து பாப் பா கூ டி வி ளை யா டு பாப் பா ஒ ரு கு ழந் தை யை வை யா தே பாப் பா' },
+  { name: 'சின்னஞ்சிறு கிளியே — Chinnanchiru Kiliye', bpm: 80, meter: '3/4', fifths: 0,
+    about: 'Subramania Bharathiyar (1882–1921), Kannamma songs. Simple setting in raga Mohanam (Sa Ri₂ Ga₃ Pa Da₂).',
+    notes: 'E4 G4 A4 | G4 E4 D4 | E4:3 | G4 A4 G4 | E4:3 | D4 E4 G4 | A4 G4 E4 | D4 C4:2',
+    words: 'சின் னஞ் சி று கி ளி யே கண் ணம் மா _ செல் வக் க ளஞ் சி ய மே _' },
+  { name: 'நிலா நிலா ஓடி வா — Nila Nila Odi Vaa', bpm: 100, meter: '4/4', fifths: 0,
+    about: 'Traditional Tamil children’s rhyme. Simple setting in C major.',
+    notes: 'E4 G4 E4 G4 | A4 G4 E4:2 | D4 E4 F4 D4 | E4:2 C4:2 | E4 G4 E4 G4 | A4 C5 G4:2 | A4 G4 F4 E4 | D4 E4 C4:2',
+    words: 'நி லா நி லா ஓ டி வா நில் லா மல் ஓ டி வா ம லை மே லே ஏ றி வா மல் லி கைப் பூ கொண் டு வா' },
+  { name: 'கை வீசம்மா கை வீசு — Kai Veesamma', bpm: 104, meter: '4/4', fifths: 0,
+    about: 'Traditional Tamil children’s rhyme. Simple setting in C major.',
+    notes: 'G4 E4 G4 E4 | G4 A4 G4:2 | A4:0.5 A4:0.5 G4 E4:0.5 E4:0.5 D4 | E4 D4 C4:2 | G4 G4 A4:0.5 G4:0.5 E4 | G4 A4 G4:2 | A4:0.5 A4:0.5 G4 E4:0.5 E4:0.5 D4 | E4 D4 C4:2',
+    words: 'கை வீ சம் மா கை வீ சு க டைக் குப் போ க லாம் கை வீ சு மிட் டாய் வாங் க லாம் கை வீ சு மெ து வாய்த் தின் ன லாம் கை வீ சு' }
+];
+
+const view = { zoom: store.get('piano.sheet.zoom', 1), names: '', tab: false };
 let current = null;                               // { model, eng, tl, bpm, title }
 
 function songList(){ try{ return typeof SONGS !== 'undefined' ? SONGS : []; }catch(e){ return []; } }
@@ -2977,6 +3027,8 @@ function fillPieces(){
   const og = (label) => { const o = document.createElement('optgroup'); o.label = label; sel.appendChild(o); return o; };
   const a = og('Sheet pieces');
   PIECES.forEach((p, i) => a.appendChild(new Option(p.name, 'p' + i)));
+  const tg = og('Tamil songs (out of copyright)');
+  TAMIL.forEach((p, i) => tg.appendChild(new Option(p.name, 't' + i)));
   const b = og('Exercises');
   b.appendChild(new Option('Scale and arpeggio builder', 'gen'));
   const c = og('Songs from the song list');
@@ -3031,11 +3083,17 @@ function loadCurrent(){
   $('shGen').hidden = v !== 'gen';
   let events, meter = null, pickup = 0, fifths = null, bpm = +bpmEl.value, title = '', about = '', clef = 'auto', groups = [];
   try{
-    if(v[0] === 'p'){
-      const p = PIECES[+v.slice(1)];
+    if(v[0] === 'p' || v[0] === 't'){
+      const p = (v[0] === 'p' ? PIECES : TAMIL)[+v.slice(1)];
       const r = parseText(p.notes); events = r.events; groups = r.groups;
       const [n, d] = p.meter.split('/').map(Number); meter = { num: n, den: d };
       pickup = p.pickup || 0; fifths = p.fifths; bpm = p.bpm; title = p.name; about = p.about; clef = p.clef || 'auto';
+      if(p.words){
+        const w = p.words.split(/\s+/);
+        let k = 0;
+        events.forEach(e => { if(!e.rest){ const s = w[k++]; e.lyric = s && s !== '_' ? s : null; } });
+        about += ' Melody is a simple practice setting written for this page — the way it is sung varies.';
+      }
     }else if(v === 'gen'){
       const f = +$('shGenKey').value, type = $('shGenType').value;
       events = generate(f, type); meter = { num: 4, den: 4 }; fifths = f; bpm = 80;
@@ -3058,7 +3116,7 @@ function loadCurrent(){
   if(tsel){ const [n, d] = tsel.split('/').map(Number); meter = { num: n, den: d }; }
   if(!meter) meter = guessMeter(groups);
   const barLen = meter.num * 4 / meter.den;
-  if(!pickup && v[0] !== 'p' && v !== 'gen') pickup = guessPickup(groups, barLen);
+  if(!pickup && v[0] !== 'p' && v[0] !== 't' && v !== 'gen') pickup = guessPickup(groups, barLen);
   const ksel = $('shKey').value;
   if(ksel !== 'auto') fifths = +ksel;
   if(fifths === null) fifths = guessKey(events);
@@ -3529,7 +3587,7 @@ $('shStop').addEventListener('click', () => {
   sheetStop(); allNotesOff();
   if(!$('shLoop').checked && current){ delete $('shFrom').dataset.touched; $('shFrom').value = current.model.pickup ? 0 : 1; }
 });
-$('shNames').addEventListener('change', e => { view.names = e.target.checked; render(); });
+$('shNames').addEventListener('change', e => { view.names = e.target.value; render(); });
 $('shTab').addEventListener('change', e => { view.tab = e.target.checked; render(); });
 $('shZoomIn').addEventListener('click', () => { view.zoom = Math.min(1.8, +(view.zoom + 0.1).toFixed(2)); store.set('piano.sheet.zoom', view.zoom); render(); });
 $('shZoomOut').addEventListener('click', () => { view.zoom = Math.max(0.6, +(view.zoom - 0.1).toFixed(2)); store.set('piano.sheet.zoom', view.zoom); render(); });

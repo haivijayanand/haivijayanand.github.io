@@ -1,27 +1,44 @@
 ---
+# TOOL: index.md | FAMILY: SITE | VERSION: 2.0.0 | DATE: 2026-10-05
+# CHAT: Offline HTML inventory and online links
+# CHANGES: 2.0.0 - home page is now a short guide to the four sections (Speaks, Tools, Book Review, Engineering Articles); article list moved to /engineering/
 layout: default
 title: Home
 ---
 
-<div style="border:1px solid #1f6f5c;border-left:5px solid #1f6f5c;border-radius:8px;padding:14px 18px;margin:0 0 24px;background:rgba(31,111,92,.06)">
-  <strong><a href="/tools/">Tools →</a></strong><br>
-  Interactive engineering, music and astrology tools that run in your browser: spring rate calculator, PSD Explorer,
-  bearing frequencies, rotor balancing, piano, Sudoku, AstroExplorer and more.
-</div>
+<style>
+.hm-intro{font-size:1.05rem;line-height:1.7;margin:0 0 22px}
+.hm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin:0 0 28px}
+.hm-card{display:block;border:1px solid var(--c);border-left:5px solid var(--c);border-radius:8px;padding:14px 18px;
+  background:color-mix(in srgb,var(--c) 7%,transparent);text-decoration:none!important;color:inherit!important;transition:transform .12s}
+.hm-card:hover{transform:translateY(-2px)}
+.hm-card b{display:block;font-size:1.15rem;color:var(--c);margin-bottom:4px}
+.hm-card span{display:block;line-height:1.6}
+.hm-card small{display:block;margin-top:8px;opacity:.75}
+</style>
 
-<div style="border:1px solid #7a3b1f;border-left:5px solid #7a3b1f;border-radius:8px;padding:14px 18px;margin:0 0 24px;background:rgba(122,59,31,.06)">
-  <strong><a href="/book-review/">Book Review →</a></strong><br>
-  One famous management book a day: a 300-word summary and ten questions to test yourself.
-</div>
+<p class="hm-intro">Welcome. This site collects my writing and the small browser tools I build: essays on life and work,
+interactive engineering and learning tools, daily book reviews and longer engineering articles. Pick a section below.</p>
 
-<div style="border:1px solid #2c6a9e;border-left:5px solid #2c6a9e;border-radius:8px;padding:14px 18px;margin:0 0 24px;background:rgba(44,106,158,.06)">
-  <strong><a href="/speaks/">Vijay Anand Speaks →</a></strong><br>
-  Essays on life, family, work and leadership, in English and Tamil, written since 2009.
+<div class="hm-grid">
+  <a class="hm-card" href="/speaks/" style="--c:#2c6a9e">
+    <b>Vijay Anand Speaks →</b>
+    <span>Short essays on life, family, relationships, work and leadership, in English and Tamil, written since 2009 and moved here from Blogger.</span>
+    <small>200+ essays · 2009 to now</small>
+  </a>
+  <a class="hm-card" href="/tools/" style="--c:#1f6f5c">
+    <b>Tools →</b>
+    <span>Interactive pages that run in your browser and work offline: spring rate, PSD and bearing calculators, rotor balancing, business sim games, Class 8 Maths, Science and Social Science, piano, Sudoku, AstroExplorer and more.</span>
+    <small>Engineering · School education · Games · Astrology</small>
+  </a>
+  <a class="hm-card" href="/book-review/" style="--c:#b5591b">
+    <b>Book Review →</b>
+    <span>One famous management book a day: a 300-word summary, the key ideas, and ten questions to test yourself, with a certificate at the end.</span>
+    <small>New review every day</small>
+  </a>
+  <a class="hm-card" href="/engineering/" style="--c:#6b4fa3">
+    <b>Engineering Articles →</b>
+    <span>Longer technical write-ups with worked analysis and plots: mechanical design, materials, orbital mechanics and Python visualisation.</span>
+    <small>{{ site.posts | size }} articles so far</small>
+  </a>
 </div>
-
-{% for post in site.posts %}
-<article>
-  <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
-  <p>{{ post.date | date: "%B %d, %Y" }} · {{ post.description }}</p>
-</article>
-{% endfor %}

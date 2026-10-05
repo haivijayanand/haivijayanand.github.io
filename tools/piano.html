@@ -2,10 +2,12 @@
 <!--
 TOOL    : piano.html (public copy)
 FAMILY  : MUSIC
-VERSION : 1.1.0
-DATE    : 2026-10-01
+VERSION : 1.2.0
+DATE    : 2026-10-05
 CHAT    : Piano - play, record, replay
-CHANGES : v1.1.0  the loaded songbook, the last recorded take and the notes box are kept in
+CHANGES : v1.2.0  Sheet music tab: staff engraver and player (clefs, keys, time, beams, ties, TAB),
+                  six sheet pieces, scale/arpeggio builder, seven lessons, note and key-signature drills
+          v1.1.0  the loaded songbook, the last recorded take and the notes box are kept in
                   this browser and come back after a reload
           v1.0.0  piano with eight synthesised instruments, note wheel, recording, sequencer,
                   letter-sheet converter and Carnatic practice
@@ -353,6 +355,64 @@ STATUS  : working; runs offline in any browser, no network
   }
   button.try:hover{border-color:var(--brass)}
   code{background:#221d2c;border-radius:4px;padding:1px 5px;font-size:12.5px}
+
+  /* ---------- sheet music (v1.2.0) ---------- */
+  .sheetwrap{margin-top:10px;background:#211c2b;border:1px solid var(--line);border-radius:10px;padding:10px 12px 12px}
+  .stabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+  .stab{background:transparent;border:1px solid transparent;color:var(--muted);border-radius:7px;padding:5px 12px;cursor:pointer;font:inherit;font-size:13px}
+  .stab:hover{color:var(--ivory)}
+  .stab[aria-selected="true"]{background:#2c2536;border-color:var(--line);color:var(--ivory)}
+  .stab:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+  .sbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:0 0 8px;font-size:13px;color:var(--muted)}
+  .sbar label{display:inline-flex;align-items:center;gap:5px}
+  .sbar select,.sbar input[type=number]{background:#181421;color:var(--ivory);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font:inherit;font-size:13px}
+  .sbar input[type=number]{width:52px}
+  .sbar select#shPiece{max-width:min(340px,80vw)}
+  .sbtn{background:#2a2335;border:1px solid var(--line);color:var(--ivory);border-radius:6px;padding:5px 11px;cursor:pointer;font:inherit;font-size:13px}
+  .sbtn:hover{border-color:var(--brass)}
+  .sbtn.primary{background:var(--brass);color:#221b08;border-color:#e9c877;font-weight:600}
+  .sbtn[aria-pressed="true"]{background:#3a3146;border-color:var(--brass)}
+  .sinfo{font-size:12.5px;color:var(--muted);margin:2px 0 8px}
+  .sinfo b{color:var(--ivory);font-weight:600}
+  .paper{background:#fbf8f1;color:#1d1a22;border-radius:8px;overflow:auto;max-height:min(62vh,640px);padding:6px 4px 10px;
+         box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+  .paper svg{display:block}
+  .paper .ttl{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-size:19px;text-align:center;margin:6px 0 0;color:#1d1a22}
+  .sm .ev{cursor:pointer}
+  .sm .ev:hover .hd{fill:#7a4a10}
+  .sm .ev.cur .hd,.sm .ev.cur .hdo{fill:#c8372d;stroke:#c8372d}
+  .sm .ev.cur .rst{fill:#c8372d;stroke:#c8372d}
+  .sm .ev.cur .nm,.sm .ev.cur .tb{fill:#c8372d}
+  .sm .ev.mark .hd{fill:#2e6f9e}
+  .sm .mbox{fill:#f4d58d;opacity:0;pointer-events:none}
+  .sm .mbox.on{opacity:.35}
+  .stage:fullscreen{background:var(--ink);padding:14px;overflow:auto}
+  .stage:fullscreen .paper{max-height:58vh}
+  .lesson{background:#fbf8f1;color:#1d1a22;border-radius:8px;padding:14px 18px;max-height:min(62vh,660px);overflow:auto;line-height:1.55}
+  .lesson h3{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-size:19px;margin:18px 0 6px;color:#1d1a22}
+  .lesson h3:first-child{margin-top:0}
+  .lesson p{margin:0 0 10px;max-width:78ch}
+  .lesson table{border-collapse:collapse;margin:4px 0 14px;font-size:13.5px}
+  .lesson th,.lesson td{border-bottom:1px solid #e0d9c9;padding:6px 14px 6px 0;text-align:left;vertical-align:top}
+  .lesson code{background:#eee7d6;color:#1d1a22}
+  .lesson .mini{border:1px solid #e6dfcf;border-radius:8px;margin:6px 0 12px;padding:2px 0 6px;position:relative;max-width:820px}
+  .lesson .mini .sbtn{position:absolute;right:8px;top:6px;background:#efe7d4;color:#1d1a22;border-color:#d6cbb2;padding:3px 10px;font-size:12px}
+  .lesson .mini .cap{font-size:12.5px;color:#5c5566;padding:0 12px}
+  .lnav{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+  .lnav button{background:#efe7d4;border:1px solid #d6cbb2;border-radius:999px;padding:3px 11px;font:inherit;font-size:12.5px;cursor:pointer;color:#1d1a22}
+  .lnav button[aria-pressed="true"]{background:#1d1a22;color:#fbf8f1}
+  .drill{display:grid;grid-template-columns:minmax(220px,360px) 1fr;gap:16px;align-items:start}
+  .drill .card{background:#fbf8f1;border-radius:8px;padding:6px;min-height:150px}
+  .drill .ans{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+  .drill .ans button{min-width:46px;padding:9px 10px;font-size:16px;border-radius:8px;background:#2a2335;border:1px solid var(--line);color:var(--ivory);cursor:pointer;font-family:Georgia,serif}
+  .drill .ans button:hover{border-color:var(--brass)}
+  .drill .ans button.ok{background:#2f6b3f;border-color:#58b072}
+  .drill .ans button.no{background:#7a2b2b;border-color:#c55}
+  .drill .fb{min-height:1.5em;font-size:14px}
+  .drill .fb.ok{color:#8fd19e}.drill .fb.no{color:#f19a8f}
+  .drill .stats{font-size:13px;color:var(--muted)}
+  .drill .stats b{color:var(--ivory)}
+  @media (max-width:760px){.drill{grid-template-columns:1fr}.paper,.lesson{max-height:none}}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -361,7 +421,7 @@ STATUS  : working; runs offline in any browser, no network
 
 <header>
   <h1>Piano</h1>
-  <p>Click the keys or use your computer keyboard. Record what you play and hear it back, or type a line of notes and let the piano read it.</p>
+  <p>Click the keys or use your computer keyboard. Record what you play and hear it back, type a line of notes and let the piano read it, or open Sheet music to learn to read a staff.</p>
 </header>
 
 <div class="stage" id="stage">
@@ -369,8 +429,97 @@ STATUS  : working; runs offline in any browser, no network
 <div class="views" role="tablist" aria-label="Playing surface">
   <button class="vtab" role="tab" data-view="keys" aria-selected="true" aria-controls="viewKeys">Keyboard</button>
   <button class="vtab" role="tab" data-view="wheel" aria-selected="false" tabindex="-1" aria-controls="viewWheel">Wheel</button>
+  <button class="vtab" role="tab" data-view="sheet" aria-selected="false" tabindex="-1" aria-controls="viewSheet">Sheet music</button>
 </div>
 <div class="instbar" id="instBar" role="group" aria-label="Instrument"></div>
+</div>
+
+<div class="sheetwrap" id="viewSheet" hidden>
+  <div class="stabs" role="tablist" aria-label="Sheet music">
+    <button class="stab" role="tab" data-sp="shScore" aria-selected="true">Read &amp; play</button>
+    <button class="stab" role="tab" data-sp="shLearn" aria-selected="false" tabindex="-1">Learn to read</button>
+    <button class="stab" role="tab" data-sp="shNotes" aria-selected="false" tabindex="-1">Note drill</button>
+    <button class="stab" role="tab" data-sp="shKeys" aria-selected="false" tabindex="-1">Key signature drill</button>
+  </div>
+
+  <div id="shScore">
+    <div class="sbar">
+      <label>Piece <select id="shPiece"></select></label>
+      <span id="shGen" hidden>
+        <label>Key <select id="shGenKey"></select></label>
+        <label>Pattern <select id="shGenType">
+          <option value="scale">Scale, two octaves</option>
+          <option value="thirds">Scale in thirds</option>
+          <option value="triads">Arpeggios: triads on each degree</option>
+          <option value="sevenths">Arpeggios: seventh chords</option>
+        </select></label>
+      </span>
+    </div>
+    <div class="sbar">
+      <button class="sbtn primary" id="shPlay" type="button">▶ Play</button>
+      <button class="sbtn" id="shStop" type="button">■ Stop</button>
+      <label title="Repeat bars"><input type="checkbox" id="shLoop"> Loop bars</label>
+      <input type="number" id="shFrom" min="0" value="1" aria-label="First bar"> to
+      <input type="number" id="shTo" min="0" value="4" aria-label="Last bar">
+      <label><input type="checkbox" id="shCount" checked> Count-in</label>
+      <label><input type="checkbox" id="shClick"> Metronome</label>
+      <span class="meter" id="shBpm"></span>
+    </div>
+    <div class="sbar">
+      <label>Key <select id="shKey"></select></label>
+      <label>Time <select id="shTime">
+        <option value="">Auto</option><option>2/4</option><option>3/4</option><option>4/4</option><option>6/8</option>
+      </select></label>
+      <label><input type="checkbox" id="shNames"> Note names</label>
+      <label><input type="checkbox" id="shTab"> Guitar TAB</label>
+      <button class="sbtn" id="shZoomOut" type="button" aria-label="Smaller">−</button>
+      <span class="meter" id="shZoom">100%</span>
+      <button class="sbtn" id="shZoomIn" type="button" aria-label="Larger">+</button>
+      <button class="sbtn" id="shFull" type="button">⛶ Full screen</button>
+      <button class="sbtn" id="shToBox" type="button" title="Write this piece into the notes box">Copy to notes box</button>
+    </div>
+    <div class="sinfo" id="shInfo"></div>
+    <div class="paper sm" id="shPaper"></div>
+  </div>
+
+  <div id="shLearn" hidden>
+    <div class="lesson sm" id="shLesson"></div>
+  </div>
+
+  <div id="shNotes" hidden>
+    <div class="sbar">
+      <label>Clef <select id="ndClef"><option value="treble">Treble</option><option value="bass">Bass</option><option value="both">Both</option></select></label>
+      <label>Range <select id="ndRange"><option value="staff">On the staff</option><option value="ledger">With ledger lines</option></select></label>
+      <label><input type="checkbox" id="ndAcc"> Sharps and flats</label>
+      <label title="Answer on the piano keys too"><input type="checkbox" id="ndOct"> Keyboard answer must match the octave</label>
+    </div>
+    <div class="drill">
+      <div class="card sm" id="ndCard"></div>
+      <div>
+        <div class="ans" id="ndAns"></div>
+        <div class="ans" id="ndAcc2" hidden></div>
+        <div class="fb" id="ndFb">Name the note: click a letter, or play it on the keyboard below.</div>
+        <div class="stats" id="ndStats"></div>
+        <div class="sbar" style="margin-top:8px"><button class="sbtn" id="ndHear" type="button">Hear it</button><button class="sbtn" id="ndSkip" type="button">Skip</button><button class="sbtn" id="ndReset" type="button">Reset score</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="shKeys" hidden>
+    <div class="sbar">
+      <label>Clef <select id="kdClef"><option value="treble">Treble</option><option value="bass">Bass</option></select></label>
+      <label>Answer as <select id="kdMode"><option value="major">Major key</option><option value="minor">Minor key</option></select></label>
+    </div>
+    <div class="drill">
+      <div class="card sm" id="kdCard"></div>
+      <div>
+        <div class="ans" id="kdAns"></div>
+        <div class="fb" id="kdFb">Which key has this signature?</div>
+        <div class="stats" id="kdStats"></div>
+        <div class="sbar" style="margin-top:8px"><button class="sbtn" id="kdHear" type="button">Hear the scale</button><button class="sbtn" id="kdSkip" type="button">Skip</button></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="case" id="viewKeys">
@@ -2253,5 +2402,1193 @@ updateRecUI();
 seqEl.addEventListener('input', refreshScore);
 refreshScore();
 </script>
+<script>
+/* ======================= sheet music (v1.2.0) =======================
+   A small engraver and player. Notes are written in the same token language
+   as the notes box (C#4:0.5, chords with +, - for a rest, | for bars) and
+   drawn on a real staff: clef, key and time signature, bars, beams, ties,
+   dots, accidentals, ledger lines, optional note names and guitar TAB.
+   Playback uses the piano's own voices and lights the keyboard below. */
+(function(){
+'use strict';
+const NS = 'http://www.w3.org/2000/svg';
+const STEPS = 'CDEFGAB', STEP_PC = [0,2,4,5,7,9,11];
+const SP = 10;                                   // one staff space
+const SHARP_ORDER = 'FCGDAEB', FLAT_ORDER = 'BEADGCF';
+const MAJ_SHARP = ['C','G','D','A','E','B','F♯','C♯'], MAJ_FLAT = ['C','F','B♭','E♭','A♭','D♭','G♭','C♭'];
+const MIN_SHARP = ['A','E','B','F♯','C♯','G♯','D♯','A♯'], MIN_FLAT = ['A','D','G','C','F','B♭','E♭','A♭'];
+const majName = f => f >= 0 ? MAJ_SHARP[f] : MAJ_FLAT[-f];
+const minName = f => f >= 0 ? MIN_SHARP[f] : MIN_FLAT[-f];
+const ACC = { '1':'♯', '-1':'♭', '0':'♮', '2':'𝄪', '-2':'𝄫' };
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+
+function keyAlter(f, step){
+  if(f > 0) return SHARP_ORDER.indexOf(step) < f ? 1 : 0;
+  if(f < 0) return FLAT_ORDER.indexOf(step) < -f ? -1 : 0;
+  return 0;
+}
+function mkPitch(stepIdx, alter, oct){
+  return { step: STEPS[stepIdx], si: stepIdx, alter: alter, oct: oct,
+           midi: STEP_PC[stepIdx] + alter + (oct + 1) * 12, d: oct * 7 + stepIdx };
+}
+const PITCH_RE = /^([A-Ga-g])(##|bb|#|b|n)?(-?\d)?$/;
+function parsePitch(s){
+  const m = PITCH_RE.exec(s);
+  if(!m) return null;
+  const si = STEPS.indexOf(m[1].toUpperCase());
+  const alter = { '#':1, '##':2, 'b':-1, 'bb':-2 }[m[2]] || 0;
+  return mkPitch(si, alter, m[3] === undefined ? 4 : +m[3]);
+}
+// spell a midi number in a key (used for generated exercises and drills)
+function spell(midi, f){
+  const pc = ((midi % 12) + 12) % 12;
+  for(let si = 0; si < 7; si++){
+    const a = keyAlter(f, STEPS[si]);
+    if((STEP_PC[si] + a + 12) % 12 === pc) return mkPitch(si, a, Math.floor((midi - STEP_PC[si] - a) / 12) - 1);
+  }
+  for(let si = 0; si < 7; si++){
+    const a = f >= 0 ? 1 : -1;
+    if((STEP_PC[si] + a + 12) % 12 === pc) return mkPitch(si, a, Math.floor((midi - STEP_PC[si] - a) / 12) - 1);
+  }
+  return null;
+}
+const pname = p => p.step + (p.alter ? ACC[p.alter] : '');
+const tokenOf = p => p.step + (p.alter === 1 ? '#' : p.alter === -1 ? 'b' : p.alter === 2 ? '##' : p.alter === -2 ? 'bb' : '') + p.oct;
+
+/* ---------------- parsing ---------------- */
+function parseText(text){
+  const events = [], groups = [];
+  let g = 0;
+  const toks = String(text).replace(/\|/g, ' | ').replace(/,/g, ' ').split(/\s+/).filter(Boolean);
+  toks.forEach(tk => {
+    if(tk === '|'){ groups.push(g); g = 0; return; }
+    const bits = tk.split(':');
+    const dur = bits[1] === undefined ? 1 : parseFloat(bits[1]);
+    if(!(dur > 0)) throw new Error('Bad length in "' + tk + '"');
+    if(/^[-_rR]$/.test(bits[0])){ events.push({ rest: true, dur: dur }); g += dur; return; }
+    const ps = bits[0].split('+').map(s => {
+      const p = parsePitch(s);
+      if(!p) throw new Error('Unknown note "' + s + '"');
+      return p;
+    });
+    events.push({ pitches: ps, dur: dur });
+    g += dur;
+  });
+  if(g > 0) groups.push(g);
+  return { events, groups };
+}
+
+function guessMeter(groups){
+  const inner = groups.length > 2 ? groups.slice(1, -1) : groups.slice();
+  const fits = n => inner.filter(x => Math.abs(x / n - Math.round(x / n)) < 1e-6).length;
+  let best = 4, sc = fits(4);
+  if(fits(3) > sc){ best = 3; sc = fits(3); }
+  if(sc === 0 && fits(2) > 0) best = 2;
+  return { num: best, den: 4 };
+}
+function guessPickup(groups, barLen){
+  if(groups.length < 2) return 0;
+  const r = groups[0] % barLen;
+  return r > 1e-6 && r < barLen - 1e-6 ? r : 0;
+}
+function guessKey(events){
+  const ps = [];
+  events.forEach(e => (e.pitches || []).forEach(p => ps.push(p)));
+  if(!ps.length) return 0;
+  const last = ps[ps.length - 1];
+  let best = 0, bc = 1e9;
+  for(let f = -6; f <= 6; f++){
+    let c = Math.abs(f) * 0.35;
+    ps.forEach(p => { if(p.alter !== keyAlter(f, p.step)) c += 1; });
+    const tonicPc = (f * 7 % 12 + 12) % 12;
+    const lp = ((last.midi % 12) + 12) % 12;
+    if(lp === tonicPc || lp === (tonicPc + 9) % 12) c -= 1.5;
+    if(c < bc - 1e-9){ bc = c; best = f; }
+  }
+  return best;
+}
+
+/* ---------------- bars, ties and note values ---------------- */
+const VALUES = [4,3,2,1.5,1,0.75,0.5,0.375,0.25,0.125];
+function looks(d){
+  const t = { 4:['w',0], 3:['h',1], 2:['h',0], 1.5:['q',1], 1:['q',0], 0.75:['8',1], 0.5:['8',0], 0.375:['16',1], 0.25:['16',0], 0.125:['32',0] }[d];
+  return t || ['q',0];
+}
+function buildMeasures(events, meter, pickup){
+  const barLen = meter.num * 4 / meter.den;
+  const measures = [];
+  let cap = pickup > 0 ? pickup : barLen, pos = 0, cur = { items: [], cap: cap, pickup: pickup > 0 };
+  measures.push(cur);
+  events.forEach((ev, ei) => {
+    let left = ev.dur, first = true;
+    while(left > 1e-6){
+      if(cap - pos < 1e-6){ cur = { items: [], cap: barLen, pickup: false }; measures.push(cur); cap = barLen; pos = 0; }
+      let take = Math.min(left, cap - pos);
+      // largest written value that fits
+      let v = VALUES.find(x => x <= take + 1e-6);
+      if(v === undefined){ left = 0; break; }
+      // keep dotted values from starting off the beat in simple time where a plain one reads better
+      if((v === 3 || v === 1.5) && Math.abs(pos % 1) > 1e-6 && take >= v / 1.5) v = v / 1.5;
+      const more = left - v > 1e-6;
+      cur.items.push({ ei: ei, rest: !!ev.rest, pitches: ev.pitches || [], dur: v, pos: pos,
+                       tieIn: !first && !ev.rest, tieOut: more && !ev.rest, chord: first ? ev.chord : null });
+      first = false; left -= v; pos += v;
+    }
+  });
+  if(!cur.items.length && measures.length > 1) measures.pop();
+  return measures;
+}
+
+/* ---------------- guitar TAB ---------------- */
+const OPEN = [64,59,55,50,45,40];                 // sounding pitches, string 1 (high e) to 6
+function tabFor(ps, state){
+  const out = [], used = new Set();
+  ps.slice().sort((a, b) => b.midi - a.midi).forEach(p => {
+    const snd = p.midi - 12;                     // guitar sounds an octave below the written note
+    let best = null, bs = 1e9;
+    OPEN.forEach((o, s) => {
+      const fr = snd - o;
+      if(fr < 0 || fr > 17 || used.has(s)) return;
+      const sc = Math.abs(fr - state.pos) + (fr === 0 ? 0.6 : 0) + (fr > 12 ? 2 : 0);
+      if(sc < bs){ bs = sc; best = { s: s, f: fr }; }
+    });
+    if(best){ used.add(best.s); out.push({ p: p, s: best.s, f: best.f }); if(best.f > 0) state.pos = best.f; }
+  });
+  return out;
+}
+
+/* ---------------- engraving ---------------- */
+function el(tag, attrs, parent, text){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  if(text !== undefined) e.textContent = text;
+  if(parent) parent.appendChild(e);
+  return e;
+}
+const REF = { treble: 34, bass: 22 };            // diatonic number of the middle line
+const yOf = (d, top, clef) => top + 2 * SP - (d - REF[clef]) * SP / 2;
+
+function drawClef(g, clef, x, t){
+  if(clef === 'treble'){
+    el('path', { d: `M${x+9},${t+50} C${x+15},${t+55} ${x+19},${t+45} ${x+16},${t+37} L${x+11},${t-9} C${x+10},${t-16} ${x+17},${t-19} ${x+19},${t-11} C${x+21},${t-2} ${x+3},${t+8} ${x+3},${t+23} C${x+3},${t+35} ${x+22},${t+37} ${x+22},${t+27} C${x+22},${t+18} ${x+10},${t+18} ${x+11},${t+27}`,
+      fill: 'none', stroke: '#1d1a22', 'stroke-width': 2.3, 'stroke-linecap': 'round' }, g);
+    el('circle', { cx: x + 8, cy: t + 49, r: 3, fill: '#1d1a22' }, g);
+  }else{
+    el('path', { d: `M${x+3},${t+12} C${x+3},${t+1} ${x+22},${t-1} ${x+22},${t+13} C${x+22},${t+27} ${x+10},${t+35} ${x+1},${t+40}`,
+      fill: 'none', stroke: '#1d1a22', 'stroke-width': 2.6, 'stroke-linecap': 'round' }, g);
+    el('circle', { cx: x + 5, cy: t + 11, r: 3.6, fill: '#1d1a22' }, g);
+    el('circle', { cx: x + 28, cy: t + 5, r: 1.9, fill: '#1d1a22' }, g);
+    el('circle', { cx: x + 28, cy: t + 15, r: 1.9, fill: '#1d1a22' }, g);
+  }
+}
+const KS_SHARP = { treble: [38,35,39,36,33,37,34], bass: [24,21,25,22,19,23,20] };
+const KS_FLAT  = { treble: [34,37,33,36,32,35,31], bass: [20,23,19,22,18,21,17] };
+function drawKey(g, clef, f, x, t){
+  const n = Math.abs(f), pos = f > 0 ? KS_SHARP[clef] : KS_FLAT[clef];
+  for(let i = 0; i < n; i++){
+    const y = yOf(pos[i], t, clef);
+    el('text', { x: x + i * 9, y: y + (f > 0 ? 6 : 4), 'font-size': 19, 'text-anchor': 'middle', class: 'acc' }, g, f > 0 ? '♯' : '♭');
+  }
+  return n * 9;
+}
+function drawTime(g, meter, x, t){
+  const a = { x: x, 'font-size': 22, 'font-weight': 700, 'text-anchor': 'middle', 'font-family': 'Georgia,serif' };
+  el('text', Object.assign({ y: t + 18 }, a), g, meter.num);
+  el('text', Object.assign({ y: t + 38 }, a), g, meter.den);
+}
+function drawRest(g, look, x, t, dots){
+  const k = look;
+  const ink = { class: 'rst', fill: '#1d1a22', stroke: 'none' };
+  if(k === 'w') el('rect', Object.assign({ x: x - 6, y: t + SP, width: 12, height: 5 }, ink), g);
+  else if(k === 'h') el('rect', Object.assign({ x: x - 6, y: t + 2 * SP - 5, width: 12, height: 5 }, ink), g);
+  else if(k === 'q') el('path', { class: 'rst', d: `M${x-3},${t+9} L${x+3},${t+17} L${x-2},${t+23} L${x+3},${t+30} C${x-3},${t+27} ${x-6},${t+31} ${x-1},${t+36}`, fill: 'none', stroke: '#1d1a22', 'stroke-width': 2.4, 'stroke-linejoin': 'round' }, g);
+  else{
+    const n = k === '8' ? 1 : k === '16' ? 2 : 3;
+    el('path', { class: 'rst', d: `M${x+4},${t+12} L${x-2},${t+31+(n-1)*7}`, fill: 'none', stroke: '#1d1a22', 'stroke-width': 1.6 }, g);
+    for(let i = 0; i < n; i++){
+      el('circle', Object.assign({ cx: x - 3 - i * 1.5, cy: t + 13 + i * 7, r: 2.6 }, ink), g);
+      el('path', { class: 'rst', d: `M${x-3-i*1.5},${t+14+i*7} Q${x+1-i},${t+16+i*7} ${x+4-i*1},${t+12+i*7}`, fill: 'none', stroke: '#1d1a22', 'stroke-width': 1.4 }, g);
+    }
+  }
+  if(dots) el('circle', { class: 'rst', cx: x + 9, cy: t + 15, r: 1.8, fill: '#1d1a22' }, g);
+}
+
+/* model: { measures, meter, fifths, clef, pickup }
+   opts:  { width, zoom, names, tab, mini, showTime } */
+function engrave(host, model, opts){
+  host.innerHTML = '';
+  const zoom = opts.zoom || 1;
+  const W = Math.max(260, (opts.width || host.clientWidth || 800) / zoom);
+  const items = [];                              // flat list in order
+  model.measures.forEach((m, mi) => m.items.forEach(it => { it.mi = mi; items.push(it); }));
+  if(!items.length){ host.textContent = 'Nothing to show.'; return null; }
+
+  // which clef(s)
+  let clef = model.clef;
+  if(!clef || clef === 'auto'){
+    let lo = 999, hi = -999;
+    items.forEach(it => it.pitches.forEach(p => { lo = Math.min(lo, p.midi); hi = Math.max(hi, p.midi); }));
+    clef = lo === 999 ? 'treble' : lo >= 53 ? 'treble' : hi <= 64 ? 'bass' : 'grand';
+  }
+  const staves = clef === 'grand' ? ['treble', 'bass'] : [clef];
+  const staffOf = p => clef === 'grand' ? (p.midi >= 60 ? 'treble' : 'bass') : clef;
+
+  // widths
+  const hasAcc = it => it.pitches.some(p => p.alter !== keyAlter(model.fifths, p.step));
+  items.forEach(it => {
+    it.w = 15 + 25 * Math.sqrt(it.dur) + (hasAcc(it) ? 8 : 0) + (opts.names ? 4 : 0) + (it.chord ? 10 : 0);
+  });
+  const mw = model.measures.map(m => 12 + m.items.reduce((s, it) => s + it.w, 0));
+  const headW = first => 40 + Math.abs(model.fifths) * 9 + 6 + (first && opts.showTime !== false ? 26 : 0);
+  const avail = W - 16;
+  const systems = [];
+  let curS = { ms: [], used: headW(true) };
+  model.measures.forEach((m, mi) => {
+    if(curS.ms.length && curS.used + mw[mi] > avail){ systems.push(curS); curS = { ms: [], used: headW(false) }; }
+    curS.ms.push(mi); curS.used += mw[mi];
+  });
+  systems.push(curS);
+
+  // vertical extents per system
+  let y = opts.mini ? 6 : 10;
+  const sysGeo = [];
+  systems.forEach((s, si) => {
+    const ext = {};
+    staves.forEach(c => ext[c] = { hi: REF[c] + 4, lo: REF[c] - 4 });
+    let chords = false;
+    s.ms.forEach(mi => model.measures[mi].items.forEach(it => {
+      if(it.chord) chords = true;
+      it.pitches.forEach(p => { const e = ext[staffOf(p)]; e.hi = Math.max(e.hi, p.d); e.lo = Math.min(e.lo, p.d); });
+    }));
+    const geo = { top: y };
+    let cursor = y;
+    staves.forEach((c, i) => {
+      const above = Math.max(i === 0 ? 30 : 22, (ext[c].hi - (REF[c] + 4)) * SP / 2 + 34) + (i === 0 && chords ? 16 : 0);
+      const below = Math.max(26, ((REF[c] - 4) - ext[c].lo) * SP / 2 + 30);
+      geo[c] = cursor + above;
+      cursor = geo[c] + 4 * SP + (i === staves.length - 1 ? below : Math.min(below, 40));
+    });
+    if(opts.names){ geo.names = cursor - 8; cursor += 12; }
+    if(opts.tab){ geo.tab = cursor + 6; cursor = geo.tab + 5 * 11 + 22; }
+    geo.bottom = cursor;
+    sysGeo.push(geo);
+    y = cursor + (opts.mini ? 0 : 6);
+  });
+  const H = y + 4;
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, width: W * zoom, height: H * zoom, role: 'img',
+                          'aria-label': 'Sheet music', 'font-family': 'Georgia,"Times New Roman",serif' }, host);
+
+  // horizontal placement
+  systems.forEach((s, si) => {
+    const geo = sysGeo[si];
+    const h = headW(si === 0);
+    const natural = s.ms.reduce((a, mi) => a + mw[mi], 0);
+    const room = avail - h;
+    const isLast = si === systems.length - 1;
+    const k = (opts.justify || !isLast || natural / room > 0.7) ? room / natural : 1;
+    let x = 8 + h;
+    s.ms.forEach(mi => {
+      const m = model.measures[mi];
+      m.x0 = x; m.sys = si;
+      let ix = x + 10 * k;
+      m.items.forEach(it => { it.x = ix + 8; it.sys = si; ix += it.w * k; });
+      x += mw[mi] * k;
+      m.x1 = x;
+    });
+    s.x1 = x;
+  });
+
+  // staff lines, clefs, key, time, bar lines, bar numbers
+  let barNo = model.pickup > 0 ? 0 : 1;
+  const barNumbers = model.measures.map(() => barNo++);
+  systems.forEach((s, si) => {
+    const geo = sysGeo[si], g = el('g', {}, svg);
+    staves.forEach(c => {
+      for(let i = 0; i < 5; i++) el('line', { x1: 8, x2: s.x1, y1: geo[c] + i * SP, y2: geo[c] + i * SP, stroke: '#1d1a22', 'stroke-width': 0.9 }, g);
+      drawClef(g, c, 12, geo[c]);
+      const kw = drawKey(g, c, model.fifths, 50, geo[c]);
+      if(si === 0 && opts.showTime !== false) drawTime(g, model.meter, 50 + kw + 12, geo[c]);
+    });
+    const yTop = geo[staves[0]], yBot = geo[staves[staves.length - 1]] + 4 * SP;
+    el('line', { x1: 8, x2: 8, y1: yTop, y2: yBot, stroke: '#1d1a22', 'stroke-width': 1.2 }, g);
+    if(staves.length > 1) el('path', { d: `M5,${yTop} Q-1,${(yTop+yBot)/2} 5,${yBot}`, fill: 'none', stroke: '#1d1a22', 'stroke-width': 2 }, g);
+    if(!opts.mini) el('text', { x: 10, y: yTop - 22, 'font-size': 10, fill: '#6b6475', 'font-style': 'italic' }, g, barNumbers[s.ms[0]]);
+    s.ms.forEach((mi, j) => {
+      const m = model.measures[mi];
+      m.box = el('rect', { class: 'mbox', x: m.x0, y: yTop - 8, width: m.x1 - m.x0, height: yBot - yTop + 16 }, g);
+      const last = mi === model.measures.length - 1;
+      if(last){
+        el('line', { x1: m.x1 - 6, x2: m.x1 - 6, y1: yTop, y2: yBot, stroke: '#1d1a22', 'stroke-width': 1 }, g);
+        el('line', { x1: m.x1 - 1.5, x2: m.x1 - 1.5, y1: yTop, y2: yBot, stroke: '#1d1a22', 'stroke-width': 3.5 }, g);
+      }else{
+        el('line', { x1: m.x1, x2: m.x1, y1: yTop, y2: yBot, stroke: '#1d1a22', 'stroke-width': 1 }, g);
+      }
+    });
+    if(opts.tab){
+      for(let i = 0; i < 6; i++) el('line', { x1: 8, x2: s.x1, y1: geo.tab + i * 11, y2: geo.tab + i * 11, stroke: '#6b6475', 'stroke-width': 0.8 }, g);
+      ['T','A','B'].forEach((c, i) => el('text', { x: 18, y: geo.tab + 15 + i * 15, 'font-size': 13, 'font-weight': 700, 'text-anchor': 'middle' }, g, c));
+      el('line', { x1: 8, x2: 8, y1: geo.tab, y2: geo.tab + 55, stroke: '#1d1a22', 'stroke-width': 1 }, g);
+      s.ms.forEach(mi => { const m = model.measures[mi]; el('line', { x1: m.x1, x2: m.x1, y1: geo.tab, y2: geo.tab + 55, stroke: '#6b6475', 'stroke-width': 0.9 }, g); });
+    }
+  });
+
+  // notes, per measure and staff
+  const barLen = model.meter.num * 4 / model.meter.den;
+  const beamUnit = model.meter.den === 8 ? 1.5 : 1;
+  const tabState = { pos: 3 };
+  const evG = [];                                 // item index -> <g>
+  items.forEach((it, ii) => {
+    it.ii = ii;
+    const g = el('g', { class: 'ev', 'data-i': ii }, svg);
+    evG.push(g); it.g = g;
+  });
+  const heads = [];                               // for ties: {it, p, x, y, up}
+  model.measures.forEach((m, mi) => {
+    const off = m.pickup ? barLen - m.cap : 0;
+    staves.forEach(c => {
+      const geo = sysGeo[m.sys], top = geo[c];
+      const state = {};                           // accidentals in force this bar
+      // stem directions and beam groups
+      const cand = m.items.map(it => {
+        const ps = it.pitches.filter(p => staffOf(p) === c);
+        return { it: it, ps: ps };
+      });
+      const groups = [];
+      let run = [];
+      const flush = () => { if(run.length > 1) groups.push(run); run = []; };
+      cand.forEach(o => {
+        const lk = looks(o.it.dur)[0];
+        const beamable = o.ps.length && (lk === '8' || lk === '16' || lk === '32');
+        if(!beamable){ flush(); return; }
+        const gk = Math.floor((o.it.pos + off + 1e-6) / beamUnit);
+        if(run.length && run[0].gk !== gk) flush();
+        o.gk = gk; run.push(o);
+      });
+      flush();
+      const inBeam = new Map();
+      groups.forEach(grp => {
+        const all = [].concat.apply([], grp.map(o => o.ps.map(p => p.d)));
+        const avg = all.reduce((a, b) => a + b, 0) / all.length;
+        const up = avg < REF[c];
+        grp.forEach(o => inBeam.set(o, { grp: grp, up: up }));
+      });
+
+      cand.forEach(o => {
+        const it = o.it, g = it.g, [lk, dots] = looks(it.dur), x = it.x;
+        if(it.rest){
+          if(c === staves[0] || staves.length > 1) drawRest(g, lk, x, top, dots);
+          if(!opts.mini && c === staves[0] && it.chord) el('text', { x: x - 4, y: top - 20, 'font-size': 13, 'font-weight': 700, class: 'nm' }, g, it.chord);
+          return;
+        }
+        if(!o.ps.length) return;
+        const ds = o.ps.map(p => p.d).sort((a, b) => a - b);
+        const bi = inBeam.get(o);
+        const up = bi ? bi.up : ((ds[0] + ds[ds.length - 1]) / 2 < REF[c]);
+        o.up = up;
+        // ledger lines
+        const lo = ds[0], hi = ds[ds.length - 1];
+        for(let d = REF[c] - 6; d >= lo; d -= 2) el('line', { x1: x - 10, x2: x + 10, y1: yOf(d, top, c), y2: yOf(d, top, c), stroke: '#1d1a22', 'stroke-width': 1 }, g);
+        for(let d = REF[c] + 6; d <= hi; d += 2) el('line', { x1: x - 10, x2: x + 10, y1: yOf(d, top, c), y2: yOf(d, top, c), stroke: '#1d1a22', 'stroke-width': 1 }, g);
+        // heads (seconds side by side)
+        const sorted = o.ps.slice().sort((a, b) => a.d - b.d);
+        let prevD = -99, prevShift = false;
+        sorted.forEach(p => {
+          let hx = x;
+          const second = p.d - prevD === 1 && !prevShift;
+          if(second) hx = up ? x + 11 : x - 11;
+          prevShift = second; prevD = p.d;
+          const hy = yOf(p.d, top, c);
+          p._x = hx; p._y = hy;
+          const hollow = lk === 'w' || lk === 'h';
+          el('ellipse', { class: hollow ? 'hdo' : 'hd', cx: hx, cy: hy, rx: 6.2, ry: 4.4, transform: `rotate(-20 ${hx} ${hy})`,
+                          fill: hollow ? 'none' : '#1d1a22', stroke: '#1d1a22', 'stroke-width': hollow ? 1.8 : 0.6 }, g);
+          if(hollow) el('ellipse', { class: 'hit', cx: hx, cy: hy, rx: 6.2, ry: 4.4, transform: `rotate(-20 ${hx} ${hy})`, fill: 'transparent' }, g);
+          // accidental
+          const key = p.step + p.oct;
+          const want = p.alter;
+          const have = key in state ? state[key] : keyAlter(model.fifths, p.step);
+          if(want !== have && !it.tieIn){
+            el('text', { x: x - 15 - (second && !up ? 11 : 0), y: hy + (want < 0 ? 4 : 6), 'font-size': 18, 'text-anchor': 'middle', class: 'acc' }, g, ACC[want]);
+          }
+          state[key] = want;
+          if(dots){
+            const onLine = (p.d - REF[c]) % 2 === 0;
+            el('circle', { cx: Math.max(x, hx) + 11, cy: hy - (onLine ? SP / 2 : 0), r: 1.9, fill: '#1d1a22', class: 'hd' }, g);
+          }
+          heads.push({ it: it, p: p, x: hx, y: hy, up: up, sys: it.sys, top: top, c: c });
+        });
+        // stem and flags (beamed stems are drawn with the beam)
+        if(lk !== 'w' && !bi){
+          const sx = up ? x + 5.8 : x - 5.8;
+          const yEnd = up ? yOf(hi, top, c) - 35 : yOf(lo, top, c) + 35;
+          const yStart = up ? yOf(lo, top, c) : yOf(hi, top, c);
+          const ye = up ? Math.min(yEnd, top + 2 * SP) : Math.max(yEnd, top + 2 * SP);
+          el('line', { x1: sx, x2: sx, y1: yStart, y2: ye, stroke: '#1d1a22', 'stroke-width': 1.3 }, g);
+          const nf = lk === '8' ? 1 : lk === '16' ? 2 : lk === '32' ? 3 : 0;
+          for(let i = 0; i < nf; i++){
+            const fy = ye + (up ? i * 8 : -i * 8), s2 = up ? 1 : -1;
+            el('path', { d: `M${sx},${fy} C${sx+1},${fy+8*s2} ${sx+12},${fy+11*s2} ${sx+8},${fy+24*s2}`, fill: 'none', stroke: '#1d1a22', 'stroke-width': 2 }, g);
+          }
+        }
+        // chord symbol, note names, TAB
+        if(it.chord && c === staves[0]) el('text', { x: x - 6, y: geo[staves[0]] - 26 - Math.max(0, (Math.max.apply(null, sorted.map(p => p.d)) - REF[c] - 6) * SP / 2), 'font-size': 13, 'font-weight': 700, class: 'nm' }, g, it.chord);
+        if(opts.names && !it.tieIn && c === staves[staves.length - 1]){
+          const label = it.pitches.slice().sort((a, b) => b.midi - a.midi).map(pname).join(' ');
+          el('text', { x: x, y: geo.names, 'font-size': 11, 'text-anchor': 'middle', fill: '#5c5566', class: 'nm', 'font-family': 'Segoe UI,system-ui,sans-serif' }, g, label);
+        }
+        if(opts.tab && c === staves[staves.length - 1] && !it.tieIn){
+          tabFor(it.pitches, tabState).forEach(t => {
+            const ty = geo.tab + t.s * 11;
+            const txt = String(t.f);
+            el('rect', { x: x - 4 - (txt.length - 1) * 3.5, y: ty - 6, width: 8 + (txt.length - 1) * 7, height: 12, fill: '#fbf8f1' }, g);
+            el('text', { x: x, y: ty + 4.5, 'font-size': 12, 'font-weight': 700, 'text-anchor': 'middle', class: 'tb', 'font-family': 'Segoe UI,system-ui,sans-serif' }, g, txt);
+          });
+        }
+      });
+
+      // beams
+      groups.forEach(grp => {
+        const up = inBeam.get(grp[0]).up;
+        const ends = grp.map(o => {
+          const ds = o.ps.map(p => p.d);
+          return up ? yOf(Math.max.apply(null, ds), top, c) - 33 : yOf(Math.min.apply(null, ds), top, c) + 33;
+        });
+        let by = up ? Math.min.apply(null, ends) : Math.max.apply(null, ends);
+        by = up ? Math.min(by, top + 2 * SP) : Math.max(by, top + 2 * SP);
+        const g = grp[0].it.g.parentNode;
+        const bg = el('g', {}, g);
+        const sx = o => up ? o.it.x + 5.8 : o.it.x - 5.8;
+        grp.forEach(o => {
+          const ds = o.ps.map(p => p.d);
+          const from = up ? yOf(Math.min.apply(null, ds), top, c) : yOf(Math.max.apply(null, ds), top, c);
+          el('line', { x1: sx(o), x2: sx(o), y1: from, y2: by, stroke: '#1d1a22', 'stroke-width': 1.3 }, o.it.g);
+        });
+        const th = 4.6, dy = up ? 0 : -th;
+        el('rect', { x: sx(grp[0]) - 0.6, y: by + dy, width: sx(grp[grp.length - 1]) - sx(grp[0]) + 1.2, height: th, fill: '#1d1a22' }, bg);
+        // second beam for sixteenths
+        const is16 = o => { const l = looks(o.it.dur)[0]; return l === '16' || l === '32'; };
+        const y2 = up ? by + 7.5 : by - 7.5 - th;
+        grp.forEach((o, i) => {
+          if(!is16(o)) return;
+          const nx = grp[i + 1];
+          if(nx && is16(nx)) el('rect', { x: sx(o) - 0.6, y: y2, width: sx(nx) - sx(o) + 1.2, height: th, fill: '#1d1a22' }, bg);
+          else if(!(i > 0 && is16(grp[i - 1]))){
+            const dir = i === grp.length - 1 ? -1 : 1;
+            el('rect', { x: dir > 0 ? sx(o) : sx(o) - 9, y: y2, width: 9, height: th, fill: '#1d1a22' }, bg);
+          }
+        });
+      });
+    });
+  });
+
+  // ties
+  heads.forEach(h => {
+    if(!h.it.tieOut) return;
+    const nxt = items[h.it.ii + 1];
+    if(!nxt) return;
+    const t = heads.find(o => o.it === nxt && o.p.midi === h.p.midi);
+    const s = h.up ? 1 : -1;                      // curve away from the stem
+    const y0 = h.y + s * 6;
+    if(t && t.sys === h.sys){
+      el('path', { d: `M${h.x+5},${y0} Q${(h.x+t.x)/2},${y0 + s*9} ${t.x-5},${y0}`, fill: 'none', stroke: '#1d1a22', 'stroke-width': 1.4 }, h.it.g);
+    }else{
+      el('path', { d: `M${h.x+5},${y0} Q${h.x+16},${y0 + s*8} ${h.x+28},${y0+s*3}`, fill: 'none', stroke: '#1d1a22', 'stroke-width': 1.4 }, h.it.g);
+      if(t) el('path', { d: `M${t.x-28},${t.y+s*9} Q${t.x-16},${t.y + s*14} ${t.x-5},${t.y+s*6}`, fill: 'none', stroke: '#1d1a22', 'stroke-width': 1.4 }, nxt.g);
+    }
+  });
+
+  return { svg: svg, items: items, systems: systems, sysGeo: sysGeo, zoom: zoom, barNumbers: barNumbers, clef: clef };
+}
+
+/* ---------------- timeline + player ---------------- */
+function timeline(model){
+  const items = [], notes = [], open = new Map();
+  let t = 0;
+  model.measures.forEach(m => m.items.forEach(it => {
+    it.t = t;
+    items.push(it);
+    if(!it.rest){
+      it.pitches.forEach(p => {
+        if(it.tieIn && open.has(p.midi)){ open.get(p.midi).dur += it.dur; }
+        else{ const n = { midi: p.midi, t: t, dur: it.dur }; notes.push(n); open.set(p.midi, n); }
+      });
+      if(!it.tieOut) it.pitches.forEach(p => open.delete(p.midi));
+    }
+    t += it.dur;
+  }));
+  return { items, notes, total: t };
+}
+
+let play = null;
+function clickAt(when, accent){
+  const ac = audio();
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.frequency.value = accent ? 1560 : 1040;
+  g.gain.setValueAtTime(0.0001, when);
+  g.gain.exponentialRampToValueAtTime(accent ? 0.35 : 0.22, when + 0.002);
+  g.gain.exponentialRampToValueAtTime(0.0001, when + 0.06);
+  o.connect(g); g.connect(master || ac.destination);
+  o.start(when); o.stop(when + 0.08);
+}
+function sheetStop(){
+  if(!play) return;
+  clearInterval(play.timer);
+  play.timeouts.forEach(clearTimeout);
+  play = null;
+  document.querySelectorAll('#shPaper .ev.cur').forEach(e => e.classList.remove('cur'));
+  document.querySelectorAll('#shPaper .mbox.on').forEach(e => e.classList.remove('on'));
+  $('shPlay').textContent = '▶ Play';
+}
+window.sheetStop = sheetStop;
+
+/* ---------------- the Read & play panel ---------------- */
+const PIECES = [
+  { name: 'Auld Lang Syne', bpm: 92, meter: '4/4', pickup: 1, fifths: -1,
+    about: 'Scottish, words by Robert Burns (1788). Starts with a one-beat pickup and uses dotted quarter + eighth pairs.',
+    notes: 'C4 | F4:1.5 F4:0.5 F4 A4 | G4:1.5 F4:0.5 G4 A4 | F4:1.5 F4:0.5 A4 C5 | D5:3 D5 | C5:1.5 A4:0.5 A4 F4 | G4:1.5 F4:0.5 G4 A4 | F4:1.5 D4:0.5 D4 C4 | F4:3' },
+  { name: 'Amazing Grace', bpm: 84, meter: '3/4', pickup: 1, fifths: 1,
+    about: 'Hymn, words by John Newton (1779). Three beats in a bar, with one sharp (F♯) in the key signature even though no F appears.',
+    notes: 'D4 | G4:2 B4:0.5 G4:0.5 | B4:2 A4 | G4:2 E4 | D4:2 D4 | G4:2 B4:0.5 G4:0.5 | B4:2 A4 | D5:2 B4 | D5:2 B4:0.5 G4:0.5 | B4:2 A4 | G4:2 E4 | D4:2 D4 | G4:2 B4:0.5 G4:0.5 | B4:2 A4 | G4:3' },
+  { name: 'Minuet in G (Petzold)', bpm: 108, meter: '3/4', fifths: 1,
+    about: 'From the Anna Magdalena Bach notebook (1725). Beamed eighth notes and an F♯ from the key signature.',
+    notes: 'D5 G4:0.5 A4:0.5 B4:0.5 C5:0.5 | D5 G4 G4 | E5 C5:0.5 D5:0.5 E5:0.5 F#5:0.5 | G5 G4 G4 | C5 D5:0.5 C5:0.5 B4:0.5 A4:0.5 | B4 C5:0.5 B4:0.5 A4:0.5 G4:0.5 | F#4 G4:0.5 A4:0.5 B4:0.5 G4:0.5 | A4:3 | D5 G4:0.5 A4:0.5 B4:0.5 C5:0.5 | D5 G4 G4 | E5 C5:0.5 D5:0.5 E5:0.5 F#5:0.5 | G5 G4 G4 | C5 D5:0.5 C5:0.5 B4:0.5 A4:0.5 | B4 C5:0.5 B4:0.5 A4:0.5 G4:0.5 | A4 B4:0.5 A4:0.5 G4:0.5 F#4:0.5 | G4:3' },
+  { name: 'Greensleeves (first half)', bpm: 96, meter: '3/4', pickup: 1, fifths: 0,
+    about: 'English, 16th century. A minor: no key signature, but G♯ appears as an accidental — the raised seventh of the minor scale.',
+    notes: 'A4 | C5:2 D5 | E5:1.5 F5:0.5 E5 | D5:2 B4 | G4:1.5 A4:0.5 B4 | C5:2 A4 | A4:1.5 G#4:0.5 A4 | B4:2 G#4 | E4:2 A4 | C5:2 D5 | E5:1.5 F5:0.5 E5 | D5:2 B4 | G4:1.5 A4:0.5 B4 | C5:1.5 B4:0.5 A4 | G#4:1.5 F#4:0.5 G#4 | A4:3' },
+  { name: 'When the Saints Go Marching In', bpm: 120, meter: '4/4', fifths: 0,
+    about: 'Spiritual. Each phrase starts after a rest, and long notes are tied across the bar.',
+    notes: '-:1 C4 E4 F4 | G4:4 | -:1 C4 E4 F4 | G4:4 | -:1 C4 E4 F4 | G4:2 E4:2 | C4:2 E4:2 | D4:4 | -:1 E4 E4 D4 | C4:3 C4 | E4:2 G4:2 | G4 F4:3 | -:2 E4 F4 | G4:2 E4:2 | C4:2 D4:2 | C4:4' },
+  { name: 'Ode to Joy, with left hand', bpm: 100, meter: '4/4', fifths: 0, clef: 'grand',
+    about: 'Beethoven, Symphony No. 9 (1824), arranged on two staves: melody in the treble, half-note chords in the bass.',
+    notes: 'E4+C3:2 E4 F4 | G4+G2:2 G4 F4 | E4+C3:2 E4 D4 | C4+G2:2 C4 D4 | E4+C3:2 E4 D4 | D4+G2:1.5 D4:0.5 D4:2 | E4+C3:2 E4 F4 | G4+G2:2 G4 F4 | E4+C3:2 E4 D4 | C4+G2:2 C4 D4 | E4+G2:2 D4 C4 | C4+C3:4' }
+];
+
+const view = { zoom: store.get('piano.sheet.zoom', 1), names: false, tab: false };
+let current = null;                               // { model, eng, tl, bpm, title }
+
+function songList(){ try{ return typeof SONGS !== 'undefined' ? SONGS : []; }catch(e){ return []; } }
+function fillPieces(){
+  const sel = $('shPiece');
+  sel.innerHTML = '';
+  const og = (label) => { const o = document.createElement('optgroup'); o.label = label; sel.appendChild(o); return o; };
+  const a = og('Sheet pieces');
+  PIECES.forEach((p, i) => a.appendChild(new Option(p.name, 'p' + i)));
+  const b = og('Exercises');
+  b.appendChild(new Option('Scale and arpeggio builder', 'gen'));
+  const c = og('Songs from the song list');
+  songList().forEach((s, i) => c.appendChild(new Option(s.name, 's' + i)));
+  const d = og('Your notes');
+  d.appendChild(new Option('Whatever is in the notes box', 'box'));
+}
+function fillKeys(){
+  const k = $('shKey'), gk = $('shGenKey');
+  k.innerHTML = '<option value="auto">Auto</option>';
+  for(let f = -7; f <= 7; f++){
+    const lab = majName(f) + ' major / ' + minName(f) + ' minor (' + (f === 0 ? 'no sharps or flats' : Math.abs(f) + (f > 0 ? ' ♯' : ' ♭')) + ')';
+    k.appendChild(new Option(lab, f));
+    if(Math.abs(f) <= 6) gk.appendChild(new Option(majName(f) + ' major', f));
+  }
+  gk.value = '4';
+}
+
+function generate(f, type){
+  const tonicSi = ((f * 4) % 7 + 7) % 7;
+  const baseOct = tonicSi <= 4 ? 4 : 3;
+  const deg = n => {                               // scale degree n (0 = tonic) as a pitch
+    const si = (tonicSi + n) % 7, oct = baseOct + Math.floor((tonicSi + n) / 7);
+    return mkPitch(si, keyAlter(f, STEPS[si]), oct);
+  };
+  const ev = [];
+  const push = (p, dur, chord) => ev.push({ pitches: [p], dur: dur, chord: chord || null });
+  const QUAL = ['', 'm', 'm', '', '', 'm', 'dim'], Q7 = ['maj7', 'm7', 'm7', 'maj7', '7', 'm7', 'm7♭5'];
+  if(type === 'scale'){
+    for(let i = 0; i < 15; i++) push(deg(i), 0.5);
+    for(let i = 13; i >= 1; i--) push(deg(i), 0.5);
+    push(deg(0), 1);
+  }else if(type === 'thirds'){
+    for(let i = 0; i < 7; i++){ push(deg(i), 0.5); push(deg(i + 2), 0.5); }
+    push(deg(7), 0.5); push(deg(9), 0.5);
+    for(let i = 7; i > 0; i--){ push(deg(i), 0.5); push(deg(i - 2), 0.5); }
+    push(deg(0), 2); ev.push({ rest: true, dur: 1 });
+  }else{
+    for(let n = 0; n < 7; n++){
+      const r = deg(n), lab = pname(r) + (type === 'sevenths' ? Q7[n] : QUAL[n]);
+      const ch = type === 'sevenths' ? [n, n + 2, n + 4, n + 6, n + 7, n + 6, n + 4, n + 2]
+                                     : [n, n + 2, n + 4, n + 7, n + 9, n + 7, n + 4, n + 2];
+      ch.forEach((d, i) => push(deg(d), 0.5, i === 0 ? lab : null));
+    }
+    push(deg(7), 4, pname(deg(7)));
+  }
+  return ev;
+}
+
+function loadCurrent(){
+  const v = $('shPiece').value;
+  $('shGen').hidden = v !== 'gen';
+  let events, meter = null, pickup = 0, fifths = null, bpm = +bpmEl.value, title = '', about = '', clef = 'auto', groups = [];
+  try{
+    if(v[0] === 'p'){
+      const p = PIECES[+v.slice(1)];
+      const r = parseText(p.notes); events = r.events; groups = r.groups;
+      const [n, d] = p.meter.split('/').map(Number); meter = { num: n, den: d };
+      pickup = p.pickup || 0; fifths = p.fifths; bpm = p.bpm; title = p.name; about = p.about; clef = p.clef || 'auto';
+    }else if(v === 'gen'){
+      const f = +$('shGenKey').value, type = $('shGenType').value;
+      events = generate(f, type); meter = { num: 4, den: 4 }; fifths = f; bpm = 80;
+      title = majName(f) + ' major — ' + $('shGenType').selectedOptions[0].textContent;
+      about = 'Generated in the key. Chord names above the staff show the chord each arpeggio spells.';
+    }else if(v[0] === 's'){
+      const s = songList()[+v.slice(1)];
+      const r = parseText(s.notes); events = r.events; groups = r.groups;
+      bpm = s.bpm || bpm; title = s.name;
+      about = 'From the song list. Key and time signature are worked out from the notes — change them above if they look wrong.';
+    }else{
+      const r = parseText($('seq').value); events = r.events; groups = r.groups;
+      title = 'Notes box';
+      about = 'Drawn from the notes box. Edit the box and this sheet redraws.';
+    }
+  }catch(err){ $('shInfo').textContent = err.message; $('shPaper').innerHTML = ''; current = null; return; }
+  if(!events.length){ $('shInfo').textContent = 'No notes to show yet.'; $('shPaper').innerHTML = ''; current = null; return; }
+
+  const tsel = $('shTime').value;
+  if(tsel){ const [n, d] = tsel.split('/').map(Number); meter = { num: n, den: d }; }
+  if(!meter) meter = guessMeter(groups);
+  const barLen = meter.num * 4 / meter.den;
+  if(!pickup && v[0] !== 'p' && v !== 'gen') pickup = guessPickup(groups, barLen);
+  const ksel = $('shKey').value;
+  if(ksel !== 'auto') fifths = +ksel;
+  if(fifths === null) fifths = guessKey(events);
+
+  const measures = buildMeasures(events, meter, pickup);
+  const model = { measures, meter, fifths, clef, pickup };
+  current = { model, bpm, title, about, v };
+  if(v !== 'box' || !current.bpmSet){ bpmEl.value = bpm; bpmEl.dispatchEvent(new Event('input')); }
+  render();
+  const bars = measures.length - (pickup ? 1 : 0);
+  $('shFrom').max = $('shTo').max = bars;
+  $('shFrom').min = $('shTo').min = pickup ? 0 : 1;
+  if(+$('shTo').value > bars || !$('shTo').dataset.touched) $('shTo').value = Math.min(bars, 4);
+  if(!$('shFrom').dataset.touched || +$('shFrom').value > bars) $('shFrom').value = pickup ? 0 : 1;
+  store.set('piano.sheet.piece', v);
+}
+
+function render(){
+  if(!current) return;
+  sheetStop();
+  const paper = $('shPaper');
+  const keep = paper.scrollTop;
+  const w = paper.clientWidth - 8;
+  paper.innerHTML = '';
+  const ttl = document.createElement('div'); ttl.className = 'ttl'; ttl.textContent = current.title; paper.appendChild(ttl);
+  const host = document.createElement('div'); paper.appendChild(host);
+  current.model.measures.forEach(m => m.items.forEach(it => { delete it.x; }));
+  current.eng = engrave(host, current.model, { width: w, zoom: view.zoom, names: view.names, tab: view.tab });
+  current.tl = timeline(current.model);
+  paper.scrollTop = keep;
+  const m = current.model, f = m.fifths;
+  const bars = m.measures.length - (m.pickup ? 1 : 0);
+  const kname = f === 0 ? 'C major / A minor, no sharps or flats'
+              : majName(f) + ' major / ' + minName(f) + ' minor, ' + Math.abs(f) + (f > 0 ? ' sharp' : ' flat') + (Math.abs(f) > 1 ? 's' : '');
+  $('shInfo').innerHTML = '<b>' + esc(current.title) + '</b> · ' + kname + ' · ' + m.meter.num + '/' + m.meter.den + ' time · ' + bars + ' bars' +
+    (m.pickup ? ' + pickup' : '') + (current.eng ? ' · ' + current.eng.clef + (current.eng.clef === 'grand' ? ' staff' : ' clef') : '') + '<br>' + esc(current.about || '');
+  $('shZoom').textContent = Math.round(view.zoom * 100) + '%';
+  host.querySelectorAll('.ev').forEach(g => g.addEventListener('click', () => {
+    const it = current.tl.items[+g.dataset.i];
+    if(!it || it.rest) return;
+    const ac = audio(), t = ac.currentTime + 0.02;
+    it.pitches.forEach(p => { strike(p.midi, t, 0.8).release(t + 0.6); flash(p.midi, 600); });
+    const bar = current.eng.barNumbers[it.mi];
+    $('shFrom').value = bar; $('shFrom').dataset.touched = '1';
+    if(+$('shTo').value < bar) $('shTo').value = bar;
+  }));
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+
+function startSheet(){
+  if(!current || !current.tl) return;
+  if(play){ const lb = play.lastBar; sheetStop(); if(lb !== undefined){ $('shFrom').value = lb; $('shFrom').dataset.touched = '1'; } return; }
+  stopAll();
+  const ac = audio();
+  const spb = 60 / +bpmEl.value;
+  const m = current.model, tl = current.tl, bn = current.eng.barNumbers;
+  let a = 0, b = tl.total;
+  const loop = $('shLoop').checked;
+  const from = +$('shFrom').value, to = Math.max(from, +$('shTo').value);
+  const fromIdx = bn.indexOf(from), toIdx = bn.lastIndexOf(to);
+  if(fromIdx >= 0){
+    const firstIt = m.measures[fromIdx].items[0];
+    a = firstIt ? firstIt.t : 0;
+  }
+  if(loop && toIdx >= 0){
+    const lm = m.measures[toIdx], li = lm.items[lm.items.length - 1];
+    b = li ? li.t + li.dur : tl.total;
+  }
+  if(b <= a) return;
+  const barLen = m.meter.num * 4 / m.meter.den;
+  const beat = m.meter.den === 8 ? 0.5 : 1;
+  const countBeats = $('shCount').checked ? barLen : 0;
+  play = { spb, a, b, loop, t0: ac.currentTime + 0.15 + countBeats * spb, timeouts: [], ni: 0, ii: 0, ci: 0, pass: 0 };
+  // count-in clicks
+  for(let i = 0; i < countBeats / beat; i++) clickAt(ac.currentTime + 0.15 + i * beat * spb, i === 0);
+  $('shPlay').textContent = '❚❚ Pause';
+  const notes = tl.notes.filter(n => n.t >= a - 1e-6 && n.t < b - 1e-6);
+  const its = tl.items.filter(it => it.t >= a - 1e-6 && it.t < b - 1e-6);
+  const paper = $('shPaper');
+  let lastBox = null;
+  function tick(){
+    if(!play) return;
+    const now = ac.currentTime, horizon = now + 0.25;
+    const at = t => play.t0 + (t - a) * spb;
+    while(play.ni < notes.length && at(notes[play.ni].t) < horizon){
+      const n = notes[play.ni++], w = at(n.t), len = Math.min(n.dur, b - n.t) * spb;
+      strike(n.midi, w, 0.82).release(w + len * 0.94);
+      play.timeouts.push(setTimeout(() => flash(n.midi, len * 900), Math.max(0, (w - now) * 1000)));
+    }
+    while(play.ii < its.length && at(its[play.ii].t) < horizon){
+      const it = its[play.ii++], w = at(it.t), len = it.dur * spb;
+      play.timeouts.push(setTimeout(() => {
+        if(!play) return;
+        it.g.classList.add('cur'); play.lastBar = current.eng.barNumbers[it.mi];
+        const box = current.model.measures[it.mi].box;
+        if(box !== lastBox){ if(lastBox) lastBox.classList.remove('on'); if(box) box.classList.add('on'); lastBox = box; }
+        const r = it.g.getBoundingClientRect(), pr = paper.getBoundingClientRect();
+        if(r.bottom > pr.bottom - 10 || r.top < pr.top + 10){
+          const geo = current.eng.sysGeo[it.sys];
+          paper.scrollTo({ top: Math.max(0, geo.top * current.eng.zoom - 10), behavior: 'smooth' });
+        }
+        setTimeout(() => it.g.classList.remove('cur'), Math.max(80, len * 1000 - 30));
+      }, Math.max(0, (w - now) * 1000)));
+    }
+    if($('shClick').checked){
+      while(play.a + play.ci * beat < b - 1e-6 && at(play.a + play.ci * beat) < horizon){
+        const bt = play.a + play.ci * beat;
+        const inBar = m.pickup ? (bt + (barLen - m.measures[0].cap)) % barLen : bt % barLen;
+        clickAt(at(bt), Math.abs(inBar) < 1e-6);
+        play.ci++;
+      }
+    }
+    if(play.ni >= notes.length && play.ii >= its.length && now > at(b) - 0.05){
+      if(play.loop){
+        play.t0 = at(b); play.ni = 0; play.ii = 0; play.ci = 0; play.pass++;
+      }else if(now > at(b) + 0.2){ sheetStop(); }
+    }
+  }
+  play.a = a;
+  play.timer = setInterval(tick, 25);
+  tick();
+}
+
+/* ---------------- lessons ---------------- */
+const LESSONS = [
+  ['Staff and clefs', `
+<h3>The staff</h3>
+<p>Music is written on five lines. Each line and each space between them is one letter name, and going up one position — line to space, or space to line — goes up one letter: C D E F G A B, then C again. Notes that go above or below the five lines get short extra lines of their own, called <b>ledger lines</b>.</p>
+<h3>The treble clef</h3>
+<p>The curly sign at the start is a <b>clef</b>. It fixes which line is which note. The treble clef (also called the G clef) curls around the second line from the bottom and makes it G above middle C. It is used for the right hand on the piano, for guitar, flute, violin and singing voices.</p>
+<div class="mini" data-notes="E4 F4 G4 A4 B4 C5 D5 E5 F5" data-names="1" data-clef="treble" data-time="0" data-cap="Treble clef, every line and space from the bottom line E to the top line F"></div>
+<p>Lines from the bottom: <b>E G B D F</b> — “Every Good Boy Deserves Fruit”. Spaces from the bottom: <b>F A C E</b>, which spells FACE.</p>
+<h3>The bass clef</h3>
+<p>The bass clef (the F clef) puts its two dots around the second line from the top and makes it F below middle C. It is used for the left hand on the piano, cello, bass guitar and low voices.</p>
+<div class="mini" data-notes="G2 A2 B2 C3 D3 E3 F3 G3 A3" data-names="1" data-clef="bass" data-time="0" data-cap="Bass clef, from the bottom line G to the top line A"></div>
+<p>Lines from the bottom: <b>G B D F A</b> — “Good Boys Do Fine Always”. Spaces: <b>A C E G</b> — “All Cows Eat Grass”.</p>
+<h3>Middle C and the grand staff</h3>
+<p>Piano music joins a treble and a bass staff with a brace. <b>Middle C</b> sits on one ledger line exactly between them: just below the treble staff, or just above the bass staff. It is the same key either way — the C nearest the middle of the piano, marked C4 on the keyboard below.</p>
+<div class="mini" data-notes="C3+C5:2 E3+A4:2 G3+F4:2 C4:2" data-names="1" data-clef="grand" data-time="0" data-cap="Notes moving towards middle C from both staves"></div>`],
+  ['Note lengths and rests', `
+<h3>How long a note lasts</h3>
+<p>The shape of a note tells you how long to hold it, counted in beats. In most music one beat is a quarter note.</p>
+<table><tr><th>Note</th><th>Looks like</th><th>Beats</th><th>Rest of the same length</th></tr>
+<tr><td>Whole note</td><td>Hollow oval, no stem</td><td>4</td><td>Block hanging under the fourth line</td></tr>
+<tr><td>Half note</td><td>Hollow oval with a stem</td><td>2</td><td>Block sitting on the middle line</td></tr>
+<tr><td>Quarter note</td><td>Filled oval with a stem</td><td>1</td><td>Zig-zag</td></tr>
+<tr><td>Eighth note</td><td>Filled, stem with one flag — or beamed in pairs</td><td>½</td><td>Dot with a hooked stroke</td></tr>
+<tr><td>Sixteenth note</td><td>Two flags, or two beams</td><td>¼</td><td>Two dots, two hooks</td></tr></table>
+<div class="mini" data-notes="C5:4 | C5:2 C5:2 | C5 C5 C5 C5 | C5:0.5 C5:0.5 C5:0.5 C5:0.5 C5:0.5 C5:0.5 C5:0.5 C5:0.5 | C5:0.25 C5:0.25 C5:0.25 C5:0.25 C5:0.25 C5:0.25 C5:0.25 C5:0.25 C5:0.25 C5:0.25 C5:0.25 C5:0.25 C5:0.25 C5:0.25 C5:0.25 C5:0.25" data-meter="4/4" data-cap="Whole, halves, quarters, eighths, sixteenths: each bar is four beats"></div>
+<div class="mini" data-notes="-:4 | -:2 -:2 | -:1 -:1 -:1 -:1 | -:0.5 -:0.5 -:0.5 -:0.5 -:0.5 -:0.5 -:0.5 -:0.5" data-meter="4/4" data-cap="The matching rests"></div>
+<h3>Dots and ties</h3>
+<p>A <b>dot</b> after a note adds half its length again: a dotted half note is 2 + 1 = 3 beats, a dotted quarter is 1 + ½ = 1½. A <b>tie</b> is a curve joining two notes of the <i>same</i> pitch; play the first and hold it through the second. Ties are how a note crosses a bar line.</p>
+<div class="mini" data-notes="G4:3 G4 | G4:1.5 A4:0.5 B4:2 | C5:6 | C5:2" data-meter="4/4" data-cap="Dotted half, dotted quarter + eighth, and a long note tied over the bar"></div>
+<p>Beams join eighths and sixteenths that share a beat, so you can see where each beat starts. A curve joining <i>different</i> pitches is a <b>slur</b>, not a tie: it means play smoothly, and every note is struck.</p>`],
+  ['Time signatures and counting', `
+<h3>Bars and time signatures</h3>
+<p>Bar lines cut the music into equal groups of beats called <b>bars</b> (or measures). The two numbers at the start are the <b>time signature</b>: the top number is how many beats in a bar, the bottom number is which note gets the beat (4 = quarter note, 8 = eighth note).</p>
+<table><tr><th>Time</th><th>Feel</th><th>Count</th></tr>
+<tr><td>4/4</td><td>Common time: most pop, hymns, marches</td><td>1 2 3 4</td></tr>
+<tr><td>3/4</td><td>Waltz, minuet</td><td>1 2 3</td></tr>
+<tr><td>2/4</td><td>Polka, quick march</td><td>1 2</td></tr>
+<tr><td>6/8</td><td>Two swaying beats, each split in three</td><td>1 2 3 4 5 6 — stress 1 and 4</td></tr></table>
+<div class="mini" data-notes="G4 E4 E4 | F4 D4 D4 | C4 D4 E4 | F4 G4 G4" data-meter="3/4" data-cap="3/4: three beats per bar, stress on 1"></div>
+<div class="mini" data-notes="C5:1.5 B4:0.5 A4:0.5 G4:0.5 | A4:0.5 B4:0.5 C5:0.5 G4:1.5" data-meter="6/8" data-cap="6/8: eighths beamed in threes"></div>
+<h3>Counting eighths</h3>
+<p>Say the beat numbers on the beat and “and” halfway between: <b>1 &amp; 2 &amp; 3 &amp; 4 &amp;</b>. A pair of beamed eighths fits exactly on “1 &amp;”. Clapping a rhythm while counting aloud, before playing the notes, is the fastest way to learn it.</p>
+<h3>Pickups</h3>
+<p>A song can start part-way through a bar — <i>Auld Lang Syne</i> starts on beat 4, <i>Amazing Grace</i> on beat 3. That short opening bar is a <b>pickup</b> (anacrusis) and is not counted as bar 1. Open those pieces in Read &amp; play to see it.</p>`],
+  ['Key signatures and accidentals', `
+<h3>Sharps, flats and naturals</h3>
+<p>A <b>sharp</b> ♯ raises a note to the next key on the right; a <b>flat</b> ♭ lowers it to the next key on the left; a <b>natural</b> ♮ cancels either. Written just before a note, it is an <b>accidental</b> and lasts until the end of that bar, for that line or space only.</p>
+<div class="mini" data-notes="F4 F#4 F#4 Fn4 | B4 Bb4 Bb4 Bn4" data-names="1" data-meter="4/4" data-cap="An accidental carries on to the end of the bar; the natural cancels it"></div>
+<h3>Key signatures</h3>
+<p>A group of sharps or flats at the start of every line is the <b>key signature</b>. It applies to that letter in every octave for the whole piece, so the music does not have to repeat the sign on every note. Sharps are always added in the order <b>F C G D A E B</b>, flats in the reverse order <b>B E A D G C F</b>.</p>
+<table><tr><th>Signature</th><th>Major key</th><th>Minor key</th></tr>
+<tr><td>none</td><td>C</td><td>A</td></tr>
+<tr><td>1 ♯ (F)</td><td>G</td><td>E</td></tr>
+<tr><td>2 ♯ (F C)</td><td>D</td><td>B</td></tr>
+<tr><td>3 ♯</td><td>A</td><td>F♯</td></tr>
+<tr><td>4 ♯</td><td>E</td><td>C♯</td></tr>
+<tr><td>1 ♭ (B)</td><td>F</td><td>D</td></tr>
+<tr><td>2 ♭ (B E)</td><td>B♭</td><td>G</td></tr>
+<tr><td>3 ♭</td><td>E♭</td><td>C</td></tr></table>
+<p>Two shortcuts. With sharps, the major key is one letter above the last sharp (last sharp C♯ → D major). With flats, the major key is the second-to-last flat (B♭ E♭ A♭ → E♭ major). Every major key shares its signature with a minor key three letters lower — its <b>relative minor</b>. To tell them apart, look at the last note and for a raised seventh (G♯ in A minor) appearing as an accidental.</p>
+<div class="mini" data-notes="D4:0.5 E4:0.5 F#4:0.5 G4:0.5 A4:0.5 B4:0.5 C#5:0.5 D5:0.5 | D5:4" data-key="2" data-names="1" data-meter="4/4" data-cap="D major: F♯ and C♯ come from the signature, so no sign is written on the notes"></div>`],
+  ['Dynamics, tempo and signs', `
+<h3>Loud and soft</h3>
+<table><tr><th>Mark</th><th>Italian</th><th>Meaning</th></tr>
+<tr><td><i>pp</i></td><td>pianissimo</td><td>very soft</td></tr>
+<tr><td><i>p</i></td><td>piano</td><td>soft</td></tr>
+<tr><td><i>mp</i></td><td>mezzo-piano</td><td>moderately soft</td></tr>
+<tr><td><i>mf</i></td><td>mezzo-forte</td><td>moderately loud</td></tr>
+<tr><td><i>f</i></td><td>forte</td><td>loud</td></tr>
+<tr><td><i>ff</i></td><td>fortissimo</td><td>very loud</td></tr>
+<tr><td><i>sfz</i>, <i>fz</i></td><td>sforzando</td><td>a sudden strong accent on one note</td></tr>
+<tr><td><i>fp</i></td><td>forte-piano</td><td>loud, then immediately soft</td></tr>
+<tr><td>&lt; &nbsp; &gt;</td><td>crescendo, diminuendo</td><td>hairpins: get gradually louder / softer</td></tr></table>
+<h3>Speed</h3>
+<table><tr><th>Word</th><th>Roughly</th></tr>
+<tr><td>Largo</td><td>very slow, 40–60 BPM</td></tr><tr><td>Adagio</td><td>slow, 66–76</td></tr>
+<tr><td>Andante</td><td>walking pace, 76–108</td></tr><tr><td>Moderato</td><td>moderate, 108–120</td></tr>
+<tr><td>Allegro</td><td>quick and bright, 120–156</td></tr><tr><td>Presto</td><td>very fast, 168–200</td></tr></table>
+<p>A marking like ♩ = 120 means 120 quarter-note beats per minute. <i>rit.</i> or <i>rall.</i> means slow down; <i>accel.</i> speed up; <i>a tempo</i> back to the speed before.</p>
+<h3>How to play a note</h3>
+<table><tr><th>Sign</th><th>Name</th><th>Meaning</th></tr>
+<tr><td>dot above/below the head</td><td>staccato</td><td>short and detached</td></tr>
+<tr><td>&gt; above the head</td><td>accent</td><td>stronger than the notes around it</td></tr>
+<tr><td>short line</td><td>tenuto</td><td>hold for full value, slight weight</td></tr>
+<tr><td>arch with a dot</td><td>fermata</td><td>hold longer than written, at your discretion</td></tr>
+<tr><td>curve over different notes</td><td>slur</td><td>smoothly connected (legato)</td></tr></table>
+<h3>Road map signs</h3>
+<p><b>Repeat bars</b> ‖: :‖ — play the section between them twice. <b>1st and 2nd endings</b> — first time take ending 1, on the repeat skip to ending 2. <b>D.C.</b> (da capo) — go back to the start. <b>D.S.</b> (dal segno) — go back to the 𝄋 sign. <b>al Fine</b> — then stop at <i>Fine</i>. <b>al Coda</b> — jump to the coda 𝄌 when you reach “To Coda”.</p>`],
+  ['Guitar TAB', `
+<h3>What TAB shows</h3>
+<p>Tablature is a map of the guitar neck instead of the pitches. Its six lines are the six strings, with the <b>highest-sounding string (thin high e) on top</b> — the opposite of how you look down at the guitar. A number is the fret to press on that string; 0 means play the open string. Numbers stacked vertically are played together.</p>
+<p>TAB tells you <i>where</i> but not <i>how long</i>, which is why good tab is printed under a staff, as in the screenshot style here: read the rhythm from the notes above and the fingering from the numbers below. Tick <b>Guitar TAB</b> in Read &amp; play to see any piece this way.</p>
+<div class="mini" data-notes="E4:0.5 G#4:0.5 B4:0.5 D#5:0.5 E5:0.5 D#5:0.5 B4:0.5 G#4:0.5 | E4:4" data-key="4" data-tab="1" data-meter="4/4" data-cap="An E major seven arpeggio, staff above, TAB below"></div>
+<p>Guitar music is written an octave higher than it sounds, so the treble staff stays readable; the TAB here follows that rule.</p>
+<h3>Technique signs</h3>
+<table><tr><th>In TAB</th><th>Technique</th></tr>
+<tr><td>5h7</td><td>Hammer-on: pick 5, then hammer a finger onto 7 without picking</td></tr>
+<tr><td>7p5</td><td>Pull-off: pick 7, then pull the finger off to sound 5</td></tr>
+<tr><td>5/7, 7\\5</td><td>Slide up or down along the string</td></tr>
+<tr><td>7b9</td><td>Bend: push the string until fret 7 sounds like fret 9</td></tr>
+<tr><td>7~, wavy line</td><td>Vibrato</td></tr>
+<tr><td>P.M.</td><td>Palm mute: rest the picking hand on the strings by the bridge</td></tr>
+<tr><td>let ring</td><td>Let notes sustain into each other</td></tr>
+<tr><td>&lt;12&gt;</td><td>Natural harmonic at that fret</td></tr>
+<tr><td>x</td><td>Muted, percussive note</td></tr>
+<tr><td>T</td><td>Tap with a picking-hand finger</td></tr></table>`],
+  ['How to study a piece', `
+<h3>A routine that works</h3>
+<p><b>1. Look before you play.</b> Name the key from the signature, the time from the time signature, and scan for accidentals, repeats and the highest and lowest notes.</p>
+<p><b>2. Rhythm first.</b> Clap or tap the rhythm while counting aloud. Tick <b>Metronome</b> and play it at a slow tempo to hear it.</p>
+<p><b>3. Name the notes.</b> Tick <b>Note names</b> once to check yourself, then turn them off — the goal is to read without them.</p>
+<p><b>4. Small loops.</b> Pick two bars, tick <b>Loop bars</b>, and slow the tempo until you can play along without stopping. Raise it 5–10 BPM at a time.</p>
+<p><b>5. Hands separately, then together</b> on two-staff music.</p>
+<p><b>6. Ten minutes a day</b> in the Note and Key signature drills beats an hour once a week.</p>
+<p>Clicking any note in Read &amp; play sounds it and sets the loop to start at that bar. The keyboard under the sheet lights each note as it plays, so you can see where the written note lives on the keys.</p>`]
+];
+
+function renderMini(div){
+  const opts = div.dataset;
+  let r;
+  try{ r = parseText(opts.notes); }catch(e){ div.textContent = e.message; return; }
+  const meter = opts.meter ? { num: +opts.meter.split('/')[0], den: +opts.meter.split('/')[1] } : { num: 4, den: 4 };
+  const evs = r.events;
+  let model;
+  if(opts.time === '0'){                          // free notes, one bar, no time signature
+    const tot = evs.reduce((s, e) => s + e.dur, 0);
+    let pos = 0;
+    model = { measures: [{ items: evs.map((e, i) => { const it = { ei: i, rest: !!e.rest, pitches: e.pitches || [], dur: e.dur, pos: pos }; pos += e.dur; return it; }), cap: tot }],
+              meter: { num: tot, den: 4 }, fifths: +(opts.key || 0), clef: opts.clef || 'auto', pickup: 0 };
+  }else{
+    model = { measures: buildMeasures(evs, meter, 0), meter, fifths: +(opts.key || 0), clef: opts.clef || 'auto', pickup: 0 };
+  }
+  div.innerHTML = '';
+  const host = document.createElement('div'); div.appendChild(host);
+  const eng = engrave(host, model, { width: Math.min(820, div.clientWidth || 700), zoom: 1, names: opts.names === '1', tab: opts.tab === '1', mini: true, showTime: opts.time !== '0' });
+  const tl = timeline(model);
+  if(opts.cap){ const c = document.createElement('div'); c.className = 'cap'; c.textContent = opts.cap; div.appendChild(c); }
+  const b = document.createElement('button'); b.className = 'sbtn'; b.type = 'button'; b.textContent = '▶ Play';
+  div.appendChild(b);
+  b.addEventListener('click', () => {
+    stopAll();
+    const ac = audio(), spb = 60 / 96, t0 = ac.currentTime + 0.1;
+    tl.notes.forEach(n => { const w = t0 + n.t * spb; strike(n.midi, w, 0.8).release(w + n.dur * spb * 0.92); setTimeout(() => flash(n.midi, n.dur * spb * 900), (w - ac.currentTime) * 1000); });
+    tl.items.forEach(it => setTimeout(() => { it.g.classList.add('cur'); setTimeout(() => it.g.classList.remove('cur'), it.dur * spb * 1000 - 20); }, (t0 + it.t * spb - ac.currentTime) * 1000));
+  });
+  if(eng) eng.items.forEach(it => it.g.addEventListener('click', () => {
+    if(it.rest) return;
+    const ac = audio(), t = ac.currentTime + 0.02;
+    it.pitches.forEach(p => { strike(p.midi, t, 0.8).release(t + 0.6); flash(p.midi, 500); });
+  }));
+}
+let lessonIdx = store.get('piano.sheet.lesson', 0);
+function showLesson(i){
+  lessonIdx = Math.max(0, Math.min(LESSONS.length - 1, i));
+  store.set('piano.sheet.lesson', lessonIdx);
+  const box = $('shLesson');
+  box.innerHTML = '<div class="lnav">' + LESSONS.map((l, j) => `<button type="button" data-l="${j}" aria-pressed="${j === lessonIdx}">${j + 1}. ${l[0]}</button>`).join('') + '</div>' + LESSONS[lessonIdx][1] +
+    (lessonIdx < LESSONS.length - 1 ? `<p><button type="button" class="sbtn" data-l="${lessonIdx + 1}" style="background:#1d1a22">Next: ${LESSONS[lessonIdx + 1][0]} →</button></p>` : '');
+  box.querySelectorAll('[data-l]').forEach(b => b.addEventListener('click', () => { showLesson(+b.dataset.l); box.scrollTop = 0; }));
+  box.querySelectorAll('.mini').forEach(renderMini);
+}
+
+/* ---------------- note drill ---------------- */
+const nd = { cur: null, stats: store.get('piano.sheet.nd', { ok: 0, n: 0, streak: 0, best: 0 }), acc: 0, locked: false };
+function ndNew(){
+  const clefSel = $('ndClef').value;
+  const clef = clefSel === 'both' ? (Math.random() < 0.5 ? 'treble' : 'bass') : clefSel;
+  const ledger = $('ndRange').value === 'ledger';
+  const base = REF[clef];
+  const span = ledger ? 9 : 5;
+  let d, tries = 0;
+  do{ d = base - span + Math.floor(Math.random() * (span * 2 + 1)); tries++; }
+  while(nd.cur && d === nd.cur.p.d && tries < 6);
+  const si = ((d % 7) + 7) % 7, oct = Math.floor(d / 7);
+  let alter = 0;
+  if($('ndAcc').checked){ const r = Math.random(); alter = r < 0.25 ? 1 : r < 0.5 ? -1 : 0; }
+  nd.cur = { p: mkPitch(si, alter, oct), clef: clef, t: performance.now() };
+  nd.acc = 0; nd.locked = false;
+  const card = $('ndCard'); card.innerHTML = '';
+  const host = document.createElement('div'); card.appendChild(host);
+  engrave(host, { measures: [{ items: [{ ei: 0, rest: false, pitches: [nd.cur.p], dur: 4, pos: 0 }], cap: 4 }], meter: { num: 4, den: 4 }, fifths: 0, clef: clef, pickup: 0 },
+          { width: 330, zoom: 1.25, mini: true, showTime: false, justify: true });
+  $('ndAns').querySelectorAll('button').forEach(b => b.className = '');
+  $('ndAcc2').querySelectorAll('button').forEach(b => { b.setAttribute('aria-pressed', 'false'); b.className = ''; });
+  $('ndFb').className = 'fb'; $('ndFb').textContent = 'Name the note: click a letter, or play it on the keyboard below.';
+  ndShow();
+}
+function ndShow(){
+  const s = nd.stats;
+  $('ndStats').innerHTML = `Score <b>${s.ok}/${s.n}</b>${s.n ? ' (' + Math.round(s.ok / s.n * 100) + '%)' : ''} · streak <b>${s.streak}</b> · best <b>${s.best}</b>`;
+}
+function ndAnswer(ok, said){
+  if(nd.locked) return;
+  const s = nd.stats, p = nd.cur.p, fb = $('ndFb');
+  s.n++;
+  const secs = ((performance.now() - nd.cur.t) / 1000).toFixed(1);
+  const right = pname(p) + p.oct;
+  const ac = audio(), t = ac.currentTime + 0.02;
+  strike(p.midi, t, 0.8).release(t + 0.7); flash(p.midi, 700);
+  if(ok){
+    s.ok++; s.streak++; s.best = Math.max(s.best, s.streak);
+    fb.className = 'fb ok'; fb.textContent = '✓ ' + right + ' — ' + secs + ' s';
+    nd.locked = true; setTimeout(ndNew, 750);
+  }else{
+    s.streak = 0;
+    fb.className = 'fb no'; fb.textContent = '✗ ' + (said ? said + ' — ' : '') + 'it is ' + right + (nd.cur.clef === 'treble' ? ' (treble clef)' : ' (bass clef)') + '. Press Skip or try the next one.';
+    nd.locked = true; setTimeout(ndNew, 2200);
+  }
+  store.set('piano.sheet.nd', s); ndShow();
+}
+function ndBuild(){
+  const ans = $('ndAns'); ans.innerHTML = '';
+  'CDEFGAB'.split('').forEach(L => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = L;
+    b.addEventListener('click', () => {
+      if(nd.locked) return;
+      const p = nd.cur.p;
+      const ok = L === p.step && nd.acc === p.alter;
+      b.className = ok ? 'ok' : 'no';
+      ndAnswer(ok, L + (nd.acc ? ACC[nd.acc] : ''));
+    });
+    ans.appendChild(b);
+  });
+  const acc = $('ndAcc2'); acc.innerHTML = '';
+  [[1, '♯ sharp'], [-1, '♭ flat']].forEach(([v, lab]) => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = lab; b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', () => {
+      nd.acc = nd.acc === v ? 0 : v;
+      acc.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false'));
+      if(nd.acc) b.setAttribute('aria-pressed', 'true');
+      acc.querySelectorAll('button').forEach(x => x.className = x.getAttribute('aria-pressed') === 'true' ? 'ok' : '');
+    });
+    acc.appendChild(b);
+  });
+  acc.hidden = !$('ndAcc').checked;
+}
+function heard(midi){                            // a key on the piano was played
+  if($('viewSheet').hidden) return;
+  if(!$('shNotes').hidden && nd.cur && !nd.locked){
+    const p = nd.cur.p;
+    const ok = $('ndOct').checked ? midi === p.midi : ((midi - p.midi) % 12 + 12) % 12 === 0;
+    ndAnswer(ok, nameOf(midi));
+  }
+}
+
+/* ---------------- key signature drill ---------------- */
+const kd = { cur: null, stats: store.get('piano.sheet.kd', { ok: 0, n: 0, streak: 0, best: 0 }), locked: false };
+function kdNew(){
+  let f;
+  do{ f = -6 + Math.floor(Math.random() * 13); }while(kd.cur && f === kd.cur.f);
+  kd.cur = { f: f }; kd.locked = false;
+  const card = $('kdCard'); card.innerHTML = '';
+  const host = document.createElement('div'); card.appendChild(host);
+  engrave(host, { measures: [{ items: [{ ei: 0, rest: true, pitches: [], dur: 4, pos: 0 }], cap: 4 }], meter: { num: 4, den: 4 }, fifths: f, clef: $('kdClef').value, pickup: 0 },
+          { width: 330, zoom: 1.25, mini: true, showTime: false, justify: true });
+  card.querySelectorAll('.rst').forEach(e => e.remove());
+  $('kdAns').querySelectorAll('button').forEach(b => b.className = '');
+  $('kdFb').className = 'fb'; $('kdFb').textContent = 'Which ' + $('kdMode').value + ' key has this signature?';
+  kdStats();
+}
+function kdStats(){
+  const s = kd.stats;
+  $('kdStats').innerHTML = `Score <b>${s.ok}/${s.n}</b>${s.n ? ' (' + Math.round(s.ok / s.n * 100) + '%)' : ''} · streak <b>${s.streak}</b> · best <b>${s.best}</b>`;
+}
+function kdBuild(){
+  const ans = $('kdAns'); ans.innerHTML = '';
+  const minor = $('kdMode').value === 'minor';
+  const order = [0, 1, 2, 3, 4, 5, 6, -1, -2, -3, -4, -5, -6];
+  order.forEach(f => {
+    const b = document.createElement('button'); b.type = 'button';
+    b.textContent = minor ? minName(f) + 'm' : majName(f);
+    b.addEventListener('click', () => {
+      if(kd.locked || !kd.cur) return;
+      const ok = f === kd.cur.f, s = kd.stats;
+      s.n++; b.className = ok ? 'ok' : 'no';
+      const right = majName(kd.cur.f) + ' major / ' + minName(kd.cur.f) + ' minor';
+      if(ok){ s.ok++; s.streak++; s.best = Math.max(s.best, s.streak); $('kdFb').className = 'fb ok'; $('kdFb').textContent = '✓ ' + right; }
+      else{ s.streak = 0; $('kdFb').className = 'fb no'; $('kdFb').textContent = '✗ That signature is ' + right + '.'; }
+      store.set('piano.sheet.kd', s); kdStats();
+      kd.locked = true; setTimeout(kdNew, ok ? 900 : 2300);
+    });
+    ans.appendChild(b);
+  });
+}
+function hearScale(f, minor){
+  stopAll();
+  const ac = audio(), spb = 0.32, t0 = ac.currentTime + 0.08;
+  const tonicSi = (((f * 4) % 7 + 7) % 7 + (minor ? 5 : 0)) % 7;
+  for(let i = 0; i <= 7; i++){
+    const si = (tonicSi + i) % 7, oct = 4 + Math.floor((tonicSi + i) / 7) - (tonicSi >= 5 ? 1 : 0);
+    let alter = keyAlter(f, STEPS[si]);
+    if(minor && i === 6) alter += 1;               // harmonic minor: raised seventh
+    const m = mkPitch(si, alter, oct).midi, w = t0 + i * spb;
+    strike(m, w, 0.8).release(w + spb * 0.9);
+    setTimeout(() => flash(m, spb * 900), (w - ac.currentTime) * 1000);
+  }
+}
+
+/* ---------------- wiring ---------------- */
+// Stop on the page also stops the sheet; a key played on the piano answers the drill.
+const _stopAll = stopAll;
+stopAll = function(){ _stopAll(); sheetStop(); };
+const _noteOn = noteOn;
+noteOn = function(midi, vel){ _noteOn(midi, vel); try{ heard(midi); }catch(e){} };
+
+// the keyboard stays under the sheet
+const sheetTab = document.querySelector('.vtab[data-view="sheet"]');
+sheetTab.addEventListener('click', () => {
+  $('viewKeys').hidden = false;
+  if(!current) loadCurrent(); else render();
+  store.set('piano.sheet.open', true);
+});
+document.querySelectorAll('.vtab:not([data-view="sheet"])').forEach(t => t.addEventListener('click', () => store.set('piano.sheet.open', false)));
+
+const stabs = Array.from(document.querySelectorAll('.stab'));
+stabs.forEach((t, i) => {
+  t.addEventListener('click', () => {
+    stabs.forEach((x, j) => { x.setAttribute('aria-selected', i === j); x.tabIndex = i === j ? 0 : -1; $(x.dataset.sp).hidden = i !== j; });
+    const id = t.dataset.sp;
+    if(id === 'shLearn') showLesson(lessonIdx);
+    if(id === 'shNotes'){ ndBuild(); ndNew(); }
+    if(id === 'shKeys'){ kdBuild(); kdNew(); }
+    if(id === 'shScore') render();
+    store.set('piano.sheet.sub', id);
+  });
+  t.addEventListener('keydown', e => {
+    const s = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if(!s) return; e.preventDefault();
+    const n = (i + s + stabs.length) % stabs.length; stabs[n].click(); stabs[n].focus();
+  });
+});
+
+fillPieces(); fillKeys();
+const saved = store.get('piano.sheet.piece', 'p0');
+if(Array.from($('shPiece').options).some(o => o.value === saved)) $('shPiece').value = saved;
+['shPiece', 'shGenKey', 'shGenType', 'shKey', 'shTime'].forEach(id => $(id).addEventListener('change', () => {
+  if(id === 'shPiece'){ $('shKey').value = 'auto'; $('shTime').value = ''; delete $('shTo').dataset.touched; delete $('shFrom').dataset.touched; }
+  loadCurrent();
+}));
+$('shTo').addEventListener('change', () => { $('shTo').dataset.touched = '1'; });
+$('shFrom').addEventListener('change', () => { $('shFrom').dataset.touched = '1'; });
+$('shPlay').addEventListener('click', startSheet);
+$('shStop').addEventListener('click', () => {
+  sheetStop(); allNotesOff();
+  if(!$('shLoop').checked && current){ delete $('shFrom').dataset.touched; $('shFrom').value = current.model.pickup ? 0 : 1; }
+});
+$('shNames').addEventListener('change', e => { view.names = e.target.checked; render(); });
+$('shTab').addEventListener('change', e => { view.tab = e.target.checked; render(); });
+$('shZoomIn').addEventListener('click', () => { view.zoom = Math.min(1.8, +(view.zoom + 0.1).toFixed(2)); store.set('piano.sheet.zoom', view.zoom); render(); });
+$('shZoomOut').addEventListener('click', () => { view.zoom = Math.max(0.6, +(view.zoom - 0.1).toFixed(2)); store.set('piano.sheet.zoom', view.zoom); render(); });
+$('shToBox').addEventListener('click', () => {
+  if(!current) return;
+  const out = current.model.measures.map(m => {
+    const toks = []; let prev = null;
+    m.items.forEach(it => {
+      if(it.tieIn && prev){ prev.dur += it.dur; return; }
+      const tk = { s: it.rest ? '-' : it.pitches.map(tokenOf).join('+'), dur: it.dur };
+      toks.push(tk); prev = it.tieOut ? tk : null;
+    });
+    return toks.map(t => t.s + (t.dur === 1 ? '' : ':' + t.dur)).join(' ');
+  }).join(' | ');
+  $('seq').value = out;
+  $('seq').dispatchEvent(new Event('input'));
+  say('The piece is in the notes box. Ties across bars are written as separate notes there.');
+});
+const stage = $('stage');
+$('shFull').addEventListener('click', () => {
+  if(document.fullscreenElement) document.exitFullscreen();
+  else if(stage.requestFullscreen) stage.requestFullscreen().then(() => setTimeout(render, 120));
+});
+document.addEventListener('fullscreenchange', () => {
+  $('shFull').textContent = document.fullscreenElement ? '✕ Exit full screen' : '⛶ Full screen';
+  setTimeout(render, 150);
+});
+if(!stage.requestFullscreen) $('shFull').hidden = true;
+const tempoShow = () => { $('shBpm').textContent = bpmEl.value + ' BPM (tempo slider)'; };
+bpmEl.addEventListener('input', tempoShow); tempoShow();
+let boxTimer = null;
+$('seq').addEventListener('input', () => {
+  if(!current || current.v !== 'box' || $('viewSheet').hidden) return;
+  clearTimeout(boxTimer); boxTimer = setTimeout(() => { current.bpmSet = true; loadCurrent(); }, 400);
+});
+['ndClef', 'ndRange', 'ndAcc'].forEach(id => $(id).addEventListener('change', () => { ndBuild(); ndNew(); }));
+$('ndHear').addEventListener('click', () => { if(!nd.cur) return; const ac = audio(), t = ac.currentTime + 0.02; strike(nd.cur.p.midi, t, 0.8).release(t + 0.8); flash(nd.cur.p.midi, 800); });
+$('ndSkip').addEventListener('click', ndNew);
+$('ndReset').addEventListener('click', () => { nd.stats = { ok: 0, n: 0, streak: 0, best: 0 }; store.set('piano.sheet.nd', nd.stats); ndShow(); });
+['kdClef', 'kdMode'].forEach(id => $(id).addEventListener('change', () => { kdBuild(); kdNew(); }));
+$('kdHear').addEventListener('click', () => { if(kd.cur) hearScale(kd.cur.f, $('kdMode').value === 'minor'); });
+$('kdSkip').addEventListener('click', kdNew);
+let rsz = null, lastW = 0;
+if(window.ResizeObserver) new ResizeObserver(() => {
+  const w = $('shPaper').clientWidth;
+  if(Math.abs(w - lastW) < 2) return;
+  lastW = w;
+  clearTimeout(rsz);
+  rsz = setTimeout(() => { if(!$('viewSheet').hidden && !$('shScore').hidden && !play) render(); }, 200);
+}).observe($('shPaper'));
+
+if(store.get('piano.sheet.open', false)){
+  sheetTab.click();
+  const sub = store.get('piano.sheet.sub', 'shScore');
+  const b = stabs.find(x => x.dataset.sp === sub);
+  if(b && sub !== 'shScore') b.click();
+}
+})();
+</script>
+
 </body>
 </html>

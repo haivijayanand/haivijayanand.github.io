@@ -2,10 +2,11 @@
 """
 TOOL:    speaks/_build.py
 FAMILY:  SITE
-VERSION: 1.0.0
+VERSION: 1.0.1
 DATE:    2026-10-05
 CHAT:    Blogger to GitHub migration (Vijay Anand Speaks)
-CHANGES: 1.0.0 - renders speaks/_content/*.json into /speaks/<yyyy>/<mm>/<slug>.html and rebuilds /speaks/index.html
+CHANGES: 1.0.1 - English/Tamil chips and search now hide rows (CSS [hidden] rule; a.row display:grid was overriding it)
+         1.0.0 - renders speaks/_content/*.json into /speaks/<yyyy>/<mm>/<slug>.html and rebuilds /speaks/index.html
 STATUS:  working
 
 Run:  python3 speaks/_build.py
@@ -19,10 +20,11 @@ Content file (_content/<yyyy>-<mm>-<slug>.json):
   path "yyyy/mm/slug", title, date (ISO, +05:30), lang ("en" or "ta"), tags [..], description,
   hero {card, src, w, h} or null, words, blogger_url, body (cleaned HTML)
 """
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 PAGE_VERSION = "1.0.0"
 PAGE_DATE = "2026-10-05"
+INDEX_VERSION = "1.0.1"
 PAGE_CHANGES = ["v1.0.0  moved from vijayanandspeaks.blogspot.com"]
 
 CUSDIS_APP_ID = ""                       # e.g. "a1b2c3d4-...." from cusdis.com → your site → Embed code
@@ -92,6 +94,7 @@ INDEX_CSS = """
 .band nav.top a{color:#eaf4f0}
 .tools{position:sticky;top:0;z-index:2;background:var(--bg);border-bottom:1px solid var(--rule);padding:12px 0}
 .search{width:100%;font-size:16px;color:var(--ink);background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:10px 14px}
+[hidden]{display:none!important}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:13.5px}
 .chips button{border:1px solid var(--rule);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
 .chips button[aria-pressed=true]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
@@ -137,8 +140,8 @@ def nice_date(d):
     return d.strftime("%d %b %Y").lstrip("0")
 
 
-def header(tool, title, changes, built_by=True):
-    lines = [f"TOOL    : {tool}", "FAMILY  : SITE", f"VERSION : {PAGE_VERSION}", f"DATE    : {PAGE_DATE}",
+def header(tool, title, changes, built_by=True, version=None):
+    lines = [f"TOOL    : {tool}", "FAMILY  : SITE", f"VERSION : {version or PAGE_VERSION}", f"DATE    : {PAGE_DATE}",
              "CHAT    : Blogger to GitHub migration (Vijay Anand Speaks)",
              "CHANGES : " + "\n          ".join(changes), "STATUS  : working"]
     if built_by:
@@ -234,7 +237,7 @@ def render_index(items):
     first, last = items[0]["dt"].year, items[-1]["dt"].year
     desc = f"{n} essays by K Vijay Anand on life, family, work and leadership, {first}–{last}, in English and Tamil."
     built = dt.date.today().isoformat()
-    return (header("speaks/index.html — list of Vijay Anand Speaks essays", "", [f"v{PAGE_VERSION}  {n} essays ({ta} Tamil), rebuilt {built}"])
+    return (header("speaks/index.html — list of Vijay Anand Speaks essays", "", [f"v{INDEX_VERSION}  {n} essays ({ta} Tamil), rebuilt {built}; English/Tamil filter and search now hide essays", "v1.0.0  first list"], version=INDEX_VERSION)
             + head(f"{BLOG_TITLE} — K Vijay Anand", desc, "/speaks/", items[-1].get("hero", {}).get("card") if items[-1].get("hero") else None, INDEX_CSS, "en")
             + f"""<body>
 <header class="band"><div class="wrap">

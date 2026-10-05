@@ -2,10 +2,11 @@
 <!--
 TOOL    : colour_workbench.html (public copy)
 FAMILY  : COLOUR
-VERSION : 1.0.0
-DATE    : 2026-10-01
+VERSION : 1.1.0
+DATE    : 2026-10-05
 CHAT    : Colour workbench
-CHANGES : v1.0.0  public copy for haivijayanand.github.io: colour wheel, models, scales, colour-vision simulation, contrast and print
+CHANGES : v1.1.0  full page width on PCs; Full screen button; active-colour box can float (drag by its title bar, resize from the corner, Dock to put it back) on PCs
+          v1.0.0  public copy for haivijayanand.github.io: colour wheel, models, scales, colour-vision simulation, contrast and print
 STATUS  : working; runs offline in any browser, no network
 -->
 <html lang="en">
@@ -65,7 +66,7 @@ button{cursor:pointer}
   box-shadow:0 6px 18px rgba(0,0,0,.28);
 }
 .booth-inner{
-  max-width:1240px;margin:0 auto;
+  max-width:none;margin:0 auto;
   padding:14px 18px;
   display:flex;gap:16px;align-items:center;flex-wrap:wrap;
 }
@@ -92,6 +93,23 @@ button{cursor:pointer}
 .btn.ghost:hover{background:#5c5c5c}
 .btn.sm{padding:4px 8px;font-size:12.5px}
 
+/* floating active-colour box (PCs) */
+.fhead{display:none}
+.booth.float{
+  position:fixed;z-index:60;width:400px;height:290px;min-width:260px;min-height:170px;
+  max-width:96vw;max-height:92vh;resize:both;overflow:auto;border:1px solid #8a8a8a;border-radius:8px;
+  box-shadow:0 14px 40px rgba(0,0,0,.5);display:flex;flex-direction:column}
+.booth.float .fhead{display:flex;align-items:center;gap:8px;flex:none;padding:6px 10px;cursor:move;user-select:none;
+  background:#3b3b3b;color:#e6e6e6;font-size:12.5px;letter-spacing:.04em;border-radius:8px 8px 0 0;touch-action:none}
+.booth.float .fhead .sp{flex:1}
+.booth.float .booth-inner{margin:0;width:100%;box-sizing:border-box;flex:1;flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:10px;padding:10px 12px 14px;min-height:0}
+.booth.float .chip{width:100%;height:auto;flex:1 1 70px;min-height:50px}
+.booth.float .booth-fields{min-width:0}
+.booth.float .tray{margin-left:0}
+.booth.float .tray-swatches{max-width:none}
+body.floated nav.rail{top:16px}
+.tbtns{display:flex;gap:6px}
+
 /* palette tray */
 .tray{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
 .tray-swatches{display:flex;gap:3px;flex-wrap:wrap;max-width:340px}
@@ -108,7 +126,7 @@ button{cursor:pointer}
 .tray-empty{color:#d2d2d2;font-size:12.5px;font-style:italic}
 
 /* ---------- layout ---------- */
-.wrap{max-width:1240px;margin:0 auto;padding:0 18px 90px;display:flex;gap:26px;align-items:flex-start}
+.wrap{max-width:none;margin:0 auto;padding:0 24px 90px;display:flex;gap:26px;align-items:flex-start}
 nav.rail{
   position:sticky;top:132px;flex:none;width:186px;padding-top:26px;
 }
@@ -233,7 +251,8 @@ canvas.sim{width:100%;height:auto;border:1px solid #8a8a8a;display:block;backgro
 <body>
 
 <!-- ============ BOOTH BAR ============ -->
-<header class="booth no-print">
+<header class="booth no-print" id="booth">
+  <div class="fhead" id="fhead" title="Drag to move · drag the bottom-right corner to resize"><span>⠿ ACTIVE COLOUR</span><span class="sp"></span><button class="btn ghost sm" id="dockBtn" type="button">Dock</button></div>
   <div class="booth-inner">
     <div class="chip" id="chip" title="Active colour"></div>
     <div class="booth-fields">
@@ -245,6 +264,10 @@ canvas.sim{width:100%;height:auto;border:1px solid #8a8a8a;display:block;backgro
       <div style="display:flex;gap:6px">
         <button class="btn sm" id="addBtn">Add to palette</button>
         <button class="btn sm" id="copyHex">Copy hex</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm" id="floatBtn" type="button" title="Float this box so it stays on screen; drag and resize it" hidden>⧉ Float</button>
+        <button class="btn ghost sm" id="fsBtn" type="button" title="Full screen" hidden>⛶ Full screen</button>
       </div>
     </div>
     <div class="readout" id="readout"></div>
@@ -1722,6 +1745,69 @@ $("#imgReset").click();
 setColor(S.hex);
 $("#tplOut").value=TEMPLATES.css();
 renderContrast();
+})();
+
+/* ---------- full screen + floating active-colour box (v1.1.0) ---------- */
+(function(){
+  const $=s=>document.querySelector(s);
+  const booth=$("#booth"), fhead=$("#fhead"), floatBtn=$("#floatBtn"), dockBtn=$("#dockBtn"), fsBtn=$("#fsBtn");
+  const KEY="colourWorkbench.float";
+  const store={get(){try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){return null}},
+               set(v){try{localStorage.setItem(KEY,JSON.stringify(v))}catch(e){}}};
+  const pc=window.matchMedia("(min-width:901px) and (pointer:fine)");
+  let st=store.get()||{on:false,x:null,y:16,w:400,h:290};
+
+  // full screen
+  const root=document.documentElement;
+  if(root.requestFullscreen||root.webkitRequestFullscreen){
+    fsBtn.hidden=false;
+    fsBtn.addEventListener("click",()=>{
+      const on=document.fullscreenElement||document.webkitFullscreenElement;
+      if(on)(document.exitFullscreen||document.webkitExitFullscreen).call(document);
+      else (root.requestFullscreen||root.webkitRequestFullscreen).call(root);
+    });
+    const lab=()=>{fsBtn.textContent=(document.fullscreenElement||document.webkitFullscreenElement)?"✕ Exit full screen":"⛶ Full screen";};
+    document.addEventListener("fullscreenchange",lab);document.addEventListener("webkitfullscreenchange",lab);
+  }
+
+  function clamp(){
+    const w=booth.offsetWidth,h=booth.offsetHeight;
+    st.x=Math.max(0,Math.min(st.x,window.innerWidth-Math.min(w,120)));
+    st.y=Math.max(0,Math.min(st.y,window.innerHeight-40));
+    booth.style.left=st.x+"px";booth.style.top=st.y+"px";
+  }
+  function apply(){
+    const on=st.on&&pc.matches;
+    booth.classList.toggle("float",on);document.body.classList.toggle("floated",on);
+    floatBtn.hidden=!pc.matches||on;
+    if(on){
+      if(st.x==null)st.x=window.innerWidth-st.w-24;
+      booth.style.width=st.w+"px";booth.style.height=st.h+"px";clamp();
+    }else{booth.style.left=booth.style.top=booth.style.width=booth.style.height="";}
+  }
+  floatBtn.addEventListener("click",()=>{st.on=true;store.set(st);apply();});
+  dockBtn.addEventListener("click",()=>{st.on=false;store.set(st);apply();});
+  pc.addEventListener?pc.addEventListener("change",apply):pc.addListener(apply);
+  window.addEventListener("resize",()=>{if(booth.classList.contains("float"))clamp();});
+
+  // drag by the title bar
+  let drag=null;
+  fhead.addEventListener("pointerdown",e=>{
+    if(e.target.closest("button"))return;
+    drag={dx:e.clientX-st.x,dy:e.clientY-st.y};fhead.setPointerCapture(e.pointerId);e.preventDefault();
+  });
+  fhead.addEventListener("pointermove",e=>{if(!drag)return;st.x=e.clientX-drag.dx;st.y=e.clientY-drag.dy;clamp();});
+  const end=()=>{if(drag){drag=null;store.set(st);}};
+  fhead.addEventListener("pointerup",end);fhead.addEventListener("pointercancel",end);
+
+  // remember size after a corner resize
+  if(window.ResizeObserver){
+    let tmr;new ResizeObserver(()=>{
+      if(!booth.classList.contains("float"))return;
+      clearTimeout(tmr);tmr=setTimeout(()=>{st.w=booth.offsetWidth;st.h=booth.offsetHeight;store.set(st);},250);
+    }).observe(booth);
+  }
+  apply();
 })();
 </script>
 </body>

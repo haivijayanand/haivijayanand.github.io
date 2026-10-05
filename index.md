@@ -14,6 +14,11 @@ title: Home
   One famous management book a day: a 300-word summary and ten questions to test yourself.
 </div>
 
+<div style="border:1px solid #2c6a9e;border-left:5px solid #2c6a9e;border-radius:8px;padding:14px 18px;margin:0 0 24px;background:rgba(44,106,158,.06)">
+  <strong><a href="/speaks/">Vijay Anand Speaks →</a></strong><br>
+  Essays on life, family, work and leadership, in English and Tamil, written since 2009.
+</div>
+
 {% for post in site.posts %}
 <article>
   <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>

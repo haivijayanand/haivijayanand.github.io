@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Zen Series — Story 01: What's Inside Spills Out
+FAMILY:  zen-series
+VERSION: 1.0.0
+DATE:    2026-10-06
+CHAT:    Zen Series — first story (spilled tea)
+CHANGES: Initial release — cover page, story, reflection, illustration slot with ink-wash fallback, full-screen toggle
+STATUS:  Ready for haivijayanand.github.io/zen-series/
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What's Inside Spills Out</title>
+<meta name="description" content="Zen Series, Story 1 — a monk, a bump, and a cup of tea.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f6f1e7;
+    --paper-2: #efe7d6;
+    --ink: #2a2622;
+    --ink-soft: #5c554c;
+    --ink-faint: #8b8276;
+    --accent: #9b3b2a;      /* seal red */
+    --rule: #d9cfbd;
+    --wash: rgba(42,38,34,0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1c1a17; --paper-2: #24211d; --ink: #ece4d6; --ink-soft: #bdb3a4;
+      --ink-faint: #8a8173; --accent: #d0644f; --rule: #3a352e; --wash: rgba(236,228,214,0.08);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1c1a17; --paper-2: #24211d; --ink: #ece4d6; --ink-soft: #bdb3a4;
+    --ink-faint: #8a8173; --accent: #d0644f; --rule: #3a352e; --wash: rgba(236,228,214,0.08);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: "Cormorant Garamond", Georgia, serif; font-size: 21px; line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- toolbar ---------- */
+  .toolbar {
+    position: fixed; top: 14px; right: 16px; z-index: 10; display: flex; gap: 8px;
+    font-family: Inter, system-ui, sans-serif; font-size: 13px;
+  }
+  .toolbar button {
+    background: var(--paper-2); color: var(--ink-soft); border: 1px solid var(--rule);
+    border-radius: 999px; padding: 6px 12px; cursor: pointer; font: inherit;
+  }
+  .toolbar button:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+  /* ---------- cover ---------- */
+  .cover {
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 48px 16px; position: relative;
+    background:
+      radial-gradient(ellipse at 50% 38%, var(--wash), transparent 60%),
+      var(--paper);
+  }
+  .series {
+    font-family: Inter, system-ui, sans-serif; font-size: 12px; letter-spacing: 0.32em;
+    text-transform: uppercase; color: var(--ink-faint); margin-bottom: 28px;
+  }
+  .enso { width: min(240px, 60vw); height: auto; margin-bottom: 28px; }
+  .cover h1 {
+    font-weight: 600; font-size: clamp(40px, 7vw, 72px); line-height: 1.05; margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .storyno {
+    font-family: Inter, system-ui, sans-serif; font-size: 13px; color: var(--accent);
+    letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 22px;
+  }
+  .tagline { font-style: italic; color: var(--ink-soft); max-width: 30ch; margin: 0 auto; font-size: 22px; }
+  .seal {
+    display: inline-block; margin-top: 36px; width: 38px; height: 38px; border-radius: 6px;
+    background: var(--accent); color: var(--paper); font-family: Inter, sans-serif; font-size: 12px;
+    line-height: 38px; font-weight: 500;
+  }
+  .scroll-cue {
+    position: absolute; bottom: 26px; font-family: Inter, sans-serif; font-size: 12px;
+    color: var(--ink-faint); text-decoration: none; letter-spacing: 0.15em; text-transform: uppercase;
+  }
+
+  /* ---------- article ---------- */
+  article { max-width: 760px; margin: 0 auto; padding: 72px 16px 40px; }
+  .figure {
+    margin: 0 0 56px; border: 1px solid var(--rule); border-radius: 4px; overflow: hidden;
+    background: var(--paper-2); aspect-ratio: 16 / 10; display: flex; align-items: center; justify-content: center;
+  }
+  .figure img, .figure svg { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .figcap {
+    font-family: Inter, sans-serif; font-size: 12px; color: var(--ink-faint); text-align: center;
+    margin: -44px 0 56px;
+  }
+  h2 {
+    font-family: Inter, system-ui, sans-serif; font-weight: 500; font-size: 12px; letter-spacing: 0.3em;
+    text-transform: uppercase; color: var(--ink-faint); margin: 56px 0 18px;
+  }
+  p { margin: 0 0 1.1em; }
+  .dropcap::first-letter {
+    float: left; font-size: 3.4em; line-height: 0.85; padding: 6px 10px 0 0; color: var(--accent); font-weight: 600;
+  }
+  blockquote {
+    margin: 36px 0; padding: 4px 0 4px 26px; border-left: 2px solid var(--accent);
+    font-size: 28px; line-height: 1.4; font-style: italic;
+  }
+  .reflect { color: var(--ink-soft); }
+  .carry {
+    margin: 56px 0 0; padding: 28px 24px; background: var(--paper-2); border-radius: 4px; text-align: center;
+  }
+  .carry .lbl {
+    font-family: Inter, sans-serif; font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--accent); display: block; margin-bottom: 8px;
+  }
+  .carry p { margin: 0; font-size: 24px; font-style: italic; }
+  footer {
+    max-width: 760px; margin: 0 auto; padding: 40px 16px 64px; border-top: 1px solid var(--rule);
+    font-family: Inter, sans-serif; font-size: 13px; color: var(--ink-faint);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  footer a { color: var(--ink-soft); }
+
+  @media (max-width: 600px) {
+    body { font-size: 19px; }
+    blockquote { font-size: 23px; padding-left: 18px; }
+  }
+  @media print {
+    .toolbar, .scroll-cue { display: none; }
+    .cover { min-height: auto; page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button id="themeBtn" title="Toggle light / dark">◐ Theme</button>
+  <button id="fsBtn" title="Full screen">⤢ Full screen</button>
+</div>
+
+<!-- ================= COVER ================= -->
+<section class="cover">
+  <div class="series">Zen Series</div>
+
+  <!-- enso brush circle -->
+  <svg class="enso" viewBox="0 0 200 200" aria-hidden="true">
+    <path d="M150 52 C 125 22, 62 26, 40 70 C 20 110, 44 160, 96 168 C 146 175, 178 130, 166 88"
+          fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round" opacity="0.85"/>
+    <path d="M166 88 C 163 78, 159 72, 154 66" fill="none" stroke="currentColor" stroke-width="5"
+          stroke-linecap="round" opacity="0.5"/>
+  </svg>
+
+  <div class="storyno">Story 01</div>
+  <h1>What's Inside<br>Spills Out</h1>
+  <p class="tagline">Small stories, still minds. A short Zen tale each time, with a thought to carry into the day.</p>
+  <span class="seal">禅</span>
+
+  <a class="scroll-cue" href="#story">Read ↓</a>
+</section>
+
+<!-- ================= STORY ================= -->
+<article id="story">
+
+  <!-- Illustration slot: drop images/zen-01-tea.png beside this file.
+       Until then the ink-wash SVG below shows. -->
+  <div class="figure" id="figure">
+    <img src="images/zen-01-tea.png" alt="A monk whose cup of tea spills as someone bumps into him"
+         onerror="this.remove(); document.getElementById('fallback').style.display='block';">
+    <svg id="fallback" style="display:none" viewBox="0 0 800 500" role="img"
+         aria-label="Ink-wash sketch of a monk with a tipped cup of tea">
+      <defs>
+        <radialGradient id="mist" cx="50%" cy="45%" r="60%">
+          <stop offset="0%" stop-color="currentColor" stop-opacity="0.07"/>
+          <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <g style="color:var(--ink)">
+        <rect width="800" height="500" fill="url(#mist)"/>
+        <!-- distant hills -->
+        <path d="M0 360 C 120 300, 210 330, 300 300 S 520 250, 620 290 S 760 320, 800 300 L800 500 L0 500Z"
+              fill="currentColor" opacity="0.05"/>
+        <!-- ground line -->
+        <path d="M60 420 C 260 412, 540 426, 740 416" stroke="currentColor" stroke-width="2" opacity="0.35" fill="none"/>
+        <!-- monk robe -->
+        <path d="M330 420 C 320 330, 340 250, 380 215 C 405 195, 445 198, 462 225 C 492 270, 500 350, 492 420 Z"
+              fill="currentColor" opacity="0.82"/>
+        <!-- robe fold -->
+        <path d="M398 232 C 420 300, 410 360, 430 418" stroke="var(--paper)" stroke-width="3" opacity="0.35" fill="none"/>
+        <!-- head -->
+        <circle cx="420" cy="182" r="30" fill="currentColor" opacity="0.88"/>
+        <!-- arm reaching forward -->
+        <path d="M455 250 C 495 262, 525 268, 548 262" stroke="currentColor" stroke-width="20"
+              stroke-linecap="round" fill="none" opacity="0.82"/>
+        <!-- tipped cup -->
+        <g transform="translate(560 254) rotate(28)">
+          <path d="M-18 -16 L18 -16 L13 14 L-13 14 Z" fill="none" stroke="currentColor" stroke-width="4"/>
+        </g>
+        <!-- spilling tea, brush drops -->
+        <g style="color:var(--accent)">
+          <path d="M574 268 C 588 296, 584 322, 596 350" stroke="currentColor" stroke-width="5"
+                stroke-linecap="round" fill="none" opacity="0.8"/>
+          <circle cx="602" cy="372" r="5" fill="currentColor" opacity="0.75"/>
+          <circle cx="588" cy="388" r="3.5" fill="currentColor" opacity="0.6"/>
+          <ellipse cx="604" cy="414" rx="34" ry="6" fill="currentColor" opacity="0.35"/>
+        </g>
+        <!-- passer-by (motion) -->
+        <path d="M212 420 C 205 350, 218 290, 250 268 C 268 256, 290 262, 296 285 C 305 330, 300 380, 298 420 Z"
+              fill="currentColor" opacity="0.25"/>
+        <circle cx="270" cy="240" r="21" fill="currentColor" opacity="0.25"/>
+        <path d="M176 290 h26 M168 318 h30 M180 346 h22" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" opacity="0.25"/>
+      </g>
+    </svg>
+  </div>
+
+  <h2>The Story</h2>
+
+  <p class="dropcap">A monk was walking along, holding a cup of tea. Someone hurrying past, not watching where they were going, knocked into him — and the tea splashed out onto the ground.</p>
+
+  <p>A student standing nearby remarked, “Look, you've spilled your tea.”</p>
+
+  <p>The monk smiled and said:</p>
+
+  <blockquote>“Had it been coffee in the cup, only coffee would have spilled.”</blockquote>
+
+  <h2>Reflection</h2>
+
+  <div class="reflect">
+    <p>The lesson is quietly piercing. When life bumps into us — and it always will — what pours out is simply whatever we were already carrying inside. The jolt doesn't <em>create</em> anything. It only reveals what was there all along.</p>
+
+    <p>So the real question isn't whether we'll get knocked. We will. The question is: what have we filled our cup with? Fill it with patience, and patience is what spills. Fill it with anger, and anger is what spills.</p>
+  </div>
+
+  <div class="carry">
+    <span class="lbl">Carry this</span>
+    <p>Tend to what's inside, and the bumps take care of themselves.</p>
+  </div>
+</article>
+
+<footer>
+  <span>Zen Series · Story 01</span>
+  <span><a href="index.html">All stories</a> · <a href="https://haivijayanand.github.io/">haivijayanand.github.io</a></span>
+</footer>
+
+<script>
+  // Full screen toggle
+  document.getElementById('fsBtn').addEventListener('click', () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+    else document.exitFullscreen?.();
+  });
+  // Theme toggle (light <-> dark), remembered per browser
+  const root = document.documentElement;
+  try { const t = localStorage.getItem('zen-theme'); if (t) root.dataset.theme = t; } catch (e) {}
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    const dark = root.dataset.theme
+      ? root.dataset.theme === 'dark'
+      : matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.theme = dark ? 'light' : 'dark';
+    try { localStorage.setItem('zen-theme', root.dataset.theme); } catch (e) {}
+  });
+</script>
+</body>
+</html>

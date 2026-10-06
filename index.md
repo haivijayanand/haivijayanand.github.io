@@ -1,7 +1,7 @@
 ---
-# TOOL: index.md | FAMILY: SITE | VERSION: 2.0.0 | DATE: 2026-10-05
+# TOOL: index.md | FAMILY: SITE | VERSION: 2.1.0 | DATE: 2026-10-06
 # CHAT: Offline HTML inventory and online links
-# CHANGES: 2.0.0 - home page is now a short guide to the four sections (Speaks, Tools, Book Review, Engineering Articles); article list moved to /engineering/
+# CHANGES: 2.1.0 - Zen Series card added; 2.0.0 - home page is now a short guide to the four sections (Speaks, Tools, Book Review, Engineering Articles); article list moved to /engineering/
 layout: default
 title: Home
 ---
@@ -18,7 +18,7 @@ title: Home
 </style>
 
 <p class="hm-intro">Welcome. This site collects my writing and the small browser tools I build: essays on life and work,
-interactive engineering and learning tools, daily book reviews and longer engineering articles. Pick a section below.</p>
+interactive engineering and learning tools, daily book reviews, short Zen stories and longer engineering articles. Pick a section below.</p>
 
 <div class="hm-grid">
   <a class="hm-card" href="/speaks/" style="--c:#2c6a9e">
@@ -35,6 +35,11 @@ interactive engineering and learning tools, daily book reviews and longer engine
     <b>Book Review →</b>
     <span>One famous management book a day: a 300-word summary, the key ideas, and ten questions to test yourself, with a certificate at the end.</span>
     <small>New review every day</small>
+  </a>
+  <a class="hm-card" href="/zen-series/" style="--c:#9b3b2a">
+    <b>Zen Series →</b>
+    <span>Small stories, still minds: a short Zen tale each time, with a reflection and a thought to carry into the day.</span>
+    <small>New stories added as they are written</small>
   </a>
   <a class="hm-card" href="/engineering/" style="--c:#6b4fa3">
     <b>Engineering Articles →</b>

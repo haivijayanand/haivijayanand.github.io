@@ -2,10 +2,11 @@
 <!--
 TOOL    : Pulley Systems Explorer - mechanical advantage and rope tension (pulley-systems.html)
 FAMILY  : MECH-TOOLS
-VERSION : 1.0.0
+VERSION : 1.1.0
 DATE    : 2026-10-06
 CHAT    : Html interactive pulley arrangements, mechanical leverage and tension in rope for various arrangements
-CHANGES : 1.0.0 First build - six arrangements (fixed pulley with pull angle, single movable pulley, block and tackle 2-8 parts rove to advantage or disadvantage, cascade 2^n, third system 2^n-1, Weston differential hoist); per-sheave efficiency model for lift / hold / lower; animated rope with lay marks, rotating sheaves, tension-coloured parts with values; effort, IMA, AMA, efficiency, support load, hand travel, work and rope MBL; tension table; Compare tab with all arrangements and AMA-vs-parts chart; Theory tab
+CHANGES : 1.1.0 Wide-screen layout by default on PCs (full browser width, wider side panels, diagram sized to the window height); Full screen button in the header and F key, with the diagram growing to fill the screen
+          1.0.0 First build - six arrangements (fixed pulley with pull angle, single movable pulley, block and tackle 2-8 parts rove to advantage or disadvantage, cascade 2^n, third system 2^n-1, Weston differential hoist); per-sheave efficiency model for lift / hold / lower; animated rope with lay marks, rotating sheaves, tension-coloured parts with values; effort, IMA, AMA, efficiency, support load, hand travel, work and rope MBL; tension table; Compare tab with all arrangements and AMA-vs-parts chart; Theory tab
 STATUS  : working
 -->
 <html lang="en">
@@ -33,16 +34,20 @@ STATUS  : working
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:14px/1.5 "Segoe UI",system-ui,-apple-system,sans-serif}
 header{background:linear-gradient(120deg,#0a3440,#0f5f70);color:#eaf6f8;padding:14px 20px 0}
-header .row{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;max-width:1500px;margin:0 auto}
+header .row{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;margin:0 auto}
+header .row .sp{flex:1}
+.fsbtn{font:inherit;font-size:13px;font-weight:600;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#eaf6f8;padding:5px 12px;border-radius:999px;cursor:pointer;align-self:center}
+.fsbtn:hover{background:rgba(255,255,255,.22)}
 header h1{margin:0;font-size:22px;letter-spacing:-.01em}
 header p{margin:0;color:#b6d8de;font-size:13px}
 header a{color:#eaf6f8}
-nav.tabs{display:flex;gap:4px;max-width:1500px;margin:10px auto 0}
+nav.tabs{display:flex;gap:4px;margin:10px auto 0}
 nav.tabs button{font:inherit;font-weight:600;border:0;background:transparent;color:#b6d8de;padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer}
 nav.tabs button.on{background:var(--bg);color:var(--ink)}
-main{max-width:1500px;margin:0 auto;padding:14px 16px 40px}
+main{margin:0 auto;padding:14px 18px 40px}
 .tab{display:none}.tab.on{display:block}
-.sim{display:grid;grid-template-columns:300px minmax(0,1fr) 330px;gap:14px;align-items:start}
+.sim{display:grid;grid-template-columns:320px minmax(0,1fr) 380px;gap:16px;align-items:start}
+@media (min-width:1800px){.sim{grid-template-columns:350px minmax(0,1fr) 430px}}
 @media (max-width:1250px){.sim{grid-template-columns:290px minmax(0,1fr)}.sim .res{grid-column:1 / -1}}
 @media (max-width:760px){.sim{grid-template-columns:1fr} main{padding:10px 10px 30px}}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
@@ -61,7 +66,12 @@ input[type=number]{width:84px;font:inherit;padding:4px 6px;border:1px solid var(
 input[type=range]{accent-color:var(--accent)}
 .hint{color:var(--muted);font-size:12px;margin:4px 0 0}
 .fig{padding:6px}
-.fig svg{display:block;width:100%;height:auto;max-height:78vh}
+.fig svg{display:block;width:100%;height:auto;max-height:calc(100vh - 200px);min-height:420px;margin:0 auto}
+@media (max-width:760px){.fig svg{min-height:0;max-height:none}}
+:fullscreen .fig svg{max-height:calc(100vh - 150px)}
+:fullscreen header{padding-top:8px}
+:fullscreen header p{display:none}
+:fullscreen body{overflow:auto}
 .figbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 8px 4px}
 .figbar .rowin{flex:1;min-width:180px}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -95,6 +105,8 @@ svg text{font-family:"Segoe UI",system-ui,sans-serif}
   <div class="row">
     <h1>Pulley Systems Explorer</h1>
     <p>Mechanical advantage, rope tension and support loads for common pulley arrangements, with sheave friction. <a href="index.html">← All tools</a></p>
+    <span class="sp"></span>
+    <button class="fsbtn" id="fsBtn" title="Full screen (F)">⛶ Full screen</button>
   </div>
   <nav class="tabs" role="tablist">
     <button class="on" data-tab="t-sim">Simulator</button>
@@ -205,7 +217,7 @@ svg text{font-family:"Segoe UI",system-ui,sans-serif}
 </main>
 <script>
 "use strict";
-var VERSION = "1.0.0";
+var VERSION = "1.1.0";
 var G0 = 9.80665;
 var S = { arr:"tackle", kg:100, mode:"lift", eta:0.96, w:20, H:1, n:4, reeve:"dis", k:3, kt:3, theta:0, R:120, r:105, etaD:0.35, f:0 };
 
@@ -436,7 +448,7 @@ function clipSeg(a,b){
   return [[a[0]+dx*t0,a[1]+dy*t0],[a[0]+dx*t1,a[1]+dy*t1]];
 }
 function draw(){
-  var FSK=Math.min(1.8,Math.max(1,600/(svg.clientWidth||600))); function fs(v){ return (v*FSK).toFixed(1); }
+  var bw=svg.clientWidth||600, bh=svg.clientHeight||680, FSK=Math.min(1.8,Math.max(1,600/Math.min(bw,bh*600/680))); function fs(v){ return (v*FSK).toFixed(1); }
   var sol=CUR, G=geomAt(S,S.f), out=[], C={rope:css("--rope"),hi:css("--rope-hi"),tick:css("--tick"),sh:css("--sheave"),shs:css("--sheave-st"),blk:css("--block"),blks:css("--block-st"),load:css("--load"),loads:css("--load-st"),hand:css("--hand"),ceil:css("--ceil"),ink:css("--ink"),mut:css("--muted"),panel:css("--panel")};
   out.push('<defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="'+C.ceil+'" stroke-width="2"/></pattern>'+
     '<marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="'+C.hand+'"/></marker></defs>');
@@ -660,6 +672,20 @@ Array.prototype.forEach.call(document.querySelectorAll("nav.tabs button"),functi
 if(window.matchMedia) window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",update);
 window.addEventListener("resize",function(){ draw(); });
 
+/* full screen: button and F key; hidden where the browser has no Fullscreen API (iPhone Safari) */
+(function(){
+  var btn=document.getElementById("fsBtn"), de=document.documentElement;
+  var req=de.requestFullscreen||de.webkitRequestFullscreen, exit=document.exitFullscreen||document.webkitExitFullscreen;
+  function isFs(){ return !!(document.fullscreenElement||document.webkitFullscreenElement); }
+  if(!req){ btn.hidden=true; return; }
+  function toggle(){ if(isFs()) exit.call(document); else req.call(de); }
+  btn.onclick=toggle;
+  function sync(){ btn.textContent=isFs()?"✕ Exit full screen":"⛶ Full screen"; draw(); }
+  document.addEventListener("fullscreenchange",sync); document.addEventListener("webkitfullscreenchange",sync);
+  document.addEventListener("keydown",function(e){ var tg=(e.target.tagName||"").toLowerCase();
+    if(tg==="input"||tg==="textarea"||tg==="select"||e.ctrlKey||e.metaKey||e.altKey) return;
+    if(e.key==="f"||e.key==="F"){ e.preventDefault(); toggle(); } });
+})();
 arrUI(); paramsUI(); update();
 </script>
 </body>

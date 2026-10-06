@@ -2,10 +2,11 @@
 <!--
 TOOL    : Pulley Systems Explorer - mechanical advantage and rope tension (pulley-systems.html)
 FAMILY  : MECH-TOOLS
-VERSION : 1.1.0
+VERSION : 1.2.0
 DATE    : 2026-10-06
 CHAT    : Html interactive pulley arrangements, mechanical leverage and tension in rope for various arrangements
-CHANGES : 1.1.0 Wide-screen layout by default on PCs (full browser width, wider side panels, diagram sized to the window height); Full screen button in the header and F key, with the diagram growing to fill the screen
+CHANGES : 1.2.0 Theory tab uses the full screen width on PCs: nine sections as cards in a responsive 2–3 column grid instead of one narrow column
+          1.1.0 Wide-screen layout by default on PCs (full browser width, wider side panels, diagram sized to the window height); Full screen button in the header and F key, with the diagram growing to fill the screen
           1.0.0 First build - six arrangements (fixed pulley with pull angle, single movable pulley, block and tackle 2-8 parts rove to advantage or disadvantage, cascade 2^n, third system 2^n-1, Weston differential hoist); per-sheave efficiency model for lift / hold / lower; animated rope with lay marks, rotating sheaves, tension-coloured parts with values; effort, IMA, AMA, efficiency, support load, hand travel, work and rope MBL; tension table; Compare tab with all arrangements and AMA-vs-parts chart; Theory tab
 STATUS  : working
 -->
@@ -88,10 +89,14 @@ tr.hl td{background:var(--accent-bg)}
 .note{border-left:3px solid var(--accent);padding:6px 10px;background:var(--accent-bg);border-radius:0 6px 6px 0;margin-top:10px;font-size:13px}
 .note.warn{border-color:var(--warn)}
 .scroll{overflow-x:auto}
-.theory{max-width:900px}
+.theory{display:grid;grid-template-columns:repeat(auto-fill,minmax(480px,1fr));gap:14px;align-items:stretch}
+@media (min-width:1700px){.theory{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:560px){.theory{grid-template-columns:1fr}}
+.theory .card + .card{margin-top:0}
 .theory h2{font-size:18px;margin:22px 0 6px;color:var(--accent-dk)}
-.theory h2:first-child{margin-top:0}
-.theory p,.theory li{max-width:78ch}
+.theory h2{margin-top:0}
+.theory p,.theory li{max-width:none}
+.theory .eq{max-width:100%;overflow-x:auto}
 .eq{font-family:"Cambria Math","Cambria",Georgia,serif;font-size:15.5px;background:var(--accent-bg);padding:6px 12px;border-radius:6px;display:inline-block;margin:4px 0}
 .cmp{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px;align-items:start}
 @media (max-width:1000px){.cmp{grid-template-columns:1fr}}
@@ -181,43 +186,43 @@ svg text{font-family:"Segoe UI",system-ui,sans-serif}
 </section>
 <!-- ============ THEORY ============ -->
 <section class="tab" id="t-th">
- <div class="card theory">
-  <h2>1. Velocity ratio comes from geometry</h2>
+ <div class="theory">
+  <article class="card th"><h2>1. Velocity ratio comes from geometry</h2>
   <p>The rope is treated as inextensible. If the moving block rises by <i>y</i>, every rope part that holds it shortens by <i>y</i>, and that length has to come out through the hauling part. With <i>n</i> parts supporting the moving block the hand moves <i>x = n·y</i>.</p>
-  <span class="eq">VR = x / y = number of rope parts supporting the moving block</span>
-  <h2>2. Ideal mechanical advantage from virtual work</h2>
+  <span class="eq">VR = x / y = number of rope parts supporting the moving block</span></article>
+  <article class="card th"><h2>2. Ideal mechanical advantage from virtual work</h2>
   <p>Without friction, work in equals work out, so <i>P·x = W·y</i> and the ideal mechanical advantage equals the velocity ratio. A pulley system never reduces the work; it trades force for distance.</p>
-  <span class="eq">IMA = W / P<sub>ideal</sub> = VR&nbsp;&nbsp;&nbsp;&nbsp;AMA = W / P<sub>actual</sub>&nbsp;&nbsp;&nbsp;&nbsp;η<sub>system</sub> = AMA / VR</span>
-  <h2>3. Friction makes the tension differ part to part</h2>
+  <span class="eq">IMA = W / P<sub>ideal</sub> = VR&nbsp;&nbsp;&nbsp;&nbsp;AMA = W / P<sub>actual</sub>&nbsp;&nbsp;&nbsp;&nbsp;η<sub>system</sub> = AMA / VR</span></article>
+  <article class="card th"><h2>3. Friction makes the tension differ part to part</h2>
   <p>Bearing friction and the stiffness of the rope bending round the sheave mean the rope leaves each sheave with less tension than it arrived with, on the side being pulled. The ratio is the sheave efficiency η. Values often used in hoist design are about 0.98 for sheaves on rolling bearings and 0.96 for bronze bushes; worn, dry or small-diameter sheaves are lower.</p>
   <span class="eq">T<sub>slack side</sub> = η · T<sub>pulled side</sub></span>
-  <p>So, working away from the hauling part, each part carries η times the one before it while lifting. While lowering, the rope runs the other way and the ratio flips to 1/η: the hauling part is now the lightest. When the load is just held, friction can act either way, so the holding force can be anything between the lowering and lifting values. Hold mode here shows the frictionless value.</p>
-  <h2>4. Block and tackle</h2>
+  <p>So, working away from the hauling part, each part carries η times the one before it while lifting. While lowering, the rope runs the other way and the ratio flips to 1/η: the hauling part is now the lightest. When the load is just held, friction can act either way, so the holding force can be anything between the lowering and lifting values. Hold mode here shows the frictionless value.</p></article>
+  <article class="card th"><h2>4. Block and tackle</h2>
   <p>Summing the supporting parts gives a geometric series. With <i>n</i> supporting parts:</p>
   <span class="eq">Rove to disadvantage (haul from the fixed block):&nbsp; P = W(1−η) / [η(1−ηⁿ)]</span><br>
   <span class="eq">Rove to advantage (haul from the moving block):&nbsp; P = W(1−η) / (1−ηⁿ)</span>
   <p>As <i>n</i> grows, ηⁿ → 0 and the actual advantage tends to η/(1−η) or 1/(1−η). At η = 0.96 that ceiling is 24, but a tackle with 8 parts already gives only about 6.5. Each extra sheave adds less than the one before, while rope length, hand travel and reeving effort keep growing. This is why practical tackles rarely go beyond six to eight parts.</p>
-  <p>Hauling from the moving block adds one supporting part with the same blocks, but the hand then has to pull upward. A lead block that turns the pull downward adds one more sheave of friction and also adds the hauling force to the anchor load.</p>
-  <h2>5. Support load is more than the load</h2>
+  <p>Hauling from the moving block adds one supporting part with the same blocks, but the hand then has to pull upward. A lead block that turns the pull downward adds one more sheave of friction and also adds the hauling force to the anchor load.</p></article>
+  <article class="card th"><h2>5. Support load is more than the load</h2>
   <p>The fixed block or anchor carries the load, the moving block, and the hauling force if the hauling part pulls downward:</p>
   <span class="eq">F<sub>support</sub> = W + w<sub>block</sub> + P&nbsp;&nbsp;(pull down)&nbsp;&nbsp;&nbsp;&nbsp;F<sub>support</sub> = W + w<sub>block</sub> − P&nbsp;&nbsp;(pull up)</span>
-  <p>For a single fixed pulley with equal tensions T on both legs and an angle θ between the legs, the resultant is 2T·cos(θ/2): twice the load when the legs are parallel, 1.41 T at 90°, and equal to T at 120°.</p>
-  <h2>6. Cascade (first system): 2ⁿ</h2>
-  <p>Each movable pulley hangs in its own rope, one end anchored, the other tied to the pulley above. Each stage halves the force, so VR = 2ⁿ. The price is headroom and travel: the top pulley moves 2ⁿ⁻¹ times as far as the load, and every stage needs its own anchor.</p>
-  <h2>7. Third system: 2ⁿ − 1</h2>
-  <p>All ropes are tied to one bar carrying the load; the movable pulleys hang below the fixed one and move down as the load rises. Tensions double from rope to rope, giving 1 + 2 + 4 + … = 2ⁿ − 1. Unusually, the weights of the movable pulleys help the effort here, because they add tension to the ropes that hold the bar.</p>
-  <h2>8. Differential (Weston) hoist</h2>
+  <p>For a single fixed pulley with equal tensions T on both legs and an angle θ between the legs, the resultant is 2T·cos(θ/2): twice the load when the legs are parallel, 1.41 T at 90°, and equal to T at 120°.</p></article>
+  <article class="card th"><h2>6. Cascade (first system): 2ⁿ</h2>
+  <p>Each movable pulley hangs in its own rope, one end anchored, the other tied to the pulley above. Each stage halves the force, so VR = 2ⁿ. The price is headroom and travel: the top pulley moves 2ⁿ⁻¹ times as far as the load, and every stage needs its own anchor.</p></article>
+  <article class="card th"><h2>7. Third system: 2ⁿ − 1</h2>
+  <p>All ropes are tied to one bar carrying the load; the movable pulleys hang below the fixed one and move down as the load rises. Tensions double from rope to rope, giving 1 + 2 + 4 + … = 2ⁿ − 1. Unusually, the weights of the movable pulleys help the effort here, because they add tension to the ropes that hold the bar.</p></article>
+  <article class="card th"><h2>8. Differential (Weston) hoist</h2>
   <p>Two sheaves of radii R and r are cast together. One turn winds 2πR of chain on and pays 2πr off, so the loop round the lower pulley shortens by 2π(R−r) and the load rises by half of that, while the hand chain moves 2πR.</p>
   <span class="eq">VR = 2R / (R − r)</span>
-  <p>A large VR comes from a small difference R − r. These hoists are built with efficiency below 50%. If the friction work during lifting exceeds the useful work, it also exceeds the work the load can release when lowering, so the load cannot run back by itself. The efficiency in the lowering direction is 2 − 1/η, which is negative when η &lt; 0.5. That is the self-locking condition, and it is why a chain block holds its load when you let go.</p>
-  <h2>9. Sizing the rope</h2>
-  <p>Size the rope on the highest tension, which is the hauling part while lifting, not on W divided by the number of parts. Minimum breaking load should be at least the design factor times that tension; 5 is a common figure for general lifting rope, but use the factor the applicable lifting standard sets. Also check sheave diameter to rope diameter ratio, since bending fatigue and the sheave efficiency both get worse on small sheaves.</p>
+  <p>A large VR comes from a small difference R − r. These hoists are built with efficiency below 50%. If the friction work during lifting exceeds the useful work, it also exceeds the work the load can release when lowering, so the load cannot run back by itself. The efficiency in the lowering direction is 2 − 1/η, which is negative when η &lt; 0.5. That is the self-locking condition, and it is why a chain block holds its load when you let go.</p></article>
+  <article class="card th"><h2>9. Sizing the rope</h2>
+  <p>Size the rope on the highest tension, which is the hauling part while lifting, not on W divided by the number of parts. Minimum breaking load should be at least the design factor times that tension; 5 is a common figure for general lifting rope, but use the factor the applicable lifting standard sets. Also check sheave diameter to rope diameter ratio, since bending fatigue and the sheave efficiency both get worse on small sheaves.</p></article>
  </div>
 </section>
 </main>
 <script>
 "use strict";
-var VERSION = "1.1.0";
+var VERSION = "1.2.0";
 var G0 = 9.80665;
 var S = { arr:"tackle", kg:100, mode:"lift", eta:0.96, w:20, H:1, n:4, reeve:"dis", k:3, kt:3, theta:0, R:120, r:105, etaD:0.35, f:0 };
 

@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<!--
+TOOL    : Pulley Systems Explorer - mechanical advantage and rope tension (pulley-systems.html)
+FAMILY  : MECH-TOOLS
+VERSION : 1.0.0
+DATE    : 2026-10-06
+CHAT    : Html interactive pulley arrangements, mechanical leverage and tension in rope for various arrangements
+CHANGES : 1.0.0 First build - six arrangements (fixed pulley with pull angle, single movable pulley, block and tackle 2-8 parts rove to advantage or disadvantage, cascade 2^n, third system 2^n-1, Weston differential hoist); per-sheave efficiency model for lift / hold / lower; animated rope with lay marks, rotating sheaves, tension-coloured parts with values; effort, IMA, AMA, efficiency, support load, hand travel, work and rope MBL; tension table; Compare tab with all arrangements and AMA-vs-parts chart; Theory tab
+STATUS  : working
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pulley Systems Explorer</title>
+<style>
+:root{
+  --bg:#e9edf1; --panel:#ffffff; --ink:#16212b; --muted:#5d6d7a; --line:#c3cfd8; --soft:#dde5eb;
+  --accent:#0f5f70; --accent-dk:#0a4351; --accent-bg:#e2f0f2;
+  --rope:#a8743d; --rope-hi:#c0392b; --tick:#3b2a17;
+  --sheave:#cfd8df; --sheave-st:#4b5b67; --block:#8798a5; --block-st:#3e4c56;
+  --load:#d9a441; --load-st:#7a5a16; --hand:#1f6fb2; --react:#7b3fa0;
+  --ceil:#6b7a86; --warn:#b5591b; --ok:#1f7a4c;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#11171c; --panel:#1a2229; --ink:#e3e9ee; --muted:#98a6b1; --line:#33414c; --soft:#25313a;
+  --accent:#4fb3c4; --accent-dk:#86d0dc; --accent-bg:#17323a;
+  --rope:#d29a5a; --rope-hi:#ff6b5a; --tick:#f3dfc3;
+  --sheave:#3a4752; --sheave-st:#a9b8c3; --block:#56656f; --block-st:#b8c6cf;
+  --load:#c99434; --load-st:#f0d08a; --hand:#6fb0ea; --react:#c08ae0;
+  --ceil:#8a99a5; --warn:#f0a065; --ok:#6fd19c; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 "Segoe UI",system-ui,-apple-system,sans-serif}
+header{background:linear-gradient(120deg,#0a3440,#0f5f70);color:#eaf6f8;padding:14px 20px 0}
+header .row{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;max-width:1500px;margin:0 auto}
+header h1{margin:0;font-size:22px;letter-spacing:-.01em}
+header p{margin:0;color:#b6d8de;font-size:13px}
+header a{color:#eaf6f8}
+nav.tabs{display:flex;gap:4px;max-width:1500px;margin:10px auto 0}
+nav.tabs button{font:inherit;font-weight:600;border:0;background:transparent;color:#b6d8de;padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer}
+nav.tabs button.on{background:var(--bg);color:var(--ink)}
+main{max-width:1500px;margin:0 auto;padding:14px 16px 40px}
+.tab{display:none}.tab.on{display:block}
+.sim{display:grid;grid-template-columns:300px minmax(0,1fr) 330px;gap:14px;align-items:start}
+@media (max-width:1250px){.sim{grid-template-columns:290px minmax(0,1fr)}.sim .res{grid-column:1 / -1}}
+@media (max-width:760px){.sim{grid-template-columns:1fr} main{padding:10px 10px 30px}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.card h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.card + .card{margin-top:12px}
+label.f{display:block;margin:10px 0 3px;font-weight:600;font-size:13px}
+label.f small{font-weight:400;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button,.seg button,.btn{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:5px 10px;border-radius:999px;cursor:pointer}
+.chips button.on,.seg button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;border-radius:0}
+.rowin{display:flex;gap:8px;align-items:center}
+.rowin input[type=range]{flex:1;min-width:0}
+input[type=number]{width:84px;font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+input[type=range]{accent-color:var(--accent)}
+.hint{color:var(--muted);font-size:12px;margin:4px 0 0}
+.fig{padding:6px}
+.fig svg{display:block;width:100%;height:auto;max-height:78vh}
+.figbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 8px 4px}
+.figbar .rowin{flex:1;min-width:180px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{background:var(--accent-bg);border-radius:8px;padding:8px 10px}
+.kpi b{display:block;font-size:19px;font-variant-numeric:tabular-nums;color:var(--accent-dk)}
+.kpi span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.kpi i{display:block;font-style:normal;font-size:12px;color:var(--muted)}
+.kpi.wide{grid-column:1 / -1}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:5px 6px;border-bottom:1px solid var(--soft);text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600}
+tr.hl td{background:var(--accent-bg)}
+.note{border-left:3px solid var(--accent);padding:6px 10px;background:var(--accent-bg);border-radius:0 6px 6px 0;margin-top:10px;font-size:13px}
+.note.warn{border-color:var(--warn)}
+.scroll{overflow-x:auto}
+.theory{max-width:900px}
+.theory h2{font-size:18px;margin:22px 0 6px;color:var(--accent-dk)}
+.theory h2:first-child{margin-top:0}
+.theory p,.theory li{max-width:78ch}
+.eq{font-family:"Cambria Math","Cambria",Georgia,serif;font-size:15.5px;background:var(--accent-bg);padding:6px 12px;border-radius:6px;display:inline-block;margin:4px 0}
+.cmp{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:1000px){.cmp{grid-template-columns:1fr}}
+svg text{font-family:"Segoe UI",system-ui,sans-serif}
+.svgtxt{fill:var(--ink)}
+.svgmut{fill:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div class="row">
+    <h1>Pulley Systems Explorer</h1>
+    <p>Mechanical advantage, rope tension and support loads for common pulley arrangements, with sheave friction. <a href="index.html">← All tools</a></p>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="on" data-tab="t-sim">Simulator</button>
+    <button data-tab="t-cmp">Compare</button>
+    <button data-tab="t-th">Theory</button>
+  </nav>
+</header>
+<main>
+<!-- ============ SIMULATOR ============ -->
+<section class="tab on" id="t-sim">
+ <div class="sim">
+  <div class="ctl">
+   <div class="card">
+    <h3>Arrangement</h3>
+    <div class="chips" id="arrChips"></div>
+    <div id="arrParams"></div>
+   </div>
+   <div class="card">
+    <h3>Load and friction</h3>
+    <label class="f">Load mass <small>kg</small></label>
+    <div class="rowin"><input type="range" id="kgR" min="1" max="2000" step="1"><input type="number" id="kgN" min="0.1" step="any"></div>
+    <label class="f">Operation</label>
+    <div class="seg" id="modeSeg"><button data-v="lift">Lift</button><button data-v="hold">Hold</button><button data-v="lower">Lower</button></div>
+    <div id="frictionBox">
+     <label class="f">Sheave efficiency η <small>tension ratio across one sheave</small></label>
+     <div class="rowin"><input type="range" id="etaR" min="0.80" max="1" step="0.005"><input type="number" id="etaN" min="0.5" max="1" step="0.005"></div>
+     <div class="chips" style="margin-top:6px" id="etaChips">
+      <button data-v="1">Ideal 1.00</button><button data-v="0.98">Rolling bearing 0.98</button><button data-v="0.96">Bronze bush 0.96</button><button data-v="0.91">Plain / dirty 0.91</button>
+     </div>
+    </div>
+    <label class="f">Weight of each moving block or pulley <small>N</small></label>
+    <div class="rowin"><input type="range" id="wR" min="0" max="500" step="1"><input type="number" id="wN" min="0" step="any"></div>
+    <label class="f">Lift height for travel and work <small>m</small></label>
+    <div class="rowin"><input type="range" id="HR" min="0.1" max="10" step="0.1"><input type="number" id="HN" min="0.01" step="any"></div>
+   </div>
+  </div>
+  <div class="card fig">
+   <div class="figbar">
+    <button class="btn" id="play">▶ Animate</button>
+    <div class="rowin"><span class="hint" style="margin:0">Position</span><input type="range" id="posR" min="0" max="1" step="0.001" value="0"></div>
+   </div>
+   <svg id="svg" viewBox="0 0 600 680" role="img" aria-label="Pulley arrangement diagram"></svg>
+   <p class="hint" style="padding:0 8px 6px">Rope thickness and colour follow tension. Lay marks on the rope show which way it runs. In blocks with several sheaves the sheaves are drawn side by side for clarity; in a real block they share one axle.</p>
+  </div>
+  <div class="res">
+   <div class="card">
+    <h3>Results</h3>
+    <div class="kpis" id="kpis"></div>
+    <div id="notes"></div>
+   </div>
+   <div class="card">
+    <h3>Rope tension in each part</h3>
+    <div class="scroll"><table id="tTable"></table></div>
+   </div>
+  </div>
+ </div>
+</section>
+<!-- ============ COMPARE ============ -->
+<section class="tab" id="t-cmp">
+ <div class="cmp">
+  <div class="card">
+   <h3>All arrangements at the current load, sheave efficiency and block weight, lifting</h3>
+   <div class="scroll"><table id="cmpTable"></table></div>
+   <p class="hint" id="cmpHint"></p>
+  </div>
+  <div class="card">
+   <h3>Block and tackle: actual MA against number of parts</h3>
+   <svg id="cmpChart" viewBox="0 0 460 320" style="width:100%;height:auto"></svg>
+   <p class="hint">Rove to disadvantage (hauling part leaves the fixed block), block weight ignored. Dashed lines are the limits η/(1−η) that no number of sheaves can exceed.</p>
+  </div>
+ </div>
+</section>
+<!-- ============ THEORY ============ -->
+<section class="tab" id="t-th">
+ <div class="card theory">
+  <h2>1. Velocity ratio comes from geometry</h2>
+  <p>The rope is treated as inextensible. If the moving block rises by <i>y</i>, every rope part that holds it shortens by <i>y</i>, and that length has to come out through the hauling part. With <i>n</i> parts supporting the moving block the hand moves <i>x = n·y</i>.</p>
+  <span class="eq">VR = x / y = number of rope parts supporting the moving block</span>
+  <h2>2. Ideal mechanical advantage from virtual work</h2>
+  <p>Without friction, work in equals work out, so <i>P·x = W·y</i> and the ideal mechanical advantage equals the velocity ratio. A pulley system never reduces the work; it trades force for distance.</p>
+  <span class="eq">IMA = W / P<sub>ideal</sub> = VR&nbsp;&nbsp;&nbsp;&nbsp;AMA = W / P<sub>actual</sub>&nbsp;&nbsp;&nbsp;&nbsp;η<sub>system</sub> = AMA / VR</span>
+  <h2>3. Friction makes the tension differ part to part</h2>
+  <p>Bearing friction and the stiffness of the rope bending round the sheave mean the rope leaves each sheave with less tension than it arrived with, on the side being pulled. The ratio is the sheave efficiency η. Values often used in hoist design are about 0.98 for sheaves on rolling bearings and 0.96 for bronze bushes; worn, dry or small-diameter sheaves are lower.</p>
+  <span class="eq">T<sub>slack side</sub> = η · T<sub>pulled side</sub></span>
+  <p>So, working away from the hauling part, each part carries η times the one before it while lifting. While lowering, the rope runs the other way and the ratio flips to 1/η: the hauling part is now the lightest. When the load is just held, friction can act either way, so the holding force can be anything between the lowering and lifting values. Hold mode here shows the frictionless value.</p>
+  <h2>4. Block and tackle</h2>
+  <p>Summing the supporting parts gives a geometric series. With <i>n</i> supporting parts:</p>
+  <span class="eq">Rove to disadvantage (haul from the fixed block):&nbsp; P = W(1−η) / [η(1−ηⁿ)]</span><br>
+  <span class="eq">Rove to advantage (haul from the moving block):&nbsp; P = W(1−η) / (1−ηⁿ)</span>
+  <p>As <i>n</i> grows, ηⁿ → 0 and the actual advantage tends to η/(1−η) or 1/(1−η). At η = 0.96 that ceiling is 24, but a tackle with 8 parts already gives only about 6.5. Each extra sheave adds less than the one before, while rope length, hand travel and reeving effort keep growing. This is why practical tackles rarely go beyond six to eight parts.</p>
+  <p>Hauling from the moving block adds one supporting part with the same blocks, but the hand then has to pull upward. A lead block that turns the pull downward adds one more sheave of friction and also adds the hauling force to the anchor load.</p>
+  <h2>5. Support load is more than the load</h2>
+  <p>The fixed block or anchor carries the load, the moving block, and the hauling force if the hauling part pulls downward:</p>
+  <span class="eq">F<sub>support</sub> = W + w<sub>block</sub> + P&nbsp;&nbsp;(pull down)&nbsp;&nbsp;&nbsp;&nbsp;F<sub>support</sub> = W + w<sub>block</sub> − P&nbsp;&nbsp;(pull up)</span>
+  <p>For a single fixed pulley with equal tensions T on both legs and an angle θ between the legs, the resultant is 2T·cos(θ/2): twice the load when the legs are parallel, 1.41 T at 90°, and equal to T at 120°.</p>
+  <h2>6. Cascade (first system): 2ⁿ</h2>
+  <p>Each movable pulley hangs in its own rope, one end anchored, the other tied to the pulley above. Each stage halves the force, so VR = 2ⁿ. The price is headroom and travel: the top pulley moves 2ⁿ⁻¹ times as far as the load, and every stage needs its own anchor.</p>
+  <h2>7. Third system: 2ⁿ − 1</h2>
+  <p>All ropes are tied to one bar carrying the load; the movable pulleys hang below the fixed one and move down as the load rises. Tensions double from rope to rope, giving 1 + 2 + 4 + … = 2ⁿ − 1. Unusually, the weights of the movable pulleys help the effort here, because they add tension to the ropes that hold the bar.</p>
+  <h2>8. Differential (Weston) hoist</h2>
+  <p>Two sheaves of radii R and r are cast together. One turn winds 2πR of chain on and pays 2πr off, so the loop round the lower pulley shortens by 2π(R−r) and the load rises by half of that, while the hand chain moves 2πR.</p>
+  <span class="eq">VR = 2R / (R − r)</span>
+  <p>A large VR comes from a small difference R − r. These hoists are built with efficiency below 50%. If the friction work during lifting exceeds the useful work, it also exceeds the work the load can release when lowering, so the load cannot run back by itself. The efficiency in the lowering direction is 2 − 1/η, which is negative when η &lt; 0.5. That is the self-locking condition, and it is why a chain block holds its load when you let go.</p>
+  <h2>9. Sizing the rope</h2>
+  <p>Size the rope on the highest tension, which is the hauling part while lifting, not on W divided by the number of parts. Minimum breaking load should be at least the design factor times that tension; 5 is a common figure for general lifting rope, but use the factor the applicable lifting standard sets. Also check sheave diameter to rope diameter ratio, since bending fatigue and the sheave efficiency both get worse on small sheaves.</p>
+ </div>
+</section>
+</main>
+<script>
+"use strict";
+var VERSION = "1.0.0";
+var G0 = 9.80665;
+var S = { arr:"tackle", kg:100, mode:"lift", eta:0.96, w:20, H:1, n:4, reeve:"dis", k:3, kt:3, theta:0, R:120, r:105, etaD:0.35, f:0 };
+
+var ARR = [
+  { id:"fixed",   name:"Fixed pulley" },
+  { id:"movable", name:"Movable pulley" },
+  { id:"tackle",  name:"Block and tackle" },
+  { id:"cascade", name:"Cascade 2ⁿ" },
+  { id:"third",   name:"Third system 2ⁿ−1" },
+  { id:"diff",    name:"Differential hoist" }
+];
+var TACKLE_NAMES = { 2:"gun tackle", 3:"luff tackle", 4:"two-fold purchase", 5:"double luff", 6:"three-fold purchase", 7:"three-fold, one extra part", 8:"four-fold purchase" };
+
+/* ---------- formatting ---------- */
+function fN(x){ var a=Math.abs(x); if(a>=10000) return (x/1000).toFixed(1)+" kN"; if(a>=1000) return (x/1000).toFixed(2)+" kN"; if(a>=100) return x.toFixed(0)+" N"; return x.toFixed(1)+" N"; }
+function fK(x){ return (x/G0).toFixed(1)+" kgf"; }
+function f2(x){ return (Math.abs(x)>=100? x.toFixed(1) : x.toFixed(2)); }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+
+/* ---------- statics ---------- */
+function effFactor(s){ return s.mode==="lift" ? s.eta : s.mode==="lower" ? 1/s.eta : 1; }
+
+function solve(s){
+  var W = s.kg*G0, w = s.w, e = effFactor(s), o = { W:W, T:{}, rows:[], notes:[] }, i, j;
+  if(s.arr==="fixed"){
+    var P = W/e, th = s.theta*Math.PI/180;
+    o.IMA=1; o.P=P; o.T={s0:P, s1:W}; o.sheaves=1; o.moving=0;
+    o.rows=[["s0","Hauling part (hand)",P],["s1","Load part",W]];
+    var Rx=P*Math.sin(th), Ry=W+P*Math.cos(th);
+    o.react=Math.hypot(Rx,Ry); o.reactAng=Math.atan2(Rx,Ry)*180/Math.PI; o.pullDown = Math.cos(th)>0;
+    o.notes.push("A fixed pulley gives no force advantage; it only changes the direction of pull. The anchor feels the vector sum of both legs: "+fN(o.react)+" at "+o.reactAng.toFixed(1)+"° from vertical.");
+  } else if(s.arr==="movable" || s.arr==="tackle"){
+    var n = s.arr==="movable"?2:s.n, adv = s.arr==="movable" || s.reeve==="adv", m = adv?n-1:n, sum=0;
+    for(j=(adv?0:1); j<=m; j++) sum += Math.pow(e,j);
+    var P2=(W+w)/sum;
+    o.IMA=n; o.P=P2; o.sheaves=adv?n-1:n; o.moving=1;
+    for(j=0;j<=m;j++){
+      var T=P2*Math.pow(e,j); o.T["s"+j]=T;
+      var role = j===0 ? (adv?"Hauling part, pulled up (supports)":"Hauling part, pulled down") : (j===m ? "Part "+j+" to dead end" : "Part "+j);
+      o.rows.push(["s"+j, role, T]);
+    }
+    o.react = W + w + (adv ? -P2 : P2); o.pullDown=!adv;
+    if(s.arr==="tackle"){
+      var lim = adv ? 1/(1-s.eta) : s.eta/(1-s.eta);
+      if(s.mode==="lift" && s.eta<1) o.notes.push("Friction ceiling for this reeving: AMA can never exceed "+(adv?"1/(1−η)":"η/(1−η)")+" = "+lim.toFixed(1)+", however many sheaves are added.");
+      o.notes.push("Rove to "+(adv?"advantage: the hauling part leaves the moving block and helps hold it, so the anchor carries W + w − P.":"disadvantage: the hauling part leaves the fixed block, so the anchor carries W + w + P."));
+    } else {
+      o.notes.push("The rope is anchored overhead and pulled upward, so half the load hangs on the anchor and half on the hand (less with friction on the anchor side).");
+    }
+  } else if(s.arr==="cascade"){
+    var k=s.k, load=W+w, Tk=0;
+    for(i=1;i<=k;i++){
+      var Ti=load/(1+e); o.T["r"+i+"R"]=Ti; o.T["r"+i+"L"]=e*Ti;
+      o.rows.push(["r"+i+"L","Rope "+i+", anchored leg",e*Ti]);
+      o.rows.push(["r"+i+"R", i<k ? "Rope "+i+", leg to pulley "+(i+1) : "Rope "+i+", leg to fixed pulley", Ti]);
+      load=Ti+w; Tk=Ti;
+    }
+    var P3=Tk/e; o.T.h=P3; o.rows.push(["h","Hauling part (over fixed pulley)",P3]);
+    o.IMA=Math.pow(2,k); o.P=P3; o.sheaves=k+1; o.moving=k; o.react=W+k*w+P3; o.pullDown=true;
+    o.notes.push("Each pulley carries the weight of the pulleys below it, so block weight costs more here than in a single tackle. The top movable pulley travels "+Math.pow(2,k-1)+"× the load travel.");
+  } else if(s.arr==="third"){
+    var kt=s.kt, a=[], b=[];
+    a[kt]=1; b[kt]=0;
+    for(i=kt;i>=2;i--){ a[i-1]=(1+e)*a[i]; b[i-1]=(1+e)*b[i]+w; }
+    var A=0,B=0; for(i=1;i<=kt;i++){ A+=e*a[i]; B+=e*b[i]; }
+    var P4=(W-B)/A;
+    for(i=1;i<=kt;i++){
+      var Ri=a[i]*P4+b[i]; o.T["r"+i+"R"]=Ri; o.T["r"+i+"L"]=e*Ri;
+      o.rows.push(["r"+i+"L","Rope "+i+", leg to load bar",e*Ri]);
+      o.rows.push(["r"+i+"R", i<kt ? "Rope "+i+", leg to pulley "+(i+1) : "Rope "+i+", hauling part", Ri]);
+    }
+    o.IMA=Math.pow(2,kt)-1; o.P=P4; o.sheaves=kt; o.moving=kt-1; o.react=(1+e)*o.T.r1R; o.pullDown=true;
+    o.notes.push("The movable pulleys move down while the load bar rises, and their weight helps the effort.");
+    if(P4>0 && W/P4>o.IMA) o.notes.push("The actual MA here exceeds the velocity ratio because the pulley weights do part of the lifting; set the pulley weight to 0 to see friction alone.");
+    if(P4<=0) o.notes.push("!The pulley weights alone outweigh the load: the bar would rise with no effort.");
+  } else if(s.arr==="diff"){
+    var R=s.R, r=Math.min(s.r, s.R-1), IMA=2*R/(R-r), Wt=W+w, ideal=Wt/IMA, ed=s.etaD, P5;
+    if(s.mode==="lift") P5=ideal/ed;
+    else if(s.mode==="lower") P5=ideal*(1/ed-2);
+    else P5 = ed<=0.5 ? 0 : ideal*(2-1/ed);
+    o.IMA=IMA; o.P=P5; o.sheaves=3; o.moving=1; o.pullDown=true;
+    o.T={A:Wt/2, B:Wt/2, hand:Math.max(P5,0), slack:0};
+    o.rows=[["A","Load chain, large-sheave side",Wt/2],["B","Load chain, small-sheave side",Wt/2],["hand","Hand chain",Math.abs(P5)]];
+    o.react=Wt+Math.abs(P5); o.selfLock = ed<=0.5;
+    o.notes.push(o.selfLock ? "Self-locking: efficiency "+(ed*100).toFixed(0)+"% is below 50%, so the reverse efficiency 2 − 1/η = "+(2-1/ed).toFixed(2)+" is negative and the load cannot run down on its own." : "!Not self-locking: efficiency above 50% means the load will run down if the hand chain is released.");
+    if(s.mode==="lower") o.notes.push(P5>0 ? "Lowering needs a driving force of "+fN(P5)+" on the chain (equivalent at the large sheave), applied on the other side of the hand chain." : "Lowering: the chain must be held back with "+fN(-P5)+".");
+    if(s.mode==="hold") o.notes.push(o.selfLock ? "Holding: no effort needed." : "Holding: at least "+fN(P5)+" needed on the hand chain.");
+    o.notes.push("Lower-pulley friction is folded into the overall efficiency, so both load strands are shown at W/2.");
+  }
+  if(s.mode==="hold" && s.arr!=="diff") o.notes.push("Hold shows the frictionless value. Static friction can help or oppose, so the real holding force lies anywhere between the Lower and Lift values.");
+  if(s.mode==="lower" && s.arr!=="diff") o.notes.push("Lowering: the rope runs the other way, so friction now helps you hold the load back and the hauling part is the lightest part.");
+  var mx=0; for(var key in o.T) if(o.T[key]>mx) mx=o.T[key];
+  o.Tmax=mx; o.AMA = o.P>0 ? W/o.P : Infinity; o.effSys = o.AMA/o.IMA;
+  return o;
+}
+
+/* ---------- rope builder ---------- */
+function Rope(x,y,offset){ this.pts=[[x,y]]; this.len=0; this.segs=[]; this.wheels=[]; this.off=offset||0; }
+Rope.prototype.last=function(){ return this.pts[this.pts.length-1]; };
+Rope.prototype.line=function(x,y,id){ var p=this.last(); this.segs.push({a:[p[0],p[1]],b:[x,y],id:id}); this.len+=Math.hypot(x-p[0],y-p[1]); this.pts.push([x,y]); return this; };
+Rope.prototype.arc=function(cx,cy,r,a0,a1,kind){
+  var nn=Math.max(8,Math.ceil(Math.abs(a1-a0)*r/4));
+  for(var i=1;i<=nn;i++){ var a=a0+(a1-a0)*i/nn; this.pts.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]); }
+  if(kind) this.wheels.push({cx:cx,cy:cy,r:r,kind:kind,ang:-(a1>a0?1:-1)*(this.len+this.off)/r});
+  this.len+=r*Math.abs(a1-a0); return this;
+};
+Rope.prototype.tail=function(dx,dy,rest,id){ var p=this.last(); this.hand={x:p[0]+dx*rest,y:p[1]+dy*rest,dx:dx,dy:dy}; return this.line(this.hand.x,this.hand.y,id); };
+
+/* ---------- geometry per arrangement (h = lift in px) ---------- */
+function geom(s,h,Lt){
+  var G={ropes:[],blocks:[],straps:[],extraWheels:[],beams:[],anchors:[],hmax:120,load:null,hand:null,bar:null};
+  var PI=Math.PI, i, j;
+  function rest(idx,def,r){ return Lt ? Lt[idx]-r.len : def; }
+  if(s.arr==="fixed"){
+    var rho=34, cx=300, cy=130, th=s.theta*PI/180, yl=440-h;
+    G.hmax=200;
+    var R0=new Rope(cx-rho, yl-34);
+    R0.line(cx-rho,cy,"s1").arc(cx,cy,rho,PI,2*PI-th,"fixed");
+    R0.tail(Math.sin(th),Math.cos(th),rest(0,280,R0),"s0");
+    G.ropes.push(R0); G.hand=R0.hand;
+    G.straps.push([cx,cy,cx,46]); G.beams.push([cx-70,cx+70]);
+    G.load={x:cx-rho, y:yl-34};
+  } else if(s.arr==="movable" || s.arr==="tackle"){
+    var n=s.arr==="movable"?2:s.n, adv=s.arr==="movable"||s.reeve==="adv", m=adv?n-1:n;
+    var D=Math.min(48,400/(m+1)), r=D/2, x0=300-m*D/2, Yf=140, Ym=470-h, pad=Math.max(6,r*0.35);
+    G.hmax=230;
+    var X=function(q){return x0+q*D;};
+    var isTop=function(q){return adv ? (q%2===1) : (q%2===0);};
+    var yP=function(q){return isTop(q)?Yf:Ym;};
+    var deadAtBottom=isTop(m-1);
+    var topC=[],botC=[];
+    for(j=0;j<m;j++){ (isTop(j)?topC:botC).push((X(j)+X(j+1))/2); }
+    var noTop = topC.length===0;
+    var deadY = deadAtBottom ? Ym-r-pad : (noTop ? 46 : Yf+r+pad);
+    var R1=new Rope(X(m),deadY);
+    R1.line(X(m),yP(m-1),"s"+m);
+    for(j=m-1;j>=0;j--){
+      var cxj=(X(j)+X(j+1))/2, top=isTop(j);
+      R1.arc(cxj,yP(j),r,0,top?-PI:PI,top?"fixed":"moving");
+      if(j>0) R1.line(X(j),yP(j-1),"s"+j);
+    }
+    var dirUp = !isTop(0);
+    R1.tail(0,dirUp?-1:1,rest(0,dirUp?70:300,R1),"s0");
+    G.ropes.push(R1); G.hand=R1.hand;
+    function blk(cs,y,dx){ var xs=cs.slice(); var lo=Math.min.apply(null,xs)-r-pad, hi=Math.max.apply(null,xs)+r+pad;
+      if(dx!=null){ lo=Math.min(lo,dx-pad); hi=Math.max(hi,dx+pad); } return {x0:lo,x1:hi,y0:y-r-pad,y1:y+r+pad}; }
+    if(!noTop){ var fb=blk(topC,Yf,deadAtBottom?null:X(m)); G.blocks.push(fb); G.straps.push([(fb.x0+fb.x1)/2,fb.y0,(fb.x0+fb.x1)/2,46]); G.beams.push([fb.x0-30,fb.x1+30]); }
+    else { G.beams.push([X(m)-40,X(m)+40]); G.anchors.push([X(m),46]); }
+    var mb=blk(botC,Ym,deadAtBottom?X(m):null); G.blocks.push(mb);
+    G.load={x:(mb.x0+mb.x1)/2, y:mb.y1};
+    if(deadAtBottom) G.anchors.push([X(m),deadY]); else if(!noTop) G.anchors.push([X(m),deadY]);
+  } else if(s.arr==="cascade"){
+    var k=s.k, rr=19, rf=19, x1=300-(k*rr+2*rf)/2+rr*0.5, Yc=46, Yfx=Yc+48;
+    var gap = k<=3 ? 110 : (k===4 ? 85 : 68);
+    var y0=function(q){return 480-(q-1)*gap;};
+    G.hmax=Math.min(130,(y0(k)-(Yfx+rf+rr+26))/Math.pow(2,k-1));
+    var xs=function(q){return x1+(q-1)*rr;};
+    var ys=function(q){return y0(q)-h*Math.pow(2,q-1);};
+    var xf=xs(k)+rr+rf;
+    for(i=1;i<=k;i++){
+      var Rc=new Rope(xs(i)-rr,Yc);
+      Rc.line(xs(i)-rr,ys(i),"r"+i+"L").arc(xs(i),ys(i),rr,PI,0,"moving");
+      if(i<k){ Rc.line(xs(i)+rr, ys(i+1)+rr+12, "r"+i+"R"); }
+      else { Rc.line(xs(k)+rr,Yfx,"r"+k+"R").arc(xf,Yfx,rf,PI,2*PI,"fixed"); Rc.tail(0,1,rest(i-1,300,Rc),"h"); G.hand=Rc.hand; }
+      G.ropes.push(Rc); G.anchors.push([xs(i)-rr,Yc]);
+      G.straps.push([xs(i),ys(i),xs(i),ys(i)+rr+12]);
+    }
+    G.straps.push([xf,Yfx,xf,Yc]);
+    G.beams.push([xs(1)-rr-40, xf+rf+40]);
+    G.load={x:xs(1), y:ys(1)+rr+12};
+  } else if(s.arr==="third"){
+    var kt=s.kt, rt=21, xt1=300-(kt*rt)/2, Yct=46, gapT=70, yt1=105;
+    var xt=function(q){return xt1+(q-1)*rt;};
+    var yt=function(q){return yt1+(q-1)*gapT+(Math.pow(2,q-1)-1)*h;};
+    var yb0=yt1+(kt-1)*gapT+200, yb=yb0-h;
+    G.hmax=Math.min(130,(200-rt-12-36)/Math.pow(2,kt-1));
+    for(i=1;i<=kt;i++){
+      var Rt=new Rope(xt(i)-rt,yb);
+      Rt.line(xt(i)-rt,yt(i),"r"+i+"L").arc(xt(i),yt(i),rt,PI,2*PI,i===1?"fixed":"moving");
+      if(i<kt) Rt.line(xt(i)+rt, yt(i+1)-rt-12, "r"+i+"R");
+      else { Rt.tail(0,1,rest(i-1,260,Rt),"r"+kt+"R"); G.hand=Rt.hand; }
+      G.ropes.push(Rt);
+      if(i>1) G.straps.push([xt(i),yt(i),xt(i),yt(i)-rt-12]);
+      G.anchors.push([xt(i)-rt,yb]);
+    }
+    G.straps.push([xt(1),yt(1),xt(1),Yct]);
+    G.beams.push([xt(1)-80,xt(1)+80]);
+    G.bar={x0:xt(1)-rt-16,x1:xt(kt)-rt+16,y:yb};
+    G.load={x:(G.bar.x0+G.bar.x1)/2, y:yb+5};
+  } else if(s.arr==="diff"){
+    var Rp=66, rp=Math.max(6,66*Math.min(s.r,s.R-1)/s.R), cxd=290, Cy=110, xL=cxd+(Rp-rp)/2, rL=(Rp+rp)/2, yL=370-h;
+    G.hmax=70;
+    var phi=2*h/(Rp-rp);
+    var fixedPart=PI*Rp+PI*rL+PI*rp+PI*(Rp+rp)/2;
+    var Ltot = Lt ? Lt[0] : fixedPart+2*(370-Cy)+2*(370+rL+88-Cy);
+    var ysd=Cy+(Ltot-fixedPart-2*(yL-Cy))/2;
+    var Rd=new Rope(cxd-Rp,Cy,Rp*phi);
+    Rd.arc(cxd,Cy,Rp,PI,2*PI,null).line(cxd+Rp,yL,"A").arc(xL,yL,rL,0,PI,"moving").line(cxd-rp,Cy,"B")
+      .arc(cxd,Cy,rp,PI,2*PI,null).line(cxd+rp,ysd,"slack").arc(cxd+(rp-Rp)/2,ysd,(Rp+rp)/2,0,PI,null).line(cxd-Rp,Cy,"hand");
+    Rd.closed=true; Rd.closedLen=Ltot; Rd.matShift=-Rp*phi;
+    G.ropes.push(Rd);
+    G.diff={cx:cxd,cy:Cy,R:Rp,r:rp,phi:phi};
+    G.straps.push([cxd,Cy,cxd,46]); G.beams.push([cxd-90,cxd+90]);
+    G.straps.push([xL,yL,xL,yL+rL+12]);
+    G.load={x:xL,y:yL+rL+12};
+    var hy=Cy+(ysd-Cy)*0.55; G.hand={x:cxd-Rp,y:hy,dx:0,dy:1};
+    G.slackX=cxd+rp;
+  }
+  return G;
+}
+
+function geomAt(s,f){
+  var G0=geom(s,0,null), Lt=G0.ropes.map(function(r){ return r.closed? r.closedLen : r.len; });
+  return geom(s,f*G0.hmax,Lt);
+}
+
+/* ---------- SVG rendering ---------- */
+var svg=document.getElementById("svg");
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function mix(c1,c2,t){
+  function p(c){ c=c.replace("#",""); if(c.length===3) c=c.split("").map(function(x){return x+x;}).join(""); return [parseInt(c.substr(0,2),16),parseInt(c.substr(2,2),16),parseInt(c.substr(4,2),16)]; }
+  var a=p(c1),b=p(c2); return "rgb("+a.map(function(v,i){return Math.round(v+(b[i]-v)*t);}).join(",")+")";
+}
+function clipSeg(a,b){
+  var t0=0,t1=1,dx=b[0]-a[0],dy=b[1]-a[1];
+  function lim(p,q){ if(Math.abs(p)<1e-9) return q>=0; var t=q/p; if(p<0){ if(t>t1) return false; if(t>t0) t0=t; } else { if(t<t0) return false; if(t<t1) t1=t; } return true; }
+  if(!lim(-dx,a[0]-8)||!lim(dx,592-a[0])||!lim(-dy,a[1]-16)||!lim(dy,664-a[1])) return null;
+  return [[a[0]+dx*t0,a[1]+dy*t0],[a[0]+dx*t1,a[1]+dy*t1]];
+}
+function draw(){
+  var FSK=Math.min(1.8,Math.max(1,600/(svg.clientWidth||600))); function fs(v){ return (v*FSK).toFixed(1); }
+  var sol=CUR, G=geomAt(S,S.f), out=[], C={rope:css("--rope"),hi:css("--rope-hi"),tick:css("--tick"),sh:css("--sheave"),shs:css("--sheave-st"),blk:css("--block"),blks:css("--block-st"),load:css("--load"),loads:css("--load-st"),hand:css("--hand"),ceil:css("--ceil"),ink:css("--ink"),mut:css("--muted"),panel:css("--panel")};
+  out.push('<defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="'+C.ceil+'" stroke-width="2"/></pattern>'+
+    '<marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="'+C.hand+'"/></marker></defs>');
+  G.beams.forEach(function(b){ out.push('<rect x="'+b[0]+'" y="26" width="'+(b[1]-b[0])+'" height="20" fill="url(#hatch)"/><line x1="'+b[0]+'" y1="46" x2="'+b[1]+'" y2="46" stroke="'+C.ceil+'" stroke-width="3"/>'); });
+  G.straps.forEach(function(s){ out.push('<line x1="'+s[0]+'" y1="'+s[1]+'" x2="'+s[2]+'" y2="'+s[3]+'" stroke="'+C.blks+'" stroke-width="5" stroke-linecap="round"/>'); });
+  G.blocks.forEach(function(b){ out.push('<rect x="'+b.x0+'" y="'+b.y0+'" width="'+(b.x1-b.x0)+'" height="'+(b.y1-b.y0)+'" rx="8" fill="'+C.blk+'" fill-opacity=".35" stroke="'+C.blks+'" stroke-width="1.5"/>'); });
+  if(G.bar) out.push('<rect x="'+G.bar.x0+'" y="'+(G.bar.y-5)+'" width="'+(G.bar.x1-G.bar.x0)+'" height="10" rx="3" fill="'+C.blk+'" stroke="'+C.blks+'"/>');
+  // wheels
+  function wheel(w,stroke){ var sp=''; for(var q=0;q<3;q++){ var a=w.ang+q*2*Math.PI/3; sp+='<line x1="'+w.cx+'" y1="'+w.cy+'" x2="'+(w.cx+0.78*w.r*Math.cos(a))+'" y2="'+(w.cy+0.78*w.r*Math.sin(a))+'" stroke="'+C.shs+'" stroke-width="2"/>'; }
+    return '<circle cx="'+w.cx+'" cy="'+w.cy+'" r="'+w.r+'" fill="'+C.sh+'" stroke="'+(stroke||C.shs)+'" stroke-width="1.5"/><circle cx="'+w.cx+'" cy="'+w.cy+'" r="'+(w.r*0.86)+'" fill="none" stroke="'+C.shs+'" stroke-opacity=".5"/>'+sp; }
+  if(G.diff){ var d=G.diff; out.push(wheel({cx:d.cx,cy:d.cy,r:d.R,ang:-d.phi})); out.push('<circle cx="'+d.cx+'" cy="'+d.cy+'" r="'+d.r+'" fill="'+C.sh+'" stroke="'+C.shs+'" stroke-width="2" stroke-dasharray="4 3"/>'); }
+  G.ropes.forEach(function(r){ r.wheels.forEach(function(w){ out.push(wheel(w)); }); });
+  // ropes
+  var Tmax=sol.Tmax||1;
+  G.ropes.forEach(function(r){
+    var pl=r.pts.map(function(p){return p[0].toFixed(1)+","+p[1].toFixed(1);}).join(" ");
+    out.push('<polyline points="'+pl+'" fill="none" stroke="'+C.rope+'" stroke-width="2.4" stroke-linejoin="round"/>');
+    r.segs.forEach(function(sg){
+      var T=sol.T[sg.id]; if(T==null) return;
+      var t=Math.max(0,Math.min(1,T/Tmax)), dash = sg.id==="slack" ? ' stroke-dasharray="6 5" stroke-opacity=".55"' : '';
+      out.push('<line x1="'+sg.a[0]+'" y1="'+sg.a[1]+'" x2="'+sg.b[0]+'" y2="'+sg.b[1]+'" stroke="'+(sg.id==="slack"?C.rope:mix(C.rope,C.hi,t))+'" stroke-width="'+(sg.id==="slack"?2.4:(2.2+4*t)).toFixed(2)+'" stroke-linecap="round"'+dash+'/>');
+    });
+    // lay marks
+    var spacing=13, cum=[0], ii;
+    for(ii=1;ii<r.pts.length;ii++) cum.push(cum[ii-1]+Math.hypot(r.pts[ii][0]-r.pts[ii-1][0],r.pts[ii][1]-r.pts[ii-1][1]));
+    var L=cum[cum.length-1], marks=[];
+    if(r.closed){ var sh=((r.matShift%spacing)+spacing)%spacing; for(var sPos=sh; sPos<L; sPos+=spacing) marks.push(sPos); }
+    else { for(var s2=spacing*0.5; s2<L; s2+=spacing) marks.push(s2); }
+    var seg=1, mk='';
+    marks.forEach(function(sv){ while(seg<cum.length-1 && cum[seg]<sv) seg++; var a=r.pts[seg-1], b=r.pts[seg], ln=(cum[seg]-cum[seg-1])||1, tt=(sv-cum[seg-1])/ln;
+      var x=a[0]+(b[0]-a[0])*tt, y=a[1]+(b[1]-a[1])*tt; if(x<0||x>600||y<0||y>680) return;
+      var ux=(b[0]-a[0])/ln, uy=(b[1]-a[1])/ln; mk+='M'+(x-uy*3-ux*1.5).toFixed(1)+','+(y+ux*3-uy*1.5).toFixed(1)+'L'+(x+uy*3+ux*1.5).toFixed(1)+','+(y-ux*3+uy*1.5).toFixed(1); });
+    out.push('<path d="'+mk+'" stroke="'+C.tick+'" stroke-opacity=".75" stroke-width="1.3" fill="none"/>');
+  });
+  // axles
+  G.ropes.forEach(function(r){ r.wheels.forEach(function(w){ out.push('<circle cx="'+w.cx+'" cy="'+w.cy+'" r="3.2" fill="'+C.shs+'"/>'); }); });
+  if(G.diff) out.push('<circle cx="'+G.diff.cx+'" cy="'+G.diff.cy+'" r="4" fill="'+C.shs+'"/>');
+  G.anchors.forEach(function(a){ out.push('<circle cx="'+a[0]+'" cy="'+a[1]+'" r="4" fill="'+C.panel+'" stroke="'+C.blks+'" stroke-width="2"/>'); });
+  // tension labels
+  G.ropes.forEach(function(r){ r.segs.forEach(function(sg,si){
+    var T=sol.T[sg.id]; if(T==null||sg.id==="slack"||sg.id==="hand") return;
+    var c=clipSeg(sg.a,sg.b); if(!c) return;
+    var len=Math.hypot(c[1][0]-c[0][0],c[1][1]-c[0][1]); if(len<46) return;
+    var tt=0.5+(si%2?0.17:-0.17), mx=c[0][0]+(c[1][0]-c[0][0])*tt, my=c[0][1]+(c[1][1]-c[0][1])*tt, ang=Math.atan2(c[1][1]-c[0][1],c[1][0]-c[0][0])*180/Math.PI;
+    if(ang>90) ang-=180; if(ang<-90) ang+=180;
+    var ar=ang*Math.PI/180; if(Math.abs(Math.cos(ar))<0.3 && Math.sin(ar)<0){ ang+=180; ar=ang*Math.PI/180; }
+    var ux=Math.sin(ar), uy=-Math.cos(ar);
+    var lx2=(mx+ux*(3+2*FSK)).toFixed(1), ly2=(my+uy*(3+2*FSK)).toFixed(1);
+    out.push('<text x="'+lx2+'" y="'+ly2+'" transform="rotate('+ang.toFixed(1)+' '+lx2+' '+ly2+')" text-anchor="middle" font-size="'+fs(11)+'" font-weight="600" fill="'+C.ink+'" stroke="'+C.panel+'" stroke-width="3" paint-order="stroke">'+fN(T)+'</text>');
+  }); });
+  // load
+  if(G.load){ var lx=G.load.x, ly=G.load.y, bw=74, bh=50;
+    out.push('<line x1="'+lx+'" y1="'+ly+'" x2="'+lx+'" y2="'+(ly+22)+'" stroke="'+C.blks+'" stroke-width="2.5"/>');
+    out.push('<rect x="'+(lx-bw/2)+'" y="'+(ly+22)+'" width="'+bw+'" height="'+bh+'" rx="4" fill="'+C.load+'" stroke="'+C.loads+'" stroke-width="1.5"/>');
+    out.push('<text x="'+lx+'" y="'+(ly+43)+'" text-anchor="middle" font-size="'+fs(13)+'" font-weight="700" fill="#2a1e05">W</text><text x="'+lx+'" y="'+(ly+61)+'" text-anchor="middle" font-size="'+fs(11.5)+'" fill="#2a1e05">'+(S.kg>=100?S.kg.toFixed(0):S.kg.toFixed(1))+' kg</text>');
+  }
+  // hand
+  if(G.hand){ var hx=Math.max(14,Math.min(586,G.hand.x)), hy=Math.max(20,Math.min(640,G.hand.y)), L2=40, dx=G.hand.dx, dy=G.hand.dy;
+    var lift=S.mode!=="lower", ax=lift?dx:-dx, ay=lift?dy:-dy;
+    var tx=hx+ax*L2, ty=hy+ay*L2;
+    if(ty>660){ hy-= (ty-660); ty=660; } if(ty<14){ hy+=(14-ty); ty=14; }
+    out.push('<circle cx="'+hx+'" cy="'+hy+'" r="7" fill="'+C.hand+'" fill-opacity=".25" stroke="'+C.hand+'" stroke-width="2"/>');
+    out.push('<line x1="'+hx+'" y1="'+hy+'" x2="'+(hx+ax*L2)+'" y2="'+(hy+ay*L2)+'" stroke="'+C.hand+'" stroke-width="3" marker-end="url(#arw)"/>');
+    var lab=(S.mode==="lower"?"Hold back ":"P = ")+fN(Math.abs(sol.P));
+    if(S.arr==="diff"&&S.mode!=="lift") lab = sol.P>0? "Drive "+fN(sol.P) : (sol.P===0?"P = 0 (locks)":"Hold back "+fN(-sol.P));
+    var anchor = (hx>430 || (G.load && hx<G.load.x-20)) ? "end" : "start", lxp = anchor==="end" ? hx-12 : hx+12;
+    out.push('<text x="'+lxp+'" y="'+(hy+(ay>0?-8:18))+'" text-anchor="'+anchor+'" font-size="'+fs(13)+'" font-weight="700" fill="'+C.hand+'" stroke="'+C.panel+'" stroke-width="3" paint-order="stroke">'+lab+'</text>');
+  }
+  // header text
+  if(FSK<1.3) out.push('<text x="14" y="18" font-size="'+fs(12.5)+'" fill="'+C.mut+'">'+esc(title())+'</text>');
+  out.push('<text x="586" y="18" text-anchor="end" font-size="'+fs(12.5)+'" font-weight="700" fill="'+C.ink+'">VR '+f2(sol.IMA)+' · AMA '+(isFinite(sol.AMA)?f2(sol.AMA):"∞")+'</text>');
+  svg.innerHTML=out.join("");
+}
+function title(){
+  if(S.arr==="tackle") return S.n+" parts, rove to "+(S.reeve==="adv"?"advantage":"disadvantage")+(TACKLE_NAMES[S.n]&&S.reeve==="dis"?" ("+TACKLE_NAMES[S.n]+")":"");
+  if(S.arr==="cascade") return S.k+" movable pulleys in cascade";
+  if(S.arr==="third") return S.kt+" pulleys, third system";
+  if(S.arr==="fixed") return "Pull "+S.theta+"° from vertical";
+  if(S.arr==="diff") return "R "+S.R+" mm, r "+S.r+" mm";
+  return "Single movable pulley";
+}
+
+/* ---------- results panel ---------- */
+var CUR=null;
+function kpi(label,val,sub,wide){ return '<div class="kpi'+(wide?' wide':'')+'"><span>'+label+'</span><b>'+val+'</b>'+(sub?'<i>'+sub+'</i>':'')+'</div>'; }
+function results(){
+  var o=CUR, P=o.P, h=[];
+  var plab = S.mode==="lift" ? "Effort to lift" : S.mode==="lower" ? (S.arr==="diff"&&P>0 ? "Effort to drive down" : "Effort to hold back while lowering") : "Effort to hold";
+  h.push(kpi(plab, fN(Math.abs(P)), fK(Math.abs(P))+" · load "+fN(o.W),true));
+  h.push(kpi("Velocity ratio (IMA)", f2(o.IMA), "ideal advantage"));
+  h.push(kpi("Actual MA", isFinite(o.AMA)&&o.AMA>0?f2(o.AMA):"—", S.mode==="lift"?"W / P":"in this mode"));
+  h.push(kpi("System efficiency", S.mode==="lift"&&isFinite(o.effSys)? (o.effSys*100).toFixed(1)+" %":"—", S.mode==="lift"?"AMA / VR":"lifting only"));
+  h.push(kpi("Sheaves", o.sheaves, o.moving+" moving"));
+  h.push(kpi("Highest rope tension", fN(o.Tmax), "rope MBL ≥ "+fN(5*o.Tmax)+" at factor 5"));
+  h.push(kpi("Support / anchor load", fN(o.react), fK(o.react)));
+  var travel=o.IMA*S.H;
+  h.push(kpi("Hand travel", travel.toFixed(2)+" m", "to move the load "+S.H+" m"));
+  if(S.mode==="lift") h.push(kpi("Work in / out", (P*travel/1000).toFixed(2)+" / "+(o.W*S.H/1000).toFixed(2)+" kJ", "friction loss "+((P*travel-o.W*S.H)/1000).toFixed(2)+" kJ"));
+  document.getElementById("kpis").innerHTML=h.join("");
+  document.getElementById("notes").innerHTML=o.notes.map(function(n){ var w=n.charAt(0)==="!"; return '<div class="note'+(w?' warn':'')+'">'+esc(w?n.slice(1):n)+'</div>'; }).join("");
+  var t='<tr><th>Part</th><th>Tension</th><th>kgf</th><th>% of W</th></tr>';
+  o.rows.forEach(function(r){ t+='<tr><td>'+esc(r[1])+'</td><td>'+fN(r[2])+'</td><td>'+(r[2]/G0).toFixed(1)+'</td><td>'+(100*r[2]/o.W).toFixed(1)+'</td></tr>'; });
+  document.getElementById("tTable").innerHTML=t;
+}
+
+/* ---------- compare tab ---------- */
+function compare(){
+  var base={kg:S.kg,mode:"lift",eta:S.eta,w:S.w,H:S.H,theta:0,R:S.R,r:S.r,etaD:S.etaD};
+  function mk(o){ var s={}; for(var k in base) s[k]=base[k]; for(var k2 in o) s[k2]=o[k2]; return s; }
+  var list=[
+    ["Single fixed pulley",mk({arr:"fixed"})],["Single movable pulley",mk({arr:"movable"})],
+    ["Gun tackle, 2 parts",mk({arr:"tackle",n:2,reeve:"dis"})],["Gun tackle to advantage, 3",mk({arr:"tackle",n:3,reeve:"adv"})],
+    ["Luff tackle, 3 parts",mk({arr:"tackle",n:3,reeve:"dis"})],["Luff tackle to advantage, 4",mk({arr:"tackle",n:4,reeve:"adv"})],
+    ["Two-fold purchase, 4 parts",mk({arr:"tackle",n:4,reeve:"dis"})],["Double luff, 5 parts",mk({arr:"tackle",n:5,reeve:"dis"})],
+    ["Three-fold purchase, 6 parts",mk({arr:"tackle",n:6,reeve:"dis"})],["Four-fold purchase, 8 parts",mk({arr:"tackle",n:8,reeve:"dis"})],
+    ["Cascade, 2 pulleys",mk({arr:"cascade",k:2})],["Cascade, 3 pulleys",mk({arr:"cascade",k:3})],["Cascade, 4 pulleys",mk({arr:"cascade",k:4})],
+    ["Third system, 2 pulleys",mk({arr:"third",kt:2})],["Third system, 3 pulleys",mk({arr:"third",kt:3})],
+    ["Differential hoist (η "+(S.etaD*100).toFixed(0)+"%)",mk({arr:"diff"})]
+  ];
+  var t='<tr><th>Arrangement</th><th>VR</th><th>AMA</th><th>Efficiency</th><th>Effort</th><th>Max T</th><th>Support</th><th>Sheaves</th></tr>';
+  list.forEach(function(it){ var o=solve(it[1]);
+    var same = it[1].arr===S.arr && (S.arr!=="tackle"||(it[1].n===S.n&&it[1].reeve===S.reeve)) && (S.arr!=="cascade"||it[1].k===S.k) && (S.arr!=="third"||it[1].kt===S.kt);
+    t+='<tr'+(same?' class="hl"':'')+'><td>'+esc(it[0])+'</td><td>'+f2(o.IMA)+'</td><td>'+f2(o.AMA)+'</td><td>'+(o.effSys*100).toFixed(0)+'%</td><td>'+fN(o.P)+'</td><td>'+fN(o.Tmax)+'</td><td>'+fN(o.react)+'</td><td>'+o.sheaves+'</td></tr>'; });
+  document.getElementById("cmpTable").innerHTML=t;
+  document.getElementById("cmpHint").textContent="Load "+fN(S.kg*G0)+", sheave η "+S.eta.toFixed(3)+", moving block or pulley weight "+fN(S.w)+" each. Differential hoist uses its own overall efficiency and the current R and r.";
+  // chart
+  var W0=460,H0=320,l=46,rgt=14,tp=16,bt=40, nMax=14, yMax=16;
+  var etas=[1,0.98,0.96,0.90]; if(etas.indexOf(S.eta)<0) etas.push(S.eta);
+  var X=function(n){return l+(n-1)/(nMax-1)*(W0-l-rgt);}, Y=function(v){return tp+(1-Math.min(v,yMax)/yMax)*(H0-tp-bt);};
+  var c=[], mu=css("--muted"), ln=css("--soft"), ink=css("--ink"), acc=css("--accent"), hi=css("--rope-hi");
+  for(var g=0; g<=yMax; g+=2){ c.push('<line x1="'+l+'" x2="'+(W0-rgt)+'" y1="'+Y(g)+'" y2="'+Y(g)+'" stroke="'+ln+'"/><text x="'+(l-6)+'" y="'+(Y(g)+4)+'" text-anchor="end" font-size="11" fill="'+mu+'">'+g+'</text>'); }
+  for(var nn=1; nn<=nMax; nn++) c.push('<text x="'+X(nn)+'" y="'+(H0-bt+16)+'" text-anchor="middle" font-size="11" fill="'+mu+'">'+nn+'</text>');
+  c.push('<text x="'+((l+W0-rgt)/2)+'" y="'+(H0-6)+'" text-anchor="middle" font-size="12" fill="'+mu+'">Number of parts supporting the moving block</text>');
+  c.push('<text x="12" y="'+((tp+H0-bt)/2)+'" transform="rotate(-90 12 '+((tp+H0-bt)/2)+')" text-anchor="middle" font-size="12" fill="'+mu+'">Actual MA</text>');
+  etas.forEach(function(et,ix){
+    var cur=Math.abs(et-S.eta)<1e-9, col = et===1 ? mu : (cur ? hi : acc), pts=[];
+    for(var n=1;n<=nMax;n++){ var sum=0; for(var j=1;j<=n;j++) sum+=Math.pow(et,j); pts.push(X(n)+","+Y(sum)); }
+    c.push('<polyline points="'+pts.join(" ")+'" fill="none" stroke="'+col+'" stroke-width="'+(cur?3:1.6)+'" stroke-opacity="'+(cur?1:.8)+'"/>');
+    if(et<1){ var lim=et/(1-et); if(lim<=yMax) c.push('<line x1="'+l+'" x2="'+(W0-rgt)+'" y1="'+Y(lim)+'" y2="'+Y(lim)+'" stroke="'+col+'" stroke-dasharray="4 4" stroke-opacity=".7"/>'); }
+    var lastV=0; for(var j2=1;j2<=nMax;j2++) lastV+=Math.pow(et,j2);
+    c.push('<text x="'+(W0-rgt-2)+'" y="'+(Y(lastV)-5)+'" text-anchor="end" font-size="11" font-weight="'+(cur?700:400)+'" fill="'+col+'">η = '+et.toFixed(et===1?0:3).replace(/0+$/,"").replace(/\.$/,"")+'</text>');
+  });
+  document.getElementById("cmpChart").innerHTML=c.join("");
+}
+
+/* ---------- controls ---------- */
+function paramsUI(){
+  var p=document.getElementById("arrParams"), h="";
+  if(S.arr==="fixed") h='<label class="f">Pull angle from vertical <small>degrees</small></label><div class="rowin"><input type="range" id="thR" min="0" max="150" step="1" value="'+S.theta+'"><input type="number" id="thN" min="0" max="150" step="1" value="'+S.theta+'"></div><p class="hint">0° pulls straight down beside the load; 90° pulls sideways.</p>';
+  if(S.arr==="tackle") h='<label class="f">Parts supporting the moving block</label><div class="rowin"><input type="range" id="nR" min="2" max="8" step="1" value="'+S.n+'"><input type="number" id="nN" min="2" max="8" step="1" value="'+S.n+'"></div>'+
+    '<label class="f">Reeving</label><div class="seg" id="reeveSeg"><button data-v="dis">Haul from fixed block</button><button data-v="adv">Haul from moving block</button></div>';
+  if(S.arr==="cascade") h='<label class="f">Movable pulleys</label><div class="rowin"><input type="range" id="kR" min="1" max="5" step="1" value="'+S.k+'"><input type="number" id="kN" min="1" max="5" step="1" value="'+S.k+'"></div><p class="hint">Plus one fixed pulley to lead the hauling part down.</p>';
+  if(S.arr==="third") h='<label class="f">Pulleys (top one fixed)</label><div class="rowin"><input type="range" id="ktR" min="2" max="4" step="1" value="'+S.kt+'"><input type="number" id="ktN" min="2" max="4" step="1" value="'+S.kt+'"></div>';
+  if(S.arr==="diff") h='<label class="f">Large sheave radius R <small>mm</small></label><div class="rowin"><input type="range" id="RR" min="40" max="250" step="1" value="'+S.R+'"><input type="number" id="RN" min="20" max="500" step="1" value="'+S.R+'"></div>'+
+    '<label class="f">Small sheave radius r <small>mm</small></label><div class="rowin"><input type="range" id="rR" min="20" max="249" step="1" value="'+S.r+'"><input type="number" id="rN" min="10" max="499" step="1" value="'+S.r+'"></div>'+
+    '<label class="f">Overall efficiency <small>chain hoists are usually 30–45%</small></label><div class="rowin"><input type="range" id="edR" min="0.15" max="0.9" step="0.01" value="'+S.etaD+'"><input type="number" id="edN" min="0.05" max="0.95" step="0.01" value="'+S.etaD+'"></div>';
+  if(S.arr==="movable") h='<p class="hint">Rope anchored overhead, passing under one pulley that carries the load, hauled upward.</p>';
+  p.innerHTML=h;
+  pair("thR","thN","theta",0,150);
+  pair("nR","nN","n",2,8,true);
+  pair("kR","kN","k",1,5,true);
+  pair("ktR","ktN","kt",2,4,true);
+  pair("RR","RN","R",20,500);
+  pair("rR","rN","r",10,499);
+  pair("edR","edN","etaD",0.05,0.95);
+  var rs=document.getElementById("reeveSeg"); if(rs) segUI(rs,"reeve");
+  document.getElementById("frictionBox").style.display = S.arr==="diff" ? "none" : "";
+}
+function pair(rid,nid,key,lo,hi,isInt){
+  var r=document.getElementById(rid), n=document.getElementById(nid); if(!r) return;
+  r.value=S[key]; n.value=S[key];
+  function set(v,src){ v=parseFloat(v); if(!isFinite(v)) return; v=Math.max(lo,Math.min(hi,v)); if(isInt) v=Math.round(v); S[key]=v; if(src!==r) r.value=v; if(src!==n && document.activeElement!==n) n.value=v; update(); }
+  r.addEventListener("input",function(){ set(r.value,r); });
+  n.addEventListener("change",function(){ set(n.value,n); n.value=S[key]; });
+}
+function segUI(el,key){
+  Array.prototype.forEach.call(el.querySelectorAll("button"),function(b){
+    b.classList.toggle("on",b.dataset.v===S[key]);
+    b.onclick=function(){ S[key]=b.dataset.v; Array.prototype.forEach.call(el.querySelectorAll("button"),function(x){x.classList.toggle("on",x===b);}); S.f=0; posR.value=0; update(); };
+  });
+}
+function arrUI(){
+  var c=document.getElementById("arrChips");
+  c.innerHTML=ARR.map(function(a){return '<button data-v="'+a.id+'" class="'+(a.id===S.arr?"on":"")+'">'+a.name+'</button>';}).join("");
+  Array.prototype.forEach.call(c.querySelectorAll("button"),function(b){ b.onclick=function(){ S.arr=b.dataset.v; S.f=0; posR.value=0; arrUI(); paramsUI(); update(); }; });
+}
+function update(){
+  if(S.arr==="diff" && S.r>=S.R) S.r=S.R-1;
+  CUR=solve(S); results(); draw(); compare();
+  Array.prototype.forEach.call(document.querySelectorAll("#etaChips button"),function(b){ b.classList.toggle("on",Math.abs(parseFloat(b.dataset.v)-S.eta)<1e-9); });
+}
+
+var posR=document.getElementById("posR");
+posR.addEventListener("input",function(){ S.f=parseFloat(posR.value); draw(); });
+pair("kgR","kgN","kg",0.1,100000);
+pair("etaR","etaN","eta",0.5,1);
+pair("wR","wN","w",0,100000);
+pair("HR","HN","H",0.01,1000);
+segUI(document.getElementById("modeSeg"),"mode");
+Array.prototype.forEach.call(document.querySelectorAll("#etaChips button"),function(b){ b.onclick=function(){ S.eta=parseFloat(b.dataset.v); document.getElementById("etaR").value=S.eta; document.getElementById("etaN").value=S.eta; update(); }; });
+
+var playing=false, lastT=0, pauseUntil=0;
+var playBtn=document.getElementById("play");
+playBtn.onclick=function(){ playing=!playing; playBtn.textContent=playing?"❚❚ Pause":"▶ Animate"; if(playing){ lastT=0; requestAnimationFrame(tick); } };
+function tick(t){
+  if(!playing) return;
+  if(!lastT) lastT=t; var dt=Math.min(0.05,(t-lastT)/1000); lastT=t;
+  if(t>pauseUntil && S.mode!=="hold"){
+    var dir = S.mode==="lower" ? -1 : 1;
+    S.f += dir*dt*0.22;
+    if(S.f>1){ S.f=0; pauseUntil=t+500; } if(S.f<0){ S.f=1; pauseUntil=t+500; }
+    posR.value=S.f; draw();
+  }
+  requestAnimationFrame(tick);
+}
+
+Array.prototype.forEach.call(document.querySelectorAll("nav.tabs button"),function(b){
+  b.onclick=function(){ Array.prototype.forEach.call(document.querySelectorAll("nav.tabs button"),function(x){x.classList.toggle("on",x===b);});
+    Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(x){x.classList.toggle("on",x.id===b.dataset.tab);}); };
+});
+if(window.matchMedia) window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",update);
+window.addEventListener("resize",function(){ draw(); });
+
+arrUI(); paramsUI(); update();
+</script>
+</body>
+</html>

@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<!--
+TOOL: Spur Gear Explorer (public copy)
+FAMILY: Engineering Reference / Mechanical Design
+VERSION: 1.1.0
+DATE: 2026-10-06
+CHAT: Spur gear explorer
+CHANGES: 1.1.0 - public copy for haivijayanand.github.io: full page width on PCs; Full screen button;
+                 live mesh redrawn with true involute teeth, base and pitch circles, line of action, path of
+                 contact and live contact points, pressure angle, contact ratio, slow motion, pause and step;
+                 overview sketch uses involute teeth; organisation and programme references removed
+         1.0.0 - Initial build — interactive reference covering gear design, tooth profiles, stress analysis, and maintenance
+STATUS: working
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spur Gear Explorer</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap">
+
+<style>
+/* ── Design tokens ──────────────────────────────────────────────
+   Layout: sticky sidebar nav + scrollable main content, collapses to
+   stacked tab-strip on mobile. Engineering instrument aesthetic:
+   steel-blue accent, ruled dividers, mono for values/formulas.
+──────────────────────────────────────────────────────────────── */
+:root {
+  --bg:        #f5f6f8;
+  --bg2:       #ffffff;
+  --bg3:       #eef0f4;
+  --fg:        #1a1d24;
+  --fg2:       #4a4f5e;
+  --fg3:       #7a8096;
+  --accent:    #1e6fa8;
+  --accent2:   #0d4f7a;
+  --accent-bg: #e8f1f9;
+  --ok:        #1a7a4a;
+  --ok-bg:     #e6f4ed;
+  --warn:      #a85c00;
+  --warn-bg:   #fef3e2;
+  --danger:    #c0392b;
+  --danger-bg: #fcecea;
+  --border:    #d4d8e2;
+  --shadow:    0 2px 8px rgba(30,40,70,.08);
+  --radius:    6px;
+  --ff-head:   'Playfair Display', Georgia, serif;
+  --ff-body:   'IBM Plex Sans', system-ui, sans-serif;
+  --ff-mono:   'IBM Plex Mono', 'Courier New', monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:        #12151d;
+    --bg2:       #1c2030;
+    --bg3:       #252a3a;
+    --fg:        #e4e8f2;
+    --fg2:       #9ba3bc;
+    --fg3:       #636a82;
+    --accent:    #4a9fd4;
+    --accent2:   #6db8ea;
+    --accent-bg: #1a2d3e;
+    --ok:        #3ab875;
+    --ok-bg:     #0f2d1e;
+    --warn:      #e09040;
+    --warn-bg:   #2a1e08;
+    --danger:    #e05a4a;
+    --danger-bg: #2a0e0a;
+    --border:    #2e3448;
+    --shadow:    0 2px 8px rgba(0,0,0,.3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:        #12151d;
+  --bg2:       #1c2030;
+  --bg3:       #252a3a;
+  --fg:        #e4e8f2;
+  --fg2:       #9ba3bc;
+  --fg3:       #636a82;
+  --accent:    #4a9fd4;
+  --accent2:   #6db8ea;
+  --accent-bg: #1a2d3e;
+  --ok:        #3ab875;
+  --ok-bg:     #0f2d1e;
+  --warn:      #e09040;
+  --warn-bg:   #2a1e08;
+  --danger:    #e05a4a;
+  --danger-bg: #2a0e0a;
+  --border:    #2e3448;
+  --shadow:    0 2px 8px rgba(0,0,0,.3);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--ff-body);
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+/* ── App shell ──────────────────────────────────────────────── */
+.app {
+  display: flex;
+  min-height: 100dvh;
+}
+
+/* ── Sidebar ────────────────────────────────────────────────── */
+.sidebar {
+  width: 230px;
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  height: 100dvh;
+  overflow-y: auto;
+}
+.sidebar-head {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-head h1 {
+  font-family: var(--ff-head);
+  font-size: 18px;
+  margin: 0 0 4px;
+  color: var(--fg);
+  line-height: 1.2;
+}
+.sidebar-head .sub {
+  font-size: 11px;
+  color: var(--fg3);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.nav-group {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.nav-group-label {
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--fg3);
+  padding: 0 20px 6px;
+  font-weight: 600;
+}
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--ff-body);
+  font-size: 13.5px;
+  color: var(--fg2);
+  text-align: left;
+  transition: background .15s, color .15s;
+}
+.nav-btn .icon { font-size: 15px; opacity: .8; }
+.nav-btn:hover { background: var(--bg3); color: var(--fg); }
+.nav-btn.active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+.nav-btn.active .icon { opacity: 1; }
+
+.sidebar-foot {
+  margin-top: auto;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--fg2);
+  font-family: var(--ff-body);
+  transition: background .15s;
+}
+.theme-toggle:hover { background: var(--bg3); }
+
+/* ── Main content ───────────────────────────────────────────── */
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 36px 40px;
+  max-width: none;
+}
+.section { display: none; }
+.section.active { display: block; }
+
+.section-title {
+  font-family: var(--ff-head);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--fg);
+  margin: 0 0 6px;
+  text-wrap: balance;
+}
+.section-sub {
+  color: var(--fg2);
+  font-size: 14px;
+  margin: 0 0 28px;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 16px;
+}
+
+h2 { font-size: 17px; color: var(--fg); margin: 28px 0 10px; font-weight: 600; }
+h3 { font-size: 14px; color: var(--accent); margin: 20px 0 8px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+p { margin: 0 0 14px; color: var(--fg2); max-width: 68ch; }
+ul, ol { padding-left: 1.4em; margin: 0 0 14px; color: var(--fg2); }
+li { margin-bottom: 5px; }
+strong { color: var(--fg); font-weight: 600; }
+
+/* ── Cards / grids ──────────────────────────────────────────── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+.card-icon { font-size: 22px; margin-bottom: 8px; }
+.card h3 { margin: 0 0 6px; font-size: 13px; }
+.card p { font-size: 13px; margin: 0; }
+
+/* ── Info boxes ─────────────────────────────────────────────── */
+.info-box {
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  font-size: 13.5px;
+  border-left: 3px solid;
+}
+.info-box.note   { background: var(--accent-bg); border-color: var(--accent); color: var(--fg2); }
+.info-box.ok     { background: var(--ok-bg);     border-color: var(--ok);     color: var(--fg2); }
+.info-box.warn   { background: var(--warn-bg);   border-color: var(--warn);   color: var(--fg2); }
+.info-box.danger { background: var(--danger-bg); border-color: var(--danger); color: var(--fg2); }
+
+/* ── Data table ─────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; margin-bottom: 20px; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  min-width: 480px;
+}
+th {
+  background: var(--bg3);
+  color: var(--fg);
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--fg2);
+  vertical-align: top;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg3); }
+td.mono, .mono { font-family: var(--ff-mono); font-size: 13px; }
+td.ok    { color: var(--ok); }
+td.warn  { color: var(--warn); }
+td.bad   { color: var(--danger); }
+
+/* ── Formula block ──────────────────────────────────────────── */
+.formula-block {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin: 12px 0 20px;
+  font-family: var(--ff-mono);
+  font-size: 13.5px;
+  color: var(--fg);
+  line-height: 2;
+  overflow-x: auto;
+}
+.formula-block .comment { color: var(--fg3); font-style: italic; font-family: var(--ff-body); }
+
+/* ── Gear canvas SVG ────────────────────────────────────────── */
+.gear-canvas {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 520px;
+  aspect-ratio: 4/3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  overflow: hidden;
+  position: relative;
+}
+.gear-canvas canvas, .gear-canvas svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Calculator ─────────────────────────────────────────────── */
+.calc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+@media (max-width: 540px) { .calc-grid { grid-template-columns: 1fr; } }
+.field-group { display: flex; flex-direction: column; gap: 4px; }
+.field-group label { font-size: 12px; font-weight: 600; color: var(--fg2); }
+.field-group input, .field-group select {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg2);
+  color: var(--fg);
+  font-family: var(--ff-body);
+  font-size: 14px;
+  transition: border-color .15s;
+}
+.field-group input:focus, .field-group select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.btn-calc {
+  padding: 10px 24px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--ff-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+}
+.btn-calc:hover { background: var(--accent2); }
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+.result-row:last-child { border-bottom: none; }
+.result-label { font-size: 13px; color: var(--fg2); }
+.result-val { font-family: var(--ff-mono); font-size: 14px; color: var(--accent); font-weight: 500; }
+
+/* ── Profile comparison ─────────────────────────────────────── */
+.profile-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.profile-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+}
+.profile-card:hover, .profile-card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-bg);
+}
+.profile-card .pname {
+  font-family: var(--ff-head);
+  font-size: 15px;
+  color: var(--fg);
+  margin-bottom: 6px;
+}
+.profile-card .ptag {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  margin-bottom: 10px;
+}
+.ptag.std   { background: var(--ok-bg);     color: var(--ok); }
+.ptag.spec  { background: var(--warn-bg);   color: var(--warn); }
+.ptag.adv   { background: var(--accent-bg); color: var(--accent); }
+.bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 12px; }
+.bar-row .bar-label { width: 90px; color: var(--fg3); flex-shrink: 0; }
+.bar-track { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+.bar-fill  { height: 100%; border-radius: 3px; transition: width .3s; }
+.bar-fill.good { background: var(--ok); }
+.bar-fill.mid  { background: var(--warn); }
+.bar-fill.bad  { background: var(--danger); }
+
+/* ── Maintenance timeline ───────────────────────────────────── */
+.maint-timeline { position: relative; padding-left: 28px; margin-bottom: 24px; }
+.maint-timeline::before {
+  content: '';
+  position: absolute;
+  left: 10px; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+.maint-item { position: relative; margin-bottom: 20px; }
+.maint-item::before {
+  content: '';
+  position: absolute;
+  left: -22px; top: 6px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+}
+.maint-item.warn::before  { background: var(--warn); }
+.maint-item.crit::before  { background: var(--danger); }
+.maint-freq {
+  font-family: var(--ff-mono);
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.maint-item.warn .maint-freq { color: var(--warn); }
+.maint-item.crit .maint-freq { color: var(--danger); }
+.maint-action { font-size: 14px; font-weight: 600; color: var(--fg); margin-bottom: 2px; }
+.maint-detail { font-size: 13px; color: var(--fg2); margin: 0; }
+
+/* ── Failure mode chips ─────────────────────────────────────── */
+.failure-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.failure-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.failure-card .ftag {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  margin-bottom: 8px;
+}
+.ftag.surface { background: var(--warn-bg);   color: var(--warn); }
+.ftag.bending { background: var(--danger-bg); color: var(--danger); }
+.ftag.wear    { background: var(--ok-bg);     color: var(--ok); }
+.ftag.other   { background: var(--accent-bg); color: var(--accent); }
+.failure-card h4 { font-size: 14px; margin: 0 0 5px; color: var(--fg); }
+.failure-card p  { font-size: 13px; margin: 0; }
+
+/* ── Gear animation canvas ──────────────────────────────────── */
+#gear-anim-canvas { border-radius: var(--radius); display: block; width: 100%; }
+.mesh-box { background: var(--bg); }
+.mesh-box:fullscreen { padding: 18px 22px; overflow: auto; }
+.mesh-ctl { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 10px; }
+.mesh-ctl select { height: 38px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg2); color: var(--fg); padding: 0 8px; font: inherit; }
+.btn-calc.ghost { background: var(--bg2); color: var(--fg); border: 1px solid var(--border); }
+.mesh-tog { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--fg2); margin-bottom: 10px; }
+.mesh-tog label { display: inline-flex; gap: 6px; align-items: center; }
+.mesh-canvas-wrap { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.mesh-warn { font-size: 13px; color: var(--warn); margin-top: 6px; }
+.mesh-note { font-size: 13.5px; max-width: 100ch !important; margin-top: 10px; }
+
+/* ── Responsive overrides ───────────────────────────────────── */
+@media (max-width: 700px) {
+  .app { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    top: env(safe-area-inset-top, 0px);
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-head, .sidebar-foot, .nav-group-label { display: none; }
+  .nav-group { display: flex; flex-direction: row; padding: 6px 0; border-bottom: none; }
+  .nav-btn { padding: 8px 14px; white-space: nowrap; font-size: 12.5px; }
+  .main { padding: 20px 16px; }
+  .section-title { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+<!-- ── Sidebar ─────────────────────────────────────────────── -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-head">
+    <h1>Spur Gear<br>Explorer</h1>
+    <div class="sub">Engineering Reference</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Fundamentals</div>
+    <button class="nav-btn active" data-sec="overview">
+      <span class="icon">⚙️</span> Overview
+    </button>
+    <button class="nav-btn" data-sec="terminology">
+      <span class="icon">📐</span> Terminology
+    </button>
+    <button class="nav-btn" data-sec="types">
+      <span class="icon">🔩</span> Gear Types
+    </button>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Design</div>
+    <button class="nav-btn" data-sec="profiles">
+      <span class="icon">〰️</span> Tooth Profiles
+    </button>
+    <button class="nav-btn" data-sec="stress">
+      <span class="icon">📊</span> Stress Analysis
+    </button>
+    <button class="nav-btn" data-sec="calculator">
+      <span class="icon">🧮</span> Calculator
+    </button>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Operation</div>
+    <button class="nav-btn" data-sec="failure">
+      <span class="icon">⚠️</span> Failure Modes
+    </button>
+    <button class="nav-btn" data-sec="maintenance">
+      <span class="icon">🔧</span> Maintenance
+    </button>
+    <button class="nav-btn" data-sec="animation">
+      <span class="icon">▶️</span> Live Mesh
+    </button>
+  </div>
+
+  <div class="sidebar-foot">
+    <button class="theme-toggle" onclick="pageFullscreen()" id="fsBtn">⛶ Full screen</button>
+    <button class="theme-toggle" onclick="toggleTheme()">◐ Theme</button>
+  </div>
+</nav>
+
+<!-- ── Main ─────────────────────────────────────────────────── -->
+<main class="main" id="main">
+
+  <!-- OVERVIEW ─────────────────────────────────────────────── -->
+  <section class="section active" id="sec-overview">
+    <div class="section-title">Spur Gear Fundamentals</div>
+    <p class="section-sub">The simplest and most common cylindrical gear — straight teeth cut parallel to the rotation axis, transmitting power between parallel shafts.</p>
+
+    <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-bottom:24px;">
+      <div style="flex:1;min-width:280px;">
+        <p>Spur gears are the baseline of mechanical power transmission. Their teeth are cut straight across the face, generating only radial (tangential + radial) loads — no axial thrust, which simplifies shaft and bearing design. The involute tooth profile, universal since the 18th century, ensures constant velocity ratio under load and is tolerant of small centre-distance errors.</p>
+        <p>Operating characteristics are dominated by two competing stress regimes: <strong>bending stress at the tooth root</strong> (Lewis/AGMA) and <strong>Hertzian contact stress at the flank</strong> (surface fatigue). Gear design is the art of balancing these with material selection, tooth geometry, and lubrication.</p>
+      </div>
+      <div style="flex-shrink:0;">
+        <canvas id="overview-canvas" width="260" height="220" style="border-radius:var(--radius);border:1px solid var(--border);background:var(--bg2);display:block;"></canvas>
+      </div>
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <h3>High Efficiency</h3>
+        <p>98–99.5% efficiency per mesh under full load with adequate lubrication. Best of any gear type.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">↔️</div>
+        <h3>No Axial Thrust</h3>
+        <p>Straight teeth produce only radial load on bearings. Axial bearings not required — unlike helical.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🏭</div>
+        <h3>Easy to Manufacture</h3>
+        <p>Hobbing, shaping, and grinding are well-established. Tight tolerances achievable at moderate cost.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔊</div>
+        <h3>Higher Noise</h3>
+        <p>Sudden full-width engagement creates impact loading at each tooth-in. Noisier than helical at high speed.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📏</div>
+        <h3>Parallel Shafts Only</h3>
+        <p>Transmits between coplanar parallel axes only. Bevel or worm gears needed for other orientations.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🛡️</div>
+        <h3>Proven Reliability</h3>
+        <p>AGMA and ISO standards mature. Extensive field data for life prediction and rating calculations.</p>
+      </div>
+    </div>
+
+    <div class="info-box note">
+      <strong>AGMA vs ISO:</strong> The two dominant international standards for gear design rating — AGMA 2101 (US) and ISO 6336 (global) — yield comparable but not identical results. ISO 6336 is the default in European and defence aerospace applications.
+    </div>
+  </section>
+
+  <!-- TERMINOLOGY ─────────────────────────────────────────── -->
+  <section class="section" id="sec-terminology">
+    <div class="section-title">Terminology & Geometry</div>
+    <p class="section-sub">Standard definitions and interrelationships for spur gear geometry. All relationships derive from the module and number of teeth.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Symbol</th>
+            <th>Formula / Definition</th>
+            <th>Typical Range</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Module</strong></td><td class="mono">m</td><td>Reference pitch / π = d / z</td><td class="mono">1 – 25 mm</td></tr>
+          <tr><td><strong>Number of teeth</strong></td><td class="mono">z</td><td>Integer; z ≥ 17 avoids undercut (φ=20°)</td><td class="mono">17 – 200</td></tr>
+          <tr><td><strong>Pitch circle diameter</strong></td><td class="mono">d</td><td>m · z</td><td>—</td></tr>
+          <tr><td><strong>Addendum</strong></td><td class="mono">hₐ</td><td>1.0 · m (standard)</td><td class="mono">0.8–1.25 m</td></tr>
+          <tr><td><strong>Dedendum</strong></td><td class="mono">h_f</td><td>1.25 · m (standard)</td><td class="mono">1.0–1.4 m</td></tr>
+          <tr><td><strong>Whole depth</strong></td><td class="mono">h</td><td>hₐ + h_f = 2.25 m</td><td>—</td></tr>
+          <tr><td><strong>Tip (outside) diameter</strong></td><td class="mono">dₐ</td><td>m · (z + 2)</td><td>—</td></tr>
+          <tr><td><strong>Root diameter</strong></td><td class="mono">d_f</td><td>m · (z – 2.5)</td><td>—</td></tr>
+          <tr><td><strong>Base circle diameter</strong></td><td class="mono">d_b</td><td>d · cos φ</td><td>—</td></tr>
+          <tr><td><strong>Circular pitch</strong></td><td class="mono">p</td><td>π · m</td><td>—</td></tr>
+          <tr><td><strong>Centre distance</strong></td><td class="mono">a</td><td>m · (z₁ + z₂) / 2</td><td>—</td></tr>
+          <tr><td><strong>Pressure angle</strong></td><td class="mono">φ</td><td>Standard flank tangent to base circle</td><td class="mono">14.5°, 20°, 25°</td></tr>
+          <tr><td><strong>Contact ratio</strong></td><td class="mono">ε_α</td><td>(Arc of action) / Circular pitch</td><td class="mono">1.2 – 1.9</td></tr>
+          <tr><td><strong>Gear ratio</strong></td><td class="mono">i</td><td>z₂ / z₁ = ω₁ / ω₂</td><td class="mono">1 – 8 (single stage)</td></tr>
+          <tr><td><strong>Face width</strong></td><td class="mono">b</td><td>Tooth length along axis</td><td class="mono">8–20 m typical</td></tr>
+          <tr><td><strong>Profile shift</strong></td><td class="mono">x</td><td>Cutter offset in units of module</td><td class="mono">−0.5 to +0.6</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Pressure Angle Effect</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>φ</th><th>Root Thickness</th><th>Contact Ratio</th><th>Axial Noise</th><th>Undercut Limit</th></tr></thead>
+        <tbody>
+          <tr><td>14.5°</td><td class="warn">Thinner</td><td class="ok">Higher (~1.8)</td><td class="ok">Quieter</td><td>~31 teeth</td></tr>
+          <tr><td>20°</td><td>Standard</td><td>Standard (~1.5)</td><td>Standard</td><td>17 teeth</td></tr>
+          <tr><td>25°</td><td class="ok">Thicker</td><td class="warn">Lower (~1.3)</td><td class="warn">Noisier</td><td>9 teeth</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="info-box ok">
+      <strong>Contact Ratio ε_α ≥ 1.2</strong> is the minimum for smooth power transmission. High-contact-ratio (HCR) gears target ε_α > 2.0 by reducing pressure angle and increasing addendum — they share load across more teeth simultaneously, reducing peak tooth load.
+    </div>
+  </section>
+
+  <!-- GEAR TYPES ──────────────────────────────────────────── -->
+  <section class="section" id="sec-types">
+    <div class="section-title">Gear Arrangement Types</div>
+    <p class="section-sub">Spur gears appear in several arrangement families, each with distinct kinematic properties and application niches.</p>
+
+    <div class="failure-grid">
+      <div class="failure-card">
+        <span class="ftag wear">External Mesh</span>
+        <h4>External Spur Gear Pair</h4>
+        <p>Both gears have outward-facing teeth. Rotation reverses direction. Most common arrangement. Efficiency 98.5–99.5%.</p>
+      </div>
+      <div class="failure-card">
+        <span class="ftag other">Internal Mesh</span>
+        <h4>Internal (Ring) Gear</h4>
+        <p>Pinion meshes inside an annular ring gear. Same rotation direction. Higher contact ratio, more compact radial envelope.</p>
+      </div>
+      <div class="failure-card">
+        <span class="ftag surface">Rack & Pinion</span>
+        <h4>Rack and Pinion</h4>
+        <p>Rack is a gear of infinite radius. Converts rotation to linear translation. Used in steering systems, actuators, CNC axes.</p>
+      </div>
+      <div class="failure-card">
+        <span class="ftag other">Planetary</span>
+        <h4>Epicyclic / Planetary</h4>
+        <p>Sun, planet and ring gears with a carrier. High ratio in compact envelope. Used in gearboxes, hub drives and aircraft accessory gearboxes.</p>
+      </div>
+      <div class="failure-card">
+        <span class="ftag wear">Gear Train</span>
+        <h4>Simple Gear Train</h4>
+        <p>Series of external meshes. Each stage inverts rotation. Overall ratio = product of individual ratios. Used for large ratio spreads.</p>
+      </div>
+      <div class="failure-card">
+        <span class="ftag bending">Compound Train</span>
+        <h4>Compound Gear Train</h4>
+        <p>Two gears on one shaft multiply ratio per stage. Aircraft accessory gearboxes work this way — hydraulic, fuel and electrical drives taken off one input shaft cluster.</p>
+      </div>
+    </div>
+
+    <h2>Standard Mounting Configurations</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Type</th><th>Shaft Relation</th><th>Ratio Range</th><th>Typical Application</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>External pair</td><td>Parallel, external</td><td>1:1 – 8:1</td><td>Machine tools, gearboxes, pumps</td></tr>
+          <tr><td>Internal pair</td><td>Parallel, coaxial possible</td><td>1:1 – 15:1</td><td>Planetary stages, hub drives</td></tr>
+          <tr><td>Idler gear</td><td>Parallel, 3-shaft</td><td>1:1</td><td>Direction reversal, centre distance bridging</td></tr>
+          <tr><td>2-stage compound</td><td>Parallel</td><td>4:1 – 64:1</td><td>Industrial reducers, aircraft accessory drives</td></tr>
+          <tr><td>Planetary 3-element</td><td>Coaxial</td><td>2:1 – 12:1</td><td>Helicopter MGB, automatic transmissions</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- TOOTH PROFILES ──────────────────────────────────────── -->
+  <section class="section" id="sec-profiles">
+    <div class="section-title">Tooth Profile Families</div>
+    <p class="section-sub">Same module — different flank geometry. The contour family determines the curvature at the contact point, directly governing contact (Hertzian) and bending stress.</p>
+
+    <div class="profile-cards" id="profile-cards">
+      <!-- generated by JS -->
+    </div>
+
+    <div id="profile-detail" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px;display:none;"></div>
+
+    <h2>Curvature Sum — The Key Stress Driver</h2>
+    <p>Hertzian contact stress σ_H ∝ √(Σρ) where Σρ = 1/ρ₁ ± 1/ρ₂ (− for concave contact). The closer the flanks conform, the lower Σρ and σ_H. This is the fundamental difference between profile families:</p>
+    <div class="formula-block">
+σ_H = Z_E · √(F_t / (b·d₁) · (u+1)/u · K_A·K_v·K_Hβ / Z_I)
+
+Z_I  = contact geometry factor  ← varies strongly with profile family
+Z_E  = elasticity factor        = 191 MPa^0.5 for steel/steel
+u    = gear ratio (z₂/z₁)
+</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Profile Family</th><th>Contact Type</th><th>Σρ vs Involute</th><th>σ_H</th><th>σ_b</th><th>Centre Error Tolerance</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Involute (20°)</strong></td><td>Convex–Convex</td><td>Baseline</td><td class="warn">Moderate</td><td class="ok">Moderate</td><td class="ok">Excellent</td></tr>
+          <tr><td><strong>Involute (25°)</strong></td><td>Convex–Convex</td><td>Slightly higher</td><td class="warn">Slightly higher</td><td class="ok">Lower</td><td class="ok">Excellent</td></tr>
+          <tr><td><strong>HCR Involute</strong></td><td>Convex–Convex</td><td>Lower (more teeth share)</td><td class="ok">Lower</td><td class="ok">Lower</td><td>Good</td></tr>
+          <tr><td><strong>Cycloidal</strong></td><td>Mixed (addendum: convex-concave)</td><td>Lower in addendum</td><td class="ok">Lower (addendum)</td><td class="ok">Lower</td><td class="bad">Poor</td></tr>
+          <tr><td><strong>Novikov / Circular Arc</strong></td><td>Convex–Concave (conforming)</td><td>Near zero</td><td class="ok">Very low</td><td class="bad">Higher</td><td>Moderate</td></tr>
+          <tr><td><strong>Trochoidal (internal)</strong></td><td>Convex–Concave</td><td>Lower</td><td class="ok">Lower</td><td class="ok">Lower</td><td>Good (internal)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- STRESS ANALYSIS ────────────────────────────────────── -->
+  <section class="section" id="sec-stress">
+    <div class="section-title">Stress Analysis</div>
+    <p class="section-sub">Two failure modes dominate: bending fatigue at the root (Lewis/AGMA) and surface contact fatigue at the flank (Hertz/AGMA). Both must be satisfied.</p>
+
+    <h2>1 · Tangential Load</h2>
+    <div class="formula-block">
+W_t = (2 · T) / d₁        <span class="comment">  ← Tangential force at pitch circle (N)</span>
+T   = transmitted torque (N·mm)
+d₁  = pitch circle diameter of pinion (mm)
+</div>
+
+    <h2>2 · Bending Stress (AGMA 2101)</h2>
+    <div class="formula-block">
+σ_b = W_t / (b · m) · K_A · K_v · K_s · K_H / Y_J
+
+W_t   = tangential load (N)
+b     = face width (mm)
+m     = module (mm)
+Y_J   = geometry (Lewis form) factor  ← profile and z dependent
+K_A   = application / overload factor  (1.0–2.5)
+K_v   = dynamic factor                 (1.0–2.0, speed dependent)
+K_s   = size factor                    (1.0–1.4)
+K_H   = load distribution factor       (1.0–2.0, misalignment dependent)
+</div>
+    <div class="info-box warn">
+      <strong>Y_J is profile-family-dependent.</strong> For an involute gear at 20° with z=20 teeth: Y_J ≈ 0.32. At 25°: Y_J ≈ 0.38. Novikov gears use a different form factor approach because bending is the dominant failure mode.
+    </div>
+
+    <h2>3 · Contact (Hertzian) Stress (AGMA 2101)</h2>
+    <div class="formula-block">
+σ_H = Z_E · √(W_t · K_A · K_v · K_s · K_H / (b · d₁ · Z_I))
+
+Z_E  = elastic coefficient = 191 MPa^0.5  (steel/steel)
+Z_I  = pitting resistance geometry factor
+d₁   = pinion pitch diameter (mm)
+</div>
+
+    <h2>4 · AGMA Safety Factors</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Stress Type</th><th>Allowable Stress</th><th>Min Safety Factor</th><th>Typical Target</th></tr></thead>
+        <tbody>
+          <tr><td>Bending (σ_b)</td><td>σ_F = S_t · Y_N / (S_F · K_T · K_R)</td><td>S_F = 1.0</td><td>S_F ≥ 1.5–2.0</td></tr>
+          <tr><td>Contact (σ_H)</td><td>σ_H,all = S_c · Z_N / (S_H · K_T · K_R)</td><td>S_H = 1.0</td><td>S_H ≥ 1.2–1.5</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>5 · Key Material Properties (Carburised Steel)</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Grade / Material</th><th>S_t (MPa)</th><th>S_c (MPa)</th><th>HRC Case</th><th>Use Case</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>AGMA Grade 1 (thru-harden)</td><td>207–310</td><td>793–1241</td><td>HB 180–360</td><td>Industrial, low speed</td></tr>
+          <tr><td>AGMA Grade 2 (carburised)</td><td>380–450</td><td>1380–1550</td><td>58–64 HRC</td><td>Aerospace, automotive</td></tr>
+          <tr><td>AGMA Grade 3 (premium)</td><td>450–520</td><td>1550–1724</td><td>60–64 HRC</td><td>Aircraft accessory gearboxes, helicopter MGB</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>6 · Shaft Offset Effects on Stress</h2>
+    <p>Any deviation from nominal centre distance changes the operating pressure angle and introduces face load maldistribution (K_Hβ):</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Offset Type</th><th>Parameter Affected</th><th>Stress Effect</th></tr></thead>
+        <tbody>
+          <tr><td>Δa = +1% (increased CD)</td><td>φ_w increases</td><td>σ_H +2–3%</td></tr>
+          <tr><td>Δa = −1% (decreased CD)</td><td>Backlash lost → risk of interference</td><td class="bad">σ_b spikes</td></tr>
+          <tr><td>Angular misalignment 0.05°</td><td>K_Hβ: 1.1 → 1.25</td><td>σ_H +10–15%</td></tr>
+          <tr><td>Angular misalignment 0.1°</td><td>K_Hβ: 1.1 → 1.6</td><td class="warn">σ_H +35–50%</td></tr>
+          <tr><td>Angular misalignment 0.2°</td><td>Edge loading, full face</td><td class="bad">Failure risk</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- CALCULATOR ──────────────────────────────────────────── -->
+  <section class="section" id="sec-calculator">
+    <div class="section-title">Gear Design Calculator</div>
+    <p class="section-sub">Basic geometry and simplified bending/contact stress estimates. Input gear parameters to compute pitch diameters, forces, and stress indicators.</p>
+
+    <div class="calc-grid">
+      <div class="field-group">
+        <label>Module m (mm)</label>
+        <input type="number" id="c-m" value="4" min="0.5" max="50" step="0.5">
+      </div>
+      <div class="field-group">
+        <label>Pressure angle φ (°)</label>
+        <select id="c-phi">
+          <option value="14.5">14.5°</option>
+          <option value="20" selected>20°</option>
+          <option value="25">25°</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Pinion teeth z₁</label>
+        <input type="number" id="c-z1" value="20" min="8" max="200">
+      </div>
+      <div class="field-group">
+        <label>Gear teeth z₂</label>
+        <input type="number" id="c-z2" value="50" min="8" max="400">
+      </div>
+      <div class="field-group">
+        <label>Face width b (mm)</label>
+        <input type="number" id="c-b" value="60" min="5" max="500">
+      </div>
+      <div class="field-group">
+        <label>Input torque T (N·m)</label>
+        <input type="number" id="c-T" value="200" min="1" max="100000">
+      </div>
+      <div class="field-group">
+        <label>K_A (overload factor)</label>
+        <input type="number" id="c-ka" value="1.25" min="1" max="3" step="0.05">
+      </div>
+      <div class="field-group">
+        <label>K_v (dynamic factor)</label>
+        <input type="number" id="c-kv" value="1.3" min="1" max="2.5" step="0.05">
+      </div>
+    </div>
+
+    <button class="btn-calc" onclick="runCalc()">Calculate</button>
+
+    <div id="calc-results" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-top:20px;display:none;">
+      <h3 style="margin-top:0">Geometry</h3>
+      <div id="res-geo"></div>
+      <h3>Forces & Stress Indicators</h3>
+      <div id="res-stress"></div>
+      <div id="res-verdict" style="margin-top:14px;"></div>
+    </div>
+  </section>
+
+  <!-- FAILURE MODES ───────────────────────────────────────── -->
+  <section class="section" id="sec-failure">
+    <div class="section-title">Failure Modes</div>
+    <p class="section-sub">Gear failures are classified by location (flank vs root) and mechanism (fatigue, wear, plastic deformation). Correct diagnosis drives the right remedy.</p>
+
+    <div class="failure-grid">
+      <div class="failure-card">
+        <span class="ftag surface">Surface Fatigue</span>
+        <h4>Pitting</h4>
+        <p>Sub-surface fatigue cracks propagate under cyclic Hertzian stress, forming craters on the flank. <strong>Initial pitting</strong> may arrest; <strong>destructive pitting</strong> progresses. Root cause: σ_H exceeds S_c life limit. Remedy: increase module, reduce load, improve lubrication.</p>
+      </div>
+      <div class="failure-card">
+        <span class="ftag surface">Surface Fatigue</span>
+        <h4>Spalling</h4>
+        <p>Large-scale pitting with deep cratering below the case-core interface. Common in carburised gears with insufficient case depth. Remedy: increase case depth, review thermal treatment, check stress.</p>
+      </div>
+      <div class="failure-card">
+        <span class="ftag bending">Bending Fatigue</span>
+        <h4>Tooth Root Fracture</h4>
+        <p>Fatigue crack initiating at the root fillet, propagating across the tooth section. Catastrophic if tooth separates. Root cause: σ_b > S_t life limit, stress concentration at fillet. Remedy: trochoidal fillet, surface finishing, reduce overloads.</p>
+      </div>
+      <div class="failure-card">
+        <span class="ftag wear">Adhesive Wear</span>
+        <h4>Scuffing / Scoring</h4>
+        <p>Instantaneous welding and tearing of flank asperities under boundary lubrication — high sliding velocity at addendum/dedendum. Leaves directional scratch marks. Root cause: oil film collapse (flash temperature). Remedy: EP lubricant, reduce tip relief, lower speed.</p>
+      </div>
+      <div class="failure-card">
+        <span class="ftag wear">Abrasive Wear</span>
+        <h4>Abrasion</h4>
+        <p>Progressive removal of flank material by hard particles in the lubricant. Increases backlash and profile error. Root cause: contaminated oil or inadequate filtration. Remedy: fine filtration (≤10 μm), oil flush, sealed housing.</p>
+      </div>
+      <div class="failure-card">
+        <span class="ftag other">Plastic Flow</span>
+        <h4>Rippling / Ridging</h4>
+        <p>Cold flow of flank surface under high contact stress + sliding. Surface texture develops transverse ridges. Root cause: σ_H exceeds yield in surface layer. Remedy: higher surface hardness, reduce load, improve profile geometry.</p>
+      </div>
+      <div class="failure-card">
+        <span class="ftag other">Misalignment</span>
+        <h4>Edge Loading</h4>
+        <p>Load concentration at one face edge due to shaft angular misalignment or gear crowning errors. Accelerates pitting and root fracture at edge. Remedy: reduce K_Hβ by alignment, add crowning, verify bearing preload.</p>
+      </div>
+      <div class="failure-card">
+        <span class="ftag bending">Overload</span>
+        <h4>Sudden Fracture</h4>
+        <p>Single-cycle fracture from gross overload exceeding ultimate tooth strength. Failure surface shows shear lip and no beach marks. Root cause: shock load, seizure, or jam. Remedy: shock couplings, torque limiters, overload clutches.</p>
+      </div>
+    </div>
+
+    <h2>Failure Diagnosis Matrix</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Observation</th><th>Most Likely Mode</th><th>Confirming Feature</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Pits concentrated at pitch line</td><td>Pitting fatigue</td><td>Crack origin below surface, smooth pit floors</td></tr>
+          <tr><td>Pits at addendum/dedendum only</td><td>Scuffing + wear</td><td>Directional grooves, rough surface</td></tr>
+          <tr><td>Tooth absent, fracture surface</td><td>Root fatigue or overload</td><td>Beach marks → fatigue; shear lip → overload</td></tr>
+          <tr><td>Smooth flank, increased backlash</td><td>Abrasive wear</td><td>Uniform polishing, correct profile shape lost</td></tr>
+          <tr><td>Damage concentrated at one edge</td><td>Misalignment / edge loading</td><td>Damage gradient across face width</td></tr>
+          <tr><td>Ridges perpendicular to sliding direction</td><td>Rippling / plastic flow</td><td>High-hardness material → micro-cracks; low-hardness → flow</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- MAINTENANCE ─────────────────────────────────────────── -->
+  <section class="section" id="sec-maintenance">
+    <div class="section-title">Inspection & Maintenance</div>
+    <p class="section-sub">Condition-based maintenance strategy for spur gear trains — inspection intervals, parameters, acceptance criteria, and corrective actions.</p>
+
+    <h2>Scheduled Maintenance Programme</h2>
+    <div class="maint-timeline">
+      <div class="maint-item">
+        <div class="maint-freq">Every 8 h / per shift</div>
+        <div class="maint-action">Operational Monitoring</div>
+        <p class="maint-detail">Log noise level, temperature, vibration (1× and GMF amplitude), and oil pressure. Any step change ≥ 3 dB or 20% vibration rise triggers alert.</p>
+      </div>
+      <div class="maint-item">
+        <div class="maint-freq">Every 250 h</div>
+        <div class="maint-action">Oil Analysis</div>
+        <p class="maint-detail">Ferrographic / spectrometric oil analysis for Fe, Cr, Ni, Cu wear metals. Compare to baseline. Particle count ISO 4406. Replace oil if viscosity out of spec ±10%.</p>
+      </div>
+      <div class="maint-item">
+        <div class="maint-freq">Every 500 h</div>
+        <div class="maint-action">Visual Inspection (borescope or access cover)</div>
+        <p class="maint-detail">Inspect tooth flanks for pitting initiation, scoring marks, and edge wear. Check for fretting on gear bore / shaft interface. Record and photograph any findings for trend analysis.</p>
+      </div>
+      <div class="maint-item warn">
+        <div class="maint-freq">Every 1000 h</div>
+        <div class="maint-action">Dimensional Check & Backlash Measurement</div>
+        <p class="maint-detail">Measure backlash with dial gauge (max allowable typically 0.05–0.15 mm for m=4). Check tooth profile error and pitch error with gear measuring machine or DTI method.</p>
+      </div>
+      <div class="maint-item warn">
+        <div class="maint-freq">Every 2500 h</div>
+        <div class="maint-action">Full Strip Inspection</div>
+        <p class="maint-detail">Remove gears, inspect with dye penetrant (PT) for root cracks. Measure tooth thickness with micrometer or gear tooth vernier. Check bearing condition. Verify shaft alignment with dial gauge and blue bluing contact test.</p>
+      </div>
+      <div class="maint-item crit">
+        <div class="maint-freq">On Condition / Life Limit</div>
+        <div class="maint-action">Gear Replacement</div>
+        <p class="maint-detail">Replace at mandatory life limit (AGMA L₁₀ / ISO B₁₀ rated life), or on condition: pitting coverage > 10% tooth area, root crack detected (zero tolerance), backlash > 1.5× new tolerance, or vibration exceeds alarm level after investigation.</p>
+      </div>
+    </div>
+
+    <h2>Condition Monitoring Parameters</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Method</th><th>Alert Threshold</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Gear mesh frequency amplitude</td><td>Accelerometer + FFT</td><td>+3 dB from baseline</td><td>Inspect oil, check alignment</td></tr>
+          <tr><td>GMF sidebands (1× shaft spacing)</td><td>FFT spectrum</td><td>Sideband index > 0.3</td><td>Check shaft alignment, bearing preload</td></tr>
+          <tr><td>Oil temperature</td><td>Thermocouple</td><td>> 90°C (mineral oil)</td><td>Check cooler, reduce load</td></tr>
+          <tr><td>Fe particle count</td><td>Oil analysis</td><td>> 50 ppm Fe</td><td>Borescope inspection, shorten interval</td></tr>
+          <tr><td>Vibration crest factor</td><td>Time waveform</td><td>CF > 6</td><td>Urgent tooth inspection</td></tr>
+          <tr><td>Backlash increase</td><td>Dial gauge</td><td>> 50% of new tolerance</td><td>Assess wear rate, plan replacement</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Lubrication Guide</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Application</th><th>Viscosity (ISO VG)</th><th>Type</th><th>Change Interval</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Enclosed industrial</td><td>ISO VG 220–320</td><td>Mineral or PAO</td><td>4000–8000 h</td></tr>
+          <tr><td>High speed (> 20 m/s PCD)</td><td>ISO VG 68–100</td><td>PAO + EP additives</td><td>2000–4000 h</td></tr>
+          <tr><td>Aerospace gearboxes</td><td>MIL-PRF-23699 / DEF-STAN 91-98</td><td>Synthetic ester</td><td>Per OEM schedule</td></tr>
+          <tr><td>Open gears / low speed</td><td>ISO VG 1000+</td><td>Bituminous / grease</td><td>Weekly reapplication</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="info-box ok">
+      <strong>Endurance testing:</strong> On long test-rig runs, regular oil analysis with a trend of iron (Fe) particle count is one of the earliest warnings of gear distress. A step change in Fe ppm often shows up well before vibration levels rise.
+    </div>
+  </section>
+
+  <!-- LIVE MESH ANIMATION ─────────────────────────────────── -->
+  <section class="section" id="sec-animation">
+    <div class="section-title">Live Gear Mesh</div>
+    <p class="section-sub">Animated involute spur gear pair. Adjust parameters to see how tooth count and size affect the mesh.</p>
+
+    <div id="mesh-box" class="mesh-box">
+    <div class="mesh-ctl">
+      <div class="field-group"><label>Pinion teeth z₁</label><input type="number" id="a-z1" value="20" min="6" max="60" style="width:80px;"></div>
+      <div class="field-group"><label>Gear teeth z₂</label><input type="number" id="a-z2" value="40" min="6" max="120" style="width:80px;"></div>
+      <div class="field-group"><label>Pressure angle</label><select id="a-alpha" style="width:96px;"><option>14.5</option><option selected>20</option><option>25</option></select></div>
+      <div class="field-group"><label>Pinion speed (RPM)</label><input type="number" id="a-rpm" value="20" min="0.1" max="6000" style="width:96px;"></div>
+      <div class="field-group"><label>Slow motion</label><select id="a-slow" style="width:96px;"><option value="1">Real time</option><option value="0.5">½ ×</option><option value="0.25" selected>¼ ×</option><option value="0.1">⅒ ×</option><option value="0.02">1/50 ×</option></select></div>
+      <button class="btn-calc" onclick="restartAnim()">Update</button>
+      <button class="btn-calc ghost" id="a-play" onclick="toggleMeshPlay()">❚❚ Pause</button>
+      <button class="btn-calc ghost" onclick="stepMesh(-1)" title="Back an eighth of a tooth">◀</button>
+      <button class="btn-calc ghost" onclick="stepMesh(1)" title="Forward an eighth of a tooth">▶</button>
+      <button class="btn-calc ghost" onclick="meshFullscreen()" id="meshFs">⛶ Full screen</button>
+    </div>
+    <div class="mesh-tog">
+      <label><input type="checkbox" id="a-pitch" checked> Pitch circles</label>
+      <label><input type="checkbox" id="a-base" checked> Base circles</label>
+      <label><input type="checkbox" id="a-loa" checked> Line of action &amp; contact points</label>
+      <label><input type="checkbox" id="a-trace"> Trace contacts</label>
+      <label><input type="checkbox" id="a-mark" checked> Mark one tooth</label>
+    </div>
+    <div class="mesh-canvas-wrap"><canvas id="gear-anim-canvas"></canvas></div>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:10px;">
+      <div class="result-row" style="border:none;padding:4px 0;"><span class="result-label">Gear ratio</span><span class="result-val" id="anim-ratio">—</span></div>
+      <div class="result-row" style="border:none;padding:4px 0;"><span class="result-label">Output RPM</span><span class="result-val" id="anim-out-rpm">—</span></div>
+      <div class="result-row" style="border:none;padding:4px 0;"><span class="result-label">Mesh frequency</span><span class="result-val" id="anim-gmf">—</span></div>
+      <div class="result-row" style="border:none;padding:4px 0;"><span class="result-label">Contact ratio ε<sub>α</sub></span><span class="result-val" id="anim-eps">—</span></div>
+      <div class="result-row" style="border:none;padding:4px 0;"><span class="result-label">Teeth in contact now</span><span class="result-val" id="anim-pairs">—</span></div>
+    </div>
+    <div id="anim-warn" class="mesh-warn"></div>
+    <p class="mesh-note">The teeth are true involutes generated from the base circle. The red dashed line is the <b>line of action</b>: tangent to both base circles and through the pitch point P at the pressure angle. Contact can only happen on the solid part of it between the two tip circles — the <b>path of contact</b>. Red dots are the contact points right now; watch a pair enter at one end, slide along the line, and leave at the other while the next pair picks up. Their average number is the contact ratio. Mesh frequency is pinion revolutions per second × z₁.</p>
+  </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+// ── Navigation ───────────────────────────────────────────────
+const navBtns = document.querySelectorAll('.nav-btn');
+const sections = document.querySelectorAll('.section');
+
+navBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.sec;
+    navBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    sections.forEach(s => {
+      s.classList.toggle('active', s.id === 'sec-' + target);
+    });
+    if (target === 'animation') startAnim();
+    if (target === 'overview') drawOverviewGear();
+  });
+});
+
+// ── Theme toggle ─────────────────────────────────────────────
+function toggleTheme() {
+  const root = document.documentElement;
+  const cur = root.getAttribute('data-theme');
+  root.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+}
+
+// ── Profile family data ──────────────────────────────────────
+const profiles = [
+  {
+    name: 'Involute (Standard 20°)',
+    tag: 'std', tagLabel: 'Standard',
+    bending: 55, contact: 55, noiseVib: 55, tolerance: 95,
+    desc: 'Universal standard since the 18th century. Constant velocity ratio. Insensitive to centre distance errors. Flank is the involute of the base circle. Convex–convex contact at all points → moderate Hertzian stress.',
+    use: 'Machine tools, automotive, industrial gearboxes, aerospace (accessory gearboxes, MGB)',
+    pros: 'Centre-error tolerant, well-characterised by AGMA/ISO, easy to manufacture and inspect.',
+    cons: 'Convex–convex contact = higher σ_H than conforming profiles.'
+  },
+  {
+    name: 'Involute (25° Pressure Angle)',
+    tag: 'std', tagLabel: 'Standard',
+    bending: 45, contact: 60, noiseVib: 60, tolerance: 93,
+    desc: 'Involute family with wider pressure angle. Thicker root section improves bending strength. Slightly reduced contact ratio means higher load per contact line.',
+    use: 'Heavy shock loading, aircraft engines, military drives',
+    pros: 'Better bending strength, can use fewer teeth without undercut.',
+    cons: 'Higher contact stress, noisier, requires more precisely aligned housing.'
+  },
+  {
+    name: 'HCR Involute (ε_α > 2.0)',
+    tag: 'adv', tagLabel: 'Advanced',
+    bending: 35, contact: 40, noiseVib: 40, tolerance: 80,
+    desc: 'High-Contact-Ratio involute achieved by low pressure angle (14.5°) and long addendum. At least 2 tooth pairs always in contact simultaneously, reducing peak load per pair by ~30–40%.',
+    use: 'Aerospace gearboxes, precision planetary stages, quiet transmissions',
+    pros: 'Lower σ_b and σ_H, quieter operation, smooth torque transmission.',
+    cons: 'More sensitive to profile/pitch errors; tip and root interference risk; tighter manufacturing tolerance.'
+  },
+  {
+    name: 'Cycloidal',
+    tag: 'spec', tagLabel: 'Specialist',
+    bending: 40, contact: 45, noiseVib: 35, tolerance: 30,
+    desc: 'Flank formed by epicycloid (addendum) and hypocycloid (dedendum) of a rolling circle. Mixed curvature: convex–concave in addendum gives lower Hertzian stress there, but conjugate action is highly centre-distance sensitive.',
+    use: 'Clock movements, instrument gears, gear pumps, food machinery',
+    pros: 'Low noise, lower σ_H in addendum region, no undercut on small z.',
+    cons: 'Very sensitive to centre distance; requires matched pair replacement; not used in power transmissions.'
+  },
+  {
+    name: 'Novikov / Circular Arc',
+    tag: 'adv', tagLabel: 'Advanced',
+    bending: 75, contact: 15, noiseVib: 50, tolerance: 55,
+    desc: 'Circular arc flanks: convex pinion tooth into concave gear tooth. Near-conforming contact → Hertzian stress dramatically lower (1.5–2× vs involute). Contact ratio in transverse plane ≈ 1.0 — requires helical form for continuous contact. Dominant failure mode is bending, not surface.',
+    use: 'Russian helicopter MGB (Mi-8, Mi-24), marine gearboxes, high-torque drives',
+    pros: 'Surface fatigue life 1.5–2× better than involute at same module.',
+    cons: 'Higher bending stress, needs helical to work, sensitive to axial alignment.'
+  },
+  {
+    name: 'Trochoidal (Internal)',
+    tag: 'spec', tagLabel: 'Specialist',
+    bending: 35, contact: 45, noiseVib: 30, tolerance: 70,
+    desc: 'Tooth profile generated by a point on a rolling circle (trochoid). Used in internal gear/gerotor arrangements. Convex outer rotor lobes mesh with concave inner rotor pockets — positive displacement pumping action.',
+    use: 'Gerotor pumps, orbital motors, cycloidal drives',
+    pros: 'Very smooth flow, compact, low-noise for pump applications.',
+    cons: 'Limited torque capacity, not applicable to standard external gear trains.'
+  }
+];
+
+function renderProfileCards() {
+  const container = document.getElementById('profile-cards');
+  container.innerHTML = profiles.map((p, i) => `
+    <div class="profile-card" onclick="showProfileDetail(${i})" id="pcard-${i}">
+      <div class="pname">${p.name}</div>
+      <span class="ptag ${p.tag}">${p.tagLabel}</span>
+      <div class="bar-row">
+        <span class="bar-label">Bending σ</span>
+        <div class="bar-track"><div class="bar-fill ${p.bending<45?'good':p.bending<65?'mid':'bad'}" style="width:${p.bending}%"></div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Contact σ</span>
+        <div class="bar-track"><div class="bar-fill ${p.contact<45?'good':p.contact<65?'mid':'bad'}" style="width:${p.contact}%"></div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Noise</span>
+        <div class="bar-track"><div class="bar-fill ${p.noiseVib<45?'good':p.noiseVib<65?'mid':'bad'}" style="width:${p.noiseVib}%"></div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Ctr-err tol.</span>
+        <div class="bar-track"><div class="bar-fill ${p.tolerance>70?'good':p.tolerance>45?'mid':'bad'}" style="width:${p.tolerance}%"></div></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showProfileDetail(i) {
+  document.querySelectorAll('.profile-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('pcard-' + i).classList.add('selected');
+  const p = profiles[i];
+  const d = document.getElementById('profile-detail');
+  d.style.display = 'block';
+  d.innerHTML = `
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;">
+      <h2 style="margin:0;font-size:16px;">${p.name}</h2>
+      <span class="ptag ${p.tag}" style="margin:0">${p.tagLabel}</span>
+    </div>
+    <p style="font-size:13.5px;max-width:none;">${p.desc}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--fg3);margin-bottom:4px;">Applications</div>
+        <div style="font-size:13px;color:var(--fg2);">${p.use}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ok);margin-bottom:4px;">Advantages</div>
+        <div style="font-size:13px;color:var(--fg2);">${p.pros}</div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--danger);margin-bottom:4px;margin-top:10px;">Limitations</div>
+        <div style="font-size:13px;color:var(--fg2);">${p.cons}</div>
+      </div>
+    </div>
+  `;
+}
+
+// ── CALCULATOR ───────────────────────────────────────────────
+function runCalc() {
+  const m  = parseFloat(document.getElementById('c-m').value)  || 4;
+  const phi= parseFloat(document.getElementById('c-phi').value) || 20;
+  const z1 = parseInt(document.getElementById('c-z1').value)    || 20;
+  const z2 = parseInt(document.getElementById('c-z2').value)    || 50;
+  const b  = parseFloat(document.getElementById('c-b').value)   || 60;
+  const T  = parseFloat(document.getElementById('c-T').value)   || 200;
+  const ka = parseFloat(document.getElementById('c-ka').value)  || 1.25;
+  const kv = parseFloat(document.getElementById('c-kv').value)  || 1.3;
+
+  const phiR = phi * Math.PI / 180;
+  const d1 = m * z1;
+  const d2 = m * z2;
+  const da1 = m * (z1 + 2);
+  const da2 = m * (z2 + 2);
+  const df1 = m * (z1 - 2.5);
+  const df2 = m * (z2 - 2.5);
+  const a   = m * (z1 + z2) / 2;
+  const ratio = z2 / z1;
+
+  // Approximate contact ratio
+  const rb1 = (d1/2) * Math.cos(phiR);
+  const rb2 = (d2/2) * Math.cos(phiR);
+  const ra1 = da1/2, ra2 = da2/2;
+  const arcOfAction = Math.sqrt(ra1*ra1 - rb1*rb1) + Math.sqrt(ra2*ra2 - rb2*rb2) - a*Math.sin(phiR);
+  const eps = arcOfAction / (Math.PI * m * Math.cos(phiR));
+
+  // Tangential force
+  const Wt = (2 * T * 1000) / d1; // T in N·m → N·mm
+
+  // Approximate Lewis Y for involute
+  const YJ_map = {14.5: 0.28, 20: 0.32, 25: 0.38};
+  const YJ = YJ_map[phi] || 0.32;
+
+  // Simplified bending stress (AGMA-like, Ks=1, KH=1.2 assumed)
+  const Ks = 1.05, KH = 1.2;
+  const sigma_b = (Wt / (b * m)) * (ka * kv * Ks * KH) / YJ;
+
+  // Simplified contact stress (ZE steel/steel = 191 MPa^0.5, ZI approximate)
+  const ZE = 191;
+  const ZI = Math.sin(phiR) * Math.cos(phiR) / 2 * (ratio / (ratio + 1));
+  const sigma_H = ZE * Math.sqrt((Wt * ka * kv * Ks * KH) / (b * d1 * ZI));
+
+  const fmt = v => v.toFixed(2);
+  const fmtI = v => Math.round(v);
+
+  document.getElementById('calc-results').style.display = 'block';
+  document.getElementById('res-geo').innerHTML = `
+    <div class="result-row"><span class="result-label">Gear ratio i</span><span class="result-val">${fmt(ratio)} : 1</span></div>
+    <div class="result-row"><span class="result-label">Pinion PCD d₁</span><span class="result-val">${fmtI(d1)} mm</span></div>
+    <div class="result-row"><span class="result-label">Gear PCD d₂</span><span class="result-val">${fmtI(d2)} mm</span></div>
+    <div class="result-row"><span class="result-label">Tip diameter dₐ₁ / dₐ₂</span><span class="result-val">${fmtI(da1)} / ${fmtI(da2)} mm</span></div>
+    <div class="result-row"><span class="result-label">Root diameter d_f₁ / d_f₂</span><span class="result-val">${fmtI(df1)} / ${fmtI(df2)} mm</span></div>
+    <div class="result-row"><span class="result-label">Centre distance a</span><span class="result-val">${fmtI(a)} mm</span></div>
+    <div class="result-row"><span class="result-label">Contact ratio ε_α</span><span class="result-val" style="color:${eps>=1.2?'var(--ok)':'var(--danger)'}">${fmt(eps)}</span></div>
+    <div class="result-row"><span class="result-label">Face width / module (b/m)</span><span class="result-val">${fmt(b/m)}</span></div>
+  `;
+  document.getElementById('res-stress').innerHTML = `
+    <div class="result-row"><span class="result-label">Tangential force W_t</span><span class="result-val">${fmt(Wt)} N</span></div>
+    <div class="result-row"><span class="result-label">Bending stress σ_b (indicative)</span><span class="result-val" style="color:${sigma_b<300?'var(--ok)':sigma_b<500?'var(--warn)':'var(--danger)'}">${fmtI(sigma_b)} MPa</span></div>
+    <div class="result-row"><span class="result-label">Contact stress σ_H (indicative)</span><span class="result-val" style="color:${sigma_H<900?'var(--ok)':sigma_H<1200?'var(--warn)':'var(--danger)'}">${fmtI(sigma_H)} MPa</span></div>
+  `;
+
+  // Verdict
+  let verdict = '';
+  if (eps < 1.2)  verdict += `<div class="info-box danger"><strong>⚠ Contact ratio ${fmt(eps)} < 1.2</strong> — risk of rough engagement. Increase addendum or reduce pressure angle.</div>`;
+  if (b/m < 8)    verdict += `<div class="info-box warn"><strong>Face width/module = ${fmt(b/m)}</strong> — below recommended minimum of 8. Consider wider face.</div>`;
+  if (b/m > 20)   verdict += `<div class="info-box warn"><strong>Face width/module = ${fmt(b/m)}</strong> — above 20; risk of load maldistribution (K_Hβ escalates).</div>`;
+  if (z1 < 17 && phi === 20) verdict += `<div class="info-box danger"><strong>z₁ = ${z1} < 17</strong> — undercut risk at 20°. Use profile shift (x > 0) or increase tooth count.</div>`;
+  if (!verdict) verdict = `<div class="info-box ok">✓ Basic geometry checks pass. Verify against AGMA 2101 or ISO 6336 with full K-factor suite for rating.</div>`;
+  document.getElementById('res-verdict').innerHTML = verdict;
+}
+
+// ── INVOLUTE GEOMETRY (shared by the overview sketch and the live mesh) ──
+const inv = a => Math.tan(a) - a;
+// One closed outline for a spur gear: true involute flanks from the base circle
+// (or the root, whichever is larger) to the tip, radial flank below the base
+// circle, round root fillet, flat tip land. Angles in radians, radii in px.
+function gearOutline(z, m, alphaDeg, backlash) {
+  const a = alphaDeg * Math.PI / 180;
+  const r = m * z / 2, rb = r * Math.cos(a), ra = r + m, rf = Math.max(r - 1.25 * m, 0.2 * r);
+  const s = Math.PI * m / 2 - (backlash || 0);          // circular tooth thickness at pitch
+  const psi = s / (2 * r);                               // half-thickness angle at pitch
+  const halfAt = rho => psi + inv(a) - inv(Math.acos(Math.min(1, rb / rho)));
+  const rStart = Math.max(rb, rf);
+  const N = 14, flank = [];
+  for (let i = 0; i <= N; i++) {
+    const rho = rStart + (ra - rStart) * (i / N);
+    flank.push([rho, halfAt(rho)]);
+  }
+  const tipHalf = Math.max(halfAt(ra), 0.004);
+  const baseHalf = halfAt(rStart);
+  const pitchAng = 2 * Math.PI / z;
+  const pts = [];
+  for (let k = 0; k < z; k++) {
+    const c = k * pitchAng;
+    // root arc from the previous space centre to this tooth's root corner
+    const rootFrom = c - pitchAng / 2, rootTo = c - baseHalf - 0.06 * pitchAng;
+    for (let t = 0; t <= 4; t++) { const ang = rootFrom + (rootTo - rootFrom) * t / 4; pts.push([rf * Math.cos(ang), rf * Math.sin(ang)]); }
+    // fillet / radial flank up to the base circle
+    if (rf < rb) pts.push([rStart * Math.cos(c - baseHalf), rStart * Math.sin(c - baseHalf)]);
+    flank.forEach(([rho, h]) => pts.push([rho * Math.cos(c - h), rho * Math.sin(c - h)]));
+    for (let t = 1; t < 3; t++) { const ang = c - tipHalf + 2 * tipHalf * t / 3; pts.push([ra * Math.cos(ang), ra * Math.sin(ang)]); }
+    for (let i = flank.length - 1; i >= 0; i--) { const [rho, h] = flank[i]; pts.push([rho * Math.cos(c + h), rho * Math.sin(c + h)]); }
+    if (rf < rb) pts.push([rf * Math.cos(c + baseHalf + 0.06 * pitchAng), rf * Math.sin(c + baseHalf + 0.06 * pitchAng)]);
+    const rootFrom2 = c + baseHalf + 0.06 * pitchAng, rootTo2 = c + pitchAng / 2;
+    for (let t = 1; t <= 4; t++) { const ang = rootFrom2 + (rootTo2 - rootFrom2) * t / 4; pts.push([rf * Math.cos(ang), rf * Math.sin(ang)]); }
+  }
+  return { pts, r, rb, ra, rf, a };
+}
+function tracePath(ctx, g, cx, cy, ang) {
+  const c = Math.cos(ang), s = Math.sin(ang);
+  ctx.beginPath();
+  g.pts.forEach(([x, y], i) => {
+    const X = cx + x * c - y * s, Y = cy + x * s + y * c;
+    if (i) ctx.lineTo(X, Y); else ctx.moveTo(X, Y);
+  });
+  ctx.closePath();
+}
+function themeIsDark() {
+  const t = document.documentElement.getAttribute('data-theme');
+  return t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches);
+}
+
+// ── OVERVIEW GEAR SKETCH ────────────────────────────────────
+function drawOverviewGear() {
+  const canvas = document.getElementById('overview-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const dark = themeIsDark();
+  const colStroke = dark ? '#4a9fd4' : '#1e6fa8', colFill = dark ? '#1c2030' : '#ffffff';
+  const colText = dark ? '#9ba3bc' : '#4a4f5e', colAccent = dark ? '#e09040' : '#a85c00';
+  const z1 = 14, z2 = 22, m = 7.2;
+  const g1 = gearOutline(z1, m, 20, 0.08 * m), g2 = gearOutline(z2, m, 20, 0.08 * m);
+  const cy = 108, cx1 = 18 + g1.ra, cx2 = cx1 + g1.r + g2.r;
+  [[g1, cx1, 0, colStroke], [g2, cx2, Math.PI + Math.PI / z2, colAccent]].forEach(([g, cx, ang, col]) => {
+    tracePath(ctx, g, cx, cy, ang);
+    ctx.fillStyle = colFill; ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = 1.4; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, g.rf * 0.28, 0, 2 * Math.PI); ctx.fillStyle = col; ctx.fill();
+  });
+  ctx.fillStyle = colText; ctx.font = '11px IBM Plex Mono, monospace'; ctx.textAlign = 'center';
+  ctx.fillText(`z₁ = ${z1}`, cx1, cy + g2.ra + 14);
+  ctx.fillText(`z₂ = ${z2}`, cx2, cy + g2.ra + 14);
+  ctx.textAlign = 'left';
+  ctx.strokeStyle = colText; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(cx1, cy); ctx.lineTo(cx2, cy); ctx.stroke(); ctx.setLineDash([]);
+  ctx.font = '10px IBM Plex Sans, sans-serif';
+  ctx.fillText('line of centres', cx1 + 12, cy - 6);
+}
+
+// ── LIVE MESH ───────────────────────────────────────────────
+const SHIFT = 1;
+const mesh = { angle: 0, playing: true, raf: null, last: null, trail: [] };
+function meshParams() {
+  const num = (id, d, lo, hi) => Math.min(hi, Math.max(lo, parseFloat(document.getElementById(id).value) || d));
+  return {
+    z1: Math.round(num('a-z1', 16, 6, 60)), z2: Math.round(num('a-z2', 32, 6, 120)),
+    rpm: num('a-rpm', 60, 0.1, 6000), alpha: parseFloat(document.getElementById('a-alpha').value) || 20,
+    slow: parseFloat(document.getElementById('a-slow').value) || 1,
+    show: {
+      pitch: document.getElementById('a-pitch').checked, base: document.getElementById('a-base').checked,
+      loa: document.getElementById('a-loa').checked, mark: document.getElementById('a-mark').checked,
+      trace: document.getElementById('a-trace').checked
+    }
+  };
+}
+function sizeCanvas(canvas) {
+  const box = canvas.parentElement.getBoundingClientRect();
+  const full = !!document.fullscreenElement;
+  const w = Math.max(300, box.width);
+  const h = full ? Math.max(320, window.innerHeight - canvas.getBoundingClientRect().top - 90)
+                 : Math.max(280, Math.min(560, w * 0.55));
+  const dpr = window.devicePixelRatio || 1;
+  if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+    canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+  }
+  return { W: w, H: h, dpr };
+}
+let meshCache = null;
+function startAnim() {
+  const P = meshParams();
+  const a = P.alpha * Math.PI / 180;
+  const ratio = P.z2 / P.z1;
+  document.getElementById('anim-ratio').textContent = ratio.toFixed(3) + ' : 1';
+  document.getElementById('anim-out-rpm').textContent = (P.rpm / ratio).toFixed(P.rpm / ratio < 10 ? 2 : 1) + ' RPM';
+  document.getElementById('anim-gmf').textContent = (P.rpm / 60 * P.z1).toFixed(P.rpm / 60 * P.z1 < 10 ? 2 : 1) + ' Hz';
+  // contact ratio for unit module
+  const r1 = P.z1 / 2, r2 = P.z2 / 2, rb1 = r1 * Math.cos(a), rb2 = r2 * Math.cos(a);
+  const eps = (Math.sqrt((r1 + 1) ** 2 - rb1 ** 2) + Math.sqrt((r2 + 1) ** 2 - rb2 ** 2) - (r1 + r2) * Math.sin(a)) / (Math.PI * Math.cos(a));
+  document.getElementById('anim-eps').textContent = eps.toFixed(2);
+  const zmin = Math.ceil(2 / Math.sin(a) ** 2);
+  const warn = [];
+  if (P.z1 < zmin) warn.push(`Pinion has fewer than ${zmin} teeth: at ${P.alpha}° a standard rack cutter would undercut it — real gears use profile shift.`);
+  if (P.z2 < zmin) warn.push(`Gear has fewer than ${zmin} teeth: undercut risk at ${P.alpha}°.`);
+  if (eps < 1.2) warn.push(`Contact ratio ${eps.toFixed(2)} is low — aim for at least 1.2 so one pair takes over before the last lets go.`);
+  document.getElementById('anim-warn').innerHTML = warn.map(w => '<div>⚠ ' + w + '</div>').join('');
+  meshCache = null; mesh.trail = [];
+  if (mesh.raf) cancelAnimationFrame(mesh.raf);
+  mesh.last = null;
+  mesh.raf = requestAnimationFrame(meshFrame);
+}
+function meshFrame(ts) {
+  const sec = document.getElementById('sec-animation');
+  if (!sec.classList.contains('active')) { mesh.raf = null; return; }
+  const P = meshParams();
+  if (mesh.last === null) mesh.last = ts;
+  const dt = Math.min((ts - mesh.last) / 1000, 0.05); mesh.last = ts;
+  if (mesh.playing) mesh.angle += (P.rpm / 60) * 2 * Math.PI * dt * P.slow;
+  drawMesh(P);
+  mesh.raf = requestAnimationFrame(meshFrame);
+}
+function drawMesh(P) {
+  const canvas = document.getElementById('gear-anim-canvas');
+  const ctx = canvas.getContext('2d');
+  const { W, H, dpr } = sizeCanvas(canvas);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const dark = themeIsDark();
+  const C = {
+    bg: dark ? '#12151d' : '#f5f6f8', fill1: dark ? '#17283a' : '#eaf2f9', fill2: dark ? '#33240f' : '#fbf1e4',
+    s1: dark ? '#4a9fd4' : '#1e6fa8', s2: dark ? '#e09040' : '#a85c00', txt: dark ? '#8a93ab' : '#6b7285',
+    guide: dark ? '#3a3e50' : '#c9ceda', loa: dark ? '#e05d5d' : '#c0392b', mark1: dark ? '#7cc3f0' : '#1e6fa8', mark2: dark ? '#f0b070' : '#c46e00'
+  };
+  ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
+  // fit both gears: horizontal span = m(z1+z2+2), vertical = m(zmax+2)
+  const m = Math.min((W - 40) / (P.z1 + P.z2 + 2), (H - 50) / (Math.max(P.z1, P.z2) + 2));
+  const key = [P.z1, P.z2, P.alpha, m.toFixed(3)].join('|');
+  if (!meshCache || meshCache.key !== key) {
+    meshCache = { key, g1: gearOutline(P.z1, m, P.alpha, 0.06 * m), g2: gearOutline(P.z2, m, P.alpha, 0.06 * m) };
+    mesh.trail = [];
+  }
+  const { g1, g2 } = meshCache;
+  const span = m * (P.z1 + P.z2 + 2);
+  const cx1 = (W - span) / 2 + g1.ra, cx2 = cx1 + g1.r + g2.r, cy = (H - 20) / 2 + 4;
+  const th1 = mesh.angle;
+  // backlash is all taken on the coast side: the driving flanks touch
+  const th2 = Math.PI + Math.PI / P.z2 - th1 * P.z1 / P.z2 + SHIFT * 0.06 / (P.z2 / 2);
+  const a = g1.a;
+
+  // guide circles
+  const circ = (cx, r, dash, col) => { ctx.setLineDash(dash); ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]); };
+  // gears
+  [[g1, cx1, th1, C.fill1, C.s1], [g2, cx2, th2, C.fill2, C.s2]].forEach(([g, cx, th, fill, stroke]) => {
+    tracePath(ctx, g, cx, cy, th);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.strokeStyle = stroke; ctx.lineWidth = 1.6; ctx.lineJoin = 'round'; ctx.stroke();
+  });
+  if (P.show.pitch) { circ(cx1, g1.r, [5, 4], C.guide); circ(cx2, g2.r, [5, 4], C.guide); }
+  if (P.show.base) { circ(cx1, g1.rb, [2, 3], C.guide); circ(cx2, g2.rb, [2, 3], C.guide); }
+
+  // hubs, keyways, spokes so rotation is easy to follow
+  [[g1, cx1, th1, C.s1], [g2, cx2, th2, C.s2]].forEach(([g, cx, th, col]) => {
+    ctx.strokeStyle = col; ctx.globalAlpha = 0.35; ctx.lineWidth = Math.max(2, g.rf * 0.06);
+    for (let k = 0; k < 5; k++) {
+      const sa = th + k * 2 * Math.PI / 5;
+      ctx.beginPath(); ctx.moveTo(cx + g.rf * 0.3 * Math.cos(sa), cy + g.rf * 0.3 * Math.sin(sa));
+      ctx.lineTo(cx + g.rf * 0.78 * Math.cos(sa), cy + g.rf * 0.78 * Math.sin(sa)); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.beginPath(); ctx.arc(cx, cy, g.rf * 0.22, 0, 2 * Math.PI); ctx.fillStyle = col; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, g.rf * 0.09, 0, 2 * Math.PI); ctx.fillStyle = C.bg; ctx.fill();
+  });
+
+  // marked tooth on each gear (the pair that starts in mesh)
+  if (P.show.mark) {
+    [[g1, cx1, th1, C.mark1, 0], [g2, cx2, th2, C.mark2, 0]].forEach(([g, cx, th, col]) => {
+      ctx.beginPath(); const rr = (g.r + g.ra) / 2;
+      ctx.arc(cx + rr * Math.cos(th), cy + rr * Math.sin(th), Math.max(2.5, m * 0.22), 0, 2 * Math.PI);
+      ctx.fillStyle = col; ctx.fill();
+    });
+  }
+
+  // line of action, path of contact and live contact points
+  const Px = cx1 + g1.r, Py = cy;                          // pitch point
+  const dir = [Math.sin(a), Math.cos(a)];                   // line of action direction (screen coords, y down)
+  const T1 = [cx1 + g1.rb * Math.cos(a), cy - g1.rb * Math.sin(a)];
+  const T2 = [cx2 - g2.rb * Math.cos(a), cy + g2.rb * Math.sin(a)];
+  if (P.show.loa) {
+    ctx.strokeStyle = C.loa; ctx.globalAlpha = 0.45; ctx.lineWidth = 1; ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(T1[0], T1[1]); ctx.lineTo(T2[0], T2[1]); ctx.stroke(); ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+    // path of contact = part of T1T2 inside both tip circles
+    const along = (cx, ra) => { // solve |P + t·dir − c| = ra for the two t values
+      const dx = Px - cx, dy = Py - cy, b = dx * dir[0] + dy * dir[1], cc = dx * dx + dy * dy - ra * ra;
+      const d = Math.sqrt(Math.max(0, b * b - cc)); return [-b - d, -b + d];
+    };
+    const tA = along(cx2, g2.ra), tB = along(cx1, g1.ra);
+    const tStart = Math.max(tA[0], tB[0]), tEnd = Math.min(tA[1], tB[1]);
+    ctx.strokeStyle = C.loa; ctx.lineWidth = 3; ctx.globalAlpha = 0.8;
+    ctx.beginPath(); ctx.moveTo(Px + tStart * dir[0], Py + tStart * dir[1]); ctx.lineTo(Px + tEnd * dir[0], Py + tEnd * dir[1]); ctx.stroke();
+    ctx.globalAlpha = 1;
+    // contact points: where the two tooth outlines cross the line of action at the same place
+    const cross = (g, cx, th) => {
+      const c = Math.cos(th), s = Math.sin(th), out = [], pts = g.pts;
+      for (let i = 0; i < pts.length; i++) {
+        const [x0, y0] = pts[i], [x1, y1] = pts[(i + 1) % pts.length];
+        const ax = cx + x0 * c - y0 * s - Px, ay = cy + x0 * s + y0 * c - Py;
+        const bx = cx + x1 * c - y1 * s - Px, by = cy + x1 * s + y1 * c - Py;
+        // signed distance of each end from the line
+        const da = ax * dir[1] - ay * dir[0], db = bx * dir[1] - by * dir[0];
+        if ((da > 0) === (db > 0)) continue;
+        const f = da / (da - db);
+        const tt = (ax + (bx - ax) * f) * dir[0] + (ay + (by - ay) * f) * dir[1];
+        if (tt >= tStart - m * 0.3 && tt <= tEnd + m * 0.3) out.push(tt);
+      }
+      return out;
+    };
+    const c1 = cross(g1, cx1, th1), c2 = cross(g2, cx2, th2);
+    let n = 0;
+    c1.forEach(t1 => {
+      if (!c2.some(t2 => Math.abs(t2 - t1) < m * 0.035)) return;
+      const X = Px + t1 * dir[0], Y = Py + t1 * dir[1];
+      ctx.beginPath(); ctx.arc(X, Y, Math.max(3, m * 0.26), 0, 2 * Math.PI);
+      ctx.fillStyle = C.loa; ctx.fill(); ctx.strokeStyle = C.bg; ctx.lineWidth = 1.5; ctx.stroke();
+      if (P.show.trace) mesh.trail.push([X, Y]);
+      n++;
+    });
+    document.getElementById('anim-pairs').textContent = n + (n === 1 ? ' pair' : ' pairs');
+    ctx.beginPath(); ctx.arc(Px, Py, 3, 0, 2 * Math.PI); ctx.fillStyle = C.txt; ctx.fill();
+    ctx.fillStyle = C.txt; ctx.font = '11px IBM Plex Sans, sans-serif';
+    ctx.fillText('P', Px + 6, Py - 6);
+    ctx.fillText(`line of action (${P.alpha}°)`, T1[0] + 10, T1[1] - 8);
+  }
+  if (P.show.trace && mesh.trail.length) {
+    if (mesh.trail.length > 600) mesh.trail.splice(0, mesh.trail.length - 600);
+    ctx.fillStyle = C.loa; ctx.globalAlpha = 0.25;
+    mesh.trail.forEach(([x, y]) => { ctx.fillRect(x - 1, y - 1, 2, 2); });
+    ctx.globalAlpha = 1;
+  }
+  ctx.fillStyle = C.txt; ctx.font = '12px IBM Plex Mono, monospace'; ctx.textAlign = 'center';
+  ctx.fillText(`z₁ = ${P.z1}  (driver)`, cx1, H - 10);
+  ctx.fillText(`z₂ = ${P.z2}`, cx2, H - 10);
+  ctx.textAlign = 'left';
+}
+function restartAnim() { startAnim(); }
+function toggleMeshPlay() {
+  mesh.playing = !mesh.playing;
+  document.getElementById('a-play').textContent = mesh.playing ? '❚❚ Pause' : '▶ Play';
+}
+function stepMesh(dir) {
+  const z1 = Math.round(parseFloat(document.getElementById('a-z1').value) || 16);
+  mesh.playing = false; document.getElementById('a-play').textContent = '▶ Play';
+  mesh.angle += dir * (2 * Math.PI / z1) / 8;            // one eighth of a tooth pitch
+}
+function meshFullscreen() {
+  const box = document.getElementById('mesh-box');
+  if (document.fullscreenElement) document.exitFullscreen();
+  else if (box.requestFullscreen) box.requestFullscreen();
+}
+
+
+// ── Init ─────────────────────────────────────────────────────
+renderProfileCards();
+drawOverviewGear();
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', drawOverviewGear);
+function pageFullscreen() {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+}
+document.addEventListener('fullscreenchange', () => {
+  const on = !!document.fullscreenElement;
+  document.getElementById('fsBtn').textContent = on ? '✕ Exit full screen' : '⛶ Full screen';
+  document.getElementById('meshFs').textContent = on ? '✕ Exit full screen' : '⛶ Full screen';
+});
+if (!document.documentElement.requestFullscreen) { document.getElementById('fsBtn').hidden = true; document.getElementById('meshFs').hidden = true; }
+['a-alpha', 'a-slow', 'a-z1', 'a-z2', 'a-rpm'].forEach(id => document.getElementById(id).addEventListener('change', () => { if (id !== 'a-slow') startAnim(); }));
+['a-trace'].forEach(id => document.getElementById(id).addEventListener('change', () => { mesh.trail = []; }));
+const _toggleTheme = toggleTheme;
+toggleTheme = function () { _toggleTheme(); drawOverviewGear(); };
+</script>
+</body>
+</html>

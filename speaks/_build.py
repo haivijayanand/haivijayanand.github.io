@@ -2,10 +2,11 @@
 """
 TOOL:    speaks/_build.py
 FAMILY:  SITE
-VERSION: 1.0.1
-DATE:    2026-10-05
+VERSION: 1.1.0
+DATE:    2026-10-09
 CHAT:    Blogger to GitHub migration (Vijay Anand Speaks)
-CHANGES: 1.0.1 - English/Tamil chips and search now hide rows (CSS [hidden] rule; a.row display:grid was overriding it)
+CHANGES: 1.1.0 - topic tags from _topics.json; index gets multi-select language/topic filters (Any/All), sort by date, group by year or topic, shareable URL
+         1.0.1 - English/Tamil chips and search now hide rows (CSS [hidden] rule; a.row display:grid was overriding it)
          1.0.0 - renders speaks/_content/*.json into /speaks/<yyyy>/<mm>/<slug>.html and rebuilds /speaks/index.html
 STATUS:  working
 
@@ -19,13 +20,17 @@ A blank App ID leaves the comment box out.
 Content file (_content/<yyyy>-<mm>-<slug>.json):
   path "yyyy/mm/slug", title, date (ISO, +05:30), lang ("en" or "ta"), tags [..], description,
   hero {card, src, w, h} or null, words, blogger_url, body (cleaned HTML)
-"""
-__version__ = "1.0.1"
 
-PAGE_VERSION = "1.0.0"
-PAGE_DATE = "2026-10-05"
-INDEX_VERSION = "1.0.1"
-PAGE_CHANGES = ["v1.0.0  moved from vijayanandspeaks.blogspot.com"]
+Topics (_topics.json): { "<content file name without .json>": ["Management", "Philosophy"], ... }
+  "_topics" lists the allowed topics in the order the filter shows them. Every essay needs at least one.
+  Kept apart from _content so running _import_blogger.py again does not wipe them.
+"""
+__version__ = "1.1.0"
+
+PAGE_VERSION = "1.1.0"
+PAGE_DATE = "2026-10-09"
+INDEX_VERSION = "1.1.0"
+PAGE_CHANGES = ["v1.1.0  topic tags that open the list filtered to that topic", "v1.0.0  moved from vijayanandspeaks.blogspot.com"]
 
 CUSDIS_APP_ID = ""                       # e.g. "a1b2c3d4-...." from cusdis.com → your site → Embed code
 SITE = "https://haivijayanand.github.io"
@@ -36,10 +41,12 @@ import datetime as dt
 import html
 import json
 import re
+import urllib.parse
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 CONTENT = HERE / "_content"
+TOPICS_FILE = HERE / "_topics.json"
 
 FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
          '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;700&family=Noto+Serif+Tamil:wght@400;700&display=swap" rel="stylesheet">')
@@ -63,6 +70,8 @@ POST_CSS = """
 h1{font-size:clamp(1.6em,5vw,2.2em);line-height:1.25;margin:10px 0 8px;letter-spacing:-.01em}
 .meta{font-size:14px;color:var(--muted);margin:0 0 24px;display:flex;flex-wrap:wrap;gap:4px 14px}
 .tag{background:var(--card);border:1px solid var(--rule);border-radius:999px;padding:0 10px;font-size:12.5px}
+a.tag{color:var(--brand);text-decoration:none}
+a.tag:hover{border-color:var(--brand)}
 article h2{font-size:1.3em;line-height:1.35;margin:1.8em 0 .5em}
 article h3{font-size:1.1em;margin:1.5em 0 .4em}
 article p,article li{overflow-wrap:anywhere}
@@ -87,19 +96,35 @@ article figure:not(:first-child){margin-top:1.6em}
 """
 
 INDEX_CSS = """
+.wrap.wide{max-width:960px}
 .band{background:linear-gradient(120deg,#123c33,#1f6f5c);color:#eaf4f0}
 .band .wrap{padding:28px 16px 24px}
 .band h1{font-size:clamp(28px,6vw,40px);margin:0 0 4px;line-height:1.15}
 .band p{margin:0;color:#b8d4cb;font-size:16px}
 .band nav.top a{color:#eaf4f0}
-.tools{position:sticky;top:0;z-index:2;background:var(--bg);border-bottom:1px solid var(--rule);padding:12px 0}
+.tools{background:var(--bg);border-bottom:1px solid var(--rule);padding:12px 0;font-family:'Segoe UI',system-ui,-apple-system,'Noto Sans Tamil',sans-serif}
+@media (min-width:900px){.tools{position:sticky;top:0;z-index:2}}
 .search{width:100%;font-size:16px;color:var(--ink);background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:10px 14px}
 [hidden]{display:none!important}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:13.5px}
-.chips button{border:1px solid var(--rule);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.frow{display:flex;gap:8px 12px;align-items:baseline;margin-top:10px;font-size:13.5px}
+.frow>.lbl{flex:0 0 74px;color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.chips{display:flex;gap:6px 8px;flex-wrap:wrap;flex:1}
+.chips button,.seg button,.clear{font:inherit;border:1px solid var(--rule);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.chips button small{color:var(--muted);margin-left:3px}
 .chips button[aria-pressed=true]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.chips button[aria-pressed=true] small{color:inherit;opacity:.8}
+.chips button.zero{opacity:.45}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:999px;overflow:hidden;flex:0 0 auto}
+.seg button{border:0;border-radius:0;padding:4px 11px}
+.seg button+button{border-left:1px solid var(--rule)}
+.seg button[aria-pressed=true]{background:var(--brand);color:var(--brand-ink)}
+.view{flex-wrap:wrap}
+.view .grp{display:flex;gap:8px;align-items:center;margin-right:10px}
+.view .grp span{color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.clear{margin-left:auto;color:var(--brand)}
 .count{font:13px 'Segoe UI',system-ui,sans-serif;color:var(--muted);margin:14px 0 0}
-h2.year{font:700 14px 'Segoe UI',system-ui,sans-serif;letter-spacing:.1em;color:var(--brand);margin:28px 0 8px;border-bottom:1px solid var(--rule);padding-bottom:6px}
+h2.grp{font:700 14px 'Segoe UI',system-ui,sans-serif;letter-spacing:.1em;color:var(--brand);margin:28px 0 8px;border-bottom:1px solid var(--rule);padding-bottom:6px;display:flex;justify-content:space-between}
+h2.grp small{font-weight:400;letter-spacing:0;color:var(--muted)}
 a.row{display:grid;grid-template-columns:168px 1fr;gap:16px;align-items:start;text-decoration:none;color:var(--ink);padding:12px 0;border-bottom:1px solid var(--rule)}
 a.row:hover h3{color:var(--brand)}
 .thumb{aspect-ratio:1200/630;border-radius:8px;overflow:hidden;background:var(--frame)}
@@ -107,8 +132,11 @@ a.row:hover h3{color:var(--brand)}
 .thumb.none{display:flex;align-items:center;justify-content:center;font:700 40px Georgia,'Noto Serif Tamil',serif;color:var(--brand);background:linear-gradient(135deg,var(--card),var(--frame))}
 a.row h3{font-size:19px;line-height:1.35;margin:0 0 4px}
 a.row .meta{font-size:13px;color:var(--muted);margin:0 0 4px}
+a.row .tp{color:var(--brand)}
 a.row p{margin:0;font-size:15px;line-height:1.55;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-@media (max-width:560px){a.row{grid-template-columns:104px 1fr;gap:12px}a.row h3{font-size:16.5px}a.row p{display:none}}
+.empty{font:15px 'Segoe UI',system-ui,sans-serif;color:var(--muted);padding:30px 0}
+@media (max-width:560px){a.row{grid-template-columns:104px 1fr;gap:12px}a.row h3{font-size:16.5px}a.row p{display:none}
+  .frow{flex-direction:column;align-items:stretch;gap:6px}.frow>.lbl{flex:none}.clear{margin-left:0;align-self:flex-start}}
 .foot{font:13px 'Segoe UI',system-ui,sans-serif;color:var(--muted);padding:24px 0 40px}
 """
 
@@ -117,8 +145,15 @@ def esc(s):
     return html.escape(str(s), quote=True)
 
 
+def load_topics():
+    t = json.loads(TOPICS_FILE.read_text(encoding="utf-8"))
+    order = t["_topics"]
+    return order, {k: v for k, v in t.items() if not k.startswith("_")}
+
+
 def load():
-    items = []
+    order, tmap = load_topics()
+    items, untagged = [], []
     for f in sorted(CONTENT.glob("*.json")):
         c = json.loads(f.read_text(encoding="utf-8"))
         for k in ("path", "title", "date", "lang", "body"):
@@ -126,9 +161,17 @@ def load():
                 raise SystemExit(f"{f.name}: missing '{k}'")
         c["dt"] = dt.datetime.fromisoformat(c["date"])
         c["url"] = f"/speaks/{c['path']}.html"
+        c["topics"] = tmap.get(f.stem, [])
+        for t in c["topics"]:
+            if t not in order:
+                raise SystemExit(f"_topics.json: '{t}' on {f.stem} is not in _topics")
+        if not c["topics"]:
+            untagged.append(f.stem)
         items.append(c)
+    if untagged:
+        print(f"warning: {len(untagged)} essays have no topic in _topics.json: " + ", ".join(untagged))
     items.sort(key=lambda c: c["dt"])
-    return items
+    return items, order
 
 
 def minutes(c):
@@ -177,7 +220,7 @@ def comments(c):
 
 
 def render_post(c, prev, nxt):
-    tags = "".join(f'<span class="tag">{esc(t)}</span>' for t in c.get("tags", []))
+    tags = "".join(f'<a class="tag" href="/speaks/?t={urllib.parse.quote(t)}">{esc(t)}</a>' for t in c["topics"])
     lang_label = '<span class="tag">தமிழ்</span>' if c["lang"] == "ta" else ""
     pn = ""
     if prev:
@@ -186,7 +229,7 @@ def render_post(c, prev, nxt):
         pn += f'<a class="next" href="{nxt["url"]}"><small>Newer →</small>{esc(nxt["title"])}</a>'
     image = (c.get("hero") or {}).get("card")
     first = nice_date(c["dt"])
-    return (header(f"speaks/{c['path']}.html — {c['title']}", c["title"], [PAGE_CHANGES[0]])
+    return (header(f"speaks/{c['path']}.html — {c['title']}", c["title"], PAGE_CHANGES)
             + head(f"{c['title']} — {BLOG_TITLE}", c.get("description", ""), c["url"], image, POST_CSS, c["lang"])
             + f"""<body>
 <div class="wrap">
@@ -217,60 +260,151 @@ def render_post(c, prev, nxt):
 """)
 
 
-def render_index(items):
-    rows, year = [], None
+def render_index(items, order):
+    rows = []
     for c in reversed(items):
-        if c["dt"].year != year:
-            year = c["dt"].year
-            rows.append(f'<h2 class="year" data-year="{year}">{year}</h2>')
         hero = c.get("hero")
         if hero:
             thumb = f'<div class="thumb"><img src="{hero["card"]}" alt="" loading="lazy" width="1200" height="630"></div>'
         else:
             thumb = f'<div class="thumb none" aria-hidden="true">{esc(c["title"][:1])}</div>'
-        hay = " ".join([c["title"], c.get("description", ""), " ".join(c.get("tags", []))]).lower()
+        hay = " ".join([c["title"], c.get("description", ""), " ".join(c.get("tags", [])), " ".join(c["topics"])]).lower()
+        tp = f' · <span class="tp">{esc(" · ".join(c["topics"]))}</span>' if c["topics"] else ""
         rows.append(
-            f'<a class="row" href="{c["url"]}" data-lang="{c["lang"]}" data-year="{year}" data-s="{esc(hay)}" lang="{c["lang"]}">{thumb}'
-            f'<div><h3>{esc(c["title"])}</h3><p class="meta">{nice_date(c["dt"])} · {minutes(c)} min</p>'
+            f'<a class="row" href="{c["url"]}" data-lang="{c["lang"]}" data-d="{c["date"]}" data-t="{esc("|".join(c["topics"]))}" data-s="{esc(hay)}" lang="{c["lang"]}">{thumb}'
+            f'<div><h3>{esc(c["title"])}</h3><p class="meta">{nice_date(c["dt"])} · {minutes(c)} min{tp}</p>'
             f'<p>{esc(c.get("description", ""))}</p></div></a>')
     n, ta = len(items), sum(1 for c in items if c["lang"] == "ta")
     first, last = items[0]["dt"].year, items[-1]["dt"].year
+    tcount = {t: sum(1 for c in items if t in c["topics"]) for t in order}
+    topic_chips = "".join(f'<button type="button" data-t="{esc(t)}" aria-pressed="false">{esc(t)}<small>{tcount[t]}</small></button>'
+                          for t in order if tcount[t])
     desc = f"{n} essays by K Vijay Anand on life, family, work and leadership, {first}–{last}, in English and Tamil."
     built = dt.date.today().isoformat()
-    return (header("speaks/index.html — list of Vijay Anand Speaks essays", "", [f"v{INDEX_VERSION}  {n} essays ({ta} Tamil), rebuilt {built}; English/Tamil filter and search now hide essays", "v1.0.0  first list"], version=INDEX_VERSION)
+    return (header("speaks/index.html — list of Vijay Anand Speaks essays", "",
+                   [f"v{INDEX_VERSION}  {n} essays ({ta} Tamil), rebuilt {built}; multi-select language and topic filters (Any/All), sort by date, group by year or topic",
+                    "v1.0.1  English/Tamil filter and search hide essays", "v1.0.0  first list"], version=INDEX_VERSION)
             + head(f"{BLOG_TITLE} — K Vijay Anand", desc, "/speaks/", items[-1].get("hero", {}).get("card") if items[-1].get("hero") else None, INDEX_CSS, "en")
             + f"""<body>
-<header class="band"><div class="wrap">
+<header class="band"><div class="wrap wide">
 <nav class="top"><a href="/">← K Vijay Anand</a><a href="/tools/">Tools</a></nav>
 <h1>{BLOG_TITLE}</h1>
 <p>{BLOG_TAGLINE} {n} essays, {first}–{last}.</p>
 </div></header>
-<div class="tools"><div class="wrap">
-<input class="search" id="q" type="search" placeholder="Search titles and summaries" aria-label="Search essays" autocomplete="off">
-<div class="chips" role="group" aria-label="Language"><button type="button" data-l="" aria-pressed="true">All {n}</button><button type="button" data-l="en" aria-pressed="false">English {n - ta}</button><button type="button" data-l="ta" aria-pressed="false" lang="ta">தமிழ் {ta}</button></div>
+<div class="tools"><div class="wrap wide">
+<input class="search" id="q" type="search" placeholder="Search titles, summaries and topics" aria-label="Search essays" autocomplete="off">
+<div class="frow"><span class="lbl">Language</span><div class="chips" id="langs" role="group" aria-label="Language"><button type="button" data-l="en" aria-pressed="false">English<small>{n - ta}</small></button><button type="button" data-l="ta" aria-pressed="false" lang="ta">தமிழ்<small>{ta}</small></button></div></div>
+<div class="frow"><span class="lbl">Topics</span><div class="chips" id="topics" role="group" aria-label="Topics">{topic_chips}</div>
+<div class="seg" id="match" role="group" aria-label="Topic match" title="Any: essay has at least one chosen topic. All: essay has every chosen topic."><button type="button" data-m="any" aria-pressed="true">Any</button><button type="button" data-m="all" aria-pressed="false">All</button></div></div>
+<div class="frow view"><span class="lbl">View</span>
+<div class="grp"><span>Sort</span><div class="seg" id="sort" role="group" aria-label="Sort by date"><button type="button" data-s="new" aria-pressed="true">Newest</button><button type="button" data-s="old" aria-pressed="false">Oldest</button></div></div>
+<div class="grp"><span>Group</span><div class="seg" id="group" role="group" aria-label="Group by"><button type="button" data-g="year" aria-pressed="true">Year</button><button type="button" data-g="topic" aria-pressed="false">Topic</button><button type="button" data-g="none" aria-pressed="false">None</button></div></div>
+<button type="button" class="clear" id="clear" hidden>Clear filters</button></div>
 </div></div>
-<main class="wrap">
-<p class="count" id="count"></p>
+<main class="wrap wide">
+<p class="count" id="count" aria-live="polite"></p>
+<div id="list">
 {chr(10).join(rows)}
+</div>
+<p class="empty" id="empty" hidden>No essays match these filters.</p>
 <p class="foot">Moved from vijayanandspeaks.blogspot.com · K Vijay Anand, Chennai</p>
 </main>
 <script>
 (function(){{
-  var q=document.getElementById('q'), lang='', rows=[].slice.call(document.querySelectorAll('a.row')),
-      years=[].slice.call(document.querySelectorAll('h2.year')), count=document.getElementById('count');
-  function run(){{
-    var w=q.value.trim().toLowerCase().split(/\\s+/).filter(Boolean), shown=0, seen={{}};
-    rows.forEach(function(r){{
-      var ok=(!lang||r.dataset.lang===lang)&&w.every(function(x){{return r.dataset.s.indexOf(x)>=0}});
-      r.hidden=!ok; if(ok){{shown++; seen[r.dataset.year]=1}}
-    }});
-    years.forEach(function(h){{h.hidden=!seen[h.dataset.year]}});
-    count.textContent=(w.length||lang)?shown+' of '+rows.length+' essays':'';
-  }}
-  q.addEventListener('input',run);
-  [].forEach.call(document.querySelectorAll('.chips button'),function(b){{
-    b.onclick=function(){{lang=b.dataset.l;[].forEach.call(b.parentNode.children,function(x){{x.setAttribute('aria-pressed',x===b)}});run()}};
+  var $=function(id){{return document.getElementById(id)}}, each=function(l,f){{[].forEach.call(l,f)}};
+  var list=$('list'), q=$('q'), count=$('count'), empty=$('empty'), clear=$('clear');
+  var ORDER={json.dumps([t for t in order if tcount[t]], ensure_ascii=False)};
+  var rows=[].slice.call(list.querySelectorAll('a.row')).map(function(r){{
+    return {{el:r, lang:r.dataset.lang, d:r.dataset.d, t:r.dataset.t?r.dataset.t.split('|'):[], s:r.dataset.s}};
   }});
+  var st={{langs:[], topics:[], match:'any', sort:'new', group:'year'}};
+
+  function press(box,attr,vals){{each($(box).children,function(b){{b.setAttribute('aria-pressed',vals.indexOf(b.dataset[attr])>=0)}})}}
+  function multi(box,attr,key){{
+    each($(box).children,function(b){{b.onclick=function(){{
+      var v=b.dataset[attr], a=st[key], i=a.indexOf(v); if(i>=0)a.splice(i,1); else a.push(v); run();
+    }}}});
+  }}
+  function single(box,attr,key){{
+    each($(box).children,function(b){{b.onclick=function(){{st[key]=b.dataset[attr]; run()}}}});
+  }}
+  multi('langs','l','langs'); multi('topics','t','topics');
+  single('match','m','match'); single('sort','s','sort'); single('group','g','group');
+  q.addEventListener('input',run);
+  clear.onclick=function(){{q.value=''; st.langs=[]; st.topics=[]; run()}};
+
+  function words(){{return q.value.trim().toLowerCase().split(/\\s+/).filter(Boolean)}}
+  function passText(r,w){{return w.every(function(x){{return r.s.indexOf(x)>=0}})}}
+  function passLang(r){{return !st.langs.length||st.langs.indexOf(r.lang)>=0}}
+  function passTopic(r){{
+    if(!st.topics.length) return true;
+    var has=function(t){{return r.t.indexOf(t)>=0}};
+    return st.match==='all'?st.topics.every(has):st.topics.some(has);
+  }}
+  function head(label,n){{
+    var h=document.createElement('h2'); h.className='grp';
+    h.innerHTML='<span></span><small></small>'; h.firstChild.textContent=label;
+    h.lastChild.textContent=n+(n===1?' essay':' essays'); return h;
+  }}
+
+  function run(){{
+    var w=words();
+    var hit=rows.filter(function(r){{return passText(r,w)&&passLang(r)&&passTopic(r)}});
+    hit.sort(function(a,b){{return st.sort==='new'?(a.d<b.d?1:-1):(a.d<b.d?-1:1)}});
+
+    // topic chip counts reflect the other filters, so empty combinations are visible before clicking
+    var base=rows.filter(function(r){{return passText(r,w)&&passLang(r)}});
+    each($('topics').children,function(b){{
+      var t=b.dataset.t, c=base.filter(function(r){{return r.t.indexOf(t)>=0}}).length;
+      b.querySelector('small').textContent=c; b.classList.toggle('zero',!c);
+    }});
+
+    var frag=document.createDocumentFragment(), used={{}};
+    function put(r){{frag.appendChild(used[r.d+r.el.href]?r.el.cloneNode(true):r.el); used[r.d+r.el.href]=1}}
+    if(st.group==='year'){{
+      var by={{}}, keys=[];
+      hit.forEach(function(r){{var y=r.d.slice(0,4); if(!by[y]){{by[y]=[];keys.push(y)}} by[y].push(r)}});
+      keys.forEach(function(y){{frag.appendChild(head(y,by[y].length)); by[y].forEach(put)}});
+    }} else if(st.group==='topic'){{
+      var tops=st.topics.length?ORDER.filter(function(t){{return st.topics.indexOf(t)>=0}}):ORDER;
+      tops.forEach(function(t){{
+        var g=hit.filter(function(r){{return r.t.indexOf(t)>=0}});
+        if(g.length){{frag.appendChild(head(t,g.length)); g.forEach(put)}}
+      }});
+    }} else hit.forEach(put);
+    list.textContent=''; list.appendChild(frag);
+
+    press('langs','l',st.langs); press('topics','t',st.topics);
+    press('match','m',[st.match]); press('sort','s',[st.sort]); press('group','g',[st.group]);
+    $('match').hidden=st.topics.length<2;
+    var filtered=w.length||st.langs.length||st.topics.length;
+    clear.hidden=!filtered; empty.hidden=!!hit.length;
+    count.textContent=filtered?hit.length+' of '+rows.length+' essays':rows.length+' essays';
+    save();
+  }}
+
+  // filters live in the address so a filtered list can be bookmarked or shared
+  function save(){{
+    var p=new URLSearchParams();
+    if(q.value.trim()) p.set('q',q.value.trim());
+    if(st.langs.length) p.set('l',st.langs.join(','));
+    if(st.topics.length) p.set('t',st.topics.join(','));
+    if(st.match!=='any') p.set('m',st.match);
+    if(st.sort!=='new') p.set('s',st.sort);
+    if(st.group!=='year') p.set('g',st.group);
+    var s=p.toString().replace(/%2C/g,',');
+    try{{history.replaceState(null,'',location.pathname+(s?'?'+s:''))}}catch(e){{}}
+  }}
+  function load(){{
+    var p=new URLSearchParams(location.search), sp=function(k){{return (p.get(k)||'').split(',').filter(Boolean)}};
+    q.value=p.get('q')||'';
+    st.langs=sp('l').filter(function(l){{return l==='en'||l==='ta'}});
+    st.topics=sp('t').filter(function(t){{return ORDER.indexOf(t)>=0}});
+    if(p.get('m')==='all') st.match='all';
+    if(p.get('s')==='old') st.sort='old';
+    if(['topic','none'].indexOf(p.get('g'))>=0) st.group=p.get('g');
+  }}
+  load(); run();
 }})();
 </script>
 </body>
@@ -279,7 +413,7 @@ def render_index(items):
 
 
 def main():
-    items = load()
+    items, order = load()
     out_paths = set()
     for i, c in enumerate(items):
         dest = HERE / f"{c['path']}.html"
@@ -290,7 +424,7 @@ def main():
     for f in HERE.glob("[0-9][0-9][0-9][0-9]/*/*.html"):
         if f not in out_paths:
             f.unlink()
-    (HERE / "index.html").write_text(render_index(items), encoding="utf-8")
+    (HERE / "index.html").write_text(render_index(items, order), encoding="utf-8")
     print(f"built {len(items)} essays and speaks/index.html" + ("" if CUSDIS_APP_ID else "  (comments off: CUSDIS_APP_ID is blank)"))
 
 

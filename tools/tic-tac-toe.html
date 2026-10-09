@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Tic-Tac-Toe
+FAMILY:  games
+VERSION: 1.0.0
+DATE:    2026-10-09
+CHAT:    Offline HTML inventory and online links
+CHANGES: 1.0.0 - first release: play the computer (Easy / Medium / Unbeatable) or a friend on one device;
+                 choose X or O and who starts; hint, undo, scoreboard kept in this browser, winning-line
+                 animation, keyboard 1-9, light/dark, full screen, works offline
+STATUS:  working
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tic-Tac-Toe</title>
+<meta name="description" content="Tic-Tac-Toe against the computer (easy, medium or unbeatable) or a friend. Runs offline in the browser.">
+<style>
+:root{
+  --bg:#f3efe6; --panel:#fffdf8; --ink:#1f2328; --muted:#646b73; --rule:#ddd5c6;
+  --x:#1f6fb2; --o:#c2541c; --win:#e7b93a; --grid:#2b2f36;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15181d; --panel:#1d2128; --ink:#e7e9ec; --muted:#9aa1ab; --rule:#30353f;
+    --x:#5aa9f0; --o:#f08a52; --win:#f2c84b; --grid:#c9cdd3; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15181d; --panel:#1d2128; --ink:#e7e9ec; --muted:#9aa1ab; --rule:#30353f;
+  --x:#5aa9f0; --o:#f08a52; --win:#f2c84b; --grid:#c9cdd3; color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;min-height:100vh}
+button,select{font:inherit;color:inherit}
+.wrap{max-width:1300px;margin:0 auto;padding:20px 24px 40px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px}
+h1{margin:0;font:700 clamp(26px,4vw,38px)/1.1 Georgia,"Times New Roman",serif;letter-spacing:.01em}
+h1 .x{color:var(--x)} h1 .o{color:var(--o)}
+.top{display:flex;gap:8px;flex-wrap:wrap}
+.btn{background:var(--panel);border:1px solid var(--rule);border-radius:999px;padding:7px 14px;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
+.btn:disabled{opacity:.45;cursor:default}
+.layout{display:grid;grid-template-columns:minmax(260px,320px) 1fr minmax(240px,300px);gap:24px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:14px;padding:16px 18px}
+.card h2{margin:0 0 10px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.field{margin:0 0 14px}
+.field>span{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+.seg{display:flex;border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.seg button{flex:1;border:0;background:transparent;padding:8px 6px;cursor:pointer;font-size:14px}
+.seg button+button{border-left:1px solid var(--rule)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:600}
+.boardbox{display:flex;flex-direction:column;align-items:center}
+.status{font-size:clamp(18px,2.4vw,24px);font-weight:600;min-height:1.6em;margin:2px 0 14px;text-align:center}
+.status .x{color:var(--x)} .status .o{color:var(--o)}
+.board{position:relative;width:min(560px,86vw,62vh);aspect-ratio:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr)}
+.cell{border:0;background:transparent;cursor:pointer;position:relative;padding:0}
+.cell:nth-child(-n+6){border-bottom:5px solid var(--grid)}
+.cell:not(:nth-child(3n)){border-right:5px solid var(--grid)}
+.cell:focus-visible{outline:3px solid var(--win);outline-offset:-8px;border-radius:6px}
+.cell .num{position:absolute;left:8px;top:4px;font-size:12px;color:var(--muted);opacity:.55}
+.cell:hover:not([data-v]) .ghost{opacity:.18}
+.cell svg{position:absolute;inset:14%;width:72%;height:72%}
+.ghost{opacity:0;transition:opacity .12s}
+.mark path,.mark circle{fill:none;stroke-width:12;stroke-linecap:round}
+.mark.x path{stroke:var(--x)} .mark.o circle{stroke:var(--o)}
+.mark .draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw .28s ease-out forwards}
+.mark .draw.d2{animation-delay:.12s}
+@keyframes draw{to{stroke-dashoffset:0}}
+.cell.hint{background:color-mix(in srgb,var(--win) 22%,transparent);border-radius:10px}
+.cell.won{background:color-mix(in srgb,var(--win) 28%,transparent)}
+.strike{position:absolute;inset:0;pointer-events:none}
+.strike line{stroke:var(--win);stroke-width:2.4;stroke-linecap:round;stroke-dasharray:160;stroke-dashoffset:160;animation:draw .45s .15s ease-out forwards}
+.under{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+.score{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.score div{border:1px solid var(--rule);border-radius:10px;padding:10px 4px}
+.score b{display:block;font-size:28px;line-height:1.1}
+.score small{color:var(--muted);font-size:12px}
+.score .sx b{color:var(--x)} .score .so b{color:var(--o)}
+.hist{list-style:none;margin:0;padding:0;font-size:14px;max-height:220px;overflow:auto}
+.hist li{padding:4px 0;border-bottom:1px dashed var(--rule);display:flex;justify-content:space-between}
+.hist li span:first-child{color:var(--muted)}
+.note{font-size:13.5px;color:var(--muted);margin:10px 0 0}
+.note b{color:var(--ink)}
+@media (max-width:1000px){
+  .layout{grid-template-columns:1fr}
+  .boardbox{order:-1}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.mark .draw{stroke-dashoffset:0}.strike line{stroke-dashoffset:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span class="x">Tic</span>-<span class="o">Tac</span>-Toe</h1>
+    <div class="top">
+      <button class="btn" id="themeBtn" type="button">◐ Theme</button>
+      <button class="btn" id="fsBtn" type="button">⛶ Full screen</button>
+      <a class="btn" href="index.html" style="text-decoration:none;color:inherit">← Tools</a>
+    </div>
+  </header>
+
+  <div class="layout">
+    <section class="card" aria-label="Game settings">
+      <h2>Game</h2>
+      <div class="field"><span>Opponent</span>
+        <div class="seg" id="segMode"><button data-v="cpu" type="button">Computer</button><button data-v="two" type="button">Friend</button></div>
+      </div>
+      <div class="field" id="fLevel"><span>Computer level</span>
+        <div class="seg" id="segLevel"><button data-v="easy" type="button">Easy</button><button data-v="medium" type="button">Medium</button><button data-v="hard" type="button">Unbeatable</button></div>
+      </div>
+      <div class="field" id="fSide"><span>You play</span>
+        <div class="seg" id="segSide"><button data-v="X" type="button">X</button><button data-v="O" type="button">O</button></div>
+      </div>
+      <div class="field"><span>Who starts</span>
+        <div class="seg" id="segFirst"><button data-v="X" type="button">X</button><button data-v="O" type="button">O</button><button data-v="alt" type="button">Take turns</button></div>
+      </div>
+      <p class="note">Click a square or press keys <b>1–9</b> (laid out like a phone keypad: 1 top-left, 9 bottom-right). <b>N</b> starts a new game, <b>U</b> undoes, <b>H</b> shows a hint.</p>
+    </section>
+
+    <section class="boardbox" aria-label="Board">
+      <div class="status" id="status" aria-live="polite"></div>
+      <div class="board" id="board" role="grid" aria-label="Tic-tac-toe board"></div>
+      <div class="under">
+        <button class="btn primary" id="newBtn" type="button">New game</button>
+        <button class="btn" id="undoBtn" type="button">↶ Undo</button>
+        <button class="btn" id="hintBtn" type="button">💡 Hint</button>
+      </div>
+    </section>
+
+    <aside class="card" aria-label="Score">
+      <h2>Score</h2>
+      <div class="score">
+        <div class="sx"><b id="sX">0</b><small id="lX">X</small></div>
+        <div><b id="sD">0</b><small>Draws</small></div>
+        <div class="so"><b id="sO">0</b><small id="lO">O</small></div>
+      </div>
+      <div class="under" style="justify-content:flex-start"><button class="btn" id="resetBtn" type="button">Reset score</button></div>
+      <h2 style="margin-top:18px">This game</h2>
+      <ol class="hist" id="hist"></ol>
+      <p class="note" id="tip"></p>
+    </aside>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+const NAMES = ['top left','top middle','top right','middle left','centre','middle right','bottom left','bottom middle','bottom right'];
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+const cfg = Object.assign({ mode:'cpu', level:'medium', side:'X', first:'X' }, store.get('ttt.cfg', {}));
+let score = store.get('ttt.score', { cpu:{X:0,O:0,D:0}, two:{X:0,O:0,D:0} });
+let board, turn, moves, over, gameNo = store.get('ttt.gameNo', 0), cpuTimer = null;
+
+/* ---------- rules ---------- */
+function winner(b){
+  for(const l of LINES){ const [a,c,d] = l; if(b[a] && b[a] === b[c] && b[a] === b[d]) return { p:b[a], line:l }; }
+  return b.every(Boolean) ? { p:'D' } : null;
+}
+const other = p => p === 'X' ? 'O' : 'X';
+
+/* ---------- computer ---------- */
+function minimax(b, me, toMove, depth){
+  const w = winner(b);
+  if(w) return w.p === 'D' ? 0 : (w.p === me ? 10 - depth : depth - 10);
+  let best = toMove === me ? -99 : 99;
+  for(let i = 0; i < 9; i++){
+    if(b[i]) continue;
+    b[i] = toMove;
+    const s = minimax(b, me, other(toMove), depth + 1);
+    b[i] = null;
+    best = toMove === me ? Math.max(best, s) : Math.min(best, s);
+  }
+  return best;
+}
+function bestMoves(b, p){
+  let best = -99, out = [];
+  for(let i = 0; i < 9; i++){
+    if(b[i]) continue;
+    b[i] = p; const s = minimax(b, p, other(p), 1); b[i] = null;
+    if(s > best){ best = s; out = [i]; } else if(s === best) out.push(i);
+  }
+  return out;
+}
+function winningMove(b, p){
+  for(let i = 0; i < 9; i++){ if(b[i]) continue; b[i] = p; const w = winner(b); b[i] = null; if(w && w.p === p) return i; }
+  return -1;
+}
+const pick = a => a[Math.floor(Math.random() * a.length)];
+function cpuMove(b, p, level){
+  const free = b.map((v, i) => v ? -1 : i).filter(i => i >= 0);
+  if(level === 'easy'){
+    const w = winningMove(b, p);
+    if(w >= 0 && Math.random() < 0.5) return w;
+    return pick(free);
+  }
+  if(level === 'medium'){
+    let m = winningMove(b, p); if(m >= 0) return m;
+    m = winningMove(b, other(p)); if(m >= 0) return m;
+    if(Math.random() < 0.75) return pick(bestMoves(b, p));
+    return pick(free);
+  }
+  // unbeatable: best moves, preferring centre then corners when tied
+  const bm = bestMoves(b, p);
+  const pref = [4,0,2,6,8];
+  const top = bm.filter(i => pref.includes(i));
+  return free.length === 9 ? pick([4,0,2,6,8]) : pick(top.length ? top : bm);
+}
+
+/* ---------- drawing ---------- */
+const cells = [];
+function markSVG(p, ghost){
+  if(p === 'X') return `<svg viewBox="0 0 100 100" class="mark x${ghost ? ' ghost' : ''}"><path class="${ghost ? '' : 'draw'}" style="--len:100" d="M18 18 L82 82"/><path class="${ghost ? '' : 'draw d2'}" style="--len:100" d="M82 18 L18 82"/></svg>`;
+  return `<svg viewBox="0 0 100 100" class="mark o${ghost ? ' ghost' : ''}"><circle class="${ghost ? '' : 'draw'}" style="--len:207" cx="50" cy="50" r="33" transform="rotate(-90 50 50)"/></svg>`;
+}
+function build(){
+  const el = $('board');
+  for(let i = 0; i < 9; i++){
+    const c = document.createElement('button');
+    c.type = 'button'; c.className = 'cell'; c.dataset.i = i;
+    c.setAttribute('aria-label', NAMES[i] + ', empty');
+    c.addEventListener('click', () => human(i));
+    el.appendChild(c); cells.push(c);
+  }
+}
+function render(){
+  const w = winner(board);
+  cells.forEach((c, i) => {
+    const v = board[i];
+    c.classList.remove('hint', 'won');
+    if(v){
+      if(c.dataset.v !== v){ c.innerHTML = `<span class="num">${i + 1}</span>` + markSVG(v, false); c.dataset.v = v; }
+      c.setAttribute('aria-label', NAMES[i] + ', ' + v);
+    }else{
+      delete c.dataset.v;
+      c.innerHTML = `<span class="num">${i + 1}</span>` + (over ? '' : markSVG(turn, true));
+      c.setAttribute('aria-label', NAMES[i] + ', empty');
+    }
+    c.disabled = over || !!v || cpuThinking();
+  });
+  const old = $('board').querySelector('.strike'); if(old) old.remove();
+  if(w && w.line){
+    w.line.forEach(i => cells[i].classList.add('won'));
+    const pt = i => [16.67 + (i % 3) * 33.33, 16.67 + Math.floor(i / 3) * 33.33];
+    const [a, b] = [pt(w.line[0]), pt(w.line[2])];
+    const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy), ex = dx / L * 12, ey = dy / L * 12;
+    $('board').insertAdjacentHTML('beforeend', `<svg class="strike" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="${a[0]-ex}" y1="${a[1]-ey}" x2="${b[0]+ex}" y2="${b[1]+ey}"/></svg>`);
+  }
+  // status
+  const who = p => `<span class="${p.toLowerCase()}">${p}</span>`;
+  const label = p => cfg.mode === 'cpu' ? (p === cfg.side ? 'You' : 'Computer') : 'Player ' + who(p);
+  let s;
+  if(w){
+    if(w.p === 'D') s = 'Draw — nobody wins.';
+    else if(cfg.mode === 'cpu') s = w.p === cfg.side ? 'You win! 🎉' : 'Computer wins.';
+    else s = 'Player ' + who(w.p) + ' wins! 🎉';
+  }else if(cfg.mode === 'cpu' && turn !== cfg.side) s = 'Computer is thinking…';
+  else s = (cfg.mode === 'cpu' ? 'Your turn (' + who(turn) + ')' : label(turn) + ' to play');
+  $('status').innerHTML = s;
+  // score labels
+  const sc = score[cfg.mode];
+  $('sX').textContent = sc.X; $('sO').textContent = sc.O; $('sD').textContent = sc.D;
+  $('lX').textContent = cfg.mode === 'cpu' ? (cfg.side === 'X' ? 'You (X)' : 'Computer (X)') : 'Player X';
+  $('lO').textContent = cfg.mode === 'cpu' ? (cfg.side === 'O' ? 'You (O)' : 'Computer (O)') : 'Player O';
+  $('hist').innerHTML = moves.map((m, k) => `<li><span>${k + 1}. ${m.p}</span><span>${NAMES[m.i]}</span></li>`).join('');
+  $('undoBtn').disabled = !moves.length || cpuThinking();
+  $('hintBtn').disabled = over || cpuThinking();
+  // segmented buttons
+  [['segMode', cfg.mode], ['segLevel', cfg.level], ['segSide', cfg.side], ['segFirst', cfg.first]].forEach(([id, v]) => {
+    $(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v));
+  });
+  $('fLevel').hidden = $('fSide').hidden = cfg.mode !== 'cpu';
+  $('tip').innerHTML = tipText(w);
+}
+function tipText(w){
+  if(cfg.mode !== 'cpu') return 'Two players share this screen and take turns.';
+  if(cfg.level === 'hard') return w && w.p === 'D' ? 'A draw is the best anyone can do against perfect play — well held.' : '<b>Unbeatable</b> plays perfectly: the best you can get is a draw.';
+  if(cfg.level === 'medium') return '<b>Medium</b> always takes a win and blocks yours, but sometimes misses the deeper trap. Try a fork: make two threats at once.';
+  return '<b>Easy</b> mostly plays at random. Good for warming up.';
+}
+const cpuThinking = () => cpuTimer !== null;
+
+/* ---------- play ---------- */
+function newGame(){
+  clearTimeout(cpuTimer); cpuTimer = null;
+  board = Array(9).fill(null); moves = []; over = false;
+  gameNo++; store.set('ttt.gameNo', gameNo);
+  turn = cfg.first === 'alt' ? (gameNo % 2 ? 'X' : 'O') : cfg.first;
+  render(); maybeCpu();
+}
+function place(i){
+  if(over || board[i]) return false;
+  board[i] = turn; moves.push({ i, p: turn });
+  const w = winner(board);
+  if(w){
+    over = true;
+    score[cfg.mode][w.p === 'D' ? 'D' : w.p]++;
+    store.set('ttt.score', score);
+  }else turn = other(turn);
+  render();
+  return true;
+}
+function human(i){
+  if(over || cpuThinking()) return;
+  if(cfg.mode === 'cpu' && turn !== cfg.side) return;
+  if(place(i)) maybeCpu();
+}
+function maybeCpu(){
+  if(over || cfg.mode !== 'cpu' || turn === cfg.side) return;
+  cpuTimer = setTimeout(() => {
+    cpuTimer = null;
+    place(cpuMove(board.slice(), turn, cfg.level));
+  }, 420 + Math.random() * 280);
+  render();
+}
+function undo(){
+  if(!moves.length || cpuThinking()) return;
+  const back = cfg.mode === 'cpu' ? (moves.length && moves[moves.length - 1].p !== cfg.side ? 2 : 1) : 1;
+  if(over){
+    const w = winner(board);
+    if(w){ score[cfg.mode][w.p === 'D' ? 'D' : w.p] = Math.max(0, score[cfg.mode][w.p === 'D' ? 'D' : w.p] - 1); store.set('ttt.score', score); }
+    over = false;
+  }
+  for(let k = 0; k < back && moves.length; k++){ const m = moves.pop(); board[m.i] = null; turn = m.p; }
+  cells.forEach(c => delete c.dataset.v);
+  render(); maybeCpu();
+}
+function hint(){
+  if(over || cpuThinking()) return;
+  const bm = bestMoves(board.slice(), turn);
+  render();
+  bm.forEach(i => cells[i].classList.add('hint'));
+  $('tip').innerHTML = bm.length === 1 ? 'The best move is the <b>' + NAMES[bm[0]] + '</b> square.' : 'Any of the highlighted squares is a best move.';
+}
+
+/* ---------- wiring ---------- */
+function seg(id, key, restart){
+  $(id).addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    cfg[key] = b.dataset.v; store.set('ttt.cfg', cfg);
+    if(restart) newGame(); else render();
+  });
+}
+seg('segMode', 'mode', true); seg('segLevel', 'level', true); seg('segSide', 'side', true); seg('segFirst', 'first', true);
+$('newBtn').addEventListener('click', newGame);
+$('undoBtn').addEventListener('click', undo);
+$('hintBtn').addEventListener('click', hint);
+$('resetBtn').addEventListener('click', () => { score[cfg.mode] = { X:0, O:0, D:0 }; store.set('ttt.score', score); render(); });
+document.addEventListener('keydown', e => {
+  if(e.target.tagName === 'SELECT' || e.ctrlKey || e.metaKey || e.altKey) return;
+  if(/^[1-9]$/.test(e.key)){ human(+e.key - 1); e.preventDefault(); }
+  else if(e.key === 'n' || e.key === 'N') newGame();
+  else if(e.key === 'u' || e.key === 'U') undo();
+  else if(e.key === 'h' || e.key === 'H') hint();
+});
+const root = document.documentElement;
+const t = store.get('ttt.theme', null); if(t) root.dataset.theme = t;
+$('themeBtn').addEventListener('click', () => {
+  const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  root.dataset.theme = dark ? 'light' : 'dark'; store.set('ttt.theme', root.dataset.theme);
+});
+if(!root.requestFullscreen) $('fsBtn').hidden = true;
+$('fsBtn').addEventListener('click', () => { if(document.fullscreenElement) document.exitFullscreen(); else root.requestFullscreen(); });
+document.addEventListener('fullscreenchange', () => { $('fsBtn').textContent = document.fullscreenElement ? '✕ Exit full screen' : '⛶ Full screen'; });
+
+build(); newGame();
+})();
+</script>
+</body>
+</html>

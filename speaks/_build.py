@@ -2,10 +2,11 @@
 """
 TOOL:    speaks/_build.py
 FAMILY:  SITE
-VERSION: 1.2.0
+VERSION: 1.3.0
 DATE:    2026-10-09
 CHAT:    Blogger to GitHub migration (Vijay Anand Speaks)
-CHANGES: 1.2.0 - desktop index (>=1100 px) uses the full width: sticky filter sidebar + responsive card grid
+CHANGES: 1.3.0 - index header shrunk to two lines and pinned at the top; Home and Tools links moved into the filter sidebar
+         1.2.0 - desktop index (>=1100 px) uses the full width: sticky filter sidebar + responsive card grid
          1.1.0 - topic tags from _topics.json; index gets multi-select language/topic filters (Any/All), sort by date, group by year or topic, shareable URL
          1.0.1 - English/Tamil chips and search now hide rows (CSS [hidden] rule; a.row display:grid was overriding it)
          1.0.0 - renders speaks/_content/*.json into /speaks/<yyyy>/<mm>/<slug>.html and rebuilds /speaks/index.html
@@ -26,11 +27,11 @@ Topics (_topics.json): { "<content file name without .json>": ["Management", "Ph
   "_topics" lists the allowed topics in the order the filter shows them. Every essay needs at least one.
   Kept apart from _content so running _import_blogger.py again does not wipe them.
 """
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
 PAGE_VERSION = "1.1.0"
 PAGE_DATE = "2026-10-09"
-INDEX_VERSION = "1.2.0"
+INDEX_VERSION = "1.3.0"
 PAGE_CHANGES = ["v1.1.0  topic tags that open the list filtered to that topic", "v1.0.0  moved from vijayanandspeaks.blogspot.com"]
 
 CUSDIS_APP_ID = ""                       # e.g. "a1b2c3d4-...." from cusdis.com → your site → Embed code
@@ -98,13 +99,16 @@ article figure:not(:first-child){margin-top:1.6em}
 
 INDEX_CSS = """
 .wrap.wide{max-width:960px}
-.band{background:linear-gradient(120deg,#123c33,#1f6f5c);color:#eaf4f0}
-.band .wrap{padding:28px 16px 24px}
-.band h1{font-size:clamp(28px,6vw,40px);margin:0 0 4px;line-height:1.15}
-.band p{margin:0;color:#b8d4cb;font-size:16px}
-.band nav.top a{color:#eaf4f0}
+.band{background:linear-gradient(120deg,#123c33,#1f6f5c);color:#eaf4f0;position:sticky;top:0;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.band .wrap{padding:10px 16px 11px}
+.band h1{font-size:clamp(22px,4.5vw,28px);margin:0;line-height:1.25}
+.band p{margin:1px 0 0;color:#b8d4cb;font-size:14.5px;line-height:1.4}
+.band h1,.band p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.links{display:flex;gap:8px;margin-bottom:12px;font-size:13.5px}
+.links a{border:1px solid var(--rule);background:var(--card);color:var(--brand);border-radius:999px;padding:4px 14px;text-decoration:none}
+.links a:hover{border-color:var(--brand)}
 .tools{background:var(--bg);border-bottom:1px solid var(--rule);padding:12px 0;font-family:'Segoe UI',system-ui,-apple-system,'Noto Sans Tamil',sans-serif}
-@media (min-width:900px){.tools{position:sticky;top:0;z-index:2}}
+@media (min-width:900px){.tools{position:sticky;top:var(--bh,64px);z-index:2}}
 .search{width:100%;font-size:16px;color:var(--ink);background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:10px 14px}
 [hidden]{display:none!important}
 .frow{display:flex;gap:8px 12px;align-items:baseline;margin-top:10px;font-size:13.5px}
@@ -141,9 +145,9 @@ a.row p{margin:0;font-size:15px;line-height:1.55;color:var(--muted);display:-web
 .foot{font:13px 'Segoe UI',system-ui,sans-serif;color:var(--muted);padding:24px 0 40px}
 @media (min-width:1100px){
   .wrap.wide{max-width:1840px;padding:0 32px}
-  .band .wrap{padding:26px 32px 22px}
+  .band .wrap{padding:10px 32px 11px}
   .layout{display:grid;grid-template-columns:272px minmax(0,1fr);gap:40px;align-items:start}
-  .tools{position:sticky;top:0;z-index:2;max-height:100vh;overflow-y:auto;border:0;padding:22px 4px 24px 0;scrollbar-width:thin}
+  .tools{position:sticky;top:var(--bh,64px);z-index:2;max-height:calc(100vh - var(--bh,64px));overflow-y:auto;border:0;padding:22px 4px 24px 0;scrollbar-width:thin}
   .tools .frow{flex-direction:column;align-items:stretch;gap:8px;margin-top:20px}
   .frow>.lbl{flex:none}
   #langs button{flex:1;text-align:center}
@@ -312,12 +316,12 @@ def render_index(items, order):
                     "v1.0.1  English/Tamil filter and search hide essays", "v1.0.0  first list"], version=INDEX_VERSION)
             + head(f"{BLOG_TITLE} — K Vijay Anand", desc, "/speaks/", items[-1].get("hero", {}).get("card") if items[-1].get("hero") else None, INDEX_CSS, "en")
             + f"""<body>
-<header class="band"><div class="wrap wide">
-<nav class="top"><a href="/">← K Vijay Anand</a><a href="/tools/">Tools</a></nav>
+<header class="band" id="band"><div class="wrap wide">
 <h1>{BLOG_TITLE}</h1>
 <p>{BLOG_TAGLINE} {n} essays, {first}–{last}.</p>
 </div></header>
 <div class="wrap wide layout"><aside class="tools" aria-label="Filters">
+<nav class="links" aria-label="Site"><a href="/">← Home</a><a href="/tools/">Tools</a></nav>
 <input class="search" id="q" type="search" placeholder="Search essays" aria-label="Search essays" autocomplete="off">
 <div class="frow"><span class="lbl">Language</span><div class="chips" id="langs" role="group" aria-label="Language"><button type="button" data-l="en" aria-pressed="false">English<small>{n - ta}</small></button><button type="button" data-l="ta" aria-pressed="false" lang="ta">தமிழ்<small>{ta}</small></button></div></div>
 <div class="frow"><span class="lbl">Topics</span><div class="chips" id="topics" role="group" aria-label="Topics">{topic_chips}</div>
@@ -430,6 +434,9 @@ def render_index(items, order):
     if(p.get('s')==='old') st.sort='old';
     if(['topic','none'].indexOf(p.get('g'))>=0) st.group=p.get('g');
   }}
+  var band=$('band');
+  function bh(){{document.documentElement.style.setProperty('--bh',band.offsetHeight+'px')}}
+  bh(); addEventListener('resize',bh);
   load(); run();
 }})();
 </script>

@@ -2,10 +2,11 @@
 """
 TOOL:    speaks/_build.py
 FAMILY:  SITE
-VERSION: 1.1.0
+VERSION: 1.2.0
 DATE:    2026-10-09
 CHAT:    Blogger to GitHub migration (Vijay Anand Speaks)
-CHANGES: 1.1.0 - topic tags from _topics.json; index gets multi-select language/topic filters (Any/All), sort by date, group by year or topic, shareable URL
+CHANGES: 1.2.0 - desktop index (>=1100 px) uses the full width: sticky filter sidebar + responsive card grid
+         1.1.0 - topic tags from _topics.json; index gets multi-select language/topic filters (Any/All), sort by date, group by year or topic, shareable URL
          1.0.1 - English/Tamil chips and search now hide rows (CSS [hidden] rule; a.row display:grid was overriding it)
          1.0.0 - renders speaks/_content/*.json into /speaks/<yyyy>/<mm>/<slug>.html and rebuilds /speaks/index.html
 STATUS:  working
@@ -25,11 +26,11 @@ Topics (_topics.json): { "<content file name without .json>": ["Management", "Ph
   "_topics" lists the allowed topics in the order the filter shows them. Every essay needs at least one.
   Kept apart from _content so running _import_blogger.py again does not wipe them.
 """
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 PAGE_VERSION = "1.1.0"
 PAGE_DATE = "2026-10-09"
-INDEX_VERSION = "1.1.0"
+INDEX_VERSION = "1.2.0"
 PAGE_CHANGES = ["v1.1.0  topic tags that open the list filtered to that topic", "v1.0.0  moved from vijayanandspeaks.blogspot.com"]
 
 CUSDIS_APP_ID = ""                       # e.g. "a1b2c3d4-...." from cusdis.com → your site → Embed code
@@ -138,6 +139,31 @@ a.row p{margin:0;font-size:15px;line-height:1.55;color:var(--muted);display:-web
 @media (max-width:560px){a.row{grid-template-columns:104px 1fr;gap:12px}a.row h3{font-size:16.5px}a.row p{display:none}
   .frow{flex-direction:column;align-items:stretch;gap:6px}.frow>.lbl{flex:none}.clear{margin-left:0;align-self:flex-start}}
 .foot{font:13px 'Segoe UI',system-ui,sans-serif;color:var(--muted);padding:24px 0 40px}
+@media (min-width:1100px){
+  .wrap.wide{max-width:1840px;padding:0 32px}
+  .band .wrap{padding:26px 32px 22px}
+  .layout{display:grid;grid-template-columns:272px minmax(0,1fr);gap:40px;align-items:start}
+  .tools{position:sticky;top:0;z-index:2;max-height:100vh;overflow-y:auto;border:0;padding:22px 4px 24px 0;scrollbar-width:thin}
+  .tools .frow{flex-direction:column;align-items:stretch;gap:8px;margin-top:20px}
+  .frow>.lbl{flex:none}
+  #langs button{flex:1;text-align:center}
+  #topics{flex-direction:column;gap:3px}
+  #topics button{display:flex;justify-content:space-between;align-items:baseline;border-radius:8px;text-align:left;padding:4px 12px;border-color:transparent;background:transparent}
+  #topics button:hover{background:var(--card);border-color:var(--rule)}
+  #topics button[aria-pressed=true]{background:var(--brand);border-color:var(--brand)}
+  .seg{display:flex}.seg button{flex:1;padding:5px 8px}
+  .view .grp{flex-direction:column;align-items:stretch;gap:5px;margin:0 0 6px}
+  .clear{margin:4px 0 0;align-self:stretch}
+  .count{margin:26px 0 0}
+  #list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:22px;margin-top:4px}
+  h2.grp{grid-column:1/-1;margin:16px 0 -4px}
+  a.row{display:flex;flex-direction:column;padding:0;border:1px solid var(--rule);border-radius:12px;background:var(--card);overflow:hidden;transition:transform .15s,box-shadow .15s,border-color .15s}
+  a.row:hover{transform:translateY(-2px);border-color:var(--brand);box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  a.row .thumb{border-radius:0;width:100%;flex:none}
+  a.row>div:last-child{padding:12px 16px 16px;display:flex;flex-direction:column;gap:2px}
+  a.row h3{font-size:18px}
+  a.row p{-webkit-line-clamp:3}
+}
 """
 
 
@@ -291,8 +317,8 @@ def render_index(items, order):
 <h1>{BLOG_TITLE}</h1>
 <p>{BLOG_TAGLINE} {n} essays, {first}–{last}.</p>
 </div></header>
-<div class="tools"><div class="wrap wide">
-<input class="search" id="q" type="search" placeholder="Search titles, summaries and topics" aria-label="Search essays" autocomplete="off">
+<div class="wrap wide layout"><aside class="tools" aria-label="Filters">
+<input class="search" id="q" type="search" placeholder="Search essays" aria-label="Search essays" autocomplete="off">
 <div class="frow"><span class="lbl">Language</span><div class="chips" id="langs" role="group" aria-label="Language"><button type="button" data-l="en" aria-pressed="false">English<small>{n - ta}</small></button><button type="button" data-l="ta" aria-pressed="false" lang="ta">தமிழ்<small>{ta}</small></button></div></div>
 <div class="frow"><span class="lbl">Topics</span><div class="chips" id="topics" role="group" aria-label="Topics">{topic_chips}</div>
 <div class="seg" id="match" role="group" aria-label="Topic match" title="Any: essay has at least one chosen topic. All: essay has every chosen topic."><button type="button" data-m="any" aria-pressed="true">Any</button><button type="button" data-m="all" aria-pressed="false">All</button></div></div>
@@ -300,15 +326,15 @@ def render_index(items, order):
 <div class="grp"><span>Sort</span><div class="seg" id="sort" role="group" aria-label="Sort by date"><button type="button" data-s="new" aria-pressed="true">Newest</button><button type="button" data-s="old" aria-pressed="false">Oldest</button></div></div>
 <div class="grp"><span>Group</span><div class="seg" id="group" role="group" aria-label="Group by"><button type="button" data-g="year" aria-pressed="true">Year</button><button type="button" data-g="topic" aria-pressed="false">Topic</button><button type="button" data-g="none" aria-pressed="false">None</button></div></div>
 <button type="button" class="clear" id="clear" hidden>Clear filters</button></div>
-</div></div>
-<main class="wrap wide">
+</aside>
+<main>
 <p class="count" id="count" aria-live="polite"></p>
 <div id="list">
 {chr(10).join(rows)}
 </div>
 <p class="empty" id="empty" hidden>No essays match these filters.</p>
 <p class="foot">Moved from vijayanandspeaks.blogspot.com · K Vijay Anand, Chennai</p>
-</main>
+</main></div>
 <script>
 (function(){{
   var $=function(id){{return document.getElementById(id)}}, each=function(l,f){{[].forEach.call(l,f)}};

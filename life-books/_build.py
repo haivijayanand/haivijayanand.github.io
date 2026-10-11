@@ -1,0 +1,502 @@
+#!/usr/bin/env python3
+"""
+TOOL:    life-books/_build.py
+FAMILY:  SITE
+VERSION: 1.0.0
+DATE:    2026-10-11
+CHAT:    Daily life books review (personal growth, family, love, parenting) on GitHub Pages
+CHANGES: 1.0.0 - new section modelled on the Book Review build script 1.1.0: warm cover palettes and motifs, own paths and labels, empty-index message
+STATUS:  working
+
+Run:  python3 life-books/_build.py            (checks every content file, rebuilds all pages and the index)
+Jekyll skips files that start with "_", so this script, the queue and the content folder are not published.
+
+Content file (_content/<slug>.json):
+  slug, title, author, year, day, date (YYYY-MM-DD), theme (one line),
+  summary: [paragraphs]  - 280 to 320 words in total,
+  takeaway: one sentence,
+  questions: 10 x {q, options: [4 strings], answer: 0-3, why}
+"""
+__version__ = "1.0.0"
+
+# review page template version; each page's header lists these plus its own first line
+PAGE_VERSION = "1.0.0"
+PAGE_DATE = "2026-10-11"     # date of the last template change
+PAGE_CHANGES = ["v1.0.0  page template: cover, summary, quiz and certificate (from Book Review 1.1.0)"]
+
+import datetime as dt
+import math
+import hashlib
+import html
+import json
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+CONTENT = HERE / "_content"
+QUEUE = HERE / "_queue.json"
+
+# cover palettes: (background, accent, ink) — picked per book from its slug
+PALETTES = [
+    ("#a8456b", "#ffd6a5", "#fff7f2"), ("#5e3a6e", "#f7b2bd", "#fbf4fb"),
+    ("#2f5d50", "#f6c28b", "#f7f3ea"), ("#b5591b", "#fde2b8", "#fff8ef"),
+    ("#3b4a7a", "#f5b7a5", "#f6f4fb"), ("#7a2e3a", "#f2c6a0", "#fff5f0"),
+    ("#46664a", "#f9d77e", "#f8f6ec"), ("#6b3f2a", "#e9b8c9", "#fbf3ee"),
+]
+
+
+def esc(s):
+    return html.escape(str(s), quote=True)
+
+
+def year_text(y):
+    return f"c. {abs(y)} BCE" if y < 0 else str(y)
+
+
+def check(c, name):
+    errs = []
+    for k in ("slug", "title", "author", "year", "day", "date", "theme", "summary", "takeaway", "questions"):
+        if k not in c:
+            errs.append(f"missing '{k}'")
+    if errs:
+        return errs
+    words = sum(len(p.split()) for p in c["summary"])
+    if not 280 <= words <= 320:
+        errs.append(f"summary is {words} words (needs 280-320)")
+    if len(c["questions"]) != 10:
+        errs.append(f"{len(c['questions'])} questions (needs 10)")
+    for i, q in enumerate(c["questions"], 1):
+        if len(q.get("options", [])) != 4:
+            errs.append(f"Q{i} needs 4 options")
+        if q.get("answer") not in (0, 1, 2, 3):
+            errs.append(f"Q{i} answer must be 0-3")
+        if not q.get("q") or not q.get("why"):
+            errs.append(f"Q{i} needs 'q' and 'why'")
+    try:
+        dt.date.fromisoformat(c["date"])
+    except ValueError:
+        errs.append("date must be YYYY-MM-DD")
+    if c["slug"] != name:
+        errs.append(f"slug '{c['slug']}' does not match file name '{name}'")
+    return errs
+
+
+def wrap(text, width):
+    """split a title into lines of at most ~width characters"""
+    lines, cur = [], ""
+    for w in text.split():
+        if cur and len(cur) + 1 + len(w) > width:
+            lines.append(cur)
+            cur = w
+        else:
+            cur = (cur + " " + w).strip()
+    if cur:
+        lines.append(cur)
+    return lines
+
+
+def cover_svg(c):
+    h = int(hashlib.md5(c["slug"].encode()).hexdigest(), 16)
+    bg, acc, ink = PALETTES[h % len(PALETTES)]
+    motif = (h >> 8) % 3
+    lines = wrap(c["title"], 14)
+    size = 46 if len(lines) <= 2 else (38 if len(lines) == 3 else 32)
+    y0 = 250 - (len(lines) - 1) * size * 0.55
+    title = "".join(
+        f'<text x="40" y="{y0 + i * size * 1.12:.0f}" font-size="{size}" font-weight="700" fill="{ink}">{esc(l)}</text>'
+        for i, l in enumerate(lines))
+    if motif == 0:      # heart
+        art = f'<path d="M300 150 C 240 110 238 62 270 56 C 288 52 298 64 300 74 C 302 64 312 52 330 56 C 362 62 360 110 300 150 Z" fill="{acc}" opacity=".85"/>'
+    elif motif == 1:    # rising sun
+        rays = "".join(f'<line x1="300" y1="130" x2="{300 + 70 * math.cos(k * math.pi / 8):.0f}" y2="{130 - 70 * math.sin(k * math.pi / 8):.0f}" stroke="{acc}" stroke-width="3" opacity=".6"/>' for k in range(1, 8))
+        art = rays + f'<circle cx="300" cy="130" r="30" fill="{acc}"/><line x1="220" y1="130" x2="380" y2="130" stroke="{acc}" stroke-width="3"/>'
+    else:               # sprout
+        art = f'<path d="M300 160 V96" stroke="{acc}" stroke-width="5" stroke-linecap="round"/><path d="M300 112 C 270 112 256 92 254 70 C 280 70 298 86 300 112 Z" fill="{acc}"/><path d="M300 98 C 326 98 342 78 346 56 C 318 56 302 74 300 98 Z" fill="{acc}" opacity=".75"/>'
+    authors = wrap(c["author"], 30)
+    auth = "".join(f'<text x="40" y="{470 + i * 24}" font-size="19" fill="{ink}" opacity=".92">{esc(a)}</text>' for i, a in enumerate(authors))
+    return f'''<svg class="cover-art" viewBox="0 0 400 600" role="img" aria-label="Cover for {esc(c['title'])} by {esc(c['author'])}" xmlns="http://www.w3.org/2000/svg" font-family="Georgia, 'Times New Roman', serif">
+<rect width="400" height="600" fill="{bg}"/>
+<rect x="18" y="18" width="364" height="564" fill="none" stroke="{acc}" stroke-width="1.5" opacity=".7"/>
+{art}
+<text x="40" y="60" font-size="13" letter-spacing="3" fill="{acc}" font-family="Verdana, sans-serif">LIFE BOOKS · DAY {c['day']}</text>
+<line x1="40" y1="{y0 - size - 4:.0f}" x2="120" y2="{y0 - size - 4:.0f}" stroke="{acc}" stroke-width="4"/>
+{title}
+<line x1="40" y1="440" x2="360" y2="440" stroke="{ink}" stroke-width="1" opacity=".4"/>
+{auth}
+<text x="40" y="556" font-size="14" fill="{acc}" font-family="Verdana, sans-serif">{esc(year_text(c['year']))}</text>
+<text x="360" y="556" font-size="12" fill="{ink}" opacity=".7" text-anchor="end" font-family="Verdana, sans-serif">haivijayanand.github.io</text>
+</svg>''', bg
+
+
+STYLE = """
+:root{--bg:#f5f2ea;--card:#fffdf8;--ink:#1d2421;--muted:#5d6763;--rule:#ddd6c8;--brand:#a8456b;--good:#2e7d4f;--bad:#b23a2a}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#161a19;--card:#1f2523;--ink:#e8ece9;--muted:#9aa7a2;--rule:#33403b;--brand:#f08fb0;--good:#6fcf97;--bad:#ff8a7a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 Georgia,'Times New Roman',serif}
+a{color:var(--brand)}
+.wrap{max-width:780px;margin:0 auto;padding:16px}
+nav.top{font:14px/1.4 Verdana,sans-serif;padding:10px 0 18px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.cover{min-height:92vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:12px 0 28px;border-bottom:1px solid var(--rule)}
+.cover-art{width:min(340px,82vw);height:auto;box-shadow:0 18px 40px rgba(0,0,0,.28),0 2px 6px rgba(0,0,0,.2);border-radius:3px 8px 8px 3px}
+.cover .meta{text-align:center;font:15px/1.5 Verdana,sans-serif;color:var(--muted)}
+.cover .meta b{color:var(--ink)}
+.scroll{font:13px Verdana,sans-serif;color:var(--muted);text-decoration:none}
+h1{font-size:1.9em;line-height:1.2;margin:34px 0 4px}
+.byline{font:14px/1.5 Verdana,sans-serif;color:var(--muted);margin:0 0 22px}
+.theme{border-left:4px solid var(--brand);padding:6px 14px;background:var(--card);font-style:italic;margin:0 0 20px}
+h2{font:700 15px/1.3 Verdana,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);margin:36px 0 10px}
+.take{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:12px 16px;margin:18px 0}
+.wc{font:12px Verdana,sans-serif;color:var(--muted)}
+ol.quiz{padding-left:0;list-style:none;counter-reset:q}
+ol.quiz>li{counter-increment:q;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:14px 16px;margin:0 0 14px}
+ol.quiz>li>p{margin:0 0 10px;font-weight:700}
+ol.quiz>li>p::before{content:counter(q) ". ";color:var(--brand)}
+.opt{display:block;width:100%;text-align:left;font:15px/1.45 Verdana,sans-serif;color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:7px;padding:9px 12px;margin:6px 0;cursor:pointer}
+.opt:hover{border-color:var(--brand)}
+.opt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent)}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent)}
+.opt:disabled{cursor:default}
+.why{display:none;font:14px/1.5 Verdana,sans-serif;color:var(--muted);margin:8px 2px 0}
+li.done .why{display:block}
+.score{font:15px Verdana,sans-serif;position:sticky;bottom:0;background:var(--bg);padding:10px 0;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.score button{font:14px Verdana,sans-serif;background:var(--brand);color:#fff;border:0;border-radius:6px;padding:7px 12px;cursor:pointer}
+.cert{display:none;background:var(--card);border:2px solid var(--brand);border-radius:12px;padding:16px;margin:22px 0}
+.cert.show{display:block}
+.cert h2{margin-top:4px}
+.cert label{display:block;font:14px Verdana,sans-serif;color:var(--muted);margin:0 0 6px}
+.cert input{width:100%;font:18px Georgia,serif;padding:9px 12px;border:1px solid var(--rule);border-radius:7px;background:var(--bg);color:var(--ink)}
+.cert .row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
+.cert button,.cert a.btn{font:14px Verdana,sans-serif;border:1px solid var(--brand);border-radius:7px;padding:9px 14px;cursor:pointer;background:transparent;color:var(--brand);text-decoration:none}
+.cert button.main{background:var(--brand);color:#fff}
+.cert img{display:block;width:100%;height:auto;margin:14px 0 4px;border:1px solid var(--rule);border-radius:4px;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.cert .note{font:13px/1.5 Verdana,sans-serif;color:var(--muted);margin:10px 0 0}
+.cert .hidden{display:none}
+footer{font:13px/1.5 Verdana,sans-serif;color:var(--muted);padding:26px 0 40px}
+@media print{.cover{min-height:auto;page-break-after:always}.cert,.score,nav.top,.scroll{display:none}.why{display:block}body{background:#fff}}
+"""
+
+QUIZ_JS = """
+(function(){
+  var KEY=window.QUIZ_KEY,total=KEY.length,got=0,done=0;
+  var out=document.getElementById('score');
+  function show(){out.textContent='Score: '+got+' / '+done+' answered, '+total+' questions';if(window.onQuizChange)window.onQuizChange(got,done,total);}
+  document.querySelectorAll('ol.quiz>li').forEach(function(li,i){
+    li.querySelectorAll('.opt').forEach(function(b,j){
+      b.addEventListener('click',function(){
+        if(li.classList.contains('done'))return;
+        li.classList.add('done');done++;
+        if(j===KEY[i]){got++;b.classList.add('right');}
+        else{b.classList.add('wrong');li.querySelectorAll('.opt')[KEY[i]].classList.add('right');}
+        li.querySelectorAll('.opt').forEach(function(x){x.disabled=true;});
+        show();
+      });
+    });
+  });
+  document.getElementById('reset').addEventListener('click',function(){
+    got=0;done=0;
+    document.querySelectorAll('ol.quiz>li').forEach(function(li){
+      li.classList.remove('done');
+      li.querySelectorAll('.opt').forEach(function(x){x.disabled=false;x.classList.remove('right','wrong');});
+    });
+    show();
+  });
+  show();
+})();
+"""
+
+
+CERT_JS = """
+(function(){
+  var C=window.CERT;C.when=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  var KEY_NAME='bookReview.name',W=2339,H=1654;
+  var box=document.getElementById('cert'),inp=document.getElementById('cert-name'),
+      prev=document.getElementById('cert-img'),acts=document.getElementById('cert-acts'),
+      note=document.getElementById('cert-note'),last=null;
+  function getName(){try{return localStorage.getItem(KEY_NAME)||'';}catch(e){return '';}}
+  function setName(n){try{localStorage.setItem(KEY_NAME,n);}catch(e){}}
+  inp.value=getName();
+  window.onQuizChange=function(got,done,total){
+    if(done<total){box.classList.remove('show');return;}
+    box.classList.add('show');
+    document.getElementById('cert-score').textContent=got+' / '+total;
+    if(inp.value.trim())make();
+  };
+  function coverImage(){
+    return new Promise(function(ok){
+      var svg=document.querySelector('.cover .cover-art');
+      if(!svg)return ok(null);
+      var src=new XMLSerializer().serializeToString(svg);
+      var img=new Image();img.onload=function(){ok(img);};img.onerror=function(){ok(null);};
+      img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(src);
+    });
+  }
+  function fit(ctx,text,font,size,maxW){
+    do{ctx.font=font.replace('$',size);size-=4;}while(ctx.measureText(text).width>maxW&&size>30);
+  }
+  function draw(name,got,total,cover){
+    var cv=document.createElement('canvas');cv.width=W;cv.height=H;
+    var x=cv.getContext('2d'),G='#a8456b',GOLD='#b8892d',INK='#1d2421',MUTE='#5d6763';
+    var SERIF="Georgia,'Noto Serif','Noto Serif Tamil','Latha','Nirmala UI',serif",SANS="Verdana,'Noto Sans','Nirmala UI',sans-serif";
+    x.fillStyle='#fbf7ee';x.fillRect(0,0,W,H);
+    x.strokeStyle=G;x.lineWidth=34;x.strokeRect(40,40,W-80,H-80);
+    x.strokeStyle=GOLD;x.lineWidth=6;x.strokeRect(92,92,W-184,H-184);
+    x.lineWidth=2;x.strokeRect(112,112,W-224,H-224);
+    [[112,112],[W-112,112],[112,H-112],[W-112,H-112]].forEach(function(p){
+      x.save();x.translate(p[0],p[1]);x.rotate(Math.PI/4);x.fillStyle=GOLD;x.fillRect(-22,-22,44,44);
+      x.fillStyle='#fbf7ee';x.fillRect(-10,-10,20,20);x.restore();});
+    var L=230,cx;
+    if(cover){var ch=860,cw=ch*400/600;x.save();x.shadowColor='rgba(0,0,0,.3)';x.shadowBlur=40;x.shadowOffsetY=18;
+      x.drawImage(cover,L,(H-ch)/2,cw,ch);x.restore();cx=L+cw+(W-140-(L+cw))/2;}
+    else cx=W/2;
+    var maxW=W-140-(cover?L+600:L)-120;
+    x.textAlign='center';x.textBaseline='alphabetic';
+    x.fillStyle=G;x.font='bold 40px '+SANS;
+    if(x.letterSpacing!==undefined)x.letterSpacing='10px';
+    x.fillText('LIFE BOOKS · DAY '+C.day,cx,300);
+    if(x.letterSpacing!==undefined)x.letterSpacing='0px';
+    var top=got>=8?'Certificate of Excellence':'Certificate of Completion';
+    x.fillStyle=INK;x.font='bold 112px '+SERIF;x.fillText(top,cx,430);
+    x.strokeStyle=GOLD;x.lineWidth=5;x.beginPath();x.moveTo(cx-260,480);x.lineTo(cx+260,480);x.stroke();
+    x.fillStyle=MUTE;x.font='italic 50px '+SERIF;x.fillText('This is to certify that',cx,590);
+    x.fillStyle=G;fit(x,name,'italic bold $px '+SERIF,124,maxW);x.fillText(name,cx,735);
+    x.strokeStyle=MUTE;x.lineWidth=2;x.beginPath();x.moveTo(cx-maxW/2,775);x.lineTo(cx+maxW/2,775);x.stroke();
+    x.fillStyle=MUTE;x.font='italic 48px '+SERIF;x.fillText('has studied the review of',cx,870);
+    x.fillStyle=INK;fit(x,C.title,'bold $px '+SERIF,80,maxW);x.fillText(C.title,cx,975);
+    fit(x,'by '+C.author,'$px '+SERIF,52,maxW);x.fillStyle=MUTE;x.fillText('by '+C.author,cx,1050);
+    x.fillStyle=INK;x.font='50px '+SERIF;
+    x.fillText('and answered '+got+' of '+total+' questions correctly',cx,1150);
+    var sx=cx+maxW/2-130,sy=1390;
+    x.fillStyle=G;x.beginPath();x.arc(sx,sy,120,0,7);x.fill();
+    x.strokeStyle=GOLD;x.lineWidth=8;x.beginPath();x.arc(sx,sy,102,0,7);x.stroke();
+    x.fillStyle='#fff';x.font='bold 72px '+SERIF;x.fillText(got+'/'+total,sx,sy+20);
+    x.font='bold 24px '+SANS;x.fillText('SCORE',sx,sy+62);
+    var lx=cx-maxW/2+190;
+    x.fillStyle=INK;x.font='46px '+SERIF;x.fillText(C.when,lx,1370);
+    x.strokeStyle=MUTE;x.lineWidth=2;x.beginPath();x.moveTo(lx-190,1395);x.lineTo(lx+190,1395);x.stroke();
+    x.fillStyle=MUTE;x.font='30px '+SANS;x.fillText('Date',lx,1440);
+    x.font='28px '+SANS;x.fillText('haivijayanand.github.io/life-books',cx,H-150);
+    return cv;
+  }
+  function make(){
+    var name=inp.value.trim().replace(/\\s+/g,' ');
+    if(!name){inp.focus();note.textContent='Please type your name first.';return;}
+    setName(name);
+    var parts=document.getElementById('cert-score').textContent.split(' / ');
+    coverImage().then(function(cover){
+      var cv=draw(name,+parts[0],+parts[1],cover);
+      prev.src=cv.toDataURL('image/jpeg',0.9);prev.classList.remove('hidden');
+      acts.classList.remove('hidden');last={cv:cv,name:name,got:parts[0]};
+      note.textContent=navigator.share?'Tap Share to send the PDF to WhatsApp, Gmail or any app.':'Save the PDF, then attach it to WhatsApp or email.';
+    });
+  }
+  var jspdf=null;
+  function loadPdf(){
+    if(window.jspdf)return Promise.resolve(window.jspdf);
+    if(jspdf)return jspdf;
+    jspdf=new Promise(function(ok,bad){
+      var s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s.onload=function(){ok(window.jspdf);};s.onerror=function(){jspdf=null;bad();};
+      document.head.appendChild(s);
+    });
+    return jspdf;
+  }
+  function fileName(){return ('Certificate - '+C.title+' - '+last.name).replace(/[\\\\/:*?"<>|]+/g,'')+'.pdf';}
+  function pdfFile(){
+    return loadPdf().then(function(lib){
+      var d=new lib.jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+      d.setProperties({title:'Certificate: '+C.title,author:'haivijayanand.github.io',subject:'Life Books Day '+C.day});
+      d.addImage(last.cv.toDataURL('image/jpeg',0.92),'JPEG',0,0,297,210);
+      return new File([d.output('blob')],fileName(),{type:'application/pdf'});
+    });
+  }
+  function download(blob,name){
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+    document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
+  }
+  function msg(){return 'I scored '+last.got+'/10 on the "'+C.title+'" book review quiz. '+C.url;}
+  document.getElementById('cert-make').addEventListener('click',make);
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter')make();});
+  document.getElementById('cert-pdf').addEventListener('click',function(){
+    if(!last)return;
+    pdfFile().then(function(f){download(f,f.name);},function(){
+      note.textContent='PDF tool could not load (offline?). Saving as an image instead.';
+      last.cv.toBlob(function(b){download(b,fileName().replace(/pdf$/,'jpg'));},'image/jpeg',0.92);
+    });
+  });
+  var sh=document.getElementById('cert-share');
+  if(!navigator.share)sh.classList.add('hidden');
+  sh.addEventListener('click',function(){
+    if(!last)return;
+    pdfFile().then(function(f){
+      if(navigator.canShare&&navigator.canShare({files:[f]}))
+        return navigator.share({files:[f],title:'Certificate: '+C.title,text:msg()});
+      download(f,f.name);
+      return navigator.share({title:'Certificate: '+C.title,text:msg(),url:C.url});
+    }).catch(function(e){if(e&&e.name!=='AbortError')note.textContent='Sharing did not work here. Use Save PDF and attach the file.';});
+  });
+  document.getElementById('cert-wa').addEventListener('click',function(){
+    if(last)window.open('https://wa.me/?text='+encodeURIComponent(msg()),'_blank');
+  });
+  document.getElementById('cert-mail').addEventListener('click',function(){
+    if(last)location.href='mailto:?subject='+encodeURIComponent('My certificate: '+C.title)+'&body='+encodeURIComponent(msg()+'\\n\\n(The certificate PDF is attached.)');
+  });
+})();
+"""
+
+
+def header(path, version, chat, changes, date=None):
+    return (f"<!DOCTYPE html>\n<!--\nTOOL    : {path}\nFAMILY  : SITE\nVERSION : {version}\n"
+            f"DATE    : {date or dt.date.today().isoformat()}\nCHAT    : {chat}\nCHANGES : {changes}\nSTATUS  : working\n"
+            f"BUILT BY: life-books/_build.py v{__version__}\n-->\n")
+
+
+def render_page(c, prev_c, next_c):
+    svg, bg = cover_svg(c)
+    words = sum(len(p.split()) for p in c["summary"])
+    paras = "\n".join(f"<p>{esc(p)}</p>" for p in c["summary"])
+    qs = []
+    for q in c["questions"]:
+        opts = "".join(f'<button class="opt" type="button">{"ABCD"[k]}. {esc(o)}</button>' for k, o in enumerate(q["options"]))
+        qs.append(f'<li><p>{esc(q["q"])}</p>{opts}<div class="why"><b>Answer {"ABCD"[q["answer"]]}.</b> {esc(q["why"])}</div></li>')
+    key = json.dumps([q["answer"] for q in c["questions"]])
+    cert = json.dumps({"title": c["title"], "author": c["author"], "day": c["day"],
+                       "url": f"https://haivijayanand.github.io/life-books/{c['slug']}.html"}, ensure_ascii=False).replace("</", "<\\/")
+    when = dt.date.fromisoformat(c["date"]).strftime("%d %B %Y").lstrip("0")
+    prev = f'<a href="{prev_c["slug"]}.html">← Day {prev_c["day"]}: {esc(prev_c["title"])}</a>' if prev_c else "<span></span>"
+    nxt = f'<a href="{next_c["slug"]}.html">Day {next_c["day"]}: {esc(next_c["title"])} →</a>' if next_c else "<span></span>"
+    changes = "\n          ".join(PAGE_CHANGES + [f"v1.0.0  review of {c['title']} ({c['author']})"])
+    return header(f"life-books/{c['slug']}.html — Life Books Day {c['day']}: {c['title']}", PAGE_VERSION,
+                  "Daily life books review on GitHub Pages", changes, max(c["date"], PAGE_DATE)) + f"""<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{esc(c['title'])} — Life Books Day {c['day']}</title>
+<meta name="description" content="{esc(c['theme'])}">
+<meta name="theme-color" content="{bg}">
+<style>{STYLE}</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="top"><a href="./">← All Life Books</a><a href="/">K Vijay Anand</a></nav>
+
+<section class="cover">
+{svg}
+<div class="meta"><b>{esc(c['title'])}</b><br>{esc(c['author'])} · {esc(year_text(c['year']))}<br>Day {c['day']} · {when}</div>
+<a class="scroll" href="#summary">Read the summary ↓</a>
+</section>
+
+<article>
+<h1 id="summary">{esc(c['title'])}</h1>
+<p class="byline">{esc(c['author'])} · first published {esc(year_text(c['year']))} · reviewed by K Vijay Anand</p>
+<p class="theme">{esc(c['theme'])}</p>
+
+<h2>Summary</h2>
+{paras}
+<p class="wc">{words} words</p>
+<div class="take"><b>One-line takeaway:</b> {esc(c['takeaway'])}</div>
+
+<h2>Test yourself — 10 questions</h2>
+<p class="wc">Tap an option to check it. Each answer shows a short reason.</p>
+<ol class="quiz">
+{chr(10).join(qs)}
+</ol>
+<div class="score"><span id="score"></span><button id="reset" type="button">Try again</button></div>
+
+<section class="cert" id="cert" aria-live="polite">
+<h2>Your certificate — <span id="cert-score"></span></h2>
+<label for="cert-name">Name to print on the certificate (remembered on this device)</label>
+<input id="cert-name" type="text" maxlength="60" autocomplete="name" placeholder="Your full name">
+<div class="row"><button id="cert-make" class="main" type="button">Make certificate</button></div>
+<img id="cert-img" class="hidden" alt="Certificate preview">
+<div id="cert-acts" class="row hidden">
+<button id="cert-share" class="main" type="button">Share PDF</button>
+<button id="cert-pdf" type="button">Save PDF</button>
+<button id="cert-wa" type="button">WhatsApp</button>
+<button id="cert-mail" type="button">Email</button>
+</div>
+<p class="note" id="cert-note"></p>
+</section>
+</article>
+
+<nav class="top" style="padding-top:22px">{prev}{nxt}</nav>
+<footer>A short personal summary written for study and discussion. The cover above is an original design for this page, not the publisher's cover. Read the book itself for the full argument.</footer>
+</div>
+<script>window.QUIZ_KEY={key};window.CERT={cert};{CERT_JS}{QUIZ_JS}</script>
+</body>
+</html>
+"""
+
+
+def render_index(items):
+    cards = []
+    for c in reversed(items):
+        svg, _ = cover_svg(c)
+        when = dt.date.fromisoformat(c["date"]).strftime("%d %b %Y").lstrip("0")
+        cards.append(f'<a class="card" href="{c["slug"]}.html">{svg}<span class="t">{esc(c["title"])}</span>'
+                     f'<span class="a">{esc(c["author"])}</span><span class="d">Day {c["day"]} · {when}</span>'
+                     f'<span class="s">{esc(c["theme"])}</span></a>')
+    return header("life-books/index.html — list of daily life books reviews", f"1.0.{len(items)}",
+                  "Daily life books review on GitHub Pages", f"v1.0.{len(items)}  {len(items)} reviews listed") + f"""<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Life Books — K Vijay Anand</title>
+<meta name="description" content="One well-loved book a day on personal growth, family, love and raising children: a 300-word summary and ten questions.">
+<style>{STYLE}
+.grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px;margin:22px 0}}
+.card{{display:flex;flex-direction:column;gap:3px;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:12px}}
+.card:hover{{border-color:var(--brand)}}
+.card .cover-art{{width:100%;box-shadow:0 6px 14px rgba(0,0,0,.2);margin-bottom:8px}}
+.card .t{{font-weight:700;line-height:1.3}}
+.card .a,.card .d{{font:13px Verdana,sans-serif;color:var(--muted)}}
+.card .s{{font:13px/1.45 Verdana,sans-serif;margin-top:4px}}
+#q{{width:100%;font:15px Verdana,sans-serif;padding:9px 12px;border:1px solid var(--rule);border-radius:7px;background:var(--card);color:var(--ink)}}
+</style>
+</head>
+<body>
+<div class="wrap" style="max-width:1100px">
+<nav class="top"><a href="/">← K Vijay Anand</a><a href="/book-review/">Management Book Review</a></nav>
+<h1 style="margin-top:6px">Life Books</h1>
+<p class="byline">One well-loved book a day on personal growth, family, love and raising children — a 300-word summary and ten questions to test yourself. {len(items)} reviewed so far, newest first.</p>
+<input id="q" type="search" placeholder="Search by title, author or idea…" aria-label="Search reviews">
+<div class="grid" id="grid">
+{chr(10).join(cards) or '<p class="wc">The first review appears tonight at 8 PM IST.</p>'}
+</div>
+<footer>Covers on this site are original designs made for each review, not the publishers' covers.</footer>
+</div>
+<script>
+document.getElementById('q').addEventListener('input',function(e){{
+  var t=e.target.value.toLowerCase();
+  document.querySelectorAll('#grid .card').forEach(function(c){{c.style.display=c.textContent.toLowerCase().indexOf(t)>=0?'':'none';}});
+}});
+</script>
+</body>
+</html>
+"""
+
+
+def main():
+    items, bad = [], False
+    for f in sorted(CONTENT.glob("*.json")):
+        c = json.loads(f.read_text(encoding="utf-8"))
+        errs = check(c, f.stem)
+        if errs:
+            bad = True
+            print(f"ERROR {f.name}: " + "; ".join(errs))
+        items.append(c)
+    if bad:
+        sys.exit(1)
+    items.sort(key=lambda c: c["day"])
+    days = [c["day"] for c in items]
+    if len(set(days)) != len(days):
+        sys.exit("ERROR: two reviews share a day number")
+    for i, c in enumerate(items):
+        page = render_page(c, items[i - 1] if i else None, items[i + 1] if i + 1 < len(items) else None)
+        (HERE / f"{c['slug']}.html").write_text(page, encoding="utf-8")
+    (HERE / "index.html").write_text(render_index(items), encoding="utf-8")
+    print(f"built {len(items)} review page(s) and index.html")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<!--
+TOOL: Hearts
+FAMILY: card-games
+VERSION: 1.0.0
+DATE: 2026-10-13
+CHAT: Card games batch 1 (claude.ai)
+CHANGES: 1.0.0 - first release
+STATUS: released
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b3d2a">
+<title>Hearts</title>
+<style>
+:root{--felt:#0f5132;--bar:#0b3d2a;--red:#c62828;--blk:#111;--back:#1e3a8a;--cw:64px;--hcw:78px;--gold:#ffd54f;--ink:#f1f5f2;--panel:#fbfbf7}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:radial-gradient(ellipse at 50% 35%,#18734a 0%,var(--felt) 55%,#0a3b24 100%) fixed;background-color:var(--felt);color:var(--ink);width:100%;min-height:100vh;-webkit-tap-highlight-color:transparent}
+button,select,input{font:inherit}
+.topbar{position:sticky;top:0;z-index:20;background:var(--bar);display:flex;align-items:center;gap:6px;padding:4px 10px;padding-top:max(4px,env(safe-area-inset-top));box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.topbar h1{font-size:20px;margin:0 auto 0 0;white-space:nowrap;letter-spacing:.5px}
+.topbar h1 span{color:#ff6b6b}
+.tb{min-height:40px;min-width:40px;padding:6px 12px;border:1px solid #2f6f52;background:#145c3c;color:#fff;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-size:15px;white-space:nowrap}
+.tb:active{transform:translateY(1px)}
+.tb.on{background:#f1c40f;color:#222;border-color:#f1c40f}
+.tabs{display:flex;gap:4px;justify-content:center;padding:6px 8px 0}
+.tab{min-height:40px;padding:6px 16px;border-radius:10px 10px 0 0;border:0;background:rgba(0,0,0,.25);color:#dfe;cursor:pointer;font-size:15px}
+.tab.on{background:rgba(0,0,0,.5);color:#fff;font-weight:700}
+main{width:100%;max-width:1400px;margin:0 auto;padding:0 10px 16px}
+.panel{display:none}.panel.on{display:block}
+.strip{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;background:rgba(0,0,0,.35);padding:6px 12px;border-radius:0 0 10px 10px;font-size:14px}
+.strip select{min-height:36px;border-radius:6px;padding:2px 6px}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,.15);font-size:13px}
+.badge.hb{background:#c62828;color:#fff}
+.table{display:grid;grid-template-columns:minmax(90px,1fr) minmax(240px,2.2fr) minmax(90px,1fr);grid-template-areas:". top ." "left mid right" "hand hand hand" "status status status";gap:8px;padding-top:10px;align-items:center}
+.seat{text-align:center;padding:6px;border-radius:12px;background:rgba(0,0,0,.18);border:2px solid transparent;transition:border-color .2s,background .2s}
+.seat.turn{border-color:var(--gold);background:rgba(255,213,79,.12)}
+.seat .nm{font-weight:700;font-size:16px}
+.seat .sc{font-size:13px;opacity:.92}
+.seat .backs{display:flex;justify-content:center;margin:6px auto 2px;height:calc(var(--cw)*.9)}
+.mini{width:calc(var(--cw)*.6);height:calc(var(--cw)*.84);border-radius:5px;border:1px solid #c7d2fe;background:repeating-linear-gradient(45deg,#1e3a8a 0 5px,#2848a8 5px 10px);margin-left:calc(var(--cw)*-.45);box-shadow:0 1px 2px rgba(0,0,0,.5)}
+.mini:first-child{margin-left:0}
+#seat2{grid-area:top;justify-self:center;min-width:180px}
+#seat1{grid-area:left}#seat3{grid-area:right}
+.mid{grid-area:mid;display:flex;justify-content:center}
+.trick{position:relative;width:calc(var(--cw)*3.9);height:calc(var(--cw)*1.4*2.55);}
+.slot{position:absolute;transition:transform .25s}
+.slot0{left:50%;bottom:0;transform:translateX(-50%)}
+.slot2{left:50%;top:0;transform:translateX(-50%)}
+.slot1{left:0;top:50%;transform:translateY(-50%)}
+.slot3{right:0;top:50%;transform:translateY(-50%)}
+.slot .card.win{box-shadow:0 0 0 3px var(--gold),0 2px 6px rgba(0,0,0,.6)}
+.card{width:var(--cw);height:calc(var(--cw)*1.4);background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.55);position:relative;color:var(--blk);user-select:none;-webkit-user-select:none;border:1px solid #d6d6d6}
+.card.red{color:var(--red)}
+.card .ix{position:absolute;left:3px;top:2px;line-height:.95;display:flex;flex-direction:column;align-items:center;font-weight:800;font-size:calc(var(--cw)*.3);min-width:calc(var(--cw)*.3)}
+.card .ix i{font-style:normal;font-size:calc(var(--cw)*.28)}
+.card .pip{position:absolute;right:4px;bottom:1px;font-size:calc(var(--cw)*.55);line-height:1}
+.handwrap{grid-area:hand;background:rgba(0,0,0,.18);border-radius:12px;padding:8px 8px 6px;border:2px solid transparent}
+.handwrap.turn{border-color:var(--gold)}
+.handinfo{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:14px;margin-bottom:6px}
+.hand{position:relative;height:calc(var(--hcw)*1.4 + 16px);width:100%}
+.hand .card{--cw:var(--hcw);position:absolute;top:14px;cursor:pointer;transition:top .15s,opacity .15s}
+.hand .card.sel{top:0;box-shadow:0 0 0 3px var(--gold),0 2px 6px rgba(0,0,0,.6)}
+.hand .card.dim{background:#c9cfcb;filter:brightness(.82) grayscale(.35);cursor:default}
+.hand .card.new{box-shadow:0 0 0 3px #4fc3f7,0 2px 6px rgba(0,0,0,.6)}
+.status{grid-area:status;text-align:center;background:rgba(0,0,0,.4);padding:10px;border-radius:10px;font-size:16px;min-height:44px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.btn{min-height:42px;padding:8px 18px;border-radius:10px;border:0;background:#f1c40f;color:#222;font-weight:700;cursor:pointer;font-size:15px}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.alt{background:#e0e7e3}
+.doc{background:var(--panel);color:#1d2a22;border-radius:0 0 12px 12px;padding:14px 18px;line-height:1.5;font-size:15px}
+.doc h2{margin:.6em 0 .3em;color:#0b3d2a;font-size:20px}
+.doc h3{margin:.8em 0 .3em;color:#0f5132;font-size:17px}
+.doc table{border-collapse:collapse;margin:6px 0;font-size:14px;max-width:100%}
+.doc th,.doc td{border:1px solid #c9d6ce;padding:4px 8px;text-align:left}
+.doc th{background:#e4efe8}
+.doc code,.doc .f{font-family:ui-monospace,Consolas,monospace;background:#eef3ef;padding:1px 5px;border-radius:4px;font-size:13px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.box{border:1px solid #c9d6ce;border-radius:10px;padding:10px 14px;background:#fff;overflow-x:auto}
+.ctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}
+.ctl input[type=range]{flex:1;min-width:140px;height:32px}
+.ctl label{min-width:150px}
+.bar{height:12px;background:#2e7d32;border-radius:3px;min-width:1px}
+.big{font-size:20px;font-weight:800;color:#0b3d2a}
+.redt{color:#c62828}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:12px}
+.modal.on{display:flex}
+.dlg{background:#fff;color:#1d2a22;border-radius:14px;max-width:520px;width:100%;padding:16px 18px;max-height:90vh;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.dlg h2{margin:0 0 8px;color:#0b3d2a}
+.dlg table{border-collapse:collapse;width:100%;margin:8px 0}
+.dlg th,.dlg td{border-bottom:1px solid #dde5df;padding:6px;text-align:center}
+.dlg .row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:10px}
+.small{font-size:13px;opacity:.85}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+@media (max-width:600px){
+ :root{--cw:44px;--hcw:52px}
+ .topbar{padding:4px 6px;gap:4px;flex-wrap:wrap}
+ .topbar h1{font-size:17px}
+ .tb{padding:4px 8px;font-size:13px}
+ .tb .lbl{display:none}
+ main{padding:0 6px 12px}
+ .table{grid-template-columns:72px 1fr 72px;gap:6px}
+ .seat{padding:4px 2px}
+ .seat .nm{font-size:14px}.seat .sc{font-size:12px}
+ #seat2{min-width:150px}
+ .seat .backs .mini{margin-left:calc(var(--cw)*-.52)}
+ .seat .backs .mini:first-child{margin-left:0}
+ .status{font-size:14px;padding:8px}
+ .doc{padding:10px 10px;font-size:14px}
+ .ctl label{min-width:0;width:100%}
+ .tab{padding:6px 10px;font-size:14px}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+ <h1><span>♥</span> Hearts</h1>
+ <button class="tb" id="bNew" title="New game">✚<span class="lbl">&nbsp;New</span></button>
+ <button class="tb" id="bRules" title="Rules">📖<span class="lbl">&nbsp;Rules</span></button>
+ <button class="tb" id="bOdds" title="Odds &amp; Strategy">%<span class="lbl">&nbsp;Odds</span></button>
+ <button class="tb" id="bFull" title="Full screen">⛶<span class="lbl">&nbsp;Full screen</span></button>
+ <a class="tb" href="index.html" title="Back to games">←<span class="lbl">&nbsp;Games</span></a>
+</header>
+<nav class="tabs">
+ <button class="tab on" data-tab="play">Play</button>
+ <button class="tab" data-tab="rules">Rules</button>
+ <button class="tab" data-tab="odds">Odds &amp; Strategy</button>
+</nav>
+<main>
+<section class="panel on" id="p-play">
+ <div class="strip">
+  <span id="passInfo" class="badge">Pass: left</span>
+  <span id="handNo" class="badge">Hand 1</span>
+  <span id="hbInfo" class="badge">Hearts not broken</span>
+  <label>Difficulty <select id="diff"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select></label>
+ </div>
+ <div class="table">
+  <div class="seat" id="seat2"></div>
+  <div class="seat" id="seat1"></div>
+  <div class="mid"><div class="trick" id="trick"><div class="slot slot0" id="slot0"></div><div class="slot slot1" id="slot1"></div><div class="slot slot2" id="slot2"></div><div class="slot slot3" id="slot3"></div></div></div>
+  <div class="seat" id="seat3"></div>
+  <div class="handwrap" id="handwrap"><div class="handinfo"><b id="youInfo">You</b><span id="recvInfo" class="small"></span></div><div class="hand" id="hand"></div></div>
+  <div class="status" id="status">Loading…</div>
+ </div>
+</section>
+
+<section class="panel" id="p-rules"><div class="doc">
+ <h2>How to play Hearts</h2>
+ <p>Four players, 52 cards, 13 each. You play against three computer players: <b>Arun</b> (left), <b>Meena</b> (across) and <b>Ravi</b> (right). Play goes clockwise: You → Arun → Meena → Ravi. The aim is to take as <b>few</b> points as possible.</p>
+ <h3>Each hand</h3>
+ <ol>
+  <li><b>Pass 3 cards</b> — hand 1 to the left (Arun), hand 2 to the right (Ravi), hand 3 across (Meena), hand 4 hold (no pass); then the cycle repeats. Tap three cards, then tap <i>Pass</i>. Cards you receive are outlined in blue.</li>
+  <li>The holder of <b>2♣</b> leads it to the first trick.</li>
+  <li>You must <b>follow suit</b> if you can. If you cannot, you may play any card. The highest card of the suit led wins the trick; the winner leads next. There are no trumps.</li>
+  <li>On the <b>first trick</b> nobody may play a heart or Q♠ (unless their hand holds nothing else).</li>
+  <li><b>Hearts cannot be led until broken</b> — i.e. until a heart has been discarded on an earlier trick — unless you hold only hearts.</li>
+ </ol>
+ <h3>Scoring</h3>
+ <table><tr><th>Card</th><th>Points</th></tr><tr><td>Each heart ♥</td><td>1</td></tr><tr><td>Queen of spades Q♠</td><td>13</td></tr><tr><td>Everything else</td><td>0</td></tr><tr><td><b>Total per hand</b></td><td>26</td></tr></table>
+ <p><b>Shooting the moon:</b> if one player takes all 13 hearts and Q♠, that player scores 0 and every other player scores +26.</p>
+ <p><b>Game end:</b> when any player reaches <b>100</b> or more at the end of a hand, the player with the <b>lowest</b> score wins. If two or more players tie for lowest, they share the win.</p>
+ <h3>Variant choices</h3>
+ <ul><li>Standard 4-player Hearts, pass L/R/across/hold rotation.</li><li>Q♠ may be led at any time; it does not break hearts (only a heart does).</li><li>Q♠ cannot be dumped on the first trick (no points on trick 1 unless a hand holds only point cards).</li><li>No J♦ bonus, no "new moon" option.</li></ul>
+ <h3>Computer players</h3>
+ <ul><li><b>Easy</b> – mostly random legal cards.</li><li><b>Normal</b> – passes dangerous cards, ducks under the winning card, dumps Q♠ and high hearts when void.</li><li><b>Hard</b> – also tracks every card played, known voids, who received your passed cards, chooses safe leads, tries to flush Q♠, blocks a moon attempt and sometimes shoots the moon itself.</li></ul>
+ <h3>Your statistics</h3>
+ <div id="statsBox"></div>
+ <p><button class="btn alt" id="bResetStats">Reset statistics</button></p>
+ <p class="small">Hearts v<span id="ver"></span> · card-games family · offline single file · autosaves after every card (resume when you reopen).</p>
+</div></section>
+
+<section class="panel" id="p-odds"><div class="doc">
+ <h2>Odds &amp; Strategy</h2>
+ <div class="box" id="liveBox"></div>
+ <div class="grid2" style="margin-top:14px">
+  <div class="box">
+   <h3>1. Suit-split calculator</h3>
+   <p class="small">How are the <i>n</i> missing cards of a suit split among the other hands? Exact multivariate hypergeometric:<br><span class="f">P(a,b,c) = C(h1,a)·C(h2,b)·C(h3,c) / C(h1+h2+h3, n)</span></p>
+   <div class="ctl"><label>Missing cards n = <b id="nOut">5</b></label><input type="range" id="nIn" min="0" max="13" value="5"></div>
+   <div class="ctl"><label>Hands sharing them</label><select id="kIn"><option value="2">2 hands</option><option value="3" selected>3 hands (all opponents)</option></select></div>
+   <div class="ctl"><label>Unknown cards per hand = <b id="hOut">13</b></label><input type="range" id="hIn" min="1" max="13" value="13"></div>
+   <div class="ctl"><label>Live game</label><select id="liveSuit"><option value="0">♣ Clubs</option><option value="1">♦ Diamonds</option><option value="2">♠ Spades</option><option value="3">♥ Hearts</option></select><button class="btn alt" id="bLive">Use live counts</button></div>
+   <div id="sizesTxt" class="small"></div>
+   <div id="splitTbl"></div>
+  </div>
+  <div class="box">
+   <h3>2. Will I be passed Q♠?</h3>
+   <p class="small">If Q♠ is not in your own 13 cards, it is in one of the 39 other cards, so a particular passer holds it with probability 13/39 = 1/3. You receive it only if that player also chooses to pass it.</p>
+   <div class="ctl"><label>Passer gives away Q♠ when held: <b id="ppOut">60</b>%</label><input type="range" id="ppIn" min="0" max="100" value="60"></div>
+   <div id="qsPass"></div>
+   <h3>3. Where is Q♠?</h3>
+   <p class="small">Q♠ unplayed and not in your hand. Any known spade void removes that player; every remaining unknown card slot is equally likely, so <span class="f">P(player i) = h<sub>i</sub> / Σ h<sub>j</sub></span> over players not void in spades.</p>
+   <div id="qsWhere"></div>
+   <p><button class="btn alt" id="bLiveQ">Use live game</button></p>
+   <div id="qsWhereOut"></div>
+  </div>
+ </div>
+ <div class="box" style="margin-top:14px">
+  <h3>Strategy tips</h3>
+  <ul>
+   <li><b>Pass dangerous cards:</b> Q♠, A♠, K♠ (unless you hold 4–5+ low spades to protect them), and high hearts.</li>
+   <li><b>Void a short suit</b> (clubs or diamonds) when passing — being void lets you discard Q♠ and hearts on someone else's trick.</li>
+   <li><b>Duck:</b> when following, play the highest card that is still <i>below</i> the winning card.</li>
+   <li><b>Flush the queen:</b> if you hold only low spades, lead them — whoever holds Q♠ without cover may be forced to play it.</li>
+   <li><b>Count cards:</b> 13 cards per suit. If 5 clubs are missing they split 3-2 about 68% of the time among two hands (see calculator).</li>
+   <li><b>Watch the moon:</b> if one player has taken every point so far and lots of hearts, take one heart trick yourself to stop them — it costs you 1 point but saves 26.</li>
+   <li>Leading a low card from a suit where many higher cards are still unplayed is the safest lead.</li>
+  </ul>
+ </div>
+</div></section>
+</main>
+
+<div class="modal" id="modal"><div class="dlg" id="dlg"></div></div>
+
+<script>
+"use strict";
+const APP_VERSION = "1.0.0";
+const SAVE_KEY = "cg_hearts_v1", STATS_KEY = "cg_hearts_stats", PREF_KEY = "cg_hearts_prefs";
+const NAMES = ["You", "Arun", "Meena", "Ravi"];
+const SUITS = ["♣", "♦", "♠", "♥"];
+const SUIT_NAMES = ["Clubs", "Diamonds", "Spades", "Hearts"];
+const CLUBS = 0, DIAMONDS = 1, SPADES = 2, HEARTS = 3;
+const QS = SPADES * 13 + 10, KS = QS + 1, AS = QS + 2, TWO_CLUBS = 0;
+const PASS_DIRS = [{ name: "left", off: 1 }, { name: "right", off: 3 }, { name: "across", off: 2 }, { name: "hold", off: 0 }];
+
+/* ---------- pure rules ---------- */
+const suitOf = c => Math.floor(c / 13);
+const rankOf = c => (c % 13) + 2;
+const rankLabel = r => ({ 11: "J", 12: "Q", 13: "K", 14: "A" })[r] || String(r);
+const cardName = c => rankLabel(rankOf(c)) + SUITS[suitOf(c)];
+const cardPoints = c => suitOf(c) === HEARTS ? 1 : (c === QS ? 13 : 0);
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function deal() { const d = shuffle([...Array(52).keys()]); const h = [[], [], [], []]; d.forEach((c, i) => h[i % 4].push(c)); h.forEach(x => x.sort((a, b) => a - b)); return h; }
+function trickWinner(trick) { const led = suitOf(trick[0].c); let w = trick[0]; for (const t of trick) if (suitOf(t.c) === led && rankOf(t.c) > rankOf(w.c)) w = t; return w.p; }
+function trickPoints(trick) { return trick.reduce((a, t) => a + cardPoints(t.c), 0); }
+function legalMoves(s, p) {
+  const hand = s.hands[p];
+  if (!hand.length) return [];
+  if (s.trick.length === 0) {
+    if (s.trickNo === 0) return hand.includes(TWO_CLUBS) ? [TWO_CLUBS] : hand.slice();
+    if (!s.heartsBroken) { const nh = hand.filter(c => suitOf(c) !== HEARTS); if (nh.length) return nh; }
+    return hand.slice();
+  }
+  const led = suitOf(s.trick[0].c);
+  const follow = hand.filter(c => suitOf(c) === led);
+  if (follow.length) return follow;
+  if (s.trickNo === 0) { const np = hand.filter(c => cardPoints(c) === 0); if (np.length) return np; }
+  return hand.slice();
+}
+function handPoints(taken) { return taken.map(t => t.reduce((a, c) => a + cardPoints(c), 0)); }
+function scoreHand(taken) {
+  const pts = handPoints(taken); const moon = pts.indexOf(26);
+  if (moon >= 0) return { pts: pts.map((_, i) => i === moon ? 0 : 26), raw: pts, moon };
+  return { pts, raw: pts, moon: -1 };
+}
+
+/* ---------- state ---------- */
+let state = null, gen = 0, timer = null;
+const G = { fast: false };
+const dly = ms => G.fast ? 0 : ms;
+function schedule(fn, ms) { clearTimeout(timer); const g = gen; timer = setTimeout(() => { if (g === gen) fn(); }, dly(ms)); }
+function loadJSON(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+function saveJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+function save() { if (state) saveJSON(SAVE_KEY, state); }
+function prefs() { return loadJSON(PREF_KEY) || { difficulty: "normal" }; }
+
+function freshState(diff) {
+  return { v: 1, difficulty: diff, scores: [0, 0, 0, 0], handNo: 0, history: [], phase: "pass", hands: [[], [], [], []], passSel: [],
+    received: [], passInfo: [null, null, null, null], trick: [], leader: 0, turn: 0, trickNo: 0, heartsBroken: false,
+    taken: [[], [], [], []], tricksWon: [0, 0, 0, 0], played: [], voids: [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+    moonTry: [false, false, false, false], lastWinner: -1, result: null };
+}
+function newGame() {
+  gen++; clearTimeout(timer); closeModal();
+  state = freshState(prefs().difficulty);
+  startHand();
+}
+function startHand() {
+  const s = state;
+  s.hands = deal(); s.passSel = []; s.received = []; s.passInfo = [null, null, null, null];
+  s.trick = []; s.trickNo = 0; s.heartsBroken = false; s.taken = [[], [], [], []]; s.tricksWon = [0, 0, 0, 0];
+  s.played = []; s.voids = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]; s.moonTry = [false, false, false, false]; s.lastWinner = -1;
+  if (PASS_DIRS[s.handNo % 4].off === 0) { s.phase = "play"; beginPlay(); }
+  else { s.phase = "pass"; save(); render(); advance(); }
+}
+function humanPass(cards) {
+  const s = state;
+  if (!s || s.phase !== "pass" || !Array.isArray(cards) || cards.length !== 3) return false;
+  if (new Set(cards).size !== 3 || !cards.every(c => s.hands[0].includes(c))) return false;
+  const off = PASS_DIRS[s.handNo % 4].off;
+  const out = [cards.slice()];
+  for (let p = 1; p < 4; p++) out[p] = aiChoosePass(s, p);
+  for (let p = 0; p < 4; p++) { s.hands[p] = s.hands[p].filter(c => !out[p].includes(c)); s.passInfo[p] = { to: (p + off) % 4, cards: out[p].slice() }; }
+  for (let p = 0; p < 4; p++) { const to = (p + off) % 4; s.hands[to].push(...out[p]); s.hands[to].sort((a, b) => a - b); }
+  s.received = out[(4 - off) % 4].slice();
+  s.passSel = [];
+  s.phase = "play";
+  beginPlay();
+  return true;
+}
+function beginPlay() {
+  const s = state;
+  s.leader = s.turn = s.hands.findIndex(h => h.includes(TWO_CLUBS));
+  s.trick = []; s.trickNo = 0;
+  if (s.difficulty === "hard") for (let p = 1; p < 4; p++) s.moonTry[p] = moonWorthy(s.hands[p]);
+  save(); render(); advance();
+}
+function playCard(p, c) {
+  const s = state;
+  if (!s || s.phase !== "play" || s.turn !== p || s.trick.length >= 4) return false;
+  if (!legalMoves(s, p).includes(c)) return false;
+  s.hands[p] = s.hands[p].filter(x => x !== c);
+  if (s.trick.length) { const led = suitOf(s.trick[0].c); if (suitOf(c) !== led) s.voids[p][led] = 1; }
+  if (suitOf(c) === HEARTS) s.heartsBroken = true;
+  s.trick.push({ p, c }); s.played.push(c);
+  if (p === 0) s.received = [];
+  s.turn = (p + 1) % 4;
+  save(); render(); advance();
+  return true;
+}
+function collectTrick() {
+  const s = state; if (s.trick.length !== 4) return;
+  const w = trickWinner(s.trick);
+  s.taken[w].push(...s.trick.map(t => t.c)); s.tricksWon[w]++;
+  if (trickPoints(s.trick) > 0) for (let p = 0; p < 4; p++) if (p !== w) s.moonTry[p] = false;
+  s.trick = []; s.trickNo++; s.leader = s.turn = w; s.lastWinner = w;
+  if (s.trickNo === 13) { endHand(); return; }
+  save(); render(); advance();
+}
+function endHand() {
+  const s = state;
+  const r = scoreHand(s.taken);
+  for (let p = 0; p < 4; p++) s.scores[p] += r.pts[p];
+  s.history.push({ hand: s.handNo + 1, pts: r.pts, raw: r.raw, moon: r.moon, totals: s.scores.slice() });
+  if (Math.max(...s.scores) >= 100) {
+    const lo = Math.min(...s.scores);
+    const winners = [0, 1, 2, 3].filter(p => s.scores[p] === lo);
+    s.phase = "gameOver"; s.result = { winners, youWin: winners.includes(0) };
+    recordStats(s);
+  } else s.phase = "handEnd";
+  save(); render(); advance();
+}
+function nextHand() { const s = state; if (!s || s.phase !== "handEnd") return false; closeModal(); s.handNo++; startHand(); return true; }
+
+function advance() {
+  const s = state; if (!s) return;
+  if (s.phase === "pass") { setStatus(passStatus()); return; }
+  if (s.phase === "play") {
+    if (s.trick.length === 4) { setStatus(NAMES[trickWinner(s.trick)] + " take" + (trickWinner(s.trick) === 0 ? "" : "s") + " the trick" + (trickPoints(s.trick) ? " (" + trickPoints(s.trick) + " pt" + (trickPoints(s.trick) > 1 ? "s" : "") + ")" : "")); schedule(collectTrick, 1100); return; }
+    if (s.turn !== 0) { setStatus(NAMES[s.turn] + " is thinking…"); const p = s.turn; schedule(() => { if (state.phase === "play" && state.turn === p && state.trick.length < 4) playCard(p, aiChoosePlay(state, p)); }, 600); return; }
+    setStatus(s.trickNo === 0 && s.trick.length === 0 ? "You hold 2♣ — tap it to lead" : "Your turn — tap a card to play");
+    return;
+  }
+  if (s.phase === "handEnd") { setStatus("Hand over"); showHandEnd(); return; }
+  if (s.phase === "gameOver") { setStatus("Game over — tap New for another game"); showGameOver(); }
+}
+
+/* ---------- AI ---------- */
+const rnd = a => a[Math.floor(Math.random() * a.length)];
+const maxR = a => a.reduce((b, c) => rankOf(c) > rankOf(b) ? c : b);
+const minR = a => a.reduce((b, c) => rankOf(c) < rankOf(b) ? c : b);
+function unseenFor(s, p) { const k = new Set([...s.hands[p], ...s.played]); const r = []; for (let c = 0; c < 52; c++) if (!k.has(c)) r.push(c); return r; }
+function moonWorthy(h) {
+  const hearts = h.filter(c => suitOf(c) === HEARTS), hi = hearts.filter(c => rankOf(c) >= 12).length;
+  const tops = h.filter(c => rankOf(c) >= 13).length;
+  return hearts.length >= 6 && hi >= 3 && tops >= 5;
+}
+function aiChoosePass(s, p) {
+  const h = s.hands[p], d = s.difficulty;
+  if (d === "easy") return shuffle(h.slice()).slice(0, 3);
+  if (d === "hard" && moonWorthy(h)) return h.slice().sort((a, b) => rankOf(a) - rankOf(b)).slice(0, 3);
+  const cnt = [0, 0, 0, 0]; h.forEach(c => cnt[suitOf(c)]++);
+  const spadeLow = h.filter(c => suitOf(c) === SPADES && rankOf(c) < 12).length;
+  const score = c => {
+    const su = suitOf(c), r = rankOf(c);
+    if (c === QS) return (d === "hard" && spadeLow >= 4) ? 5 : 200;
+    if (su === SPADES && r > 12) return (d === "hard" && spadeLow >= 4) ? 10 : 150 + r;
+    if (su === SPADES) return r;
+    let v = r * 3 + (su === HEARTS ? 6 : 0);
+    if (d === "hard" && su !== HEARTS && cnt[su] <= 3) v += (4 - cnt[su]) * 12;
+    return v;
+  };
+  return h.slice().sort((a, b) => score(b) - score(a)).slice(0, 3);
+}
+function moonThreat(s, p) {
+  const pts = handPoints(s.taken), tot = pts.reduce((a, b) => a + b, 0);
+  const holders = [0, 1, 2, 3].filter(q => pts[q] > 0);
+  if (holders.length === 1 && holders[0] !== p && tot >= 10) return holders[0];
+  return -1;
+}
+function aiChoosePlay(s, p) {
+  const legal = legalMoves(s, p);
+  if (legal.length <= 1) return legal[0];
+  const d = s.difficulty;
+  if (d === "easy" && Math.random() < 0.85) return rnd(legal);
+  const c = smartPlay(s, p, legal, d === "hard");
+  return legal.includes(c) ? c : legal[0];
+}
+function smartPlay(s, p, legal, hard) {
+  const hand = s.hands[p];
+  const qsGone = s.played.includes(QS);
+  if (hard && s.moonTry[p]) {
+    if (!s.trick.length) return maxR(legal);
+    const led = suitOf(s.trick[0].c); const onSuit = legal.filter(c => suitOf(c) === led);
+    if (onSuit.length) { const w = s.trick.filter(t => suitOf(t.c) === led).map(t => t.c); const hi = maxR(onSuit); return rankOf(hi) > rankOf(maxR(w)) ? hi : minR(onSuit); }
+    const np = legal.filter(c => cardPoints(c) === 0); return minR(np.length ? np : legal);
+  }
+  if (!s.trick.length) return chooseLead(s, p, legal, hard);
+  const led = suitOf(s.trick[0].c);
+  const following = suitOf(legal[0]) === led && hand.some(c => suitOf(c) === led);
+  const winCard = maxR(s.trick.filter(t => suitOf(t.c) === led).map(t => t.c));
+  const winner = trickWinner(s.trick);
+  const pts = trickPoints(s.trick);
+  const last = s.trick.length === 3;
+  const threat = hard ? moonThreat(s, p) : -1;
+  if (following) {
+    const above = legal.filter(c => rankOf(c) > rankOf(winCard));
+    const under = legal.filter(c => rankOf(c) < rankOf(winCard));
+    if (threat >= 0 && winner === threat && above.length && (pts > 0 || led === HEARTS)) {
+      const ok = above.filter(c => c !== QS); if (ok.length) return minR(ok);
+    }
+    if (last) {
+      if (pts === 0) { const nq = legal.filter(c => c !== QS); return maxR(nq.length ? nq : legal); }
+      if (under.length) return maxR(under);
+      const nq = legal.filter(c => c !== QS); return maxR(nq.length ? nq : legal);
+    }
+    if (under.length) return maxR(under);
+    const nq = legal.filter(c => c !== QS); const pool = nq.length ? nq : legal;
+    if (led === SPADES && !qsGone) return minR(pool);
+    if (hard) {
+      const behind = [1, 2, 3].map(k => (p + k) % 4).slice(0, 3 - s.trick.length);
+      const uns = unseenFor(s, p).filter(c => suitOf(c) === led && rankOf(c) > rankOf(minR(pool)));
+      const canOvertake = uns.length > 0 && behind.some(q => !s.voids[q][led]);
+      return canOvertake ? minR(pool) : maxR(pool);
+    }
+    return maxR(pool);
+  }
+  // void: discard
+  if (threat >= 0 && winner === threat) { const np = legal.filter(c => cardPoints(c) === 0); if (np.length) return maxR(np); }
+  if (legal.includes(QS)) return QS;
+  if (!qsGone && !hand.includes(QS)) { const hs = legal.filter(c => c === AS || c === KS); if (hs.length) return maxR(hs); }
+  if (!qsGone && hand.includes(QS)) { const hs = legal.filter(c => c === AS || c === KS); if (hs.length) return maxR(hs); }
+  const hearts = legal.filter(c => suitOf(c) === HEARTS);
+  if (hearts.length) return maxR(hearts);
+  if (hard) {
+    const cnt = [0, 0, 0, 0]; hand.forEach(c => cnt[suitOf(c)]++);
+    return legal.slice().sort((a, b) => (rankOf(b) - cnt[suitOf(b)] * 1.5) - (rankOf(a) - cnt[suitOf(a)] * 1.5))[0];
+  }
+  return maxR(legal);
+}
+function chooseLead(s, p, legal, hard) {
+  const hand = s.hands[p];
+  const by = [[], [], [], []]; legal.forEach(c => by[suitOf(c)].push(c));
+  const holdQS = hand.includes(QS), qsOut = !s.played.includes(QS) && !holdQS;
+  const holdHiS = hand.includes(KS) || hand.includes(AS);
+  const uns = hard ? unseenFor(s, p) : [];
+  let best = legal[0], bs = Infinity;
+  for (let su = 0; su < 4; su++) {
+    if (!by[su].length) continue;
+    const low = by[su][0];
+    const cnt = hand.filter(c => suitOf(c) === su).length;
+    let sc;
+    if (!hard) {
+      sc = rankOf(low) + cnt * 1.5;
+      if (su === SPADES && (holdQS || holdHiS)) sc += 30;
+      if (su === SPADES && qsOut && rankOf(low) < 12 && !holdHiS) sc -= 4;
+      if (su === HEARTS) sc += 8;
+    } else {
+      const us = uns.filter(c => suitOf(c) === su);
+      const lower = us.filter(c => rankOf(c) < rankOf(low)).length, higher = us.length - lower;
+      if (!us.length) sc = 40;
+      else if (higher === 0) sc = 35;
+      else sc = lower * 3 / higher;
+      const others = [1, 2, 3].map(k => (p + k) % 4);
+      if (higher > 0 && others.some(q => s.voids[q][su])) sc += lower > 0 ? 6 : 1;
+      if (su === SPADES) { if (holdQS) sc += 25; if (holdHiS && qsOut) sc += 25; if (qsOut && !holdHiS && rankOf(low) < 12) sc -= 3; }
+      if (su === HEARTS) sc += 1;
+      sc += cnt * 0.3;
+    }
+    if (sc < bs) { bs = sc; best = low; }
+  }
+  return best;
+}
+function suggestPass() { return aiChoosePass({ ...state, difficulty: "normal" }, 0); }
+function suggestPlay() { return aiChoosePlay({ ...state, difficulty: "normal" }, 0); }
+
+/* ---------- stats ---------- */
+function getStats() { return loadJSON(STATS_KEY) || { played: 0, won: 0, best: null, streak: 0, bestStreak: 0, moons: 0 }; }
+function recordStats(s) {
+  const st = getStats(); st.played++;
+  if (s.result.youWin) { st.won++; st.streak++; st.bestStreak = Math.max(st.bestStreak, st.streak); } else st.streak = 0;
+  if (st.best === null || s.scores[0] < st.best) st.best = s.scores[0];
+  st.moons += s.history.filter(h => h.moon === 0).length;
+  saveJSON(STATS_KEY, st);
+}
+
+/* ---------- rendering ---------- */
+const $ = id => document.getElementById(id);
+function cardHTML(c, cls) { const su = suitOf(c); return `<div class="card ${su === 1 || su === 3 ? "red" : "blk"} ${cls || ""}" data-c="${c}"><div class="ix"><b>${rankLabel(rankOf(c))}</b><i>${SUITS[su]}</i></div><div class="pip">${SUITS[su]}</div></div>`; }
+function setStatus(html) { const el = $("status"); if (el) el.innerHTML = html; }
+function passStatus() {
+  const s = state, dir = PASS_DIRS[s.handNo % 4], to = NAMES[(dir.off) % 4];
+  const n = s.passSel.length;
+  return `Select 3 cards to pass ${dir.name} to ${to} (${n}/3) <button class="btn" id="bPass" ${n === 3 ? "" : "disabled"}>Pass →</button>`;
+}
+function render() {
+  const s = state; if (!s) return;
+  const pts = handPoints(s.taken);
+  const dir = PASS_DIRS[s.handNo % 4];
+  $("passInfo").textContent = "Pass: " + dir.name + (dir.off ? " → " + NAMES[dir.off] : "");
+  $("handNo").textContent = "Hand " + (s.handNo + 1);
+  $("hbInfo").textContent = s.heartsBroken ? "♥ Hearts broken" : "Hearts not broken";
+  $("hbInfo").classList.toggle("hb", s.heartsBroken);
+  $("diff").value = s.difficulty;
+  for (let p = 1; p < 4; p++) {
+    const n = s.hands[p].length;
+    $("seat" + p).innerHTML = `<div class="nm">${NAMES[p]}</div><div class="sc">Score ${s.scores[p]} · hand ${pts[p]}</div><div class="backs">${'<div class="mini"></div>'.repeat(Math.min(n, 13))}</div><div class="sc">${n} card${n === 1 ? "" : "s"} · ${s.tricksWon[p]} trick${s.tricksWon[p] === 1 ? "" : "s"}</div>`;
+    $("seat" + p).classList.toggle("turn", s.phase === "play" && s.turn === p && s.trick.length < 4);
+  }
+  for (let p = 0; p < 4; p++) $("slot" + p).innerHTML = "";
+  const w = s.trick.length === 4 ? trickWinner(s.trick) : -1;
+  s.trick.forEach(t => { $("slot" + t.p).innerHTML = cardHTML(t.c, t.p === w ? "win" : ""); });
+  $("youInfo").textContent = `You — score ${s.scores[0]} · this hand ${pts[0]} · tricks ${s.tricksWon[0]}`;
+  $("recvInfo").textContent = s.received.length && s.phase === "play" ? "Received: " + s.received.map(cardName).join(" ") : "";
+  $("handwrap").classList.toggle("turn", s.phase === "play" && s.turn === 0 && s.trick.length < 4);
+  renderHand();
+  if ($("p-odds").classList.contains("on")) renderLive();
+}
+function renderHand() {
+  const s = state, el = $("hand"), h = s.hands[0];
+  const myTurn = s.phase === "play" && s.turn === 0 && s.trick.length < 4;
+  const legal = myTurn ? legalMoves(s, 0) : [];
+  const cw = parseFloat(getComputedStyle(el).getPropertyValue("--hcw")) || 78;
+  const W = el.clientWidth || 360, n = h.length;
+  const step = n > 1 ? Math.min(cw + 6, (W - cw) / (n - 1)) : 0;
+  const total = n ? cw + step * (n - 1) : 0, x0 = Math.max(0, (W - total) / 2);
+  el.innerHTML = h.map((c, i) => {
+    let cls = "";
+    if (s.phase === "pass" && s.passSel.includes(c)) cls = "sel";
+    else if (s.phase === "play" && s.received.includes(c)) cls = "new";
+    if (myTurn && !legal.includes(c)) cls += " dim";
+    return cardHTML(c, cls).replace('class="card', `style="left:${(x0 + i * step).toFixed(1)}px;z-index:${i + 1}" class="card`);
+  }).join("");
+}
+function onHandClick(e) {
+  const el = e.target.closest(".card"); if (!el || !state) return;
+  const c = +el.dataset.c, s = state;
+  if (s.phase === "pass") {
+    const i = s.passSel.indexOf(c);
+    if (i >= 0) s.passSel.splice(i, 1); else if (s.passSel.length < 3) s.passSel.push(c);
+    renderHand(); setStatus(passStatus()); return;
+  }
+  if (s.phase === "play" && s.turn === 0 && s.trick.length < 4) {
+    if (!playCard(0, c)) {
+      const msg = s.trickNo === 0 && s.trick.length === 0 ? "You must lead 2♣" : (s.trick.length ? "You must follow suit (" + SUIT_NAMES[suitOf(s.trick[0].c)] + ")" : "Hearts are not broken yet");
+      setStatus(msg + " — tap a highlighted card");
+    }
+  }
+}
+
+/* ---------- modals ---------- */
+function showModal(html) { $("dlg").innerHTML = html; $("modal").classList.add("on"); }
+function closeModal() { $("modal").classList.remove("on"); }
+function scoreTable(s, last) {
+  let h = `<table><tr><th>Player</th><th>This hand</th><th>Total</th></tr>`;
+  for (let p = 0; p < 4; p++) h += `<tr><td>${NAMES[p]}</td><td>${last ? (last.pts[p] ? "+" + last.pts[p] : "0") : ""}</td><td><b>${s.scores[p]}</b></td></tr>`;
+  return h + "</table>";
+}
+function showHandEnd() {
+  const s = state, last = s.history[s.history.length - 1];
+  const moon = last.moon >= 0 ? `<p class="big">🌙 ${NAMES[last.moon]} shot the moon! +26 to everyone else.</p>` : "";
+  showModal(`<h2>Hand ${last.hand} complete</h2>${moon}${scoreTable(s, last)}<p class="small">Game ends when someone reaches 100. Lowest score wins.</p><div class="row"><button class="btn" id="bNext">Next hand</button></div>`);
+}
+function showGameOver() {
+  const s = state, last = s.history[s.history.length - 1], r = s.result;
+  const st = getStats();
+  const title = r.youWin ? (r.winners.length > 1 ? "You share the win! 🤝" : "You win! 🏆") : NAMES[r.winners[0]] + (r.winners.length > 1 ? " and " + r.winners.slice(1).map(p => NAMES[p]).join(", ") : "") + " win" + (r.winners.length > 1 ? "" : "s");
+  const moon = last.moon >= 0 ? `<p>🌙 ${NAMES[last.moon]} shot the moon in the last hand.</p>` : "";
+  showModal(`<h2>Game over — ${title}</h2>${moon}${scoreTable(s, last)}<p class="small">Hands played: ${s.history.length}. Your record: ${st.won} won of ${st.played} · streak ${st.streak} · best score ${st.best}</p><div class="row"><button class="btn" id="bAgain">New game</button></div>`);
+}
+function showResume(saved) {
+  showModal(`<h2>Resume saved game?</h2><p>Hand ${saved.handNo + 1}, scores — ${NAMES.map((n, i) => n + " " + saved.scores[i]).join(", ")}.</p><div class="row"><button class="btn alt" id="bFresh">New game</button><button class="btn" id="bResume">Resume saved game</button></div>`);
+}
+function resume(saved) {
+  gen++; clearTimeout(timer); closeModal(); state = saved;
+  render(); advance();
+}
+
+/* ---------- odds tab ---------- */
+function C(n, k) { if (k < 0 || k > n) return 0; k = Math.min(k, n - k); let r = 1; for (let i = 1; i <= k; i++) r = r * (n - k + i) / i; return r; }
+function splitDist(n, sizes) {
+  const N = sizes.reduce((a, b) => a + b, 0), den = C(N, n), out = [];
+  const rec = (i, left, acc, ways) => {
+    if (i === sizes.length - 1) { if (left <= sizes[i]) out.push({ a: [...acc, left], p: ways * C(sizes[i], left) / den }); return; }
+    for (let a = 0; a <= Math.min(left, sizes[i]); a++) rec(i + 1, left - a, [...acc, a], ways * C(sizes[i], a));
+  };
+  if (n <= N && den > 0) rec(0, n, [], 1);
+  return out;
+}
+let splitSizes = null;
+function renderSplit() {
+  const n = +$("nIn").value, k = +$("kIn").value, h = +$("hIn").value;
+  $("nOut").textContent = n; $("hOut").textContent = h;
+  const sizes = splitSizes && splitSizes.length === k ? splitSizes : Array(k).fill(h);
+  const N = sizes.reduce((a, b) => a + b, 0);
+  $("sizesTxt").textContent = `Hand sizes: ${sizes.join(", ")} (total ${N} unknown cards)` + (splitSizes ? " — live" : "");
+  if (n > N) { $("splitTbl").innerHTML = `<p class="redt">n cannot exceed the ${N} unknown cards.</p>`; return; }
+  const dist = splitDist(n, sizes), groups = new Map();
+  dist.forEach(d => { const key = d.a.slice().sort((x, y) => y - x).join("-"); const g = groups.get(key) || { p: 0, ways: 0, one: d.p }; g.p += d.p; g.ways++; groups.set(key, g); });
+  const rows = [...groups.entries()].sort((a, b) => b[1].p - a[1].p);
+  const tot = rows.reduce((a, r) => a + r[1].p, 0);
+  let t = `<table><tr><th>Split</th><th>Any order</th><th>One specific order</th><th style="width:35%"></th></tr>`;
+  rows.forEach(([key, g]) => t += `<tr><td><b>${key}</b></td><td>${(g.p * 100).toFixed(2)}%</td><td>${(g.one * 100).toFixed(2)}% ×${g.ways}</td><td><div class="bar" style="width:${(g.p * 100).toFixed(1)}%"></div></td></tr>`);
+  t += `<tr><td>Total</td><td>${(tot * 100).toFixed(2)}%</td><td colspan="2" class="small">denominator C(${N},${n}) = ${Math.round(C(N, n)).toLocaleString()}</td></tr></table>`;
+  if (k === 3 && sizes.every(x => x > 0)) { const pv = C(N - sizes[0], n) / C(N, n); t += `<p class="small">Chance a <i>particular</i> opponent (h=${sizes[0]}) is void: C(${N - sizes[0]},${n})/C(${N},${n}) = <b>${(pv * 100).toFixed(2)}%</b></p>`; }
+  $("splitTbl").innerHTML = t;
+}
+function renderQsPass() {
+  const pp = +$("ppIn").value / 100; $("ppOut").textContent = Math.round(pp * 100);
+  const holdP = 13 / 39, recv = holdP * pp;
+  $("qsPass").innerHTML = `<table><tr><td>Q♠ dealt to you</td><td>13/52 = <b>25.00%</b></td></tr><tr><td>Passer holds Q♠ (given you don't)</td><td>13/39 = ${(holdP * 100).toFixed(2)}%</td></tr><tr><td>You are passed Q♠ (given you don't hold it)</td><td>1/3 × ${pp.toFixed(2)} = <b>${(recv * 100).toFixed(2)}%</b></td></tr><tr><td>You hold Q♠ after the pass (you also pass it at the same rate)</td><td>0.25×(1−${pp.toFixed(2)}) + 0.75×${recv.toFixed(4)} = <b>${((0.25 * (1 - pp) + 0.75 * recv) * 100).toFixed(2)}%</b></td></tr></table><p class="small">On a hold hand (every 4th hand) nobody passes, so it stays 25%.</p>`;
+}
+let qsVoid = [false, false, false], qsSizes = [13, 13, 13];
+function renderQsWhereInputs() {
+  $("qsWhere").innerHTML = [1, 2, 3].map((p, i) => `<div class="ctl"><label>${NAMES[p]}: <b id="qsh${i}">${qsSizes[i]}</b> cards</label><input type="range" min="0" max="13" value="${qsSizes[i]}" data-qi="${i}" class="qsSize"><label style="min-width:0"><input type="checkbox" data-qv="${i}" ${qsVoid[i] ? "checked" : ""}> void in ♠</label></div>`).join("");
+}
+function renderQsWhere() {
+  const elig = [0, 1, 2].filter(i => !qsVoid[i] && qsSizes[i] > 0);
+  const den = elig.reduce((a, i) => a + qsSizes[i], 0);
+  let t = `<table><tr><th>Player</th><th>P(holds Q♠)</th></tr>`;
+  [0, 1, 2].forEach(i => { const pr = den && elig.includes(i) ? qsSizes[i] / den : 0; t += `<tr><td>${NAMES[i + 1]}</td><td>${elig.includes(i) ? `${qsSizes[i]}/${den} = ` : ""}<b>${(pr * 100).toFixed(1)}%</b></td></tr>`; });
+  t += "</table>";
+  if (!den) t += `<p class="redt">Everyone void or empty — Q♠ must already be played or in your hand.</p>`;
+  if (state && state.played.includes(QS)) t += `<p class="small">Live game: Q♠ has already been played this hand.</p>`;
+  else if (state && state.hands[0].includes(QS)) t += `<p class="small">Live game: you hold Q♠.</p>`;
+  $("qsWhereOut").innerHTML = t;
+}
+function renderLive() {
+  const s = state; if (!s) { $("liveBox").innerHTML = ""; return; }
+  const mine = [0, 0, 0, 0], played = [0, 0, 0, 0];
+  s.hands[0].forEach(c => mine[suitOf(c)]++); s.played.forEach(c => played[suitOf(c)]++);
+  let t = `<h3>Live readout — hand ${s.handNo + 1}, trick ${Math.min(s.trickNo + 1, 13)}</h3><table><tr><th>Suit</th><th>In your hand</th><th>Played</th><th>With others (unseen)</th><th>Known voids</th></tr>`;
+  for (let su = 0; su < 4; su++) {
+    const v = [1, 2, 3].filter(p => s.voids[p][su]).map(p => NAMES[p]).join(", ") || "—";
+    t += `<tr><td class="${su % 2 ? "redt" : ""}">${SUITS[su]} ${SUIT_NAMES[su]}</td><td>${mine[su]}</td><td>${played[su]}</td><td><b>${13 - mine[su] - played[su]}</b></td><td>${v}</td></tr>`;
+  }
+  const pts = handPoints(s.taken), out = 26 - pts.reduce((a, b) => a + b, 0);
+  const qs = s.played.includes(QS) ? "played" : (s.hands[0].includes(QS) ? "in your hand" : "unseen (with an opponent)");
+  t += `</table><p>Q♠: <b>${qs}</b> · points still out: <b>${out}</b> · hearts ${s.heartsBroken ? "broken" : "not broken"}${moonThreat(s, 0) >= 0 ? ` · <span class="redt">⚠ ${NAMES[moonThreat(s, 0)]} has every point so far — moon danger!</span>` : ""}</p>`;
+  $("liveBox").innerHTML = t;
+}
+function useLiveSplit() {
+  const s = state; if (!s) return;
+  const su = +$("liveSuit").value;
+  const mine = s.hands[0].filter(c => suitOf(c) === su).length, pl = s.played.filter(c => suitOf(c) === su).length;
+  const n = 13 - mine - pl;
+  const eligible = [1, 2, 3].filter(p => !s.voids[p][su]);
+  const sizes = eligible.map(p => s.hands[p].length).filter(x => x > 0);
+  if (!sizes.length) { splitSizes = null; $("sizesTxt").textContent = "All opponents void in this suit."; return; }
+  $("kIn").value = String(Math.min(3, Math.max(2, sizes.length)));
+  splitSizes = sizes.length === 1 ? null : sizes.slice(0, 3);
+  $("nIn").value = n; renderSplit();
+  if (eligible.length < 3) $("sizesTxt").textContent += ` (void players excluded: ${[1, 2, 3].filter(p => s.voids[p][su]).map(p => NAMES[p]).join(", ")})`;
+}
+function useLiveQ() {
+  const s = state; if (!s) return;
+  qsSizes = [1, 2, 3].map(p => s.hands[p].length); qsVoid = [1, 2, 3].map(p => !!s.voids[p][SPADES]);
+  renderQsWhereInputs(); renderQsWhere();
+}
+
+/* ---------- misc UI ---------- */
+function showTab(name) {
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === name));
+  ["play", "rules", "odds"].forEach(n => $("p-" + n).classList.toggle("on", n === name));
+  $("bRules").classList.toggle("on", name === "rules"); $("bOdds").classList.toggle("on", name === "odds");
+  if (name === "rules") renderStats();
+  if (name === "odds") { renderLive(); renderSplit(); renderQsPass(); renderQsWhere(); }
+  if (name === "play") renderHand();
+}
+function renderStats() {
+  const st = getStats();
+  $("statsBox").innerHTML = `<table><tr><th>Games played</th><th>Won</th><th>Win %</th><th>Current streak</th><th>Best streak</th><th>Best (lowest) final score</th><th>Moons shot</th></tr><tr><td>${st.played}</td><td>${st.won}</td><td>${st.played ? Math.round(st.won / st.played * 100) : 0}%</td><td>${st.streak}</td><td>${st.bestStreak}</td><td>${st.best === null ? "—" : st.best}</td><td>${st.moons}</td></tr></table>`;
+}
+function toggleFull() {
+  try { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { }); else document.exitFullscreen().catch(() => { }); } catch (e) { }
+}
+function init() {
+  $("ver").textContent = APP_VERSION;
+  if (!document.fullscreenEnabled) $("bFull").style.display = "none";
+  document.addEventListener("fullscreenchange", () => $("bFull").classList.toggle("on", !!document.fullscreenElement));
+  $("bFull").onclick = toggleFull;
+  $("bNew").onclick = () => { if (!state || state.phase === "gameOver" || state.history.length === 0 && state.trickNo === 0) { newGame(); showTab("play"); return; } showModal(`<h2>Start a new game?</h2><p>The current game will be abandoned.</p><div class="row"><button class="btn alt" id="bCancel">Cancel</button><button class="btn" id="bAgain">New game</button></div>`); };
+  $("bRules").onclick = () => showTab($("p-rules").classList.contains("on") ? "play" : "rules");
+  $("bOdds").onclick = () => showTab($("p-odds").classList.contains("on") ? "play" : "odds");
+  document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+  $("hand").addEventListener("click", onHandClick);
+  $("status").addEventListener("click", e => { if (e.target.id === "bPass" && state && state.passSel.length === 3) humanPass(state.passSel.slice()); });
+  $("dlg").addEventListener("click", e => {
+    const id = e.target.id;
+    if (id === "bNext") nextHand();
+    else if (id === "bAgain") { newGame(); showTab("play"); }
+    else if (id === "bCancel") { closeModal(); if (state) advance(); }
+    else if (id === "bResume") resume(pendingSave);
+    else if (id === "bFresh") newGame();
+  });
+  $("diff").onchange = () => { const d = $("diff").value; saveJSON(PREF_KEY, { difficulty: d }); if (state) { state.difficulty = d; save(); } };
+  $("bResetStats").onclick = () => { saveJSON(STATS_KEY, { played: 0, won: 0, best: null, streak: 0, bestStreak: 0, moons: 0 }); renderStats(); };
+  $("nIn").oninput = renderSplit; $("hIn").oninput = () => { splitSizes = null; renderSplit(); };
+  $("kIn").onchange = () => { splitSizes = null; renderSplit(); };
+  $("bLive").onclick = useLiveSplit; $("ppIn").oninput = renderQsPass;
+  $("bLiveQ").onclick = useLiveQ;
+  $("qsWhere").addEventListener("input", e => {
+    if (e.target.dataset.qi !== undefined) { const i = +e.target.dataset.qi; qsSizes[i] = +e.target.value; $("qsh" + i).textContent = qsSizes[i]; }
+    if (e.target.dataset.qv !== undefined) qsVoid[+e.target.dataset.qv] = e.target.checked;
+    renderQsWhere();
+  });
+  renderQsWhereInputs();
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => state && renderHand(), 80); });
+  const saved = loadJSON(SAVE_KEY);
+  if (saved && saved.v === 1 && saved.phase && saved.phase !== "gameOver" && Array.isArray(saved.hands)) { pendingSave = saved; $("diff").value = saved.difficulty; showResume(saved); setStatus("Resume your saved game or start a new one"); }
+  else newGame();
+}
+let pendingSave = null;
+
+window.__game = {
+  get state() { return state; }, G,
+  get fast() { return G.fast; }, set fast(v) { G.fast = !!v; },
+  newGame, nextHand, humanPass, play: c => playCard(0, c), legal: () => state ? legalMoves(state, 0) : [],
+  suggestPass, suggestPlay, legalMoves, trickWinner, scoreHand, splitDist, C, showTab,
+  resume: () => pendingSave && resume(pendingSave), setDifficulty: d => { $("diff").value = d; $("diff").onchange(); }
+};
+init();
+</script>
+</body>
+</html>

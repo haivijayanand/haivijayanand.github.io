@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<!--
+TOOL: Colour Clash
+FAMILY: card-games
+VERSION: 1.0.0
+DATE: 2026-10-13
+CHAT: Card games batch 1 (claude.ai)
+CHANGES: 1.0.0 - first release
+STATUS: released
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b3d2a">
+<title>Colour Clash</title>
+<style>
+:root{
+  --felt:#0f5132; --felt2:#13683f; --bar:#0b2a1d; --ink:#111; --red:#c62828;
+  --back:#1e3a8a; --cw:64px;
+  --ruby:#d32f2f; --sky:#1e6fd9; --leaf:#2e9d3a; --mango:#f29d0c; --wild:#1a1a1a;
+  --panel:#fdfcf7; --muted:#4b5563; --gold:#fcd34d;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Arial,sans-serif;
+  background:radial-gradient(ellipse at 50% 40%,var(--felt2) 0%,var(--felt) 60%,#0a3d25 100%) fixed;
+  background-color:var(--felt);color:#fff;min-height:100vh;width:100%;overflow-x:hidden}
+button{font:inherit;cursor:pointer}
+.bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--bar);padding:8px 12px;
+  box-shadow:0 2px 8px rgba(0,0,0,.4);position:sticky;top:0;z-index:20}
+.bar h1{font-size:20px;margin:0 auto 0 0;letter-spacing:.5px;white-space:nowrap}
+.bar h1 span{color:var(--gold)}
+.bar .btn{background:#1f4d36;color:#fff;border:1px solid #2f6b4c;border-radius:8px;padding:8px 12px;min-height:40px;text-decoration:none;font-size:14px;display:inline-flex;align-items:center}
+.bar .btn:active,.bar .btn.on{background:#2f7a52}
+.tabs{display:flex;gap:4px;padding:8px 12px 0;max-width:1400px;margin:0 auto}
+.tab{background:rgba(0,0,0,.25);color:#e5e7eb;border:0;border-radius:8px 8px 0 0;padding:10px 16px;min-height:40px;font-weight:600}
+.tab.on{background:rgba(255,255,255,.14);color:#fff}
+main{max-width:1400px;width:100%;margin:0 auto;padding:0 12px 16px}
+.panel{display:none}.panel.on{display:block}
+/* table */
+.table{display:grid;grid-template-columns:220px 1fr 220px;grid-template-areas:"top top top" "left center right" "hand hand hand";
+  gap:10px;background:rgba(255,255,255,.05);border-radius:0 12px 12px 12px;padding:12px;min-height:calc(100vh - 130px)}
+.seat{background:rgba(0,0,0,.22);border-radius:12px;padding:8px 10px;border:2px solid transparent;transition:border-color .2s,background .2s}
+.seat.turn{border-color:var(--gold);background:rgba(252,211,77,.12)}
+.seat .nm{font-weight:700;display:flex;justify-content:space-between;gap:6px;align-items:center}
+.seat .sub{font-size:13px;color:#d1fae5}
+.seat .fan{display:flex;margin-top:6px;min-height:34px}
+.mini{width:22px;height:31px;border-radius:4px;border:1.5px solid #fff;margin-right:-12px;
+  background:repeating-linear-gradient(45deg,var(--back) 0 4px,#2c4fb0 4px 8px)}
+.badge{background:var(--gold);color:#111;font-size:11px;border-radius:10px;padding:2px 7px;font-weight:800}
+.badge.warn{background:#fca5a5}
+#seat1{grid-area:left;align-self:center}#seat2{grid-area:top;justify-self:center;min-width:240px}#seat3{grid-area:right;align-self:center}
+.center{grid-area:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.piles{display:flex;gap:26px;align-items:center}
+.pilebox{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:13px}
+.dirind{font-size:30px;color:var(--gold);line-height:1}
+.colchip{display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.3);border-radius:20px;padding:4px 12px;font-weight:700}
+.colchip i{width:16px;height:16px;border-radius:50%;display:inline-block;border:2px solid #fff}
+.log{font-size:13px;color:#d1fae5;text-align:center;min-height:36px;max-width:520px}
+.handwrap{grid-area:hand;background:rgba(0,0,0,.18);border-radius:12px;padding:10px;border:2px solid transparent}
+.handwrap.turn{border-color:var(--gold)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-bottom:8px}
+.ctl{background:#fff;color:#111;border:0;border-radius:10px;padding:8px 16px;min-height:44px;font-weight:700;box-shadow:0 2px 0 rgba(0,0,0,.3)}
+.ctl:disabled{opacity:.4;cursor:default}
+.ctl.last{background:var(--gold)}
+.ctl.catch{background:#fca5a5}
+.ctl.hidden{display:none}
+select.ctl{font-weight:600}
+.status{text-align:center;font-weight:700;font-size:16px;margin:6px 0;min-height:24px}
+.hand{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+/* cards */
+.card{width:var(--cw);height:calc(var(--cw)*1.4);border-radius:8px;border:3px solid #fff;position:relative;
+  display:inline-flex;align-items:center;justify-content:center;padding:0;color:#fff;font-weight:900;
+  box-shadow:0 2px 5px rgba(0,0,0,.45);transition:transform .15s,box-shadow .15s,opacity .15s;flex:0 0 auto;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.card.cc-R{background:var(--ruby);--k:var(--ruby)}.card.cc-B{background:var(--sky);--k:var(--sky)}
+.card.cc-G{background:var(--leaf);--k:var(--leaf)}.card.cc-Y{background:var(--mango);--k:var(--mango)}
+.card.cc-W{background:var(--wild);--k:#111}
+.card .ov{width:80%;height:58%;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--k);font-size:calc(var(--cw)*.42);transform:rotate(-22deg);line-height:1}
+.card .ov b{transform:rotate(22deg);display:block}
+.card.cc-W .ov{background:conic-gradient(var(--ruby) 0 25%,var(--sky) 0 50%,var(--mango) 0 75%,var(--leaf) 0 100%);color:#fff;text-shadow:0 1px 3px #000}
+.card .cn{position:absolute;font-size:calc(var(--cw)*.2);line-height:1;text-shadow:0 1px 1px rgba(0,0,0,.4)}
+.card .tl{top:4px;left:5px}.card .br{bottom:4px;right:5px;transform:rotate(180deg)}
+.u{text-decoration:underline}
+.card.back{background:repeating-linear-gradient(45deg,var(--back) 0 6px,#2c4fb0 6px 12px)}
+.card.back .ov{background:#fff;color:var(--back);font-size:calc(var(--cw)*.24)}
+.hand .card.legal{transform:translateY(-6px);box-shadow:0 0 0 3px var(--gold),0 6px 10px rgba(0,0,0,.5)}
+.hand .card.dim{opacity:.6}
+.hand .card.drawn{box-shadow:0 0 0 3px #a5f3fc,0 6px 10px rgba(0,0,0,.5)}
+.discard{position:relative}
+.discard .ring{position:absolute;inset:-7px;border-radius:12px;border:4px solid var(--k2,#fff)}
+.big{--cw:84px}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal.on{display:flex}
+.box{background:var(--panel);color:#111;border-radius:14px;padding:18px;max-width:480px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.box h2{margin:0 0 10px}
+.box table{width:100%;border-collapse:collapse;margin:8px 0}
+.box td,.box th{padding:5px;border-bottom:1px solid #e5e7eb;text-align:left}
+.box .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px}
+.box .row button{min-height:44px;border-radius:10px;border:0;padding:8px 16px;font-weight:700;background:#0f5132;color:#fff}
+.box .row button.alt{background:#e5e7eb;color:#111}
+.cpick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cpick button{min-height:64px;border-radius:12px;border:3px solid #fff;color:#fff;font-weight:800;font-size:18px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+/* info panels */
+.info{background:var(--panel);color:#111;border-radius:0 12px 12px 12px;padding:16px 20px;line-height:1.5}
+.info h2{margin-top:4px;color:#0f5132}.info h3{color:#0f5132;margin-bottom:6px}
+.info table{border-collapse:collapse;margin:8px 0}
+.info td,.info th{border:1px solid #d1d5db;padding:4px 10px;text-align:center}
+.info th{background:#ecfdf5}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.calc{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 14px}
+.calc label{display:block;margin:6px 0 2px;font-weight:600}
+.calc input[type=range]{width:100%;min-height:32px}
+.calc select,.calc button{min-height:40px;font-size:15px;border-radius:8px;padding:4px 10px}
+.calc button{background:#0f5132;color:#fff;border:0;font-weight:700}
+.res{font-size:20px;font-weight:800;color:#0f5132}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:14px;background:#fff;border-radius:6px;padding:2px 6px}
+.live{background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:12px 14px}
+.muted{color:var(--muted);font-size:14px}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+@media (max-width:600px){
+  :root{--cw:44px}
+  .big{--cw:58px}
+  .bar{padding:6px 8px;gap:5px}
+  .bar h1{font-size:17px;width:100%}
+  .bar .btn{padding:6px 9px;font-size:13px}
+  main{padding:0 6px 12px}
+  .tabs{padding:6px 6px 0}.tab{padding:8px 10px;font-size:14px}
+  .table{grid-template-columns:1fr 1fr 1fr;grid-template-areas:"left top right" "center center center" "hand hand hand";padding:8px;gap:6px;min-height:auto}
+  #seat2{min-width:0;justify-self:stretch}
+  .seat{padding:6px}
+  .seat .nm{font-size:14px;flex-wrap:wrap}
+  .seat .sub{font-size:12px}
+  .mini{width:14px;height:20px;margin-right:-8px}
+  .seat .fan{min-height:22px}
+  .piles{gap:18px}
+  .ctl{padding:6px 12px;font-size:14px}
+  .hand{gap:4px}
+  .info{padding:12px}
+}
+</style>
+</head>
+<body>
+<div class="bar">
+  <h1>Colour <span>Clash</span></h1>
+  <button class="btn" id="bNew">New</button>
+  <button class="btn" id="bRules">Rules</button>
+  <button class="btn" id="bOdds">Odds</button>
+  <button class="btn" id="bFull">⛶ Full screen</button>
+  <a class="btn" href="index.html">← Games</a>
+</div>
+<div class="tabs">
+  <button class="tab on" data-tab="play">Play</button>
+  <button class="tab" data-tab="rules">Rules</button>
+  <button class="tab" data-tab="odds">Odds &amp; Strategy</button>
+</div>
+<main>
+<section class="panel on" id="p-play">
+  <div class="table">
+    <div class="seat" id="seat1"></div>
+    <div class="seat" id="seat2"></div>
+    <div class="seat" id="seat3"></div>
+    <div class="center">
+      <div class="piles">
+        <div class="pilebox"><div id="drawPile"></div><span id="drawCount"></span></div>
+        <div class="dirind" id="dirInd">↻</div>
+        <div class="pilebox"><div id="discard" class="discard"></div><span class="colchip" id="colChip"></span></div>
+      </div>
+      <div class="log" id="log"></div>
+    </div>
+    <div class="handwrap" id="handwrap">
+      <div class="status" id="status"></div>
+      <div class="controls">
+        <button class="ctl" id="cDraw">Draw</button>
+        <button class="ctl" id="cPass">Pass</button>
+        <button class="ctl last" id="cLast">Last card!</button>
+        <button class="ctl catch hidden" id="cCatch">Catch!</button>
+        <select class="ctl" id="diffSel" aria-label="Difficulty">
+          <option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option>
+        </select>
+      </div>
+      <div class="hand" id="hand"></div>
+      <div class="muted" style="color:#d1fae5;text-align:center;margin-top:6px" id="scoreLine"></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="p-rules"><div class="info">
+  <h2>How to play Colour Clash</h2>
+  <p>Colour Clash is a colour-matching shedding game in the style of Crazy Eights. You play against three computer players — Arun, Meena and Ravi. Be the first to get rid of all your cards.</p>
+  <h3>Your turn</h3>
+  <ul>
+    <li>Play one card that matches the <b>colour</b> in play, or the <b>number / symbol</b> of the top card. Wild cards can always be played.</li>
+    <li>If you cannot (or do not want to) play, tap <b>Draw</b> (or the draw pile). If the drawn card fits, you may play it straight away; otherwise tap <b>Pass</b>.</li>
+    <li>When you play your second-last card, press <b>Last card!</b> (before or right after playing). If the next player acts before you call, you may be caught and must draw <b>2</b> cards.</li>
+    <li>If a computer player forgets to call, a <b>Catch!</b> button appears — tap it before your own move to make them draw 2.</li>
+  </ul>
+  <h3>Action cards</h3>
+  <table>
+    <tr><th>Card</th><th>Effect</th><th>Points</th></tr>
+    <tr><td>⊘ Skip</td><td style="text-align:left">Next player misses a turn</td><td>20</td></tr>
+    <tr><td>⇄ Reverse</td><td style="text-align:left">Direction of play changes</td><td>20</td></tr>
+    <tr><td>+2</td><td style="text-align:left">Next player draws 2 and misses a turn</td><td>20</td></tr>
+    <tr><td>Wild</td><td style="text-align:left">Choose the next colour</td><td>50</td></tr>
+    <tr><td>Wild +4</td><td style="text-align:left">Choose colour; next player draws 4 and misses a turn</td><td>50</td></tr>
+    <tr><td>0–9</td><td style="text-align:left">Number cards</td><td>face value</td></tr>
+  </table>
+  <h3>Scoring</h3>
+  <p>The player who goes out scores the points of every card left in the other hands. If the last card was a +2 or Wild +4, the next player still draws before scoring. The first to <b>500</b> points wins the game.</p>
+  <h3>The deck (108 cards)</h3>
+  <p>Four colours — <b style="color:var(--ruby)">Ruby</b>, <b style="color:var(--sky)">Sky</b>, <b style="color:var(--leaf)">Leaf</b> and <b style="color:#b26b00">Mango</b>. Each colour has one 0, two each of 1–9, and two each of Skip, Reverse and +2 (25 per colour). Plus 4 Wild and 4 Wild +4.</p>
+  <h3>Variant choices</h3>
+  <ul>
+    <li>7 cards each; the starting card is always a number card (action/wild starters are shuffled back).</li>
+    <li>No stacking of +2 / +4; Wild +4 may be played at any time (no challenge rule).</li>
+    <li>Draw one card per turn; when the draw pile runs out, the discards (except the top card) are reshuffled.</li>
+    <li>Computer: <b>Easy</b> plays the first legal card; <b>Normal</b> saves Wilds and picks the colour it holds most; <b>Hard</b> also remembers which colours each opponent could not play and aims +2 / +4 / Skip at the leader.</li>
+  </ul>
+  <h3>Your stats</h3>
+  <div id="statsBox"></div>
+  <p class="muted">Colour Clash v<span id="verTxt"></span> · card-games family · game autosaves after every move.</p>
+</div></section>
+
+<section class="panel" id="p-odds"><div class="info">
+  <h2>Odds &amp; Strategy</h2>
+  <div class="live" id="liveOdds"></div>
+  <h3>Deck composition</h3>
+  <table>
+    <tr><th>Card type</th><th>Per colour</th><th>Total</th><th>Share of deck</th></tr>
+    <tr><td>0</td><td>1</td><td>4</td><td>3.7%</td></tr>
+    <tr><td>1 – 9</td><td>18 (2 each)</td><td>72</td><td>66.7%</td></tr>
+    <tr><td>Skip</td><td>2</td><td>8</td><td>7.4%</td></tr>
+    <tr><td>Reverse</td><td>2</td><td>8</td><td>7.4%</td></tr>
+    <tr><td>+2</td><td>2</td><td>8</td><td>7.4%</td></tr>
+    <tr><td>Wild</td><td>—</td><td>4</td><td>3.7%</td></tr>
+    <tr><td>Wild +4</td><td>—</td><td>4</td><td>3.7%</td></tr>
+    <tr><th>Total</th><th>25</th><th>108</th><th>100%</th></tr>
+  </table>
+  <div class="grid2">
+    <div class="calc">
+      <h3>1 · Will I hold a playable card?</h3>
+      <p class="muted">The top card is out of the deck, so your hand is a random sample of n cards from the other N = 107. If K of those 107 would be playable ("outs"):<br>
+      <span class="mono">P(at least one) = 1 − C(N−K, n) / C(N, n)</span></p>
+      <label>Top card <select id="o1top">
+        <option value="num">Number 1–9 (e.g. Ruby 7)</option>
+        <option value="zero">Number 0 (e.g. Ruby 0)</option>
+        <option value="act">Action (e.g. Ruby Skip)</option>
+        <option value="wild">Wild (Ruby chosen)</option>
+      </select></label>
+      <label>Hand size n = <span id="o1nv"></span></label>
+      <input type="range" id="o1n" min="1" max="20" value="7">
+      <div id="o1out"></div>
+      <button id="o1mc">Run Monte Carlo (50,000 deals)</button>
+      <div id="o1mcout" class="muted"></div>
+    </div>
+    <div class="calc">
+      <h3>2 · Is an opponent out of a colour?</h3>
+      <p class="muted">If K of the N unseen cards are of one colour, an opponent holding n random unseen cards has none of it with<br>
+      <span class="mono">P(0) = C(N−K, n) / C(N, n)</span>. Hard players use "they drew instead of playing" as stronger evidence.</p>
+      <label>Unseen cards N = <span id="o2Nv"></span></label><input type="range" id="o2N" min="10" max="107" value="80">
+      <label>Unseen cards of the colour K = <span id="o2Kv"></span></label><input type="range" id="o2K" min="0" max="25" value="18">
+      <label>Opponent's hand size n = <span id="o2nv"></span></label><input type="range" id="o2n" min="1" max="15" value="5">
+      <div id="o2out"></div>
+    </div>
+  </div>
+  <h3>Why keep your Wilds?</h3>
+  <p>Only 8 of 108 cards (7.4%) are Wild. A 7-card hand holds at least one with probability 1 − C(100,7)/C(108,7) = <b id="wildP"></b>. A Wild is the only card that is <i>always</i> legal, so it guarantees you never have to draw — which is most valuable late in the round, when one draw can cost you the hand. Spend number cards first while you still have choices, and keep the Wild as insurance (but don't get caught with it: it costs 50 points if someone else goes out).</p>
+  <h3>Strategy tips</h3>
+  <ul>
+    <li>Change colour toward the colour you hold most — it keeps your next turns playable.</li>
+    <li>Watch who draws: a player who draws on Leaf probably has no Leaf. Switch to it when they are next.</li>
+    <li>Save +2, Skip and Wild +4 for the player who is about to go out.</li>
+    <li>Dump high-value cards (Wilds 50, actions 20, 9s and 8s) when someone is down to 2–3 cards.</li>
+    <li>Always press <b>Last card!</b> — two penalty cards can undo a whole round.</li>
+  </ul>
+</div></section>
+</main>
+
+<div class="modal" id="modal"><div class="box" id="modalBox"></div></div>
+
+<script>
+"use strict";
+const APP_VERSION = "1.0.0";
+const GAME_ID = "colourclash";
+const SAVE_KEY = "cg_" + GAME_ID + "_v1";
+const STATS_KEY = "cg_" + GAME_ID + "_stats";
+const COLORS = ["R", "B", "G", "Y"];
+const CNAME = { R: "Ruby", B: "Sky", G: "Leaf", Y: "Mango", W: "Wild" };
+const CVAR = { R: "var(--ruby)", B: "var(--sky)", G: "var(--leaf)", Y: "var(--mango)" };
+const NAMES = ["You", "Arun", "Meena", "Ravi"];
+const TARGET = 500;
+
+/* ---------------- pure rules ---------------- */
+function buildDeck() {
+  const d = []; let id = 0;
+  for (const c of COLORS) {
+    d.push({ id: id++, c, v: "0" });
+    for (let n = 1; n <= 9; n++) for (let k = 0; k < 2; k++) d.push({ id: id++, c, v: String(n) });
+    for (const a of ["skip", "rev", "d2"]) for (let k = 0; k < 2; k++) d.push({ id: id++, c, v: a });
+  }
+  for (let k = 0; k < 4; k++) { d.push({ id: id++, c: "W", v: "wild" }); d.push({ id: id++, c: "W", v: "w4" }); }
+  return d;
+}
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function isLegal(card, top, color) { return card.c === "W" || card.c === color || card.v === top.v; }
+function cardPoints(c) { if (/^\d$/.test(c.v)) return +c.v; if (c.c === "W") return 50; return 20; }
+function handPoints(h) { return h.reduce((s, c) => s + cardPoints(c), 0); }
+function isAction(c) { return !/^\d$/.test(c.v); }
+function symOf(c) { return { skip: "⊘", rev: "⇄", d2: "+2", wild: "W", w4: "+4" }[c.v] || c.v; }
+function cardLabel(c) { const n = { skip: "Skip", rev: "Reverse", d2: "+2", wild: "Wild", w4: "Wild +4" }[c.v]; return c.c === "W" ? n : CNAME[c.c] + " " + (n || c.v); }
+function countColor(hand, col) { return hand.filter(c => c.c === col).length; }
+function mostHeldColor(hand, bonus) {
+  let best = null, bs = -1;
+  for (const col of COLORS) { const s = countColor(hand, col) + (bonus ? bonus(col) : 0); if (s > bs) { bs = s; best = col; } }
+  if (bs <= 0) return COLORS[Math.floor(Math.random() * 4)];
+  return best;
+}
+/* hypergeometric helpers */
+function pNone(N, K, n) { if (n > N) return 0; let p = 1; for (let i = 0; i < n; i++) { p *= (N - K - i) / (N - i); if (p <= 0) return 0; } return p; }
+function lnC(n, k) { if (k < 0 || k > n) return -Infinity; let s = 0; for (let i = 1; i <= k; i++) s += Math.log((n - k + i) / i); return s; }
+function hyp(N, K, n, k) { return Math.exp(lnC(K, k) + lnC(N - K, n - k) - lnC(N, n)); }
+
+/* ---------------- state ---------------- */
+let S = null;
+let FAST = false;
+let timer = null;
+function blankWeak() { return [0, 1, 2, 3].map(() => ({ R: 0, B: 0, G: 0, Y: 0 })); }
+
+function newGame(keepDiff) {
+  const diff = (S && keepDiff) ? S.diff : (document.getElementById("diffSel").value || "normal");
+  S = {
+    ver: APP_VERSION, diff, round: 0, dealer: 3, phase: "play",
+    players: NAMES.map((n, i) => ({ name: n, human: i === 0, hand: [], score: 0, called: false })),
+    drawPile: [], discard: [], color: "R", cur: 0, dir: 1, drawn: null, armed: false,
+    pendingLast: null, pendingWild: null, weak: blankWeak(), log: [], lastRound: null, winner: null, counted: false
+  };
+  startRound();
+}
+function startRound() {
+  S.round++; S.dealer = (S.dealer + 1) % 4;
+  const deck = shuffle(buildDeck());
+  for (const p of S.players) { p.hand = deck.splice(0, 7); p.called = false; }
+  let top = deck.shift();
+  while (isAction(top)) { deck.splice(Math.floor(Math.random() * deck.length), 0, top); top = deck.shift(); }
+  S.drawPile = deck; S.discard = [top]; S.color = top.c; S.dir = 1;
+  S.cur = (S.dealer + 1) % 4; S.drawn = null; S.armed = false; S.pendingLast = null; S.pendingWild = null;
+  S.weak = blankWeak(); S.phase = "play"; S.lastRound = null;
+  S.log = ["Round " + S.round + " — " + S.players[S.cur].name + " start" + (S.cur === 0 ? "" : "s") + "."];
+  save(); render(); schedule();
+}
+function topCard() { return S.discard[S.discard.length - 1]; }
+function nextIdx(i, steps) { return ((i + S.dir * (steps || 1)) % 4 + 4) % 4; }
+function addLog(t) { S.log.push(t); if (S.log.length > 4) S.log.shift(); }
+
+function drawCards(pi, n) {
+  const got = [];
+  for (let k = 0; k < n; k++) {
+    if (!S.drawPile.length) {
+      const t = S.discard.pop();
+      if (!S.discard.length) { S.discard.push(t); break; }
+      S.drawPile = shuffle(S.discard); S.discard = [t];
+      addLog("Discards reshuffled into the draw pile.");
+    }
+    const c = S.drawPile.pop(); S.players[pi].hand.push(c); got.push(c);
+  }
+  if (S.players[pi].hand.length > 1) S.players[pi].called = false;
+  return got;
+}
+
+function penalise(pi, why) { drawCards(pi, 2); addLog(S.players[pi].name + " " + why + " — draw" + (pi === 0 ? "" : "s") + " 2."); }
+
+/* resolve an uncalled last card at the start of the next player's action */
+function resolvePending(actor) {
+  const pl = S.pendingLast;
+  if (pl === null || pl === actor) { S.pendingLast = null; return; }
+  const p = S.players[pl];
+  if (p.hand.length === 1 && !p.called && !S.players[actor].human) {
+    const prob = { easy: 0.5, normal: 0.85, hard: 1 }[S.diff];
+    if (Math.random() < prob) penalise(pl, pl === 0 ? "forgot to call Last card (caught by " + S.players[actor].name + ")" : "forgot Last card — caught by " + S.players[actor].name);
+  }
+  S.pendingLast = null;
+}
+
+/* commit a play; returns nothing; handles effects, round end and turn advance */
+function commitPlay(pi, cardId, chosen) {
+  const p = S.players[pi];
+  const idx = p.hand.findIndex(c => c.id === cardId);
+  const card = p.hand.splice(idx, 1)[0];
+  S.discard.push(card);
+  S.color = card.c === "W" ? chosen : card.c;
+  S.weak[pi][S.color] = 0;
+  S.drawn = null;
+  let msg = p.name + " played " + cardLabel(card) + (card.c === "W" ? " → " + CNAME[S.color] : "");
+  let skip = false;
+  const victim = nextIdx(pi);
+  if (card.v === "rev") { S.dir *= -1; msg += " (direction reversed)"; }
+  if (card.v === "skip") { skip = true; msg += " — " + S.players[victim].name + " skipped"; }
+  if (card.v === "d2" || card.v === "w4") {
+    const n = card.v === "d2" ? 2 : 4; drawCards(victim, n); skip = true;
+    msg += " — " + S.players[victim].name + " draw" + (victim === 0 ? "" : "s") + " " + n;
+  }
+  addLog(msg + ".");
+  if (p.hand.length === 1) {
+    if (p.human) {
+      if (S.armed || FAST) { p.called = true; addLog("You called Last card!"); }
+      else S.pendingLast = 0;
+    } else {
+      const callP = { easy: 0.75, normal: 0.92, hard: 1 }[S.diff];
+      if (Math.random() < callP) { p.called = true; addLog(p.name + " calls Last card!"); }
+      else S.pendingLast = pi;
+    }
+  } else if (p.hand.length > 1) p.called = false;
+  S.armed = false;
+  if (p.hand.length === 0) { endRound(pi); return; }
+  S.cur = nextIdx(pi, skip ? 2 : 1);
+}
+
+function endRound(w) {
+  S.pendingLast = null;
+  let pts = 0; const rows = [];
+  S.players.forEach((p, i) => { const v = handPoints(p.hand); if (i !== w) pts += v; rows.push({ name: p.name, left: p.hand.length, pts: v }); });
+  S.players[w].score += pts;
+  S.lastRound = { winner: w, pts, rows };
+  addLog(S.players[w].name + " went out and score" + (w === 0 ? "" : "s") + " " + pts + ".");
+  if (w === 0) { const st = loadStats(); st.roundsWon++; st.bestRound = Math.max(st.bestRound, pts); saveStats(st); }
+  if (S.players.some(p => p.score >= TARGET)) {
+    S.phase = "gameOver";
+    let best = 0; S.players.forEach((p, i) => { if (p.score > S.players[best].score) best = i; });
+    S.winner = best;
+    if (!S.counted) {
+      S.counted = true; const st = loadStats(); st.played++;
+      if (best === 0) { st.won++; st.streak++; st.bestStreak = Math.max(st.bestStreak, st.streak); } else st.streak = 0;
+      st.bestScore = Math.max(st.bestScore, S.players[0].score); saveStats(st);
+    }
+  } else S.phase = "roundOver";
+  save(); render();
+  if (FAST) { if (S.phase === "roundOver") startRound(); }
+  else showRoundModal();
+}
+
+/* ---------------- AI ---------------- */
+function leaderOf(pi) {
+  let best = -1, bc = 99;
+  S.players.forEach((p, i) => { if (i !== pi && p.hand.length < bc) { bc = p.hand.length; best = i; } });
+  return best;
+}
+function aiChoose(pi, diff) {
+  const hand = S.players[pi].hand, t = topCard();
+  const legal = hand.filter(c => isLegal(c, t, S.color));
+  if (!legal.length) return null;
+  if (diff === "easy") {
+    const c = legal[0];
+    return { card: c, color: c.c === "W" ? COLORS[Math.floor(Math.random() * 4)] : null };
+  }
+  const nx = nextIdx(pi), nxCount = S.players[nx].hand.length;
+  const leader = leaderOf(pi);
+  const danger = Math.min(...S.players.filter((_, i) => i !== pi).map(p => p.hand.length));
+  const hard = diff === "hard";
+  const weakBonus = col => (hard && S.weak[nx][col]) ? 1.5 : 0;
+  let best = null, bs = -Infinity;
+  for (const c of legal) {
+    const rest = hand.filter(x => x !== c);
+    let s = 0;
+    if (c.c === "W") {
+      s = -20;                                         // save wilds
+      if (rest.every(x => !isLegal(x, t, S.color) || x.c === "W")) s = -5;
+      if (c.v === "w4") {
+        s -= 1;
+        if (nxCount <= 2) s += 18;
+        if (hard && nx === leader && nxCount <= 4) s += 12;
+      } else if (hand.length <= 2) s += 10;
+    } else {
+      s += countColor(rest, c.c) * 2;
+      s += cardPoints(c) / 10;
+      if (isAction(c) && nxCount <= 3) s += 6;
+      if (hard) {
+        if (S.weak[nx][c.c]) s += 4;
+        if (nx === leader) { if (c.v === "d2") s += 12; else if (c.v === "skip") s += 8; else if (c.v === "rev") s += 5; }
+        if (danger <= 2) s += cardPoints(c) / 5;
+      }
+    }
+    if (s > bs) { bs = s; best = c; }
+  }
+  let color = null;
+  if (best.c === "W") color = mostHeldColor(hand.filter(x => x !== best), weakBonus);
+  return { card: best, color };
+}
+
+/* one action for the current player (AI or auto-human); synchronous */
+function stepOnce() {
+  if (S.phase !== "play") return;
+  const pi = S.cur, p = S.players[pi];
+  resolvePending(pi);
+  const diff = p.human ? "normal" : S.diff;
+  if (p.human) S.armed = true; // auto-play always calls
+  let ch = aiChoose(pi, diff);
+  if (ch) { commitPlay(pi, ch.card.id, ch.color); }
+  else {
+    const missed = S.color;
+    const got = drawCards(pi, 1)[0];
+    S.weak[pi][missed] = 1;
+    if (got && isLegal(got, topCard(), S.color) && (diff === "easy" || got.c !== "W" || p.hand.length <= 3 || diff === "hard")) {
+      addLog(p.name + " drew a card and played it.");
+      const color = got.c === "W" ? mostHeldColor(p.hand.filter(x => x !== got), null) : null;
+      commitPlay(pi, got.id, color);
+    } else {
+      addLog(p.name + " drew a card.");
+      S.cur = nextIdx(pi);
+    }
+  }
+  if (p.human) S.armed = false;
+}
+
+function schedule() {
+  clearTimeout(timer);
+  if (!S || S.phase !== "play") return;
+  if (S.cur === 0 && !FAST) { render(); return; }
+  const delay = FAST ? 0 : (S.pendingLast === 0 ? 1600 : 650);
+  timer = setTimeout(() => { stepOnce(); save(); render(); schedule(); }, delay);
+}
+
+/* ---------------- human actions ---------------- */
+function humanCanAct() { return S.phase === "play" && S.cur === 0 && !FAST; }
+function humanPlay(id) {
+  if (!humanCanAct()) return;
+  const card = S.players[0].hand.find(c => c.id === id);
+  if (!card || !isLegal(card, topCard(), S.color)) { flash("That card doesn't match " + CNAME[S.color] + " or " + symOf(topCard()) + "."); return; }
+  if (S.drawn !== null && S.drawn !== id) { flash("You can only play the card you just drew — or Pass."); return; }
+  if (S.pendingLast !== null && S.pendingLast !== 0) S.pendingLast = null;
+  if (card.c === "W") { S.pendingWild = id; S.phase = "chooseColor"; save(); render(); showColorPicker(); return; }
+  commitPlay(0, id, null); after();
+}
+function chooseColor(col) {
+  if (S.phase !== "chooseColor") return;
+  S.phase = "play"; const id = S.pendingWild; S.pendingWild = null;
+  closeModal(); commitPlay(0, id, col); after();
+}
+function humanDraw() {
+  if (!humanCanAct() || S.drawn !== null) return;
+  if (S.pendingLast !== null && S.pendingLast !== 0) S.pendingLast = null;
+  const missed = S.color;
+  const got = drawCards(0, 1)[0];
+  S.weak[0][missed] = 1;
+  if (got && isLegal(got, topCard(), S.color)) { S.drawn = got.id; addLog("You drew " + cardLabel(got) + " — it can be played."); save(); render(); }
+  else { addLog("You drew a card."); S.cur = nextIdx(0); after(); }
+}
+function humanPass() {
+  if (!humanCanAct() || S.drawn === null) return;
+  S.drawn = null; addLog("You passed."); S.cur = nextIdx(0); after();
+}
+function humanLast() {
+  const me = S.players[0];
+  if (S.phase !== "play" && S.phase !== "chooseColor") return;
+  if (me.hand.length === 1 && !me.called) { me.called = true; if (S.pendingLast === 0) S.pendingLast = null; addLog("You called Last card!"); save(); render(); return; }
+  if (me.hand.length === 2 && S.cur === 0) { S.armed = true; flash("Last card! armed — now play your card."); render(); return; }
+  flash("Call Last card! when you are down to one card (or about to be).");
+}
+function humanCatch() {
+  const pl = S.pendingLast;
+  if (pl === null || pl === 0) return;
+  const p = S.players[pl];
+  if (p.hand.length === 1 && !p.called) { penalise(pl, "was caught not calling Last card"); }
+  S.pendingLast = null; save(); render();
+}
+function after() { save(); render(); schedule(); }
+
+/* ---------------- persistence ---------------- */
+function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable */ } }
+function loadSave() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.players && s.ver) return s; } catch (e) { } return null; }
+function loadStats() {
+  const d = { played: 0, won: 0, streak: 0, bestStreak: 0, bestScore: 0, roundsWon: 0, bestRound: 0 };
+  try { const s = JSON.parse(localStorage.getItem(STATS_KEY)); if (s) return Object.assign(d, s); } catch (e) { }
+  return d;
+}
+function saveStats(s) { try { localStorage.setItem(STATS_KEY, JSON.stringify(s)); } catch (e) { } }
+
+/* ---------------- rendering ---------------- */
+const $ = id => document.getElementById(id);
+function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch])); }
+function cardHTML(c, cls) {
+  const s = symOf(c), u = (c.v === "6" || c.v === "9") ? " u" : "";
+  const big = c.v === "wild" ? "★" : s;
+  return '<button class="card cc-' + c.c + (cls ? " " + cls : "") + '" data-id="' + c.id + '" aria-label="' + esc(cardLabel(c)) + '">' +
+    '<span class="cn tl' + u + '">' + s + '</span><span class="ov"><b class="' + u.trim() + '">' + big + '</b></span><span class="cn br' + u + '">' + s + "</span></button>";
+}
+function backHTML(cls) { return '<div class="card back ' + (cls || "") + '"><span class="ov"><b>CC</b></span></div>'; }
+let flashMsg = "", flashT = null;
+function flash(m) { flashMsg = m; clearTimeout(flashT); flashT = setTimeout(() => { flashMsg = ""; render(); }, 2200); render(); }
+
+function render() {
+  if (!S || (FAST && S.phase === "play")) return;
+  for (let i = 1; i <= 3; i++) {
+    const p = S.players[i], el = $("seat" + i);
+    el.className = "seat" + (S.cur === i && S.phase === "play" ? " turn" : "");
+    let fan = ""; for (let k = 0; k < Math.min(p.hand.length, 12); k++) fan += '<span class="mini"></span>';
+    const badge = p.hand.length === 1 ? (p.called ? '<span class="badge">Last card!</span>' : '<span class="badge warn">1 card</span>') : "";
+    el.innerHTML = '<div class="nm"><span>' + p.name + "</span>" + badge + '</div><div class="sub">' + p.hand.length + " card" + (p.hand.length === 1 ? "" : "s") + " · " + p.score + ' pts</div><div class="fan">' + fan + "</div>";
+  }
+  const t = topCard();
+  $("drawPile").innerHTML = '<div class="big" style="cursor:pointer" id="drawBtnPile">' + backHTML() + "</div>";
+  $("drawCount").textContent = S.drawPile.length + " left";
+  $("discard").innerHTML = '<div class="big">' + cardHTML(t) + '</div><span class="ring" style="--k2:' + CVAR[S.color] + '"></span>';
+  $("colChip").innerHTML = '<i style="background:' + CVAR[S.color] + '"></i>' + CNAME[S.color];
+  $("dirInd").textContent = S.dir === 1 ? "↻" : "↺";
+  $("dirInd").title = S.dir === 1 ? "Clockwise" : "Anticlockwise";
+  $("log").innerHTML = S.log.slice(-3).map(esc).join("<br>");
+  const me = S.players[0], myTurn = S.phase === "play" && S.cur === 0;
+  $("handwrap").className = "handwrap" + (myTurn ? " turn" : "");
+  const hand = me.hand.slice().sort((a, b) => (COLORS.indexOf(a.c) + (a.c === "W" ? 9 : 0)) - (COLORS.indexOf(b.c) + (b.c === "W" ? 9 : 0)) || a.v.localeCompare(b.v, undefined, { numeric: true }));
+  $("hand").innerHTML = hand.map(c => {
+    let cls = "";
+    if (myTurn) {
+      const ok = isLegal(c, t, S.color) && (S.drawn === null || S.drawn === c.id);
+      cls = ok ? "legal" : "dim";
+      if (S.drawn === c.id) cls += " drawn";
+    }
+    return cardHTML(c, cls);
+  }).join("");
+  $("cDraw").disabled = !myTurn || S.drawn !== null;
+  $("cPass").disabled = !myTurn || S.drawn === null;
+  const canCall = (me.hand.length === 1 && !me.called) || (myTurn && me.hand.length === 2);
+  $("cLast").disabled = !canCall;
+  $("cLast").textContent = S.armed ? "Last card! ✓" : "Last card!";
+  const pl = S.pendingLast;
+  const catchable = pl !== null && pl !== 0 && S.players[pl].hand.length === 1 && !S.players[pl].called;
+  $("cCatch").className = "ctl catch" + (catchable ? "" : " hidden");
+  if (catchable) $("cCatch").textContent = "Catch " + S.players[pl].name + "!";
+  $("diffSel").value = S.diff;
+  let st;
+  if (flashMsg) st = flashMsg;
+  else if (S.phase === "gameOver") st = S.players[S.winner].name + (S.winner === 0 ? " win the game!" : " wins the game.") + " Tap New to play again.";
+  else if (S.phase === "roundOver") st = "Round over.";
+  else if (S.phase === "chooseColor") st = "Choose a colour for your Wild.";
+  else if (myTurn) {
+    if (S.drawn !== null) st = "Play the card you drew, or Pass.";
+    else if (me.hand.some(c => isLegal(c, t, S.color))) st = "Your turn — tap a glowing card to play" + (me.hand.length === 2 ? " (press Last card!)" : "") + ".";
+    else st = "No match — tap Draw.";
+  } else st = S.players[S.cur].name + " is thinking…";
+  if (me.hand.length === 1 && !me.called && S.phase === "play") st = "Quick — press Last card!";
+  $("status").textContent = st;
+  $("scoreLine").textContent = "Round " + S.round + " · Your score " + me.score + " / " + TARGET + " · " + me.hand.length + " cards";
+  renderLive(); renderStats();
+}
+function renderStats() {
+  const s = loadStats();
+  $("statsBox").innerHTML = "<table><tr><th>Games</th><th>Won</th><th>Win %</th><th>Streak</th><th>Best streak</th><th>Best game score</th><th>Rounds won</th><th>Best round</th></tr><tr><td>" +
+    s.played + "</td><td>" + s.won + "</td><td>" + (s.played ? Math.round(100 * s.won / s.played) : 0) + "%</td><td>" + s.streak + "</td><td>" + s.bestStreak + "</td><td>" + s.bestScore + "</td><td>" + s.roundsWon + "</td><td>" + s.bestRound + "</td></tr></table>";
+}
+/* live odds based on what the human can see */
+function liveStats() {
+  const me = S.players[0].hand, t = topCard();
+  const seen = new Set(me.concat(S.discard).map(c => c.id));
+  const unseen = buildDeck().filter(c => !seen.has(c.id));
+  const outs = unseen.filter(c => isLegal(c, t, S.color)).length;
+  const playable = me.filter(c => isLegal(c, t, S.color)).length;
+  return { unseen: unseen.length, outs, playable, hand: me.length, p: unseen.length ? outs / unseen.length : 0 };
+}
+function renderLive() {
+  if (!S) return;
+  const L = liveStats();
+  const opp = S.players.slice(1).map(p => p.name + " " + p.hand.length).join(", ");
+  $("liveOdds").innerHTML = "<b>Live odds</b> — top card <b>" + esc(cardLabel(topCard())) + "</b>, colour in play <b>" + CNAME[S.color] + "</b>.<br>" +
+    "Your playable cards: <b>" + L.playable + " of " + L.hand + "</b>. Unseen cards (opponents' hands + draw pile): <b>" + L.unseen + "</b>, of which <b>" + L.outs + "</b> would be playable now → a random unseen card (e.g. your next draw) matches with <b>" + (100 * L.p).toFixed(1) + "%</b>.<br>" +
+    '<span class="muted">Opponents\' cards: ' + opp + ". Formula: outs / unseen = " + L.outs + " / " + L.unseen + ".</span>";
+}
+
+/* ---------------- modals ---------------- */
+function openModal(html) { $("modalBox").innerHTML = html; $("modal").classList.add("on"); }
+function closeModal() { $("modal").classList.remove("on"); }
+function showColorPicker() {
+  openModal('<h2>Choose a colour</h2><div class="cpick">' + COLORS.map(c => '<button data-col="' + c + '" style="background:' + CVAR[c] + '">' + CNAME[c] + " (" + countColor(S.players[0].hand, c) + ")</button>").join("") + "</div>");
+}
+function showRoundModal() {
+  const r = S.lastRound; if (!r) return;
+  const over = S.phase === "gameOver";
+  let h = "<h2>" + (over ? (S.winner === 0 ? "You win the game! 🏆" : S.players[S.winner].name + " wins the game") : (r.winner === 0 ? "You won the round!" : S.players[r.winner].name + " won the round")) + "</h2>";
+  h += "<p>" + S.players[r.winner].name + " scored <b>" + r.pts + "</b> points from the cards left in other hands.</p>";
+  h += "<table><tr><th>Player</th><th>Cards left</th><th>Card points</th><th>Total</th></tr>" + r.rows.map((x, i) => "<tr><td>" + x.name + "</td><td>" + x.left + "</td><td>" + x.pts + "</td><td><b>" + S.players[i].score + "</b></td></tr>").join("") + "</table>";
+  h += '<div class="row">' + (over ? '<button id="mNew">New game</button>' : '<button id="mNext">Next round</button>') + "</div>";
+  openModal(h);
+}
+
+/* ---------------- odds tab calculators ---------------- */
+const O1_K = { num: 38, zero: 35, act: 38, wild: 32 };
+function updO1() {
+  const n = +$("o1n").value, k = O1_K[$("o1top").value], N = 107;
+  $("o1nv").textContent = n;
+  const p = 1 - pNone(N, k, n);
+  $("o1out").innerHTML = "Outs K = <b>" + k + "</b> of N = 107 " + ({ num: "(24 same colour + 6 same number + 8 Wilds)", zero: "(24 same colour + 3 other 0s + 8 Wilds)", act: "(24 same colour + 6 same symbol + 8 Wilds)", wild: "(25 Ruby + 7 other Wilds)" }[$("o1top").value]) +
+    '<br>P(no playable card) = C(' + (N - k) + "," + n + ")/C(107," + n + ") = " + (100 * pNone(N, k, n)).toFixed(2) + '%<br><span class="res">P(at least one) = ' + (100 * p).toFixed(2) + "%</span>";
+}
+function monteCarloO1(trials) {
+  const type = $("o1top").value, n = +$("o1n").value;
+  const deck = buildDeck();
+  const tc = deck.find(c => type === "num" ? (c.c === "R" && c.v === "7") : type === "zero" ? (c.c === "R" && c.v === "0") : type === "act" ? (c.c === "R" && c.v === "skip") : c.v === "wild");
+  const rest = deck.filter(c => c !== tc), col = "R";
+  let hits = 0;
+  for (let t = 0; t < trials; t++) {
+    const a = rest.slice(); let ok = false;
+    for (let i = 0; i < n; i++) { const j = i + Math.floor(Math.random() * (a.length - i)); const x = a[j]; a[j] = a[i]; a[i] = x; if (isLegal(x, tc, col)) { ok = true; break; } }
+    if (ok) hits++;
+  }
+  return hits / trials;
+}
+function updO2() {
+  const N = +$("o2N").value; $("o2K").max = Math.min(25, N);
+  const K = Math.min(+$("o2K").value, N); const n = Math.min(+$("o2n").value, N);
+  $("o2Nv").textContent = N; $("o2Kv").textContent = K; $("o2nv").textContent = n;
+  let rows = ""; for (let k = 0; k <= Math.min(3, n); k++) rows += "<tr><td>" + k + "</td><td>" + (100 * hyp(N, K, n, k)).toFixed(1) + "%</td></tr>";
+  $("o2out").innerHTML = '<span class="res">P(no card of that colour) = ' + (100 * pNone(N, K, n)).toFixed(1) + "%</span><table><tr><th>Holds k of colour</th><th>P</th></tr>" + rows + "</table>";
+}
+
+/* ---------------- wiring ---------------- */
+function setTab(t) {
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === "p-" + t));
+  if (t !== "play") { renderLive(); renderStats(); }
+}
+function wire() {
+  document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+  $("bRules").onclick = () => setTab("rules");
+  $("bOdds").onclick = () => setTab("odds");
+  $("bNew").onclick = () => {
+    openModal('<h2>Start a new game?</h2><p>The current game will be lost.</p><div class="row"><button class="alt" id="mCancel">Cancel</button><button id="mNew">New game</button></div>');
+  };
+  const fe = document.documentElement;
+  if (!document.fullscreenEnabled || !fe.requestFullscreen) $("bFull").style.display = "none";
+  $("bFull").onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else fe.requestFullscreen().catch(() => { }); };
+  document.addEventListener("fullscreenchange", () => $("bFull").classList.toggle("on", !!document.fullscreenElement));
+  $("hand").addEventListener("click", e => { const b = e.target.closest(".card"); if (b) humanPlay(+b.dataset.id); });
+  $("drawPile").addEventListener("click", humanDraw);
+  $("cDraw").onclick = humanDraw; $("cPass").onclick = humanPass; $("cLast").onclick = humanLast; $("cCatch").onclick = humanCatch;
+  $("diffSel").onchange = () => { if (S) { S.diff = $("diffSel").value; save(); } };
+  $("modal").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.col) chooseColor(b.dataset.col);
+    else if (b.id === "mNew") { closeModal(); clearTimeout(timer); newGame(true); }
+    else if (b.id === "mNext") { closeModal(); startRound(); }
+    else if (b.id === "mCancel") closeModal();
+    else if (b.id === "mResume") { closeModal(); render(); if (S.phase === "chooseColor") showColorPicker(); else if (S.phase === "roundOver" || S.phase === "gameOver") showRoundModal(); else schedule(); }
+  });
+  $("o1n").oninput = updO1; $("o1top").onchange = () => { updO1(); $("o1mcout").textContent = ""; };
+  $("o1mc").onclick = () => { const p = monteCarloO1(50000); $("o1mcout").innerHTML = "Simulated: <b>" + (100 * p).toFixed(2) + "%</b> of 50,000 random deals had a playable card (exact: " + (100 * (1 - pNone(107, O1_K[$("o1top").value], +$("o1n").value))).toFixed(2) + "%)."; };
+  ["o2N", "o2K", "o2n"].forEach(id => $(id).oninput = updO2);
+  $("wildP").textContent = (100 * (1 - pNone(108, 8, 7))).toFixed(1) + "%";
+  $("verTxt").textContent = APP_VERSION;
+  updO1(); updO2();
+}
+function init() {
+  wire();
+  const sv = loadSave();
+  if (sv && sv.phase !== "gameOver") {
+    S = sv; $("diffSel").value = S.diff; render();
+    openModal('<h2>Welcome back</h2><p>You have a saved game (round ' + S.round + ", your score " + S.players[0].score + ').</p><div class="row"><button class="alt" id="mNew">New game</button><button id="mResume">Resume saved game</button></div>');
+  } else newGame(false);
+}
+
+/* ---------------- test hook ---------------- */
+window.__game = {
+  get state() { return S; },
+  newGame: () => { clearTimeout(timer); closeModal(); newGame(true); },
+  buildDeck, isLegal, cardPoints, aiChoose, liveStats, monteCarloO1, pNone,
+  setDifficulty: d => { S.diff = d; $("diffSel").value = d; },
+  setFast: on => { FAST = !!on; if (FAST) { closeModal(); if (S.phase === "chooseColor") { S.phase = "play"; } if (S.phase === "roundOver") startRound(); else schedule(); } else { render(); schedule(); } },
+  playToEnd: (maxSteps) => {
+    const was = FAST; FAST = true; clearTimeout(timer); closeModal();
+    if (S.phase === "chooseColor") S.phase = "play";
+    let steps = 0; const lim = maxSteps || 200000;
+    while (S.phase !== "gameOver" && steps < lim) {
+      if (S.phase === "roundOver") startRound(); else { stepOnce(); steps++; }
+      if (S.phase === "roundOver") startRound();
+    }
+    FAST = was; clearTimeout(timer); save(); render(); if (!FAST) showRoundModal();
+    return { steps, rounds: S.round, scores: S.players.map(p => p.score), winner: S.winner };
+  },
+  humanPlay, humanDraw, humanPass, humanLast, humanCatch, chooseColor, stepOnce
+};
+init();
+</script>
+</body>
+</html>

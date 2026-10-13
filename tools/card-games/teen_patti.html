@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<!--
+TOOL: Teen Patti (play chips)
+FAMILY: card-games
+VERSION: 1.0.0
+DATE: 2026-10-13
+CHAT: Card games batch 1 (claude.ai)
+CHANGES: 1.0.0 - first release
+STATUS: released
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b3d2a">
+<title>Teen Patti</title>
+<style>
+:root{--felt:#0f5132;--bar:#0b2a1e;--cw:64px;--red:#c62828;--blk:#111;--gold:#f5c542;--txt:#f3f7f4}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--txt);width:100%;min-height:100vh;overflow-x:hidden;
+  background:var(--felt) radial-gradient(ellipse at 50% 40%,#1a7a4c 0%,#0f5132 55%,#0a3a24 100%) fixed;-webkit-tap-highlight-color:transparent}
+.top{position:sticky;top:0;z-index:30;background:var(--bar);display:flex;align-items:center;gap:8px;padding:6px 12px;flex-wrap:wrap;box-shadow:0 2px 6px rgba(0,0,0,.45)}
+.top h1{font-size:18px;margin:0;flex:1 1 auto;white-space:nowrap}
+.top .btns{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{min-height:40px;min-width:40px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,255,255,.28);background:#1d3d30;color:#fff;font:inherit;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;gap:4px}
+.btn.on{background:#2e7d5b;border-color:#8fd3b0}
+.btn.pri{background:var(--gold);color:#222;border-color:var(--gold);font-weight:700}
+.btn.warn{background:#8b2b2b}
+.btn:disabled{opacity:.38;cursor:default}
+select.btn{padding:0 6px}
+main{width:100%;display:flex;justify-content:center}
+.view{width:100%;max-width:1400px;padding:10px 12px 24px}
+.hidden{display:none!important}
+.sheet{background:#fbfdfb;color:#1b1b1b;border-radius:12px;padding:16px 18px;max-width:1100px;margin:0 auto 14px;line-height:1.5}
+.sheet h2{margin:.2em 0 .4em;color:#0b3d2a}.sheet h3{margin:1em 0 .3em;color:#0b3d2a}
+.sheet table{border-collapse:collapse;margin:.4em 0}.sheet td,.sheet th{border:1px solid #ccd;padding:4px 8px;text-align:left}
+.sheet td.n,.sheet th.n{text-align:right}
+.calc{border:1px solid #cfe0d5;border-radius:10px;padding:10px 12px;margin:10px 0;background:#f3f9f5;overflow-x:auto}
+.calc label{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0}
+.calc input[type=range]{flex:1 1 160px;min-width:120px;height:32px}
+.calc select{min-height:36px;font-size:15px}
+.big{font-size:20px;font-weight:700;color:#0b5a35}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:13px;word-break:break-word}
+.card{width:var(--cw);height:calc(var(--cw)*1.4);border-radius:8px;background:#fff;position:relative;flex:0 0 auto;
+  box-shadow:0 1px 3px rgba(0,0,0,.45);color:var(--blk);font-weight:700;user-select:none;transition:transform .2s;border:1px solid #bbb}
+.card.red{color:var(--red)}
+.card .tl{position:absolute;top:3px;left:4px;font-size:calc(var(--cw)*.27);line-height:1.02;text-align:center}
+.card .ctr{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:calc(var(--cw)*.5);padding-top:calc(var(--cw)*.2)}
+.card.back{background:repeating-linear-gradient(45deg,#1e3a8a 0 5px,#2b4ea8 5px 10px);border:3px solid #fff}
+.card.sm{--cw:30px}
+.table{display:grid;grid-template-columns:1fr 1.4fr 1fr;grid-template-areas:"l t r" "l c r" "y y y";gap:12px;align-items:center}
+.seat{background:rgba(0,0,0,.22);border-radius:12px;padding:8px 10px;text-align:center;min-width:0}
+.seat.turn{box-shadow:0 0 0 3px var(--gold)}
+.seat.out{opacity:.45}
+.seat .nm{font-weight:700;font-size:16px}
+.seat .cards{display:flex;justify-content:center;gap:4px;margin:6px 0}
+.seat .st{font-size:13px;opacity:.95}
+.seat .act{font-size:13px;color:var(--gold);min-height:18px}
+.s1{grid-area:l}.s2{grid-area:t}.s3{grid-area:r}.you{grid-area:y}
+.potbox{grid-area:c;text-align:center;background:rgba(0,0,0,.28);border-radius:50%/40%;padding:18px 10px}
+.potbox .pot{font-size:28px;font-weight:800;color:var(--gold)}
+.chip{display:inline-block;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle,#fff 0 28%,#c62828 30% 100%);border:2px dashed #fff;vertical-align:middle;margin-right:4px}
+.you .cards{gap:8px}
+.you .cards .card{--cw:72px}
+.badge{display:inline-block;background:var(--gold);color:#222;border-radius:6px;padding:1px 6px;font-size:12px;font-weight:700}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0}
+.status{text-align:center;background:rgba(0,0,0,.3);border-radius:10px;padding:10px;font-size:15px;min-height:42px;margin-top:6px}
+.log{font-size:13px;opacity:.9;max-height:120px;overflow:auto;margin-top:8px;background:rgba(0,0,0,.18);border-radius:10px;padding:6px 10px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;display:flex;align-items:center;justify-content:center;padding:12px}
+.modal .box{background:#fbfdfb;color:#1b1b1b;border-radius:12px;padding:16px;max-width:640px;width:100%;max-height:90vh;overflow:auto}
+.modal h2{margin-top:0;color:#0b3d2a}
+.modal .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px}
+.modal .btn{background:#0f5132}.modal .btn.pri{background:var(--gold);color:#222}
+.res{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid #dde;padding:6px 0}
+.res .hc{display:flex;gap:3px}
+@media (max-width:600px){
+  :root{--cw:44px}
+  .top{padding:4px 8px}.top h1{font-size:16px}
+  .btn{font-size:13px;padding:0 9px}
+  .view{padding:8px 6px 20px}
+  .table{grid-template-columns:1fr 1fr 1fr;grid-template-areas:"l t r" "c c c" "y y y";gap:6px}
+  .seat{padding:5px 4px}.seat .nm{font-size:14px}.seat .st,.seat .act{font-size:12px}
+  .seat .cards{gap:2px}.seat .cards .card{--cw:30px}
+  .potbox{border-radius:12px;padding:8px}.potbox .pot{font-size:22px}
+  .you .cards .card{--cw:62px}
+  .sheet{padding:12px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>♥ Teen Patti</h1>
+  <div class="btns">
+    <button class="btn pri" id="bNew">New</button>
+    <button class="btn on" id="tPlay">Play</button>
+    <button class="btn" id="tRules">Rules</button>
+    <button class="btn" id="tOdds">Odds</button>
+    <select class="btn" id="selDiff" title="Difficulty"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select>
+    <button class="btn" id="bFull">⛶ Full screen</button>
+    <a class="btn" href="index.html">← Games</a>
+  </div>
+</header>
+<main>
+<section class="view" id="vPlay">
+  <div class="table" id="table"></div>
+  <div class="actions" id="actions"></div>
+  <div class="status" id="status">Loading…</div>
+  <div class="log" id="log"></div>
+</section>
+<section class="view hidden" id="vRules"><div class="sheet" id="rulesBox"></div></section>
+<section class="view hidden" id="vOdds"><div class="sheet" id="oddsBox"></div></section>
+</main>
+<div class="modal hidden" id="modal"><div class="box" id="mbox"></div></div>
+<script>
+"use strict";
+const APP_VERSION = "1.0.0";
+const SKEY = "cg_teenpatti_v1", STKEY = "cg_teenpatti_stats";
+const SUITS = ["♠","♥","♦","♣"];
+const RN = {2:"2",3:"3",4:"4",5:"5",6:"6",7:"7",8:"8",9:"9",10:"10",11:"J",12:"Q",13:"K",14:"A"};
+const NAMES = ["You","Arun","Meena","Ravi"];
+const CAT = ["High card","Pair","Colour","Sequence","Pure sequence","Trail"];
+const START_CHIPS = 1000, STAKE_CAP_MULT = 64, POT_LIMIT_MULT = 100;
+const card = id => ({r:id % 13 + 2, s:(id / 13) | 0});    // ids 0..51, rank 2..14 (A=14)
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+/* ---------- pure hand evaluation ----------
+   Variant: A-K-Q is the highest sequence, A-2-3 the second highest, then K-Q-J … down to 4-3-2 (lowest).
+   Suits never break ties. Returns an array key; compare lexicographically. */
+function handKey(ids) {
+  const cs = ids.map(card), r = cs.map(c => c.r).sort((a, b) => b - a);
+  const flush = cs[0].s === cs[1].s && cs[1].s === cs[2].s;
+  let seq = 0; // sequence strength
+  if (r[0] === 14 && r[1] === 13 && r[2] === 12) seq = 16;
+  else if (r[0] === 14 && r[1] === 3 && r[2] === 2) seq = 15;
+  else if (r[0] - 1 === r[1] && r[1] - 1 === r[2]) seq = r[0];
+  if (r[0] === r[2]) return [5, r[0]];
+  if (seq && flush) return [4, seq];
+  if (seq) return [3, seq];
+  if (flush) return [2, r[0], r[1], r[2]];
+  if (r[0] === r[1] || r[1] === r[2]) { const p = r[1], k = r[0] === r[1] ? r[2] : r[0]; return [1, p, k]; }
+  return [0, r[0], r[1], r[2]];
+}
+function cmpKey(a, b) { for (let i = 0; i < Math.max(a.length, b.length); i++) { const d = (a[i] || 0) - (b[i] || 0); if (d) return d > 0 ? 1 : -1; } return 0; }
+function compareHands(a, b) { return cmpKey(handKey(a), handKey(b)); }
+function keyCode(k) { let c = 0; for (let i = 0; i < 4; i++) c = c * 20 + (k[i] || 0); return c; }
+// Enumerate all C(52,3)=22100 hands once.
+const ENUM = (function () {
+  const counts = [0, 0, 0, 0, 0, 0], codes = [];
+  for (let a = 0; a < 52; a++) for (let b = a + 1; b < 52; b++) for (let c = b + 1; c < 52; c++) {
+    const k = handKey([a, b, c]); counts[k[0]]++; codes.push(keyCode(k));
+  }
+  const sorted = Float64Array.from(codes).sort();
+  return {counts, total:codes.length, sorted};
+})();
+function lowerBound(arr, x) { let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] < x) lo = m + 1; else hi = m; } return lo; }
+function upperBound(arr, x) { let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] <= x) lo = m + 1; else hi = m; } return lo; }
+// percentile among all 22100 hands: share strictly below + half of ties
+function percentile(ids) { const c = keyCode(handKey(ids)); const lo = lowerBound(ENUM.sorted, c), hi = upperBound(ENUM.sorted, c); return (lo + (hi - lo) / 2) / ENUM.total; }
+// exact P(one random opponent hand drawn from the other 49 cards beats / ties yours)
+function vsOneExact(ids) {
+  const mine = handKey(ids), rest = []; for (let i = 0; i < 52; i++) if (!ids.includes(i)) rest.push(i);
+  let beat = 0, tie = 0, tot = 0;
+  for (let a = 0; a < 49; a++) for (let b = a + 1; b < 49; b++) for (let c = b + 1; c < 49; c++) {
+    const d = cmpKey(handKey([rest[a], rest[b], rest[c]]), mine); tot++; if (d > 0) beat++; else if (d === 0) tie++;
+  }
+  return {beat:beat / tot, tie:tie / tot, tot};
+}
+// Monte Carlo: P(at least one of N opponents beats you)
+function vsManyMC(ids, N, trials) {
+  const rest = []; for (let i = 0; i < 52; i++) if (!ids.includes(i)) rest.push(i);
+  const mine = handKey(ids); let hit = 0;
+  for (let t = 0; t < trials; t++) {
+    for (let i = 0; i < 3 * N; i++) { const j = i + Math.floor(Math.random() * (rest.length - i)); const x = rest[i]; rest[i] = rest[j]; rest[j] = x; }
+    for (let o = 0; o < N; o++) if (cmpKey(handKey([rest[3 * o], rest[3 * o + 1], rest[3 * o + 2]]), mine) > 0) { hit++; break; }
+  }
+  return {p:hit / trials, se:Math.sqrt(hit / trials * (1 - hit / trials) / trials)};
+}
+
+/* ---------- state ---------- */
+let S = null, FAST = false, aiTimer = null; const ui = {tab:"play"};
+function loadStats() { try { return JSON.parse(localStorage.getItem(STKEY)) || null; } catch (e) { return null; } }
+let stats = loadStats() || {games:0, gamesWon:0, hands:0, handsWon:0, bestChips:START_CHIPS, biggestPot:0, streak:0, bestStreak:0};
+function saveStats() { try { localStorage.setItem(STKEY, JSON.stringify(stats)); } catch (e) {} }
+function save() { try { localStorage.setItem(SKEY, JSON.stringify(S)); } catch (e) {} }
+function clearSave() { try { localStorage.removeItem(SKEY); } catch (e) {} }
+function newGame(opts) {
+  opts = opts || {};
+  S = {v:1, boot:opts.boot || 10, diff:opts.diff || document.getElementById("selDiff").value || "normal", chips:[START_CHIPS, START_CHIPS, START_CHIPS, START_CHIPS],
+       dealer:3, handNo:0, over:false, log:[]};
+  document.getElementById("selDiff").value = S.diff;
+  startHand();
+}
+function inGame(p) { return S.chips[p] >= S.boot || (S.hands && S.active && S.active[p]); }
+function addLog(t) { S.log.push(t); if (S.log.length > 80) S.log.shift(); }
+function startHand() {
+  if (S.chips[0] < S.boot) { gameOver(false); return; }
+  const alive = [0, 1, 2, 3].filter(p => S.chips[p] >= S.boot);
+  if (alive.length === 1) { gameOver(true); return; }
+  S.handNo++;
+  const deck = shuffle([...Array(52).keys()]);
+  S.hands = [[], [], [], []]; S.active = [false, false, false, false]; S.seen = [false, false, false, false];
+  S.put = [0, 0, 0, 0]; S.lastAct = ["", "", "", ""]; S.pot = 0; S.stake = S.boot; S.result = null; S.phase = "bet"; S.bets = 0;
+  for (const p of alive) { S.hands[p] = deck.splice(0, 3); S.active[p] = true; S.chips[p] -= S.boot; S.put[p] = S.boot; S.pot += S.boot; }
+  do { S.dealer = (S.dealer + 1) % 4; } while (!S.active[S.dealer]);
+  S.turn = nextActive(S.dealer);
+  S.aiSeeAfter = [0, 0, 0, 0].map(() => Math.floor(Math.random() * 3));
+  S.aiBluff = [0, 1, 2, 3].map(() => Math.random() < bluffRate());
+  addLog("Hand " + S.handNo + " — boot " + S.boot + " each, pot " + S.pot);
+  save(); render(); pump();
+}
+function bluffRate() { return S.diff === "easy" ? 0.30 : S.diff === "normal" ? 0.15 : 0.10; }
+function nextActive(p) { let q = p; do { q = (q + 1) % 4; } while (!S.active[q]); return q; }
+function activeList() { return [0, 1, 2, 3].filter(p => S.active[p]); }
+function chaalCost(p) { return S.seen[p] ? 2 * S.stake : S.stake; }
+function maxStake() { return S.boot * STAKE_CAP_MULT; }
+function legal(p) {
+  if (!S || S.phase !== "bet" || S.turn !== p || !S.active[p]) return [];
+  const c = chaalCost(p), L = ["pack"];
+  if (!S.seen[p]) L.push("see");
+  if (S.chips[p] >= c) L.push("chaal"); else L.push("allin");
+  if (S.chips[p] >= 2 * c && S.stake * 2 <= maxStake()) L.push("raise");
+  if (activeList().length === 2 && S.chips[p] >= c) L.push("show");
+  return L;
+}
+function act(p, a) {
+  if (!legal(p).includes(a)) return false;
+  const c = chaalCost(p);
+  if (a === "see") { S.seen[p] = true; S.lastAct[p] = "Seen"; addLog(V(p, "looks", "look") + " at the cards"); save(); render(); return true; }
+  if (a === "pack") { S.active[p] = false; S.lastAct[p] = "Packed"; addLog(V(p, "packs", "pack")); if (activeList().length === 1) { finish(activeList(), "fold"); return true; } }
+  else if (a === "chaal") { pay(p, c); S.lastAct[p] = (S.seen[p] ? "Chaal " : "Blind ") + c; addLog(NAMES[p] + (S.seen[p] ? " chaal " : (p === 0 ? " play blind " : " plays blind ")) + c); }
+  else if (a === "raise") { S.stake *= 2; pay(p, 2 * c); S.lastAct[p] = "Raise " + 2 * c; addLog(V(p, "raises", "raise") + " to " + 2 * c + (S.seen[p] ? "" : " (blind)")); }
+  else if (a === "allin") { const amt = S.chips[p]; pay(p, amt); S.lastAct[p] = "All-in " + amt; addLog(V(p, "is", "are") + " all-in for " + amt + " — showdown"); showdown(activeList(), "allin", p); return true; }
+  else if (a === "show") { pay(p, c); S.lastAct[p] = "Show " + c; addLog(V(p, "pays", "pay") + " " + c + " and ask" + (p === 0 ? "" : "s") + " for a show"); showdown(activeList(), "show", p); return true; }
+  S.bets++;
+  if (S.pot >= S.boot * POT_LIMIT_MULT) { addLog("Pot limit reached — automatic show"); showdown(activeList(), "limit", -1); return true; }
+  S.turn = nextActive(p);
+  save(); render(); return true;
+}
+function V(p, he, you) { return NAMES[p] + " " + (p === 0 ? you : he); }
+function pay(p, amt) { amt = Math.min(amt, S.chips[p]); S.chips[p] -= amt; S.put[p] += amt; S.pot += amt; }
+// showdown: best hand wins; on a two-player "show" tie the player who asked loses; other ties split
+function showdown(players, why, asker) {
+  let best = [players[0]];
+  for (const p of players.slice(1)) { const d = compareHands(S.hands[p], S.hands[best[0]]); if (d > 0) best = [p]; else if (d === 0) best.push(p); }
+  if (best.length > 1 && why === "show" && best.includes(asker)) best = best.filter(x => x !== asker);
+  finish(best, why, players);
+}
+function finish(winners, why, shown) {
+  const share = Math.floor(S.pot / winners.length); let rem = S.pot - share * winners.length;
+  for (const w of winners) { S.chips[w] += share + (rem > 0 ? 1 : 0); rem--; }
+  S.result = {winners, why, pot:S.pot, shown:shown || [], hands:S.hands.map(h => h.slice())};
+  S.phase = "done";
+  addLog(winners.map(w => NAMES[w]).join(" & ") + " win" + (winners.length === 1 && winners[0] !== 0 ? "s" : "") + " the pot of " + S.pot);
+  stats.hands++; if (winners.includes(0)) stats.handsWon++;
+  stats.biggestPot = Math.max(stats.biggestPot, winners.includes(0) ? S.pot : 0);
+  stats.bestChips = Math.max(stats.bestChips, S.chips[0]);
+  saveStats(); save(); render(); showResult();
+}
+function gameOver(won) {
+  S.over = true; S.phase = "over"; stats.games++;
+  if (won) { stats.gamesWon++; stats.streak++; stats.bestStreak = Math.max(stats.bestStreak, stats.streak); } else stats.streak = 0;
+  saveStats(); clearSave(); render();
+  showModal(`<h2>${won ? "You won the game!" : "Game over"}</h2><p>${won ? "Every computer player is out of chips. You finish with " + S.chips[0] + " chips." : "You do not have enough chips for the boot (" + S.boot + ")."}</p><p>Points only — no betting with money.</p>`,
+    [{t:"Close"}, {t:"New game", pri:true, f:() => { newGame({boot:S.boot, diff:S.diff}); }}]);
+}
+
+/* ---------- AI ---------- */
+function aiDecide(p) {
+  const L = legal(p), d = S.diff, opp = activeList().length - 1;
+  if (!S.seen[p]) {
+    const rounds = Math.floor(S.bets / Math.max(1, activeList().length));
+    const lim = d === "easy" ? 3 : d === "normal" ? 2 : 1;
+    if (rounds >= S.aiSeeAfter[p] % (lim + 1) || S.stake >= S.boot * 8) return "see";
+    if (L.includes("raise") && Math.random() < (d === "easy" ? 0.25 : 0.12)) return "raise";
+    return L.includes("chaal") ? "chaal" : "see";
+  }
+  const pc = percentile(S.hands[p]);
+  // estimated chance to beat every remaining opponent; Hard discounts for opponents who raised while seen
+  let strength = Math.pow(pc, opp);
+  if (d === "hard") {
+    for (const q of activeList()) if (q !== p && S.seen[q] && /Raise|Chaal/.test(S.lastAct[q])) strength *= 0.93;
+    strength = Math.min(1, strength * (1 + 0.04 * Math.log2(S.stake / S.boot + 1)) );
+  }
+  if (d === "easy") strength = Math.min(1, Math.max(0, strength + (Math.random() - 0.5) * 0.4));
+  const bluff = S.aiBluff[p] && S.stake < S.boot * (d === "hard" ? 8 : 16);
+  const cost = chaalCost(p), potOdds = cost / (S.pot + cost);
+  if (L.includes("show") && (strength > 0.55 || (S.stake >= S.boot * 16 && strength > 0.35))) return "show";
+  if (strength > 0.8 && L.includes("raise") && Math.random() < 0.6) return "raise";
+  if (bluff && L.includes("raise") && Math.random() < 0.35) return "raise";
+  const need = d === "hard" ? Math.max(0.18, potOdds * 1.3) : d === "normal" ? 0.25 : 0.12;
+  if (strength >= need || bluff) return L.includes("chaal") ? "chaal" : (L.includes("show") ? "show" : "allin");
+  if (L.includes("show") && strength > 0.3) return "show";
+  return "pack";
+}
+function aiStep() {
+  if (!S || S.phase !== "bet" || S.turn === 0) return false;
+  const p = S.turn; act(p, aiDecide(p)); return true;
+}
+function pump() {
+  clearTimeout(aiTimer);
+  if (!S || S.phase !== "bet" || S.turn === 0) return;
+  aiTimer = setTimeout(() => { if (aiStep()) { save(); render(); } pump(); }, FAST ? 0 : 650);
+}
+function human(a) { if (!S || S.turn !== 0) return false; const ok = act(0, a); if (ok) pump(); return ok; }
+
+/* ---------- rendering ---------- */
+const $ = id => document.getElementById(id);
+function cardHTML(id, o) {
+  o = o || {}; const c = card(id);
+  return `<div class="card ${c.s === 1 || c.s === 2 ? "red" : ""} ${o.sm ? "sm" : ""}"><span class="tl">${RN[c.r]}<br>${SUITS[c.s]}</span><span class="ctr">${SUITS[c.s]}</span></div>`;
+}
+const backHTML = () => `<div class="card back"></div>`;
+function catName(ids) { return CAT[handKey(ids)[0]]; }
+function statusText() {
+  if (!S) return "";
+  if (S.phase === "over") return "Game over — tap New.";
+  if (S.phase === "done") return "Hand over — tap Next hand.";
+  if (!S.active[0]) return "You packed — watching the others…";
+  if (S.turn !== 0) return NAMES[S.turn] + " is thinking…";
+  return S.seen[0] ? "Your turn — Chaal " + chaalCost(0) + ", Raise, Pack" + (legal(0).includes("show") ? " or Show" : "") + "." : "Your turn — you are blind. Play blind (" + chaalCost(0) + "), raise, or See your cards.";
+}
+function render() {
+  if (!S) return;
+  const reveal = S.phase === "done" || S.phase === "over";
+  let h = "";
+  for (let p = 1; p < 4; p++) {
+    const out = S.chips[p] < S.boot && !S.active[p] && S.phase !== "done";
+    const showCards = reveal && S.result && S.result.shown.includes(p) && S.hands[p].length;
+    h += `<div class="seat s${p} ${S.turn === p && S.phase === "bet" ? "turn" : ""} ${!S.active[p] ? "out" : ""}">
+      <div class="nm">${NAMES[p]} ${S.dealer === p ? '<span class="badge">D</span>' : ""}</div>
+      <div class="cards">${S.hands[p] && S.hands[p].length ? (showCards ? S.hands[p].map(id => cardHTML(id)).join("") : backHTML().repeat(3)) : ""}</div>
+      <div class="st">${out ? "Out of chips" : (S.seen[p] ? "Seen" : "Blind")} · <b>${S.chips[p]}</b></div>
+      <div class="act">${showCards ? catName(S.hands[p]) : S.lastAct[p]}</div></div>`;
+  }
+  h += `<div class="potbox"><div><span class="chip"></span>Pot</div><div class="pot">${S.pot}</div><div>Stake (blind): ${S.stake} · Seen: ${2 * S.stake}</div><div style="font-size:13px;opacity:.85">Boot ${S.boot} · Hand ${S.handNo} · ${S.diff}</div></div>`;
+  const mine = S.hands[0] || [];
+  const seen = S.seen[0] || reveal;
+  h += `<div class="seat you ${S.turn === 0 && S.phase === "bet" ? "turn" : ""} ${!S.active[0] && S.phase === "bet" ? "out" : ""}">
+    <div class="nm">You ${S.dealer === 0 ? '<span class="badge">D</span>' : ""} · <span style="color:var(--gold)">${S.chips[0]} chips</span></div>
+    <div class="cards">${mine.length ? (seen ? mine.map(id => cardHTML(id)).join("") : backHTML().repeat(3)) : ""}</div>
+    <div class="st">${mine.length && seen ? "<b>" + catName(mine) + "</b> · beats " + (100 * percentile(mine)).toFixed(1) + "% of all hands" : (mine.length ? "Blind — cards not seen" : "")}</div></div>`;
+  $("table").innerHTML = h;
+  const L = legal(0); let a = "";
+  if (S.phase === "bet") {
+    const c = chaalCost(0);
+    a += `<button class="btn" data-a="see" ${L.includes("see") ? "" : "disabled"}>See cards</button>`;
+    a += `<button class="btn pri" data-a="${L.includes("allin") ? "allin" : "chaal"}" ${L.includes("chaal") || L.includes("allin") ? "" : "disabled"}>${L.includes("allin") ? "All-in " + S.chips[0] : (S.seen[0] ? "Chaal " : "Blind ") + c}</button>`;
+    a += `<button class="btn pri" data-a="raise" ${L.includes("raise") ? "" : "disabled"}>Raise ${2 * c}</button>`;
+    a += `<button class="btn" data-a="show" ${L.includes("show") ? "" : "disabled"}>Show (${c})</button>`;
+    a += `<button class="btn warn" data-a="pack" ${L.includes("pack") ? "" : "disabled"}>Pack</button>`;
+  } else if (S.phase === "done") a += `<button class="btn pri" id="bNext">Next hand</button>`;
+  else a += `<button class="btn pri" id="bAgain">New game</button>`;
+  $("actions").innerHTML = a;
+  $("actions").querySelectorAll("[data-a]").forEach(b => b.onclick = () => human(b.dataset.a));
+  if ($("bNext")) $("bNext").onclick = () => { hideModal(); startHand(); };
+  if ($("bAgain")) $("bAgain").onclick = openNewDialog;
+  $("status").textContent = statusText();
+  $("log").innerHTML = S.log.slice(-10).reverse().map(x => "• " + x).join("<br>");
+  if (ui.tab === "odds") liveOdds(); else if (ui.tab === "rules") renderRules();
+}
+function showModal(html, buttons) {
+  $("mbox").innerHTML = html + `<div class="row">${buttons.map((b, i) => `<button class="btn ${b.pri ? "pri" : ""}" data-b="${i}">${b.t}</button>`).join("")}</div>`;
+  $("modal").classList.remove("hidden");
+  $("mbox").querySelectorAll("[data-b]").forEach(el => el.onclick = () => { hideModal(); const f = buttons[+el.dataset.b].f; if (f) f(); });
+}
+function hideModal() { $("modal").classList.add("hidden"); }
+function showResult() {
+  const r = S.result, wn = r.winners.map(w => NAMES[w]).join(" & ");
+  const why = {fold:"everyone else packed", show:"show", allin:"all-in showdown", limit:"pot limit showdown"}[r.why];
+  let h = `<h2>${r.winners.includes(0) ? (r.winners.length > 1 ? "Split pot" : "You win!") : wn + " wins"}</h2><p>Pot ${r.pot} — ${why}.</p>`;
+  const list = r.shown.length ? r.shown : r.winners.includes(0) ? [0] : [0];
+  for (const p of [...new Set([0, ...list])]) if (r.hands[p].length && (p === 0 || r.shown.includes(p)))
+    h += `<div class="res"><b style="min-width:60px">${NAMES[p]}</b><div class="hc">${r.hands[p].map(id => cardHTML(id, {sm:true})).join("")}</div><span>${catName(r.hands[p])}</span>${r.winners.includes(p) ? '<span class="badge">Winner</span>' : ""}</div>`;
+  h += `<p>Chips: ${S.chips.map((c, i) => NAMES[i] + " " + c).join(" · ")}</p>`;
+  showModal(h, [{t:"Close"}, {t:"Next hand", pri:true, f:startHand}]);
+}
+function openNewDialog() {
+  showModal(`<h2>New game</h2><p>You vs Arun, Meena and Ravi. Everyone starts with ${START_CHIPS} play chips. Points only, no betting with money.</p>
+    <label>Boot: <select class="btn" id="nBoot" style="background:#0f5132"><option>5</option><option selected>10</option><option>20</option><option>50</option></select></label><br><br>
+    <label>Difficulty: <select class="btn" id="nDf" style="background:#0f5132"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select></label>`,
+    [{t:"Cancel"}, {t:"Start", pri:true}]);
+  $("nDf").value = $("selDiff").value;
+  $("mbox").querySelector('[data-b="1"]').onclick = () => { const b = +$("nBoot").value, d = $("nDf").value; hideModal(); clearSave(); newGame({boot:b, diff:d}); };
+}
+
+/* ---------- Rules ---------- */
+function renderRules() {
+  const st = stats, T = ENUM.total;
+  $("rulesBox").innerHTML = `<h2>How to play — Teen Patti</h2>
+  <p><b>Points only, no betting with money.</b> Chips here are play points with no value.</p>
+  <p><b>Variant used:</b> 52-card deck, 3 cards each, You vs 3 computer players, ${START_CHIPS} chips each. Blind/seen play, chaal, raise, pack and show. Sideshow is <b>not used</b> in this version.</p>
+  <h3>A hand</h3><ol><li>Everyone pays the <b>boot</b> into the pot and gets 3 cards face down.</li>
+  <li>Turns go clockwise from the dealer's left. A <b>blind</b> player (has not looked) bets the current stake; a <b>seen</b> player bets twice the stake.</li>
+  <li><b>Chaal</b> = bet the normal amount. <b>Raise</b> = bet double, which doubles the stake for everyone. <b>Pack</b> = fold. <b>See cards</b> = look (does not end your turn).</li>
+  <li><b>Show</b>: when only two players are left, either may pay one bet and ask for a show. Higher hand wins the pot; if the hands are exactly equal, the player who asked for the show loses.</li>
+  <li>Last player left wins the pot. Pot limit: when the pot reaches ${POT_LIMIT_MULT}× boot, all remaining hands are shown. Stake is capped at ${STAKE_CAP_MULT}× boot.</li>
+  <li>If you cannot afford the bet you may go <b>all-in</b>: you put in your remaining chips and all remaining hands are shown at once (simplified, no side pots). Ties in a multi-way showdown split the pot.</li>
+  <li>A player who cannot pay the boot is out. <b>Game over</b> when you cannot pay the boot; you win the game when every computer player is out.</li></ol>
+  <h3>Hand rankings (high to low)</h3>
+  <table><tr><th>Rank</th><th>Hand</th><th>Example</th><th class="n">Combos</th></tr>
+  ${[5, 4, 3, 2, 1, 0].map((c, i) => `<tr><td>${i + 1}</td><td>${CAT[c]}</td><td>${["A♠ K♦ 7♣ (high card)", "Q♥ Q♣ 5♦", "2♥ 7♥ J♥", "4♣ 5♥ 6♦", "8♠ 9♠ 10♠", "K♣ K♦ K♠"][c]}</td><td class="n">${ENUM.counts[c]}</td></tr>`).join("")}</table>
+  <p><b>Sequence order (our variant):</b> A-K-Q is the highest, <b>A-2-3 is second highest</b>, then K-Q-J, Q-J-10 … down to 4-3-2. Q-K-A ≠ K-A-2: K-A-2 is not a sequence. Trails: A-A-A highest, 2-2-2 lowest. Colours and high cards compare highest card, then next, then last. Pairs compare the pair, then the odd card. Suits never break ties.</p>
+  <h3>Computer players</h3><p>Easy plays loose and bluffs about 30% of hands. Normal bluffs about 15% and packs weak hands. Hard bluffs about 10%, weighs pot odds and gets cautious when seen opponents keep betting.</p>
+  <h3>Your stats</h3><table><tr><td>Games played / won</td><td>${st.games} / ${st.gamesWon}</td></tr><tr><td>Hands played / won</td><td>${st.hands} / ${st.handsWon}</td></tr>
+  <tr><td>Biggest pot won</td><td>${st.biggestPot}</td></tr><tr><td>Most chips held</td><td>${st.bestChips}</td></tr><tr><td>Game win streak (best)</td><td>${st.streak} (${st.bestStreak})</td></tr></table>
+  <p style="opacity:.7">Version ${APP_VERSION} · offline · ${T} three-card hands enumerated in your browser · game autosaves.</p>`;
+}
+
+/* ---------- Odds ---------- */
+function rankOpts(sel) { return [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2].map(r => `<option value="${r}" ${r === sel ? "selected" : ""}>${RN[r]}</option>`).join(""); }
+function suitOpts(sel) { return SUITS.map((s, i) => `<option value="${i}" ${i === sel ? "selected" : ""}>${s}</option>`).join(""); }
+function renderOdds() {
+  const box = $("oddsBox");
+  if (box.dataset.built) { liveOdds(); return; }
+  box.dataset.built = "1";
+  const T = ENUM.total, ord = [5, 4, 3, 2, 1, 0];
+  const formula = {5:"13 ranks × C(4,3) = 13 × 4", 4:"12 runs × 4 suits", 3:"12 runs × 4³ − 48 pure", 2:"4 × C(13,3) − 48 pure seq", 1:"13 × C(4,2) × 48", 0:"rest"};
+  let cum = 0, rows = "";
+  for (const c of ord) { const n = ENUM.counts[c]; cum += n; rows += `<tr><td>${CAT[c]}</td><td class="n">${n}</td><td class="n">${(100 * n / T).toFixed(3)}%</td><td class="n">${(100 * (cum - n) / T).toFixed(2)}%</td><td class="n">1 in ${(T / n).toFixed(1)}</td><td class="mono">${formula[c]}</td></tr>`; }
+  box.innerHTML = `<h2>Odds & Strategy</h2>
+  <div class="calc"><h3 style="margin-top:0">1. Exact hand probabilities (all C(52,3) = ${T} hands enumerated)</h3>
+  <table><tr><th>Hand</th><th class="n">Combos</th><th class="n">Probability</th><th class="n">P(better category)</th><th class="n">Odds</th><th>Count</th></tr>${rows}<tr><th>Total</th><th class="n">${T}</th><th class="n">100%</th><th></th><th></th><th></th></tr></table>
+  <p>Note a <b>sequence is rarer than a colour</b> (720 vs 1096), which is why it ranks higher than in poker-style thinking.</p></div>
+  <div class="calc" id="liveCalc"><h3 style="margin-top:0">2. Live: your current hand</h3><div id="liveBox">—</div></div>
+  <div class="calc"><h3 style="margin-top:0">3. Will someone beat this hand?</h3>
+    <label>Card 1 <select id="c1r">${rankOpts(14)}</select><select id="c1s">${suitOpts(0)}</select>
+      Card 2 <select id="c2r">${rankOpts(13)}</select><select id="c2s">${suitOpts(1)}</select>
+      Card 3 <select id="c3r">${rankOpts(7)}</select><select id="c3s">${suitOpts(2)}</select></label>
+    <label>Opponents N: <input type="range" id="nOpp" min="1" max="6" value="3"><b id="nOppV"></b></label>
+    <button class="btn pri" id="bCalc">Calculate</button>
+    <div id="calcOut"></div></div>
+  <div class="calc"><h3 style="margin-top:0">4. Category odds among N opponents</h3>
+    <label>Hand category <select id="catSel">${ord.map(c => `<option value="${c}">${CAT[c]}</option>`).join("")}</select>
+      Opponents N <input type="range" id="nOpp2" min="1" max="6" value="3"><b id="nOpp2V"></b></label>
+    <div id="catOut" class="big"></div><div class="mono" id="catF"></div></div>
+  <h3>Strategy tips</h3><ul>
+    <li>Blind play costs half as much — staying blind for a round or two with a cheap stake is reasonable.</li>
+    <li>Against 3 opponents a medium pair is only around a coin flip; against 1 it is strong (check calculator 3).</li>
+    <li>High card hands win surprisingly often heads-up (≈74% of hands are a high card or a pair).</li>
+    <li>Raises double the stake for everyone — raise with strong hands, not to chase.</li>
+    <li>Asking for a show on a tie loses, so only ask when you are reasonably ahead.</li>
+    <li>Watch who keeps betting seen: a seen player who raises usually has at least a pair.</li></ul>`;
+  $("nOpp").oninput = () => $("nOppV").textContent = $("nOpp").value; $("nOppV").textContent = $("nOpp").value;
+  $("bCalc").onclick = runCalc;
+  const upd2 = () => { $("nOpp2V").textContent = $("nOpp2").value; catCalc(); };
+  $("catSel").onchange = upd2; $("nOpp2").oninput = upd2; upd2();
+  liveOdds();
+}
+function runCalc() {
+  const ids = [1, 2, 3].map(i => (+$("c" + i + "s").value) * 13 + (+$("c" + i + "r").value) - 2);
+  if (new Set(ids).size < 3) { $("calcOut").innerHTML = "<p>Pick three different cards.</p>"; return; }
+  const N = +$("nOpp").value, one = vsOneExact(ids), mc = vsManyMC(ids, N, 40000);
+  const approx = 1 - Math.pow(1 - one.beat, N);
+  $("calcOut").innerHTML = `<p><b>${catName(ids)}</b> — beats ${(100 * percentile(ids)).toFixed(2)}% of all 22100 hands.</p>
+    <p class="big">P(at least one of ${N} beats you) ≈ ${(100 * mc.p).toFixed(2)}% ± ${(196 * mc.se).toFixed(2)}%</p>
+    <p>One opponent (exact, ${one.tot} hands from the other 49 cards): beaten ${(100 * one.beat).toFixed(2)}%, tie ${(100 * one.tie).toFixed(2)}%.</p>
+    <p class="mono">Simulation deals ${N} hands from the 49 unseen cards (40,000 trials). Independence approximation 1 − (1 − p)^N = ${(100 * approx).toFixed(2)}%.</p>`;
+}
+function catCalc() {
+  const c = +$("catSel").value, N = +$("nOpp2").value, T = ENUM.total;
+  let better = 0; for (let k = c + 1; k < 6; k++) better += ENUM.counts[k];
+  const pb = better / T, pAny = 1 - Math.pow(1 - pb, N);
+  $("catOut").textContent = `P(some opponent holds a better category) ≈ ${(100 * pAny).toFixed(2)}%`;
+  $("catF").textContent = `p = ${better}/${T} = ${(100 * pb).toFixed(3)}% per opponent; 1 − (1 − p)^${N} (treats hands as independent; ignores ties within ${CAT[c]})`;
+}
+let liveCache = "";
+function liveOdds() {
+  const el = $("liveBox"); if (!el || !S) return;
+  const mine = S.hands && S.hands[0];
+  const key = JSON.stringify([S.handNo, S.seen[0], S.phase, S.active.filter(Boolean).length]);
+  if (key === liveCache) return; liveCache = key;
+  if (!mine || !mine.length) { el.innerHTML = "<p>No hand in progress.</p>"; return; }
+  if (!S.seen[0] && S.phase === "bet") { el.innerHTML = "<p>You are playing blind — see your cards to get a live readout. Blind, your hand is an average draw: 50th percentile.</p>"; return; }
+  const pc = percentile(mine), opp = Math.max(1, activeList().length - (S.active[0] ? 1 : 0)), one = vsOneExact(mine);
+  el.innerHTML = `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${mine.map(id => cardHTML(id, {sm:true})).join("")} <b>${catName(mine)}</b></div>
+    <p class="big">Percentile: ${(100 * pc).toFixed(1)}% (beats that share of all ${ENUM.total} hands)</p>
+    <p>One random opponent beats you: ${(100 * one.beat).toFixed(2)}% (exact). With ${opp} opponent(s) still in, rough chance nobody beats you: ${(100 * Math.pow(1 - one.beat, opp)).toFixed(1)}%.</p>`;
+}
+
+/* ---------- wiring ---------- */
+function setTab(t) {
+  ui.tab = t;
+  $("vPlay").classList.toggle("hidden", t !== "play"); $("vRules").classList.toggle("hidden", t !== "rules"); $("vOdds").classList.toggle("hidden", t !== "odds");
+  $("tPlay").classList.toggle("on", t === "play"); $("tRules").classList.toggle("on", t === "rules"); $("tOdds").classList.toggle("on", t === "odds");
+  if (t === "rules") renderRules(); if (t === "odds") renderOdds();
+}
+$("tPlay").onclick = () => setTab("play"); $("tRules").onclick = () => setTab(ui.tab === "rules" ? "play" : "rules"); $("tOdds").onclick = () => setTab(ui.tab === "odds" ? "play" : "odds");
+$("bNew").onclick = openNewDialog;
+$("selDiff").onchange = () => { if (S) { S.diff = $("selDiff").value; save(); render(); } };
+if (!document.fullscreenEnabled) $("bFull").classList.add("hidden");
+$("bFull").onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {}); };
+
+window.__game = {
+  get state() { return S; }, newGame, startHand, handKey, compareHands, percentile, vsOneExact, vsManyMC, ENUM, legal, act, human, aiStep,
+  setFast(v) { FAST = !!v; }, render, setTab,
+  aiUntilHuman() { clearTimeout(aiTimer); let g = 0; while (S.phase === "bet" && S.turn !== 0 && g++ < 1000) aiStep(); save(); render(); return S.phase; }
+};
+(function init() {
+  let saved = null; try { saved = JSON.parse(localStorage.getItem(SKEY)); } catch (e) { saved = null; }
+  if (saved && saved.v === 1 && !saved.over && saved.hands) {
+    S = saved; $("selDiff").value = S.diff; render();
+    showModal(`<h2>Saved game found</h2><p>Hand ${S.handNo} · your chips ${S.chips[0]} · boot ${S.boot}.</p>`,
+      [{t:"New game", f:() => { clearSave(); openNewDialog(); }}, {t:"Resume saved game", pri:true, f:() => { render(); if (S.phase === "done") showResult(); else pump(); }}]);
+  } else newGame({boot:10, diff:"normal"});
+})();
+</script>
+</body>
+</html>

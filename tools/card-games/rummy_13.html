@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<!--
+TOOL: 13-Card Indian Rummy
+FAMILY: card-games
+VERSION: 1.0.0
+DATE: 2026-10-13
+CHAT: Card games batch 1 (claude.ai)
+CHANGES: 1.0.0 - first release
+STATUS: released
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b3d2a">
+<title>13-Card Rummy</title>
+<style>
+:root{--felt:#0f5132;--bar:#0b2a1e;--cw:64px;--red:#c62828;--blk:#111;--gold:#f5c542;--txt:#f3f7f4}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--txt);width:100%;min-height:100vh;overflow-x:hidden;
+  background:var(--felt) radial-gradient(ellipse at 50% 40%,#1a7a4c 0%,#0f5132 55%,#0a3a24 100%) fixed;-webkit-tap-highlight-color:transparent}
+.top{position:sticky;top:0;z-index:30;background:var(--bar);display:flex;align-items:center;gap:8px;padding:6px 12px;flex-wrap:wrap;box-shadow:0 2px 6px rgba(0,0,0,.45)}
+.top h1{font-size:18px;margin:0;flex:1 1 auto;white-space:nowrap}
+.top .btns{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{min-height:40px;min-width:40px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,255,255,.28);background:#1d3d30;color:#fff;font:inherit;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;gap:4px}
+.btn.on{background:#2e7d5b;border-color:#8fd3b0}
+.btn.pri{background:var(--gold);color:#222;border-color:var(--gold);font-weight:700}
+.btn.warn{background:#8b2b2b}
+.btn:disabled{opacity:.38;cursor:default}
+select.btn{padding:0 6px}
+main{width:100%;display:flex;justify-content:center}
+.view{width:100%;max-width:1400px;padding:10px 12px 24px}
+.hidden{display:none!important}
+.sheet{background:#fbfdfb;color:#1b1b1b;border-radius:12px;padding:16px 18px;max-width:1100px;margin:0 auto 14px;line-height:1.5}
+.sheet h2{margin:.2em 0 .4em;color:#0b3d2a}.sheet h3{margin:1em 0 .3em;color:#0b3d2a}
+.sheet table{border-collapse:collapse;margin:.4em 0}.sheet td,.sheet th{border:1px solid #ccd;padding:4px 8px;text-align:left}
+.sheet code{background:#eef3ef;padding:1px 4px;border-radius:4px}
+.calc{border:1px solid #cfe0d5;border-radius:10px;padding:10px 12px;margin:10px 0;background:#f3f9f5;overflow-x:auto}
+.calc label{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0}
+.calc input[type=range]{flex:1 1 160px;min-width:120px;height:32px}
+.big{font-size:20px;font-weight:700;color:#0b5a35}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:13px;word-break:break-word}
+/* cards */
+.card{width:var(--cw);height:calc(var(--cw)*1.4);border-radius:8px;background:#fff;position:relative;flex:0 0 auto;
+  box-shadow:0 1px 3px rgba(0,0,0,.45);color:var(--blk);font-weight:700;user-select:none;transition:transform .15s,box-shadow .15s;border:1px solid #bbb}
+.card.red{color:var(--red)}
+.card .tl{position:absolute;top:3px;left:4px;font-size:calc(var(--cw)*.27);line-height:1.02;text-align:center}
+.card .ctr{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:calc(var(--cw)*.5);padding-top:calc(var(--cw)*.2)}
+.card.back{background:repeating-linear-gradient(45deg,#1e3a8a 0 5px,#2b4ea8 5px 10px);border:3px solid #fff}
+.card.jk{color:#6a1b9a}
+.card.wild{box-shadow:0 0 0 3px var(--gold),0 1px 3px rgba(0,0,0,.45)}
+.card .wb{position:absolute;right:3px;bottom:3px;font-size:calc(var(--cw)*.2);background:var(--gold);color:#222;border-radius:4px;padding:0 3px}
+.card.sel{transform:translateY(-12px);box-shadow:0 0 0 3px #4fc3f7,0 4px 8px rgba(0,0,0,.5)}
+.card.new{outline:3px dashed #4fc3f7;outline-offset:-3px}
+.card.sm{--cw:30px}
+.card.tap{cursor:pointer}
+.card.glow{box-shadow:0 0 0 3px #4fc3f7,0 0 14px #4fc3f7}
+/* table */
+.tablewrap{display:grid;grid-template-columns:1fr 250px;gap:12px}
+.opps{display:flex;justify-content:space-around;gap:8px;flex-wrap:wrap}
+.opp{background:rgba(0,0,0,.22);border-radius:10px;padding:6px 10px;min-width:150px;text-align:center}
+.opp .nm{font-weight:700}.opp.turn{box-shadow:0 0 0 2px var(--gold)}
+.opp .mini{display:flex;justify-content:center;margin:4px 0}
+.opp .mini .card{--cw:26px;margin-left:-16px}.opp .mini .card:first-child{margin-left:0}
+.center{display:flex;justify-content:center;align-items:center;gap:22px;margin:14px 0;flex-wrap:wrap}
+.pile{text-align:center;font-size:13px}
+.pile .lbl{margin-top:4px;opacity:.9}
+.cut{transform:rotate(90deg);margin:0 10px}
+.info{background:rgba(0,0,0,.25);padding:8px 12px;border-radius:10px;font-size:14px;max-width:260px}
+.hand{display:flex;flex-wrap:wrap;gap:10px 14px;justify-content:center;padding:18px 4px 6px;min-height:calc(var(--cw)*1.4 + 40px)}
+.grp{background:rgba(255,255,255,.08);border-radius:10px;padding:4px 6px 6px;display:flex;flex-direction:column;align-items:flex-start}
+.grp .gl{font-size:12px;font-weight:700;padding:1px 6px;border-radius:6px;margin-bottom:4px;background:#555}
+.gl.pure{background:#2e7d32}.gl.seq{background:#00838f}.gl.set{background:#1565c0}.gl.invalid{background:#a33}
+.grp .cards{display:flex}
+.grp .cards .card{margin-left:calc(var(--cw)*-.42)}.grp .cards .card:first-child{margin-left:0}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:8px 0}
+.status{text-align:center;background:rgba(0,0,0,.3);border-radius:10px;padding:10px;font-size:15px;min-height:42px;margin-top:6px}
+.side{background:rgba(0,0,0,.22);border-radius:10px;padding:10px;font-size:14px;align-self:start}
+.side table{width:100%;border-collapse:collapse}.side td,.side th{padding:3px 4px;border-bottom:1px solid rgba(255,255,255,.15);text-align:right}
+.side td:first-child,.side th:first-child{text-align:left}
+.log{font-size:13px;opacity:.9;max-height:180px;overflow:auto;margin-top:8px}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;display:flex;align-items:center;justify-content:center;padding:12px}
+.modal .box{background:#fbfdfb;color:#1b1b1b;border-radius:12px;padding:16px;max-width:760px;width:100%;max-height:90vh;overflow:auto}
+.modal h2{margin-top:0;color:#0b3d2a}
+.modal .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px}
+.modal .btn{background:#0f5132}
+.modal .btn.pri{background:var(--gold);color:#222}
+.res{border-top:1px solid #dde;padding:6px 0}
+.res .hcards{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.res .mg{display:flex;align-items:center;gap:2px;background:#eef3ef;border-radius:6px;padding:2px 4px}
+.res .mg .t{font-size:11px;margin-right:3px;color:#335}
+@media (max-width:900px){.tablewrap{grid-template-columns:1fr}}
+@media (max-width:600px){
+  :root{--cw:44px}
+  .top{padding:4px 8px}.top h1{font-size:16px}
+  .btn{font-size:13px;padding:0 9px}
+  .view{padding:8px 6px 20px}
+  .opp{min-width:0;flex:1 1 30%;padding:4px 6px;font-size:13px}
+  .hand{gap:8px 8px;padding-top:16px}
+  .grp{padding:3px 4px 4px}
+  .center{gap:12px;margin:8px 0}
+  .info{font-size:13px}
+  .sheet{padding:12px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>♠ 13-Card Rummy</h1>
+  <div class="btns">
+    <button class="btn pri" id="bNew">New</button>
+    <button class="btn on" id="tPlay">Play</button>
+    <button class="btn" id="tRules">Rules</button>
+    <button class="btn" id="tOdds">Odds</button>
+    <select class="btn" id="selDiff" title="Difficulty"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select>
+    <button class="btn" id="bFull">⛶ Full screen</button>
+    <a class="btn" href="index.html">← Games</a>
+  </div>
+</header>
+<main>
+<section class="view" id="vPlay">
+  <div class="tablewrap">
+    <div>
+      <div class="opps" id="opps"></div>
+      <div class="center" id="center"></div>
+      <div class="hand" id="hand"></div>
+      <div class="actions">
+        <button class="btn" id="aSort">Sort by suit</button>
+        <button class="btn" id="aGroup">Group selected</button>
+        <button class="btn pri" id="aDiscard">Discard</button>
+        <button class="btn pri" id="aDeclare">Declare</button>
+        <button class="btn warn" id="aDrop">Drop</button>
+      </div>
+      <div class="status" id="status">Loading…</div>
+    </div>
+    <aside class="side" id="side"></aside>
+  </div>
+</section>
+<section class="view hidden" id="vRules"><div class="sheet" id="rulesBox"></div></section>
+<section class="view hidden" id="vOdds"><div class="sheet" id="oddsBox"></div></section>
+</main>
+<div class="modal hidden" id="modal"><div class="box" id="mbox"></div></div>
+<script>
+"use strict";
+const APP_VERSION = "1.0.0";
+const SKEY = "cg_rummy13_v1", STKEY = "cg_rummy13_stats";
+const SUITS = ["♠","♥","♦","♣"];
+const RN = ["JK","A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+const NAMES = ["You","Arun","Meena","Ravi"];
+const TOTAL_DEALS = 5, MAX_PTS = 80, WRONG_PEN = 80, FIRST_DROP = 20, MID_DROP = 40, TURN_CAP = 600;
+/* ---------- cards: ids 0..103 = two 52-card decks, 104/105 = printed jokers ---------- */
+const CARDS = [];
+for (let i = 0; i < 106; i++) {
+  if (i >= 104) CARDS.push({id:i, r:0, s:4});
+  else { const x = i % 52; CARDS.push({id:i, r:x % 13 + 1, s:(x / 13) | 0}); }
+}
+const isJk = (id, w) => { const r = CARDS[id].r; return r === 0 || r === w; };
+function pts(id, w) { if (isJk(id, w)) return 0; const r = CARDS[id].r; return (r === 1 || r >= 10) ? 10 : r; }
+function cname(id) { const c = CARDS[id]; return c.r === 0 ? "Joker" : RN[c.r] + SUITS[c.s]; }
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function consecutive(vals) { const v = vals.slice().sort((a, b) => a - b); for (let i = 1; i < v.length; i++) if (v[i] !== v[i - 1] + 1) return false; return true; }
+
+/* ---------- pure rules ---------- */
+// classify a group of card ids given wild rank w: "pure" | "seq" | "set" | "invalid"
+function classify(ids, w) {
+  const n = ids.length; if (n < 3) return "invalid";
+  const cs = ids.map(i => CARDS[i]);
+  if (cs.every(c => c.r > 0 && c.s === cs[0].s)) {           // natural run (wild-rank cards may sit in natural place)
+    const rs = cs.map(c => c.r);
+    if (new Set(rs).size === n && (consecutive(rs) || consecutive(rs.map(r => r === 1 ? 14 : r)))) return "pure";
+  }
+  const nat = cs.filter(c => !(c.r === 0 || c.r === w)); const j = n - nat.length;
+  if (nat.length === 0) return "seq";                          // a group made only of jokers counts as an (impure) sequence
+  if (n <= 13 && nat.every(c => c.s === nat[0].s)) {
+    const rs = nat.map(c => c.r);
+    if (new Set(rs).size === rs.length) {
+      for (const hi of [false, true]) {
+        const v = rs.map(r => (hi && r === 1) ? 14 : r);
+        if (Math.max(...v) - Math.min(...v) + 1 <= n && j > 0) return "seq";
+      }
+    }
+  }
+  if (n <= 4 && nat.every(c => c.r === nat[0].r) && new Set(nat.map(c => c.s)).size === nat.length) return "set";
+  return "invalid";
+}
+// declaration check: groups = arrays of ids covering exactly 13 cards
+function validateDeclaration(groups, w) {
+  const gs = groups.filter(g => g.length);
+  const total = gs.reduce((a, g) => a + g.length, 0);
+  const labels = gs.map(g => classify(g, w));
+  if (total !== 13) return {ok:false, labels, reason:"Hand must have exactly 13 cards after the finish card."};
+  const bad = labels.filter(l => l === "invalid").length;
+  const pure = labels.filter(l => l === "pure").length;
+  const seqs = labels.filter(l => l === "pure" || l === "seq").length;
+  if (pure < 1) return {ok:false, labels, reason:"No pure sequence (first life)."};
+  if (seqs < 2) return {ok:false, labels, reason:"Need at least two sequences (second life missing)."};
+  if (bad) return {ok:false, labels, reason:bad + " group(s) are not valid sets or sequences."};
+  return {ok:true, labels, reason:"Valid declaration."};
+}
+// can this subset still become part of a meld (pruning for the search)
+function compat(ids, w) {
+  const nat = []; for (const i of ids) if (!isJk(i, w)) nat.push(CARDS[i]);
+  if (nat.length <= 1) return true;
+  const r0 = nat[0].r, s0 = nat[0].s;
+  if (nat.every(c => c.r === r0)) return ids.length <= 4 && new Set(nat.map(c => c.s)).size === nat.length;
+  if (!nat.every(c => c.s === s0)) return false;
+  const rs = nat.map(c => c.r); if (new Set(rs).size !== rs.length) return false;
+  const span = v => Math.max(...v) - Math.min(...v) + 1;
+  return span(rs) <= 6 || span(rs.map(r => r === 1 ? 14 : r)) <= 6;
+}
+/* DP over subsets: g[mask*6+k] = min cost of leaving cards unmatched in mask while the melds used reach
+   life state k = pure*3 + min(seqCount,2). Melds of 3..6 cards suffice (longer runs split). */
+function analyze(ids, w, cost, partial) {
+  const n = ids.length, N = 1 << n, S = 6;
+  const byLow = Array.from({length:n}, () => []); const pureList = [];
+  const pick = [];
+  (function rec(start, mask) {
+    if (pick.length >= 3) {
+      const t = classify(pick.map(i => ids[i]), w);
+      if (t !== "invalid") { const m = {mask, p:t === "pure" ? 1 : 0, q:t === "set" ? 0 : 1, c:0}; byLow[pick[0]].push(m); if (m.p) pureList.push(mask); }
+    }
+    if (pick.length >= 6) return;
+    for (let i = start; i < n; i++) { pick.push(i); if (compat(pick.map(k => ids[k]), w)) rec(i + 1, mask | (1 << i)); pick.pop(); }
+  })(0, 0);
+  if (partial) for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) { const c = partial(ids[i], ids[j]); if (c != null) byLow[i].push({mask:(1 << i) | (1 << j), p:0, q:0, c}); }
+  const g = new Float64Array(N * S).fill(Infinity); g[0] = 0;
+  for (let mask = 1; mask < N; mask++) {
+    const low = mask & -mask, i = 31 - Math.clz32(low), base = mask * S, rb = (mask ^ low) * S, ci = cost[i];
+    for (let k = 0; k < S; k++) { const v = g[rb + k] + ci; if (v < g[base + k]) g[base + k] = v; }
+    const L = byLow[i];
+    for (let t = 0; t < L.length; t++) {
+      const m = L[t]; if ((m.mask & mask) !== m.mask) continue;
+      const r2 = (mask ^ m.mask) * S;
+      for (let k = 0; k < S; k++) {
+        const v = g[r2 + k]; if (v === Infinity) continue;
+        const nk = (((k / 3) | 0) | m.p) * 3 + Math.min(2, k % 3 + m.q), vv = v + m.c;
+        if (vv < g[base + nk]) g[base + nk] = vv;
+      }
+    }
+  }
+  return {g, n, ids, pureList, byLow, cost};
+}
+const scoreCost = (ids, w) => ids.map(id => pts(id, w) * 1000 + 1);
+const countCost = (ids, w) => ids.map(id => isJk(id, w) ? 0 : 1);
+const evalCost = (ids, w) => ids.map(id => isJk(id, w) ? 0 : pts(id, w) + 0.5);
+// points a hand (given mask of analyzer) scores under rules: full life -> unmatched; pure only -> all but pure; none -> all; cap 80
+function scoreAn(an, mask, w) {
+  let T = 0; for (let i = 0; i < an.n; i++) if (mask >> i & 1) T += pts(an.ids[i], w);
+  let s = T; const v = an.g[mask * 6 + 5]; if (v < Infinity) s = Math.min(s, Math.floor(v / 1000));
+  for (const pm of an.pureList) if ((pm & mask) === pm) { let pp = 0; for (let i = 0; i < an.n; i++) if (pm >> i & 1) pp += pts(an.ids[i], w); s = Math.min(s, T - pp); }
+  return Math.min(MAX_PTS, s);
+}
+function handScore(ids, w) { const an = analyze(ids, w, scoreCost(ids, w)); return scoreAn(an, (1 << ids.length) - 1, w); }
+function canDeclare14(ids, w) { // returns index of finish card or -1
+  const an = analyze(ids, w, scoreCost(ids, w)), full = (1 << ids.length) - 1;
+  for (let i = 0; i < ids.length; i++) if (an.g[(full ^ (1 << i)) * 6 + 5] === 0) return i;
+  return -1;
+}
+// reconstruct a best arrangement (groups + loose cards) for display
+function arrange(ids, w) {
+  const an = analyze(ids, w, scoreCost(ids, w)); const S = 6, g = an.g;
+  let mask = (1 << ids.length) - 1;
+  let k = 0, best = Infinity;
+  if (g[mask * S + 5] < Infinity) k = 5; else for (let t = 0; t < S; t++) if (g[mask * S + t] < best) { best = g[mask * S + t]; k = t; }
+  const groups = [], loose = [];
+  while (mask) {
+    const low = mask & -mask, i = 31 - Math.clz32(low), cur = g[mask * S + k];
+    if (g[(mask ^ low) * S + k] + an.cost[i] === cur) { loose.push(ids[i]); mask ^= low; continue; }
+    let done = false;
+    for (const m of an.byLow[i]) {
+      if ((m.mask & mask) !== m.mask) continue;
+      const r2 = mask ^ m.mask;
+      for (let kk = 0; kk < S && !done; kk++) {
+        const nk = (((kk / 3) | 0) | m.p) * 3 + Math.min(2, kk % 3 + m.q);
+        if (nk === k && g[r2 * S + kk] + m.c === cur) {
+          const grp = []; for (let b = 0; b < ids.length; b++) if (m.mask >> b & 1) grp.push(ids[b]);
+          groups.push(grp); mask = r2; k = kk; done = true;
+        }
+      }
+      if (done) break;
+    }
+    if (!done) { loose.push(ids[i]); mask ^= low; }
+  }
+  return {groups, loose};
+}
+const PEN_EVAL = [20, 16, 14, 99, 6, 0], PEN_COUNT = [6, 5, 5, 99, 2, 0];
+function minPen(an, mask, pen) { let b = Infinity; for (let k = 0; k < 6; k++) { const v = an.g[mask * 6 + k] + pen[k]; if (v < b) b = v; } return b; }
+// partial melds (2 cards one step from a meld) for AI evaluation; live(s,r) gives unseen natural copies (Hard) or null
+function makePartial(w, live) {
+  return (a, b) => {
+    if (isJk(a, w) || isJk(b, w)) return null;
+    const A = CARDS[a], B = CARDS[b]; const need = [];
+    if (A.s === B.s && A.r !== B.r) {
+      for (const hi of [false, true]) {
+        const va = (hi && A.r === 1) ? 14 : A.r, vb = (hi && B.r === 1) ? 14 : B.r, lo = Math.min(va, vb), d = Math.abs(va - vb);
+        if (d === 1) { need.push(lo - 1, lo + 2); } else if (d === 2) need.push(lo + 1);
+      }
+      if (!need.length) return null;
+    } else if (A.r === B.r && A.s !== B.s) {
+      for (let s = 0; s < 4; s++) if (s !== A.s && s !== B.s) need.push(-1 - s); // encoded suits for set
+    } else return null;
+    const base = 0.45 * (pts(a, w) + pts(b, w)) + 1;
+    if (live) {
+      let outs = 0;
+      for (const x of need) {
+        if (x < 0) outs += live(-1 - x, A.r);
+        else if (x >= 1 && x <= 14) outs += live(A.s, x === 14 ? 1 : x);
+      }
+      if (outs === 0) return null;
+      if (outs <= 1) return base + 0.25 * (pts(a, w) + pts(b, w));
+    }
+    return base;
+  };
+}
+function lnC(n, k) { if (k < 0 || k > n) return -Infinity; let s = 0; for (let i = 1; i <= k; i++) s += Math.log(n - k + i) - Math.log(i); return s; }
+function hyperAtLeastOne(S, k, n) { if (k <= 0) return 0; if (n > S) n = S; let p = 1; for (let i = 0; i < n; i++) p *= (S - k - i) / (S - i); return 1 - Math.max(0, p); }
+function hyperExact(S, k, n, x) { return Math.exp(lnC(k, x) + lnC(S - k, n - x) - lnC(S, n)); }
+
+/* ---------- state ---------- */
+let S = null; const ui = {sel:new Set(), tab:"play", newId:null};
+let FAST = false, aiTimer = null;
+function loadStats() { try { return JSON.parse(localStorage.getItem(STKEY)) || null; } catch (e) { return null; } }
+let stats = loadStats() || {played:0, won:0, dealsWon:0, dealsPlayed:0, best:null, streak:0, bestStreak:0};
+function saveStats() { try { localStorage.setItem(STKEY, JSON.stringify(stats)); } catch (e) {} }
+function save() { try { localStorage.setItem(SKEY, JSON.stringify(S)); } catch (e) {} }
+function clearSave() { try { localStorage.removeItem(SKEY); } catch (e) {} }
+function handOf(p) { return p === 0 ? S.groups.flat() : S.hands[p]; }
+
+function newGame(opts) {
+  opts = opts || {};
+  const n = Math.max(2, Math.min(4, opts.players || 2));
+  S = {v:1, n, diff:opts.diff || document.getElementById("selDiff").value || "normal", deal:0, totals:new Array(n).fill(0), history:[], over:false};
+  document.getElementById("selDiff").value = S.diff;
+  startDeal();
+}
+function startDeal() {
+  S.deal++;
+  const n = S.n;
+  const deck = shuffle([...Array(106).keys()]);
+  S.hands = []; for (let p = 0; p < n; p++) S.hands.push(deck.splice(0, 13));
+  S.cut = deck.pop();
+  S.wild = CARDS[S.cut].r === 0 ? 1 : CARDS[S.cut].r;     // printed joker cut -> Aces are wild
+  S.discard = [deck.pop()]; S.stock = deck;
+  S.groups = sortGroups(S.hands[0], S.wild); S.hands[0] = [];
+  S.turn = (S.deal - 1) % n; S.phase = "draw"; S.drawn = new Array(n).fill(0); S.dropped = new Array(n).fill(null);
+  S.picked = Array.from({length:n}, () => []); S.turns = 0; S.lastDrawn = null;
+  S.log = ["Deal " + S.deal + " — wild joker rank: " + RN[S.wild] + (CARDS[S.cut].r === 0 ? " (printed joker cut, so Aces are wild)" : "")];
+  S.result = null; ui.sel.clear(); ui.newId = null;
+  save(); render(); pump();
+}
+function sortGroups(ids, w) {
+  const by = [[], [], [], []], jk = [];
+  for (const id of ids) { if (CARDS[id].r === 0 || CARDS[id].r === w) jk.push(id); else by[CARDS[id].s].push(id); }
+  const order = r => r === 1 ? 14 : r;
+  by.forEach(g => g.sort((a, b) => order(CARDS[a].r) - order(CARDS[b].r)));
+  return [...by.filter(g => g.length), ...(jk.length ? [jk] : [])];
+}
+function addLog(t) { S.log.push(t); if (S.log.length > 60) S.log.shift(); }
+function syncHuman() { S.groups = S.groups.filter(g => g.length); }
+function drawCard(p, src) {
+  let id;
+  if (src === "discard") { id = S.discard.pop(); S.picked[p].push(id); }
+  else {
+    if (!S.stock.length) { const top = S.discard.pop(); S.stock = shuffle(S.discard); S.discard = [top]; addLog("Stock reshuffled from discard pile."); }
+    id = S.stock.pop();
+  }
+  if (p === 0) { S.groups.push([id]); ui.newId = id; } else S.hands[p].push(id);
+  S.drawn[p]++; S.phase = "discard"; S.lastDrawn = id;
+  addLog(NAMES[p] + (src === "discard" ? " picked " + cname(id) + " from the discard pile" : " drew from the stock"));
+  return id;
+}
+function removeCard(p, id) {
+  if (p === 0) { for (const g of S.groups) { const i = g.indexOf(id); if (i >= 0) g.splice(i, 1); } syncHuman(); }
+  else S.hands[p].splice(S.hands[p].indexOf(id), 1);
+  S.picked[p] = S.picked[p].filter(x => x !== id);
+}
+function discardCard(p, id) {
+  removeCard(p, id); S.discard.push(id); addLog(NAMES[p] + " discarded " + cname(id));
+  if (p === 0) { ui.sel.clear(); ui.newId = null; }
+  S.turns++; S.phase = "draw";
+  if (S.turns > TURN_CAP) { endDeal(-1, "stalemate"); return; }
+  nextTurn();
+}
+function activeCount() { return S.dropped.filter(x => x === null).length; }
+function nextTurn() { let p = S.turn; do { p = (p + 1) % S.n; } while (S.dropped[p] !== null); S.turn = p; S.phase = "draw"; }
+function dropPlayer(p) {
+  S.dropped[p] = S.drawn[p] === 0 ? FIRST_DROP : MID_DROP;
+  addLog(NAMES[p] + " dropped (" + S.dropped[p] + " pts)");
+  if (activeCount() === 1) { endDeal(S.dropped.findIndex(x => x === null), "last"); return; }
+  if (S.turn === p) nextTurn();
+}
+function declare(p, finishId) {
+  removeCard(p, finishId); S.discard.push(finishId);
+  let res;
+  if (p === 0) res = validateDeclaration(S.groups, S.wild);
+  else res = {ok:true};
+  addLog(NAMES[p] + " declared" + (res.ok ? "" : " — WRONG: " + res.reason));
+  endDeal(p, res.ok ? "declare" : "wrong", res);
+}
+function endDeal(who, type, res) {
+  const n = S.n, w = S.wild, sc = new Array(n).fill(0), arr = [];
+  for (let p = 0; p < n; p++) {
+    const ids = handOf(p);
+    arr.push(ids.length ? arrange(ids, w) : {groups:[], loose:[]});
+    if (S.dropped[p] !== null) { sc[p] = S.dropped[p]; continue; }
+    if (type === "declare" || type === "last") sc[p] = p === who ? 0 : handScore(ids, w);
+    else if (type === "wrong") sc[p] = p === who ? WRONG_PEN : 0;
+    else sc[p] = handScore(ids, w); // stalemate
+  }
+  for (let p = 0; p < n; p++) S.totals[p] += sc[p];
+  S.history.push(sc.slice());
+  S.phase = "dealover";
+  S.result = {who, type, reason:res ? res.reason : "", scores:sc, arr, humanGroups:S.groups.map(g => g.slice())};
+  stats.dealsPlayed++; if ((type === "declare" || type === "last") && who === 0) stats.dealsWon++;
+  if (S.deal >= TOTAL_DEALS) finishGame();
+  saveStats(); save(); render(); showDealModal();
+}
+function finishGame() {
+  S.over = true; const mn = Math.min(...S.totals);
+  stats.played++;
+  if (S.totals[0] === mn) { stats.won++; stats.streak++; stats.bestStreak = Math.max(stats.bestStreak, stats.streak); } else stats.streak = 0;
+  if (stats.best === null || S.totals[0] < stats.best) stats.best = S.totals[0];
+}
+
+/* ---------- AI ---------- */
+function liveFn(p) {
+  const seen = new Map(); const w = S.wild;
+  const add = id => { const c = CARDS[id]; if (c.r === 0) return; const k = c.s * 16 + c.r; seen.set(k, (seen.get(k) || 0) + 1); };
+  handOf(p).forEach(add); S.discard.forEach(add); add(S.cut);
+  for (let q = 0; q < S.n; q++) if (q !== p) S.picked[q].forEach(add);
+  return (s, r) => (r === w) ? 0 : Math.max(0, 2 - (seen.get(s * 16 + r) || 0));
+}
+function partialFor(p) { return makePartial(S.wild, S.diff === "hard" ? liveFn(p) : null); }
+function aiDraw(p) {
+  const w = S.wild, hand = S.hands[p], top = S.discard[S.discard.length - 1];
+  let take = false;
+  if (top != null && !isJk(top, w)) {
+    if (S.diff === "easy" && Math.random() < 0.5) take = false;
+    else {
+      const ids = [...hand, top], an = analyze(ids, w, evalCost(ids, w), partialFor(p)), full = (1 << ids.length) - 1, ti = ids.length - 1;
+      const now = minPen(an, full ^ (1 << ti), PEN_EVAL); let best = Infinity;
+      for (let i = 0; i < ti; i++) if (!isJk(ids[i], w)) best = Math.min(best, minPen(an, full ^ (1 << i), PEN_EVAL));
+      take = best < now - (S.diff === "hard" ? 2 : S.diff === "normal" ? 3 : 5);
+    }
+  }
+  drawCard(p, take ? "discard" : "stock");
+}
+function aiDiscard(p) {
+  const w = S.wild, hand = S.hands[p];
+  const fi = canDeclare14(hand, w);
+  if (fi >= 0) { declare(p, hand[fi]); return; }
+  let choice = -1;
+  const nonJ = hand.map((id, i) => i).filter(i => !isJk(hand[i], w));
+  if (S.diff === "easy" && Math.random() < 0.55) {
+    choice = nonJ[Math.floor(Math.random() * nonJ.length)];
+  } else {
+    const an = analyze(hand, w, evalCost(hand, w), partialFor(p)), full = (1 << hand.length) - 1;
+    let nxt = p; do { nxt = (nxt + 1) % S.n; } while (S.dropped[nxt] !== null && nxt !== p);
+    const feeds = S.diff === "hard" ? S.picked[nxt].map(id => CARDS[id]) : [];
+    let best = Infinity;
+    for (let i = 0; i < hand.length; i++) {
+      const id = hand[i], c = CARDS[id];
+      let v = minPen(an, full ^ (1 << i), PEN_EVAL) - 0.01 * pts(id, w);
+      if (isJk(id, w)) v += 100;
+      if (id === S.lastDrawn && S.picked[p].includes(id)) v += 50;
+      for (const f of feeds) if (f.r > 0 && (f.r === c.r || (f.s === c.s && Math.abs(f.r - c.r) <= 2))) v += 4;
+      if (v < best) { best = v; choice = i; }
+    }
+  }
+  if (choice < 0) choice = 0;
+  discardCard(p, hand[choice]);
+}
+function aiStep() {
+  if (!S || (S.phase !== "draw" && S.phase !== "discard")) return false;
+  const p = S.turn; if (p === 0 && S.dropped[0] === null) return false;
+  if (S.phase === "draw") aiDraw(p); else aiDiscard(p);
+  return true;
+}
+function delay() { return FAST ? 0 : (S.dropped[0] !== null ? 220 : 600); }
+function pump() {
+  clearTimeout(aiTimer);
+  if (!S || (S.phase !== "draw" && S.phase !== "discard")) return;
+  if (S.turn === 0 && S.dropped[0] === null) return;
+  aiTimer = setTimeout(() => { if (aiStep()) { save(); render(); } pump(); }, delay());
+}
+
+/* ---------- human actions ---------- */
+function myTurn() { return S && S.turn === 0 && S.dropped[0] === null && (S.phase === "draw" || S.phase === "discard"); }
+function humanDraw(src) {
+  if (!myTurn() || S.phase !== "draw") return false;
+  if (src === "discard") { const top = S.discard[S.discard.length - 1]; if (top == null) return false; if (isJk(top, S.wild)) { toast("Jokers cannot be picked from the discard pile."); return false; } }
+  drawCard(0, src); save(); render(); return true;
+}
+function humanDiscard(id) {
+  if (!myTurn() || S.phase !== "discard") return false;
+  if (id == null) { if (ui.sel.size !== 1) return false; id = [...ui.sel][0]; }
+  discardCard(0, id); save(); render(); pump(); return true;
+}
+function humanDeclare(id) {
+  if (!myTurn() || S.phase !== "discard") return false;
+  if (id == null) { if (ui.sel.size !== 1) return false; id = [...ui.sel][0]; }
+  declare(0, id); return true;
+}
+function humanDrop() { if (!myTurn() || S.phase !== "draw") return false; dropPlayer(0); save(); render(); pump(); return true; }
+function groupSelected() {
+  if (!ui.sel.size) return;
+  const ids = [...ui.sel];
+  for (const g of S.groups) for (const id of ids) { const i = g.indexOf(id); if (i >= 0) g.splice(i, 1); }
+  syncHuman(); S.groups.push(ids); ui.sel.clear(); save(); render();
+}
+function sortHand() { S.groups = sortGroups(S.groups.flat(), S.wild); ui.sel.clear(); save(); render(); }
+
+/* ---------- rendering ---------- */
+const $ = id => document.getElementById(id);
+function cardHTML(id, o) {
+  o = o || {}; const c = CARDS[id], w = S ? S.wild : 0;
+  const cls = ["card"]; if (o.sm) cls.push("sm"); if (o.tap) cls.push("tap"); if (ui.sel.has(id) && o.hand) cls.push("sel"); if (o.hand && id === ui.newId) cls.push("new");
+  if (c.r === 0) return `<div class="${cls.join(" ")} jk" data-id="${id}"><span class="tl">J<br>★</span><span class="ctr">★</span></div>`;
+  if (c.s === 1 || c.s === 2) cls.push("red");
+  if (c.r === w && !o.noWild) cls.push("wild");
+  return `<div class="${cls.join(" ")}" data-id="${id}"><span class="tl">${RN[c.r]}<br>${SUITS[c.s]}</span><span class="ctr">${SUITS[c.s]}</span>${c.r === w && !o.noWild && !o.sm ? '<span class="wb">W</span>' : ""}</div>`;
+}
+const backHTML = (cls) => `<div class="card back ${cls || ""}"></div>`;
+const LBL = {pure:"Pure seq", seq:"Seq", set:"Set", invalid:"Invalid"};
+function statusText() {
+  if (!S) return "";
+  if (S.phase === "dealover") return S.over ? "Game over — tap New for another game." : "Deal finished — tap Next deal.";
+  if (S.dropped[0] !== null) return "You dropped this deal — computers are finishing…";
+  if (S.turn !== 0) return NAMES[S.turn] + " is thinking…";
+  if (S.phase === "draw") return "Your turn — tap the stock or the discard pile to draw.";
+  return "Select one card, then Discard (or Declare if your groups are complete). Tap cards + Group to arrange.";
+}
+let toastTimer = null;
+function toast(t) { const el = $("status"); el.textContent = t; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.textContent = statusText(); }, 2500); }
+function render() {
+  if (!S) return;
+  const w = S.wild;
+  // opponents
+  let h = "";
+  for (let p = 1; p < S.n; p++) {
+    const cnt = S.hands[p].length, mini = Math.min(cnt, 7);
+    h += `<div class="opp ${S.turn === p && S.phase !== "dealover" ? "turn" : ""}"><div class="nm">${NAMES[p]}</div><div class="mini">${backHTML().repeat(mini)}</div>
+      <div>${S.dropped[p] !== null ? "Dropped" : cnt + " cards"} · ${S.totals[p]} pts</div></div>`;
+  }
+  $("opps").innerHTML = h;
+  const top = S.discard[S.discard.length - 1];
+  const canDraw = myTurn() && S.phase === "draw";
+  $("center").innerHTML = `
+    <div class="pile"><div style="display:flex;align-items:center"><div id="stock" class="card back tap ${canDraw ? "glow" : ""}"></div><div class="cut">${cardHTML(S.cut, {noWild:true})}</div></div>
+      <div class="lbl">Stock ${S.stock.length} · cut card</div></div>
+    <div class="pile"><div id="discardTop">${top != null ? cardHTML(top, {tap:true}) : '<div class="card" style="opacity:.25"></div>'}</div><div class="lbl">Discard</div></div>
+    <div class="info">Deal <b>${S.deal}/${TOTAL_DEALS}</b> · ${S.diff}<br>Wild joker: <b>${RN[w]}</b> (all ${RN[w]}s + printed ★)<br>Your total: <b>${S.totals[0]}</b> pts</div>`;
+  if (canDraw && top != null && !isJk(top, w)) { const el = $("discardTop").firstElementChild; if (el) el.classList.add("glow"); }
+  // hand
+  let hh = "";
+  for (let gi = 0; gi < S.groups.length; gi++) {
+    const g = S.groups[gi]; const lab = g.length >= 3 ? classify(g, w) : "invalid";
+    hh += `<div class="grp"><span class="gl ${lab}">${g.length >= 3 ? LBL[lab] : (g.length === 1 ? "Single" : "Pair")} · ${g.reduce((a, id) => a + pts(id, w), 0)}</span><div class="cards">${g.map(id => cardHTML(id, {hand:true, tap:true})).join("")}</div></div>`;
+  }
+  $("hand").innerHTML = hh;
+  const mt = myTurn();
+  $("aDiscard").disabled = !(mt && S.phase === "discard" && ui.sel.size === 1);
+  $("aDeclare").disabled = !(mt && S.phase === "discard" && ui.sel.size === 1);
+  $("aDrop").disabled = !(mt && S.phase === "draw");
+  $("aDrop").textContent = "Drop (" + (S.drawn[0] === 0 ? FIRST_DROP : MID_DROP) + ")";
+  $("aGroup").disabled = ui.sel.size === 0 || S.phase === "dealover";
+  $("aSort").disabled = S.phase === "dealover";
+  $("status").textContent = statusText();
+  // side
+  let sd = `<b>Scores (lowest wins after ${TOTAL_DEALS} deals)</b><table><tr><th>Deal</th>${NAMES.slice(0, S.n).map(x => `<th>${x}</th>`).join("")}</tr>`;
+  S.history.forEach((r, i) => { sd += `<tr><td>${i + 1}</td>${r.map(x => `<td>${x}</td>`).join("")}</tr>`; });
+  sd += `<tr><th>Total</th>${S.totals.map(x => `<th>${x}</th>`).join("")}</tr></table>`;
+  if (S.phase === "dealover") sd += `<div style="margin-top:8px"><button class="btn pri" id="bNext">${S.over ? "New game" : "Next deal"}</button></div>`;
+  sd += `<div class="log">${S.log.slice(-8).reverse().map(x => "• " + x).join("<br>")}</div>`;
+  $("side").innerHTML = sd;
+  if ($("bNext")) $("bNext").onclick = () => S.over ? openNewDialog() : startDeal();
+  if (ui.tab === "odds") renderOdds(); else if (ui.tab === "rules") renderRules();
+}
+function showModal(html, buttons) {
+  $("mbox").innerHTML = html + `<div class="row">${buttons.map((b, i) => `<button class="btn ${b.pri ? "pri" : ""}" data-b="${i}">${b.t}</button>`).join("")}</div>`;
+  $("modal").classList.remove("hidden");
+  $("mbox").querySelectorAll("[data-b]").forEach(el => el.onclick = () => { $("modal").classList.add("hidden"); const f = buttons[+el.dataset.b].f; if (f) f(); });
+}
+function hideModal() { $("modal").classList.add("hidden"); }
+function handBlock(p) {
+  const r = S.result, a = r.arr[p], w = S.wild;
+  if (p === 0 && r.type === "wrong" && r.who === 0) {
+    return r.humanGroups.map(g => `<span class="mg"><span class="t">${g.length >= 3 ? LBL[classify(g, w)] : "Invalid"}</span>${g.map(id => cardHTML(id, {sm:true})).join("")}</span>`).join("");
+  }
+  return a.groups.map(g => `<span class="mg"><span class="t">${LBL[classify(g, w)]}</span>${g.map(id => cardHTML(id, {sm:true})).join("")}</span>`).join("") +
+    (a.loose.length ? `<span class="mg"><span class="t">Unmatched</span>${a.loose.map(id => cardHTML(id, {sm:true})).join("")}</span>` : "");
+}
+function showDealModal() {
+  const r = S.result;
+  let t;
+  if (r.type === "declare") t = r.who === 0 ? "You declared — valid! You score 0." : NAMES[r.who] + " declared and wins the deal.";
+  else if (r.type === "wrong") t = (r.who === 0 ? "Wrong declaration: " : NAMES[r.who] + " made a wrong declaration: ") + r.reason + " (80 points).";
+  else if (r.type === "last") t = NAMES[r.who] + " wins — everyone else dropped.";
+  else t = "Deal stopped (turn limit) — everyone scores their hand.";
+  let h = `<h2>Deal ${S.deal} result</h2><p>${t}</p>`;
+  for (let p = 0; p < S.n; p++) h += `<div class="res"><b>${NAMES[p]}</b> — ${r.scores[p]} pts (total ${S.totals[p]})${S.dropped[p] !== null ? " · dropped" : ""}<div class="hcards">${handBlock(p)}</div></div>`;
+  if (S.over) {
+    const mn = Math.min(...S.totals), win = S.totals.map((x, i) => x === mn ? NAMES[i] : null).filter(Boolean);
+    h += `<h2 style="margin-top:12px">Game over</h2><p><b>${win.join(" & ")}</b> ${win.length > 1 ? "tie" : "wins"} with ${mn} points.${S.totals[0] === mn ? " Well played!" : ""}</p>`;
+    showModal(h, [{t:"Close"}, {t:"New game", pri:true, f:openNewDialog}]);
+  } else showModal(h, [{t:"Close"}, {t:"Next deal", pri:true, f:startDeal}]);
+}
+function openNewDialog() {
+  showModal(`<h2>New game</h2><p>13-card Indian Rummy · ${TOTAL_DEALS} deals · lowest total wins.</p>
+    <label>Players (including you): <select class="btn" id="nPl" style="background:#0f5132"><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option></select></label><br><br>
+    <label>Difficulty: <select class="btn" id="nDf" style="background:#0f5132"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select></label>`,
+    [{t:"Cancel"}, {t:"Start", pri:true, f:() => {}}]);
+  $("nDf").value = $("selDiff").value;
+  const btn = $("mbox").querySelector('[data-b="1"]');
+  btn.onclick = () => { const pl = +$("nPl").value, df = $("nDf").value; hideModal(); clearSave(); newGame({players:pl, diff:df}); };
+}
+
+/* ---------- Rules ---------- */
+function renderRules() {
+  const st = stats;
+  $("rulesBox").innerHTML = `<h2>How to play — 13-Card Indian Rummy</h2>
+  <p><b>Variant used:</b> 13-card Indian Rummy, 2 decks + 2 printed jokers (106 cards), wild-joker cut card. You vs 1–3 computer players, ${TOTAL_DEALS} deals with running totals — lowest total wins.</p>
+  <h3>Setup</h3><ul><li>Each player gets 13 cards. One card is turned up as the <b>wild-joker cut card</b>: every card of that rank (all suits) is a joker for this deal. If the cut card is a printed joker, Aces are wild. The cut card is out of play.</li>
+  <li>The next card starts the discard pile; the rest is the stock.</li></ul>
+  <h3>Your turn</h3><ol><li>Draw one card — from the stock or the top of the discard pile (jokers cannot be picked from the discard pile).</li>
+  <li>Discard one card (select it, tap <b>Discard</b>).</li></ol>
+  <p>Tap cards to select them, then <b>Group selected</b> to make a group; <b>Sort by suit</b> regroups everything. Each group shows its label (Pure seq / Seq / Set / Invalid) and its points.</p>
+  <h3>Melds</h3><ul><li><b>Pure sequence</b>: 3+ consecutive cards of one suit, no joker used as a substitute (a wild-rank card in its natural place is fine). A-2-3 and Q-K-A are allowed; K-A-2 is not.</li>
+  <li><b>Sequence (impure)</b>: 3+ consecutive cards of one suit with jokers filling gaps. A group made only of jokers also counts as an impure sequence.</li>
+  <li><b>Set</b>: 3 or 4 cards of the same rank, all different suits (jokers may fill in).</li></ul>
+  <h3>Declaring</h3><p>After drawing (14 cards), select your <b>finish card</b> and tap <b>Declare</b>. The remaining 13 cards, exactly as you grouped them, must form: at least <b>2 sequences</b>, at least <b>1 pure</b>, and every other group a valid set or sequence. A <b>wrong declaration costs 80 points</b> and ends the deal (other players score 0).</p>
+  <h3>Scoring (per deal)</h3><table><tr><th>Card</th><th>Points</th></tr><tr><td>A, K, Q, J, 10</td><td>10</td></tr><tr><td>2–9</td><td>face value</td></tr><tr><td>Jokers (printed and wild)</td><td>0</td></tr></table>
+  <ul><li>Winner of the deal scores 0. Others score their unmatched cards if they have a pure sequence + a second sequence; with only a pure sequence everything except that sequence counts; with no pure sequence all cards count. Maximum 80 per deal.</li>
+  <li>Losing hands are auto-arranged in the player's favour (best possible grouping).</li>
+  <li><b>Drop</b>: on your turn before drawing — 20 points if you have not drawn yet this deal (first drop), 40 later (middle drop). The others play on.</li></ul>
+  <h3>Computer players</h3><p>Easy: mostly stock draws and loose discards. Normal: evaluates melds and near-melds. Hard: also tracks the discard pile and dead cards, and avoids feeding the next player.</p>
+  <h3>Your stats</h3><table><tr><td>Games played</td><td>${st.played}</td></tr><tr><td>Games won</td><td>${st.won}</td></tr><tr><td>Deals won / played</td><td>${st.dealsWon} / ${st.dealsPlayed}</td></tr>
+  <tr><td>Best (lowest) game total</td><td>${st.best === null ? "—" : st.best}</td></tr><tr><td>Win streak (best)</td><td>${st.streak} (${st.bestStreak})</td></tr></table>
+  <p style="opacity:.7">Version ${APP_VERSION} · offline, no data leaves this device · game autosaves.</p>`;
+}
+
+/* ---------- Odds ---------- */
+let oddsCache = {key:"", html:""};
+function liveOuts() {
+  if (!S || S.phase === "dealover") return {msg:"No deal in progress."};
+  const hand = handOf(0), w = S.wild;
+  if (S.dropped[0] !== null) return {msg:"You have dropped this deal."};
+  if (hand.length !== 13) return {msg:"You hold 14 cards — discard first, then the live outs update."};
+  // unseen = everything not in your hand, discard pile, cut card, or known picked by opponents
+  const known = new Set([...hand, ...S.discard, S.cut]); for (let q = 1; q < S.n; q++) S.picked[q].forEach(x => known.add(x));
+  const unseen = []; for (let i = 0; i < 106; i++) if (!known.has(i)) unseen.push(i);
+  const an13 = analyze(hand, w, countCost(hand, w)); const d13 = minPen(an13, (1 << 13) - 1, PEN_COUNT);
+  const types = new Map(); for (const id of unseen) { const c = CARDS[id]; const k = (c.r === 0 || c.r === w) ? "J" : c.s * 16 + c.r; if (!types.has(k)) types.set(k, []); types.get(k).push(id); }
+  const outs = []; let k = 0;
+  for (const [key, ids] of types) {
+    const h14 = [...hand, ids[0]], an = analyze(h14, w, countCost(h14, w)), full = (1 << 14) - 1;
+    let best = Infinity; for (let i = 0; i < 14; i++) best = Math.min(best, minPen(an, full ^ (1 << i), PEN_COUNT));
+    if (best < d13) { outs.push({key, id:ids[0], n:ids.length}); k += ids.length; }
+  }
+  return {U:unseen.length, stock:S.stock.length, k, outs, score:handScore(hand, w)};
+}
+function mcPure(trials, cardsN) {
+  let hit = 0, hitJ = 0;
+  const deck = [...Array(106).keys()];
+  for (let t = 0; t < trials; t++) {
+    for (let i = 0; i < cardsN; i++) { const j = i + Math.floor(Math.random() * (106 - i)); const x = deck[i]; deck[i] = deck[j]; deck[j] = x; }
+    const m = [0, 0, 0, 0]; let jk = false;
+    for (let i = 0; i < cardsN; i++) { const c = CARDS[deck[i]]; if (c.r === 0) { jk = true; continue; } m[c.s] |= 1 << c.r; if (c.r === 1) m[c.s] |= 1 << 14; }
+    if (m.some(x => (x & (x >> 1) & (x >> 2)) !== 0)) hit++;
+    if (jk) hitJ++;
+  }
+  return {p:hit / trials, se:Math.sqrt(hit / trials * (1 - hit / trials) / trials), pj:hitJ / trials};
+}
+function pct(x, d) { return (100 * x).toFixed(d === undefined ? 1 : d) + "%"; }
+function renderOdds() {
+  const box = $("oddsBox");
+  if (!box.dataset.built) {
+    box.dataset.built = "1";
+    box.innerHTML = `<h2>Odds & Strategy</h2>
+    <div class="calc"><h3 style="margin-top:0">1. Live outs (your current hand)</h3><div id="liveBox">—</div></div>
+    <div class="calc"><h3 style="margin-top:0">2. Drawing one of your outs</h3>
+      <label>Outs k (cards that help): <input type="range" id="hk" min="1" max="24" value="4"><b id="hkv"></b></label>
+      <label>Draws n: <input type="range" id="hn" min="1" max="15" value="3"><b id="hnv"></b></label>
+      <label>Unseen cards S: <input type="range" id="hs" min="15" max="92" value="60"><b id="hsv"></b></label>
+      <div class="big" id="hres"></div><div class="mono" id="hform"></div></div>
+    <div class="calc"><h3 style="margin-top:0">3. Jokers in your hand (exact)</h3>
+      <p>After the cut card, 105 cards remain with exactly <b>9 jokers</b> (2 printed + the 7 other cards of the wild rank; if a printed joker is cut, 8 Aces + 1 printed).</p>
+      <label>Cards you see n: <input type="range" id="jn" min="1" max="30" value="13"><b id="jnv"></b></label>
+      <div id="jres"></div><div class="mono">P(x jokers) = C(9,x)·C(96,n−x) / C(105,n)</div></div>
+    <div class="calc"><h3 style="margin-top:0">4. Pure sequence in the opening deal (simulation)</h3>
+      <p>Chance that your first <i>n</i> cards already contain a natural 3-card run in one suit (A-2-3 and Q-K-A count). Computed by dealing random hands from the full 106-card pack.</p>
+      <label>Cards n: <select id="mcN" class="btn" style="background:#0f5132"><option>10</option><option selected>13</option><option>14</option></select>
+      Trials: <select id="mcT" class="btn" style="background:#0f5132"><option>20000</option><option selected>100000</option></select>
+      <button class="btn pri" id="mcGo">Run</button></label><div id="mcRes" class="big"></div><div id="mcRes2"></div></div>
+    <h3>Strategy tips</h3><ul>
+      <li>Build the <b>pure sequence first</b> — without it every card counts against you.</li>
+      <li>Throw high cards (K, Q, J, 10, A) early if they are not in a meld; they cost 10 each.</li>
+      <li>An open-ended pair like 6♥7♥ has twice the outs of a gap pair like 6♥8♥ (two ranks complete it instead of one) — keep the open ones.</li>
+      <li>Watch the discard pile: if both copies of the card you need are gone, that near-meld is dead.</li>
+      <li>Do not feed the next player: avoid discarding cards near what they just picked.</li>
+      <li>Jokers belong in impure sequences or sets — never waste one in your pure sequence.</li>
+      <li>Drop early (20) with a hopeless hand rather than lose 80.</li></ul>`;
+    ["hk", "hn", "hs"].forEach(i => $(i).oninput = updHyper);
+    $("jn").oninput = updJ;
+    $("mcGo").onclick = () => { const r = mcPure(+$("mcT").value, +$("mcN").value); $("mcRes").textContent = "P(pure sequence) ≈ " + pct(r.p, 2) + " ± " + pct(1.96 * r.se, 2);
+      $("mcRes2").textContent = "Check: simulated P(at least one printed joker) = " + pct(r.pj, 2) + " vs exact " + pct(1 - Math.exp(lnC(104, +$("mcN").value) - lnC(106, +$("mcN").value)), 2); };
+    updHyper(); updJ();
+  }
+  // live
+  const key = S ? JSON.stringify([S.groups, S.discard.length, S.phase, S.turn, S.deal]) : "";
+  if (key !== oddsCache.key) {
+    const r = liveOuts(); let h;
+    if (r.msg) h = `<p>${r.msg}</p>`;
+    else {
+      const p1 = r.k / r.U, p3 = hyperAtLeastOne(r.U, r.k, 3);
+      h = `<p>Your hand now scores <b>${r.score}</b> pts. Unseen cards (stock + opponents' hands): <b>${r.U}</b>; stock: ${r.stock}.</p>
+        <p>Outs = cards that would complete a new meld or improve your life: <b>${r.k}</b> cards (${r.outs.length} kinds)</p>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">${r.outs.map(o => `<span class="mg" style="display:flex;align-items:center;gap:2px;background:#e3efe7;border-radius:6px;padding:2px 4px">${o.key === "J" ? '<span style="font-size:12px">any joker</span>' : cardHTML(o.id, {sm:true, noWild:true})}<span style="font-size:12px">×${o.n}</span></span>`).join("")}</div>
+        <p class="big">Next draw helps: ${pct(p1)} · within 3 draws: ${pct(p3)}</p>
+        <div class="mono">P(next) = k/S = ${r.k}/${r.U}; P(≥1 in 3) = 1 − C(${r.U}−${r.k},3)/C(${r.U},3). Assumes unseen cards are equally likely to be in the stock.</div>`;
+    }
+    oddsCache = {key, html:h};
+  }
+  $("liveBox").innerHTML = oddsCache.html;
+}
+function updHyper() {
+  const k = +$("hk").value, n = +$("hn").value, Sx = +$("hs").value;
+  $("hkv").textContent = k; $("hnv").textContent = n; $("hsv").textContent = Sx;
+  const p = hyperAtLeastOne(Sx, k, n), p1 = hyperExact(Sx, k, n, 1);
+  $("hres").textContent = "P(at least one out in " + n + " draws) = " + pct(p, 2) + "  ·  P(exactly one) = " + pct(p1, 2);
+  $("hform").textContent = `P(≥1) = 1 − C(S−k, n)/C(S, n) = 1 − C(${Sx - k},${n})/C(${Sx},${n})`;
+}
+function updJ() {
+  const n = +$("jn").value; $("jnv").textContent = n;
+  let rows = "", cum = 0;
+  for (let x = 0; x <= 3; x++) { const p = Math.exp(lnC(9, x) + lnC(96, n - x) - lnC(105, n)); cum += p; rows += `<td>${pct(p, 2)}</td>`; }
+  $("jres").innerHTML = `<table><tr><th>0 jokers</th><th>1</th><th>2</th><th>3</th><th>4+</th></tr><tr>${rows}<td>${pct(Math.max(0, 1 - cum), 2)}</td></tr></table><p class="big">P(at least one joker) = ${pct(1 - Math.exp(lnC(96, n) - lnC(105, n)), 2)}</p>`;
+}
+
+/* ---------- wiring ---------- */
+function setTab(t) {
+  ui.tab = t;
+  $("vPlay").classList.toggle("hidden", t !== "play"); $("vRules").classList.toggle("hidden", t !== "rules"); $("vOdds").classList.toggle("hidden", t !== "odds");
+  $("tPlay").classList.toggle("on", t === "play"); $("tRules").classList.toggle("on", t === "rules"); $("tOdds").classList.toggle("on", t === "odds");
+  if (t === "rules") renderRules(); if (t === "odds") renderOdds();
+}
+$("tPlay").onclick = () => setTab("play"); $("tRules").onclick = () => setTab(ui.tab === "rules" ? "play" : "rules"); $("tOdds").onclick = () => setTab(ui.tab === "odds" ? "play" : "odds");
+$("bNew").onclick = openNewDialog;
+$("selDiff").onchange = () => { if (S) { S.diff = $("selDiff").value; save(); render(); } };
+if (!document.fullscreenEnabled) $("bFull").classList.add("hidden");
+$("bFull").onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {}); };
+$("center").addEventListener("click", e => {
+  if (e.target.closest("#stock")) humanDraw("stock");
+  else if (e.target.closest("#discardTop .card")) humanDraw("discard");
+});
+$("hand").addEventListener("click", e => {
+  const el = e.target.closest(".card"); if (!el || !S || S.phase === "dealover") return;
+  const id = +el.dataset.id; if (ui.sel.has(id)) ui.sel.delete(id); else ui.sel.add(id); render();
+});
+$("aSort").onclick = sortHand; $("aGroup").onclick = groupSelected;
+$("aDiscard").onclick = () => humanDiscard();
+$("aDeclare").onclick = () => {
+  if (ui.sel.size !== 1) return; const id = [...ui.sel][0];
+  showModal(`<h2>Declare?</h2><p>Finish card: <b>${cname(id)}</b>. Your remaining 13 cards will be checked exactly as grouped. A wrong declaration costs 80 points.</p>`, [{t:"Cancel"}, {t:"Declare", pri:true, f:() => humanDeclare(id)}]);
+};
+$("aDrop").onclick = () => showModal(`<h2>Drop this deal?</h2><p>You will score ${S.drawn[0] === 0 ? FIRST_DROP : MID_DROP} points for this deal.</p>`, [{t:"Cancel"}, {t:"Drop", pri:true, f:humanDrop}]);
+
+window.__game = {
+  get state() { return S; }, newGame, startDeal, classify, validateDeclaration, analyze, handScore, canDeclare14, arrange, liveOuts,
+  humanDraw, humanDiscard, humanDeclare, humanDrop, groupSelected, sortHand, aiStep, hyperAtLeastOne, mcPure, cards:CARDS, ui,
+  setFast(v) { FAST = !!v; }, render, setTab,
+  aiUntilHuman() { let g = 0; clearTimeout(aiTimer); while (aiStep() && g++ < 5000) {} save(); render(); return S.phase; }
+};
+
+(function init() {
+  let saved = null; try { saved = JSON.parse(localStorage.getItem(SKEY)); } catch (e) { saved = null; }
+  if (saved && saved.v === 1 && !saved.over && saved.groups) {
+    S = saved; render();
+    showModal(`<h2>Saved game found</h2><p>Deal ${S.deal}/${TOTAL_DEALS} · ${S.n} players · your total ${S.totals[0]} pts.</p>`,
+      [{t:"New game", f:() => { clearSave(); openNewDialog(); }}, {t:"Resume saved game", pri:true, f:() => { render(); if (S.phase === "dealover") showDealModal(); else pump(); }}]);
+  } else newGame({players:2, diff:"normal"});
+})();
+</script>
+</body>
+</html>

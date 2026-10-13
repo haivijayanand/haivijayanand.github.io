@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<!--
+TOOL: Snap
+FAMILY: card-games
+VERSION: 1.0.0
+DATE: 2026-10-13
+CHAT: Card games batch 1 (claude.ai)
+CHANGES: 1.0.0 - first release
+STATUS: released
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b3d2a">
+<title>Snap</title>
+<style>
+:root{--felt:#0f5132;--felt2:#13683f;--bar:#0b2a1d;--red:#c62828;--ink:#111;--back:#1e3a8a;--cw:64px;--panel:#fdfcf7;--gold:#fcd34d;--muted:#4b5563}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Arial,sans-serif;
+  background:radial-gradient(ellipse at 50% 40%,var(--felt2) 0%,var(--felt) 60%,#0a3d25 100%) fixed;background-color:var(--felt);
+  color:#fff;min-height:100vh;width:100%;overflow-x:hidden}
+button{font:inherit;cursor:pointer}
+.bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--bar);padding:8px 12px;box-shadow:0 2px 8px rgba(0,0,0,.4);position:sticky;top:0;z-index:20}
+.bar h1{font-size:20px;margin:0 auto 0 0;white-space:nowrap}
+.bar h1 span{color:var(--gold)}
+.bar .btn{background:#1f4d36;color:#fff;border:1px solid #2f6b4c;border-radius:8px;padding:8px 12px;min-height:40px;text-decoration:none;font-size:14px;display:inline-flex;align-items:center}
+.bar .btn.on{background:#2f7a52}
+.tabs{display:flex;gap:4px;padding:8px 12px 0;max-width:1400px;margin:0 auto}
+.tab{background:rgba(0,0,0,.25);color:#e5e7eb;border:0;border-radius:8px 8px 0 0;padding:10px 16px;min-height:40px;font-weight:600}
+.tab.on{background:rgba(255,255,255,.14);color:#fff}
+main{max-width:1400px;width:100%;margin:0 auto;padding:0 12px 16px}
+.panel{display:none}.panel.on{display:block}
+.table{background:rgba(255,255,255,.05);border-radius:0 12px 12px 12px;padding:12px;min-height:calc(100vh - 130px);display:flex;flex-direction:column;gap:12px}
+.opps{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.seat{background:rgba(0,0,0,.22);border-radius:12px;padding:8px 12px;border:2px solid transparent;min-width:150px;text-align:center;transition:border-color .2s,background .2s}
+.seat.turn{border-color:var(--gold);background:rgba(252,211,77,.12)}
+.seat.won{background:rgba(74,222,128,.35)}
+.seat.bad{background:rgba(248,113,113,.35)}
+.seat .nm{font-weight:700;font-size:17px}
+.seat .ct{font-size:28px;font-weight:900;color:var(--gold)}
+.seat .sub{font-size:12px;color:#d1fae5}
+.mid{display:flex;align-items:center;justify-content:center;gap:28px;flex:1;flex-wrap:wrap}
+.pilewrap{position:relative;width:calc(var(--cw)*2.6);height:calc(var(--cw)*2.6*1.4);--pcw:calc(var(--cw)*1.8)}
+.pilewrap .card{position:absolute;left:50%;top:50%;--cw:var(--pcw)}
+.pinfo{text-align:center;font-size:14px;color:#d1fae5;margin-top:6px}
+.card{width:var(--cw);height:calc(var(--cw)*1.4);background:#fff;border-radius:8px;color:var(--ink);position:relative;
+  box-shadow:0 2px 6px rgba(0,0,0,.45);border:1px solid #d1d5db;flex:0 0 auto}
+.card.red{color:var(--red)}
+.card .c1,.card .c2{position:absolute;font-weight:800;line-height:1;text-align:center;font-size:calc(var(--cw)*.24)}
+.card .c1{top:5px;left:6px}.card .c2{bottom:5px;right:6px;transform:rotate(180deg)}
+.card .c1 i,.card .c2 i{display:block;font-style:normal;font-size:calc(var(--cw)*.2)}
+.card .pip{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:calc(var(--cw)*.6)}
+.card.back{background:repeating-linear-gradient(45deg,var(--back) 0 6px,#2c4fb0 6px 12px);border:3px solid #fff}
+.pilecard{transition:transform .18s}
+.snapbtn{display:block;margin:0 auto;width:min(520px,100%);min-height:110px;border-radius:24px;border:0;
+  background:linear-gradient(#ef4444,#b91c1c);color:#fff;font-size:44px;font-weight:900;letter-spacing:4px;
+  box-shadow:0 6px 0 #7f1d1d,0 10px 20px rgba(0,0,0,.4);touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.snapbtn:active{transform:translateY(4px);box-shadow:0 2px 0 #7f1d1d}
+.snapbtn:disabled{opacity:.5}
+.me{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+.flipbtn{min-height:56px;border-radius:14px;border:0;background:#fff;color:#111;font-weight:800;font-size:18px;padding:8px 22px;box-shadow:0 3px 0 rgba(0,0,0,.3)}
+.flipbtn:disabled{opacity:.4}
+.status{text-align:center;font-weight:800;font-size:20px;min-height:30px}
+.opts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center;font-size:14px}
+.opts select{min-height:40px;border-radius:8px;font-size:15px;padding:4px 8px}
+.timer{font-size:22px;font-weight:900;color:var(--gold)}
+.burst{position:absolute;left:50%;top:-14px;transform:translateX(-50%);background:var(--gold);color:#111;font-weight:900;border-radius:12px;padding:4px 12px;font-size:20px;white-space:nowrap;z-index:5}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal.on{display:flex}
+.box{background:var(--panel);color:#111;border-radius:14px;padding:18px;max-width:460px;width:100%}
+.box h2{margin:0 0 10px}
+.box table{width:100%;border-collapse:collapse}.box td,.box th{padding:5px;border-bottom:1px solid #e5e7eb;text-align:left}
+.box .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px}
+.box .row button{min-height:44px;border-radius:10px;border:0;padding:8px 16px;font-weight:700;background:#0f5132;color:#fff}
+.box .row button.alt{background:#e5e7eb;color:#111}
+.info{background:var(--panel);color:#111;border-radius:0 12px 12px 12px;padding:16px 20px;line-height:1.5}
+.info h2,.info h3{color:#0f5132}
+.info table{border-collapse:collapse;margin:8px 0}.info td,.info th{border:1px solid #d1d5db;padding:4px 10px;text-align:center}.info th{background:#ecfdf5}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.calc{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 14px}
+.calc label{display:block;margin:6px 0 2px;font-weight:600}
+.calc input[type=range]{width:100%;min-height:32px}
+.res{font-size:20px;font-weight:800;color:#0f5132}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:14px;background:#fff;border-radius:6px;padding:2px 6px}
+.live{background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:12px 14px}
+.muted{color:var(--muted);font-size:14px}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+@media (max-width:600px){
+  :root{--cw:44px}
+  .bar{padding:6px 8px;gap:5px}.bar h1{font-size:17px;width:100%}.bar .btn{padding:6px 9px;font-size:13px}
+  main{padding:0 6px 12px}.tabs{padding:6px 6px 0}.tab{padding:8px 10px;font-size:14px}
+  .table{padding:8px;min-height:auto}
+  .seat{min-width:0;flex:1;padding:6px}.seat .ct{font-size:22px}.seat .nm{font-size:15px}
+  .snapbtn{min-height:96px;font-size:38px}
+  .mid{gap:16px}
+  .info{padding:12px}
+}
+</style>
+</head>
+<body>
+<div class="bar">
+  <h1>Snap<span>!</span></h1>
+  <button class="btn" id="bNew">New</button>
+  <button class="btn" id="bRules">Rules</button>
+  <button class="btn" id="bOdds">Odds</button>
+  <button class="btn" id="bFull">⛶ Full screen</button>
+  <a class="btn" href="index.html">← Games</a>
+</div>
+<div class="tabs">
+  <button class="tab on" data-tab="play">Play</button>
+  <button class="tab" data-tab="rules">Rules</button>
+  <button class="tab" data-tab="odds">Odds &amp; Strategy</button>
+</div>
+<main>
+<section class="panel on" id="p-play">
+  <div class="table">
+    <div class="opts">
+      <label>Difficulty <select id="diffSel"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select></label>
+      <label>Opponents <select id="oppSel"><option>1</option><option>2</option><option selected>3</option></select></label>
+      <label>Mode <select id="modeSel"><option value="all">Win all cards</option><option value="timed">3-minute race</option></select></label>
+      <span class="timer" id="timer"></span>
+    </div>
+    <div class="opps" id="opps"></div>
+    <div class="mid">
+      <div>
+        <div class="pilewrap" id="pile"></div>
+        <div class="pinfo" id="pileInfo"></div>
+      </div>
+    </div>
+    <div class="status" id="status"></div>
+    <button class="snapbtn" id="snapBtn">SNAP!</button>
+    <div class="me">
+      <div class="seat" id="meSeat"></div>
+      <button class="flipbtn" id="flipBtn">Flip my card</button>
+    </div>
+    <div class="muted" style="color:#d1fae5;text-align:center">PC: <b>Space</b> = SNAP, <b>F</b> or <b>Enter</b> = flip.</div>
+  </div>
+</section>
+
+<section class="panel" id="p-rules"><div class="info">
+  <h2>How to play Snap</h2>
+  <ol>
+    <li>The 52-card deck is dealt face-down as evenly as possible to everyone (you plus 1–3 computer players: Arun, Meena, Ravi).</li>
+    <li>In turn, each player flips the top card of their stack onto the middle pile. On your turn tap <b>Flip my card</b> (or press F / Enter).</li>
+    <li>When the card just flipped has the <b>same rank</b> as the card under it (e.g. 7♠ on 7♥), hit <b>SNAP!</b> (or Space). The first player to snap wins the whole pile, added to the bottom of their stack.</li>
+    <li><b>Wrong snap</b> (no match): you give one card to each opponent as a penalty.</li>
+    <li>A player with no cards left skips their turn to flip, but can still SNAP to win cards and get back in.</li>
+    <li>If every stack is empty and there's no snap, the player who flipped last turns the pile over and keeps going — when they hold all 52, they win.</li>
+  </ol>
+  <h3>Modes</h3>
+  <ul>
+    <li><b>Win all cards</b> — play until one player holds all 52 cards.</li>
+    <li><b>3-minute race</b> — when the clock runs out, the player holding the most cards wins (cards in the middle pile don't count).</li>
+  </ul>
+  <h3>Computer players</h3>
+  <table><tr><th>Level</th><th>Reaction time</th><th>Mistakes</th></tr>
+    <tr><td>Easy</td><td>900–1400 ms</td><td>never false-snaps</td></tr>
+    <tr><td>Normal</td><td>550–900 ms</td><td>never false-snaps</td></tr>
+    <tr><td>Hard</td><td>300–550 ms</td><td>~10% miss a snap; ~3% false snap on near cards</td></tr></table>
+  <p class="muted">Variant choices: match on rank only; after a snap the next flip starts a new pile; players with no cards can still snap back in; in the timed race the middle pile is not counted.</p>
+  <h3>Your stats</h3>
+  <div id="statsBox"></div>
+  <p class="muted">Snap v<span id="verTxt"></span> · card-games family · autosaves after every flip.</p>
+</div></section>
+
+<section class="panel" id="p-odds"><div class="info">
+  <h2>Odds &amp; Strategy</h2>
+  <div class="live" id="liveOdds"></div>
+  <h3>Why 3/51 on a fresh deck?</h3>
+  <p>After the first card is flipped, 51 cards remain unseen. Exactly 3 of them share its rank (there are 4 of each rank). So the next flip matches with probability <span class="mono">3/51 = 1/17 ≈ 5.88%</span>. Over a whole shuffled deck there are 51 neighbouring pairs, so the expected number of snap chances in one pass is <span class="mono">51 × 3/51 = 3</span>.</p>
+  <div class="grid2">
+    <div class="calc">
+      <h3>1 · Chance the next flip matches</h3>
+      <p class="muted">If U cards are still unseen and m of them share the top card's rank:<br><span class="mono">P(match) = m / U</span></p>
+      <label>Unseen cards U = <span id="c1Uv"></span></label><input type="range" id="c1U" min="1" max="51" value="51">
+      <label>Unseen cards of the same rank m = <span id="c1mv"></span></label><input type="range" id="c1m" min="0" max="3" value="3">
+      <div id="c1out"></div>
+    </div>
+    <div class="calc">
+      <h3>2 · Flips between snaps (geometric)</h3>
+      <p class="muted">Treat each flip as an independent trial with match chance p. The number of flips until the next match X is geometric:<br>
+      <span class="mono">P(X = k) = (1−p)^(k−1) · p</span>, <span class="mono">E[X] = 1/p</span>, <span class="mono">P(X ≤ k) = 1 − (1−p)^k</span></p>
+      <label>Match chance p = <span id="c2pv"></span>%</label><input type="range" id="c2p" min="1" max="50" step="0.01" value="5.88">
+      <label>Within k flips: k = <span id="c2kv"></span></label><input type="range" id="c2k" min="1" max="60" value="10">
+      <div id="c2out"></div>
+    </div>
+  </div>
+  <h3>Strategy tips</h3>
+  <ul>
+    <li>Watch the <b>rank</b>, not the suit — 7♠ on 7♥ is a snap.</li>
+    <li>Snaps come about once every 17 flips on average — stay alert, but don't guess: a wrong snap costs a card to every opponent.</li>
+    <li>Against Hard players, keep your finger on the button (or Space) — they react in ~0.3–0.55 s.</li>
+    <li>In the 3-minute race, a wrong snap with 3 opponents costs you 3 cards — only snap when sure.</li>
+  </ul>
+</div></section>
+</main>
+<div class="modal" id="modal"><div class="box" id="modalBox"></div></div>
+
+<script>
+"use strict";
+const APP_VERSION = "1.0.0";
+const GAME_ID = "snap";
+const SAVE_KEY = "cg_" + GAME_ID + "_v1";
+const STATS_KEY = "cg_" + GAME_ID + "_stats";
+const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+const SUITS = ["♠", "♥", "♦", "♣"];
+const NAMES = ["You", "Arun", "Meena", "Ravi"];
+const REACT = { easy: [900, 1400], normal: [550, 900], hard: [300, 550] };
+const TIME_LIMIT = 180;
+
+/* ---------- pure rules ---------- */
+function buildDeck() { const d = []; for (const s of SUITS) for (const r of RANKS) d.push(r + s); return d; }
+function rankOf(c) { return c.slice(0, -1); }
+function suitOf(c) { return c.slice(-1); }
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function isSnap(pile) { return pile.length >= 2 && rankOf(pile[pile.length - 1]) === rankOf(pile[pile.length - 2]); }
+function deal(n) { const d = shuffle(buildDeck()); const hands = Array.from({ length: n }, () => []); d.forEach((c, i) => hands[i % n].push(c)); return hands; }
+function rand(a, b) { return a + Math.random() * (b - a); }
+
+/* ---------- state ---------- */
+let S = null, FAST = false, aiTimers = [], flipTimer = null, clockTimer = null, fx = null;
+
+function newGame() {
+  clearAll();
+  const n = 1 + (+$("oppSel").value);
+  const hands = deal(n);
+  S = { ver: APP_VERSION, diff: $("diffSel").value, mode: $("modeSel").value, n,
+    players: hands.map((h, i) => ({ name: NAMES[i], stack: h, snaps: 0, wrong: 0 })),
+    pile: [], cur: 0, lastFlipper: null, flips: 0, snapOpen: false, elapsed: 0, phase: "play", winner: null, counted: false, msg: "", seenStart: 0 };
+  // human always starts
+  save(); render(); loop();
+}
+function clearAll() { aiTimers.forEach(clearTimeout); aiTimers = []; clearTimeout(flipTimer); clearInterval(clockTimer); clockTimer = null; }
+
+function alive(i) { return S.players[i].stack.length > 0; }
+function nextTurn() {
+  for (let k = 1; k <= S.n; k++) { const j = (S.cur + k) % S.n; if (alive(j)) { S.cur = j; return; } }
+}
+function flip(pi) {
+  if (S.phase !== "play" || pi !== S.cur || !alive(pi)) return false;
+  const c = S.players[pi].stack.shift();
+  S.pile.push(c); S.flips++; S.lastFlipper = pi;
+  S.snapOpen = isSnap(S.pile);
+  S.msg = S.players[pi].name + (pi === 0 ? " flip " : " flips ") + c;
+  nextTurn();
+  checkEnd();
+  return true;
+}
+/* returns "win" | "wrong" | "none" */
+function snap(pi) {
+  if (S.phase !== "play") return "none";
+  if (S.snapOpen) {
+    const p = S.players[pi]; p.stack.push(...S.pile); S.pile = []; S.snapOpen = false; p.snaps++;
+    S.msg = (pi === 0 ? "SNAP! You win the pile" : "SNAP! " + p.name + " wins the pile");
+    // whoever snapped... turn continues normally; if current player is out, move on
+    if (!alive(S.cur)) nextTurn();
+    fx = { who: pi, good: true, t: Date.now() };
+    checkEnd(); return "win";
+  }
+  if (S.pile.length && !S.snapOpen && pi !== undefined) {
+    const p = S.players[pi]; p.wrong++;
+    for (let j = 0; j < S.n; j++) { if (j !== pi && p.stack.length) S.players[j].stack.push(p.stack.pop()); }
+    S.msg = (pi === 0 ? "Wrong snap! You give" : p.name + " snapped wrongly and gives") + " a card to each opponent (if " + (pi === 0 ? "you have" : "they have") + " any).";
+    if (!alive(S.cur)) nextTurn();
+    fx = { who: pi, good: false, t: Date.now() };
+    checkEnd(); return "wrong";
+  }
+  return "none";
+}
+function checkEnd() {
+  const total = S.players.reduce((s, p) => s + p.stack.length, 0) + S.pile.length;
+  const holders = S.players.filter(p => p.stack.length > 0).length;
+  let end = false;
+  if (S.players.some(p => p.stack.length === 52)) end = true;
+  if (S.mode === "timed" && S.elapsed >= TIME_LIMIT) end = true;
+  // nobody can flip and no snap pending → stalemate
+  if (holders === 0 && !S.snapOpen && !S.pile.length) end = true;
+  // everyone's stack is empty and no snap is pending → the player who flipped last turns the pile over as their new stack
+  if (holders === 0 && !S.snapOpen && S.pile.length && S.lastFlipper != null) {
+    const w = S.players[S.lastFlipper]; w.stack.push(...S.pile); S.pile = []; S.cur = S.lastFlipper; end = false;
+    S.msg = w.name + (S.lastFlipper === 0 ? " turn" : " turns") + " the pile over";
+    if (w.stack.length === 52) end = true;
+  }
+  // one holder left, no snap available: they keep flipping onto pile; if their stack empties the pile game ends
+  if (end) finish();
+  return total;
+}
+function finish() {
+  if (S.phase !== "play") return;
+  S.phase = "over"; S.snapOpen = false;
+  let best = -1, bc = -1, tie = false;
+  S.players.forEach((p, i) => { if (p.stack.length > bc) { bc = p.stack.length; best = i; tie = false; } else if (p.stack.length === bc) tie = true; });
+  S.winner = tie ? -1 : best;
+  if (!S.counted) {
+    S.counted = true; const st = loadStats(); st.played++;
+    if (S.winner === 0) { st.won++; st.streak++; st.bestStreak = Math.max(st.bestStreak, st.streak); } else st.streak = 0;
+    st.snaps += S.players[0].snaps; st.mostCards = Math.max(st.mostCards, S.players[0].stack.length);
+    saveStats(st);
+  }
+  clearAll(); save();
+  if (!FAST) { render(); showEnd(); }
+}
+
+/* ---------- AI timing ---------- */
+function aiReact() {
+  aiTimers.forEach(clearTimeout); aiTimers = [];
+  if (S.phase !== "play") return;
+  const [lo, hi] = REACT[S.diff];
+  const pileLen = S.pile.length;
+  for (let i = 1; i < S.n; i++) {
+    if (S.snapOpen) {
+      if (S.diff === "hard" && Math.random() < 0.10) continue; // occasional miss
+      aiTimers.push(setTimeout(() => { if (S.snapOpen && S.pile.length === pileLen && S.phase === "play") { snap(i); after(); } }, rand(lo, hi)));
+    } else if (S.diff === "hard" && S.pile.length >= 2 && Math.random() < 0.03) {
+      // false snap on a near rank (adjacent ranks look similar)
+      aiTimers.push(setTimeout(() => { if (!S.snapOpen && S.pile.length === pileLen && S.phase === "play") { snap(i); after(); } }, rand(lo, hi)));
+    }
+  }
+}
+function flipDelay() { return S.snapOpen ? 1500 : ({ easy: 1100, normal: 900, hard: 750 }[S.diff]); }
+function loop() {
+  clearTimeout(flipTimer);
+  if (S.phase !== "play") return;
+  if (S.mode === "timed" && !clockTimer && !FAST) {
+    clockTimer = setInterval(() => { if (S.phase !== "play") return; S.elapsed++; if (S.elapsed >= TIME_LIMIT) { checkEnd(); } renderTimer(); if (S.elapsed % 5 === 0) save(); }, 1000);
+  }
+  if (S.cur !== 0) flipTimer = setTimeout(() => { if (flip(S.cur)) after(); }, flipDelay());
+}
+function after() { save(); if (!FAST) { aiReact(); render(); loop(); } }
+
+/* ---------- human ---------- */
+function humanFlip() { if (S.phase === "play" && S.cur === 0 && alive(0)) { flip(0); after(); } }
+function humanSnap() { if (S.phase !== "play" || !S.pile.length) return; const r = snap(0); if (r !== "none") after(); }
+
+/* ---------- persistence ---------- */
+function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { } }
+function loadSave() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.players && s.ver) return s; } catch (e) { } return null; }
+function loadStats() { const d = { played: 0, won: 0, streak: 0, bestStreak: 0, snaps: 0, mostCards: 0 }; try { const s = JSON.parse(localStorage.getItem(STATS_KEY)); if (s) return Object.assign(d, s); } catch (e) { } return d; }
+function saveStats(s) { try { localStorage.setItem(STATS_KEY, JSON.stringify(s)); } catch (e) { } }
+
+/* ---------- render ---------- */
+const $ = id => document.getElementById(id);
+function cardHTML(c, style) {
+  const r = rankOf(c), s = suitOf(c), red = s === "♥" || s === "♦";
+  return '<div class="card pilecard' + (red ? " red" : "") + '" style="' + (style || "") + '"><span class="c1">' + r + "<i>" + s + '</i></span><span class="pip">' + s + '</span><span class="c2">' + r + "<i>" + s + "</i></span></div>";
+}
+function seatHTML(i) {
+  const p = S.players[i];
+  return '<div class="nm">' + p.name + '</div><div class="ct">' + p.stack.length + '</div><div class="sub">cards · ' + p.snaps + " snaps" + (p.wrong ? " · " + p.wrong + " wrong" : "") + "</div>";
+}
+function seatClass(i) {
+  let c = "seat";
+  if (S.phase === "play" && S.cur === i) c += " turn";
+  if (fx && fx.who === i && Date.now() - fx.t < 900) c += fx.good ? " won" : " bad";
+  return c;
+}
+function render() {
+  if (!S || FAST) return;
+  $("diffSel").value = S.diff; $("oppSel").value = String(S.n - 1); $("modeSel").value = S.mode;
+  let h = ""; for (let i = 1; i < S.n; i++) h += '<div class="' + seatClass(i) + '" id="seat' + i + '">' + seatHTML(i) + "</div>";
+  $("opps").innerHTML = h;
+  $("meSeat").className = seatClass(0); $("meSeat").innerHTML = seatHTML(0);
+  const pile = S.pile.slice(-4);
+  let ph = "";
+  pile.forEach((c, k) => {
+    const d = pile.length - 1 - k; // 0 = top
+    const ang = ((S.pile.length - d) * 37 % 24) - 12, dx = d * -14, dy = d * -6;
+    ph += cardHTML(c, "transform:translate(calc(-50% + " + dx + "px),calc(-50% + " + dy + "px)) rotate(" + ang + "deg);z-index:" + (10 - d));
+  });
+  if (!S.pile.length) ph = '<div class="muted" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#d1fae5;text-align:center">Pile empty</div>';
+  $("pile").innerHTML = ph + (S.snapOpen ? "" : "");
+  $("pileInfo").textContent = "Pile: " + S.pile.length + " card" + (S.pile.length === 1 ? "" : "s") + " · flips: " + S.flips;
+  $("flipBtn").disabled = !(S.phase === "play" && S.cur === 0 && alive(0));
+  $("snapBtn").disabled = S.phase !== "play";
+  let st;
+  if (S.phase === "over") st = S.winner === 0 ? "You win! 🎉" : S.winner === -1 ? "It's a tie!" : S.players[S.winner].name + " wins.";
+  else if (S.msg && fx && Date.now() - fx.t < 1500) st = S.msg;
+  else if (S.cur === 0 && alive(0)) st = (S.msg ? S.msg + " — " : "") + "your turn: flip!";
+  else st = (S.msg || "") + (S.msg ? " · " : "") + S.players[S.cur].name + " to flip…";
+  $("status").textContent = st;
+  renderTimer(); renderLive(); renderStats();
+}
+function renderTimer() {
+  if (!S) return;
+  if (S.mode !== "timed") { $("timer").textContent = ""; return; }
+  const left = Math.max(0, TIME_LIMIT - S.elapsed);
+  $("timer").textContent = "⏱ " + Math.floor(left / 60) + ":" + String(left % 60).padStart(2, "0");
+}
+function liveStats() {
+  // cards the human has NOT seen this pass = everything except the visible pile
+  const top = S.pile[S.pile.length - 1];
+  const seen = S.pile.length;
+  const unseen = 52 - seen;
+  if (!top) return { top: null, unseen, m: 0, p: 0 };
+  const r = rankOf(top);
+  const m = 4 - S.pile.filter(c => rankOf(c) === r).length;
+  return { top, unseen, m, p: unseen ? m / unseen : 0 };
+}
+function renderLive() {
+  if (!S) return;
+  const L = liveStats();
+  if (!L.top) { $("liveOdds").innerHTML = "<b>Live odds</b> — the pile is empty. The first card flipped can't be snapped; the one after it matches with 3/51 = 5.88% if no cards are known."; return; }
+  $("liveOdds").innerHTML = "<b>Live odds</b> — top card <b>" + L.top + "</b>. Pile holds " + S.pile.length + " visible card" + (S.pile.length === 1 ? "" : "s") + "; " + L.unseen + " cards are face-down in players' stacks, of which <b>" + L.m + "</b> are " + rankOf(L.top) + "s.<br>" +
+    "Chance the next flip is a snap: " + L.m + " / " + L.unseen + ' = <span class="res">' + (100 * L.p).toFixed(2) + "%</span>" + (L.p > 0 ? " → about one snap every " + (1 / L.p).toFixed(1) + " flips at this rate." : " — no more " + rankOf(L.top) + "s can come.");
+}
+function renderStats() {
+  const s = loadStats();
+  $("statsBox").innerHTML = "<table><tr><th>Games</th><th>Won</th><th>Win %</th><th>Streak</th><th>Best streak</th><th>Total snaps</th><th>Most cards</th></tr><tr><td>" + s.played + "</td><td>" + s.won + "</td><td>" + (s.played ? Math.round(100 * s.won / s.played) : 0) + "%</td><td>" + s.streak + "</td><td>" + s.bestStreak + "</td><td>" + s.snaps + "</td><td>" + s.mostCards + "</td></tr></table>";
+}
+function openModal(h) { $("modalBox").innerHTML = h; $("modal").classList.add("on"); }
+function closeModal() { $("modal").classList.remove("on"); }
+function showEnd() {
+  const rows = S.players.map(p => "<tr><td>" + p.name + "</td><td>" + p.stack.length + "</td><td>" + p.snaps + "</td><td>" + p.wrong + "</td></tr>").join("");
+  openModal("<h2>" + (S.winner === 0 ? "You win! 🎉" : S.winner === -1 ? "It's a tie" : S.players[S.winner].name + " wins") + "</h2><table><tr><th>Player</th><th>Cards</th><th>Snaps</th><th>Wrong</th></tr>" + rows + '</table><div class="row"><button id="mNew">Play again</button></div>');
+}
+
+/* ---------- odds calculators ---------- */
+function updC1() {
+  const U = +$("c1U").value; $("c1m").max = Math.min(3, U);
+  const m = Math.min(+$("c1m").value, U);
+  $("c1Uv").textContent = U; $("c1mv").textContent = m;
+  const p = m / U;
+  $("c1out").innerHTML = 'P(match) = ' + m + " / " + U + ' = <span class="res">' + (100 * p).toFixed(2) + "%</span><br>" + (p > 0 ? "Expected flips until a match at this rate: 1/p = " + (1 / p).toFixed(1) : "No match possible.");
+}
+function updC2() {
+  const p = +$("c2p").value / 100, k = +$("c2k").value;
+  $("c2pv").textContent = (+$("c2p").value).toFixed(2); $("c2kv").textContent = k;
+  const exact = Math.pow(1 - p, k - 1) * p, within = 1 - Math.pow(1 - p, k);
+  $("c2out").innerHTML = "E[X] = 1/p = <b>" + (1 / p).toFixed(2) + "</b> flips<br>P(X = " + k + ") = " + (100 * exact).toFixed(2) + "%<br>" + 'P(snap within ' + k + ' flips) = <span class="res">' + (100 * within).toFixed(1) + "%</span><br>Median flips: " + Math.ceil(Math.log(0.5) / Math.log(1 - p));
+}
+
+/* ---------- wiring ---------- */
+function setTab(t) {
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === "p-" + t));
+  renderLive(); renderStats();
+}
+function wire() {
+  document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+  $("bRules").onclick = () => setTab("rules"); $("bOdds").onclick = () => setTab("odds");
+  $("bNew").onclick = () => openModal('<h2>Start a new game?</h2><p>Uses the difficulty, opponents and mode selected above.</p><div class="row"><button class="alt" id="mCancel">Cancel</button><button id="mNew">New game</button></div>');
+  const fe = document.documentElement;
+  if (!document.fullscreenEnabled || !fe.requestFullscreen) $("bFull").style.display = "none";
+  $("bFull").onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else fe.requestFullscreen().catch(() => { }); };
+  document.addEventListener("fullscreenchange", () => $("bFull").classList.toggle("on", !!document.fullscreenElement));
+  $("snapBtn").addEventListener("pointerdown", e => { e.preventDefault(); humanSnap(); });
+  $("snapBtn").addEventListener("keydown", e => { if (e.key === "Enter") e.preventDefault(); });
+  $("flipBtn").onclick = humanFlip;
+  $("pile").onclick = humanFlip;
+  document.addEventListener("keydown", e => {
+    if ($("modal").classList.contains("on") || !$("p-play").classList.contains("on")) return;
+    if (e.target && /SELECT|INPUT/.test(e.target.tagName)) return;
+    if (e.code === "Space") { e.preventDefault(); if (!e.repeat) humanSnap(); }
+    else if (e.key === "f" || e.key === "F" || e.key === "Enter") { e.preventDefault(); humanFlip(); }
+  });
+  $("diffSel").onchange = () => { if (S) { S.diff = $("diffSel").value; save(); } };
+  $("oppSel").onchange = $("modeSel").onchange = () => { if (S && S.flips === 0) newGame(); else if (S) { S.msg = "New settings apply when you start a New game."; render(); } };
+  $("modal").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.id === "mNew") { closeModal(); newGame(); }
+    else if (b.id === "mCancel") closeModal();
+    else if (b.id === "mResume") { closeModal(); render(); loop(); aiReact(); }
+  });
+  ["c1U", "c1m"].forEach(id => $(id).oninput = updC1); ["c2p", "c2k"].forEach(id => $(id).oninput = updC2);
+  $("verTxt").textContent = APP_VERSION;
+  updC1(); updC2();
+  setInterval(() => { if (S && fx && Date.now() - fx.t < 2000) render(); }, 400);
+}
+function init() {
+  wire();
+  const sv = loadSave();
+  if (sv && sv.phase === "play" && sv.flips > 0) {
+    S = sv; render();
+    openModal("<h2>Welcome back</h2><p>Saved game: you hold " + S.players[0].stack.length + ' cards.</p><div class="row"><button class="alt" id="mNew">New game</button><button id="mResume">Resume saved game</button></div>');
+  } else newGame();
+}
+
+/* ---------- test hook ---------- */
+window.__game = {
+  get state() { return S; },
+  newGame: (opts) => { if (opts) { if (opts.opponents) $("oppSel").value = String(opts.opponents); if (opts.mode) $("modeSel").value = opts.mode; if (opts.diff) $("diffSel").value = opts.diff; } closeModal(); newGame(); },
+  buildDeck, isSnap, deal, rankOf, liveStats, flip, snap, humanFlip, humanSnap,
+  setFast: on => { FAST = !!on; clearAll(); if (!FAST) { render(); loop(); } },
+  /* simulate a whole game synchronously; humanReact (ms) vs AI reaction ranges decide who wins each snap */
+  playToEnd: (humanReact, maxFlips) => {
+    const was = FAST; FAST = true; clearAll(); closeModal();
+    const hr = humanReact == null ? 400 : humanReact;
+    let flips = 0; const lim = maxFlips || 20000;
+    while (S.phase === "play" && flips < lim) {
+      if (S.snapOpen) {
+        const [lo, hi] = REACT[S.diff];
+        let bestT = hr + rand(-60, 60), who = 0;
+        for (let i = 1; i < S.n; i++) { if (S.diff === "hard" && Math.random() < 0.1) continue; const t = rand(lo, hi); if (t < bestT) { bestT = t; who = i; } }
+        snap(who);
+        if (S.mode === "timed") S.elapsed += Math.ceil(bestT / 1000);
+        continue;
+      }
+      if (S.diff === "hard" && S.pile.length >= 2 && Math.random() < 0.01) { snap(1 + Math.floor(Math.random() * (S.n - 1))); if (S.phase !== "play") break; }
+      if (!flip(S.cur)) { if (!S.players.some(p => p.stack.length)) { finish(); break; } nextTurn(); }
+      flips++;
+      if (S.mode === "timed") { S.elapsed += 1; if (S.elapsed >= TIME_LIMIT) checkEnd(); }
+    }
+    if (S.phase === "play") finish(); // safety cap: decide by counts
+    FAST = was; save(); if (!FAST) { render(); showEnd(); }
+    return { flips, winner: S.winner, counts: S.players.map(p => p.stack.length), pile: S.pile.length };
+  }
+};
+init();
+</script>
+</body>
+</html>

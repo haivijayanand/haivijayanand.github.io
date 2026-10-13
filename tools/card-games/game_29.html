@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<!--
+TOOL: 29 (Twenty-Nine)
+FAMILY: card-games
+VERSION: 1.0.0
+DATE: 2026-10-13
+CHAT: Card games batch 1 (claude.ai)
+CHANGES: 1.0.0 - first release
+STATUS: released
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b3d2a">
+<title>29 — Twenty-Nine</title>
+<style>
+:root{--felt:#0f5132;--bar:#0b3d2a;--red:#c62828;--blk:#111;--back:#1e3a8a;--cw:64px;--hcw:78px;--gold:#ffd54f;--ink:#f1f5f2;--panel:#fbfbf7}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:radial-gradient(ellipse at 50% 35%,#18734a 0%,var(--felt) 55%,#0a3b24 100%) fixed;background-color:var(--felt);color:var(--ink);width:100%;min-height:100vh;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+button,select,input{font:inherit}
+.topbar{position:sticky;top:0;z-index:20;background:var(--bar);display:flex;align-items:center;gap:6px;padding:4px 10px;padding-top:max(4px,env(safe-area-inset-top));box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.topbar h1{font-size:20px;margin:0 auto 0 0;white-space:nowrap;letter-spacing:.5px}
+.topbar h1 span{color:#ffd54f}
+.tb{min-height:40px;min-width:40px;padding:6px 12px;border:1px solid #2f6f52;background:#145c3c;color:#fff;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-size:15px;white-space:nowrap}
+.tb:active{transform:translateY(1px)}
+.tb.on{background:#f1c40f;color:#222;border-color:#f1c40f}
+.tabs{display:flex;gap:4px;justify-content:center;padding:6px 8px 0}
+.tab{min-height:40px;padding:6px 16px;border-radius:10px 10px 0 0;border:0;background:rgba(0,0,0,.25);color:#dfe;cursor:pointer;font-size:15px}
+.tab.on{background:rgba(0,0,0,.5);color:#fff;font-weight:700}
+main{width:100%;max-width:1400px;margin:0 auto;padding:0 10px 16px}
+.panel{display:none}.panel.on{display:block}
+.strip{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:space-between;background:rgba(0,0,0,.35);padding:6px 12px;border-radius:0 0 10px 10px;font-size:14px}
+.strip select{min-height:36px;border-radius:6px;padding:2px 6px}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,.15);font-size:13px}
+.badge.us{background:#1565c0}.badge.them{background:#8e24aa}
+.badge.tr{background:#f1c40f;color:#222;font-weight:700}
+.table{display:grid;grid-template-columns:minmax(90px,1fr) minmax(240px,2.2fr) minmax(90px,1fr);grid-template-areas:". top ." "left mid right" "hand hand hand" "status status status";gap:8px;padding-top:10px;align-items:center}
+.seat{text-align:center;padding:6px;border-radius:12px;background:rgba(0,0,0,.18);border:2px solid transparent;transition:border-color .2s,background .2s}
+.seat.turn{border-color:var(--gold);background:rgba(255,213,79,.12)}
+.seat .nm{font-weight:700;font-size:16px}
+.seat .sc{font-size:13px;opacity:.92}
+.seat .backs{display:flex;justify-content:center;margin:6px auto 2px;height:calc(var(--cw)*.9)}
+.mini{width:calc(var(--cw)*.6);height:calc(var(--cw)*.84);border-radius:5px;border:1px solid #c7d2fe;background:repeating-linear-gradient(45deg,#1e3a8a 0 5px,#2848a8 5px 10px);margin-left:calc(var(--cw)*-.45);box-shadow:0 1px 2px rgba(0,0,0,.5)}
+.mini:first-child{margin-left:0}
+.mini.hid{border:2px solid var(--gold);margin-left:6px;position:relative}
+.mini.hid::after{content:"T";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--gold);font-weight:800;font-size:calc(var(--cw)*.35)}
+.tag{display:inline-block;font-size:11px;padding:1px 6px;border-radius:8px;margin:1px}
+.tag.us{background:#1565c0}.tag.them{background:#8e24aa}.tag.bid{background:#f1c40f;color:#222;font-weight:700}
+#seat2{grid-area:top;justify-self:center;min-width:180px}
+#seat1{grid-area:left}#seat3{grid-area:right}
+.mid{grid-area:mid;display:flex;justify-content:center}
+.trick{position:relative;width:calc(var(--cw)*3.9);height:calc(var(--cw)*1.4*2.55);}
+.slot{position:absolute;transition:transform .25s}
+.slot0{left:50%;bottom:0;transform:translateX(-50%)}
+.slot2{left:50%;top:0;transform:translateX(-50%)}
+.slot1{left:0;top:50%;transform:translateY(-50%)}
+.slot3{right:0;top:50%;transform:translateY(-50%)}
+.slot .card.win{box-shadow:0 0 0 3px var(--gold),0 2px 6px rgba(0,0,0,.6)}
+.slot .card.trp::before{content:"TRUMP";position:absolute;left:0;right:0;bottom:-15px;text-align:center;font-size:10px;font-weight:800;color:var(--gold)}
+.bidlog{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:14px;gap:3px;text-align:center}
+.card{width:var(--cw);height:calc(var(--cw)*1.4);background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.55);position:relative;color:var(--blk);user-select:none;-webkit-user-select:none;border:1px solid #d6d6d6}
+.card.red{color:var(--red)}
+.card .ix{position:absolute;left:3px;top:2px;line-height:.95;display:flex;flex-direction:column;align-items:center;font-weight:800;font-size:calc(var(--cw)*.3);min-width:calc(var(--cw)*.3)}
+.card .ix b.t{letter-spacing:-2px;font-size:calc(var(--cw)*.27)}
+.card .ix i{font-style:normal;font-size:calc(var(--cw)*.28)}
+.card .pip{position:absolute;right:4px;bottom:1px;font-size:calc(var(--cw)*.55);line-height:1}
+.card .pts{position:absolute;right:3px;top:2px;font-size:calc(var(--cw)*.18);font-weight:700;color:#2e7d32}
+.handwrap{grid-area:hand;background:rgba(0,0,0,.18);border-radius:12px;padding:8px 8px 6px;border:2px solid transparent}
+.handwrap.turn{border-color:var(--gold)}
+.handinfo{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:14px;margin-bottom:6px;align-items:center}
+.hand{position:relative;height:calc(var(--hcw)*1.4 + 16px);width:100%}
+.hand .card{--cw:var(--hcw);position:absolute;top:14px;cursor:pointer;transition:top .15s,opacity .15s,left .2s}
+.hand .card.sel{top:0;box-shadow:0 0 0 3px var(--gold),0 2px 6px rgba(0,0,0,.6)}
+.hand .card.dim{opacity:.55;filter:grayscale(.3);cursor:default}
+.hand .card.hidT{box-shadow:0 0 0 3px var(--gold);opacity:.8}
+.status{grid-area:status;text-align:center;background:rgba(0,0,0,.4);padding:10px;border-radius:10px;font-size:16px;min-height:44px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.btn{min-height:42px;padding:8px 18px;border-radius:10px;border:0;background:#f1c40f;color:#222;font-weight:700;cursor:pointer;font-size:15px}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.alt{background:#e0e7e3}
+.btn.num{min-width:44px;padding:8px 6px}
+.bidrow{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;width:100%}
+.doc{background:var(--panel);color:#1d2a22;border-radius:0 0 12px 12px;padding:14px 18px;line-height:1.5;font-size:15px}
+.doc h2{margin:.6em 0 .3em;color:#0b3d2a;font-size:20px}
+.doc h3{margin:.8em 0 .3em;color:#0f5132;font-size:17px}
+.doc table{border-collapse:collapse;margin:6px 0;font-size:14px;max-width:100%}
+.doc th,.doc td{border:1px solid #c9d6ce;padding:4px 8px;text-align:left}
+.doc th{background:#e4efe8}
+.doc code,.doc .f{font-family:ui-monospace,Consolas,monospace;background:#eef3ef;padding:1px 5px;border-radius:4px;font-size:13px;word-break:break-word}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.box{border:1px solid #c9d6ce;border-radius:10px;padding:10px 14px;background:#fff;overflow-x:auto}
+.ctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}
+.ctl input[type=range]{flex:1;min-width:140px;height:32px}
+.ctl label{min-width:170px}
+.ctl select{min-height:36px}
+.bar{height:12px;background:#2e7d32;border-radius:3px;min-width:1px}
+.big{font-size:20px;font-weight:800;color:#0b3d2a}
+.redt{color:#c62828}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:12px}
+.modal.on{display:flex}
+.dlg{background:#fff;color:#1d2a22;border-radius:14px;max-width:520px;width:100%;padding:16px 18px;max-height:90vh;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.dlg h2{margin:0 0 8px;color:#0b3d2a}
+.dlg table{border-collapse:collapse;width:100%;margin:8px 0}
+.dlg th,.dlg td{border-bottom:1px solid #dde5df;padding:6px;text-align:center}
+.dlg .row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:10px}
+.small{font-size:13px;opacity:.85}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+@media (max-width:600px){
+ :root{--cw:44px;--hcw:54px}
+ .topbar{padding:4px 6px;gap:4px;flex-wrap:wrap}
+ .topbar h1{font-size:17px}
+ .tb{padding:4px 8px;font-size:13px}
+ .tb .lbl{display:none}
+ main{padding:0 6px 12px}
+ .strip{padding:6px 8px;gap:4px 8px}
+ .table{grid-template-columns:76px 1fr 76px;gap:6px}
+ .seat{padding:4px 2px}
+ .seat .nm{font-size:14px}.seat .sc{font-size:12px}
+ #seat2{min-width:150px}
+ .seat .backs .mini{margin-left:calc(var(--cw)*-.5)}
+ .status{font-size:14px;padding:8px}
+ .doc{padding:10px 10px;font-size:14px}
+ .ctl label{min-width:0;width:100%}
+ .tab{padding:6px 10px;font-size:14px}
+ .bidlog{font-size:12px}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+ <h1><span>J♠</span> 29</h1>
+ <button class="tb" id="bNew" title="New game">✚<span class="lbl">&nbsp;New</span></button>
+ <button class="tb" id="bRules" title="Rules">📖<span class="lbl">&nbsp;Rules</span></button>
+ <button class="tb" id="bOdds" title="Odds &amp; Strategy">%<span class="lbl">&nbsp;Odds</span></button>
+ <button class="tb" id="bFull" title="Full screen">⛶<span class="lbl">&nbsp;Full screen</span></button>
+ <a class="tb" href="index.html" title="Back to games">←<span class="lbl">&nbsp;Games</span></a>
+</header>
+<nav class="tabs">
+ <button class="tab on" data-tab="play">Play</button>
+ <button class="tab" data-tab="rules">Rules</button>
+ <button class="tab" data-tab="odds">Odds &amp; Strategy</button>
+</nav>
+<main>
+<section class="panel on" id="p-play">
+ <div class="strip">
+  <span id="gameInfo" class="badge">Game: Us 0 · Them 0</span>
+  <span id="bidInfo" class="badge">Bidding</span>
+  <span id="trumpInfo" class="badge">Trump: —</span>
+  <span id="ptsInfo" class="badge">Points: Us 0 · Them 0</span>
+  <label>Level <select id="diff"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select></label>
+  <label><input type="checkbox" id="pairOpt" checked> Pair</label>
+ </div>
+ <div class="table">
+  <div class="seat" id="seat2"></div>
+  <div class="seat" id="seat1"></div>
+  <div class="mid"><div class="trick" id="trick"><div class="slot slot0" id="slot0"></div><div class="slot slot1" id="slot1"></div><div class="slot slot2" id="slot2"></div><div class="slot slot3" id="slot3"></div><div class="bidlog" id="bidlog"></div></div></div>
+  <div class="seat" id="seat3"></div>
+  <div class="handwrap" id="handwrap"><div class="handinfo"><b id="youInfo">You</b><span id="hidInfo" class="small"></span></div><div class="hand" id="hand"></div></div>
+  <div class="status" id="status">Loading…</div>
+ </div>
+</section>
+
+<section class="panel" id="p-rules"><div class="doc">
+ <h2>How to play 29</h2>
+ <p>Twenty-Nine is a South Indian trick-taking game for 4 players in two fixed partnerships: <b>You + Meena</b> (across, top) against <b>Arun</b> (left) <b>+ Ravi</b> (right). Play goes clockwise around the screen: You → Arun → Meena → Ravi.</p>
+ <h3>Cards</h3>
+ <p>32 cards: 7, 8, 9, 10, J, Q, K, A in each of the four suits. Rank and point values within a suit:</p>
+ <table><tr><th>Rank (high → low)</th><td><b>J</b></td><td><b>9</b></td><td><b>A</b></td><td><b>10</b></td><td>K</td><td>Q</td><td>8</td><td>7</td></tr>
+ <tr><th>Points</th><td>3</td><td>2</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td></tr></table>
+ <p>Each suit has 7 points; the whole deck has <b>28 points</b>.</p>
+ <h3>A hand</h3>
+ <ol>
+  <li><b>Deal 4</b> cards to each player.</li>
+  <li><b>Bidding</b> starts with the player after the dealer. Each player either bids higher (minimum 16, maximum 28) or passes; a player who passes is out of the auction. When only the highest bidder is left, bidding ends. If all four pass, the cards are re-dealt.</li>
+  <li>The highest bidder chooses <b>trump</b> by placing one of their four cards <b>face down</b>. Nobody else knows the trump suit.</li>
+  <li><b>Deal 4 more</b> cards each (8 in total). The bidder plays with 7 cards in hand plus the face-down trump card.</li>
+  <li>The player after the dealer leads. You must <b>follow suit</b> if you can. If you cannot, you may play any card — or first <b>ask for trump</b> (button <i>Show trump</i>). The trump card is turned face up and goes back into the bidder's hand; the player who asked must then play a trump if they hold one.</li>
+  <li>Before the trump is revealed, trump-suit cards have no special power. From the moment of reveal, any trump card played beats every non-trump card; the highest trump wins. Otherwise the highest card of the led suit wins.</li>
+  <li>Before reveal, the bidder may also ask for trump when unable to follow suit. If the bidder runs out of hand cards, the face-down card is revealed automatically.</li>
+ </ol>
+ <h3>Pair (optional, on by default)</h3>
+ <p>K and Q of trump dealt to one player form a <b>Pair</b>. It is declared automatically once trump has been revealed <i>and</i> the holder's side has won a trick after the reveal. If the pair belongs to the bidding side, their target falls by 4 (not below 16); if it belongs to the defenders, the target rises by 4 (not above 28).</p>
+ <h3>Scoring</h3>
+ <ul>
+  <li>The bidding side scores <b>+1 game point</b> if its card points reach the (pair-adjusted) target, otherwise <b>−1</b>. The defenders' score does not change.</li>
+  <li>A side that reaches <b>+6</b> wins the game; a side that drops to <b>−6</b> loses it.</li>
+ </ul>
+ <h3>Variant choices</h3>
+ <ul>
+  <li>28-point count, <b>no</b> +1 bonus for the last trick (bids 16–28).</li>
+  <li>Simple open auction (bid higher or pass, a pass is final); no doubling or redoubling, no "single hand" bid.</li>
+  <li>The bidder places the face-down trump card from the first four cards. A trump-suit card played <i>before</i> the reveal counts only as an ordinary card, even within the trick in which trump is revealed.</li>
+  <li>All 8 tricks are always played. Game to ±6.</li>
+ </ul>
+ <h3>Computer players</h3>
+ <ul><li><b>Easy</b> – random legal cards, noisy bids.</li><li><b>Normal</b> – bids from hand strength, wins tricks with points, gives points to a winning partner, asks for trump to save points.</li><li><b>Hard</b> – also counts every card played, knows which cards are now the highest left ("masters"), remembers who is void in which suit, draws trumps when it is the bidder.</li></ul>
+ <h3>Your statistics</h3>
+ <div id="statsBox"></div>
+ <p><button class="btn alt" id="bResetStats">Reset statistics</button></p>
+ <p class="small">29 v<span id="ver"></span> · card-games family · offline single file · autosaves after every card (resume when you reopen).</p>
+</div></section>
+
+<section class="panel" id="p-odds"><div class="doc">
+ <h2>Odds &amp; Strategy</h2>
+ <div class="box" id="liveBox"></div>
+ <div class="grid2" style="margin-top:14px">
+  <div class="box">
+   <h3>1. Does my partner hold a Jack?</h3>
+   <p class="small">Every card you cannot see is equally likely to be in any unseen slot. With <i>U</i> unseen cards of which <i>r</i> are of the chosen rank, and partner holding <i>h</i> of them:<br><span class="f">P(partner has exactly k) = C(r,k)·C(U−r,h−k) / C(U,h)</span><br><span class="f">P(at least one) = 1 − C(U−r,h) / C(U,h)</span></p>
+   <div class="ctl"><label>Rank</label><select id="jRank"><option value="4">Jacks (3 pts)</option><option value="2">Nines (2 pts)</option><option value="7">Aces (1 pt)</option><option value="3">Tens (1 pt)</option></select></div>
+   <div class="ctl"><label>Cards you have seen</label><select id="jSeen"><option value="4">4 (bidding stage)</option><option value="8" selected>8 (full hand)</option></select></div>
+   <div class="ctl"><label>Of that rank in your hand: <b id="jMOut">1</b></label><input type="range" id="jM" min="0" max="4" value="1"></div>
+   <div class="ctl"><label>Partner's cards h = <b id="jHOut">8</b></label><input type="range" id="jH" min="1" max="8" value="8"></div>
+   <p><button class="btn alt" id="bLiveJ">Use my live hand</button></p>
+   <div id="jOut"></div>
+  </div>
+  <div class="box">
+   <h3>2. How are the trumps split?</h3>
+   <p class="small">Of 8 trumps, you hold <i>t</i>; the other <i>n = 8 − t − played</i> are shared among the other three hands. Exact multivariate hypergeometric:<br><span class="f">P(a,b,c) = C(h1,a)·C(h2,b)·C(h3,c) / C(h1+h2+h3, n)</span></p>
+   <div class="ctl"><label>Trumps in your 8 cards t = <b id="tTOut">3</b></label><input type="range" id="tT" min="0" max="8" value="3"></div>
+   <div class="ctl"><label>Cards per other hand = <b id="tHOut">8</b></label><input type="range" id="tH" min="1" max="8" value="8"></div>
+   <p><button class="btn alt" id="bLiveT">Use live game</button></p>
+   <div id="tSizes" class="small"></div>
+   <div id="tOut"></div>
+  </div>
+  <div class="box">
+   <h3>3. Expected points held by your side</h3>
+   <p class="small">By linearity of expectation each unseen point card sits with your partner with probability (partner's unseen slots) / (all unseen cards):<br><span class="f">E[side] = H + (28 − H) × f</span>, where <i>H</i> = points in your hand; f = 12/28 at the bidding stage (your 4 unseen cards + partner's 8 out of 28 unseen), f = 8/24 with your full hand.</p>
+   <div class="ctl"><label>Stage</label><select id="eStage"><option value="4">Bidding (4 cards seen)</option><option value="8">Full hand (8 seen)</option></select></div>
+   <div class="ctl"><label>Jacks held: <b id="eJo">1</b></label><input type="range" id="eJ" min="0" max="4" value="1"></div>
+   <div class="ctl"><label>Nines held: <b id="e9o">1</b></label><input type="range" id="e9" min="0" max="4" value="1"></div>
+   <div class="ctl"><label>Aces held: <b id="eAo">0</b></label><input type="range" id="eA" min="0" max="4" value="0"></div>
+   <div class="ctl"><label>Tens held: <b id="eTo">0</b></label><input type="range" id="eT" min="0" max="4" value="0"></div>
+   <p><button class="btn alt" id="bLiveE">Use my live hand</button></p>
+   <div id="eOut"></div>
+  </div>
+  <div class="box">
+   <h3>Strategy tips</h3>
+   <ul>
+    <li><b>Bid on trump length + Jacks.</b> J and 9 of your intended trump suit are worth far more than their 5 points – they control the trump suit.</li>
+    <li>Hide a <b>low</b> trump face down (7 or 8) so that your J and 9 stay in hand and can be played early.</li>
+    <li>Defenders: when void, <b>ask for trump</b> only when the trick carries points or the opponents are winning it – revealing also tells the bidder's partner what trump is.</li>
+    <li><b>Give points to your partner</b> (A, 10) when partner is already winning the trick with a master card.</li>
+    <li>Lead a <b>J</b> when you hold it – it is the master of its suit and pulls the 9, A or 10 from other hands.</li>
+    <li>After reveal the bidder should <b>draw trumps</b> with J/9 of trump so the defenders cannot ruff the bidder's masters.</li>
+    <li>Count: each suit has exactly 7 points. When J and 9 of a suit are gone, the A becomes the master.</li>
+    <li>Remember who failed to follow suit – a void player will trump (or ask for trump) next time that suit is led.</li>
+   </ul>
+  </div>
+ </div>
+</div></section>
+</main>
+
+<div class="modal" id="modal"><div class="dlg" id="dlg"></div></div>
+
+<script>
+"use strict";
+const APP_VERSION = "1.0.0";
+const SAVE_KEY = "cg_29_v1", STATS_KEY = "cg_29_stats", PREF_KEY = "cg_29_prefs";
+const NAMES = ["You", "Arun", "Meena", "Ravi"];
+const SUITS = ["♠", "♥", "♣", "♦"];
+const SUIT_NAMES = ["Spades", "Hearts", "Clubs", "Diamonds"];
+const RLAB = ["7", "8", "9", "10", "J", "Q", "K", "A"];
+const POWER = [0, 1, 6, 4, 7, 2, 3, 5];   // J > 9 > A > 10 > K > Q > 8 > 7
+const PTS = [0, 0, 2, 1, 3, 0, 0, 1];
+const TEAM_NAMES = ["Us (You + Meena)", "Them (Arun + Ravi)"];
+const WIN_SCORE = 6;
+
+/* ---------- pure rules ---------- */
+const suitOf = c => Math.floor(c / 8);
+const rOf = c => c % 8;
+const powOf = c => POWER[rOf(c)];
+const ptsOf = c => PTS[rOf(c)];
+const teamOf = p => p % 2;
+const cardName = c => RLAB[rOf(c)] + SUITS[suitOf(c)];
+const sumPts = cs => cs.reduce((a, c) => a + ptsOf(c), 0);
+const sortHand = h => h.sort((a, b) => suitOf(a) - suitOf(b) || powOf(b) - powOf(a));
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+/** Trick winner: entries {p,c,t}; t = played while trump was revealed. */
+function trickWinner(trick, trumpSuit) {
+  const led = suitOf(trick[0].c);
+  let best = trick[0], bestT = trick[0].t && suitOf(trick[0].c) === trumpSuit;
+  for (const e of trick.slice(1)) {
+    const isT = e.t && suitOf(e.c) === trumpSuit;
+    if (isT && !bestT) { best = e; bestT = true; }
+    else if (isT && bestT) { if (powOf(e.c) > powOf(best.c)) best = e; }
+    else if (!isT && !bestT && suitOf(e.c) === led && powOf(e.c) > powOf(best.c)) best = e;
+  }
+  return best.p;
+}
+function legalMoves(s, p) {
+  const h = s.hands[p];
+  if (!s.trick.length) return h.slice();
+  const led = suitOf(s.trick[0].c);
+  const f = h.filter(c => suitOf(c) === led);
+  if (f.length) return f;
+  if (s.mustTrump === p) { const t = h.filter(c => suitOf(c) === s.trumpSuit); if (t.length) return t; }
+  return h.slice();
+}
+function canReveal(s, p) {
+  if (!s || s.phase !== "play" || s.turn !== p || s.trumpRevealed || !s.trick.length || s.trick.length >= 4) return false;
+  const led = suitOf(s.trick[0].c);
+  return !s.hands[p].some(c => suitOf(c) === led);
+}
+function adjustTarget(bid, pairTeam, bidTeam) { return pairTeam === bidTeam ? Math.max(16, bid - 4) : Math.min(28, bid + 4); }
+
+/* ---------- state ---------- */
+let state = null, gen = 0, timer = null;
+const G = { fast: false };
+const dly = ms => G.fast ? 0 : ms;
+function schedule(fn, ms) { clearTimeout(timer); const g = gen; timer = setTimeout(() => { if (g === gen) fn(); }, dly(ms)); }
+function loadJSON(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+function saveJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+function save() { if (state) saveJSON(SAVE_KEY, state); }
+function prefs() { return Object.assign({ difficulty: "normal", pair: true }, loadJSON(PREF_KEY) || {}); }
+
+function freshState(diff, pair) {
+  return { v: 1, difficulty: diff, pairOn: pair, scores: [0, 0], dealer: 3, handNo: 0, history: [], phase: "bid", msg: "", result: null };
+}
+function newGame() {
+  gen++; clearTimeout(timer); closeModal();
+  const pr = prefs();
+  state = freshState(pr.difficulty, pr.pair);
+  startHand();
+}
+function startHand() {
+  const s = state;
+  const d = shuffle([...Array(32).keys()]);
+  s.hands = [[], [], [], []]; s.rest = [[], [], [], []];
+  for (let p = 0; p < 4; p++) { s.hands[p] = sortHand(d.slice(p * 4, p * 4 + 4)); s.rest[p] = d.slice(16 + p * 4, 20 + p * 4); }
+  s.orig = null; s.bids = []; s.passed = []; s.curBid = 0; s.curBidder = -1; s.turn = (s.dealer + 1) % 4;
+  s.bidder = -1; s.bid = 0; s.target = 0; s.trumpSuit = -1; s.trumpCard = -1; s.trumpRevealed = false; s.revealedBy = -1; s.revealTrick = -1;
+  s.mustTrump = -1; s.trick = []; s.lastTrick = null; s.leader = -1; s.trickNo = 0; s.captured = [0, 0]; s.tricksWon = [0, 0];
+  s.trickWins = []; s.played = []; s.voids = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]; s.pair = null;
+  s.phase = "bid"; s.msg = "";
+  save(); render(); advance();
+}
+function minBid(s) { return s.curBid ? s.curBid + 1 : 16; }
+function nextBidder(s, from) { for (let i = 1; i <= 4; i++) { const q = (from + i) % 4; if (!s.passed.includes(q)) return q; } return -1; }
+function doBid(p, v) {
+  const s = state;
+  if (!s || s.phase !== "bid" || s.turn !== p) return false;
+  if (v !== 0 && (!Number.isInteger(v) || v < minBid(s) || v > 28)) return false;
+  if (v === 0) { s.passed.push(p); s.bids.push({ p, v: 0 }); }
+  else { s.curBid = v; s.curBidder = p; s.bids.push({ p, v }); }
+  if (s.passed.length === 4) { // everyone passed: redeal
+    s.msg = "All four passed — cards re-dealt.";
+    toast(s.msg); startHand(); return true;
+  }
+  if (s.passed.length === 3 && s.curBidder >= 0) {
+    s.bidder = s.curBidder; s.bid = s.curBid; s.target = s.bid; s.phase = "trump"; s.turn = s.bidder;
+    save(); render(); advance(); return true;
+  }
+  s.turn = nextBidder(s, p);
+  save(); render(); advance(); return true;
+}
+function setTrump(p, c) {
+  const s = state;
+  if (!s || s.phase !== "trump" || p !== s.bidder || !s.hands[p].includes(c)) return false;
+  s.trumpSuit = suitOf(c); s.trumpCard = c;
+  s.hands[p] = s.hands[p].filter(x => x !== c);
+  for (let q = 0; q < 4; q++) { s.hands[q] = sortHand(s.hands[q].concat(s.rest[q])); s.rest[q] = []; }
+  s.orig = s.hands.map(h => h.slice()); s.orig[p].push(c);
+  s.phase = "play"; s.leader = (s.dealer + 1) % 4; s.turn = s.leader;
+  save(); render(); advance(); return true;
+}
+function revealTrump(p) {
+  const s = state;
+  if (!canReveal(s, p) && !(s && s.phase === "play" && s.turn === p && !s.trumpRevealed && p === s.bidder && !s.hands[p].length)) return false;
+  s.trumpRevealed = true; s.revealedBy = p; s.revealTrick = s.trickNo;
+  s.hands[s.bidder].push(s.trumpCard); sortHand(s.hands[s.bidder]);
+  s.mustTrump = s.hands[p].some(c => suitOf(c) === s.trumpSuit) ? p : -1;
+  s.msg = `${NAMES[p]} asked for trump: <b>${SUITS[s.trumpSuit]} ${SUIT_NAMES[s.trumpSuit]}</b>`;
+  toast(`${p === 0 ? "You" : NAMES[p]} revealed trump: ${SUITS[s.trumpSuit]} ${SUIT_NAMES[s.trumpSuit]}`);
+  save(); render(); advance(); return true;
+}
+function playCard(p, c) {
+  const s = state;
+  if (!s || s.phase !== "play" || s.turn !== p || s.trick.length >= 4) return false;
+  if (!legalMoves(s, p).includes(c)) return false;
+  if (s.trick.length && suitOf(c) !== suitOf(s.trick[0].c)) s.voids[p][suitOf(s.trick[0].c)] = 1;
+  s.hands[p] = s.hands[p].filter(x => x !== c);
+  s.trick.push({ p, c, t: s.trumpRevealed });
+  s.played.push(c);
+  if (s.mustTrump === p) s.mustTrump = -1;
+  if (s.trick.length < 4) s.turn = (p + 1) % 4;
+  save(); render(); advance(); return true;
+}
+function collectTrick() {
+  const s = state;
+  const w = trickWinner(s.trick, s.trumpSuit), pts = sumPts(s.trick.map(e => e.c));
+  s.captured[teamOf(w)] += pts; s.tricksWon[teamOf(w)]++;
+  s.trickWins.push({ no: s.trickNo, w, pts });
+  s.lastTrick = { cards: s.trick.slice(), w };
+  s.msg = `${NAMES[w]} won trick ${s.trickNo + 1}` + (pts ? ` (+${pts} pts)` : "");
+  s.trick = []; s.trickNo++; s.leader = w; s.turn = w; s.mustTrump = -1;
+  checkPair(s);
+  if (s.trickNo >= 8) { endHand(); return; }
+  save(); render(); advance();
+}
+function checkPair(s) {
+  if (!s.pairOn || s.pair || !s.trumpRevealed || !s.orig) return;
+  const K = s.trumpSuit * 8 + 6, Q = s.trumpSuit * 8 + 5;
+  for (let q = 0; q < 4; q++) {
+    if (!(s.orig[q].includes(K) && s.orig[q].includes(Q))) continue;
+    const won = s.trickWins.some(t => t.no >= s.revealTrick && teamOf(t.w) === teamOf(q));
+    if (!won) continue;
+    const old = s.target;
+    s.target = adjustTarget(s.bid, teamOf(q), teamOf(s.bidder));
+    s.pair = { p: q, team: teamOf(q), from: old, to: s.target };
+    toast(`${q === 0 ? "You show" : NAMES[q] + " shows"} the Pair (K+Q ${SUITS[s.trumpSuit]})! Target ${old} → ${s.target}`);
+  }
+}
+function endHand() {
+  const s = state, bt = teamOf(s.bidder), made = s.captured[bt] >= s.target;
+  s.scores[bt] += made ? 1 : -1;
+  const rec = { hand: s.handNo + 1, bidder: s.bidder, bid: s.bid, target: s.target, trump: s.trumpSuit, captured: s.captured.slice(), made, pair: s.pair, scores: s.scores.slice() };
+  s.history.push(rec);
+  updateHandStats(rec);
+  const winTeam = s.scores[0] >= WIN_SCORE || s.scores[1] <= -WIN_SCORE ? 0 : (s.scores[1] >= WIN_SCORE || s.scores[0] <= -WIN_SCORE ? 1 : -1);
+  if (winTeam >= 0) { s.phase = "gameOver"; s.result = { winTeam, youWin: winTeam === 0 }; recordStats(s); save(); render(); showGameOver(); }
+  else { s.phase = "handEnd"; save(); render(); showHandEnd(); }
+}
+function nextHand() { const s = state; if (!s || s.phase !== "handEnd") return false; closeModal(); s.handNo++; s.dealer = (s.dealer + 1) % 4; startHand(); return true; }
+
+function advance() {
+  const s = state; if (!s) return;
+  if (s.phase === "bid") {
+    if (s.turn !== 0) schedule(() => { const v = aiBid(s, s.turn); doBid(s.turn, v); }, 650);
+  } else if (s.phase === "trump") {
+    if (s.bidder !== 0) schedule(() => setTrump(s.bidder, aiChooseTrump(s, s.bidder)), 700);
+  } else if (s.phase === "play") {
+    if (s.trick.length === 4) { schedule(collectTrick, 1000); return; }
+    // bidder with empty hand and hidden trump: auto reveal
+    if (!s.trumpRevealed && s.turn === s.bidder && !s.hands[s.bidder].length) { schedule(() => revealTrump(s.bidder), 400); return; }
+    if (s.turn !== 0) schedule(() => { const a = aiAction(s, s.turn); if (a.type === "reveal") revealTrump(s.turn); else playCard(s.turn, a.c); }, 600);
+  }
+}
+
+/* ---------- AI ---------- */
+function handStrength(h) {
+  const cnt = [0, 0, 0, 0], pw = [0, 0, 0, 0];
+  h.forEach(c => { cnt[suitOf(c)]++; pw[suitOf(c)] += powOf(c) + 1; });
+  let best = 0; for (let su = 1; su < 4; su++) if (cnt[su] * 20 + pw[su] > cnt[best] * 20 + pw[best]) best = su;
+  const P = sumPts(h), seen = h.length;
+  const f = seen <= 4 ? 12 / 28 : 8 / 24;
+  const E = P + (28 - P) * f;
+  const hasJ = h.includes(best * 8 + 4), has9 = h.includes(best * 8 + 2);
+  const bonus = 1.5 * (cnt[best] - 1) + (hasJ ? 1.5 : 0) + (has9 ? 0.5 : 0);
+  return { best, E, est: E + bonus, cnt };
+}
+function aiBid(s, p) {
+  const st = handStrength(s.hands[p]);
+  let max = Math.floor(st.est - 1);
+  if (s.difficulty === "easy") max += Math.floor(Math.random() * 5) - 2;
+  if (s.difficulty === "hard") max = Math.floor(st.est - 0.5);
+  max = Math.min(max, 24);
+  const mb = minBid(s);
+  if (mb > max) return 0;
+  if (s.difficulty !== "easy" && s.curBidder >= 0 && teamOf(s.curBidder) === teamOf(p) && max < s.curBid + 2) return 0;
+  return mb;
+}
+function aiChooseTrump(s, p) {
+  const h = s.hands[p], best = handStrength(h).best;
+  const inS = h.filter(c => suitOf(c) === best).sort((a, b) => powOf(a) - powOf(b));
+  if (s.difficulty === "easy") return inS[Math.floor(Math.random() * inS.length)];
+  return inS.length > 1 ? inS[0] : inS[0];
+}
+/** cards p cannot see (not own hand, not played, not own hidden trump) */
+function unseenFor(s, p) {
+  const k = new Set([...s.hands[p], ...s.played]);
+  if (p === s.bidder && !s.trumpRevealed) k.add(s.trumpCard);
+  const r = []; for (let c = 0; c < 32; c++) if (!k.has(c)) r.push(c); return r;
+}
+function isMaster(s, p, c, hard) {
+  if (!hard) return rOf(c) === 4;
+  const uns = unseenFor(s, p).concat(s.trick.map(e => e.c));
+  return !uns.some(x => suitOf(x) === suitOf(c) && powOf(x) > powOf(c) && x !== c);
+}
+function knownTrump(s, p) { return (s.trumpRevealed || p === s.bidder) ? s.trumpSuit : -1; }
+function wouldWin(s, p, c) { return trickWinner(s.trick.concat([{ p, c, t: s.trumpRevealed }]), s.trumpSuit) === p; }
+const lowest = cs => cs.slice().sort((a, b) => ptsOf(a) - ptsOf(b) || powOf(a) - powOf(b))[0];
+const cheapestWinner = cs => cs.slice().sort((a, b) => powOf(a) - powOf(b))[0];
+function aiAction(s, p, forceDiff) {
+  const diff = forceDiff || s.difficulty, hard = diff === "hard";
+  const legal = legalMoves(s, p);
+  if (!legal.length) return { type: "reveal" };
+  if (diff === "easy") {
+    if (canReveal(s, p) && Math.random() < 0.35) return { type: "reveal" };
+    return { type: "play", c: legal[Math.floor(Math.random() * legal.length)] };
+  }
+  const ts = knownTrump(s, p);
+  if (!s.trick.length) return { type: "play", c: chooseLead(s, p, legal, hard, ts) };
+  const led = suitOf(s.trick[0].c);
+  const cw = trickWinner(s.trick, s.trumpSuit);
+  const partnerWin = teamOf(cw) === teamOf(p);
+  const tPts = sumPts(s.trick.map(e => e.c));
+  const last = s.trick.length === 3;
+  const winEntry = s.trick.find(e => e.p === cw);
+  const partnerSafe = partnerWin && (last || (s.trick.length === 2 && cw === (p + 2) % 4 && isMaster(s, p, winEntry.c, hard) && !(s.trumpRevealed && hard && s.voids[(p + 1) % 4][led])) || rOf(winEntry.c) === 4 && !s.trumpRevealed);
+  const following = legal.every(c => suitOf(c) === led) && s.hands[p].some(c => suitOf(c) === led);
+  if (following) {
+    if (partnerWin) {
+      if (partnerSafe) { const nonJ = legal.filter(c => rOf(c) !== 4 && !(hard && isMaster(s, p, c, hard))); const pool = nonJ.length ? nonJ : legal; return { type: "play", c: pool.slice().sort((a, b) => ptsOf(b) - ptsOf(a) || powOf(a) - powOf(b))[0] }; }
+      return { type: "play", c: lowest(legal) };
+    }
+    const W = legal.filter(c => wouldWin(s, p, c));
+    if (W.length) {
+      if (last) return { type: "play", c: W.slice().sort((a, b) => powOf(a) - powOf(b))[0] };
+      const masters = W.filter(c => isMaster(s, p, c, hard));
+      if (masters.length) return { type: "play", c: masters.sort((a, b) => powOf(a) - powOf(b))[0] };
+      if (tPts > 0) return { type: "play", c: cheapestWinner(W) };
+    }
+    return { type: "play", c: lowest(legal) };
+  }
+  // cannot follow suit
+  if (canReveal(s, p)) {
+    const wantReveal = !partnerWin && (tPts >= (p === s.bidder ? 2 : 1) || (hard && tPts >= 1)) ||
+      (!partnerWin && hard && p !== s.bidder && s.trick.length === 3 && tPts > 0);
+    if (wantReveal) return { type: "reveal" };
+  }
+  const trumps = s.trumpRevealed ? legal.filter(c => suitOf(c) === s.trumpSuit) : [];
+  if (s.mustTrump === p && trumps.length) {
+    const W = trumps.filter(c => wouldWin(s, p, c));
+    return { type: "play", c: W.length ? cheapestWinner(W) : lowest(trumps) };
+  }
+  if (trumps.length && !partnerWin) {
+    const W = trumps.filter(c => wouldWin(s, p, c));
+    if (W.length && (tPts >= 1 || (hard && !last))) return { type: "play", c: cheapestWinner(W) };
+  }
+  const nonT = legal.filter(c => suitOf(c) !== ts);
+  const pool = nonT.length ? nonT : legal;
+  if (partnerSafe) return { type: "play", c: pool.slice().sort((a, b) => ptsOf(b) - ptsOf(a) || powOf(a) - powOf(b))[0] };
+  return { type: "play", c: lowest(pool) };
+}
+function chooseLead(s, p, legal, hard, ts) {
+  let opts = legal;
+  if (p === s.bidder && !s.trumpRevealed) { const nt = legal.filter(c => suitOf(c) !== s.trumpSuit); if (nt.length) opts = nt; }
+  const opp = [(p + 1) % 4, (p + 3) % 4];
+  // bidder side draws trumps after reveal (hard)
+  if (hard && s.trumpRevealed && teamOf(p) === teamOf(s.bidder)) {
+    const myT = opts.filter(c => suitOf(c) === ts);
+    const unT = unseenFor(s, p).filter(c => suitOf(c) === ts).length;
+    const oppMayHave = opp.some(o => !s.voids[o][ts]);
+    if (myT.length && unT > 0 && oppMayHave) { const m = myT.filter(c => isMaster(s, p, c, true)); if (m.length) return m[0]; }
+  }
+  const masters = opts.filter(c => isMaster(s, p, c, hard) && suitOf(c) !== ts && !(hard && s.trumpRevealed && opp.some(o => s.voids[o][suitOf(c)] && !s.voids[o][ts])));
+  if (masters.length) return masters.sort((a, b) => ptsOf(b) - ptsOf(a))[0];
+  // lead low from a suit; avoid leading point cards; prefer partner's voids? (hard: lead suit partner is void in when trumps open)
+  if (hard && s.trumpRevealed) {
+    const pv = opts.filter(c => s.voids[(p + 2) % 4][suitOf(c)] && !s.voids[(p + 2) % 4][ts] && suitOf(c) !== ts);
+    if (pv.length) return lowest(pv);
+  }
+  const nonPts = opts.filter(c => ptsOf(c) === 0 && suitOf(c) !== ts);
+  if (nonPts.length) {
+    const cnt = [0, 0, 0, 0]; s.hands[p].forEach(c => cnt[suitOf(c)]++);
+    return nonPts.sort((a, b) => cnt[suitOf(b)] - cnt[suitOf(a)] || powOf(a) - powOf(b))[0];
+  }
+  return lowest(opts);
+}
+function suggest() {
+  const s = state; if (!s) return null;
+  if (s.phase === "bid" && s.turn === 0) return { type: "bid", v: aiBid({ ...s, difficulty: "normal" }, 0) };
+  if (s.phase === "trump" && s.bidder === 0) return { type: "trump", c: aiChooseTrump({ ...s, difficulty: "normal" }, 0) };
+  if (s.phase === "play" && s.turn === 0 && s.trick.length < 4) return aiAction(s, 0, "normal");
+  if (s.phase === "handEnd") return { type: "next" };
+  return null;
+}
+function autoHuman() {
+  const a = suggest(); if (!a) return false;
+  if (a.type === "bid") return doBid(0, a.v);
+  if (a.type === "trump") return setTrump(0, a.c);
+  if (a.type === "reveal") return revealTrump(0);
+  if (a.type === "play") return playCard(0, a.c);
+  if (a.type === "next") return nextHand();
+  return false;
+}
+
+/* ---------- stats ---------- */
+function getStats() { return Object.assign({ played: 0, won: 0, streak: 0, bestStreak: 0, bids: 0, bidsMade: 0, hands: 0 }, loadJSON(STATS_KEY) || {}); }
+function updateHandStats(rec) {
+  const st = getStats(); st.hands++;
+  if (rec.bidder === 0) { st.bids++; if (rec.made) st.bidsMade++; }
+  saveJSON(STATS_KEY, st);
+}
+function recordStats(s) {
+  const st = getStats(); st.played++;
+  if (s.result.youWin) { st.won++; st.streak++; st.bestStreak = Math.max(st.bestStreak, st.streak); } else st.streak = 0;
+  saveJSON(STATS_KEY, st);
+}
+
+/* ---------- rendering ---------- */
+const $ = id => document.getElementById(id);
+function cardHTML(c, cls) {
+  const su = suitOf(c), lab = RLAB[rOf(c)];
+  return `<div class="card ${su % 2 ? "red" : "blk"} ${cls || ""}" data-c="${c}"><div class="ix"><b class="${lab === "10" ? "t" : ""}">${lab}</b><i>${SUITS[su]}</i></div>${ptsOf(c) ? `<div class="pts">${ptsOf(c)}</div>` : ""}<div class="pip">${SUITS[su]}</div></div>`;
+}
+function setStatus(html) { $("status").innerHTML = html; }
+let toastMsg = "", toastT = null;
+function toast(m) { toastMsg = m; clearTimeout(toastT); toastT = setTimeout(() => { toastMsg = ""; if (state) renderStatus(); }, G.fast ? 10 : 2600); }
+function trumpLabel(s, viewer) {
+  if (s.trumpSuit < 0) return "Trump: not set";
+  if (s.trumpRevealed) return `Trump: ${SUITS[s.trumpSuit]} ${SUIT_NAMES[s.trumpSuit]} (open)`;
+  if (viewer === s.bidder) return `Trump: ${SUITS[s.trumpSuit]} (hidden — only you know)`;
+  return "Trump: hidden 🂠";
+}
+function render() {
+  const s = state; if (!s) return;
+  $("gameInfo").innerHTML = `Game: Us <b>${s.scores[0] > 0 ? "+" : ""}${s.scores[0]}</b> · Them <b>${s.scores[1] > 0 ? "+" : ""}${s.scores[1]}</b>`;
+  $("bidInfo").textContent = s.bidder >= 0 ? `Bid: ${NAMES[s.bidder]} ${s.bid}${s.target !== s.bid ? " → target " + s.target : ""}` : (s.curBidder >= 0 ? `Bidding: ${NAMES[s.curBidder]} ${s.curBid}` : "Bidding: none yet");
+  $("bidInfo").className = "badge " + (s.bidder >= 0 ? (teamOf(s.bidder) ? "them" : "us") : "");
+  $("trumpInfo").textContent = trumpLabel(s, 0) + (s.pair ? ` · Pair: ${NAMES[s.pair.p]}` : "");
+  $("trumpInfo").className = "badge" + (s.trumpRevealed ? " tr" : "");
+  $("ptsInfo").innerHTML = `Points: Us <b>${s.captured[0]}</b> · Them <b>${s.captured[1]}</b> · out ${28 - s.captured[0] - s.captured[1]}`;
+  for (let p = 1; p < 4; p++) {
+    const n = s.hands[p].length;
+    const hid = p === s.bidder && !s.trumpRevealed && s.trumpCard >= 0;
+    const lastBid = [...s.bids].reverse().find(b => b.p === p);
+    const bidTxt = s.phase === "bid" ? (lastBid ? (lastBid.v ? "bid " + lastBid.v : "pass") : "") : "";
+    $("seat" + p).innerHTML = `<div class="nm">${NAMES[p]} <span class="tag ${teamOf(p) ? "them" : "us"}">${teamOf(p) ? "Them" : "Partner"}</span>${p === s.bidder ? ` <span class="tag bid">${s.bid}</span>` : ""}</div>` +
+      `<div class="backs">${Array(n).fill('<div class="mini"></div>').join("")}${hid ? '<div class="mini hid" title="Face-down trump"></div>' : ""}</div>` +
+      `<div class="sc">${n} cards${p === s.dealer ? " · dealer" : ""}${bidTxt ? " · " + bidTxt : ""}</div>`;
+    $("seat" + p).classList.toggle("turn", (s.phase === "bid" || s.phase === "play") && s.turn === p || s.phase === "trump" && s.bidder === p);
+  }
+  for (let p = 0; p < 4; p++) $("slot" + p).innerHTML = "";
+  const tr = s.trick.length ? s.trick : [];
+  const w = tr.length === 4 ? trickWinner(tr, s.trumpSuit) : -1;
+  tr.forEach(e => { $("slot" + e.p).innerHTML = cardHTML(e.c, (e.p === w ? "win " : "") + (e.t && suitOf(e.c) === s.trumpSuit ? "trp" : "")); });
+  $("bidlog").innerHTML = s.phase === "bid" ? `<b>Bidding</b>${s.bids.slice(-6).map(b => `<span>${NAMES[b.p]}: ${b.v ? b.v : "pass"}</span>`).join("")}<span class="small">min ${minBid(s)}</span>` :
+    (s.phase === "trump" ? `<b>${NAMES[s.bidder]} won the bid at ${s.bid}</b><span>choosing trump…</span>` : "");
+  $("youInfo").innerHTML = `You <span class="tag us">Us</span>${s.bidder === 0 ? ` <span class="tag bid">${s.bid}</span>` : ""}${s.dealer === 0 ? " · dealer" : ""}`;
+  $("hidInfo").innerHTML = s.bidder === 0 && s.trumpCard >= 0 && !s.trumpRevealed ? `Your face-down trump card: <b class="${suitOf(s.trumpCard) % 2 ? "redt" : ""}" style="color:${suitOf(s.trumpCard) % 2 ? "#ff8a80" : "#fff"}">${cardName(s.trumpCard)}</b>` : `Tricks: Us ${s.tricksWon[0]} · Them ${s.tricksWon[1]}`;
+  $("handwrap").classList.toggle("turn", (s.phase === "bid" || s.phase === "play") && s.turn === 0 || s.phase === "trump" && s.bidder === 0);
+  renderHand(); renderStatus();
+  if ($("p-odds").classList.contains("on")) renderLive();
+}
+function renderStatus() {
+  const s = state; if (!s) return;
+  let h = "";
+  const pre = toastMsg ? `<span>${toastMsg}</span> · ` : "";
+  if (s.phase === "bid") {
+    if (s.turn === 0) {
+      const mb = minBid(s);
+      h = `<span>${pre}Your bid (min ${mb}) — or pass:</span><div class="bidrow">`;
+      for (let v = mb; v <= 28; v++) h += `<button class="btn num" data-bid="${v}">${v}</button>`;
+      h += `<button class="btn alt" data-bid="0">Pass</button></div>`;
+    } else h = pre + `${NAMES[s.turn]} is thinking…`;
+  } else if (s.phase === "trump") {
+    h = s.bidder === 0 ? pre + "You won the bid! <b>Tap one of your 4 cards</b> — it goes face down and its suit becomes trump." : pre + `${NAMES[s.bidder]} is choosing trump…`;
+  } else if (s.phase === "play") {
+    if (s.trick.length === 4) h = pre + `${NAMES[trickWinner(s.trick, s.trumpSuit)]} wins the trick`;
+    else if (s.turn === 0) {
+      h = pre + (s.mustTrump === 0 ? "You asked for trump — you must play a trump" : (s.trick.length ? "Your turn — follow suit if you can" : "Your lead — tap a card"));
+      if (canReveal(s, 0)) h += ` <button class="btn" id="bReveal">Show trump</button>`;
+    } else h = pre + `${NAMES[s.turn]} is thinking…`;
+  } else if (s.phase === "handEnd") h = `Hand over. <button class="btn" id="bNext2">Next hand</button>`;
+  else if (s.phase === "gameOver") h = `Game over. <button class="btn" id="bAgain2">New game</button>`;
+  setStatus(h);
+}
+function layoutHand(el, cards, opts) {
+  const W = el.clientWidth || 340;
+  const cw = parseFloat(getComputedStyle(el).getPropertyValue("--hcw")) || 64;
+  const n = cards.length;
+  const minStep = cw * 0.42;
+  const perRow = Math.max(1, Math.floor((W - cw) / minStep) + 1);
+  const rows = Math.max(1, Math.ceil(n / perRow));
+  const per = Math.ceil(n / rows) || 1;
+  const step = per > 1 ? Math.min(cw + 6, (W - cw) / (per - 1)) : 0;
+  const rowH = cw * 0.62;
+  el.style.height = (cw * 1.4 + 16 + (rows - 1) * rowH) + "px";
+  let html = "";
+  cards.forEach((c, i) => {
+    const r = Math.floor(i / per), k = i % per, cnt = Math.min(per, n - r * per);
+    const total = (cnt - 1) * step + cw, x0 = Math.max(0, (W - total) / 2);
+    html += cardHTML(c, opts.cls(c)).replace('class="card', `style="left:${(x0 + k * step).toFixed(1)}px;margin-top:${(r * rowH).toFixed(1)}px;z-index:${i + 1}" class="card`);
+  });
+  el.innerHTML = html;
+}
+function renderHand() {
+  const s = state; if (!s) return;
+  const h = s.hands[0];
+  const myTurn = s.phase === "play" && s.turn === 0 && s.trick.length < 4;
+  const legal = myTurn ? legalMoves(s, 0) : [];
+  layoutHand($("hand"), h, { cls: c => (s.phase === "play" && myTurn && !legal.includes(c)) ? "dim" : "" });
+}
+function onHandClick(e) {
+  const el = e.target.closest(".card"); if (!el || !state) return;
+  const c = +el.dataset.c, s = state;
+  if (s.phase === "trump" && s.bidder === 0) { setTrump(0, c); return; }
+  if (s.phase === "play" && s.turn === 0) playCard(0, c);
+}
+
+/* ---------- modals ---------- */
+function showModal(html) { $("dlg").innerHTML = html; $("modal").classList.add("on"); }
+function closeModal() { $("modal").classList.remove("on"); }
+function handSummary(s, r) {
+  const bt = teamOf(r.bidder);
+  return `<p><b>${NAMES[r.bidder]}</b> bid <b>${r.bid}</b> with trump ${SUITS[r.trump]} ${SUIT_NAMES[r.trump]}${r.pair ? ` · Pair shown by ${NAMES[r.pair.p]} → target <b>${r.target}</b>` : ""}.</p>
+  <table><tr><th></th><th>Card points</th><th>Game score</th></tr>
+  <tr><td>${TEAM_NAMES[0]}</td><td>${r.captured[0]}</td><td><b>${r.scores[0]}</b></td></tr>
+  <tr><td>${TEAM_NAMES[1]}</td><td>${r.captured[1]}</td><td><b>${r.scores[1]}</b></td></tr></table>
+  <p class="big ${r.made ? "" : "redt"}">${bt === 0 ? "Our side" : "Their side"} ${r.made ? "made" : "failed"} the bid (${r.captured[bt]} / ${r.target}) → ${r.made ? "+1" : "−1"}</p>`;
+}
+function showHandEnd() {
+  const s = state, r = s.history[s.history.length - 1];
+  showModal(`<h2>Hand ${r.hand} complete</h2>${handSummary(s, r)}<p class="small">First side to +6 wins; a side at −6 loses.</p><div class="row"><button class="btn" id="bNext">Next hand</button></div>`);
+}
+function showGameOver() {
+  const s = state, r = s.history[s.history.length - 1], st = getStats();
+  showModal(`<h2>Game over — ${s.result.youWin ? "You and Meena win! 🏆" : "Arun and Ravi win"}</h2>${handSummary(s, r)}<p class="small">Hands played: ${s.history.length}. Your record: ${st.won} won of ${st.played} · streak ${st.streak}</p><div class="row"><button class="btn" id="bAgain">New game</button></div>`);
+}
+function showResume(saved) {
+  showModal(`<h2>Resume saved game?</h2><p>Hand ${saved.handNo + 1}, game score Us ${saved.scores[0]} · Them ${saved.scores[1]}.</p><div class="row"><button class="btn alt" id="bFresh">New game</button><button class="btn" id="bResume">Resume saved game</button></div>`);
+}
+function resume(saved) {
+  gen++; clearTimeout(timer); closeModal(); state = saved;
+  $("diff").value = saved.difficulty; $("pairOpt").checked = !!saved.pairOn;
+  render();
+  if (state.phase === "handEnd") showHandEnd(); else if (state.phase === "gameOver") showGameOver(); else advance();
+}
+
+/* ---------- odds tab ---------- */
+function C(n, k) { if (k < 0 || k > n || n < 0) return 0; k = Math.min(k, n - k); let r = 1; for (let i = 1; i <= k; i++) r = r * (n - k + i) / i; return r; }
+function hyper(N, K, n, k) { const d = C(N, n); return d ? C(K, k) * C(N - K, n - k) / d : 0; }
+function splitDist(n, sizes) {
+  const N = sizes.reduce((a, b) => a + b, 0), den = C(N, n), out = [];
+  const rec = (i, left, acc, ways) => {
+    if (i === sizes.length - 1) { if (left <= sizes[i]) out.push({ a: [...acc, left], p: ways * C(sizes[i], left) / den }); return; }
+    for (let a = 0; a <= Math.min(left, sizes[i]); a++) rec(i + 1, left - a, [...acc, a], ways * C(sizes[i], a));
+  };
+  if (n <= N && den > 0) rec(0, n, [], 1);
+  return out;
+}
+const pct = x => (x * 100).toFixed(2) + "%";
+function renderJack() {
+  const seen = +$("jSeen").value; $("jM").max = 4;
+  const m = Math.min(+$("jM").value, 4), h = +$("jH").value, rk = +$("jRank").value;
+  $("jMOut").textContent = m; $("jHOut").textContent = h;
+  const U = 32 - seen, r = 4 - m;
+  const nm = { 4: "Jacks", 2: "Nines", 7: "Aces", 3: "Tens" }[rk];
+  if (h > U) { $("jOut").innerHTML = `<p class="redt">h cannot exceed ${U}.</p>`; return; }
+  let t = `<p>Unseen cards U = 32 − ${seen} = <b>${U}</b>; ${nm.toLowerCase()} unseen r = 4 − ${m} = <b>${r}</b>.</p><table><tr><th>Partner holds</th><th>Probability</th><th style="width:40%"></th></tr>`;
+  for (let k = 0; k <= Math.min(r, h); k++) { const pr = hyper(U, r, h, k); t += `<tr><td>${k}</td><td>C(${r},${k})·C(${U - r},${h - k})/C(${U},${h}) = <b>${pct(pr)}</b></td><td><div class="bar" style="width:${(pr * 100).toFixed(1)}%"></div></td></tr>`; }
+  const p1 = 1 - hyper(U, r, h, 0);
+  const ev = r * h / U;
+  t += `</table><p class="big">P(partner has ≥ 1 of the ${nm.toLowerCase()}) = ${pct(p1)}</p><p class="small">Expected number with partner = r·h/U = ${ev.toFixed(2)}. Both opponents together: P(they hold all ${r}) = ${r ? pct(hyper(U, r, U - h, r)) : "—"}.</p>`;
+  $("jOut").innerHTML = t;
+}
+let tSizes = null, tPlayed = 0;
+function renderTrump() {
+  const t = +$("tT").value, h = +$("tH").value;
+  $("tTOut").textContent = t; $("tHOut").textContent = h;
+  const sizes = tSizes || [h, h, h];
+  const n = Math.max(0, 8 - t - tPlayed), N = sizes.reduce((a, b) => a + b, 0);
+  $("tSizes").textContent = `Trumps still out n = 8 − ${t}${tPlayed ? " − " + tPlayed + " played" : ""} = ${n}; hand sizes ${sizes.join(", ")}` + (tSizes ? " (live)" : "");
+  if (n > N) { $("tOut").innerHTML = `<p class="redt">n exceeds unknown cards.</p>`; return; }
+  const dist = splitDist(n, sizes), groups = new Map();
+  dist.forEach(d => { const key = d.a.slice().sort((x, y) => y - x).join("-"); const g = groups.get(key) || { p: 0 }; g.p += d.p; groups.set(key, g); });
+  const rows = [...groups.entries()].sort((a, b) => b[1].p - a[1].p);
+  let out = `<table><tr><th>Split</th><th>Probability</th><th style="width:40%"></th></tr>`;
+  rows.forEach(([k, g]) => out += `<tr><td><b>${k}</b></td><td>${pct(g.p)}</td><td><div class="bar" style="width:${(g.p * 100).toFixed(1)}%"></div></td></tr>`);
+  out += `</table>`;
+  if (sizes.length === 3) {
+    const pPartner = [0, 1, 2, 3, 4].map(k => hyper(N, n, sizes[1], k));
+    const pVoid = hyper(N, n, sizes[0], 0);
+    out += `<p class="small">Partner (Meena, h=${sizes[1]}) holds ≥1 trump: <b>${pct(1 - pPartner[0])}</b> · ≥2: <b>${pct(1 - pPartner[0] - pPartner[1])}</b>. A given opponent (h=${sizes[0]}) has no trump: C(${N - sizes[0]},${n})/C(${N},${n}) = <b>${pct(pVoid)}</b>.</p>`;
+  }
+  $("tOut").innerHTML = out;
+}
+function renderExp() {
+  const st = +$("eStage").value;
+  const J = +$("eJ").value, N9 = +$("e9").value, A = +$("eA").value, T = +$("eT").value;
+  $("eJo").textContent = J; $("e9o").textContent = N9; $("eAo").textContent = A; $("eTo").textContent = T;
+  const cardsUsed = J + N9 + A + T;
+  if (cardsUsed > st) { $("eOut").innerHTML = `<p class="redt">That is ${cardsUsed} cards — more than the ${st} you can see.</p>`; return; }
+  const H = 3 * J + 2 * N9 + A + T;
+  const f = st === 4 ? 12 / 28 : 8 / 24, fs = st === 4 ? "12/28" : "8/24";
+  const E = H + (28 - H) * f;
+  $("eOut").innerHTML = `<table><tr><td>Points in your hand H</td><td>3·${J} + 2·${N9} + ${A} + ${T} = <b>${H}</b></td></tr>
+  <tr><td>Points unseen</td><td>28 − ${H} = ${28 - H}</td></tr>
+  <tr><td>Expected with ${st === 4 ? "your next 4 cards + partner" : "partner"}</td><td>${28 - H} × ${fs} = ${((28 - H) * f).toFixed(2)}</td></tr>
+  <tr><td><b>Expected points held by your side</b></td><td class="big">${E.toFixed(2)}</td></tr></table>
+  <p class="small">Points <i>held</i> are not points <i>won</i> — trump control decides who captures them. The computer bids up to about E + 1.5 per extra card in its trump suit + 1.5 for the trump J + 0.5 for the trump 9, minus 1. A side holding exactly half the deck averages 14 points.</p>`;
+}
+function liveHandCounts() { const h = state.hands[0].slice(); if (state.bidder === 0 && !state.trumpRevealed && state.trumpCard >= 0) h.push(state.trumpCard); return h; }
+function renderLive() {
+  const s = state; if (!s || !s.hands) { $("liveBox").innerHTML = ""; return; }
+  const mine = liveHandCounts();
+  const out = 28 - s.captured[0] - s.captured[1];
+  const inHand = sumPts(mine);
+  let trumpTxt;
+  const ts = knownTrump(s, 0);
+  if (ts < 0) trumpTxt = s.trumpSuit < 0 ? "not chosen yet" : "hidden — you do not know the trump suit yet";
+  else {
+    const myT = mine.filter(c => suitOf(c) === ts).length, plT = s.played.filter(c => suitOf(c) === ts).length;
+    const hiddenElse = !s.trumpRevealed && s.bidder !== 0 ? 1 : 0;
+    trumpTxt = `${SUITS[ts]} ${SUIT_NAMES[ts]} — you hold ${myT}, played ${plT}, <b>unseen ${8 - myT - plT}</b>${hiddenElse ? "" : ""}`;
+  }
+  let t = `<h3>Live readout — hand ${s.handNo + 1}${s.phase === "play" ? ", trick " + Math.min(s.trickNo + 1, 8) : ""}</h3><table>
+  <tr><td>Contract</td><td>${s.bidder >= 0 ? `${NAMES[s.bidder]} (${teamOf(s.bidder) ? "Them" : "Us"}) bid ${s.bid}, target ${s.target}` : "bidding in progress"}</td></tr>
+  <tr><td>Points captured</td><td>Us ${s.captured[0]} · Them ${s.captured[1]}</td></tr>
+  <tr><td><b>Points still out</b></td><td class="big">${out}</td></tr>
+  <tr><td>Points in your hand</td><td>${inHand} (others hold the remaining ${Math.max(0, out - inHand - sumPts(s.trick.map(e => e.c)))} not in the current trick)</td></tr>
+  <tr><td><b>Trumps unseen</b></td><td>${trumpTxt}</td></tr>`;
+  if (s.bidder >= 0 && s.phase === "play") {
+    const bt = teamOf(s.bidder), need = s.target - s.captured[bt], defNeed = 28 - s.target + 1 - s.captured[1 - bt];
+    t += `<tr><td>Bidding side still needs</td><td>${need > 0 ? need + " pts" : "made ✓"} · defenders need ${defNeed > 0 ? defNeed + " pts to break it" : "— contract broken"}</td></tr>`;
+  }
+  const v = [1, 2, 3].map(p => { const su = [0, 1, 2, 3].filter(x => s.voids[p][x]).map(x => SUITS[x]).join(""); return su ? `${NAMES[p]}: ${su}` : ""; }).filter(Boolean).join(" · ");
+  t += `<tr><td>Known voids</td><td>${v || "—"}</td></tr></table>`;
+  $("liveBox").innerHTML = t;
+}
+function useLiveJ() {
+  if (!state || !state.hands) return;
+  const mine = liveHandCounts(), rk = +$("jRank").value;
+  $("jSeen").value = mine.length + state.played.length >= 8 || state.phase !== "bid" ? "8" : "4";
+  $("jM").value = mine.filter(c => rOf(c) === rk).length + state.played.filter(c => rOf(c) === rk && false).length;
+  $("jH").value = 8; renderJack();
+}
+function useLiveT() {
+  const s = state; if (!s || !s.hands) return;
+  const ts = knownTrump(s, 0);
+  if (ts < 0) { $("tSizes").textContent = "Trump is hidden from you — pick a suit with the slider instead (live mode needs a known trump)."; return; }
+  const mine = liveHandCounts();
+  $("tT").value = mine.filter(c => suitOf(c) === ts).length;
+  tPlayed = s.played.filter(c => suitOf(c) === ts).length;
+  const sz = [1, 2, 3].map(p => s.hands[p].length + (p === s.bidder && !s.trumpRevealed ? 1 : 0));
+  tSizes = sz.every(x => x > 0) ? sz : null;
+  renderTrump();
+}
+function useLiveE() {
+  if (!state || !state.hands) return;
+  const mine = liveHandCounts();
+  $("eStage").value = mine.length <= 4 && state.phase !== "play" ? "4" : "8";
+  $("eJ").value = mine.filter(c => rOf(c) === 4).length; $("e9").value = mine.filter(c => rOf(c) === 2).length;
+  $("eA").value = mine.filter(c => rOf(c) === 7).length; $("eT").value = mine.filter(c => rOf(c) === 3).length;
+  renderExp();
+}
+
+/* ---------- misc UI ---------- */
+function showTab(name) {
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === name));
+  ["play", "rules", "odds"].forEach(n => $("p-" + n).classList.toggle("on", n === name));
+  $("bRules").classList.toggle("on", name === "rules"); $("bOdds").classList.toggle("on", name === "odds");
+  if (name === "rules") renderStats();
+  if (name === "odds") { renderLive(); renderJack(); renderTrump(); renderExp(); }
+  if (name === "play") renderHand();
+}
+function renderStats() {
+  const st = getStats();
+  $("statsBox").innerHTML = `<table><tr><th>Games</th><th>Won</th><th>Win %</th><th>Streak</th><th>Best streak</th><th>Hands</th><th>Your bids made</th></tr><tr><td>${st.played}</td><td>${st.won}</td><td>${st.played ? Math.round(st.won / st.played * 100) : 0}%</td><td>${st.streak}</td><td>${st.bestStreak}</td><td>${st.hands}</td><td>${st.bidsMade} / ${st.bids}</td></tr></table>`;
+}
+function toggleFull() { try { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { }); else document.exitFullscreen().catch(() => { }); } catch (e) { } }
+let pendingSave = null;
+function init() {
+  $("ver").textContent = APP_VERSION;
+  if (!document.fullscreenEnabled) $("bFull").style.display = "none";
+  document.addEventListener("fullscreenchange", () => $("bFull").classList.toggle("on", !!document.fullscreenElement));
+  $("bFull").onclick = toggleFull;
+  $("bNew").onclick = () => { if (!state || state.phase === "gameOver") { newGame(); showTab("play"); return; } showModal(`<h2>Start a new game?</h2><p>The current game will be abandoned.</p><div class="row"><button class="btn alt" id="bCancel">Cancel</button><button class="btn" id="bAgain">New game</button></div>`); };
+  $("bRules").onclick = () => showTab($("p-rules").classList.contains("on") ? "play" : "rules");
+  $("bOdds").onclick = () => showTab($("p-odds").classList.contains("on") ? "play" : "odds");
+  document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+  $("hand").addEventListener("click", onHandClick);
+  $("status").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b || !state) return;
+    if (b.dataset.bid !== undefined) doBid(0, +b.dataset.bid);
+    else if (b.id === "bReveal") revealTrump(0);
+    else if (b.id === "bNext2") nextHand();
+    else if (b.id === "bAgain2") newGame();
+  });
+  $("dlg").addEventListener("click", e => {
+    const id = e.target.id;
+    if (id === "bNext") nextHand();
+    else if (id === "bAgain") { newGame(); showTab("play"); }
+    else if (id === "bCancel") { closeModal(); if (state) advance(); }
+    else if (id === "bResume") resume(pendingSave);
+    else if (id === "bFresh") newGame();
+  });
+  $("diff").onchange = () => { const d = $("diff").value; const pr = prefs(); pr.difficulty = d; saveJSON(PREF_KEY, pr); if (state) { state.difficulty = d; save(); } };
+  $("pairOpt").onchange = () => { const pr = prefs(); pr.pair = $("pairOpt").checked; saveJSON(PREF_KEY, pr); if (state && state.phase === "bid" && !state.bids.length) { state.pairOn = pr.pair; save(); } else toast("Pair setting applies from the next game"); renderStatus(); };
+  $("bResetStats").onclick = () => { saveJSON(STATS_KEY, null); try { localStorage.removeItem(STATS_KEY); } catch (e) { } renderStats(); };
+  ["jRank", "jSeen", "jM", "jH"].forEach(id => $(id).oninput = $(id).onchange = renderJack);
+  $("tT").oninput = renderTrump; $("tH").oninput = () => { tSizes = null; tPlayed = 0; renderTrump(); };
+  ["eStage", "eJ", "e9", "eA", "eT"].forEach(id => $(id).oninput = $(id).onchange = renderExp);
+  $("bLiveJ").onclick = useLiveJ; $("bLiveT").onclick = useLiveT; $("bLiveE").onclick = useLiveE;
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => state && renderHand(), 80); });
+  const pr = prefs(); $("diff").value = pr.difficulty; $("pairOpt").checked = pr.pair;
+  const saved = loadJSON(SAVE_KEY);
+  if (saved && saved.v === 1 && saved.phase && saved.phase !== "gameOver" && Array.isArray(saved.hands)) { pendingSave = saved; showResume(saved); setStatus("Resume your saved game or start a new one"); }
+  else newGame();
+}
+
+window.__game = {
+  get state() { return state; }, G,
+  get fast() { return G.fast; }, set fast(v) { G.fast = !!v; },
+  newGame, nextHand, bid: v => doBid(0, v), pass: () => doBid(0, 0), setTrump: c => setTrump(0, c), play: c => playCard(0, c), reveal: () => revealTrump(0),
+  legal: () => state && state.phase === "play" ? legalMoves(state, 0) : [], canReveal: () => canReveal(state, 0),
+  suggest, autoHuman, legalMoves, trickWinner, splitDist, hyper, C, showTab, adjustTarget,
+  resume: () => pendingSave && resume(pendingSave), setDifficulty: d => { $("diff").value = d; $("diff").onchange(); }
+};
+init();
+</script>
+</body>
+</html>

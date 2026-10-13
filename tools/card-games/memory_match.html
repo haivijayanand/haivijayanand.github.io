@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<!--
+TOOL: Memory Match
+FAMILY: card-games
+VERSION: 1.0.0
+DATE: 2026-10-13
+CHAT: Card games batch 1 (claude.ai)
+CHANGES: 1.0.0 - first release
+STATUS: released
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b3d2a">
+<title>Memory Match</title>
+<style>
+:root{--felt:#0f5132;--felt2:#16774a;--bar:#0b2e20;--red:#c62828;--blk:#111;--back:#1e3a8a;--gold:#facc15;--cw:64px;--ink:#f1f5f2;--muted:#b9d4c4;--panel:rgba(0,0,0,.25);--you:#38bdf8;--cpu:#fb923c}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Arial,sans-serif;color:var(--ink);background:var(--felt);background-image:radial-gradient(ellipse at 50% 25%,var(--felt2) 0%,var(--felt) 60%,#0a3d26 100%);min-height:100vh;width:100%;overflow-x:hidden}
+button,select,input{font:inherit}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;background:var(--bar);padding:6px 12px;padding-top:max(6px,env(safe-area-inset-top));box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.topbar h1{font-size:1.15rem;margin:0;white-space:nowrap}
+.topbar nav{display:flex;gap:6px;flex-wrap:wrap}
+.btn{min-height:40px;min-width:40px;padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:#174d35;color:#fff;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;font-size:.95rem}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:#e0b400;color:#1b1b1b;border-color:#e0b400;font-weight:600}
+.tabs{display:flex;gap:4px;padding:6px 12px 0;max-width:1400px;margin:0 auto}
+.tab{min-height:40px;padding:6px 14px;border:none;border-radius:8px 8px 0 0;background:rgba(0,0,0,.25);color:var(--muted);cursor:pointer}
+.tab.active{background:rgba(0,0,0,.45);color:#fff;font-weight:600}
+main{width:100%;max-width:1400px;margin:0 auto;padding:0 12px 12px}
+.panel{display:none;background:rgba(0,0,0,.18);border-radius:0 10px 10px 10px;padding:10px}
+.panel.active{display:block}
+.settings{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.settings label{display:flex;align-items:center;gap:6px;font-size:.92rem}
+.settings select{min-height:40px;border-radius:8px;padding:4px 8px;background:#174d35;color:#fff;border:1px solid rgba(255,255,255,.25)}
+.score{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+.pl{background:var(--panel);border-radius:10px;padding:6px 14px;min-width:130px;text-align:center;border:2px solid transparent;transition:border-color .2s,background .2s}
+.pl .nm{font-size:.85rem;color:var(--muted)}
+.pl .pts{font-size:1.5rem;font-weight:700}
+.pl.you .pts{color:var(--you)} .pl.cpu .pts{color:var(--cpu)}
+.pl.turn{border-color:var(--gold);background:rgba(0,0,0,.4)}
+.board{display:grid;gap:10px;margin:0 auto;justify-content:center}
+.slot{perspective:700px;aspect-ratio:5/7;cursor:pointer;-webkit-tap-highlight-color:transparent;border:none;padding:0;background:none;width:100%}
+.inner{position:relative;width:100%;height:100%;transition:transform .45s ease;transform-style:preserve-3d}
+.slot.up .inner{transform:rotateY(180deg)}
+.face,.backf{position:absolute;inset:0;border-radius:8px;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:0 2px 5px rgba(0,0,0,.45)}
+.backf{background:repeating-linear-gradient(45deg,#1e3a8a 0 7px,#2a4aa6 7px 14px);border:3px solid #fff}
+.face{background:#fff;color:var(--blk);transform:rotateY(180deg);display:flex;align-items:center;justify-content:center;flex-direction:column;font-weight:700}
+.face.red{color:var(--red)}
+.face .rk{font-size:2.1em;line-height:1}
+.face .su{font-size:2.3em;line-height:1}
+.face .cn{position:absolute;left:.35em;top:.2em;font-size:.9em;line-height:1}
+.slot.gone{cursor:default}
+.slot.gone .face{opacity:.35;box-shadow:none}
+.slot.gone.byyou .face{outline:3px solid var(--you);outline-offset:-3px}
+.slot.gone.bycpu .face{outline:3px solid var(--cpu);outline-offset:-3px}
+.slot.pop .inner{animation:pop .5s}
+@keyframes pop{50%{transform:rotateY(180deg) scale(1.08)}}
+.status{margin-top:12px;text-align:center;background:var(--panel);border-radius:8px;padding:10px;min-height:44px;font-size:1.05rem}
+.prose{line-height:1.5;max-width:900px}
+.prose h2{font-size:1.15rem;margin:.6em 0 .3em;color:var(--gold)}
+.prose h3{font-size:1rem;margin:.8em 0 .3em}
+.prose table{border-collapse:collapse;margin:.4em 0}
+.prose td,.prose th{border:1px solid rgba(255,255,255,.25);padding:4px 8px;text-align:left}
+.calc{background:rgba(0,0,0,.25);border-radius:10px;padding:10px 12px;margin:10px 0}
+.calc label{display:flex;align-items:center;gap:8px;margin:6px 0;flex-wrap:wrap}
+.calc input[type=range]{flex:1;min-width:160px;height:32px}
+.calc select{min-height:40px;border-radius:8px;padding:4px 8px}
+.big{font-size:1.4rem;font-weight:700;color:var(--gold)}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:.9rem;background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;display:inline-block}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:2000;padding:16px}
+.modal.hidden{display:none}
+.modal .box{background:#123d2b;border:1px solid rgba(255,255,255,.3);border-radius:12px;padding:18px;max-width:420px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,.6);text-align:center}
+.modal h2{margin:0 0 8px;color:var(--gold);font-size:1.5rem}
+.modal .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;justify-content:center}
+@media (max-width:600px){
+ :root{--cw:44px}
+ .topbar{padding:4px 6px}
+ .topbar h1{font-size:1rem}
+ .topbar nav{gap:4px}
+ .topbar .btn{padding:4px 8px;font-size:.85rem}
+ .fstext{display:none}
+ main{padding:0 4px 8px}
+ .tabs{padding:4px 4px 0}
+ .panel{padding:8px 6px}
+ .board{gap:6px}
+ .pl{min-width:110px;padding:4px 10px}
+ .grid2{grid-template-columns:1fr}
+ .calc input[type=range]{min-width:120px}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+ <h1>🃏 Memory Match</h1>
+ <nav>
+  <button class="btn primary" id="bNew">New</button>
+  <button class="btn" id="bRules">Rules</button>
+  <button class="btn" id="bOdds">Odds</button>
+  <button class="btn" id="bFs" title="Full screen">⛶<span class="fstext"> Full screen</span></button>
+  <a class="btn" href="index.html">← Games</a>
+ </nav>
+</header>
+<div class="tabs" role="tablist">
+ <button class="tab active" data-tab="play">Play</button>
+ <button class="tab" data-tab="rules">Rules</button>
+ <button class="tab" data-tab="odds">Odds &amp; Strategy</button>
+</div>
+<main>
+<section class="panel active" id="tab-play">
+ <div class="settings">
+  <label>Mode <select id="sMode"><option value="cpu">You vs Computer</option><option value="solo">Solo — beat your best</option></select></label>
+  <label id="lDiff">Computer <select id="sDiff"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select></label>
+  <label>Grid <select id="sSize"><option value="16">4×4 · 8 pairs</option><option value="24">4×6 · 12 pairs</option><option value="36">6×6 · 18 pairs</option></select></label>
+ </div>
+ <div class="score" id="score"></div>
+ <div class="board" id="board"></div>
+ <div class="status" id="status">Tap a card to turn it over.</div>
+</section>
+
+<section class="panel" id="tab-rules">
+ <div class="prose">
+  <h2>How to play</h2>
+  <ul>
+   <li>All cards start face down. On your turn, turn over <b>two cards</b>.</li>
+   <li>A <b>pair</b> is two cards of the <b>same rank and same colour</b> — e.g. 7♥ and 7♦ (both red), or K♠ and K♣ (both black).</li>
+   <li>Found a pair? You keep it and <b>play again</b>. No pair? The cards turn back over and it is the next player's turn.</li>
+   <li>When all pairs are found, the player with more pairs wins (equal pairs = a tie).</li>
+   <li><b>Solo mode:</b> find every pair in as few moves (pairs of flips) as you can and beat your best for that grid size.</li>
+  </ul>
+  <h3>Computer levels</h3>
+  <table><tr><th>Level</th><th>How it remembers</th></tr>
+   <tr><td>Easy</td><td>Forgets most cards (remembers each card it sees only 25% of the time, and forgets over time)</td></tr>
+   <tr><td>Normal</td><td>Remembers about 60% of cards it sees, slowly forgets old ones</td></tr>
+   <tr><td>Hard</td><td>Near-perfect memory (97%) and never forgets</td></tr></table>
+  <h3>Grid sizes</h3>
+  <p>4×4 = 8 pairs, 4×6 = 12 pairs, 6×6 = 18 pairs. Cards are drawn from a normal deck: each pair uses a rank and colour that no other pair uses.</p>
+  <h3>Your statistics</h3>
+  <div id="statsBox"></div>
+  <p class="mono">Memory Match v<span id="ver"></span> · card-games family · offline single file</p>
+ </div>
+</section>
+
+<section class="panel" id="tab-odds">
+ <div class="prose" style="max-width:none">
+  <h2>Odds &amp; Strategy</h2>
+  <div class="calc">
+   <h3 style="margin-top:0">Live odds — this game</h3>
+   <div id="live"></div>
+  </div>
+  <div class="grid2">
+   <div class="calc">
+    <h3 style="margin-top:0">1 · Chance of a lucky match</h3>
+    <p style="margin:0">N pairs are still on the table; you know (have seen) K single cards whose partner you have <i>not</i> seen. You flip an <b>unseen</b> card first.</p>
+    <label>Unmatched pairs N: <input type="range" id="cN" min="1" max="18" value="8"><b id="cNv"></b></label>
+    <label>Known single cards K: <input type="range" id="cK" min="0" max="8" value="0"><b id="cKv"></b></label>
+    <div id="cOut"></div>
+   </div>
+   <div class="calc">
+    <h3 style="margin-top:0">2 · Perfect memory vs no memory</h3>
+    <label>Pairs: <select id="eN"><option>4</option><option selected>8</option><option>12</option><option>18</option></select></label>
+    <div id="eOut"></div>
+    <button class="btn" id="eMC">Run 2,000 simulated solo games</button>
+    <div id="eMCout" style="margin-top:6px"></div>
+   </div>
+  </div>
+  <div class="calc">
+   <h3 style="margin-top:0">Strategy tips</h3>
+   <ul>
+    <li><b>Flip an unknown card first.</b> If it matches something you've seen, you score for sure; if not, you learn a new card.</li>
+    <li>If your first card is new and matches nothing you know, flip a <b>known</b> card second — it gives the opponent no new information. (Advanced trick; beginners can just explore.)</li>
+    <li>Say the cards aloud or group them by row (“red 7 top-left”) — memory works better with words.</li>
+    <li>Early on, matches are mostly luck (1 in 2N−1). Late in the game memory decides everything.</li>
+    <li>Watch the computer's flips too — every card it shows is free information.</li>
+   </ul>
+  </div>
+ </div>
+</section>
+</main>
+
+<div class="modal hidden" id="modal"><div class="box"><h2 id="mTitle"></h2><div id="mBody"></div><div class="row" id="mBtns"></div></div></div>
+
+<script>
+"use strict";
+const APP_VERSION = "1.0.0";
+const SAVE_KEY = "cg_memory_v1", STATS_KEY = "cg_memory_stats";
+const SUITS = ["♠", "♥", "♦", "♣"], RED = [false, true, true, false];
+const RANKS = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+const AI = { easy: { learn: 0.25, forget: 0.15 }, normal: { learn: 0.6, forget: 0.04 }, hard: { learn: 0.97, forget: 0 } };
+const AI_NAME = "Meena";
+const $ = s => document.querySelector(s);
+let FAST = false;
+const wait = ms => new Promise(r => setTimeout(r, FAST ? 0 : ms));
+
+function lsGet(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* unavailable */ } }
+function lsDel(k) { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } }
+
+/* ---------- pure logic ---------- */
+function shuffle(a, rng) { rng = rng || Math.random; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+/* 26 rank+colour keys exist; pick N, each pair gets the two suits of that colour */
+function makeCards(pairs) {
+  const keys = []; for (let r = 1; r <= 13; r++) { keys.push({ r, red: false }); keys.push({ r, red: true }); }
+  shuffle(keys); const cards = [];
+  keys.slice(0, pairs).forEach((k, p) => { const ss = k.red ? [1, 2] : [0, 3]; ss.forEach(s => cards.push({ r: k.r, s, p, up: false, gone: false, by: null })); });
+  return shuffle(cards);
+}
+function isPair(a, b) { return a.r === b.r && RED[a.s] === RED[b.s]; }
+function newState(mode, diff, size) {
+  return { v: 1, mode, diff, size, cols: size === 16 ? 4 : size === 24 ? 4 : 6, cards: makeCards(size / 2), turn: "you", sel: [], score: { you: 0, cpu: 0 }, moves: 0, mem: {}, seen: {}, over: false };
+}
+
+/* ---------- state ---------- */
+let S = null, busy = false, aiTimer = null;
+function defStats() { return { played: 0, won: 0, lost: 0, tied: 0, best: {}, solo: 0, streak: 0 }; }
+let stats = Object.assign(defStats(), lsGet(STATS_KEY) || {});
+function save() { if (S && !S.over) lsSet(SAVE_KEY, S); else lsDel(SAVE_KEY); }
+
+function remaining() { return S.cards.filter(c => !c.gone).length / 2; }
+function setStatus(t) { $("#status").textContent = t; }
+
+function newGame() {
+  if (aiTimer) clearTimeout(aiTimer);
+  busy = false;
+  S = newState($("#sMode").value, $("#sDiff").value, +$("#sSize").value);
+  save(); buildBoard(); render();
+  setStatus(S.mode === "cpu" ? "Your turn — tap two cards to find a pair." : "Solo game — find all pairs in as few moves as you can.");
+  showTab("play");
+}
+function seeCard(i) {  /* everyone sees the card: player knowledge (seen) + AI memory */
+  S.seen[i] = 1;
+  const lv = AI[S.diff]; if (Math.random() < lv.learn) S.mem[i] = 1;
+}
+function aiForget() {
+  const f = AI[S.diff].forget; if (!f) return;
+  for (const k of Object.keys(S.mem)) if (Math.random() < f) delete S.mem[k];
+}
+/* flip one card; returns a promise that resolves when the turn step is done */
+async function flip(i, who) {
+  const c = S.cards[i];
+  if (!S || S.over || c.gone || c.up || S.sel.length >= 2) return false;
+  c.up = true; S.sel.push(i); seeCard(i); renderCard(i); renderLive();
+  if (S.sel.length < 2) { save(); return true; }
+  S.moves++;
+  const [a, b] = S.sel.map(k => S.cards[k]);
+  if (isPair(a, b)) {
+    await wait(450);
+    a.gone = b.gone = true; a.by = b.by = who; S.score[who]++;
+    delete S.mem[S.sel[0]]; delete S.mem[S.sel[1]];
+    S.sel.forEach(k => { renderCard(k); const el = $("#board").children[k]; el.classList.add("pop"); });
+    S.sel = []; render();
+    if (remaining() === 0) { endGame(); return true; }
+    setStatus(who === "you" ? (S.mode === "cpu" ? "A pair! 🎉 Play again." : "A pair! Keep going.") : AI_NAME + " found a pair and plays again…");
+  } else {
+    setStatus(who === "you" ? "Not a pair. " + (S.mode === "cpu" ? AI_NAME + "'s turn next…" : "Remember them!") : "No pair for " + AI_NAME + ".");
+    await wait(1000);
+    a.up = b.up = false; const sel = S.sel; S.sel = []; sel.forEach(renderCard);
+    if (S.mode === "cpu") { S.turn = who === "you" ? "cpu" : "you"; aiForget(); }
+    render();
+    if (S.turn === "you") setStatus("Your turn — tap a card.");
+  }
+  save();
+  if (S.mode === "cpu" && S.turn === "cpu" && !S.over) scheduleAI();
+  return true;
+}
+function scheduleAI() { busy = true; setStatus(AI_NAME + " is thinking…"); aiTimer = setTimeout(aiTurn, FAST ? 0 : 650); }
+/* AI picks using its memory only */
+function aiChoose(firstIdx) {
+  const live = S.cards.map((c, i) => i).filter(i => !S.cards[i].gone && !S.cards[i].up);
+  const known = live.filter(i => S.mem[i]);
+  if (firstIdx === undefined) {
+    for (let x = 0; x < known.length; x++) for (let y = x + 1; y < known.length; y++) if (isPair(S.cards[known[x]], S.cards[known[y]])) return [known[x], known[y]];
+    const unk = live.filter(i => !S.mem[i]);
+    return [(unk.length ? unk : live)[Math.floor(Math.random() * (unk.length ? unk : live).length)]];
+  }
+  const fc = S.cards[firstIdx];
+  const m = known.find(i => i !== firstIdx && isPair(S.cards[i], fc));
+  if (m !== undefined) return [m];
+  const unk = live.filter(i => !S.mem[i] && i !== firstIdx);
+  const pool = unk.length ? unk : live.filter(i => i !== firstIdx);
+  return [pool[Math.floor(Math.random() * pool.length)]];
+}
+async function aiTurn() {
+  aiTimer = null;
+  if (!S || S.over || S.turn !== "cpu") { busy = false; return; }
+  const pick = aiChoose();
+  await flip(pick[0], "cpu");
+  await wait(600);
+  if (!S || S.over) { busy = false; return; }
+  const second = pick.length > 1 ? pick[1] : aiChoose(pick[0])[0];
+  // a turn may have been reset (new game) during the wait
+  if (S.sel.length !== 1) { busy = false; return; }
+  busy = false;
+  await flip(second, "cpu");
+  if (S.turn === "cpu" && !S.over && !aiTimer) scheduleAI();
+}
+async function tap(i) {
+  if (!S || S.over || busy) return false;
+  if (S.mode === "cpu" && S.turn !== "you") return false;
+  const c = S.cards[i]; if (!c || c.gone || c.up) return false;
+  if (S.sel.length === 1) { busy = true; const r = await flip(i, "you"); if (!(S.mode === "cpu" && S.turn === "cpu")) busy = false; return r; }
+  return flip(i, "you");
+}
+function endGame() {
+  S.over = true; S.turn = null; lsDel(SAVE_KEY); busy = false;
+  let title, body;
+  if (S.mode === "solo") {
+    const key = "s" + S.size, prev = stats.best[key];
+    stats.solo++; const nb = prev === undefined || S.moves < prev; if (nb) stats.best[key] = S.moves;
+    const perfect = S.size / 2;
+    title = nb ? "New best! 🏆" : "All pairs found! 🎉";
+    body = `<p>You found all ${S.size / 2} pairs in <b>${S.moves}</b> moves.</p><p>Best for this grid: <b>${stats.best[key]}</b> · Perfect is ${perfect}.</p>`;
+  } else {
+    stats.played++;
+    const y = S.score.you, c = S.score.cpu;
+    if (y > c) { stats.won++; stats.streak++; title = "You win! 🎉"; } else if (y < c) { stats.lost++; stats.streak = 0; title = AI_NAME + " wins"; } else { stats.tied++; title = "It's a tie!"; }
+    body = `<p>You <b>${y}</b> pairs · ${AI_NAME} <b>${c}</b> pairs</p><p>${S.moves} moves in total.</p>`;
+  }
+  lsSet(STATS_KEY, stats);
+  render(); setStatus("Game over — " + title.replace(/[🎉🏆!]/gu, "").trim() + ". Tap New to play again.");
+  showModal(title, body, [{ label: "Play again", primary: true, fn: newGame }, { label: "Close", fn: () => {} }]);
+}
+
+/* ---------- render ---------- */
+function buildBoard() {
+  const b = $("#board"); b.innerHTML = "";
+  S.cards.forEach((c, i) => { const d = document.createElement("button"); d.className = "slot"; d.dataset.i = i; d.setAttribute("aria-label", "card " + (i + 1)); d.innerHTML = `<div class="inner"><div class="backf"></div><div class="face${RED[c.s] ? " red" : ""}"><span class="cn">${RANKS[c.r]}${SUITS[c.s]}</span><span class="rk">${RANKS[c.r]}</span><span class="su">${SUITS[c.s]}</span></div></div>`; d.onclick = () => tap(i); b.appendChild(d); });
+  sizeBoard();
+}
+function sizeBoard() {
+  if (!S) return;
+  const b = $("#board"), cols = S.cols, rows = S.size / cols;
+  const W = Math.min(b.parentElement.clientWidth - 4, 1100);
+  const gap = window.innerWidth <= 600 ? 6 : 10;
+  const top = b.getBoundingClientRect().top + window.scrollY;
+  const H = Math.max(260, window.innerHeight - top - 80);
+  const wByW = (W - gap * (cols - 1)) / cols, wByH = ((H - gap * (rows - 1)) / rows) / 1.4;
+  const w = Math.floor(Math.max(44, Math.min(wByW, wByH, 150)));
+  b.style.gridTemplateColumns = `repeat(${cols}, ${w}px)`;
+  b.style.fontSize = Math.max(10, w * 0.2) + "px";
+}
+function renderCard(i) {
+  const el = $("#board").children[i]; if (!el) return; const c = S.cards[i];
+  el.classList.toggle("up", c.up || c.gone); el.classList.toggle("gone", c.gone);
+  el.classList.toggle("byyou", c.by === "you"); el.classList.toggle("bycpu", c.by === "cpu");
+  el.setAttribute("aria-label", (c.up || c.gone) ? RANKS[c.r] + SUITS[c.s] : "face-down card");
+}
+function render() {
+  if (!S) return;
+  S.cards.forEach((c, i) => renderCard(i));
+  const t = S.turn;
+  if (S.mode === "cpu") $("#score").innerHTML = `<div class="pl you${t === "you" ? " turn" : ""}"><div class="nm">You</div><div class="pts">${S.score.you}</div></div><div class="pl cpu${t === "cpu" ? " turn" : ""}"><div class="nm">${AI_NAME} (${S.diff})</div><div class="pts">${S.score.cpu}</div></div><div class="pl"><div class="nm">Pairs left</div><div class="pts">${remaining()}</div></div>`;
+  else { const b = stats.best["s" + S.size]; $("#score").innerHTML = `<div class="pl you turn"><div class="nm">Moves</div><div class="pts">${S.moves}</div></div><div class="pl"><div class="nm">Pairs found</div><div class="pts">${S.score.you}/${S.size / 2}</div></div><div class="pl"><div class="nm">Best (${S.cols}×${S.size / S.cols})</div><div class="pts">${b === undefined ? "—" : b}</div></div>`; }
+  $("#lDiff").style.display = $("#sMode").value === "cpu" ? "" : "none";
+  renderStats(); renderLive();
+}
+function renderStats() {
+  const b = stats.best;
+  $("#statsBox").innerHTML = `<table><tr><th>Vs computer: played</th><td>${stats.played}</td></tr><tr><th>Won / lost / tied</th><td>${stats.won} / ${stats.lost} / ${stats.tied}</td></tr><tr><th>Current win streak</th><td>${stats.streak}</td></tr><tr><th>Solo games</th><td>${stats.solo}</td></tr><tr><th>Best moves 4×4 / 4×6 / 6×6</th><td>${b.s16 ?? "—"} / ${b.s24 ?? "—"} / ${b.s36 ?? "—"}</td></tr></table>`;
+}
+
+/* ---------- maths ---------- */
+function pct(p) { return (p * 100).toFixed(1) + "%"; }
+/* Blind first flip with N pairs left, K known singles (partner unseen) and no known pairs.
+   Unseen cards U = 2N − K. P(first unseen card's partner is known) = K/U → sure match.
+   Otherwise flip another unseen card: P(it is the partner) = 1/(U−1). */
+function blindOdds(N, K) {
+  const U = 2 * N - K;
+  if (U <= 0) return { U, pKnown: 0, pBlindSecond: 0, pTurn: 1 };
+  const pKnown = K / U;
+  const pBlindSecond = U > 1 ? 1 / (U - 1) : 0;
+  return { U, pKnown, pBlindSecond, pTurn: pKnown + (1 - pKnown) * pBlindSecond, pNoMemory: 1 / (2 * N - 1) };
+}
+/* Simulated solo games. perfect=true remembers everything (optimal greedy: flip unknown first);
+   perfect=false flips two random face-down cards. Returns moves. */
+function simGame(N, perfect) {
+  const cards = []; for (let p = 0; p < N; p++) cards.push(p, p); shuffle(cards);
+  const gone = new Array(2 * N).fill(false), known = new Map(); /* pair -> index of single known */
+  const seen = new Array(2 * N).fill(false); let left = N, moves = 0, knownPairs = [];
+  const unseenIdx = () => { const a = []; for (let i = 0; i < 2 * N; i++) if (!gone[i] && !seen[i]) a.push(i); return a; };
+  while (left > 0) {
+    moves++;
+    if (!perfect) {
+      const live = []; for (let i = 0; i < 2 * N; i++) if (!gone[i]) live.push(i);
+      const a = live.splice(Math.floor(Math.random() * live.length), 1)[0], b = live[Math.floor(Math.random() * live.length)];
+      if (cards[a] === cards[b]) { gone[a] = gone[b] = true; left--; }
+      continue;
+    }
+    if (knownPairs.length) { const [a, b] = knownPairs.pop(); gone[a] = gone[b] = true; left--; continue; }
+    const un = unseenIdx(); const a = un[Math.floor(Math.random() * un.length)]; seen[a] = true;
+    if (known.has(cards[a])) { const b = known.get(cards[a]); known.delete(cards[a]); gone[a] = gone[b] = true; left--; continue; }
+    const un2 = unseenIdx();
+    if (!un2.length) { known.set(cards[a], a); continue; }
+    const b = un2[Math.floor(Math.random() * un2.length)]; seen[b] = true;
+    if (cards[a] === cards[b]) { gone[a] = gone[b] = true; left--; continue; }
+    if (known.has(cards[b])) { knownPairs.push([b, known.get(cards[b])]); known.delete(cards[b]); } else known.set(cards[b], b);
+    known.set(cards[a], a);
+  }
+  return moves;
+}
+/* exact expected moves with no memory: each move is an independent random pair from 2n live cards → success 1/(2n−1), geometric. E = Σ_{n=1..N}(2n−1) = N² */
+function expNoMemory(N) { return N * N; }
+function runMC(N, games) {
+  games = games || 2000; let sp = 0, sn = 0, mn = 1e9, mx = 0;
+  for (let g = 0; g < games; g++) { const m = simGame(N, true); sp += m; mn = Math.min(mn, m); mx = Math.max(mx, m); sn += simGame(N, false); }
+  return { perfect: sp / games, none: sn / games, min: mn, max: mx, games };
+}
+function updCalc() {
+  const N = +$("#cN").value; const kEl = $("#cK"); kEl.max = String(N); const K = Math.min(+kEl.value, N);
+  $("#cNv").textContent = N; $("#cKv").textContent = K;
+  const o = blindOdds(N, K);
+  $("#cOut").innerHTML = `<p style="margin:6px 0">Unseen cards U = 2N − K = <b>${o.U}</b>.</p>
+   <p style="margin:6px 0">First flip matches a card you know: <span class="big">${pct(o.pKnown)}</span> <span class="mono">K / U = ${K}/${o.U}</span></p>
+   <p style="margin:6px 0">If not, a second blind flip is its partner: <b>${pct(o.pBlindSecond)}</b> <span class="mono">1 / (U − 1)</span></p>
+   <p style="margin:6px 0">Chance this turn scores (with memory): <span class="big">${pct(o.pTurn)}</span> &nbsp; vs no memory at all: <b>${pct(o.pNoMemory)}</b> <span class="mono">1 / (2N − 1)</span></p>`;
+}
+function updExp() {
+  const N = +$("#eN").value;
+  $("#eOut").innerHTML = `<p style="margin:6px 0">No memory (two random cards each move): each move succeeds with probability 1/(2n−1) when n pairs remain, so the expected moves are Σ(2n−1) = <b>N² = ${expNoMemory(N)}</b>.</p>
+   <p style="margin:6px 0">Perfect memory: about <b>(3 − 2·ln2)·N + 7/8 − 2·ln2 ≈ 1.614·N − 0.51</b> moves (Velleman &amp; Warrington, 2013) ≈ <b>${(1.6137 * N - 0.5113).toFixed(2)}</b> for N = ${N}. Minimum possible is N = ${N} (pure luck). Press the button to check it by simulation.</p>`;
+}
+function doMC() {
+  const N = +$("#eN").value, r = runMC(N, 2000);
+  $("#eMCout").innerHTML = `${r.games.toLocaleString()} games with N = ${N}: perfect memory average <b>${r.perfect.toFixed(2)}</b> moves (range ${r.min}–${r.max}); no memory average <b>${r.none.toFixed(1)}</b> (theory ${expNoMemory(N)}).`;
+  return r;
+}
+function renderLive() {
+  if (!S) return;
+  const live = S.cards.map((c, i) => i).filter(i => !S.cards[i].gone);
+  const N = live.length / 2;
+  if (!N) { $("#live").innerHTML = "<p>Game over — no cards left.</p>"; return; }
+  // player's knowledge: cards seen (and still on table)
+  const seenLive = live.filter(i => S.seen[i]);
+  let knownPairs = 0, singles = 0; const used = new Set();
+  for (const i of seenLive) { if (used.has(i)) continue; const j = seenLive.find(k => k !== i && !used.has(k) && isPair(S.cards[i], S.cards[k])); if (j !== undefined) { knownPairs++; used.add(i); used.add(j); } else singles++; }
+  const U = live.length - seenLive.length;
+  let txt = `<div class="settings" style="margin:0"><span class="mono">Pairs left ${N}</span><span class="mono">Cards never seen ${U}</span><span class="mono">Seen singles ${singles}</span><span class="mono">Seen pairs (free points) ${knownPairs}</span></div>`;
+  if (S.sel.length === 1) {
+    const f = S.cards[S.sel[0]];
+    const partnerSeen = live.some(i => i !== S.sel[0] && S.seen[i] && isPair(S.cards[i], f));
+    txt += `<p style="margin:6px 0">First card is <b>${RANKS[f.r]}${SUITS[f.s]}</b>. ` + (partnerSeen ? `Its partner has been seen — pick it for a <span class="big">100%</span> match!` : `Its partner has not been seen yet, so it is one of the ${U} never-seen cards: your next blind pick matches with <span class="big">${pct(U ? 1 / U : 0)}</span> <span class="mono">1/${U}</span>.`) + `</p>`;
+  } else {
+    const pBlind = 1 / (2 * N - 1);
+    const o = U > 0 ? blindOdds(N, Math.max(0, Math.min(singles, U))) : null;
+    txt += `<p style="margin:6px 0">Chance your next blind pick matches (two random face-down cards): <span class="big">${pct(pBlind)}</span> <span class="mono">1/(2N−1) = 1/${2 * N - 1}</span></p>`;
+    if (knownPairs) txt += `<p style="margin:6px 0">You have seen both cards of <b>${knownPairs}</b> pair${knownPairs > 1 ? "s" : ""} — a sure match if you remember where!</p>`;
+    else if (o && U > 0) txt += `<p style="margin:6px 0">Playing smart (unseen card first, then use memory): this turn scores with <b>${pct(o.pTurn)}</b>.</p>`;
+  }
+  $("#live").innerHTML = txt;
+}
+
+/* ---------- UI ---------- */
+function showTab(t) {
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === t));
+  document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.id === "tab-" + t));
+  if (t === "play") sizeBoard(); if (t === "odds") { renderLive(); updCalc(); updExp(); } if (t === "rules") renderStats();
+}
+function showModal(title, body, btns) {
+  $("#mTitle").textContent = title; $("#mBody").innerHTML = body; const row = $("#mBtns"); row.innerHTML = "";
+  btns.forEach(b => { const e = document.createElement("button"); e.className = "btn" + (b.primary ? " primary" : ""); e.textContent = b.label; e.onclick = () => { $("#modal").classList.add("hidden"); b.fn(); }; row.appendChild(e); });
+  $("#modal").classList.remove("hidden");
+}
+function toggleFs() { try { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {}); } catch (e) { /* unsupported */ } }
+function init() {
+  $("#ver").textContent = APP_VERSION;
+  if (!document.documentElement.requestFullscreen) $("#bFs").style.display = "none";
+  $("#bFs").onclick = toggleFs;
+  $("#bNew").onclick = newGame; $("#bRules").onclick = () => showTab("rules"); $("#bOdds").onclick = () => showTab("odds");
+  document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+  ["sMode", "sDiff", "sSize"].forEach(id => $("#" + id).onchange = () => { $("#lDiff").style.display = $("#sMode").value === "cpu" ? "" : "none"; if (!S || S.moves === 0 || S.over) newGame(); else setStatus("Setting changed — tap New to start a game with it."); });
+  $("#cN").oninput = updCalc; $("#cK").oninput = updCalc; $("#eN").onchange = () => { updExp(); $("#eMCout").textContent = ""; }; $("#eMC").onclick = doMC;
+  window.addEventListener("resize", sizeBoard);
+  const saved = lsGet(SAVE_KEY);
+  if (saved && saved.cards && !saved.over) {
+    S = saved; S.sel.forEach(i => { S.cards[i].up = false; }); S.sel = [];
+    $("#sMode").value = S.mode; $("#sDiff").value = S.diff; $("#sSize").value = String(S.size);
+    buildBoard(); render(); setStatus("Saved game found.");
+    showModal("Resume saved game?", `<p>${S.mode === "cpu" ? "You " + S.score.you + " – " + S.score.cpu + " " + AI_NAME : "Solo · " + S.moves + " moves"} · ${remaining()} pairs left.</p>`,
+      [{ label: "Resume saved game", primary: true, fn: () => { if (S.mode === "cpu" && S.turn === "cpu") scheduleAI(); else setStatus("Your turn — tap a card."); } }, { label: "New game", fn: newGame }]);
+  } else newGame();
+  updCalc(); updExp();
+}
+window.__game = {
+  get state() { return S; }, get busy() { return busy; },
+  set fast(v) { FAST = !!v; }, get fast() { return FAST; },
+  newGame, tap, isPair, blindOdds, simGame, runMC, expNoMemory, doMC,
+  setup(mode, diff, size) { $("#sMode").value = mode; $("#sDiff").value = diff; $("#sSize").value = String(size); newGame(); }
+};
+init();
+</script>
+</body>
+</html>

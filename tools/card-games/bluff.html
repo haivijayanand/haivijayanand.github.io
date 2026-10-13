@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<!--
+TOOL: Bluff (Cheat / I Doubt It)
+FAMILY: card-games
+VERSION: 1.0.0
+DATE: 2026-10-13
+CHAT: Card games batch 1 (claude.ai)
+CHANGES: 1.0.0 - first release
+STATUS: released
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b3d2a">
+<title>Bluff</title>
+<style>
+:root{--felt:#0f5132;--bar:#0b3d2a;--red:#c62828;--blk:#111;--back:#1e3a8a;--cw:64px;--hcw:70px;--gold:#ffd54f;--ink:#f1f5f2;--panel:#fbfbf7}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:radial-gradient(ellipse at 50% 35%,#18734a 0%,var(--felt) 55%,#0a3b24 100%) fixed;background-color:var(--felt);color:var(--ink);width:100%;min-height:100vh;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+button,select,input{font:inherit}
+.topbar{position:sticky;top:0;z-index:20;background:var(--bar);display:flex;align-items:center;gap:6px;padding:4px 10px;padding-top:max(4px,env(safe-area-inset-top));box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.topbar h1{font-size:20px;margin:0 auto 0 0;white-space:nowrap;letter-spacing:.5px}
+.topbar h1 span{color:#ffd54f}
+.tb{min-height:40px;min-width:40px;padding:6px 12px;border:1px solid #2f6f52;background:#145c3c;color:#fff;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-size:15px;white-space:nowrap}
+.tb:active{transform:translateY(1px)}
+.tb.on{background:#f1c40f;color:#222;border-color:#f1c40f}
+.tabs{display:flex;gap:4px;justify-content:center;padding:6px 8px 0}
+.tab{min-height:40px;padding:6px 16px;border-radius:10px 10px 0 0;border:0;background:rgba(0,0,0,.25);color:#dfe;cursor:pointer;font-size:15px}
+.tab.on{background:rgba(0,0,0,.5);color:#fff;font-weight:700}
+main{width:100%;max-width:1400px;margin:0 auto;padding:0 10px 16px}
+.panel{display:none}.panel.on{display:block}
+.strip{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:space-between;background:rgba(0,0,0,.35);padding:6px 12px;border-radius:0 0 10px 10px;font-size:14px}
+.strip select{min-height:36px;border-radius:6px;padding:2px 6px}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,.15);font-size:13px}
+.badge.hot{background:#f1c40f;color:#222;font-weight:700}
+.table{display:grid;grid-template-columns:minmax(90px,1fr) minmax(240px,2.2fr) minmax(90px,1fr);grid-template-areas:". top ." "left mid right" "hand hand hand" "status status status";gap:8px;padding-top:10px;align-items:center}
+.seat{text-align:center;padding:6px;border-radius:12px;background:rgba(0,0,0,.18);border:2px solid transparent;transition:border-color .2s,background .2s}
+.seat.turn{border-color:var(--gold);background:rgba(255,213,79,.12)}
+.seat .nm{font-weight:700;font-size:16px}
+.seat .sc{font-size:13px;opacity:.92;min-height:18px}
+.seat .say{font-size:13px;color:var(--gold);min-height:18px;font-weight:700}
+.seat .backs{display:flex;justify-content:center;margin:6px auto 2px;height:calc(var(--cw)*.9);overflow:hidden}
+.mini{flex:0 0 auto;width:calc(var(--cw)*.6);height:calc(var(--cw)*.84);border-radius:5px;border:1px solid #c7d2fe;background:repeating-linear-gradient(45deg,#1e3a8a 0 5px,#2848a8 5px 10px);margin-left:calc(var(--cw)*-.48);box-shadow:0 1px 2px rgba(0,0,0,.5)}
+.mini:first-child{margin-left:0}
+#seat2{grid-area:top;justify-self:center;min-width:180px}
+#seat1{grid-area:left}#seat3{grid-area:right}
+.mid{grid-area:mid;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:calc(var(--cw)*2.6)}
+.pile{position:relative;width:calc(var(--cw)*2.2);height:calc(var(--cw)*1.6)}
+.pile .pc{position:absolute;left:50%;top:50%;width:var(--cw);height:calc(var(--cw)*1.4);border-radius:8px;border:1px solid #c7d2fe;background:repeating-linear-gradient(45deg,#1e3a8a 0 6px,#2848a8 6px 12px);box-shadow:0 1px 3px rgba(0,0,0,.6)}
+.pilecount{font-size:15px;font-weight:700}
+.claim{background:rgba(0,0,0,.4);padding:6px 12px;border-radius:10px;font-size:15px;text-align:center}
+.claim b{color:var(--gold)}
+.reveal{display:flex;gap:4px;justify-content:center;flex-wrap:wrap}
+.card{width:var(--cw);height:calc(var(--cw)*1.4);background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.55);position:relative;color:var(--blk);user-select:none;-webkit-user-select:none;border:1px solid #d6d6d6;flex:0 0 auto}
+.card.red{color:var(--red)}
+.card .ix{position:absolute;left:3px;top:2px;line-height:.95;display:flex;flex-direction:column;align-items:center;font-weight:800;font-size:calc(var(--cw)*.3);min-width:calc(var(--cw)*.3)}
+.card .ix b.t{letter-spacing:-2px;font-size:calc(var(--cw)*.27)}
+.card .ix i{font-style:normal;font-size:calc(var(--cw)*.28)}
+.card .pip{position:absolute;right:4px;bottom:1px;font-size:calc(var(--cw)*.55);line-height:1}
+.card.lie{box-shadow:0 0 0 3px #ff5252}
+.card.ok{box-shadow:0 0 0 3px #69f0ae}
+.handwrap{grid-area:hand;background:rgba(0,0,0,.18);border-radius:12px;padding:8px 8px 6px;border:2px solid transparent}
+.handwrap.turn{border-color:var(--gold)}
+.handinfo{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:14px;margin-bottom:6px;align-items:center}
+.hand{position:relative;height:calc(var(--hcw)*1.4 + 16px);width:100%}
+.hand .card{--cw:var(--hcw);position:absolute;top:14px;cursor:pointer;transition:top .15s,left .2s}
+.hand .card.sel{top:0;box-shadow:0 0 0 3px var(--gold),0 2px 6px rgba(0,0,0,.6)}
+.hand .card.new{box-shadow:0 0 0 3px #4fc3f7,0 2px 6px rgba(0,0,0,.6)}
+.hand .card.sel.new{box-shadow:0 0 0 3px var(--gold),0 2px 6px rgba(0,0,0,.6)}
+.status{grid-area:status;text-align:center;background:rgba(0,0,0,.4);padding:10px;border-radius:10px;font-size:16px;min-height:44px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.status select{min-height:42px;border-radius:8px;font-size:16px;padding:2px 6px}
+.btn{min-height:42px;padding:8px 18px;border-radius:10px;border:0;background:#f1c40f;color:#222;font-weight:700;cursor:pointer;font-size:15px}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.alt{background:#e0e7e3}
+.btn.bluff{background:#e53935;color:#fff;font-size:18px;padding:8px 24px}
+.timer{height:6px;background:rgba(255,255,255,.2);border-radius:3px;width:100%;overflow:hidden}
+.timer i{display:block;height:100%;background:var(--gold);width:100%}
+.timer.run i{animation:shrink linear forwards}
+@keyframes shrink{from{width:100%}to{width:0}}
+.doc{background:var(--panel);color:#1d2a22;border-radius:0 0 12px 12px;padding:14px 18px;line-height:1.5;font-size:15px}
+.doc h2{margin:.6em 0 .3em;color:#0b3d2a;font-size:20px}
+.doc h3{margin:.8em 0 .3em;color:#0f5132;font-size:17px}
+.doc table{border-collapse:collapse;margin:6px 0;font-size:14px;max-width:100%}
+.doc th,.doc td{border:1px solid #c9d6ce;padding:4px 8px;text-align:left}
+.doc th{background:#e4efe8}
+.doc code,.doc .f{font-family:ui-monospace,Consolas,monospace;background:#eef3ef;padding:1px 5px;border-radius:4px;font-size:13px;word-break:break-word}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.box{border:1px solid #c9d6ce;border-radius:10px;padding:10px 14px;background:#fff;overflow-x:auto}
+.ctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}
+.ctl input[type=range]{flex:1;min-width:140px;height:32px}
+.ctl label{min-width:190px}
+.ctl select{min-height:36px}
+.bar{height:12px;background:#2e7d32;border-radius:3px;min-width:1px}
+.big{font-size:20px;font-weight:800;color:#0b3d2a}
+.redt{color:#c62828}.grnt{color:#2e7d32}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:12px}
+.modal.on{display:flex}
+.dlg{background:#fff;color:#1d2a22;border-radius:14px;max-width:520px;width:100%;padding:16px 18px;max-height:90vh;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.dlg h2{margin:0 0 8px;color:#0b3d2a}
+.dlg table{border-collapse:collapse;width:100%;margin:8px 0}
+.dlg th,.dlg td{border-bottom:1px solid #dde5df;padding:6px;text-align:center}
+.dlg .row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:10px}
+.small{font-size:13px;opacity:.85}
+.log{font-size:13px;line-height:1.5em;max-height:4.5em;overflow:hidden;opacity:.9;text-align:center}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+@media (max-width:600px){
+ :root{--cw:44px;--hcw:52px}
+ .topbar{padding:4px 6px;gap:4px;flex-wrap:wrap}
+ .topbar h1{font-size:17px}
+ .tb{padding:4px 8px;font-size:13px}
+ .tb .lbl{display:none}
+ main{padding:0 6px 12px}
+ .strip{padding:6px 8px;gap:4px 8px}
+ .table{grid-template-columns:76px 1fr 76px;gap:6px}
+ .seat{padding:4px 2px}
+ .seat .nm{font-size:14px}.seat .sc,.seat .say{font-size:12px}
+ #seat2{min-width:150px}
+ .mini{margin-left:calc(var(--cw)*-.53)}
+ .status{font-size:14px;padding:8px}
+ .claim{font-size:13px;padding:4px 8px}
+ .doc{padding:10px 10px;font-size:14px}
+ .ctl label{min-width:0;width:100%}
+ .tab{padding:6px 10px;font-size:14px}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+ <h1><span>🂠</span> Bluff</h1>
+ <button class="tb" id="bNew" title="New game">✚<span class="lbl">&nbsp;New</span></button>
+ <button class="tb" id="bRules" title="Rules">📖<span class="lbl">&nbsp;Rules</span></button>
+ <button class="tb" id="bOdds" title="Odds &amp; Strategy">%<span class="lbl">&nbsp;Odds</span></button>
+ <button class="tb" id="bFull" title="Full screen">⛶<span class="lbl">&nbsp;Full screen</span></button>
+ <a class="tb" href="index.html" title="Back to games">←<span class="lbl">&nbsp;Games</span></a>
+</header>
+<nav class="tabs">
+ <button class="tab on" data-tab="play">Play</button>
+ <button class="tab" data-tab="rules">Rules</button>
+ <button class="tab" data-tab="odds">Odds &amp; Strategy</button>
+</nav>
+<main>
+<section class="panel on" id="p-play">
+ <div class="strip">
+  <span id="roundInfo" class="badge">Round 1</span>
+  <span id="rankInfo" class="badge">Rank: —</span>
+  <span id="honestInfo" class="badge">Last claim honest: —</span>
+  <label>Level <select id="diff"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select></label>
+ </div>
+ <div class="table">
+  <div class="seat" id="seat2"></div>
+  <div class="seat" id="seat1"></div>
+  <div class="mid"><div class="claim" id="claim">—</div><div class="pile" id="pile"></div><div class="pilecount" id="pileCount"></div><div class="reveal" id="reveal"></div><div class="log" id="log"></div></div>
+  <div class="seat" id="seat3"></div>
+  <div class="handwrap" id="handwrap"><div class="handinfo"><b id="youInfo">You</b><span id="selInfo" class="small"></span></div><div class="hand" id="hand"></div></div>
+  <div class="status" id="status">Loading…</div>
+ </div>
+</section>
+
+<section class="panel" id="p-rules"><div class="doc">
+ <h2>How to play Bluff</h2>
+ <p>Also called <i>Cheat</i> or <i>I Doubt It</i>. You play against <b>Arun</b> (left), <b>Meena</b> (top) and <b>Ravi</b> (right). One 52-card deck is dealt out, 13 cards each. Play goes clockwise: You → Arun → Meena → Ravi. <b>First player to get rid of all their cards wins.</b></p>
+ <h3>A round</h3>
+ <ol>
+  <li>The player who starts a round places <b>1 to 4 cards face down</b> on the pile and names any rank, e.g. "three 7s". The <b>number</b> of cards is always visible; only the rank may be a lie.</li>
+  <li>Each following player must either place 1–4 cards claiming <b>the same rank</b>, or <b>pass</b>.</li>
+  <li>After any play, anyone may shout <b>"Bluff!"</b>. The cards just played are turned over:
+   <ul><li>If any of them is not of the claimed rank, the <b>liar</b> picks up the whole pile.</li>
+   <li>If they are all genuine, the <b>caller</b> picks up the whole pile.</li></ul>
+   The player who did <i>not</i> pick up starts a new round with any rank.</li>
+  <li>If everyone else passes after a play, the round ends: the pile is <b>discarded</b> (out of the game, unseen) and the last player who placed cards starts the next round.</li>
+ </ol>
+ <h3>Winning</h3>
+ <p>A player who places their last cards wins once that play survives — either nobody calls Bluff, or the call shows the cards were genuine. If they were caught lying, they pick up the pile and play continues.</p>
+ <h3>Your Bluff window</h3>
+ <p>After each computer play you get a few seconds with a big <b>Bluff!</b> button (and <i>No call</i> to skip). You get first chance to call; after that the computer players may call.</p>
+ <h3>Variant choices</h3>
+ <ul><li>Common Indian rule set: round starter names any rank; others must keep the same rank or pass; all-pass discards the pile.</li><li>4 players, one deck, no jokers. (Bigger groups normally use 2 decks; this edition always seats 4 with 1 deck.)</li><li>Only the most recent play is revealed when Bluff is called.</li><li>The round leader cannot pass.</li></ul>
+ <h3>Computer players</h3>
+ <ul><li><b>Easy</b> – random claims and random calls.</li><li><b>Normal</b> – tracks its own cards and always calls a claim that is impossible from its own hand (e.g. it holds two Kings and you claim three Kings).</li><li><b>Hard</b> – remembers every card it has seen (its own plays, revealed cards, who picked up which pile) and calls when the hypergeometric chance the claim is honest is low, always challenging a player about to go out.</li></ul>
+ <h3>Your statistics</h3>
+ <div id="statsBox"></div>
+ <p><button class="btn alt" id="bResetStats">Reset statistics</button></p>
+ <p class="small">Bluff v<span id="ver"></span> · card-games family · offline single file · autosaves after every move (resume when you reopen).</p>
+</div></section>
+
+<section class="panel" id="p-odds"><div class="doc">
+ <h2>Odds &amp; Strategy</h2>
+ <div class="box" id="liveBox"></div>
+ <div class="grid2" style="margin-top:14px">
+  <div class="box">
+   <h3>1. Does the claimant really hold k cards of that rank?</h3>
+   <p class="small">You hold <i>n</i> cards, <i>m</i> of rank R. The other <i>U = 52 − n</i> cards contain <i>r = 4 − m</i> cards of rank R. A player holding <i>h</i> of those unseen cards has X cards of rank R, hypergeometric:<br><span class="f">P(X = j) = C(r,j)·C(U−r,h−j) / C(U,h)</span> &nbsp; <span class="f">P(honest) ≈ P(X ≥ k)</span></p>
+   <div class="ctl"><label>Your hand size n = <b id="hNo">13</b></label><input type="range" id="hN" min="1" max="40" value="13"></div>
+   <div class="ctl"><label>Of rank R you hold m = <b id="hMo">1</b></label><input type="range" id="hM" min="0" max="4" value="1"></div>
+   <div class="ctl"><label>Claimant's cards before playing h = <b id="hHo">13</b></label><input type="range" id="hH" min="1" max="39" value="13"></div>
+   <div class="ctl"><label>Cards claimed k = <b id="hKo">2</b></label><input type="range" id="hK" min="1" max="4" value="2"></div>
+   <p><button class="btn alt" id="bLiveH">Use last claim in the game</button></p>
+   <div id="hOut"></div>
+  </div>
+  <div class="box">
+   <h3>2. Impossible-claim detector</h3>
+   <p class="small">There are exactly 4 cards of each rank. Count what you <i>know</i> is not in the claimant's hand: the copies you hold (m), copies you played honestly into the pile this round (a), and copies you saw revealed or know were discarded/picked up by someone else (d). The claimant can hold at most <span class="f">4 − m − a − d</span>.</p>
+   <div class="ctl"><label>You hold m = <b id="iMo">2</b></label><input type="range" id="iM" min="0" max="4" value="2"></div>
+   <div class="ctl"><label>Your genuine copies in pile a = <b id="iAo">0</b></label><input type="range" id="iA" min="0" max="4" value="0"></div>
+   <div class="ctl"><label>Known elsewhere d = <b id="iDo">0</b></label><input type="range" id="iD" min="0" max="4" value="0"></div>
+   <div class="ctl"><label>Cards claimed now k = <b id="iKo">3</b></label><input type="range" id="iK" min="1" max="4" value="3"></div>
+   <div class="ctl"><label>Others' earlier claims this round c = <b id="iCo">0</b></label><input type="range" id="iC" min="0" max="12" value="0"></div>
+   <div id="iOut"></div>
+  </div>
+ </div>
+ <div class="box" style="margin-top:14px">
+  <h3>Strategy tips</h3>
+  <ul>
+   <li><b>Lead with your biggest set.</b> Starting a round with three or four genuine cards is safe and sheds cards fast.</li>
+   <li><b>Pad truth with a lie:</b> two genuine 9s plus one odd card claimed as three 9s is hard to catch — and if called, only the last play is turned over.</li>
+   <li><b>Call when the count is impossible.</b> If you hold two Kings and someone claims three Kings, they are lying for certain.</li>
+   <li>Probability is on the claimant's side for 1-card claims: with r = 3 unseen copies among 39 cards, a 13-card hand holds at least one copy about 70% of the time.</li>
+   <li><b>Big piles change the maths.</b> A wrong call on a 20-card pile hurts far more than on a 3-card pile — call only when the chance of a lie is well above 50%.</li>
+   <li><b>Always consider calling the last play of a player going out</b> — if you let it go, they win.</li>
+   <li>Remember the cards you picked up and the cards you saw revealed: they are no longer in other hands.</li>
+  </ul>
+ </div>
+</div></section>
+</main>
+
+<div class="modal" id="modal"><div class="dlg" id="dlg"></div></div>
+
+<script>
+"use strict";
+const APP_VERSION = "1.0.0";
+const SAVE_KEY = "cg_bluff_v1", STATS_KEY = "cg_bluff_stats", PREF_KEY = "cg_bluff_prefs";
+const NAMES = ["You", "Arun", "Meena", "Ravi"];
+const SUITS = ["♠", "♥", "♣", "♦"];
+const RLAB = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+const RNAME = ["Aces", "2s", "3s", "4s", "5s", "6s", "7s", "8s", "9s", "10s", "Jacks", "Queens", "Kings"];
+const WINDOW_MS = 3500;
+// knowledge codes (per viewer, per card)
+const UNK = -1, DISC = 4, PILE = 20; // 0..3 = in that player's hand; 10+p = was in p's hand just before p's latest play; 30+p = in p's hand or in the pile (older)
+
+/* ---------- pure rules ---------- */
+const rankOf = c => Math.floor(c / 4);
+const suitOf = c => c % 4;
+const cardName = c => RLAB[rankOf(c)] + SUITS[suitOf(c)];
+const sortHand = h => h.sort((a, b) => a - b);
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function isLie(cards, rank) { return cards.some(c => rankOf(c) !== rank); }
+function C(n, k) { if (k < 0 || k > n || n < 0) return 0; k = Math.min(k, n - k); let r = 1; for (let i = 1; i <= k; i++) r = r * (n - k + i) / i; return r; }
+function hyper(N, K, n, k) { const d = C(N, n); return d ? C(K, k) * C(N - K, n - k) / d : 0; }
+function hyperAtLeast(N, K, n, k) { let s = 0; for (let j = Math.max(0, k); j <= Math.min(K, n); j++) s += hyper(N, K, n, j); return Math.min(1, s); }
+
+/* ---------- state ---------- */
+let state = null, gen = 0, timer = null, winTimer = null;
+const G = { fast: false };
+const dly = ms => G.fast ? 0 : ms;
+function schedule(fn, ms) { clearTimeout(timer); const g = gen; timer = setTimeout(() => { if (g === gen) fn(); }, dly(ms)); }
+function loadJSON(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+function saveJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+function save() { if (state) saveJSON(SAVE_KEY, state); }
+function prefs() { return Object.assign({ difficulty: "normal" }, loadJSON(PREF_KEY) || {}); }
+
+function newGame() {
+  gen++; clearTimeout(timer); closeModal();
+  const d = shuffle([...Array(52).keys()]);
+  const hands = [0, 1, 2, 3].map(p => sortHand(d.slice(p * 13, p * 13 + 13)));
+  const know = [0, 1, 2, 3].map(v => { const k = Array(52).fill(UNK); hands[v].forEach(c => k[c] = v); return k; });
+  state = { v: 1, difficulty: prefs().difficulty, hands, know, pile: [], rank: -1, roundNo: 1, starter: Math.floor(Math.random() * 4),
+    turn: 0, passes: 0, last: null, phase: "play", reveal: null, sel: [], newCards: [], log: [], says: ["", "", "", ""], moves: 0, winner: -1,
+    calls: { you: 0, youRight: 0 }, discarded: 0 };
+  state.turn = state.starter;
+  addLog(`${NAMES[state.starter]} start${state.starter ? "s" : ""} round 1`);
+  save(); render(); advance();
+}
+function addLog(t) { state.log.push(t); if (state.log.length > 30) state.log.shift(); }
+function legalPlay(s, p, cards, rank) {
+  if (!s || s.phase !== "play" || s.turn !== p) return false;
+  if (!Array.isArray(cards) || cards.length < 1 || cards.length > 4 || new Set(cards).size !== cards.length) return false;
+  if (!cards.every(c => s.hands[p].includes(c))) return false;
+  if (s.rank < 0) return Number.isInteger(rank) && rank >= 0 && rank < 13;
+  return rank === undefined || rank === null || rank === s.rank;
+}
+function doPlay(p, cards, rank) {
+  const s = state;
+  if (!legalPlay(s, p, cards, rank)) return false;
+  if (s.rank < 0) s.rank = rank;
+  s.hands[p] = s.hands[p].filter(c => !cards.includes(c));
+  // knowledge updates
+  for (let v = 0; v < 4; v++) {
+    if (v === p) cards.forEach(c => s.know[v][c] = PILE);
+    else for (let c = 0; c < 52; c++) { if (s.know[v][c] === 10 + p) s.know[v][c] = 30 + p; else if (s.know[v][c] === p) s.know[v][c] = 10 + p; }
+  }
+  s.pile.push({ p, cards: cards.slice(), n: cards.length, rank: s.rank });
+  s.last = { p, n: cards.length, rank: s.rank, idx: s.pile.length - 1 };
+  s.passes = 0; s.moves++; s.reveal = null;
+  s.says = s.says.map((x, i) => i === p ? `${cards.length} × ${RLAB[s.rank]}` : (x === "pass" ? "" : x));
+  if (p === 0) s.sel = [];
+  s.newCards = p === 0 ? s.newCards : s.newCards;
+  addLog(`${NAMES[p]}: ${cards.length} × ${RNAME[s.rank]}`);
+  s.phase = "window";
+  s.windowStart = Date.now();
+  save(); render(); advance();
+  return true;
+}
+function doPass(p) {
+  const s = state;
+  if (!s || s.phase !== "play" || s.turn !== p || s.rank < 0) return false;
+  s.passes++; s.says[p] = "pass"; addLog(`${NAMES[p]} passes`);
+  if (s.passes >= 3) { discardPile(); return true; }
+  s.turn = (p + 1) % 4;
+  save(); render(); advance(); return true;
+}
+function discardPile() {
+  const s = state, lp = s.last ? s.last.p : s.turn;
+  const all = s.pile.flatMap(e => e.cards);
+  for (let v = 0; v < 4; v++) for (let c = 0; c < 52; c++) { const k = s.know[v][c]; if (k === PILE) s.know[v][c] = DISC; else if (k >= 10) s.know[v][c] = UNK; }
+  s.discarded += all.length;
+  addLog(`All passed — ${all.length} cards discarded. ${NAMES[lp]} starts.`);
+  newRound(lp);
+}
+function newRound(starter) {
+  const s = state;
+  s.pile = []; s.rank = -1; s.passes = 0; s.last = null; s.roundNo++; s.starter = starter; s.turn = starter; s.phase = "play";
+  s.says = ["", "", "", ""];
+  save(); render(); advance();
+}
+/** close the call window with nobody calling */
+function noCall() {
+  const s = state; if (!s || s.phase !== "window") return false;
+  const p = s.last.p;
+  if (!s.hands[p].length) { endGame(p); return true; }
+  s.phase = "play"; s.turn = (p + 1) % 4;
+  save(); render(); advance(); return true;
+}
+function callBluff(q) {
+  const s = state;
+  if (!s || s.phase !== "window" || !s.last || q === s.last.p) return false;
+  clearTimeout(winTimer);
+  const play = s.pile[s.last.idx], lie = isLie(play.cards, play.rank);
+  const loser = lie ? play.p : q;
+  const all = s.pile.flatMap(e => e.cards);
+  // public knowledge: revealed cards go to loser; private: contributors know their own pile cards
+  for (let v = 0; v < 4; v++) {
+    for (let c = 0; c < 52; c++) {
+      const k = s.know[v][c];
+      if (k === PILE) s.know[v][c] = loser;
+      else if (k >= 10) s.know[v][c] = ((k % 10) === loser) ? loser : UNK;
+    }
+    play.cards.forEach(c => s.know[v][c] = loser);
+    if (v === loser) all.forEach(c => s.know[v][c] = loser);
+  }
+  s.hands[loser] = sortHand(s.hands[loser].concat(all));
+  if (loser === 0) s.newCards = all.slice(); else s.newCards = s.newCards.filter(c => s.hands[0].includes(c));
+  if (q === 0) { s.calls.you++; if (lie) s.calls.youRight++; }
+  s.reveal = { cards: play.cards.slice(), rank: play.rank, lie, caller: q, claimant: play.p, loser, n: all.length };
+  addLog(`${NAMES[q]} called Bluff on ${NAMES[play.p]} — ${lie ? "LIE" : "truth"}! ${NAMES[loser]} pick${loser ? "s" : ""} up ${all.length}`);
+  s.pile = []; s.last = null; s.rank = -1;
+  s.says = ["", "", "", ""]; s.says[q] = "Bluff!";
+  s.phase = "reveal"; s.moves++;
+  const winner = lie ? q : play.p;
+  s.nextStarter = winner;
+  s.pendingWin = (!lie && !s.hands[play.p].length) ? play.p : -1;
+  save(); render(); advance();
+  return true;
+}
+function afterReveal() {
+  const s = state; if (!s || s.phase !== "reveal") return false;
+  if (s.pendingWin >= 0) { endGame(s.pendingWin); return true; }
+  const st = s.nextStarter; s.reveal = null;
+  addLog(`${NAMES[st]} start${st ? "s" : ""} round ${s.roundNo + 1}`);
+  newRound(st); return true;
+}
+function endGame(p) {
+  const s = state; s.phase = "gameOver"; s.winner = p; clearTimeout(winTimer);
+  recordStats(s); save(); render(); showGameOver();
+}
+
+function advance() {
+  const s = state; if (!s) return;
+  if (s.phase === "play") {
+    if (s.turn !== 0) schedule(() => { const a = aiTurn(s, s.turn); if (a.type === "pass") doPass(s.turn); else doPlay(s.turn, a.cards, a.rank); }, 700);
+  } else if (s.phase === "window") {
+    if (s.last.p !== 0) {
+      // human gets first chance: window
+      if (G.fast) return; // test harness decides via __game.call/noCall or autoHuman
+      clearTimeout(winTimer); const g = gen;
+      winTimer = setTimeout(() => { if (g === gen && state.phase === "window") aiCallPhase(); }, WINDOW_MS);
+    } else schedule(aiCallPhase, 650);
+  } else if (s.phase === "reveal") {
+    schedule(afterReveal, 2200);
+  }
+}
+/** after the human window: AIs (in seat order after claimant) may call */
+function aiCallPhase() {
+  const s = state; if (!s || s.phase !== "window") return;
+  const p = s.last.p;
+  for (let i = 1; i < 4; i++) { const q = (p + i) % 4; if (q === 0) continue; if (aiWantsCall(s, q)) { callBluff(q); return; } }
+  noCall();
+}
+function humanNoCall() { const s = state; if (!s || s.phase !== "window" || s.last.p === 0) return false; clearTimeout(winTimer); aiCallPhase(); return true; }
+
+/* ---------- knowledge & probability ---------- */
+/** what viewer v can say about the last claim. */
+function claimAnalysis(s, v) {
+  if (!s || !s.last) return null;
+  const { p, n: k, rank: R } = s.last;
+  if (p === v) return { own: true, p, k, R };
+  const play = s.pile[s.last.idx];
+  const kn = s.know[v];
+  // cards of rank R that cannot be among the claimant's just-played cards
+  let blocked = 0, knownInP = 0, knownNonRInP = 0, pool = 0, poolR = 0;
+  const justPlayed = new Set(play.cards);
+  for (let c = 0; c < 52; c++) {
+    const k0 = kn[c];
+    const isR = rankOf(c) === R;
+    if (k0 === UNK || k0 === 30 + p) { pool++; if (isR) poolR++; continue; }
+    if (k0 === 10 + p || k0 === p) { if (isR) knownInP++; else knownNonRInP++; continue; }
+    if (isR) blocked++;
+  }
+  void justPlayed;
+  const avail = 4 - blocked;
+  const impossible = k > avail;
+  const hp = s.hands[p].length + k;            // claimant's hand size before the play
+  const u = Math.max(0, Math.min(pool, hp - knownInP - knownNonRInP));
+  const need = k - Math.min(knownInP, k);
+  const pHonest = impossible ? 0 : (need <= 0 ? 1 : hyperAtLeast(pool, poolR, u, need));
+  return { own: false, p, k, R, blocked, avail, impossible, pool, poolR, u, need, knownInP, hp, pHonest, mine: s.hands[v].filter(c => rankOf(c) === R).length };
+}
+/* ---------- AI ---------- */
+function aiWantsCall(s, q) {
+  const a = claimAnalysis(s, q); if (!a || a.own) return false;
+  const goingOut = s.hands[a.p].length === 0;
+  const pileN = s.pile.reduce((t, e) => t + e.n, 0);
+  if (s.difficulty === "easy") return Math.random() < (goingOut ? 0.5 : 0.12);
+  if (s.difficulty === "normal") {
+    if (a.mine + a.k > 4) return true;
+    if (goingOut) return Math.random() < 0.6;
+    return Math.random() < 0.06 + (a.k >= 3 ? 0.08 : 0);
+  }
+  // hard
+  if (a.impossible) return true;
+  if (goingOut) return a.pHonest < 0.97;
+  const thr = Math.max(0.15, 0.45 - 0.012 * pileN) + (s.hands[q].length <= 3 ? -0.1 : 0);
+  return a.pHonest < thr;
+}
+function aiTurn(s, p, forceDiff) {
+  const diff = forceDiff || s.difficulty;
+  const h = s.hands[p];
+  const byRank = Array.from({ length: 13 }, () => []);
+  h.forEach(c => byRank[rankOf(c)].push(c));
+  const pileN = s.pile.reduce((t, e) => t + e.n, 0);
+  const rnd = a => a[Math.floor(Math.random() * a.length)];
+  const junk = (excl, n) => { // cards from smallest groups, not of rank excl
+    const cs = h.filter(c => rankOf(c) !== excl).sort((a, b) => byRank[rankOf(a)].length - byRank[rankOf(b)].length || Math.random() - .5);
+    return cs.slice(0, n);
+  };
+  if (s.rank < 0) { // leading
+    if (diff === "easy") { const R = rankOf(rnd(h)); const g = byRank[R]; const n = 1 + Math.floor(Math.random() * Math.min(4, g.length)); return { type: "play", cards: g.slice(0, n), rank: R }; }
+    let R = 0; for (let r = 0; r < 13; r++) if (byRank[r].length > byRank[R].length) R = r;
+    let cards = byRank[R].slice(0, 4);
+    if (h.length === cards.length) return { type: "play", cards, rank: R };
+    const padP = diff === "hard" ? 0.3 : 0.15;
+    if (cards.length < 4 && Math.random() < padP && h.length > cards.length) cards = cards.concat(junk(R, 1));
+    return { type: "play", cards, rank: R };
+  }
+  const R = s.rank, mine = byRank[R];
+  // already claimed of R this round by others (public)
+  const claimed = s.pile.filter(e => e.p !== p).reduce((t, e) => t + e.n, 0);
+  if (mine.length) {
+    let cards = mine.slice(0, 4);
+    if (h.length === cards.length) return { type: "play", cards, rank: R };
+    if (diff !== "easy" && cards.length < 4 && Math.random() < (diff === "hard" ? 0.25 : 0.15) && mine.length + claimed < 4) cards = cards.concat(junk(R, 1));
+    return { type: "play", cards, rank: R };
+  }
+  // no genuine cards: bluff or pass
+  if (diff === "easy") return Math.random() < 0.55 ? { type: "play", cards: junk(R, 1 + Math.floor(Math.random() * 2)), rank: R } : { type: "pass" };
+  let pBluff = diff === "hard" ? 0.6 : 0.45;
+  if (claimed >= 3) pBluff = 0.05;            // claim would look impossible
+  else if (claimed >= 2) pBluff *= 0.5;
+  pBluff *= Math.max(0.25, 1 - pileN / 30);
+  if (h.length <= 2) pBluff = Math.max(pBluff, diff === "hard" ? 0.5 : 0.3);
+  if (Math.random() < pBluff) return { type: "play", cards: junk(R, claimed <= 1 && Math.random() < 0.3 ? 2 : 1), rank: R };
+  return { type: "pass" };
+}
+function suggest() {
+  const s = state; if (!s) return null;
+  if (s.phase === "window" && s.last && s.last.p !== 0) { const a = claimAnalysis(s, 0); return a && (a.impossible || a.pHonest < 0.3 || (s.hands[a.p].length === 0 && a.pHonest < 0.9)) ? { type: "call" } : { type: "nocall" }; }
+  if (s.phase === "play" && s.turn === 0) return aiTurn(s, 0, "normal");
+  if (s.phase === "reveal") return { type: "continue" };
+  return null;
+}
+function autoHuman() {
+  const s = state, a = suggest(); if (!a) {
+    // AI windows in fast mode with human not involved need a push
+    if (s && s.phase === "window" && s.last && s.last.p === 0) { aiCallPhase(); return true; }
+    return false;
+  }
+  if (a.type === "call") return callBluff(0);
+  if (a.type === "nocall") return humanNoCall();
+  if (a.type === "pass") return doPass(0);
+  if (a.type === "play") return doPlay(0, a.cards, a.rank);
+  if (a.type === "continue") return afterReveal();
+  return false;
+}
+
+/* ---------- stats ---------- */
+function getStats() { return Object.assign({ played: 0, won: 0, streak: 0, bestStreak: 0, fewestMoves: null, calls: 0, callsRight: 0 }, loadJSON(STATS_KEY) || {}); }
+function recordStats(s) {
+  const st = getStats(); st.played++;
+  if (s.winner === 0) { st.won++; st.streak++; st.bestStreak = Math.max(st.bestStreak, st.streak); st.fewestMoves = st.fewestMoves === null ? s.moves : Math.min(st.fewestMoves, s.moves); } else st.streak = 0;
+  st.calls += s.calls.you; st.callsRight += s.calls.youRight;
+  saveJSON(STATS_KEY, st);
+}
+
+/* ---------- rendering ---------- */
+const $ = id => document.getElementById(id);
+function cardHTML(c, cls) {
+  const su = suitOf(c), lab = RLAB[rankOf(c)];
+  return `<div class="card ${su % 2 ? "red" : "blk"} ${cls || ""}" data-c="${c}"><div class="ix"><b class="${lab === "10" ? "t" : ""}">${lab}</b><i>${SUITS[su]}</i></div><div class="pip">${SUITS[su]}</div></div>`;
+}
+function setStatus(html) { $("status").innerHTML = html; }
+const pct = x => (x * 100).toFixed(1) + "%";
+function render() {
+  const s = state; if (!s) return;
+  const pileN = s.pile.reduce((t, e) => t + e.n, 0);
+  $("roundInfo").textContent = `Round ${s.roundNo} · discarded ${s.discarded}`;
+  $("rankInfo").textContent = s.rank >= 0 ? `Rank: ${RNAME[s.rank]}` : "Rank: open (starter names it)";
+  $("rankInfo").className = "badge" + (s.rank >= 0 ? " hot" : "");
+  const a = s.last ? claimAnalysis(s, 0) : null;
+  $("honestInfo").innerHTML = a ? (a.own ? "Last claim: yours" : (a.impossible ? `<b>${NAMES[a.p]}'s claim is IMPOSSIBLE</b>` : `P(${NAMES[a.p]} honest) ≈ <b>${pct(a.pHonest)}</b>`)) : "Last claim honest: —";
+  $("honestInfo").className = "badge" + (a && !a.own && (a.impossible || a.pHonest < 0.4) ? " hot" : "");
+  for (let p = 1; p < 4; p++) {
+    const n = s.hands[p].length, show = Math.min(n, 13);
+    $("seat" + p).innerHTML = `<div class="nm">${NAMES[p]}</div><div class="backs">${Array(show).fill('<div class="mini"></div>').join("")}</div><div class="sc"><b>${n}</b> card${n === 1 ? "" : "s"}${p === s.starter ? " · started" : ""}</div><div class="say">${s.says[p] || ""}</div>`;
+    $("seat" + p).classList.toggle("turn", s.phase === "play" && s.turn === p || s.phase === "window" && s.last && s.last.p === p);
+  }
+  // pile
+  const shown = Math.min(pileN, 10);
+  let ph = ""; for (let i = 0; i < shown; i++) { const rot = ((i * 37) % 30) - 15; ph += `<div class="pc" style="transform:translate(-50%,-50%) rotate(${rot}deg) translate(${(i % 3) - 1}px,${-i}px)"></div>`; }
+  $("pile").innerHTML = ph;
+  $("pileCount").textContent = pileN ? `Pile: ${pileN} card${pileN === 1 ? "" : "s"}` : "Pile empty";
+  if (s.reveal) {
+    const r = s.reveal;
+    $("claim").innerHTML = `${NAMES[r.caller]} called Bluff on ${NAMES[r.claimant]}: <b>${r.lie ? "LIE!" : "Truth!"}</b> ${NAMES[r.loser]} pick${r.loser ? "s" : ""} up ${r.n}`;
+    $("reveal").innerHTML = r.cards.map(c => cardHTML(c, rankOf(c) === r.rank ? "ok" : "lie")).join("");
+  } else {
+    $("claim").innerHTML = s.last ? `${NAMES[s.last.p]} claims <b>${s.last.n} × ${RNAME[s.last.rank]}</b>` : (s.phase === "gameOver" ? `${NAMES[s.winner]} won!` : `${NAMES[s.turn]} starts a new round`);
+    $("reveal").innerHTML = "";
+  }
+  $("log").innerHTML = s.log.slice(-3).join("<br>");
+  const counts = {}; s.hands[0].forEach(c => counts[rankOf(c)] = (counts[rankOf(c)] || 0) + 1);
+  $("youInfo").innerHTML = `You · <b>${s.hands[0].length}</b> cards${s.says[0] ? ` · <span style="color:var(--gold)">${s.says[0]}</span>` : ""}`;
+  $("selInfo").textContent = s.phase === "play" && s.turn === 0 ? `Selected ${s.sel.length}/4` : "";
+  $("handwrap").classList.toggle("turn", s.phase === "play" && s.turn === 0);
+  renderHand(); renderStatus();
+  if ($("p-odds").classList.contains("on")) renderLive();
+}
+let chosenRank = -1;
+function renderStatus() {
+  const s = state; if (!s) return;
+  let h = "";
+  if (s.phase === "play") {
+    if (s.turn === 0) {
+      if (s.rank < 0) {
+        const selR = s.sel.length ? rankOf(s.sel[0]) : 0;
+        if (chosenRank < 0) chosenRank = selR;
+        h = `<span>New round — select 1–4 cards and name a rank:</span><select id="rankSel">${RLAB.map((l, i) => `<option value="${i}" ${i === chosenRank ? "selected" : ""}>${RNAME[i]}</option>`).join("")}</select><button class="btn" id="bPlay" ${s.sel.length ? "" : "disabled"}>Play ${s.sel.length || ""}</button>`;
+      } else {
+        h = `<span>Rank is <b>${RNAME[s.rank]}</b> — select 1–4 cards or pass</span><button class="btn" id="bPlay" ${s.sel.length ? "" : "disabled"}>Play ${s.sel.length || ""} as ${RLAB[s.rank]}</button><button class="btn alt" id="bPass">Pass</button>`;
+      }
+    } else h = `${NAMES[s.turn]} is thinking…`;
+  } else if (s.phase === "window") {
+    if (s.last.p !== 0) h = `<div style="width:100%"><div>${NAMES[s.last.p]} claims ${s.last.n} × ${RNAME[s.last.rank]}${s.hands[s.last.p].length ? "" : " — <b>their last cards!</b>"}</div><div class="timer ${G.fast ? "" : "run"}"><i style="animation-duration:${WINDOW_MS}ms"></i></div></div><button class="btn bluff" id="bBluff">Bluff!</button><button class="btn alt" id="bNoCall">No call</button>`;
+    else h = "Waiting to see if anyone calls Bluff…";
+  } else if (s.phase === "reveal") h = `${s.reveal.lie ? "Caught lying!" : "It was the truth!"} ${NAMES[s.reveal.loser]} pick${s.reveal.loser ? "s" : ""} up the pile. <button class="btn alt" id="bCont">Continue</button>`;
+  else if (s.phase === "gameOver") h = `${NAMES[s.winner]} won! <button class="btn" id="bAgain2">New game</button>`;
+  setStatus(h);
+}
+function layoutHand(el, cards, cls) {
+  const W = el.clientWidth || 340;
+  const cw = parseFloat(getComputedStyle(el).getPropertyValue("--hcw")) || 64;
+  const n = cards.length;
+  const minStep = cw * 0.42;
+  const perRow = Math.max(1, Math.floor((W - cw) / minStep) + 1);
+  const rows = Math.max(1, Math.ceil(n / perRow));
+  const per = Math.ceil(n / rows) || 1;
+  const step = per > 1 ? Math.min(cw + 6, (W - cw) / (per - 1)) : 0;
+  const rowH = cw * 0.62;
+  el.style.height = (cw * 1.4 + 16 + (rows - 1) * rowH) + "px";
+  let html = "";
+  cards.forEach((c, i) => {
+    const r = Math.floor(i / per), k = i % per, cnt = Math.min(per, n - r * per);
+    const total = (cnt - 1) * step + cw, x0 = Math.max(0, (W - total) / 2);
+    html += cardHTML(c, cls(c)).replace('class="card', `style="left:${(x0 + k * step).toFixed(1)}px;margin-top:${(r * rowH).toFixed(1)}px;z-index:${i + 1}" class="card`);
+  });
+  el.innerHTML = html;
+}
+function renderHand() {
+  const s = state; if (!s) return;
+  layoutHand($("hand"), s.hands[0], c => (s.sel.includes(c) ? "sel " : "") + (s.newCards.includes(c) ? "new" : ""));
+}
+function onHandClick(e) {
+  const el = e.target.closest(".card"); if (!el || !state) return;
+  const s = state, c = +el.dataset.c;
+  if (s.phase !== "play" || s.turn !== 0) return;
+  if (s.sel.includes(c)) s.sel = s.sel.filter(x => x !== c);
+  else if (s.sel.length < 4) { s.sel.push(c); if (s.rank < 0 && s.sel.length === 1) chosenRank = rankOf(c); }
+  renderHand(); renderStatus(); $("selInfo").textContent = `Selected ${s.sel.length}/4`;
+}
+
+/* ---------- modals ---------- */
+function showModal(html) { $("dlg").innerHTML = html; $("modal").classList.add("on"); }
+function closeModal() { $("modal").classList.remove("on"); }
+function showGameOver() {
+  const s = state, st = getStats();
+  const rows = [0, 1, 2, 3].map(p => `<tr><td>${NAMES[p]}</td><td>${s.hands[p].length}</td></tr>`).join("");
+  showModal(`<h2>${s.winner === 0 ? "You win! 🏆" : NAMES[s.winner] + " wins"}</h2><table><tr><th>Player</th><th>Cards left</th></tr>${rows}</table><p class="small">Rounds: ${s.roundNo} · moves: ${s.moves} · your Bluff calls: ${s.calls.youRight}/${s.calls.you} correct.<br>Record: ${st.won} won of ${st.played} · streak ${st.streak}</p><div class="row"><button class="btn" id="bAgain">New game</button></div>`);
+}
+function showResume(saved) {
+  showModal(`<h2>Resume saved game?</h2><p>Round ${saved.roundNo}; cards left — ${NAMES.map((n, i) => n + " " + saved.hands[i].length).join(", ")}.</p><div class="row"><button class="btn alt" id="bFresh">New game</button><button class="btn" id="bResume">Resume saved game</button></div>`);
+}
+function resume(saved) {
+  gen++; clearTimeout(timer); closeModal(); state = saved; $("diff").value = saved.difficulty;
+  render(); advance();
+}
+
+/* ---------- odds tab ---------- */
+function renderHyper() {
+  const n = +$("hN").value, m = Math.min(+$("hM").value, 4), k = +$("hK").value;
+  $("hH").max = 52 - n; if (+$("hH").value > 52 - n) $("hH").value = 52 - n;
+  const h = +$("hH").value;
+  $("hNo").textContent = n; $("hMo").textContent = m; $("hHo").textContent = h; $("hKo").textContent = k;
+  const U = 52 - n, r = 4 - m;
+  if (m > n) { $("hOut").innerHTML = `<p class="redt">m cannot exceed your hand size.</p>`; return; }
+  let t = `<p>U = 52 − ${n} = <b>${U}</b>, r = 4 − ${m} = <b>${r}</b></p><table><tr><th>j copies</th><th>P(X = j)</th><th style="width:35%"></th></tr>`;
+  for (let j = 0; j <= Math.min(r, h); j++) { const p = hyper(U, r, h, j); t += `<tr><td>${j}</td><td>C(${r},${j})·C(${U - r},${h - j})/C(${U},${h}) = <b>${pct(p)}</b></td><td><div class="bar" style="width:${(p * 100).toFixed(1)}%"></div></td></tr>`; }
+  const ph = k > r ? 0 : hyperAtLeast(U, r, h, k);
+  t += `</table><p class="big">P(claimant holds ≥ ${k}) = ${k > r ? "0 — impossible claim!" : pct(ph)}</p><p class="small">Expected copies E[X] = r·h/U = ${(r * h / U).toFixed(2)}. Treating this as P(honest) assumes a player who holds the cards plays them truthfully.</p>`;
+  $("hOut").innerHTML = t;
+}
+function renderImp() {
+  const m = +$("iM").value, a = +$("iA").value, d = +$("iD").value, k = +$("iK").value, c = +$("iC").value;
+  ["iM", "iA", "iD", "iK", "iC"].forEach(id => $(id + "o").textContent = $(id).value);
+  const known = m + a + d;
+  let t = "";
+  if (known > 4) t = `<p class="redt">m + a + d = ${known} > 4 — inputs inconsistent (only 4 copies exist).</p>`;
+  else {
+    const avail = 4 - known;
+    t += `<p>Copies the claimant could hold: 4 − ${m} − ${a} − ${d} = <b>${avail}</b>.</p>`;
+    t += k > avail ? `<p class="big redt">Claim of ${k} is IMPOSSIBLE → call Bluff (certain win).</p>` : `<p class="big grnt">Claim of ${k} is possible.</p>`;
+    const tot = c + k;
+    t += tot > avail ? `<p class="redt">Round total: others' claims c + k = ${tot} > ${avail} → <b>someone</b> in this round has lied — but only the last play is turned over, so the last claimant is not necessarily the liar.</p>` : `<p class="small">Round total c + k = ${tot} ≤ ${avail}: every claim this round could be honest.</p>`;
+  }
+  $("iOut").innerHTML = t;
+}
+function renderLive() {
+  const s = state; if (!s) { $("liveBox").innerHTML = ""; return; }
+  const cnt = Array(13).fill(0); s.hands[0].forEach(c => cnt[rankOf(c)]++);
+  const sets = cnt.map((n, r) => n ? `${RLAB[r]}×${n}` : "").filter(Boolean).join(" ");
+  let t = `<h3>Live readout — round ${s.roundNo}</h3><table><tr><td>Your ranks</td><td>${sets || "—"}</td></tr>`;
+  t += `<tr><td>Current rank</td><td>${s.rank >= 0 ? RNAME[s.rank] + ` — you hold ${cnt[s.rank]}` : "open"}</td></tr>`;
+  const a = s.last ? claimAnalysis(s, 0) : null;
+  if (a && !a.own) {
+    t += `<tr><td>Last claim</td><td>${NAMES[a.p]}: ${a.k} × ${RNAME[a.R]} (hand before play ${a.hp})</td></tr>`;
+    t += `<tr><td>Copies of ${RLAB[a.R]} you know are elsewhere</td><td>${a.blocked} (your hand ${a.mine}) → claimant can hold at most ${a.avail}${a.knownInP ? `; you know ${a.knownInP} were in their hand` : ""}</td></tr>`;
+    t += `<tr><td><b>P(last claim honest)</b></td><td class="big">${a.impossible ? '<span class="redt">0% — impossible claim!</span>' : pct(a.pHonest)}</td></tr>`;
+    if (!a.impossible && a.need > 0) t += `<tr><td>Formula</td><td><span class="f">P(X ≥ ${a.need}), X ~ Hypergeometric(U=${a.pool}, r=${a.poolR}, h=${a.u})</span></td></tr>`;
+  } else if (a && a.own) t += `<tr><td>Last claim</td><td>yours</td></tr>`;
+  else t += `<tr><td>Last claim</td><td>—</td></tr>`;
+  t += `<tr><td>Cards: pile / discarded</td><td>${s.pile.reduce((x, e) => x + e.n, 0)} / ${s.discarded}</td></tr>`;
+  t += `<tr><td>Hands</td><td>${NAMES.map((n, i) => n + " " + s.hands[i].length).join(" · ")}</td></tr></table>`;
+  $("liveBox").innerHTML = t;
+}
+function useLiveH() {
+  const s = state; if (!s || !s.last || s.last.p === 0) { $("hOut").insertAdjacentHTML("afterbegin", `<p class="small redt">No opponent claim on the table right now.</p>`); return; }
+  const a = claimAnalysis(s, 0);
+  $("hN").value = s.hands[0].length; $("hM").value = a.mine; renderHyper();
+  $("hH").value = Math.min(a.hp, 52 - s.hands[0].length); $("hK").value = a.k; renderHyper();
+}
+
+/* ---------- misc UI ---------- */
+function showTab(name) {
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === name));
+  ["play", "rules", "odds"].forEach(n => $("p-" + n).classList.toggle("on", n === name));
+  $("bRules").classList.toggle("on", name === "rules"); $("bOdds").classList.toggle("on", name === "odds");
+  if (name === "rules") renderStats();
+  if (name === "odds") { renderLive(); renderHyper(); renderImp(); }
+  if (name === "play") renderHand();
+}
+function renderStats() {
+  const st = getStats();
+  $("statsBox").innerHTML = `<table><tr><th>Games</th><th>Won</th><th>Win %</th><th>Streak</th><th>Best streak</th><th>Fewest moves to win</th><th>Your Bluff calls right</th></tr><tr><td>${st.played}</td><td>${st.won}</td><td>${st.played ? Math.round(st.won / st.played * 100) : 0}%</td><td>${st.streak}</td><td>${st.bestStreak}</td><td>${st.fewestMoves === null ? "—" : st.fewestMoves}</td><td>${st.callsRight} / ${st.calls}</td></tr></table>`;
+}
+function toggleFull() { try { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { }); else document.exitFullscreen().catch(() => { }); } catch (e) { } }
+let pendingSave = null;
+function init() {
+  $("ver").textContent = APP_VERSION;
+  if (!document.fullscreenEnabled) $("bFull").style.display = "none";
+  document.addEventListener("fullscreenchange", () => $("bFull").classList.toggle("on", !!document.fullscreenElement));
+  $("bFull").onclick = toggleFull;
+  $("bNew").onclick = () => { if (!state || state.phase === "gameOver") { newGame(); showTab("play"); return; } showModal(`<h2>Start a new game?</h2><p>The current game will be abandoned.</p><div class="row"><button class="btn alt" id="bCancel">Cancel</button><button class="btn" id="bAgain">New game</button></div>`); };
+  $("bRules").onclick = () => showTab($("p-rules").classList.contains("on") ? "play" : "rules");
+  $("bOdds").onclick = () => showTab($("p-odds").classList.contains("on") ? "play" : "odds");
+  document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+  $("hand").addEventListener("click", onHandClick);
+  $("status").addEventListener("change", e => { if (e.target.id === "rankSel") chosenRank = +e.target.value; });
+  $("status").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b || !state) return;
+    const s = state;
+    if (b.id === "bPlay") { const r = s.rank < 0 ? +$("rankSel").value : s.rank; if (doPlay(0, s.sel.slice(), r)) chosenRank = -1; }
+    else if (b.id === "bPass") doPass(0);
+    else if (b.id === "bBluff") callBluff(0);
+    else if (b.id === "bNoCall") humanNoCall();
+    else if (b.id === "bCont") afterReveal();
+    else if (b.id === "bAgain2") newGame();
+  });
+  $("dlg").addEventListener("click", e => {
+    const id = e.target.id;
+    if (id === "bAgain") { newGame(); showTab("play"); }
+    else if (id === "bCancel") { closeModal(); }
+    else if (id === "bResume") resume(pendingSave);
+    else if (id === "bFresh") newGame();
+  });
+  $("diff").onchange = () => { const d = $("diff").value; saveJSON(PREF_KEY, { difficulty: d }); if (state) { state.difficulty = d; save(); } };
+  $("bResetStats").onclick = () => { try { localStorage.removeItem(STATS_KEY); } catch (e) { } renderStats(); };
+  ["hN", "hM", "hH", "hK"].forEach(id => $(id).oninput = renderHyper);
+  ["iM", "iA", "iD", "iK", "iC"].forEach(id => $(id).oninput = renderImp);
+  $("bLiveH").onclick = useLiveH;
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => state && renderHand(), 80); });
+  $("diff").value = prefs().difficulty;
+  const saved = loadJSON(SAVE_KEY);
+  if (saved && saved.v === 1 && saved.phase && saved.phase !== "gameOver" && Array.isArray(saved.hands)) { pendingSave = saved; showResume(saved); setStatus("Resume your saved game or start a new one"); }
+  else newGame();
+}
+
+window.__game = {
+  get state() { return state; }, G,
+  get fast() { return G.fast; }, set fast(v) { G.fast = !!v; },
+  newGame, play: (cards, rank) => doPlay(0, cards, rank), pass: () => doPass(0), call: () => callBluff(0), noCall: humanNoCall, cont: afterReveal,
+  suggest, autoHuman, claimAnalysis, hyper, hyperAtLeast, C, isLie, showTab,
+  resume: () => pendingSave && resume(pendingSave), setDifficulty: d => { $("diff").value = d; $("diff").onchange(); }
+};
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<!--
+TOOL: Klondike Solitaire
+FAMILY: card-games
+VERSION: 1.0.0
+DATE: 2026-10-13
+CHAT: Card games batch 1 (claude.ai)
+CHANGES: 1.0.0 - first release
+STATUS: released
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b3d2a">
+<title>Klondike Solitaire</title>
+<style>
+:root{--felt:#0f5132;--cw:64px;--ch:90px;--red:#c62828;--blk:#111;--back:#1e3a8a;--gold:#facc15;--ink:#f1f5f2;--panel:rgba(0,0,0,.28)}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:radial-gradient(ellipse at 50% 25%,#18774a 0%,#0f5132 55%,#093822 100%) fixed;background-color:#0f5132;color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+header.top{display:flex;align-items:center;gap:6px;background:#0b1f16;padding:6px 10px;flex-wrap:wrap;position:sticky;top:0;z-index:60;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.top h1{font-size:18px;margin:0 auto 0 0;white-space:nowrap}
+.btn{min-height:40px;min-width:40px;padding:0 12px;border-radius:8px;border:1px solid #2f6d50;background:#174a33;color:#fff;font-size:14px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit}
+.btn:hover{background:#1d5c40}.btn:active{transform:translateY(1px)}
+.btn.primary{background:#b45309;border-color:#d97706}
+.btn[disabled]{opacity:.45;cursor:default}
+main{max-width:1400px;width:100%;margin:0 auto;padding:0 8px 16px}
+.tabs{display:flex;gap:4px;margin:8px 0}
+.tabs button{flex:0 0 auto;min-height:40px;padding:0 14px;border:0;border-radius:8px 8px 0 0;background:rgba(0,0,0,.25);color:#cde;font-size:14px;cursor:pointer;font-family:inherit}
+.tabs button.on{background:rgba(0,0,0,.5);color:#fff;font-weight:600}
+.panel{display:none}.panel.on{display:block}
+.ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:6px}
+.ctrl select{min-height:40px;border-radius:8px;background:#0b2e1f;color:#fff;border:1px solid #2f6d50;padding:0 6px;font-size:14px}
+.stat{background:var(--panel);border-radius:8px;padding:4px 8px;font-size:13px;min-height:40px;display:inline-flex;align-items:center;gap:4px}
+.stat b{color:var(--gold);font-variant-numeric:tabular-nums}
+#table{position:relative;width:100%;user-select:none;-webkit-user-select:none;min-height:300px}
+.slot{position:absolute;width:var(--cw);height:var(--ch);border-radius:8px;border:2px dashed rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.35);font-size:calc(var(--cw)*.42)}
+.slot.stockslot{cursor:pointer;border-style:solid}
+.card{position:absolute;width:var(--cw);height:var(--ch);border-radius:8px;background:#fff;border:1px solid #9aa;box-shadow:0 1px 3px rgba(0,0,0,.45);color:var(--blk);transition:left .18s ease,top .18s ease;cursor:pointer;touch-action:none;overflow:hidden}
+.card.red{color:var(--red)}
+.card .tl{position:absolute;left:3px;top:1px;font-weight:700;font-size:calc(var(--cw)*.27);line-height:1.05;letter-spacing:-.5px;white-space:nowrap}
+.card .mid{position:absolute;left:0;right:0;top:34%;text-align:center;font-size:calc(var(--cw)*.5);line-height:1}
+.card .br{position:absolute;right:3px;bottom:1px;font-size:calc(var(--cw)*.22);transform:rotate(180deg);font-weight:700}
+.card.back{background:var(--back) repeating-linear-gradient(45deg,rgba(255,255,255,.14) 0 3px,transparent 3px 8px);border:2px solid #e8eefc;cursor:default}
+.card.back>*{display:none}
+.card.drag{transition:none;box-shadow:0 8px 18px rgba(0,0,0,.55)}
+.card.hint{outline:3px solid var(--gold);outline-offset:-1px}
+.slot.hint{border-color:var(--gold);border-style:solid}
+.card.shake{animation:shake .3s}
+@keyframes shake{25%{margin-left:-4px}75%{margin-left:4px}}
+#status{margin-top:8px;background:var(--panel);border-radius:8px;padding:8px 10px;font-size:14px;min-height:40px}
+.doc{background:rgba(0,0,0,.32);border-radius:10px;padding:12px 16px;line-height:1.5;font-size:15px}
+.doc h2{margin:.3em 0 .4em;font-size:20px}.doc h3{margin:1em 0 .3em;font-size:16px;color:var(--gold)}
+.doc table{border-collapse:collapse;margin:6px 0}.doc td,.doc th{border:1px solid rgba(255,255,255,.25);padding:4px 8px;text-align:left}
+.calc{background:rgba(0,0,0,.25);border-radius:8px;padding:10px;margin:8px 0}
+.calc label{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:4px 0}
+.calc input[type=range]{flex:1;min-width:140px;height:32px}
+.calc .out{font-size:16px;color:#fff;margin-top:6px}.calc .out b{color:var(--gold)}
+code{background:rgba(0,0,0,.35);padding:1px 5px;border-radius:4px}
+.grid{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.grid span{width:30px;height:30px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;background:#334;color:#aab}
+.grid span.ok{background:#16a34a;color:#fff;font-weight:700}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+.modal{background:#0d2a1d;border:1px solid #2f6d50;border-radius:12px;padding:18px;max-width:440px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.modal h2{margin:0 0 8px}.modal .mb{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;justify-content:flex-end}
+.confetti{position:fixed;top:-40px;font-size:28px;z-index:99;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+@media (max-width:600px){
+  .top h1{font-size:14px}header.top{gap:4px;padding:6px}.top .btn{padding:0 7px}.btn{padding:0 8px;font-size:13px}
+  .lbl{display:none}
+  .stat{font-size:12px;padding:3px 6px}
+  main{padding:0 4px 12px}
+  .doc{padding:10px;font-size:14px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>♠ Klondike</h1>
+  <button class="btn primary" id="bNew">New</button>
+  <button class="btn" id="bRules">Rules</button>
+  <button class="btn" id="bOdds">Odds</button>
+  <button class="btn" id="bFull" title="Full screen">⛶<span class="lbl">&nbsp;Full screen</span></button>
+  <a class="btn" href="index.html">← Games</a>
+</header>
+<main>
+  <nav class="tabs">
+    <button data-tab="play" class="on">Play</button>
+    <button data-tab="rules">Rules</button>
+    <button data-tab="odds">Odds &amp; Strategy</button>
+  </nav>
+
+  <section class="panel on" id="p-play">
+    <div class="ctrl">
+      <select id="selDiff" aria-label="Difficulty">
+        <option value="easy">Easy · draw 1</option>
+        <option value="normal">Normal · draw 3</option>
+        <option value="hard">Hard · draw 3, 3 passes</option>
+      </select>
+      <button class="btn" id="bUndo">↶ Undo</button>
+      <button class="btn" id="bHint">💡 Hint</button>
+      <button class="btn" id="bAuto" style="display:none">⚡ Auto-finish</button>
+      <span class="stat">Moves <b id="sMoves">0</b></span>
+      <span class="stat">Time <b id="sTime">0:00</b></span>
+      <span class="stat">Score <b id="sScore">0</b></span>
+      <span class="stat" id="sPassWrap">Passes <b id="sPass">-</b></span>
+    </div>
+    <div id="table"></div>
+    <div id="status">Tap a card to move it, or drag it. Tap the deck to draw.</div>
+  </section>
+
+  <section class="panel" id="p-rules">
+    <div class="doc">
+      <h2>How to play Klondike</h2>
+      <p>Goal: build all four <b>foundations</b> (top right) up by suit from Ace to King.</p>
+      <ul>
+        <li><b>Tableau</b> (7 columns): build <i>down</i> in alternating colours (red 9 on black 10). Move any face-up run as a unit. Only a <b>King</b> (or a run starting with a King) may go into an empty column. A face-down card is turned over automatically when uncovered.</li>
+        <li><b>Stock</b> (top left): tap it to deal cards to the <b>waste</b>. Only the top waste card is playable. When the stock is empty, tap the empty spot to turn the waste back over.</li>
+        <li>Cards on a foundation may be moved back to the tableau if needed.</li>
+        <li><b>Tap</b> a card: it goes to the best legal place — foundation first, otherwise a tableau column. Or <b>drag</b> it. Undo is unlimited. When everything is face up and the stock is empty, the game auto-finishes.</li>
+      </ul>
+      <h3>Difficulty</h3>
+      <table><tr><th>Level</th><th>Draw</th><th>Passes through stock</th></tr>
+        <tr><td>Easy</td><td>1 card</td><td>unlimited</td></tr>
+        <tr><td>Normal</td><td>3 cards</td><td>unlimited</td></tr>
+        <tr><td>Hard</td><td>3 cards</td><td>3 (2 redeals)</td></tr></table>
+      <h3>Scoring (Windows standard)</h3>
+      <table>
+        <tr><td>Waste → tableau</td><td>+5</td></tr>
+        <tr><td>Waste → foundation</td><td>+10</td></tr>
+        <tr><td>Tableau → foundation</td><td>+10</td></tr>
+        <tr><td>Turn over a tableau card</td><td>+5</td></tr>
+        <tr><td>Foundation → tableau</td><td>−15</td></tr>
+        <tr><td>Recycle waste (draw 1)</td><td>−100</td></tr>
+        <tr><td>Recycle waste (draw 3, after the 3rd pass)</td><td>−20</td></tr>
+        <tr><td>Every 10 seconds</td><td>−2</td></tr>
+        <tr><td>Time bonus on a win (if over 30 s)</td><td>700 000 ÷ seconds</td></tr>
+      </table>
+      <p>The score never goes below 0.</p>
+      <h3>Your stats</h3>
+      <div id="statsBox"></div>
+      <p style="opacity:.7;font-size:13px">Klondike Solitaire v<span id="ver"></span> · card-games family · offline, no tracking. Your game is saved automatically on this device.</p>
+    </div>
+  </section>
+
+  <section class="panel" id="p-odds">
+    <div class="doc">
+      <h2>Odds &amp; Strategy</h2>
+      <h3>Live readout (current game)</h3>
+      <div class="calc" id="live"></div>
+
+      <h3>How many deals can be won?</h3>
+      <p>Published solver studies estimate that roughly <b>79–82 %</b> of Klondike deals are winnable with perfect play when the player may see every card ("thoughtful solitaire", draw-1). For ordinary play, where face-down cards are hidden, a strong human or program wins far less often — commonly quoted figures are about 35–45 % for draw-1 and lower for draw-3. These are <i>estimates</i> from published studies, not exact values; a small fraction of deals (around 0.25 %) cannot even make a first move.</p>
+
+      <h3>1 · Where is a card I can't see?</h3>
+      <p>At the deal there are 24 cards in the stock, 21 face-down in the tableau and 7 face-up. A card you cannot see is equally likely to be at any hidden position, so</p>
+      <p><code>P(in stock) = S ÷ (S + D)</code>, <code>P(face-down) = D ÷ (S + D)</code>.</p>
+      <div class="calc">
+        <label>Cards in stock + waste S <input type="range" id="c1s" min="0" max="24" value="24"><b id="c1sv">24</b></label>
+        <label>Face-down tableau cards D <input type="range" id="c1d" min="0" max="21" value="21"><b id="c1dv">21</b></label>
+        <button class="btn" id="c1now">Use current game</button>
+        <div class="out" id="c1out"></div>
+      </div>
+
+      <h3>2 · Is at least one of my target cards in the stock?</h3>
+      <p>If K wanted cards (e.g. the 4 Aces) are spread at random over N hidden positions and S of those positions are the stock, the number in the stock is hypergeometric:</p>
+      <p><code>P(X = j) = C(K, j) · C(N − K, S − j) ÷ C(N, S)</code>, and <code>P(X ≥ 1) = 1 − C(N − K, S) ÷ C(N, S)</code>.</p>
+      <div class="calc">
+        <label>Hidden pool N <input type="range" id="c2n" min="1" max="52" value="52"><b id="c2nv">52</b></label>
+        <label>of which in stock S <input type="range" id="c2s" min="0" max="24" value="24"><b id="c2sv">24</b></label>
+        <label>Target cards K <input type="range" id="c2k" min="1" max="4" value="4"><b id="c2kv">4</b></label>
+        <button class="btn" id="c2a">Whole deck (52 / 24)</button>
+        <button class="btn" id="c2b">After the deal, no Ace showing (45 / 24)</button>
+        <div class="out" id="c2out"></div>
+      </div>
+
+      <h3>3 · Draw-3: which stock cards can I reach?</h3>
+      <p>With draw-3 you only see every third card on a pass: positions 3, 6, 9 … from the top, plus the last card when the stock size is not a multiple of 3. Playing a card from the waste shifts everything after it by one, which is how other cards become reachable on the next pass. Reachable on one untouched pass: <code>⌊n ÷ 3⌋ + (1 if n mod 3 ≠ 0)</code>.</p>
+      <div class="calc">
+        <label>Stock size n <input type="range" id="c3n" min="1" max="24" value="24"><b id="c3nv">24</b></label>
+        <label>Draw <select id="c3d"><option value="1">1</option><option value="3" selected>3</option></select></label>
+        <label>Cards played from the waste before this pass, taken from position p <input type="range" id="c3p" min="0" max="24" value="0"><b id="c3pv">none</b></label>
+        <div class="grid" id="c3grid"></div>
+        <div class="out" id="c3out"></div>
+      </div>
+
+      <h3>Strategy tips</h3>
+      <ul>
+        <li>Prefer moves that turn over a face-down card; work on the longest face-down columns first.</li>
+        <li>Don't empty a column unless you have a King ready to fill it.</li>
+        <li>Don't rush every card to the foundation — low cards of the opposite colour may still be needed to hold tableau runs.</li>
+        <li>In draw-3, playing one waste card changes which cards are reachable on the next pass; think before you recycle.</li>
+        <li>When choosing which of two black 7s to move a red 6 onto, take the one that uncovers more.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<script>
+"use strict";
+const APP_VERSION = "1.0.0";
+const GAME_ID = "klondike";
+const SAVE_KEY = "cg_klondike_v1", STATS_KEY = "cg_klondike_stats";
+const RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+const SUITS = ["♣","♦","♥","♠"];
+const DIFF = {easy:{draw:1,passes:0,label:"Easy"},normal:{draw:3,passes:0,label:"Normal"},hard:{draw:3,passes:3,label:"Hard"}};
+
+/* ================= pure rules ================= */
+const rankOf = c => c >> 2, suitOf = c => c & 3, isRed = c => (c & 3) === 1 || (c & 3) === 2;
+const cardName = c => RANKS[rankOf(c)] + SUITS[suitOf(c)];
+function rng32(seed){ let a = seed >>> 0; return function(){ a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function shuffled(seed){ const r = rng32(seed); const d = [...Array(52).keys()]; for (let i = 51; i > 0; i--){ const j = Math.floor(r() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; } return d; }
+function deal(diff, seed){
+  const d = shuffled(seed), tab = [];
+  let p = 0;
+  for (let i = 0; i < 7; i++) tab.push({d: [], u: []});
+  for (let row = 0; row < 7; row++) for (let i = row; i < 7; i++){ const c = d[p++]; if (i === row) tab[i].u.push(c); else tab[i].d.push(c); }
+  const stock = d.slice(p).reverse();
+  return {seed, diff, draw: DIFF[diff].draw, maxPasses: DIFF[diff].passes, pass: 1, stock, waste: [], found: [0,0,0,0], tab,
+          moves: 0, score: 0, elapsed: 0, started: false, won: false, counted: false};
+}
+function foundTop(st, s){ return st.found[s] ? (st.found[s] - 1) * 4 + s : -1; }
+function canFound(st, c){ return st.found[suitOf(c)] === rankOf(c); }
+function canTab(st, c, i){
+  const col = st.tab[i];
+  if (col.u.length){ const t = col.u[col.u.length - 1]; return rankOf(t) === rankOf(c) + 1 && isRed(t) !== isRed(c); }
+  return col.d.length === 0 && rankOf(c) === 12;
+}
+/* from: {p:'w'} | {p:'f',i} | {p:'t',i,k}   to: {p:'f'} | {p:'t',i} */
+function movingCards(st, from){
+  if (from.p === 'w') return st.waste.length ? [st.waste[st.waste.length - 1]] : [];
+  if (from.p === 'f') return st.found[from.i] ? [foundTop(st, from.i)] : [];
+  if (from.p === 't'){ const u = st.tab[from.i].u; return from.k >= 0 && from.k < u.length ? u.slice(from.k) : []; }
+  return [];
+}
+function legal(st, m){
+  const cs = movingCards(st, m.from); if (!cs.length) return false;
+  if (m.to.p === 'f') return cs.length === 1 && m.from.p !== 'f' && canFound(st, cs[0]);
+  if (m.to.p === 't'){ if (m.from.p === 't' && m.from.i === m.to.i) return false; return canTab(st, cs[0], m.to.i); }
+  return false;
+}
+function addScore(st, n){ st.score = Math.max(0, st.score + n); }
+function applyMove(st, m){
+  const cs = movingCards(st, m.from);
+  if (m.from.p === 'w') st.waste.pop();
+  else if (m.from.p === 'f') st.found[m.from.i]--;
+  else st.tab[m.from.i].u.splice(m.from.k);
+  if (m.to.p === 'f'){ st.found[suitOf(cs[0])]++; addScore(st, 10); }
+  else { st.tab[m.to.i].u.push(...cs); if (m.from.p === 'w') addScore(st, 5); if (m.from.p === 'f') addScore(st, -15); }
+  if (m.from.p === 't'){ const col = st.tab[m.from.i]; if (!col.u.length && col.d.length){ col.u.push(col.d.pop()); addScore(st, 5); } }
+  st.moves++;
+  if (st.found.every(f => f === 13)) st.won = true;
+}
+function canRecycle(st){ return !st.stock.length && st.waste.length > 0 && (!st.maxPasses || st.pass < st.maxPasses); }
+function canDraw(st){ return st.stock.length > 0 || canRecycle(st); }
+function applyDraw(st){
+  if (st.stock.length){ for (let k = 0; k < st.draw && st.stock.length; k++) st.waste.push(st.stock.pop()); }
+  else if (canRecycle(st)){
+    st.stock = st.waste.reverse(); st.waste = []; st.pass++;
+    if (st.draw === 1) addScore(st, -100); else if (st.pass > 3) addScore(st, -20);
+  } else return false;
+  st.moves++; return true;
+}
+function allMoves(st){
+  const out = [];
+  const tops = [];
+  if (st.waste.length) tops.push({p:'w'});
+  for (let i = 0; i < 7; i++) if (st.tab[i].u.length) tops.push({p:'t', i, k: st.tab[i].u.length - 1});
+  for (const f of tops) if (legal(st, {from: f, to: {p:'f'}})) out.push({from: f, to: {p:'f'}, kind: 'found'});
+  for (let i = 0; i < 7; i++){
+    const col = st.tab[i];
+    for (let k = 0; k < col.u.length; k++){
+      for (let j = 0; j < 7; j++){
+        const m = {from: {p:'t', i, k}, to: {p:'t', i: j}};
+        if (!legal(st, m)) continue;
+        const reveals = k === 0 && col.d.length > 0;
+        const kingShuffle = k === 0 && col.d.length === 0 && !st.tab[j].u.length; // pointless
+        if (kingShuffle) continue;
+        // partial-run moves only useful if they expose a card that can go home
+        let kind = reveals ? 'reveal' : (k === 0 ? 'empty' : 'shift');
+        if (kind === 'shift'){ const under = col.u[k - 1]; if (!canFound(st, under)) continue; kind = 'unblock'; }
+        if (kind === 'empty' && col.d.length === 0) kind = 'empty';
+        out.push({...m, kind});
+      }
+    }
+  }
+  if (st.waste.length) for (let j = 0; j < 7; j++){ const m = {from:{p:'w'}, to:{p:'t', i:j}}; if (legal(st, m)) out.push({...m, kind:'waste'}); }
+  return out;
+}
+function bestHint(st){
+  const ms = allMoves(st);
+  const pri = {found: 1, reveal: 0, unblock: 2, waste: 3, empty: 5};
+  // foundation moves of aces/2s first, then reveals, then other foundation moves
+  ms.forEach(m => { m.p = pri[m.kind] ?? 9; if (m.kind === 'found'){ const c = movingCards(st, m.from)[0]; if (rankOf(c) <= 1) m.p = -1; } });
+  ms.sort((a, b) => a.p - b.p);
+  const useful = ms.filter(m => m.kind !== 'empty');
+  if (useful.length) return useful[0];
+  if (canDraw(st)) return {draw: true};
+  return null;
+}
+function canAutoFinish(st){ return !st.won && !st.stock.length && !st.waste.length && st.tab.every(c => !c.d.length); }
+function autoStep(st){
+  let best = null, br = 99;
+  for (let i = 0; i < 7; i++){ const u = st.tab[i].u; if (u.length){ const c = u[u.length - 1]; if (canFound(st, c) && rankOf(c) < br){ br = rankOf(c); best = {from:{p:'t', i, k: u.length - 1}, to:{p:'f'}}; } } }
+  if (best){ applyMove(st, best); return true; }
+  return false;
+}
+function counts(st){
+  let down = 0; st.tab.forEach(c => down += c.d.length);
+  const home = st.found.reduce((a, b) => a + b, 0);
+  return {left: 52 - home, down, stock: st.stock.length, waste: st.waste.length, moves: st.moves, home};
+}
+
+/* ================= storage ================= */
+function sGet(k){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e){ return null; } }
+function sSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function sDel(k){ try { localStorage.removeItem(k); } catch(e){} }
+function loadStats(){ return Object.assign({played:0, won:0, streak:0, bestStreak:0, bestScore:0, bestTime:0, byDiff:{}}, sGet(STATS_KEY) || {}); }
+
+/* ================= app state ================= */
+let st = null, hist = [], stats = loadStats(), busy = false, timerId = null;
+const $ = id => document.getElementById(id);
+const table = $('table');
+let G = {cw: 64, ch: 90, gap: 8, x0: 0, y0: 0, fd: 10, fu: 24};
+const cardEls = [];
+
+function save(){ sSet(SAVE_KEY, {st, hist: hist.slice(-150)}); }
+function pushHist(){ hist.push(JSON.stringify(st)); }
+function markStarted(){
+  if (!st.started){ st.started = true; }
+  if (!st.counted){ st.counted = true; stats.played++; const b = stats.byDiff[st.diff] || (stats.byDiff[st.diff] = {p:0, w:0}); b.p++; sSet(STATS_KEY, stats); }
+}
+function newGame(diff, seed){
+  if (st && st.counted && !st.won){ stats.streak = 0; sSet(STATS_KEY, stats); }
+  diff = diff || $('selDiff').value;
+  $('selDiff').value = diff;
+  seed = seed == null ? (Math.floor(Math.random() * 1e9) + 1) : seed;
+  st = deal(diff, seed); hist = []; busy = false;
+  closeModal();
+  render(); save();
+  setStatus(`Game #${seed} · ${DIFF[diff].label}. Tap a card to move it, or drag. Tap the deck to draw.`);
+}
+
+/* ================= layout & rendering ================= */
+function buildCards(){
+  table.innerHTML = '';
+  const slots = [];
+  const mk = (cls, txt) => { const s = document.createElement('div'); s.className = 'slot ' + cls; s.textContent = txt || ''; table.appendChild(s); slots.push(s); return s; };
+  G.sStock = mk('stockslot', '↻'); G.sWaste = mk('wasteslot');
+  G.sFound = [0,1,2,3].map(s => { const e = mk('fslot', SUITS[s]); e.dataset.f = s; return e; });
+  G.sTab = [0,1,2,3,4,5,6].map(i => { const e = mk('tslot', 'K'); e.dataset.t = i; return e; });
+  for (let c = 0; c < 52; c++){
+    const e = document.createElement('div');
+    const r = RANKS[rankOf(c)], s = SUITS[suitOf(c)];
+    e.className = 'card' + (isRed(c) ? ' red' : '');
+    e.dataset.id = c;
+    e.innerHTML = `<span class="tl">${r}${s}</span><span class="mid">${rankOf(c) >= 10 ? r : s}</span><span class="br">${r}${s}</span>`;
+    table.appendChild(e); cardEls[c] = e;
+  }
+}
+function computeLayout(){
+  const W = table.clientWidth || 360;
+  G.gap = W < 500 ? 4 : (W < 900 ? 8 : 14);
+  G.cw = Math.max(36, Math.min(110, Math.floor((W - G.gap * 8) / 7)));
+  G.ch = Math.round(G.cw * 1.4);
+  G.x0 = Math.floor((W - (7 * G.cw + 8 * G.gap)) / 2) + G.gap;
+  G.y0 = G.ch + G.gap * 3;
+  document.documentElement.style.setProperty('--cw', G.cw + 'px');
+  document.documentElement.style.setProperty('--ch', G.ch + 'px');
+}
+const colX = i => G.x0 + i * (G.cw + G.gap);
+function fanFor(i){
+  const col = st.tab[i];
+  const top = table.getBoundingClientRect().top + window.scrollY;
+  const avail = Math.max(G.ch * 3.2, window.innerHeight - (top - window.scrollY > 0 ? top - window.scrollY : 120) - 70);
+  const fd = Math.max(5, Math.round(G.ch * 0.1));
+  let fu = Math.round(G.ch * 0.27), fuMin = Math.round(G.cw * 0.36);
+  const n = col.u.length;
+  if (n > 1){ const need = G.y0 + col.d.length * fd + (n - 1) * fu + G.ch; if (need > avail) fu = Math.max(fuMin, Math.floor((avail - G.y0 - col.d.length * fd - G.ch) / (n - 1))); }
+  return {fd, fu};
+}
+function place(el, x, y, z, up){
+  el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.zIndex = z;
+  el.classList.toggle('back', !up);
+}
+function render(){
+  if (!cardEls.length) buildCards();
+  computeLayout();
+  const sp = (e, x, y) => { e.style.left = x + 'px'; e.style.top = y + 'px'; };
+  sp(G.sStock, colX(0), G.gap); sp(G.sWaste, colX(1), G.gap);
+  G.sStock.textContent = st.stock.length ? '' : (canRecycle(st) ? '↻' : '✕');
+  G.sFound.forEach((e, s) => sp(e, colX(3 + s), G.gap));
+  G.sTab.forEach((e, i) => sp(e, colX(i), G.y0));
+  st.stock.forEach((c, k) => place(cardEls[c], colX(0) - Math.min(k, 6) * 0 , G.gap, 10 + k, false));
+  const wn = st.waste.length, show = st.draw === 3 ? 3 : 1, off = Math.round(G.cw * 0.24);
+  st.waste.forEach((c, k) => { const v = k - (wn - show); place(cardEls[c], colX(1) + (v > 0 ? v * off : 0), G.gap, 10 + k, true); });
+  for (let s = 0; s < 4; s++) for (let r = 0; r < 13; r++){ const c = r * 4 + s; if (r < st.found[s]) place(cardEls[c], colX(3 + s), G.gap, 10 + r, true); }
+  let maxY = G.y0 + G.ch;
+  for (let i = 0; i < 7; i++){
+    const col = st.tab[i], f = fanFor(i); let y = G.y0, z = 10;
+    col.d.forEach(c => { place(cardEls[c], colX(i), y, z++, false); y += f.fd; });
+    col.u.forEach((c, k) => { place(cardEls[c], colX(i), y, z++, true); if (k < col.u.length - 1) y += f.fu; });
+    maxY = Math.max(maxY, y + G.ch);
+  }
+  table.style.height = (maxY + G.gap * 2) + 'px';
+  cardEls.forEach(e => e.classList.remove('drag', 'hint'));
+  updateHud();
+}
+function fmtTime(s){ const m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); }
+function updateHud(){
+  $('sMoves').textContent = st.moves; $('sTime').textContent = fmtTime(st.elapsed); $('sScore').textContent = st.score;
+  $('sPassWrap').style.display = st.maxPasses ? '' : 'none';
+  $('sPass').textContent = st.maxPasses ? `${st.pass}/${st.maxPasses}` : '∞';
+  $('bUndo').disabled = !hist.length || busy;
+  $('bAuto').style.display = canAutoFinish(st) ? '' : 'none';
+  updateLive();
+}
+function setStatus(t){ $('status').textContent = t; }
+
+/* ================= actions ================= */
+function afterAction(){
+  render(); save();
+  if (st.won){ onWin(); return; }
+  if (canAutoFinish(st) && !busy) setTimeout(autoFinish, 300);
+}
+function doMove(m){
+  if (busy || st.won || !legal(st, m)) return false;
+  pushHist(); markStarted(); applyMove(st, m); afterAction(); return true;
+}
+function doDraw(){
+  if (busy || st.won) return false;
+  if (!canDraw(st)){ setStatus(st.waste.length ? 'No more passes through the stock (Hard mode).' : 'Stock is empty.'); return false; }
+  pushHist(); markStarted(); const recyc = !st.stock.length; applyDraw(st);
+  if (recyc) setStatus(st.maxPasses ? `Pass ${st.pass} of ${st.maxPasses}.` : 'Waste turned over.');
+  afterAction(); return true;
+}
+function undo(){
+  if (busy || !hist.length) return false;
+  const el = st.elapsed, counted = st.counted;
+  st = JSON.parse(hist.pop()); st.elapsed = el; st.counted = counted; st.won = false;
+  render(); save(); setStatus('Undone.'); return true;
+}
+function locate(c){
+  if (st.waste.length && st.waste[st.waste.length - 1] === c) return {p:'w'};
+  if (st.waste.includes(c)) return {p:'wx'};
+  if (st.stock.includes(c)) return {p:'s'};
+  for (let s = 0; s < 4; s++) if (suitOf(c) === s && rankOf(c) < st.found[s]) return rankOf(c) === st.found[s] - 1 ? {p:'f', i:s} : {p:'fx'};
+  for (let i = 0; i < 7; i++){ const k = st.tab[i].u.indexOf(c); if (k >= 0) return {p:'t', i, k}; if (st.tab[i].d.includes(c)) return {p:'td', i}; }
+  return null;
+}
+function bestDest(from){
+  const cs = movingCards(st, from); if (!cs.length) return null;
+  if (cs.length === 1 && from.p !== 'f' && canFound(st, cs[0])) return {p:'f'};
+  const start = from.p === 't' ? from.i + 1 : 0;
+  let empty = null;
+  for (let n = 0; n < 7; n++){
+    const j = (start + n) % 7; if (from.p === 't' && j === from.i) continue;
+    if (!canTab(st, cs[0], j)) continue;
+    if (st.tab[j].u.length) return {p:'t', i:j};
+    if (empty === null && !(from.p === 't' && from.k === 0 && st.tab[from.i].d.length === 0)) empty = {p:'t', i:j};
+  }
+  return empty;
+}
+function tapCard(c){
+  if (busy || st.won) return false;
+  const loc = locate(c); if (!loc) return false;
+  if (loc.p === 's') return doDraw();
+  if (!['w','f','t'].includes(loc.p)){ return false; }
+  const to = bestDest(loc);
+  if (!to){ const e = cardEls[c]; e.classList.remove('shake'); void e.offsetWidth; e.classList.add('shake'); setStatus(`${cardName(c)} has nowhere to go.`); return false; }
+  const ok = doMove({from: loc, to});
+  if (ok && !st.won) setStatus(`Moved ${cardName(c)} to ${to.p === 'f' ? 'the foundation' : 'column ' + (to.i + 1)}.`);
+  return ok;
+}
+function showHint(){
+  if (busy || st.won) return null;
+  const h = bestHint(st);
+  cardEls.forEach(e => e.classList.remove('hint')); [G.sStock, ...G.sFound, ...G.sTab].forEach(e => e.classList.remove('hint'));
+  if (!h){ setStatus('No moves left. Try Undo, or start a New game.'); return null; }
+  if (h.draw){ (st.stock.length ? cardEls[st.stock[st.stock.length - 1]] : G.sStock).classList.add('hint'); setStatus(st.stock.length ? 'Hint: draw from the stock.' : 'Hint: turn the waste over (tap the empty stock).'); return h; }
+  const cs = movingCards(st, h.from); cardEls[cs[0]].classList.add('hint');
+  let dest;
+  if (h.to.p === 'f') dest = st.found[suitOf(cs[0])] ? cardEls[foundTop(st, suitOf(cs[0]))] : G.sFound[suitOf(cs[0])];
+  else { const u = st.tab[h.to.i].u; dest = u.length ? cardEls[u[u.length - 1]] : G.sTab[h.to.i]; }
+  dest.classList.add('hint');
+  setStatus(`Hint: move ${cardName(cs[0])}${cs.length > 1 ? ' (+' + (cs.length - 1) + ')' : ''} to ${h.to.p === 'f' ? 'the foundation' : 'column ' + (h.to.i + 1)}.`);
+  setTimeout(() => { cardEls.forEach(e => e.classList.remove('hint')); [G.sStock, ...G.sFound, ...G.sTab].forEach(e => e.classList.remove('hint')); }, 2200);
+  return h;
+}
+function autoFinish(){
+  if (busy || !canAutoFinish(st)) return;
+  busy = true; pushHist(); updateHud(); setStatus('Auto-finishing…');
+  const step = () => {
+    if (autoStep(st)){ render(); if (st.won){ busy = false; save(); onWin(); return; } setTimeout(step, 70); }
+    else { busy = false; render(); save(); }
+  };
+  step();
+}
+function finishInstant(){ if (!canAutoFinish(st)) return false; pushHist(); while (autoStep(st)); busy = false; afterAction(); return st.won; }
+function onWin(){
+  if (st.winShown) return; st.winShown = true;
+  const bonus = st.elapsed >= 30 ? Math.round(700000 / st.elapsed) : 0;
+  addScore(st, bonus);
+  stats.won++; stats.streak++; stats.bestStreak = Math.max(stats.bestStreak, stats.streak);
+  stats.bestScore = Math.max(stats.bestScore, st.score);
+  if (!stats.bestTime || st.elapsed < stats.bestTime) stats.bestTime = st.elapsed;
+  const b = stats.byDiff[st.diff] || (stats.byDiff[st.diff] = {p:0, w:0}); b.w++;
+  sSet(STATS_KEY, stats); save(); updateHud(); renderStats();
+  setStatus('You won! 🎉');
+  for (let i = 0; i < 26; i++){ const e = document.createElement('div'); e.className = 'confetti'; e.textContent = SUITS[i % 4]; e.style.color = i % 4 === 1 || i % 4 === 2 ? '#ef4444' : '#fff'; e.style.left = (Math.random() * 100) + 'vw'; e.style.animationDuration = (1.8 + Math.random() * 2) + 's'; document.body.appendChild(e); setTimeout(() => e.remove(), 4200); }
+  showModal('You won! 🏆', `<p>${DIFF[st.diff].label} · Game #${st.seed}</p><p>Moves: <b>${st.moves}</b> · Time: <b>${fmtTime(st.elapsed)}</b><br>Time bonus: <b>${bonus}</b> · Final score: <b>${st.score}</b></p><p>Won ${stats.won} of ${stats.played} · streak ${stats.streak}</p>`,
+    [{t:'Close'}, {t:'New game', primary:true, f:() => newGame()}]);
+}
+
+/* ================= pointer input (tap + drag) ================= */
+let drag = null;
+table.addEventListener('pointerdown', e => {
+  if (busy || st.won || e.button > 0) return;
+  const el = e.target.closest('.card');
+  if (!el){ if (e.target.closest('.stockslot')) doDraw(); return; }
+  const c = +el.dataset.id, loc = locate(c);
+  if (!loc) return;
+  if (loc.p === 's'){ doDraw(); return; }
+  if (!['w','f','t'].includes(loc.p)) return;
+  const cs = movingCards(st, loc);
+  drag = {c, loc, cs, sx: e.clientX, sy: e.clientY, moved: false, pid: e.pointerId,
+          orig: cs.map(x => ({x: parseFloat(cardEls[x].style.left), y: parseFloat(cardEls[x].style.top)}))};
+  try { table.setPointerCapture(e.pointerId); } catch(_){}
+  e.preventDefault();
+});
+table.addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.pid) return;
+  const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+  if (!drag.moved && Math.hypot(dx, dy) < 7) return;
+  if (!drag.moved){ drag.moved = true; drag.cs.forEach((x, n) => { cardEls[x].classList.add('drag'); cardEls[x].style.zIndex = 1000 + n; }); }
+  drag.cs.forEach((x, n) => { cardEls[x].style.left = (drag.orig[n].x + dx) + 'px'; cardEls[x].style.top = (drag.orig[n].y + dy) + 'px'; });
+});
+function endDrag(e){
+  if (!drag || e.pointerId !== drag.pid) return;
+  const d = drag; drag = null;
+  if (!d.moved){ tapCard(d.c); return; }
+  const x = parseFloat(cardEls[d.cs[0]].style.left), y = parseFloat(cardEls[d.cs[0]].style.top);
+  const ov = (ax, ay, bx, by, bw, bh) => Math.max(0, Math.min(ax + G.cw, bx + bw) - Math.max(ax, bx)) * Math.max(0, Math.min(ay + G.ch, by + bh) - Math.max(ay, by));
+  let best = null, bo = 0;
+  const tryT = (to, rx, ry, rw, rh) => { const m = {from: d.loc, to}; if (!legal(st, m)) return; const o = ov(x, y, rx, ry, rw, rh); if (o > bo){ bo = o; best = m; } };
+  for (let s = 0; s < 4; s++) tryT({p:'f'}, colX(3 + s), G.gap, G.cw, G.ch);
+  const H = parseFloat(table.style.height) || 2000;
+  for (let i = 0; i < 7; i++) tryT({p:'t', i}, colX(i), G.y0 - G.gap, G.cw, H);
+  if (best && best.to.p === 'f'){ // only accept the foundation slot of this suit area if overlapping any foundation
+    doMove(best);
+  } else if (best) doMove(best);
+  else render();
+}
+table.addEventListener('pointerup', endDrag);
+table.addEventListener('pointercancel', e => { if (drag && e.pointerId === drag.pid){ drag = null; render(); } });
+
+/* ================= modal ================= */
+function showModal(title, html, buttons){
+  closeModal();
+  const bg = document.createElement('div'); bg.className = 'modal-bg'; bg.id = 'modal';
+  bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true"><h2></h2><div class="mbody">${html}</div><div class="mb"></div></div>`;
+  bg.querySelector('h2').textContent = title;
+  const mb = bg.querySelector('.mb');
+  buttons.forEach(b => { const btn = document.createElement('button'); btn.className = 'btn' + (b.primary ? ' primary' : ''); btn.textContent = b.t; btn.onclick = () => { closeModal(); b.f && b.f(); }; mb.appendChild(btn); });
+  document.body.appendChild(bg);
+}
+function closeModal(){ const m = $('modal'); if (m) m.remove(); }
+
+/* ================= tabs, top bar ================= */
+function showTab(t){
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'p-' + t));
+  if (t === 'play') render();
+  if (t === 'odds') updateLive();
+  if (t === 'rules') renderStats();
+}
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+$('bRules').onclick = () => showTab('rules');
+$('bOdds').onclick = () => showTab('odds');
+$('bNew').onclick = () => { showTab('play'); if (st.started && !st.won) showModal('New game?', '<p>The current game will count as a loss.</p>', [{t:'Cancel'}, {t:'New game', primary:true, f:() => newGame()}]); else newGame(); };
+$('selDiff').onchange = () => { if (st.started && !st.won) showModal('Change difficulty?', '<p>This starts a new game; the current one counts as a loss.</p>', [{t:'Cancel', f:() => { $('selDiff').value = st.diff; }}, {t:'New game', primary:true, f:() => newGame($('selDiff').value)}]); else newGame($('selDiff').value); };
+$('bUndo').onclick = undo;
+$('bHint').onclick = showHint;
+$('bAuto').onclick = autoFinish;
+(function(){
+  const fb = $('bFull');
+  if (!document.fullscreenEnabled){ fb.style.display = 'none'; return; }
+  fb.onclick = () => { if (document.fullscreenElement) document.exitFullscreen().catch(()=>{}); else document.documentElement.requestFullscreen().catch(()=>{}); };
+})();
+window.addEventListener('resize', () => { if (st && $('p-play').classList.contains('on')) render(); });
+function tick(){
+  if (!st || !st.started || st.won || document.hidden) return;
+  st.elapsed++; if (st.elapsed % 10 === 0) addScore(st, -2);
+  $('sTime').textContent = fmtTime(st.elapsed); $('sScore').textContent = st.score;
+  if (st.elapsed % 5 === 0) save();
+}
+timerId = setInterval(tick, 1000);
+
+/* ================= stats ================= */
+function renderStats(){
+  const s = stats, pct = s.played ? Math.round(100 * s.won / s.played) : 0;
+  let rows = '';
+  for (const k of ['easy','normal','hard']){ const b = s.byDiff[k] || {p:0, w:0}; rows += `<tr><td>${DIFF[k].label}</td><td>${b.p}</td><td>${b.w}</td></tr>`; }
+  $('statsBox').innerHTML = `<p>Played <b>${s.played}</b> · Won <b>${s.won}</b> (${pct} %) · Streak <b>${s.streak}</b> (best ${s.bestStreak}) · Best score <b>${s.bestScore}</b> · Best time <b>${s.bestTime ? fmtTime(s.bestTime) : '–'}</b></p><table><tr><th>Level</th><th>Played</th><th>Won</th></tr>${rows}</table><button class="btn" id="bReset">Reset stats</button>`;
+  $('bReset').onclick = () => showModal('Reset statistics?', '<p>This clears all Klondike stats.</p>', [{t:'Cancel'}, {t:'Reset', primary:true, f:() => { stats = loadStats(); stats = {played:0, won:0, streak:0, bestStreak:0, bestScore:0, bestTime:0, byDiff:{}}; sSet(STATS_KEY, stats); renderStats(); }}]);
+}
+
+/* ================= odds maths ================= */
+function C(n, k){ if (k < 0 || k > n || n < 0) return 0; k = Math.min(k, n - k); let r = 1; for (let i = 1; i <= k; i++) r = r * (n - k + i) / i; return r; }
+const pc = x => (100 * x).toFixed(x > 0 && x < 0.001 ? 4 : 2) + ' %';
+function updateLive(){
+  if (!st) return;
+  const k = counts(st), pool = k.stock + k.waste + k.down;
+  $('live').innerHTML = `<div class="out">Cards left (not on foundations): <b>${k.left}</b> · Face down: <b>${k.down}</b> · Stock: <b>${k.stock}</b> · Waste: <b>${k.waste}</b> · Moves: <b>${k.moves}</b>${st.maxPasses ? ` · Pass <b>${st.pass}/${st.maxPasses}</b>` : ''}</div>
+  <div class="out">A card you can't see is in the stock/waste with probability <b>${pool ? pc((k.stock + k.waste) / pool) : '–'}</b> and face-down in the tableau with <b>${pool ? pc(k.down / pool) : '–'}</b>.</div>
+  <div class="out">Stock cards reachable on this pass without playing any: <b>${reach(k.stock, st.draw).filter(Boolean).length}</b> of ${k.stock}.</div>`;
+}
+function calc1(){
+  const s = +$('c1s').value, d = +$('c1d').value; $('c1sv').textContent = s; $('c1dv').textContent = d;
+  $('c1out').innerHTML = s + d ? `P(in stock/waste) = ${s}/${s + d} = <b>${pc(s / (s + d))}</b> · P(face-down) = ${d}/${s + d} = <b>${pc(d / (s + d))}</b>` : 'Every card is visible.';
+}
+function calc2(){
+  const n = +$('c2n').value; const sEl = $('c2s'); sEl.max = Math.min(24, n); let s = Math.min(+sEl.value, n); sEl.value = s;
+  const kEl = $('c2k'); kEl.max = Math.min(4, n); const k = Math.min(+kEl.value, n); kEl.value = k;
+  $('c2nv').textContent = n; $('c2sv').textContent = s; $('c2kv').textContent = k;
+  const tot = C(n, s); let rows = '';
+  for (let j = 0; j <= k; j++) rows += `<td>${pc(C(k, j) * C(n - k, s - j) / tot)}</td>`;
+  const p0 = C(n - k, s) / tot;
+  $('c2out').innerHTML = `P(at least one in stock) = 1 − C(${n - k},${s}) / C(${n},${s}) = <b>${pc(1 - p0)}</b><br>P(all ${k} in stock) = <b>${pc(C(n - k, s - k) / tot)}</b>
+  <table><tr>${[...Array(k + 1).keys()].map(j => `<th>j=${j}</th>`).join('')}</tr><tr>${rows}</tr></table>`;
+}
+function reach(n, d, p){
+  // positions 1..n from top; optionally a card at position p was played on the previous pass (removed)
+  const arr = [];
+  for (let i = 1; i <= n; i++) arr.push(d === 1 ? true : (i % d === 0 || i === n));
+  return arr;
+}
+function calc3(){
+  const n = +$('c3n').value, d = +$('c3d').value; const pEl = $('c3p'); pEl.max = n; const p = Math.min(+pEl.value, n); pEl.value = p;
+  $('c3nv').textContent = n; $('c3pv').textContent = p ? 'position ' + p : 'none';
+  // build stock order: original positions 1..n; if p>0 and reachable it has been played (removed) — next pass groups shift
+  let ids = [...Array(n).keys()].map(i => i + 1);
+  let note = '';
+  if (p){
+    const first = reach(n, d);
+    if (!first[p - 1]) note = `Position ${p} is not reachable on the first pass, so it can't have been played — showing the untouched stock.`;
+    else { ids = ids.filter(x => x !== p); note = `After playing the card from position ${p}, the next pass contains ${ids.length} cards; green = reachable (numbers are the original positions).`; }
+  }
+  const r = reach(ids.length, d);
+  $('c3grid').innerHTML = ids.map((x, i) => `<span class="${r[i] ? 'ok' : ''}">${x}</span>`).join('');
+  const cnt = r.filter(Boolean).length;
+  $('c3out').innerHTML = `Reachable this pass: <b>${cnt}</b> of ${ids.length} (${pc(ids.length ? cnt / ids.length : 0)}). ${note}`;
+}
+['c1s','c1d'].forEach(id => $(id).oninput = calc1);
+['c2n','c2s','c2k'].forEach(id => $(id).oninput = calc2);
+['c3n','c3d','c3p'].forEach(id => $(id).oninput = calc3);
+$('c1now').onclick = () => { const k = counts(st); $('c1s').value = k.stock + k.waste; $('c1d').value = k.down; calc1(); };
+$('c2a').onclick = () => { $('c2n').value = 52; calc2(); $('c2s').value = 24; $('c2k').value = 4; calc2(); };
+$('c2b').onclick = () => { $('c2n').value = 45; calc2(); $('c2s').value = 24; $('c2k').value = 4; calc2(); };
+
+/* ================= boot ================= */
+$('ver').textContent = APP_VERSION;
+calc1(); calc2(); calc3(); renderStats();
+(function boot(){
+  const sv = sGet(SAVE_KEY);
+  if (sv && sv.st && sv.st.tab && !sv.st.won && sv.st.started){
+    st = sv.st; hist = Array.isArray(sv.hist) ? sv.hist : []; $('selDiff').value = st.diff; render();
+    showModal('Resume saved game?', `<p>${DIFF[st.diff].label} · Game #${st.seed} · ${st.moves} moves · ${fmtTime(st.elapsed)}</p>`,
+      [{t:'New game', f:() => newGame()}, {t:'Resume saved game', primary:true, f:() => setStatus('Resumed. Tap a card to move it, or drag.')}]);
+  } else newGame(sv && sv.st ? sv.st.diff : 'easy');
+})();
+
+window.__game = {
+  get state(){ return st; }, newGame, tapCard, draw: doDraw, undo, hint: showHint, move: (from, to) => doMove({from, to}),
+  allMoves: () => allMoves(st), bestHint: () => bestHint(st), locate, legal: m => legal(st, m), autoFinish, finishInstant,
+  counts: () => counts(st), canAutoFinish: () => canAutoFinish(st), reach, C, render, version: APP_VERSION,
+  cardName, layout: () => ({...G, colX: [0,1,2,3,4,5,6].map(colX)}),
+  setState(s){ st = s; hist = []; render(); save(); }
+};
+</script>
+</body>
+</html>

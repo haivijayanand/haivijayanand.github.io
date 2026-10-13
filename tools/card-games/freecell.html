@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<!--
+TOOL: FreeCell
+FAMILY: card-games
+VERSION: 1.0.0
+DATE: 2026-10-13
+CHAT: Card games batch 1 (claude.ai)
+CHANGES: 1.0.0 - first release
+STATUS: released
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b3d2a">
+<title>FreeCell</title>
+<style>
+:root{--felt:#0f5132;--cw:64px;--ch:90px;--red:#c62828;--blk:#111;--back:#1e3a8a;--gold:#facc15;--ink:#f1f5f2;--panel:rgba(0,0,0,.28)}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:radial-gradient(ellipse at 50% 25%,#18774a 0%,#0f5132 55%,#093822 100%) fixed;background-color:#0f5132;color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+header.top{display:flex;align-items:center;gap:6px;background:#0b1f16;padding:6px 10px;flex-wrap:wrap;position:sticky;top:0;z-index:60;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.top h1{font-size:18px;margin:0 auto 0 0;white-space:nowrap}
+.btn{min-height:40px;min-width:40px;padding:0 12px;border-radius:8px;border:1px solid #2f6d50;background:#174a33;color:#fff;font-size:14px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit}
+.btn:hover{background:#1d5c40}.btn:active{transform:translateY(1px)}
+.btn.primary{background:#b45309;border-color:#d97706}
+.btn[disabled]{opacity:.45;cursor:default}
+main{max-width:1400px;width:100%;margin:0 auto;padding:0 8px 16px}
+.tabs{display:flex;gap:4px;margin:8px 0}
+.tabs button{flex:0 0 auto;min-height:40px;padding:0 14px;border:0;border-radius:8px 8px 0 0;background:rgba(0,0,0,.25);color:#cde;font-size:14px;cursor:pointer;font-family:inherit}
+.tabs button.on{background:rgba(0,0,0,.5);color:#fff;font-weight:600}
+.panel{display:none}.panel.on{display:block}
+.ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:6px}
+.ctrl select,.ctrl input{min-height:40px;border-radius:8px;background:#0b2e1f;color:#fff;border:1px solid #2f6d50;padding:0 6px;font-size:14px;font-family:inherit}
+.ctrl input{width:90px}
+.stat{background:var(--panel);border-radius:8px;padding:4px 8px;font-size:13px;min-height:40px;display:inline-flex;align-items:center;gap:4px}
+.stat b{color:var(--gold);font-variant-numeric:tabular-nums}
+#table{position:relative;width:100%;user-select:none;-webkit-user-select:none;min-height:300px}
+.slot{position:absolute;width:var(--cw);height:var(--ch);border-radius:8px;border:2px dashed rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.35);font-size:calc(var(--cw)*.4)}
+.slot.cell{border-style:solid;background:rgba(0,0,0,.12)}
+.card{position:absolute;width:var(--cw);height:var(--ch);border-radius:8px;background:#fff;border:1px solid #9aa;box-shadow:0 1px 3px rgba(0,0,0,.45);color:var(--blk);transition:left .18s ease,top .18s ease;cursor:pointer;touch-action:none;overflow:hidden}
+.card.red{color:var(--red)}
+.card .tl{position:absolute;left:3px;top:1px;font-weight:700;font-size:calc(var(--cw)*.27);line-height:1.05;letter-spacing:-.5px;white-space:nowrap}
+.card .mid{position:absolute;left:0;right:0;top:34%;text-align:center;font-size:calc(var(--cw)*.5);line-height:1}
+.card .br{position:absolute;right:3px;bottom:1px;font-size:calc(var(--cw)*.22);transform:rotate(180deg);font-weight:700}
+.card.drag{transition:none;box-shadow:0 8px 18px rgba(0,0,0,.55)}
+.card.hint{outline:3px solid var(--gold);outline-offset:-1px}
+.slot.hint{border-color:var(--gold);border-style:solid}
+.card.shake{animation:shake .3s}
+@keyframes shake{25%{margin-left:-4px}75%{margin-left:4px}}
+#status{margin-top:8px;background:var(--panel);border-radius:8px;padding:8px 10px;font-size:14px;min-height:40px}
+.doc{background:rgba(0,0,0,.32);border-radius:10px;padding:12px 16px;line-height:1.5;font-size:15px}
+.doc h2{margin:.3em 0 .4em;font-size:20px}.doc h3{margin:1em 0 .3em;font-size:16px;color:var(--gold)}
+.doc table{border-collapse:collapse;margin:6px 0}.doc td,.doc th{border:1px solid rgba(255,255,255,.25);padding:4px 8px;text-align:left}
+.calc{background:rgba(0,0,0,.25);border-radius:8px;padding:10px;margin:8px 0}
+.calc label{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:4px 0}
+.calc input[type=range]{flex:1;min-width:140px;height:32px}
+.calc .out{font-size:16px;color:#fff;margin-top:6px;overflow-wrap:anywhere}.calc .out b{color:var(--gold)}
+code{background:rgba(0,0,0,.35);padding:1px 5px;border-radius:4px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+.modal{background:#0d2a1d;border:1px solid #2f6d50;border-radius:12px;padding:18px;max-width:440px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.modal h2{margin:0 0 8px}.modal .mb{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;justify-content:flex-end}
+.confetti{position:fixed;top:-40px;font-size:28px;z-index:99;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+@media (max-width:600px){
+  .top h1{font-size:14px}header.top{gap:4px;padding:6px}.top .btn{padding:0 7px}.btn{padding:0 8px;font-size:13px}
+  .lbl{display:none}
+  .stat{font-size:12px;padding:3px 6px}
+  main{padding:0 4px 12px}
+  .doc{padding:10px;font-size:14px}
+  .ctrl input{width:72px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>♦ FreeCell</h1>
+  <button class="btn primary" id="bNew">New</button>
+  <button class="btn" id="bRules">Rules</button>
+  <button class="btn" id="bOdds">Odds</button>
+  <button class="btn" id="bFull" title="Full screen">⛶<span class="lbl">&nbsp;Full screen</span></button>
+  <a class="btn" href="index.html">← Games</a>
+</header>
+<main>
+  <nav class="tabs">
+    <button data-tab="play" class="on">Play</button>
+    <button data-tab="rules">Rules</button>
+    <button data-tab="odds">Odds &amp; Strategy</button>
+  </nav>
+
+  <section class="panel on" id="p-play">
+    <div class="ctrl">
+      <select id="selDiff" aria-label="Difficulty">
+        <option value="easy">Easy deals</option>
+        <option value="normal">Normal (any deal)</option>
+        <option value="hard">Hard deals</option>
+      </select>
+      <input id="dealNo" type="number" min="1" max="32000" inputmode="numeric" aria-label="Deal number" placeholder="Deal #">
+      <button class="btn" id="bDeal">Play #</button>
+      <button class="btn" id="bUndo">↶ Undo</button>
+      <button class="btn" id="bHint">💡 Hint</button>
+      <span class="stat">Deal <b id="sDeal">-</b></span>
+      <span class="stat">Moves <b id="sMoves">0</b></span>
+      <span class="stat">Time <b id="sTime">0:00</b></span>
+      <span class="stat">Max move <b id="sMax">5</b></span>
+    </div>
+    <div id="table"></div>
+    <div id="status">Tap a card to move it, or drag it.</div>
+  </section>
+
+  <section class="panel" id="p-rules">
+    <div class="doc">
+      <h2>How to play FreeCell</h2>
+      <p>All 52 cards are dealt face up into 8 columns. Goal: move every card to the 4 <b>foundations</b> (top right), building up by suit from Ace to King.</p>
+      <ul>
+        <li><b>Columns</b>: build down in alternating colours (red 6 on black 7). Any card may go into an empty column.</li>
+        <li><b>Free cells</b> (top left): each holds one card.</li>
+        <li>Officially only one card moves at a time; moving a run is a shortcut ("supermove") for several single moves through free cells and empty columns. The longest run you can move is <code>(free cells + 1) × 2^(empty columns)</code>, halved when the destination is itself an empty column.</li>
+        <li><b>Tap</b> a card: it goes to the foundation if it can, otherwise the run from that card goes to a column (non-empty first), otherwise a single card goes to a free cell. Or <b>drag</b> it. Undo is unlimited.</li>
+        <li>Cards that are no longer needed on the table are moved to the foundations automatically (a card goes home when both opposite-colour cards one rank lower are already home).</li>
+      </ul>
+      <h3>Deals and difficulty</h3>
+      <p>Deal numbers 1–32000 use the classic Microsoft FreeCell shuffle, so deal #1 here is the same as deal #1 in Windows. Deal #11982 is the famous unsolvable one.</p>
+      <table><tr><th>Level</th><th>Deals used</th></tr>
+        <tr><td>Easy</td><td>240 deals from #1–3000 that the built-in solver cleared with the least search (very forgiving)</td></tr>
+        <tr><td>Normal</td><td>any random deal 1–32000 (except #11982)</td></tr>
+        <tr><td>Hard</td><td>240 deals from #1–3000 that needed the most solver search (all solvable)</td></tr></table>
+      <p>You can also type any deal number and press <b>Play #</b>.</p>
+      <h3>Hint &amp; solver</h3>
+      <p>Hint runs a built-in A* solver in the background (up to about 6 seconds). It tells you whether the current position can still be won and highlights the first move of the solution. If it runs out of time it says so — that does not prove the game is lost.</p>
+      <h3>Your stats</h3>
+      <div id="statsBox"></div>
+      <p style="opacity:.7;font-size:13px">FreeCell v<span id="ver"></span> · card-games family · offline, no tracking. Your game is saved automatically on this device.</p>
+    </div>
+  </section>
+
+  <section class="panel" id="p-odds">
+    <div class="doc">
+      <h2>Odds &amp; Strategy</h2>
+      <h3>Live readout (current game)</h3>
+      <div class="calc" id="live"></div>
+
+      <h3>1 · How many cards can I move at once?</h3>
+      <p>With F empty free cells and E empty columns, the longest run you can move is <code>(F + 1) × 2^E</code>. Moving into an empty column, that column can't be used as a stepping stone, so it becomes <code>(F + 1) × 2^(E − 1)</code>.</p>
+      <div class="calc">
+        <label>Empty free cells F <input type="range" id="m1f" min="0" max="4" value="4"><b id="m1fv">4</b></label>
+        <label>Empty columns E <input type="range" id="m1e" min="0" max="7" value="0"><b id="m1ev">0</b></label>
+        <button class="btn" id="m1now">Use current game</button>
+        <div class="out" id="m1out"></div>
+      </div>
+
+      <h3>2 · Is an Ace near the bottom at the start?</h3>
+      <p>Columns 1–4 hold 7 cards and columns 5–8 hold 6. Depth 0 means the exposed card; depths 0–5 have 8 positions each and depth 6 has 4. With m positions at depth ≤ d, <code>P(at least one Ace) = 1 − C(52 − m, 4) ÷ C(52, 4)</code>.</p>
+      <div class="calc">
+        <label>Covered by at most d cards <input type="range" id="m2d" min="0" max="6" value="0"><b id="m2dv">0</b></label>
+        <label>Cards wanted K <input type="range" id="m2k" min="1" max="4" value="4"><b id="m2kv">4</b></label>
+        <div class="out" id="m2out"></div>
+      </div>
+
+      <h3>3 · How many ways can a deck be shuffled?</h3>
+      <p>n cards can be ordered in <code>n! = n × (n − 1) × … × 1</code> ways.</p>
+      <div class="calc">
+        <label>Cards n <input type="range" id="m3n" min="1" max="52" value="52"><b id="m3nv">52</b></label>
+        <div class="out" id="m3out"></div>
+      </div>
+
+      <h3>Deal facts</h3>
+      <ul>
+        <li>52! ≈ 8.07 × 10<sup>67</sup> orderings exist, but the Microsoft shuffle starts from a 31-bit seed, so it can only make about 2.1 billion (2<sup>31</sup>) different deals. The original game offered 32,000 of them.</li>
+        <li>Of the original 32,000 deals, only <b>#11982</b> is unsolvable, as found by volunteer solver projects in the 1990s and confirmed by computer solvers since. The built-in solver here also proves #11982 has no solution (it searches every position, about 60 000 of them, in a few seconds).</li>
+        <li>Among later, larger ranges of deal numbers only a handful of unsolvable deals have been reported, so almost every FreeCell deal can be won — losing is nearly always a matter of play, not luck.</li>
+        <li>Deal #1 starts: J♦ 2♦ 9♥ J♣ 5♦ 7♥ 7♣ 5♥.</li>
+      </ul>
+      <h3>Strategy tips</h3>
+      <ul>
+        <li>Free cells are precious: each card parked there cuts your maximum move (5 → 4 → 3 …). Keep at least one free.</li>
+        <li>An empty column is worth more than a free cell — it doubles the move limit.</li>
+        <li>Plan to free the Aces and 2s first; look at which columns bury them deepest.</li>
+        <li>Prefer to build long runs headed by high cards so they can later move as a unit.</li>
+        <li>Before filling an empty column with a single card, see if a whole run could go there instead.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<script>
+"use strict";
+const APP_VERSION = "1.0.0";
+const GAME_ID = "freecell";
+const SAVE_KEY = "cg_freecell_v1", STATS_KEY = "cg_freecell_stats";
+const RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+const SUITS = ["♣","♦","♥","♠"];
+const DIFF = {easy:{label:"Easy"}, normal:{label:"Normal"}, hard:{label:"Hard"}};
+/* Easy/Hard deal lists: deals #1-3000 ranked by how many positions the solver below expanded (fewest / most). */
+const EASY_DEALS=[3,18,31,33,59,69,73,75,78,80,81,84,104,113,146,155,156,164,195,199,217,219,240,248,251,310,316,321,334,346,360,364,365,378,386,405,412,414,438,458,462,467,468,475,480,507,521,535,536,545,556,564,591,605,653,655,677,686,689,697,709,712,735,750,777,799,810,816,836,837,845,852,855,859,868,873,904,919,924,941,945,947,960,969,971,991,995,1014,1054,1057,1075,1088,1090,1106,1119,1129,1171,1174,1184,1187,1197,1206,1241,1273,1282,1305,1308,1324,1352,1378,1385,1400,1403,1408,1431,1446,1448,1457,1459,1469,1473,1492,1500,1511,1516,1524,1555,1577,1597,1605,1609,1610,1611,1654,1671,1680,1712,1722,1739,1747,1750,1755,1779,1792,1797,1801,1804,1809,1839,1847,1899,1900,1910,1927,1928,1930,1931,1933,1952,2018,2039,2040,2047,2051,2074,2076,2129,2131,2143,2151,2153,2154,2163,2195,2209,2217,2225,2236,2291,2306,2320,2326,2329,2331,2340,2360,2366,2375,2387,2396,2417,2418,2424,2485,2499,2504,2513,2535,2548,2550,2551,2558,2612,2619,2620,2626,2628,2639,2640,2650,2667,2669,2676,2687,2705,2723,2750,2762,2786,2792,2812,2832,2833,2840,2842,2847,2862,2868,2878,2882,2887,2894,2912,2926,2930,2934,2938,2949,2993,2998];
+const HARD_DEALS=[5,24,92,109,138,139,144,160,178,189,194,207,209,222,227,256,265,272,285,290,299,309,315,337,352,355,372,376,383,385,393,409,416,418,422,443,479,485,511,518,539,543,553,562,579,583,585,598,607,617,619,641,657,661,672,679,698,707,730,739,751,754,769,771,804,819,822,829,860,864,897,899,912,915,921,940,950,972,988,1013,1020,1021,1025,1030,1051,1072,1136,1154,1159,1165,1166,1185,1189,1193,1196,1204,1216,1228,1229,1256,1263,1288,1289,1299,1323,1327,1341,1347,1356,1357,1364,1365,1367,1368,1391,1407,1409,1420,1443,1449,1464,1496,1506,1550,1554,1566,1571,1599,1616,1618,1632,1647,1661,1676,1679,1683,1688,1689,1694,1706,1710,1734,1742,1746,1756,1761,1765,1767,1784,1788,1810,1813,1821,1826,1840,1849,1875,1883,1904,1905,1918,1925,1939,1941,1943,1951,1976,1977,1996,2009,2020,2027,2046,2048,2081,2094,2122,2133,2144,2158,2162,2172,2213,2215,2240,2247,2261,2267,2274,2277,2288,2290,2301,2309,2359,2372,2433,2449,2461,2466,2473,2501,2502,2544,2552,2572,2598,2614,2621,2642,2643,2646,2649,2663,2686,2689,2706,2759,2779,2783,2788,2801,2803,2821,2823,2860,2861,2870,2872,2880,2884,2886,2903,2911,2917,2928,2932,2943,2952,2990];
+// card = rank*4+suit, rank 0..12, suit 0..3 (C D H S)
+function FCSolver(cols, cells, found, opts){
+  opts=opts||{};
+  const RED=s=>s===1||s===2;
+  function clone(st){return {cols:st.cols.map(c=>c.slice()),cells:st.cells.slice(),found:st.found.slice()};}
+  function key(st){const cs=st.cols.map(c=>c.join(',')).sort().join('|');const ce=st.cells.slice().sort((a,b)=>a-b).join(',');return st.found.join(',')+'#'+ce+'#'+cs;}
+  function canStack(a,b){return (a>>2)===(b>>2)-1 && RED(a&3)!==RED(b&3);} // a onto b
+  function safe(st,c){const r=c>>2,s=c&3;if(st.found[s]!==r)return false;if(r<=1)return true;
+    const red=RED(s);for(let t=0;t<4;t++){if(RED(t)!==red&&st.found[t]<r)return false;}return true;}
+  function autoMoves(st,list){let moved=true;while(moved){moved=false;
+    for(let i=0;i<4;i++){const c=st.cells[i];if(c>=0&&safe(st,c)){st.found[c&3]++;st.cells[i]=-1;list&&list.push({t:'cell',i,to:'f',n:1});moved=true;}}
+    for(let i=0;i<st.cols.length;i++){const col=st.cols[i];if(col.length){const c=col[col.length-1];if(safe(st,c)){col.pop();st.found[c&3]++;list&&list.push({t:'col',i,to:'f',n:1});moved=true;}}}}}
+  function maxMove(st,toEmpty){let fc=0,ec=0;for(const c of st.cells)if(c<0)fc++;for(const c of st.cols)if(!c.length)ec++;if(toEmpty)ec--;return (fc+1)*Math.pow(2,Math.max(0,ec));}
+  function runLen(col){let n=col.length?1:0;for(let i=col.length-1;i>0;i--){if(canStack(col[i],col[i-1]))n++;else break;}return n;}
+  function moves(st){const out=[];
+    // foundation
+    for(let i=0;i<4;i++){const c=st.cells[i];if(c>=0&&st.found[c&3]===(c>>2))out.push({t:'cell',i,to:'f',n:1});}
+    for(let i=0;i<st.cols.length;i++){const col=st.cols[i];if(col.length){const c=col[col.length-1];if(st.found[c&3]===(c>>2))out.push({t:'col',i,to:'f',n:1});}}
+    let firstEmpty=-1;for(let j=0;j<st.cols.length;j++)if(!st.cols[j].length){firstEmpty=j;break;}
+    // cell -> col
+    for(let i=0;i<4;i++){const c=st.cells[i];if(c<0)continue;
+      for(let j=0;j<st.cols.length;j++){const d=st.cols[j];if(d.length&&canStack(c,d[d.length-1]))out.push({t:'cell',i,to:'col',j,n:1});}
+      if(firstEmpty>=0)out.push({t:'cell',i,to:'col',j:firstEmpty,n:1});}
+    // col -> col
+    for(let i=0;i<st.cols.length;i++){const col=st.cols[i];if(!col.length)continue;const rl=runLen(col);
+      for(let j=0;j<st.cols.length;j++){if(j===i)continue;const d=st.cols[j];
+        if(d.length){const top=d[d.length-1];for(let n=1;n<=rl;n++){const c=col[col.length-n];if(canStack(c,top)){if(n<=maxMove(st,false))out.push({t:'col',i,to:'col',j,n});break;}}}
+      }
+      if(firstEmpty>=0&&firstEmpty!==i){const mx=Math.min(rl,maxMove(st,true));for(let n=mx;n>=1;n--){if(n===col.length)continue;out.push({t:'col',i,to:'col',j:firstEmpty,n});}}
+    }
+    // col -> cell
+    let fc=st.cells.indexOf(-1);if(fc>=0){for(let i=0;i<st.cols.length;i++){if(st.cols[i].length)out.push({t:'col',i,to:'cell',j:fc,n:1});}}
+    return out;}
+  function apply(st,m){let cards;
+    if(m.t==='cell'){cards=[st.cells[m.i]];st.cells[m.i]=-1;}else{cards=st.cols[m.i].splice(st.cols[m.i].length-m.n,m.n);}
+    if(m.to==='f')st.found[cards[0]&3]++;else if(m.to==='cell')st.cells[m.j]=cards[0];else st.cols[m.j].push(...cards);}
+  function h(st){let home=0;for(const f of st.found)home+=f;let score=(52-home)*4;
+    for(let s=0;s<4;s++){const need=st.found[s];if(need>=13)continue;const c=need*4+s;
+      if(st.cells.indexOf(c)>=0)continue;for(const col of st.cols){const k=col.indexOf(c);if(k>=0){score+=(col.length-1-k)*2;break;}}}
+    let fc=0;for(const c of st.cells)if(c>=0)fc++;score+=fc;
+    for(const col of st.cols){if(!col.length){score-=2;continue;}let rl=runLen(col);score+= (col.length-rl);}
+    return score;}
+  // heap
+  const heap=[];function push(n){heap.push(n);let i=heap.length-1;while(i>0){const p=(i-1)>>1;if(heap[p].f<=heap[i].f)break;[heap[p],heap[i]]=[heap[i],heap[p]];i=p;}}
+  function pop(){const top=heap[0];const last=heap.pop();if(heap.length){heap[0]=last;let i=0;for(;;){const l=2*i+1,r=l+1;let m=i;if(l<heap.length&&heap[l].f<heap[m].f)m=l;if(r<heap.length&&heap[r].f<heap[m].f)m=r;if(m===i)break;[heap[m],heap[i]]=[heap[i],heap[m]];i=m;}}return top;}
+  const start={cols:cols.map(c=>c.slice()),cells:cells.slice(),found:found.slice()};
+  const startAuto=[];autoMoves(start,startAuto);
+  const seen=new Set();const gw=opts.gw==null?0.5:opts.gw;let expanded=0;let result=null;
+  seen.add(key(start));push({st:start,g:0,f:h(start),parent:null,move:null});
+  function done(st){return st.found[0]+st.found[1]+st.found[2]+st.found[3]===52;}
+  function path(node){const p=[];while(node&&node.move){p.push(node.move);node=node.parent;}return p.reverse();}
+  if(done(start))result={status:'solved',moves:[]};
+  return {
+    run(budget){if(result)return result;let b=0;while(heap.length&&b<budget){b++;expanded++;const node=pop();
+        for(const m of moves(node.st)){const st=clone(node.st);apply(st,m);autoMoves(st,null);const k=key(st);if(seen.has(k))continue;seen.add(k);
+          const child={st,g:node.g+1,f:0,parent:node,move:m};child.f=h(st)+gw*child.g;
+          if(done(st)){result={status:'solved',moves:path(child),expanded};return result;}
+          push(child);}
+        if(seen.size>(opts.maxStates||1500000)){result={status:'limit',expanded};return result;}}
+      if(!heap.length){result={status:'unsolvable',expanded};return result;}
+      return null;},
+    get expanded(){return expanded;}
+  };
+}
+
+
+/* ================= pure rules ================= */
+const rankOf = c => c >> 2, suitOf = c => c & 3, isRed = c => (c & 3) === 1 || (c & 3) === 2;
+const cardName = c => RANKS[rankOf(c)] + SUITS[suitOf(c)];
+/* Microsoft FreeCell deal (LCG seed = deal number). Card id = rank*4 + suit (C,D,H,S). */
+function msDeal(n){
+  let seed = n >>> 0;
+  const rand = () => { seed = (seed * 214013 + 2531011) % 2147483648; return Math.floor(seed / 65536); };
+  const deck = [...Array(52).keys()], cols = [[],[],[],[],[],[],[],[]];
+  let left = 52;
+  for (let i = 0; i < 52; i++){ const j = rand() % left; const c = deck[j]; deck[j] = deck[left - 1]; left--; cols[i % 8].push(c); }
+  return cols;
+}
+function newState(dealNo, diff){ return {deal: dealNo, diff, cols: msDeal(dealNo), cells: [-1,-1,-1,-1], found: [0,0,0,0], moves: 0, elapsed: 0, started: false, won: false, counted: false, hints: 0}; }
+const canStack = (a, b) => rankOf(a) === rankOf(b) - 1 && isRed(a) !== isRed(b);
+function freeCells(st){ return st.cells.filter(c => c < 0).length; }
+function emptyCols(st){ return st.cols.filter(c => !c.length).length; }
+function maxMove(st, toEmpty){ const e = emptyCols(st) - (toEmpty ? 1 : 0); return (freeCells(st) + 1) * Math.pow(2, Math.max(0, e)); }
+function runLen(col){ let n = col.length ? 1 : 0; for (let i = col.length - 1; i > 0; i--){ if (canStack(col[i], col[i - 1])) n++; else break; } return n; }
+/* from: {p:'c',i} cell | {p:'t',i,k} column from index k | {p:'f',i}   to: {p:'f'} | {p:'c',i} | {p:'t',i} */
+function movingCards(st, from){
+  if (from.p === 'c') return st.cells[from.i] >= 0 ? [st.cells[from.i]] : [];
+  if (from.p === 'f') return [];
+  if (from.p === 't'){ const col = st.cols[from.i]; if (from.k < 0 || from.k >= col.length) return []; const cs = col.slice(from.k); for (let j = 1; j < cs.length; j++) if (!canStack(cs[j], cs[j - 1])) return []; return cs; }
+  return [];
+}
+function legal(st, m){
+  const cs = movingCards(st, m.from); if (!cs.length) return false;
+  if (m.to.p === 'f') return cs.length === 1 && st.found[suitOf(cs[0])] === rankOf(cs[0]);
+  if (m.to.p === 'c') return cs.length === 1 && m.from.p !== 'c' && m.to.i >= 0 && m.to.i < 4 && st.cells[m.to.i] < 0;
+  if (m.to.p === 't'){
+    if (m.from.p === 't' && m.from.i === m.to.i) return false;
+    const d = st.cols[m.to.i];
+    if (!d.length){ if (m.from.p === 't' && m.from.k === 0) return false; return cs.length <= maxMove(st, true); }
+    return canStack(cs[0], d[d.length - 1]) && cs.length <= maxMove(st, false);
+  }
+  return false;
+}
+function applyMove(st, m){
+  const cs = movingCards(st, m.from);
+  if (m.from.p === 'c') st.cells[m.from.i] = -1; else st.cols[m.from.i].splice(m.from.k);
+  if (m.to.p === 'f') st.found[suitOf(cs[0])]++;
+  else if (m.to.p === 'c') st.cells[m.to.i] = cs[0];
+  else st.cols[m.to.i].push(...cs);
+  st.moves++;
+}
+function isSafe(st, c){ const r = rankOf(c), s = suitOf(c); if (st.found[s] !== r) return false; if (r <= 1) return true; for (let t = 0; t < 4; t++) if (isRed(t) !== isRed(s) && st.found[t] < r) return false; return true; }
+/* returns list of automatic moves performed */
+function autoSafe(st){
+  const done = []; let moved = true;
+  while (moved){ moved = false;
+    for (let i = 0; i < 4; i++){ const c = st.cells[i]; if (c >= 0 && isSafe(st, c)){ st.cells[i] = -1; st.found[suitOf(c)]++; done.push(c); moved = true; } }
+    for (let i = 0; i < 8; i++){ const col = st.cols[i]; if (col.length && isSafe(st, col[col.length - 1])){ const c = col.pop(); st.found[suitOf(c)]++; done.push(c); moved = true; } }
+  }
+  return done;
+}
+const isWon = st => st.found.every(f => f === 13);
+function counts(st){ const home = st.found.reduce((a, b) => a + b, 0); return {left: 52 - home, home, free: freeCells(st), empty: emptyCols(st), moves: st.moves, max: maxMove(st, false), maxEmpty: maxMove(st, true), down: 0}; }
+/* solver move -> game move */
+function solverToGame(st, m){
+  if (m.t === 'cell'){ const from = {p:'c', i:m.i}; if (m.to === 'f') return {from, to:{p:'f'}}; return {from, to:{p:'t', i:m.j}}; }
+  const col = st.cols[m.i], from = {p:'t', i:m.i, k: col.length - m.n};
+  if (m.to === 'f') return {from, to:{p:'f'}};
+  if (m.to === 'cell') return {from, to:{p:'c', i: st.cells.indexOf(-1)}};
+  return {from, to:{p:'t', i:m.j}};
+}
+
+/* ================= storage ================= */
+function sGet(k){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e){ return null; } }
+function sSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function blankStats(){ return {played:0, won:0, streak:0, bestStreak:0, bestTime:0, fewestMoves:0, byDiff:{}}; }
+function loadStats(){ return Object.assign(blankStats(), sGet(STATS_KEY) || {}); }
+
+/* ================= app state ================= */
+let st = null, hist = [], stats = loadStats(), busy = false, solving = null;
+const $ = id => document.getElementById(id);
+const table = $('table');
+const G = {cw: 64, ch: 90, gap: 8, x0: 0, y0: 0};
+const cardEls = [];
+function save(){ sSet(SAVE_KEY, {st, hist: hist.slice(-200)}); }
+function markStarted(){
+  st.started = true;
+  if (!st.counted){ st.counted = true; stats.played++; const b = stats.byDiff[st.diff] || (stats.byDiff[st.diff] = {p:0, w:0}); b.p++; sSet(STATS_KEY, stats); }
+}
+function pickDeal(diff){
+  if (diff === 'easy') return EASY_DEALS[Math.floor(Math.random() * EASY_DEALS.length)];
+  if (diff === 'hard') return HARD_DEALS[Math.floor(Math.random() * HARD_DEALS.length)];
+  let d; do { d = 1 + Math.floor(Math.random() * 32000); } while (d === 11982); return d;
+}
+function newGame(diff, dealNo){
+  if (st && st.counted && !st.won){ stats.streak = 0; sSet(STATS_KEY, stats); }
+  cancelSolve();
+  diff = diff || $('selDiff').value; $('selDiff').value = diff;
+  dealNo = dealNo || pickDeal(diff);
+  st = newState(dealNo, diff); hist = []; busy = false;
+  closeModal(); render(); save();
+  setStatus(`Deal #${dealNo} · ${DIFF[diff].label}${dealNo === 11982 ? ' — this is the famous unsolvable deal!' : ''}. Tap a card to move it, or drag.`);
+}
+
+/* ================= layout & rendering ================= */
+function buildCards(){
+  table.innerHTML = '';
+  const mk = (cls, txt) => { const s = document.createElement('div'); s.className = 'slot ' + cls; s.textContent = txt || ''; table.appendChild(s); return s; };
+  G.sCell = [0,1,2,3].map(i => { const e = mk('cell'); e.dataset.c = i; return e; });
+  G.sFound = [0,1,2,3].map(s => mk('fslot', SUITS[s]));
+  G.sTab = [0,1,2,3,4,5,6,7].map(i => mk('tslot'));
+  for (let c = 0; c < 52; c++){
+    const e = document.createElement('div'), r = RANKS[rankOf(c)], s = SUITS[suitOf(c)];
+    e.className = 'card' + (isRed(c) ? ' red' : ''); e.dataset.id = c;
+    e.innerHTML = `<span class="tl">${r}${s}</span><span class="mid">${rankOf(c) >= 10 ? r : s}</span><span class="br">${r}${s}</span>`;
+    table.appendChild(e); cardEls[c] = e;
+  }
+}
+function computeLayout(){
+  const W = table.clientWidth || 360;
+  G.gap = W < 500 ? 4 : (W < 900 ? 8 : 14);
+  G.cw = Math.max(34, Math.min(104, Math.floor((W - G.gap * 9) / 8)));
+  G.ch = Math.round(G.cw * 1.4);
+  G.x0 = Math.floor((W - (8 * G.cw + 9 * G.gap)) / 2) + G.gap;
+  G.y0 = G.ch + G.gap * 3;
+  document.documentElement.style.setProperty('--cw', G.cw + 'px');
+  document.documentElement.style.setProperty('--ch', G.ch + 'px');
+}
+const colX = i => G.x0 + i * (G.cw + G.gap);
+function fanFor(n){
+  const r = table.getBoundingClientRect();
+  const avail = Math.max(G.ch * 3.5, window.innerHeight - Math.max(60, r.top) - 70);
+  let fu = Math.round(G.ch * 0.28); const fuMin = Math.round(G.cw * 0.36);
+  if (n > 1 && G.y0 + (n - 1) * fu + G.ch > avail) fu = Math.max(fuMin, Math.floor((avail - G.y0 - G.ch) / (n - 1)));
+  return fu;
+}
+function place(el, x, y, z){ el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.zIndex = z; }
+function render(){
+  if (!cardEls.length) buildCards();
+  computeLayout();
+  const sp = (e, x, y) => { e.style.left = x + 'px'; e.style.top = y + 'px'; };
+  G.sCell.forEach((e, i) => sp(e, colX(i), G.gap));
+  G.sFound.forEach((e, s) => sp(e, colX(4 + s), G.gap));
+  G.sTab.forEach((e, i) => sp(e, colX(i), G.y0));
+  st.cells.forEach((c, i) => { if (c >= 0) place(cardEls[c], colX(i), G.gap, 10); });
+  for (let s = 0; s < 4; s++) for (let r = 0; r < 13; r++){ const c = r * 4 + s; if (r < st.found[s]) place(cardEls[c], colX(4 + s), G.gap, 10 + r); }
+  let maxY = G.y0 + G.ch;
+  st.cols.forEach((col, i) => { const fu = fanFor(col.length); col.forEach((c, k) => place(cardEls[c], colX(i), G.y0 + k * fu, 10 + k)); if (col.length) maxY = Math.max(maxY, G.y0 + (col.length - 1) * fu + G.ch); });
+  table.style.height = (maxY + G.gap * 2) + 'px';
+  cardEls.forEach(e => e.classList.remove('drag', 'hint'));
+  updateHud();
+}
+function fmtTime(s){ const m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); }
+function updateHud(){
+  $('sDeal').textContent = '#' + st.deal; $('sMoves').textContent = st.moves; $('sTime').textContent = fmtTime(st.elapsed);
+  $('sMax').textContent = maxMove(st, false);
+  $('bUndo').disabled = !hist.length || busy;
+  updateLive();
+}
+function setStatus(t){ $('status').textContent = t; }
+
+/* ================= actions ================= */
+function doMove(m){
+  if (busy || st.won || !legal(st, m)) return false;
+  cancelSolve();
+  hist.push(JSON.stringify(st)); markStarted();
+  applyMove(st, m);
+  const auto = autoSafe(st);
+  if (auto.length) setStatus('Auto-moved to foundations: ' + auto.map(cardName).join(' '));
+  if (isWon(st)) st.won = true;
+  render(); save();
+  if (st.won) onWin();
+  return true;
+}
+function undo(){
+  if (busy || !hist.length) return false;
+  cancelSolve();
+  const el = st.elapsed, counted = st.counted, hints = st.hints;
+  st = JSON.parse(hist.pop()); st.elapsed = el; st.counted = counted; st.hints = hints; st.won = false;
+  render(); save(); setStatus('Undone.'); return true;
+}
+function locate(c){
+  const ci = st.cells.indexOf(c); if (ci >= 0) return {p:'c', i:ci};
+  if (rankOf(c) < st.found[suitOf(c)]) return {p:'f', i:suitOf(c)};
+  for (let i = 0; i < 8; i++){ const k = st.cols[i].indexOf(c); if (k >= 0) return {p:'t', i, k}; }
+  return null;
+}
+function bestDest(from){
+  const cs = movingCards(st, from); if (!cs.length) return null;
+  if (cs.length === 1 && legal(st, {from, to:{p:'f'}})) return {p:'f'};
+  const start = from.p === 't' ? from.i + 1 : 0;
+  for (let n = 0; n < 8; n++){ const j = (start + n) % 8; if (st.cols[j].length && legal(st, {from, to:{p:'t', i:j}})) return {p:'t', i:j}; }
+  if (cs.length === 1 && from.p === 't'){ const fc = st.cells.indexOf(-1); if (fc >= 0) return {p:'c', i:fc}; }
+  for (let n = 0; n < 8; n++){ const j = (start + n) % 8; if (!st.cols[j].length && legal(st, {from, to:{p:'t', i:j}})) return {p:'t', i:j}; }
+  return null;
+}
+function tapCard(c){
+  if (busy || st.won) return false;
+  const loc = locate(c); if (!loc || loc.p === 'f') return false;
+  const to = bestDest(loc);
+  if (!to){
+    const e = cardEls[c]; e.classList.remove('shake'); void e.offsetWidth; e.classList.add('shake');
+    const cs = movingCards(st, loc);
+    setStatus(!cs.length ? `${cardName(c)} isn't at the top of an ordered run.` : `${cardName(c)}${cs.length > 1 ? ' + ' + (cs.length - 1) : ''} has nowhere to go (max move now ${maxMove(st, false)}).`);
+    return false;
+  }
+  const ok = doMove({from: loc, to});
+  if (ok && !st.won && !/Auto/.test($('status').textContent)) setStatus(`Moved ${cardName(c)} to ${to.p === 'f' ? 'the foundation' : to.p === 'c' ? 'a free cell' : 'column ' + (to.i + 1)}.`);
+  return ok;
+}
+function onWin(){
+  stats.won++; stats.streak++; stats.bestStreak = Math.max(stats.bestStreak, stats.streak);
+  if (!stats.bestTime || st.elapsed < stats.bestTime) stats.bestTime = st.elapsed;
+  if (!stats.fewestMoves || st.moves < stats.fewestMoves) stats.fewestMoves = st.moves;
+  const b = stats.byDiff[st.diff] || (stats.byDiff[st.diff] = {p:0, w:0}); b.w++;
+  sSet(STATS_KEY, stats); save(); renderStats(); setStatus('You won! 🎉');
+  for (let i = 0; i < 26; i++){ const e = document.createElement('div'); e.className = 'confetti'; e.textContent = SUITS[i % 4]; e.style.color = i % 4 === 1 || i % 4 === 2 ? '#ef4444' : '#fff'; e.style.left = (Math.random() * 100) + 'vw'; e.style.animationDuration = (1.8 + Math.random() * 2) + 's'; document.body.appendChild(e); setTimeout(() => e.remove(), 4200); }
+  showModal('You won! 🏆', `<p>Deal #${st.deal} · ${DIFF[st.diff].label}</p><p>Moves: <b>${st.moves}</b> · Time: <b>${fmtTime(st.elapsed)}</b> · Hints used: <b>${st.hints}</b></p><p>Won ${stats.won} of ${stats.played} · streak ${stats.streak}</p>`,
+    [{t:'Close'}, {t:'New game', primary:true, f:() => newGame()}]);
+}
+
+/* ================= solver runner (Web Worker via Blob URL, fallback to time slices) ================= */
+const WORKER_SRC = FCSolver.toString() + `
+self.onmessage = function(e){
+  const d = e.data, s = FCSolver(d.cols, d.cells, d.found, {maxStates: d.maxStates});
+  const t0 = Date.now(); let r = null;
+  while (!(r = s.run(2000))){ if (Date.now() - t0 > d.ms){ r = {status:'timeout', expanded: s.expanded}; break; } }
+  r.ms = Date.now() - t0; self.postMessage(r);
+};`;
+let workerURL = null;
+function cancelSolve(){ if (solving){ solving.cancel(); solving = null; $('bHint').disabled = false; } }
+function solve(state, ms, cb){
+  ms = ms || 6000;
+  const data = {cols: state.cols, cells: state.cells, found: state.found, ms, maxStates: 2500000};
+  let cancelled = false;
+  try {
+    if (!workerURL) workerURL = URL.createObjectURL(new Blob([WORKER_SRC], {type: 'text/javascript'}));
+    const w = new Worker(workerURL);
+    w.onmessage = e => { w.terminate(); if (!cancelled) cb(e.data); };
+    w.onerror = ev => { ev.preventDefault(); w.terminate(); if (!cancelled) sliced(); };
+    w.postMessage(data);
+    return {cancel(){ cancelled = true; w.terminate(); }};
+  } catch(err){ return sliced(); }
+  function sliced(){
+    const s = FCSolver(data.cols, data.cells, data.found, {maxStates: data.maxStates}); const t0 = Date.now(); let tid = 0;
+    const step = () => { if (cancelled) return; const r = s.run(400); if (r){ r.ms = Date.now() - t0; cb(r); return; } if (Date.now() - t0 > ms){ cb({status:'timeout', expanded: s.expanded, ms: Date.now() - t0}); return; } tid = setTimeout(step, 0); };
+    tid = setTimeout(step, 0);
+    return {cancel(){ cancelled = true; clearTimeout(tid); }};
+  }
+}
+function clearHints(){ cardEls.forEach(e => e.classList.remove('hint')); [...G.sCell, ...G.sFound, ...G.sTab].forEach(e => e.classList.remove('hint')); }
+function hint(cb){
+  if (busy || st.won || solving) return false;
+  st.hints++; save();
+  $('bHint').disabled = true; setStatus('Solver is thinking… (up to 6 s)');
+  const snap = JSON.stringify(st);
+  solving = solve(st, 6000, r => {
+    solving = null; $('bHint').disabled = false;
+    if (JSON.stringify(st) !== snap){ cb && cb(r); return; }
+    window.__lastSolve = r;
+    if (r.status === 'solved'){
+      if (!r.moves.length){ setStatus('Everything is already going home.'); cb && cb(r); return; }
+      const m = solverToGame(st, r.moves[0]); const cs = movingCards(st, m.from);
+      clearHints(); cardEls[cs[0]].classList.add('hint');
+      let dest; if (m.to.p === 'f') dest = G.sFound[suitOf(cs[0])]; else if (m.to.p === 'c') dest = G.sCell[m.to.i]; else { const d = st.cols[m.to.i]; dest = d.length ? cardEls[d[d.length - 1]] : G.sTab[m.to.i]; }
+      dest.classList.add('hint');
+      setStatus(`✔ Solvable — solver found a win in ${r.moves.length} moves. Hint: move ${cardName(cs[0])}${cs.length > 1 ? ' (+' + (cs.length - 1) + ')' : ''} to ${m.to.p === 'f' ? 'the foundation' : m.to.p === 'c' ? 'a free cell' : 'column ' + (m.to.i + 1)}.`);
+      setTimeout(clearHints, 3000);
+    } else if (r.status === 'unsolvable') setStatus(`✘ This position cannot be won (solver checked every reachable position: ${r.expanded} states). Try Undo.`);
+    else setStatus(`? The solver couldn't decide within ${Math.round(r.ms / 1000)} s (${r.expanded} positions searched). The game may still be winnable.`);
+    cb && cb(r);
+  });
+  return true;
+}
+
+/* ================= pointer input ================= */
+let drag = null;
+table.addEventListener('pointerdown', e => {
+  if (busy || st.won || e.button > 0) return;
+  const el = e.target.closest('.card'); if (!el) return;
+  const c = +el.dataset.id, loc = locate(c); if (!loc || loc.p === 'f') return;
+  const cs = movingCards(st, loc);
+  drag = {c, loc, cs, sx: e.clientX, sy: e.clientY, moved: false, pid: e.pointerId, orig: cs.map(x => ({x: parseFloat(cardEls[x].style.left), y: parseFloat(cardEls[x].style.top)}))};
+  try { table.setPointerCapture(e.pointerId); } catch(_){}
+  e.preventDefault();
+});
+table.addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.pid || !drag.cs.length) return;
+  const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+  if (!drag.moved && Math.hypot(dx, dy) < 7) return;
+  if (!drag.moved){ drag.moved = true; drag.cs.forEach((x, n) => { cardEls[x].classList.add('drag'); cardEls[x].style.zIndex = 1000 + n; }); }
+  drag.cs.forEach((x, n) => { cardEls[x].style.left = (drag.orig[n].x + dx) + 'px'; cardEls[x].style.top = (drag.orig[n].y + dy) + 'px'; });
+});
+table.addEventListener('pointerup', e => {
+  if (!drag || e.pointerId !== drag.pid) return;
+  const d = drag; drag = null;
+  if (!d.moved){ tapCard(d.c); return; }
+  const x = parseFloat(cardEls[d.cs[0]].style.left), y = parseFloat(cardEls[d.cs[0]].style.top);
+  const ov = (bx, by, bw, bh) => Math.max(0, Math.min(x + G.cw, bx + bw) - Math.max(x, bx)) * Math.max(0, Math.min(y + G.ch, by + bh) - Math.max(y, by));
+  let best = null, bo = 0;
+  const tryT = (to, rx, ry, rw, rh) => { const m = {from: d.loc, to}; if (!legal(st, m)) return; const o = ov(rx, ry, rw, rh); if (o > bo){ bo = o; best = m; } };
+  for (let i = 0; i < 4; i++) tryT({p:'c', i}, colX(i), G.gap, G.cw, G.ch);
+  for (let s = 0; s < 4; s++) tryT({p:'f'}, colX(4 + s), G.gap, G.cw, G.ch);
+  const H = parseFloat(table.style.height) || 2000;
+  for (let i = 0; i < 8; i++) tryT({p:'t', i}, colX(i), G.y0 - G.gap, G.cw, H);
+  if (best) doMove(best); else render();
+});
+table.addEventListener('pointercancel', e => { if (drag && e.pointerId === drag.pid){ drag = null; render(); } });
+
+/* ================= modal / tabs ================= */
+function showModal(title, html, buttons){
+  closeModal();
+  const bg = document.createElement('div'); bg.className = 'modal-bg'; bg.id = 'modal';
+  bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true"><h2></h2><div class="mbody">${html}</div><div class="mb"></div></div>`;
+  bg.querySelector('h2').textContent = title;
+  const mb = bg.querySelector('.mb');
+  buttons.forEach(b => { const btn = document.createElement('button'); btn.className = 'btn' + (b.primary ? ' primary' : ''); btn.textContent = b.t; btn.onclick = () => { closeModal(); b.f && b.f(); }; mb.appendChild(btn); });
+  document.body.appendChild(bg);
+}
+function closeModal(){ const m = $('modal'); if (m) m.remove(); }
+function showTab(t){
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'p-' + t));
+  if (t === 'play') render(); if (t === 'odds') updateLive(); if (t === 'rules') renderStats();
+}
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+$('bRules').onclick = () => showTab('rules');
+$('bOdds').onclick = () => showTab('odds');
+function confirmNew(f){ showTab('play'); if (st.started && !st.won) showModal('New game?', '<p>The current game will count as a loss.</p>', [{t:'Cancel', f:() => { $('selDiff').value = st.diff; }}, {t:'New game', primary:true, f}]); else f(); }
+$('bNew').onclick = () => confirmNew(() => newGame());
+$('selDiff').onchange = () => confirmNew(() => newGame($('selDiff').value));
+$('bDeal').onclick = () => { const n = Math.floor(+$('dealNo').value); if (!(n >= 1 && n <= 32000)){ setStatus('Enter a deal number from 1 to 32000.'); return; } confirmNew(() => newGame('normal', n)); };
+$('bUndo').onclick = undo;
+$('bHint').onclick = () => hint();
+(function(){ const fb = $('bFull'); if (!document.fullscreenEnabled){ fb.style.display = 'none'; return; }
+  fb.onclick = () => { if (document.fullscreenElement) document.exitFullscreen().catch(()=>{}); else document.documentElement.requestFullscreen().catch(()=>{}); }; })();
+window.addEventListener('resize', () => { if (st && $('p-play').classList.contains('on')) render(); });
+setInterval(() => { if (!st || !st.started || st.won || document.hidden) return; st.elapsed++; $('sTime').textContent = fmtTime(st.elapsed); if (st.elapsed % 5 === 0) save(); }, 1000);
+
+function renderStats(){
+  const s = stats, pct = s.played ? Math.round(100 * s.won / s.played) : 0;
+  let rows = ''; for (const k of ['easy','normal','hard']){ const b = s.byDiff[k] || {p:0, w:0}; rows += `<tr><td>${DIFF[k].label}</td><td>${b.p}</td><td>${b.w}</td></tr>`; }
+  $('statsBox').innerHTML = `<p>Played <b>${s.played}</b> · Won <b>${s.won}</b> (${pct} %) · Streak <b>${s.streak}</b> (best ${s.bestStreak}) · Best time <b>${s.bestTime ? fmtTime(s.bestTime) : '–'}</b> · Fewest moves <b>${s.fewestMoves || '–'}</b></p><table><tr><th>Level</th><th>Played</th><th>Won</th></tr>${rows}</table><button class="btn" id="bReset">Reset stats</button>`;
+  $('bReset').onclick = () => showModal('Reset statistics?', '<p>This clears all FreeCell stats.</p>', [{t:'Cancel'}, {t:'Reset', primary:true, f:() => { stats = blankStats(); sSet(STATS_KEY, stats); renderStats(); }}]);
+}
+
+/* ================= odds maths ================= */
+function C(n, k){ if (k < 0 || k > n || n < 0) return 0; k = Math.min(k, n - k); let r = 1; for (let i = 1; i <= k; i++) r = r * (n - k + i) / i; return r; }
+const pc = x => (100 * x).toFixed(2) + ' %';
+function updateLive(){
+  if (!st) return; const k = counts(st);
+  $('live').innerHTML = `<div class="out">Deal <b>#${st.deal}</b> · Cards left: <b>${k.left}</b> · Face down: <b>0</b> (FreeCell is open information) · Moves: <b>${k.moves}</b></div>
+  <div class="out">Free cells empty: <b>${k.free}</b> · Empty columns: <b>${k.empty}</b> → max run to a column: <b>${k.max}</b>${k.empty ? `, to an empty column: <b>${k.maxEmpty}</b>` : ''}</div>`;
+}
+function m1(){ const f = +$('m1f').value, e = +$('m1e').value; $('m1fv').textContent = f; $('m1ev').textContent = e;
+  const a = (f + 1) * Math.pow(2, e), b = e ? (f + 1) * Math.pow(2, e - 1) : 0;
+  $('m1out').innerHTML = `To a non-empty column: (${f} + 1) × 2^${e} = <b>${a}</b> cards` + (e ? `<br>To an empty column: (${f} + 1) × 2^${e - 1} = <b>${b}</b> cards` : '<br>No empty column to move into.') + (a > 13 ? '<br><i>(A run can never be longer than 13 cards, K down to A.)</i>' : ''); }
+function m2(){ const d = +$('m2d').value, k = +$('m2k').value; $('m2dv').textContent = d; $('m2kv').textContent = k;
+  const m = Math.min(52, 8 * Math.min(d + 1, 6) + (d >= 6 ? 4 : 0));
+  const p = 1 - C(52 - m, k) / C(52, k);
+  $('m2out').innerHTML = `Positions with at most ${d} card${d === 1 ? '' : 's'} on top: m = <b>${m}</b><br>P(at least one of ${k} chosen cards (e.g. the Aces) there) = 1 − C(${52 - m},${k}) / C(52,${k}) = <b>${pc(p)}</b><br>Expected number of them there: ${k} × ${m}/52 = <b>${(k * m / 52).toFixed(2)}</b>`; }
+function m3(){ const n = +$('m3n').value; $('m3nv').textContent = n; let f = 1n; for (let i = 2n; i <= BigInt(n); i++) f *= i; const s = f.toString();
+  const sci = s.length > 6 ? `${s[0]}.${s.slice(1, 4)} × 10^${s.length - 1}` : s;
+  $('m3out').innerHTML = `${n}! = <b>${sci}</b> (${s.length} digits)<br><span style="font-size:13px">${s}</span>` + (n === 52 ? `<br>Microsoft deals reachable from 31-bit seeds: at most 2^31 = 2 147 483 648 — a fraction of about ${(2147483648 / 8.0658e67).toExponential(2)} of all orderings.` : ''); }
+['m1f','m1e'].forEach(id => $(id).oninput = m1); ['m2d','m2k'].forEach(id => $(id).oninput = m2); $('m3n').oninput = m3;
+$('m1now').onclick = () => { $('m1f').value = freeCells(st); $('m1e').value = emptyCols(st); m1(); };
+
+/* ================= boot ================= */
+$('ver').textContent = APP_VERSION;
+m1(); m2(); m3(); renderStats();
+(function boot(){
+  const sv = sGet(SAVE_KEY);
+  if (sv && sv.st && sv.st.cols && !sv.st.won && sv.st.started){
+    st = sv.st; hist = Array.isArray(sv.hist) ? sv.hist : []; $('selDiff').value = st.diff; render();
+    showModal('Resume saved game?', `<p>Deal #${st.deal} · ${st.moves} moves · ${fmtTime(st.elapsed)}</p>`, [{t:'New game', f:() => newGame()}, {t:'Resume saved game', primary:true, f:() => setStatus('Resumed. Tap a card to move it, or drag.')}]);
+  } else newGame(sv && sv.st ? sv.st.diff : 'easy');
+})();
+
+window.__game = {
+  get state(){ return st; }, newGame, tapCard, undo, hint, move: (from, to) => doMove({from, to}), legal: m => legal(st, m),
+  msDeal, solve, maxMove: e => maxMove(st, !!e), locate, counts: () => counts(st), cardName, render, version: APP_VERSION,
+  EASY_DEALS, HARD_DEALS, solverToGame: m => solverToGame(st, m),
+  setState(s){ cancelSolve(); st = s; hist = []; render(); save(); },
+  layout: () => ({...G, colX: [0,1,2,3,4,5,6,7].map(colX)})
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<!--
+TOOL: Spider Solitaire
+FAMILY: card-games
+VERSION: 1.0.0
+DATE: 2026-10-13
+CHAT: Card games batch 1 (claude.ai)
+CHANGES: 1.0.0 - first release
+STATUS: released
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b3d2a">
+<title>Spider Solitaire</title>
+<style>
+:root{--felt:#0f5132;--felt2:#16774a;--bar:#0b2e20;--red:#c62828;--blk:#111;--back:#1e3a8a;--gold:#facc15;--cw:64px;--ink:#f1f5f2;--muted:#b9d4c4;--panel:rgba(0,0,0,.25)}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Arial,sans-serif;color:var(--ink);background:var(--felt);background-image:radial-gradient(ellipse at 50% 25%,var(--felt2) 0%,var(--felt) 60%,#0a3d26 100%);min-height:100vh;width:100%;overflow-x:hidden}
+button,select,input{font:inherit}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;background:var(--bar);padding:6px 12px;padding-top:max(6px,env(safe-area-inset-top));box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.topbar h1{font-size:1.15rem;margin:0;white-space:nowrap;letter-spacing:.3px}
+.topbar nav{display:flex;gap:6px;flex-wrap:wrap}
+.btn{min-height:40px;min-width:40px;padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:#174d35;color:#fff;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;font-size:.95rem}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:#e0b400;color:#1b1b1b;border-color:#e0b400;font-weight:600}
+.btn:disabled{opacity:.45;cursor:default}
+.tabs{display:flex;gap:4px;padding:6px 12px 0;max-width:1400px;margin:0 auto}
+.tab{min-height:40px;padding:6px 14px;border:none;border-radius:8px 8px 0 0;background:rgba(0,0,0,.25);color:var(--muted);cursor:pointer}
+.tab.active{background:rgba(0,0,0,.45);color:#fff;font-weight:600}
+main{width:100%;max-width:1400px;margin:0 auto;padding:0 12px 12px}
+.panel{display:none;background:rgba(0,0,0,.18);border-radius:0 10px 10px 10px;padding:10px}
+.panel.active{display:block}
+.hud{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}
+.stockbtn{width:58px;height:46px;border-radius:7px;border:2px solid #fff;background:repeating-linear-gradient(45deg,#1e3a8a 0 5px,#2a4aa6 5px 10px);color:#fff;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;font-size:.8rem;text-shadow:0 1px 2px #000}
+.stockbtn.emptystock{background:rgba(255,255,255,.08);border-style:dashed;color:var(--muted)}
+.chip{background:var(--panel);border-radius:8px;padding:6px 10px;font-size:.9rem;white-space:nowrap}
+.chip b{color:var(--gold)}
+.found{display:flex;gap:3px;align-items:center}
+.fslot{width:18px;height:25px;border-radius:3px;border:1px dashed rgba(255,255,255,.35);font-size:12px;display:flex;align-items:center;justify-content:center}
+.fslot.full{background:#fff;border:1px solid #fff;color:var(--blk)}
+.fslot.full.red{color:var(--red)}
+.hud select{min-height:40px;border-radius:8px;padding:4px 6px;background:#174d35;color:#fff;border:1px solid rgba(255,255,255,.25)}
+.spacer{flex:1}
+.tableau{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px;max-width:1060px;margin:0 auto;user-select:none;-webkit-user-select:none}
+.col{position:relative;min-height:40px;border-radius:8px}
+.col::before{content:"";position:absolute;left:0;right:0;top:0;aspect-ratio:5/7;border:2px dashed rgba(255,255,255,.22);border-radius:8px}
+.col.target{outline:3px solid var(--gold);outline-offset:2px}
+.card{position:absolute;left:0;width:100%;aspect-ratio:5/7;border-radius:8px;background:#fff;color:var(--blk);box-shadow:0 1px 3px rgba(0,0,0,.45);touch-action:none;cursor:pointer;transition:top .15s ease;overflow:hidden}
+.card.red{color:var(--red)}
+.card.down{background:repeating-linear-gradient(45deg,#1e3a8a 0 5px,#2a4aa6 5px 10px);border:2px solid #fff;cursor:default}
+.card .cr{position:absolute;left:.25em;top:.08em;font-weight:700;line-height:1.1;white-space:nowrap;letter-spacing:-.04em}
+.card .cr b{font-weight:400;margin-left:.04em}
+.card .pip{position:absolute;left:0;right:0;top:38%;text-align:center;font-size:2.2em;line-height:1;opacity:.9}
+.card .br{position:absolute;right:.25em;bottom:.08em;font-weight:700;transform:rotate(180deg);line-height:1.1;white-space:nowrap}
+.tableau.compact .pip,.tableau.compact .br{display:none}
+.tableau.compact .card{border-radius:4px}
+.tableau.compact .card.down{border-width:1px}
+.tableau.compact .col::before{border-radius:4px}
+.card.hint{outline:3px solid var(--gold);outline-offset:-2px;z-index:5}
+.card.dragsrc{opacity:.35}
+.card.shake{animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.ghost{position:fixed;pointer-events:none;z-index:1000}
+.ghost .card{box-shadow:0 6px 14px rgba(0,0,0,.5);transition:none}
+.status{margin-top:10px;text-align:center;background:var(--panel);border-radius:8px;padding:8px;min-height:40px;font-size:.95rem}
+.prose{line-height:1.5;max-width:900px}
+.prose h2{font-size:1.15rem;margin:.6em 0 .3em;color:var(--gold)}
+.prose h3{font-size:1rem;margin:.8em 0 .3em}
+.prose table{border-collapse:collapse;margin:.4em 0}
+.prose td,.prose th{border:1px solid rgba(255,255,255,.25);padding:4px 8px;text-align:left}
+.calc{background:rgba(0,0,0,.25);border-radius:10px;padding:10px 12px;margin:10px 0}
+.calc label{display:flex;align-items:center;gap:8px;margin:6px 0;flex-wrap:wrap}
+.calc input[type=range]{flex:1;min-width:160px;height:32px}
+.calc select{min-height:40px;border-radius:8px;padding:4px 8px}
+.big{font-size:1.4rem;font-weight:700;color:var(--gold)}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:.9rem;background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px}
+.bars{display:grid;grid-template-columns:auto 1fr auto;gap:3px 8px;align-items:center;font-size:.85rem;margin-top:6px}
+.bar{height:12px;background:var(--gold);border-radius:3px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:2000;padding:16px}
+.modal.hidden{display:none}
+.modal .box{background:#123d2b;border:1px solid rgba(255,255,255,.3);border-radius:12px;padding:18px;max-width:420px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.modal h2{margin:0 0 8px;color:var(--gold)}
+.modal .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;justify-content:flex-end}
+@media (max-width:600px){
+ :root{--cw:44px}
+ .topbar{padding:4px 6px}
+ .topbar h1{font-size:1rem}
+ .topbar nav{gap:4px}
+ .topbar .btn{padding:4px 8px;font-size:.85rem}
+ .fstext{display:none}
+ main{padding:0 4px 8px}
+ .tabs{padding:4px 4px 0}
+ .panel{padding:6px 4px}
+ .tableau{gap:3px}
+ .hud{gap:5px}
+ .chip{padding:5px 7px;font-size:.82rem}
+ .grid2{grid-template-columns:1fr}
+ .calc input[type=range]{min-width:120px}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+ <h1>♠ Spider Solitaire</h1>
+ <nav>
+  <button class="btn primary" id="bNew">New</button>
+  <button class="btn" id="bRules">Rules</button>
+  <button class="btn" id="bOdds">Odds</button>
+  <button class="btn" id="bFs" title="Full screen">⛶<span class="fstext"> Full screen</span></button>
+  <a class="btn" href="index.html">← Games</a>
+ </nav>
+</header>
+<div class="tabs" role="tablist">
+ <button class="tab active" data-tab="play">Play</button>
+ <button class="tab" data-tab="rules">Rules</button>
+ <button class="tab" data-tab="odds">Odds &amp; Strategy</button>
+</div>
+<main>
+<section class="panel active" id="tab-play">
+ <div class="hud">
+  <button class="stockbtn" id="stock" title="Deal 10 cards">Deal<span id="stockN">×5</span></button>
+  <div class="chip found" id="found" title="Completed runs"></div>
+  <div class="chip">Score <b id="score">500</b></div>
+  <div class="chip">Moves <b id="moves">0</b></div>
+  <span class="spacer"></span>
+  <button class="btn" id="bUndo">↶ Undo</button>
+  <button class="btn" id="bHint">💡 Hint</button>
+  <select id="diff" title="Difficulty" aria-label="Difficulty">
+   <option value="1">Easy · 1 suit</option>
+   <option value="2">Normal · 2 suits</option>
+   <option value="4">Hard · 4 suits</option>
+  </select>
+ </div>
+ <div class="tableau" id="tableau"></div>
+ <div class="status" id="status">Tap a card to move it, or drag it.</div>
+</section>
+
+<section class="panel" id="tab-rules">
+ <div class="prose">
+  <h2>How to play Spider</h2>
+  <p>Two full decks (104 cards) are dealt into <b>10 columns</b>: the first four get 6 cards and the other six get 5, with only the top card face up. The other <b>50 cards</b> form the stock, dealt <b>10 at a time</b> (one onto every column) — 5 deals in all.</p>
+  <ul>
+   <li>Any face-up card may be placed on a card <b>one rank higher</b> of any suit (e.g. 7♥ on 8♠). A King or any run may go into an empty column.</li>
+   <li>Several cards move together only if they form a <b>same-suit run in descending order</b> (e.g. 9♠ 8♠ 7♠).</li>
+   <li>A complete same-suit run <b>K down to A</b> is removed automatically to the foundation. Clear all <b>8 runs</b> to win.</li>
+   <li>When a face-down card is uncovered it turns face up.</li>
+   <li>You may not deal from the stock while any column is empty (standard rule) — fill gaps first.</li>
+  </ul>
+  <h3>Controls</h3>
+  <p><b>Tap</b> a card to send it (and the run on it) to the best place — a same-suit card is preferred, then any suit, then an empty column. Or <b>drag</b> it with mouse or finger. <b>Undo</b> is unlimited. <b>Hint</b> highlights a useful move (tap again for the next one). Tap the blue stock pile to deal.</p>
+  <h3>Difficulty</h3>
+  <table><tr><th>Level</th><th>Suits</th><th>Copies of each card</th></tr>
+   <tr><td>Easy</td><td>1 (♠ only)</td><td>8</td></tr>
+   <tr><td>Normal</td><td>2 (♠ ♥)</td><td>4</td></tr>
+   <tr><td>Hard</td><td>4 (♠ ♥ ♦ ♣)</td><td>2</td></tr></table>
+  <h3>Scoring</h3>
+  <p>Start with <b>500</b>. Every move and every deal costs <b>−1</b>. Each completed K→A run earns <b>+100</b>. Undo restores the position and score exactly as it was (variant choice: no undo penalty).</p>
+  <h3>Your statistics</h3>
+  <div id="statsBox"></div>
+  <p style="margin-top:10px">The game autosaves after every move — close the page and you will be offered to resume.</p>
+  <p class="mono" style="display:inline-block">Spider Solitaire v<span id="ver"></span> · card-games family · offline single file</p>
+ </div>
+</section>
+
+<section class="panel" id="tab-odds">
+ <div class="prose" style="max-width:none">
+  <h2>Odds &amp; Strategy</h2>
+  <div class="calc">
+   <h3 style="margin-top:0">Live odds — this game</h3>
+   <div id="liveBox"></div>
+   <label>Rank you need: <select id="lvRank"></select> Suit: <select id="lvSuit"></select></label>
+   <div id="liveCalc"></div>
+  </div>
+  <div class="grid2">
+   <div class="calc">
+    <h3 style="margin-top:0">1 · Will the next deal bring the card I need?</h3>
+    <p style="margin:0">From your point of view every hidden card (stock + face-down) is equally likely to be in the 10 dealt cards, so the count of “outs” in a deal is <b>hypergeometric</b>.</p>
+    <label>Hidden cards U: <input type="range" id="hgU" min="10" max="94" value="94"><b id="hgUv"></b></label>
+    <label>Outs K (copies of the card still hidden): <input type="range" id="hgK" min="0" max="8" value="4"><b id="hgKv"></b></label>
+    <label>Cards dealt n: <input type="range" id="hgN" min="1" max="10" value="10"><b id="hgNv"></b></label>
+    <div>P(at least one) = <span class="big" id="hgP"></span></div>
+    <div class="mono" style="margin-top:6px">P(X≥1) = 1 − C(U−K, n) / C(U, n) &nbsp; P(X=k) = C(K,k)·C(U−K,n−k)/C(U,n)</div>
+    <div class="bars" id="hgBars"></div>
+   </div>
+   <div class="calc">
+    <h3 style="margin-top:0">2 · Why more suits is harder</h3>
+    <label>Suits in play: <select id="suS"><option value="1">1 suit</option><option value="2" selected>2 suits</option><option value="4">4 suits</option></select></label>
+    <div id="suOut"></div>
+    <div class="mono" style="margin-top:6px">E[builds among 10 up-cards] = 10·9 · (12/13) · m / 103, m = copies of the needed card</div>
+    <table id="suTable" style="margin-top:8px"></table>
+    <p style="margin:8px 0 4px">Check it by simulation (deals random openings in your browser):</p>
+    <button class="btn" id="suMC">Run 20,000 openings</button>
+    <div id="suMCout" style="margin-top:6px"></div>
+   </div>
+  </div>
+  <div class="calc">
+   <h3 style="margin-top:0">Strategy tips</h3>
+   <ul>
+    <li>Prefer moves that <b>turn over a face-down card</b> — information is everything in Spider.</li>
+    <li>Build <b>same-suit</b> whenever you have a choice; mixed-suit stacks cannot move as a unit.</li>
+    <li><b>Empty columns</b> are your most valuable resource: use them to re-order runs, don't fill them with a lone King too early.</li>
+    <li>Work on the columns with the <b>fewest face-down cards</b> first to create an empty column.</li>
+    <li>Before dealing, make every useful move — a deal buries the top of every column.</li>
+    <li>Kings can only be moved into empty columns, so a King on top of face-down cards is a problem; uncover early.</li>
+   </ul>
+  </div>
+ </div>
+</section>
+</main>
+
+<div class="modal hidden" id="modal"><div class="box"><h2 id="mTitle"></h2><div id="mBody"></div><div class="row" id="mBtns"></div></div></div>
+
+<script>
+"use strict";
+const APP_VERSION = "1.0.0";
+const SAVE_KEY = "cg_spider_v1", STATS_KEY = "cg_spider_stats";
+const SUITS = ["♠", "♥", "♦", "♣"], RED = [false, true, true, false];
+const RANKS = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+const DIFF_NAME = { 1: "Easy", 2: "Normal", 4: "Hard" };
+const $ = s => document.querySelector(s);
+
+/* ---------- storage (safe) ---------- */
+function lsGet(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+function lsDel(k) { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } }
+
+/* ---------- pure game logic ---------- */
+function suitsFor(d) { return d === 1 ? [0] : d === 2 ? [0, 1] : [0, 1, 2, 3]; }
+function makeDeck(d) {
+  const ss = suitsFor(d), rep = 8 / ss.length, deck = []; let id = 0;
+  for (let k = 0; k < rep; k++) for (const s of ss) for (let r = 1; r <= 13; r++) deck.push({ id: id++, s, r, u: false });
+  return deck;
+}
+function shuffle(a, rng) { rng = rng || Math.random; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function dealNew(d) {
+  const deck = shuffle(makeDeck(d)), cols = [];
+  for (let c = 0; c < 10; c++) { const col = deck.splice(0, c < 4 ? 6 : 5); col[col.length - 1].u = true; cols.push(col); }
+  return { v: 1, diff: d, cols, stock: deck, found: [], score: 500, moves: 0, won: false };
+}
+function isRunFrom(col, i) {
+  if (i < 0 || i >= col.length || !col[i].u) return false;
+  for (let k = i + 1; k < col.length; k++) { const a = col[k - 1], b = col[k]; if (!b.u || b.s !== a.s || b.r !== a.r - 1) return false; }
+  return true;
+}
+function canDrop(col, card) { if (col.length === 0) return true; const t = col[col.length - 1]; return t.u && t.r === card.r + 1; }
+function flipTops(st) { for (const col of st.cols) if (col.length && !col[col.length - 1].u) col[col.length - 1].u = true; }
+function collectRuns(st) {
+  let n = 0;
+  for (const col of st.cols) {
+    if (col.length >= 13) { const i = col.length - 13; if (col[i].r === 13 && isRunFrom(col, i)) { st.found.push(col[i].s); col.splice(i, 13); st.score += 100; n++; } }
+  }
+  flipTops(st);
+  if (st.found.length === 8) st.won = true;
+  return n;
+}
+function legalMove(st, ci, i, cj) {
+  if (ci === cj || ci < 0 || cj < 0 || ci > 9 || cj > 9) return false;
+  const col = st.cols[ci]; if (!isRunFrom(col, i)) return false;
+  return canDrop(st.cols[cj], col[i]);
+}
+function applyMove(st, ci, i, cj) {
+  if (!legalMove(st, ci, i, cj)) return -1;
+  const run = st.cols[ci].splice(i);
+  st.cols[cj].push(...run); st.moves++; st.score--;
+  flipTops(st);
+  return collectRuns(st);
+}
+function canDeal(st) { if (!st.stock.length) return "empty"; if (st.cols.some(c => c.length === 0)) return "gap"; return "ok"; }
+function applyDeal(st) {
+  const why = canDeal(st); if (why !== "ok") return why;
+  for (let c = 0; c < 10; c++) { const card = st.stock.pop(); card.u = true; st.cols[c].push(card); }
+  st.moves++; st.score--;
+  collectRuns(st);
+  return "ok";
+}
+/* rated list of moves (for hint); value>0 = useful */
+function listMoves(st) {
+  const out = [];
+  for (let ci = 0; ci < 10; ci++) {
+    const col = st.cols[ci];
+    for (let i = col.length - 1; i >= 0 && isRunFrom(col, i); i--) {
+      const c = col[i], below = i > 0 ? col[i - 1] : null;
+      const sittingNatural = below && below.u && below.s === c.s && below.r === c.r + 1;
+      const sittingOk = below && below.u && below.r === c.r + 1;
+      for (let cj = 0; cj < 10; cj++) {
+        if (cj === ci || !canDrop(st.cols[cj], c)) continue;
+        const dest = st.cols[cj], top = dest[dest.length - 1];
+        let v = 0;
+        if (!dest.length) { v = (i === 0) ? -5 : (below && !below.u ? 2 : (sittingOk ? -1 : 0.5)); }
+        else {
+          if (top.s === c.s) v += sittingNatural ? -2 : 3; else v += sittingOk ? -2 : 0.5;
+          if (below && !below.u) v += 2.5;
+          if (i === 0) v += 2;
+        }
+        if (sittingNatural && !(below && !below.u)) v -= 1;
+        out.push({ ci, i, cj, v, len: col.length - i });
+      }
+    }
+  }
+  out.sort((a, b) => b.v - a.v || b.len - a.len);
+  return out;
+}
+function bestDest(st, ci, i) {
+  const col = st.cols[ci]; if (!isRunFrom(col, i)) return -1;
+  const c = col[i]; let best = -1, bv = -1e9;
+  for (let k = 1; k < 10; k++) {
+    const cj = (ci + k) % 10, dest = st.cols[cj];
+    if (!canDrop(dest, c)) continue;
+    let v;
+    if (!dest.length) v = (i === 0) ? -10 : 1;
+    else v = dest[dest.length - 1].s === c.s ? 4 : 2;
+    if (v > bv) { bv = v; best = cj; }
+  }
+  return bv > -10 ? best : -1;
+}
+function hiddenCount(st) { let n = 0; for (const col of st.cols) for (const c of col) if (!c.u) n++; return n; }
+
+/* ---------- maths ---------- */
+const LNF = [0]; for (let i = 1; i <= 400; i++) LNF[i] = LNF[i - 1] + Math.log(i);
+function lnC(n, k) { return (k < 0 || k > n || n < 0) ? -Infinity : LNF[n] - LNF[k] - LNF[n - k]; }
+function hyper(U, K, n, k) { return Math.exp(lnC(K, k) + lnC(U - K, n - k) - lnC(U, n)); }
+function pAtLeastOne(U, K, n) { if (K <= 0 || n <= 0) return 0; if (U - K < n) return 1; return 1 - Math.exp(lnC(U - K, n) - lnC(U, n)); }
+function pct(p) { return (p * 100).toFixed(p > 0 && p < 0.001 ? 3 : 1) + "%"; }
+
+/* ---------- app state ---------- */
+let S = null, hist = [], hintList = [], hintIdx = 0;
+function defaultStats() { return { played: 0, won: 0, best: null, streak: 0, bestStreak: 0, byDiff: { 1: { p: 0, w: 0 }, 2: { p: 0, w: 0 }, 4: { p: 0, w: 0 } } }; }
+let stats = Object.assign(defaultStats(), lsGet(STATS_KEY) || {});
+function saveStats() { lsSet(STATS_KEY, stats); }
+function save() { if (!S) return; if (S.won) lsDel(SAVE_KEY); else lsSet(SAVE_KEY, { state: S, hist: hist.slice(-150) }); }
+
+function newGame(d) {
+  d = Number(d || $("#diff").value || 2);
+  if (S && !S.won && S.moves > 0) stats.streak = 0;
+  S = dealNew(d); hist = []; hintList = [];
+  stats.played++; stats.byDiff[d] = stats.byDiff[d] || { p: 0, w: 0 }; stats.byDiff[d].p++; saveStats();
+  $("#diff").value = String(d);
+  save(); render(); setStatus("New " + DIFF_NAME[d] + " game — tap or drag a card. Build same-suit runs K→A.");
+  showTab("play");
+}
+function snapshot() { hist.push(JSON.stringify(S)); }
+function doMove(ci, i, cj) {
+  if (!legalMove(S, ci, i, cj)) return false;
+  snapshot(); const runs = applyMove(S, ci, i, cj); hintList = [];
+  afterAction(runs > 0 ? "Run complete! +100" : null);
+  return true;
+}
+function doDeal() {
+  if (S.won) return false;
+  const why = canDeal(S);
+  if (why === "empty") { setStatus("The stock is empty — no deals left."); return false; }
+  if (why === "gap") { setStatus("Fill every empty column before dealing (standard rule)."); return false; }
+  snapshot(); const before = S.found.length; applyDeal(S); hintList = [];
+  afterAction(S.found.length > before ? "Dealt 10 cards — and a run completed! +100" : "Dealt 10 cards.");
+  return true;
+}
+function undo() {
+  if (!hist.length) { setStatus("Nothing to undo."); return false; }
+  S = JSON.parse(hist.pop()); hintList = []; save(); render(); setStatus("Move undone."); return true;
+}
+function afterAction(msg) {
+  save(); render();
+  if (S.won) { onWin(); return; }
+  const mv = listMoves(S).filter(m => m.v > 0);
+  if (msg) setStatus(msg);
+  else if (!mv.length && !S.stock.length && !listMoves(S).length) setStatus("No moves left. Try Undo, or start a New game.");
+  else setStatus(mv.length ? "Keep going — " + S.found.length + "/8 runs done." : (S.stock.length ? "No obvious moves — tap the stock to deal." : "Few moves left — think carefully or Undo."));
+}
+function onWin() {
+  stats.won++; stats.streak++; stats.bestStreak = Math.max(stats.bestStreak, stats.streak);
+  stats.byDiff[S.diff].w++; if (stats.best === null || S.score > stats.best) stats.best = S.score; saveStats(); lsDel(SAVE_KEY);
+  setStatus("You won! 🎉");
+  showModal("You won! 🎉", `<p>All 8 runs completed on <b>${DIFF_NAME[S.diff]}</b>.</p><p>Score <b>${S.score}</b> · Moves <b>${S.moves}</b><br>Best score ${stats.best} · Win streak ${stats.streak}</p>`,
+    [{ label: "Play again", primary: true, fn: () => newGame(S.diff) }, { label: "Close", fn: () => {} }]);
+}
+function tapCard(ci, i) {
+  const col = S.cols[ci], c = col[i]; if (!c) return;
+  const el = cardEl(ci, i);
+  if (!c.u) { setStatus("That card is face down — uncover it by moving the cards on top."); shake(el); return; }
+  if (!isRunFrom(col, i)) { setStatus("Only a same-suit run in order can move together."); shake(el); return; }
+  const cj = bestDest(S, ci, i);
+  if (cj < 0) { setStatus("No place for " + RANKS[c.r] + SUITS[c.s] + " right now."); shake(el); return; }
+  doMove(ci, i, cj);
+}
+function hint() {
+  if (S.won) return;
+  if (!hintList.length) { hintList = listMoves(S).filter(m => m.v > 0); hintIdx = 0; }
+  clearHints();
+  if (!hintList.length) { setStatus(S.stock.length && canDeal(S) === "ok" ? "No useful moves — deal from the stock." : (S.stock.length ? "Fill the empty column, then deal." : "No useful moves — try Undo.")); flashStock(); return; }
+  const m = hintList[hintIdx % hintList.length]; hintIdx++;
+  for (let k = m.i; k < S.cols[m.ci].length; k++) { const e = cardEl(m.ci, k); if (e) e.classList.add("hint"); }
+  const dc = $("#tableau").children[m.cj]; dc.classList.add("target");
+  const c = S.cols[m.ci][m.i];
+  setStatus("Hint: move " + RANKS[c.r] + SUITS[c.s] + " to column " + (m.cj + 1) + (hintList.length > 1 ? " (tap Hint again for another)" : ""));
+  setTimeout(clearHints, 2000);
+}
+function clearHints() { document.querySelectorAll(".hint").forEach(e => e.classList.remove("hint")); document.querySelectorAll(".col.target").forEach(e => e.classList.remove("target")); }
+function flashStock() { const s = $("#stock"); s.classList.add("shake"); setTimeout(() => s.classList.remove("shake"), 350); }
+function shake(el) { if (!el) return; el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
+function setStatus(t) { $("#status").textContent = t; }
+
+/* ---------- rendering ---------- */
+function cardEl(ci, i) { return document.querySelector(`.card[data-c="${ci}"][data-i="${i}"]`); }
+function cardHTML(c, ci, i, top) {
+  if (!c.u) return `<div class="card down" data-c="${ci}" data-i="${i}" style="top:${top}px"></div>`;
+  const rk = RANKS[c.r], su = SUITS[c.s];
+  return `<div class="card up${RED[c.s] ? " red" : ""}" data-c="${ci}" data-i="${i}" style="top:${top}px" aria-label="${rk}${su}"><span class="cr">${rk}<b>${su}</b></span><span class="pip">${su}</span><span class="br">${rk}${su}</span></div>`;
+}
+function ensureCols() {
+  const t = $("#tableau"); if (t.children.length === 10) return;
+  t.innerHTML = ""; for (let c = 0; c < 10; c++) { const d = document.createElement("div"); d.className = "col"; d.dataset.c = c; t.appendChild(d); }
+}
+function render() {
+  if (!S) return;
+  ensureCols();
+  const tab = $("#tableau"), colsEl = tab.children;
+  const cw = colsEl[0].clientWidth || 36, ch = cw * 1.4;
+  const font = Math.max(10, Math.min(19, cw * 0.3));
+  tab.style.fontSize = font + "px"; tab.classList.toggle("compact", cw < 62);
+  const r = tab.getBoundingClientRect();
+  const avail = Math.max(ch * 3.2, window.innerHeight - (r.top + window.scrollY) - 70);
+  const upMin = font * 1.3 + 2, upDef = Math.max(upMin, ch * 0.26), dnDef = ch * 0.12, dnMin = ch * 0.05;
+  for (let ci = 0; ci < 10; ci++) {
+    const col = S.cols[ci]; const nd = col.filter(c => !c.u).length, nu = col.length - nd;
+    let du = upDef, dd = dnDef;
+    const need = () => nd * dd + Math.max(0, nu - 1) * du + ch;
+    if (need() > avail && nu > 1) du = Math.max(upMin, (avail - ch - nd * dd) / (nu - 1));
+    if (need() > avail) dd = Math.max(dnMin, (avail - ch - Math.max(0, nu - 1) * du) / Math.max(1, nd));
+    let top = 0, html = "";
+    for (let i = 0; i < col.length; i++) { html += cardHTML(col[i], ci, i, Math.round(top)); top += col[i].u ? du : dd; }
+    colsEl[ci].innerHTML = html;
+    colsEl[ci].style.height = Math.round(col.length ? top - (col[col.length - 1].u ? du : dd) + ch : ch) + "px";
+  }
+  const deals = S.stock.length / 10;
+  $("#stockN").textContent = "×" + deals; $("#stock").classList.toggle("emptystock", deals === 0);
+  let f = ""; for (let k = 0; k < 8; k++) { const s = S.found[k]; f += s === undefined ? `<span class="fslot"></span>` : `<span class="fslot full${RED[s] ? " red" : ""}">${SUITS[s]}</span>`; }
+  $("#found").innerHTML = f;
+  $("#score").textContent = S.score; $("#moves").textContent = S.moves;
+  $("#bUndo").disabled = hist.length === 0;
+  renderStats(); renderLive();
+}
+function renderStats() {
+  const b = stats.byDiff, row = d => `<tr><td>${DIFF_NAME[d]}</td><td>${(b[d] || {}).p || 0}</td><td>${(b[d] || {}).w || 0}</td></tr>`;
+  $("#statsBox").innerHTML = `<table><tr><th>Games played</th><td>${stats.played}</td></tr><tr><th>Games won</th><td>${stats.won} (${stats.played ? Math.round(100 * stats.won / stats.played) : 0}%)</td></tr><tr><th>Best score</th><td>${stats.best === null ? "—" : stats.best}</td></tr><tr><th>Win streak (current / best)</th><td>${stats.streak} / ${stats.bestStreak}</td></tr></table>
+  <table><tr><th>Level</th><th>Played</th><th>Won</th></tr>${row(1)}${row(2)}${row(4)}</table>`;
+}
+
+/* ---------- drag & tap ---------- */
+let drag = null;
+function onDown(e) {
+  const el = e.target.closest(".card"); if (!el || !S || S.won) return;
+  if (e.pointerType === "mouse" && e.button !== 0) return;
+  e.preventDefault();
+  drag = { ci: +el.dataset.c, i: +el.dataset.i, x: e.clientX, y: e.clientY, moved: false, ghost: null, id: e.pointerId };
+}
+function onMove(e) {
+  if (!drag || e.pointerId !== drag.id) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!drag.moved) {
+    if (dx * dx + dy * dy < 64) return;
+    const col = S.cols[drag.ci];
+    if (!isRunFrom(col, drag.i)) return;
+    drag.moved = true;
+    const first = cardEl(drag.ci, drag.i), r0 = first.getBoundingClientRect();
+    const g = document.createElement("div"); g.className = "ghost"; g.style.width = r0.width + "px";
+    g.style.fontSize = $("#tableau").style.fontSize;
+    if ($("#tableau").classList.contains("compact")) g.classList.add("tableau", "compact"), g.style.display = "block";
+    const baseTop = parseFloat(first.style.top);
+    for (let k = drag.i; k < col.length; k++) { const src = cardEl(drag.ci, k); const cl = src.cloneNode(true); cl.style.top = (parseFloat(src.style.top) - baseTop) + "px"; g.appendChild(cl); src.classList.add("dragsrc"); }
+    drag.ox = drag.x - r0.left; drag.oy = drag.y - r0.top;
+    document.body.appendChild(g); drag.ghost = g;
+  }
+  drag.ghost.style.left = (e.clientX - drag.ox) + "px"; drag.ghost.style.top = (e.clientY - drag.oy) + "px";
+  const cj = colAt(e.clientX);
+  document.querySelectorAll(".col.target").forEach(c => c.classList.remove("target"));
+  if (cj >= 0 && legalMove(S, drag.ci, drag.i, cj)) $("#tableau").children[cj].classList.add("target");
+}
+function onUp(e) {
+  if (!drag || e.pointerId !== drag.id) return;
+  const d = drag; drag = null;
+  if (d.ghost) d.ghost.remove();
+  document.querySelectorAll(".col.target").forEach(c => c.classList.remove("target"));
+  if (!d.moved) { tapCard(d.ci, d.i); return; }
+  const cj = colAt(e.clientX);
+  if (cj >= 0 && cj !== d.ci && doMove(d.ci, d.i, cj)) return;
+  render(); if (cj !== d.ci && cj >= 0) setStatus("That move isn't allowed — the card must go on one rank higher.");
+}
+function onCancel() { if (drag && drag.ghost) drag.ghost.remove(); drag = null; render(); }
+function colAt(x) {
+  const cols = $("#tableau").children;
+  for (let c = 0; c < cols.length; c++) { const r = cols[c].getBoundingClientRect(); const pad = 3; if (x >= r.left - pad && x <= r.right + pad) return c; }
+  return -1;
+}
+
+/* ---------- odds tab ---------- */
+function renderLive() {
+  if (!S) return;
+  const hid = hiddenCount(S), U = hid + S.stock.length, deals = S.stock.length / 10;
+  const empties = S.cols.filter(c => !c.length).length, useful = listMoves(S).filter(m => m.v > 0).length;
+  $("#liveBox").innerHTML = `<div class="hud" style="margin:0"><span class="chip">Face-down cards <b>${hid}</b></span><span class="chip">In stock <b>${S.stock.length}</b></span><span class="chip">Deals left <b>${deals}</b></span><span class="chip">Runs completed <b>${S.found.length}/8</b></span><span class="chip">Empty columns <b>${empties}</b></span><span class="chip">Useful moves <b>${useful}</b></span></div>`;
+  const rs = $("#lvRank"), ss = $("#lvSuit");
+  if (!rs.options.length) { for (let r = 13; r >= 1; r--) rs.add(new Option(RANKS[r], r)); rs.value = "13"; }
+  const want = suitsFor(S.diff), cur = ss.value;
+  if (ss.dataset.diff !== String(S.diff)) { ss.innerHTML = ""; ss.add(new Option("any suit", "-1")); want.forEach(s => ss.add(new Option(SUITS[s], s))); ss.dataset.diff = String(S.diff); ss.value = (cur !== "" && (cur === "-1" || want.includes(+cur))) ? cur : "-1"; }
+  const r = +rs.value, s = +ss.value;
+  const per = 8 / want.length, total = s < 0 ? 8 : per;
+  let seen = 0;
+  for (const col of S.cols) for (const c of col) if (c.u && c.r === r && (s < 0 || c.s === s)) seen++;
+  for (const fs of S.found) if (s < 0 || fs === s) seen++;
+  const K = total - seen, n = Math.min(10, S.stock.length);
+  const lbl = RANKS[r] + (s < 0 ? " (any suit)" : SUITS[s]);
+  let txt = `<p style="margin:6px 0">Copies of <b>${lbl}</b>: ${total} in the game, ${seen} visible/completed → <b>K = ${K}</b> hidden among <b>U = ${U}</b> unseen cards.</p>`;
+  if (!n) txt += `<p>No deals left — the remaining ${K} hidden copies are all face down in the columns.</p>`;
+  else if (U <= 0) txt += `<p>No hidden cards.</p>`;
+  else txt += `<p style="margin:6px 0">Chance the next deal of ${n} contains at least one: <span class="big">${pct(pAtLeastOne(U, K, n))}</span> &nbsp; <span class="mono">1 − C(${U - K},${n})/C(${U},${n})</span><br>Expected copies in the deal: ${(n * K / U).toFixed(2)}</p>`;
+  $("#liveCalc").innerHTML = txt;
+}
+function updHG() {
+  const U = +$("#hgU").value; const kEl = $("#hgK"); kEl.max = Math.min(8, U); let K = Math.min(+kEl.value, U); const n = Math.min(+$("#hgN").value, U);
+  $("#hgUv").textContent = U; $("#hgKv").textContent = K; $("#hgNv").textContent = n;
+  $("#hgP").textContent = pct(pAtLeastOne(U, K, n));
+  let h = ""; for (let k = 0; k <= Math.min(n, K); k++) { const p = hyper(U, K, n, k); h += `<span>P(X=${k})</span><div class="bar" style="width:${Math.max(1, p * 100)}%"></div><span>${pct(p)}</span>`; }
+  $("#hgBars").innerHTML = h;
+}
+function updSuits() {
+  const sel = +$("#suS").value;
+  let rows = `<tr><th>Suits</th><th>Same-suit copies of a card</th><th>E[natural builds] opening</th><th>E[any-suit builds]</th><th>P(next deal has a given same-suit card)</th></tr>`;
+  for (const s of [1, 2, 4]) {
+    const m = 8 / s, eN = 90 * (12 / 13) * m / 103, eA = 90 * (12 / 13) * 8 / 103;
+    rows += `<tr${s === sel ? ' style="background:rgba(250,204,21,.18)"' : ""}><td>${s}</td><td>${m}</td><td>${eN.toFixed(2)}</td><td>${eA.toFixed(2)}</td><td>${pct(pAtLeastOne(94, m, 10))}</td></tr>`;
+  }
+  $("#suTable").innerHTML = rows;
+  const m = 8 / sel;
+  $("#suOut").innerHTML = `<p style="margin:6px 0">With <b>${sel}</b> suit${sel > 1 ? "s" : ""}, each card (e.g. 7♠) exists <b>${m}</b> time${m > 1 ? "s" : ""}. A card you want to build on naturally (same suit, one lower) has only ${m} candidates out of 103 other cards, so a random card fits it naturally with probability <b>${(m / 103 * 100).toFixed(2)}%</b> — versus 8/103 = 7.77% for any suit. Fewer natural builds means fewer moveable runs and fewer completed K→A runs.</p>`;
+}
+function runSuitMC() {
+  const sel = +$("#suS").value, N = 20000; let sumN = 0, sumA = 0, anyN = 0;
+  const deck = makeDeck(sel);
+  for (let t = 0; t < N; t++) {
+    // 10 random face-up cards = random 10-subset (partial Fisher–Yates)
+    for (let i = 0; i < 10; i++) { const j = i + Math.floor(Math.random() * (deck.length - i)); const tmp = deck[i]; deck[i] = deck[j]; deck[j] = tmp; }
+    let nat = 0, all = 0;
+    for (let a = 0; a < 10; a++) for (let b = 0; b < 10; b++) if (a !== b && deck[b].r === deck[a].r - 1) { all++; if (deck[b].s === deck[a].s) nat++; }
+    sumN += nat; sumA += all; if (nat > 0) anyN++;
+  }
+  const eN = 90 * (12 / 13) * (8 / sel) / 103;
+  $("#suMCout").innerHTML = `Simulated ${N.toLocaleString()} openings (${sel} suit${sel > 1 ? "s" : ""}): average natural builds <b>${(sumN / N).toFixed(2)}</b> (theory ${eN.toFixed(2)}), any-suit builds <b>${(sumA / N).toFixed(2)}</b> (theory 6.45). Openings with at least one natural build: <b>${pct(anyN / N)}</b>.`;
+  return { avgNatural: sumN / N, avgAny: sumA / N, theory: eN };
+}
+
+/* ---------- UI plumbing ---------- */
+function showTab(t) {
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === t));
+  document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.id === "tab-" + t));
+  if (t === "play") render(); if (t === "odds") { renderLive(); updHG(); updSuits(); } if (t === "rules") renderStats();
+}
+function showModal(title, body, btns) {
+  $("#mTitle").textContent = title; $("#mBody").innerHTML = body; const row = $("#mBtns"); row.innerHTML = "";
+  btns.forEach(b => { const e = document.createElement("button"); e.className = "btn" + (b.primary ? " primary" : ""); e.textContent = b.label; e.onclick = () => { hideModal(); b.fn(); }; row.appendChild(e); });
+  $("#modal").classList.remove("hidden");
+}
+function hideModal() { $("#modal").classList.add("hidden"); }
+function toggleFs() {
+  try {
+    if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {});
+  } catch (e) { /* unsupported */ }
+}
+function init() {
+  $("#ver").textContent = APP_VERSION;
+  if (!document.documentElement.requestFullscreen) $("#bFs").style.display = "none";
+  $("#bFs").onclick = toggleFs;
+  $("#bNew").onclick = () => {
+    if (S && !S.won && S.moves > 0) showModal("Start a new game?", "<p>The current game will be counted as lost.</p>", [{ label: "New game", primary: true, fn: () => newGame() }, { label: "Cancel", fn: () => {} }]);
+    else newGame();
+  };
+  $("#bRules").onclick = () => showTab("rules"); $("#bOdds").onclick = () => showTab("odds");
+  document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+  $("#stock").onclick = doDeal; $("#bUndo").onclick = undo; $("#bHint").onclick = hint;
+  $("#diff").onchange = () => {
+    const d = +$("#diff").value;
+    if (S && S.moves === 0) { stats.played = Math.max(0, stats.played - 1); stats.byDiff[S.diff].p = Math.max(0, stats.byDiff[S.diff].p - 1); newGame(d); }
+    else setStatus(DIFF_NAME[d] + " selected — tap New to start a game at this level.");
+  };
+  const tab = $("#tableau");
+  tab.addEventListener("pointerdown", onDown);
+  window.addEventListener("pointermove", onMove);
+  window.addEventListener("pointerup", onUp);
+  window.addEventListener("pointercancel", onCancel);
+  window.addEventListener("resize", () => render());
+  ["hgU", "hgK", "hgN"].forEach(id => $("#" + id).addEventListener("input", updHG));
+  $("#suS").onchange = () => { updSuits(); $("#suMCout").textContent = ""; };
+  $("#suMC").onclick = runSuitMC;
+  $("#lvRank").onchange = renderLive; $("#lvSuit").onchange = renderLive;
+  ensureCols();
+  const saved = lsGet(SAVE_KEY);
+  if (saved && saved.state && saved.state.cols && !saved.state.won) {
+    S = saved.state; hist = saved.hist || []; $("#diff").value = String(S.diff); render();
+    setStatus("Saved game found.");
+    showModal("Resume saved game?", `<p>${DIFF_NAME[S.diff]} game · ${S.found.length}/8 runs · score ${S.score} · ${S.moves} moves.</p>`,
+      [{ label: "Resume saved game", primary: true, fn: () => setStatus("Welcome back — carry on.") }, { label: "New game", fn: () => { stats.streak = 0; S = null; newGame(); } }]);
+  } else newGame(2);
+  updHG(); updSuits();
+}
+
+window.__game = {
+  get state() { return S; }, set state(v) { S = v; hist = []; save(); render(); },
+  get history() { return hist.length; },
+  newGame, move: doMove, deal: doDeal, undo, hint, tap: tapCard, legalMoves: () => listMoves(S),
+  isRunFrom, canDrop, bestDest: (ci, i) => bestDest(S, ci, i), pAtLeastOne, hyper, runSuitMC, render,
+  logic: { dealNew, applyMove, applyDeal, collectRuns, listMoves, makeDeck }
+};
+init();
+</script>
+</body>
+</html>

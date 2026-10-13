@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<!--
+TOOL: Go Fish
+FAMILY: card-games
+VERSION: 1.0.0
+DATE: 2026-10-13
+CHAT: Card games batch 1 (claude.ai)
+CHANGES: 1.0.0 - first release
+STATUS: released
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b3d2a">
+<title>Go Fish</title>
+<style>
+:root{
+  --felt:#0f5132; --felt2:#0b3d2a; --bar:#0b2318; --ink:#111; --red:#c62828; --back:#1e3a8a;
+  --gold:#f5c542; --paper:#fffdf6; --muted:#cfe3d6; --panel:#123f2b; --line:#2b6a4b;
+  --cw:64px; --ch:calc(var(--cw)*1.4); --ov:-22px;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:var(--font);background:var(--felt2);color:#fff;min-height:100vh;width:100%;-webkit-tap-highlight-color:transparent}
+button,select{font-family:inherit}
+.topbar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 12px;background:var(--bar);box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.topbar h1{font-size:18px;margin:0 auto 0 0;white-space:nowrap}
+.topbar h1 small{font-weight:400;color:var(--muted);font-size:12px;margin-left:6px}
+.tb{min-height:40px;min-width:40px;padding:0 12px;border-radius:8px;border:1px solid #2f5d47;background:#173d2c;color:#fff;font-size:14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.tb.sel{background:#2e7d57;border-color:#5fbf8f}
+select.tb{padding:0 6px}
+.tabs{display:flex;gap:4px;padding:6px 12px 0;max-width:1400px;margin:0 auto}
+.tabs button{min-height:40px;padding:0 16px;border:none;border-radius:10px 10px 0 0;background:#174a33;color:var(--muted);font-size:15px;cursor:pointer}
+.tabs button.sel{background:var(--felt);color:#fff;font-weight:600}
+.wrap{max-width:1400px;width:100%;margin:0 auto;padding:0 12px 24px}
+.panel{display:none}.panel.show{display:block}
+.felt{background:radial-gradient(ellipse at 50% 40%,#17734a 0%,var(--felt) 55%,#0a3b25 100%);border-radius:0 0 14px 14px;box-shadow:inset 0 0 40px rgba(0,0,0,.35);padding:12px;display:flex;flex-direction:column;gap:12px;min-height:600px}
+.opps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.opp{background:rgba(0,0,0,.22);border:2px solid transparent;border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:6px;align-items:center;transition:border-color .2s}
+.opp.turn{border-color:var(--gold)}
+.opp.target{border-color:#7fd1ff;background:rgba(40,120,180,.25)}
+.oname{font-size:18px;font-weight:700;display:flex;gap:8px;align-items:center}
+.face{font-size:28px}
+.fan{display:flex;justify-content:center;min-height:calc(var(--cw)*.7)}
+.fan .mini{width:calc(var(--cw)*.5);height:calc(var(--cw)*.7);border-radius:5px;background:repeating-linear-gradient(45deg,var(--back) 0 5px,#2a4aa8 5px 10px);border:2px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.4)}
+.fan .mini+.mini{margin-left:calc(var(--cw)*-.32)}
+.books{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;min-height:26px}
+.book{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:26px;padding:0 6px;border-radius:6px;background:var(--gold);color:#222;font-weight:800;font-size:14px}
+.oinfo{font-size:13px;color:var(--muted)}
+.speech{min-height:22px;font-size:14px;background:#fff;color:#111;border-radius:12px;padding:3px 10px;max-width:100%;text-align:center}
+.speech:empty{visibility:hidden}
+.center{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:center}
+.pond{display:flex;flex-direction:column;align-items:center;gap:4px}
+.pondcards{position:relative;width:calc(var(--cw) + 16px);height:calc(var(--ch) + 10px)}
+.pondcards .card{position:absolute}
+.ponddesc{font-size:14px;color:var(--muted)}
+.log{flex:1;min-width:240px;max-width:560px;background:rgba(0,0,0,.25);border-radius:12px;padding:8px 12px;font-size:14px;max-height:150px;overflow:auto}
+.log div{padding:2px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.log div:first-child{color:var(--gold);font-weight:600}
+.status{text-align:center;font-size:17px;padding:10px;border-radius:10px;background:rgba(0,0,0,.3);min-height:44px}
+.me{background:rgba(0,0,0,.18);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px;align-items:center}
+.hand{display:flex;justify-content:center;flex-wrap:wrap;row-gap:10px;padding-top:8px}
+.group{display:flex;margin:0 6px;cursor:pointer;border-radius:10px;padding:4px;transition:background .15s}
+.group .card+.card{margin-left:var(--ov)}
+.group.sel{background:rgba(245,197,66,.45)}
+.group.sel .card{transform:translateY(-8px)}
+.card{position:relative;width:var(--cw);height:var(--ch);background:var(--paper);border-radius:8px;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.45);flex:0 0 auto;user-select:none;transition:transform .15s}
+.card.red{color:var(--red)}
+.card .cr{position:absolute;left:5px;top:3px;font-weight:700;font-size:calc(var(--cw)*.3);line-height:1}
+.card .cs{position:absolute;left:5px;top:calc(var(--cw)*.33);font-size:calc(var(--cw)*.26);line-height:1}
+.card .cc{position:absolute;right:6px;bottom:4px;font-size:calc(var(--cw)*.5);line-height:1}
+.card.back{background:repeating-linear-gradient(45deg,var(--back) 0 6px,#2a4aa8 6px 12px);border:3px solid #fff}
+.card.new{box-shadow:0 0 0 3px #7fd1ff,0 1px 3px rgba(0,0,0,.45)}
+.asks{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.ask{min-height:56px;padding:0 18px;border-radius:14px;border:none;background:var(--gold);color:#222;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 3px 0 #b8860b}
+.ask:active{transform:translateY(2px);box-shadow:0 1px 0 #b8860b}
+.ask small{display:block;font-weight:500;font-size:12px}
+.hint{font-size:14px;color:var(--muted);text-align:center}
+.doc{background:var(--felt);border-radius:0 0 14px 14px;padding:14px 18px;line-height:1.5;color:#f4f8f5}
+.doc h2{color:var(--gold);font-size:20px;margin:10px 0 6px}
+.doc h3{color:#ffe082;font-size:16px;margin:14px 0 4px}
+.doc table{border-collapse:collapse;margin:6px 0;font-size:14px}
+.doc td,.doc th{border:1px solid rgba(255,255,255,.2);padding:4px 8px;text-align:left}
+.mono{font-family:ui-monospace,Consolas,monospace;background:rgba(0,0,0,.25);padding:1px 5px;border-radius:4px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.calc{background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.calc label{display:block;font-size:14px;margin:6px 0 2px}
+.calc input[type=range]{width:100%;height:32px}
+.calc select{min-height:40px;font-size:15px;border-radius:8px;padding:0 8px}
+.res{font-size:18px;font-weight:700;color:var(--gold);margin-top:6px}
+.live{background:#0d3323;border:2px solid var(--gold);border-radius:12px;padding:10px 14px}
+.live table{width:100%}
+.modalbg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:12px}
+.modalbg.show{display:flex}
+.modal{background:#fff;color:#111;border-radius:14px;max-width:520px;width:100%;max-height:90vh;overflow:auto;padding:16px 18px}
+.modal h2{margin:0 0 8px;color:#0b3d2a}
+.modal .btns{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px}
+.modal .btns button{min-height:44px;padding:0 18px;border-radius:10px;border:none;background:#0f5132;color:#fff;font-size:16px;cursor:pointer}
+.modal .btns button.alt{background:#e2e8e4;color:#111}
+.modal table{border-collapse:collapse;width:100%;font-size:15px}
+.modal td{padding:4px 6px;border-bottom:1px solid #eee}
+.opt{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
+@media (max-width:600px){
+  :root{--cw:44px;--ov:-24px}
+  .wrap{padding:0 8px 20px}
+  .topbar{padding:6px 8px}
+  .topbar h1{font-size:16px;width:100%}
+  .tb{font-size:13px;padding:0 9px}
+  .tabs{padding:6px 8px 0}
+  .tabs button{padding:0 10px;font-size:14px}
+  .felt{padding:8px;min-height:0;gap:8px}
+  .opps{display:flex;gap:6px}
+  .opp{flex:1 1 0;min-width:0;padding:6px 4px}
+  .oname{font-size:14px;gap:4px}
+  .face{font-size:20px}
+  .speech{font-size:12px;padding:2px 6px}
+  .book{min-width:24px;height:22px;font-size:12px;padding:0 3px}
+  .log{max-height:96px;font-size:13px}
+  .ask{min-height:50px;font-size:16px;padding:0 12px}
+  .group{margin:0 3px;padding:3px}
+  .doc{padding:10px 12px}
+  .cols{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>🐟 Go Fish <small id="verTop"></small></h1>
+  <button class="tb" id="btnNew">New</button>
+  <button class="tb" id="btnRules">Rules</button>
+  <button class="tb" id="btnOdds">Odds</button>
+  <select class="tb" id="diffSel" aria-label="Difficulty"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select>
+  <select class="tb" id="oppSel" aria-label="Opponents"><option value="2">2 friends</option><option value="3" selected>3 friends</option></select>
+  <button class="tb" id="btnFull">⛶ Full screen</button>
+  <a class="tb" href="index.html">← Games</a>
+</div>
+<div class="tabs" id="tabs">
+  <button data-tab="play" class="sel">Play</button>
+  <button data-tab="rules">Rules</button>
+  <button data-tab="odds">Odds &amp; Strategy</button>
+</div>
+<main class="wrap">
+  <section class="panel show" id="tab-play">
+    <div class="felt">
+      <div class="opps" id="opps"></div>
+      <div class="center">
+        <div class="pond"><div class="pondcards" id="pondcards"></div><div class="ponddesc" id="ponddesc"></div></div>
+        <div class="log" id="log"></div>
+      </div>
+      <div class="status" id="status"></div>
+      <div class="me" id="me">
+        <div class="asks" id="asks"></div>
+        <div class="hand" id="hand"></div>
+        <div class="books" id="mybooks"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="tab-rules">
+    <div class="doc">
+      <h2>How to play Go Fish</h2>
+      <ol>
+        <li>One normal pack of 52 cards. With 3 players (you + 2 friends) everyone gets <b>7 cards</b>; with 4 players everyone gets <b>5 cards</b>. The rest go face down in the middle — the <b>pond</b>.</li>
+        <li>On your turn, tap one of your card <b>ranks</b> (for example your 7s), then tap a big button like <b>"Ask Arun for 7s"</b>. You can only ask for a rank you already hold.</li>
+        <li>If that player has any cards of that rank, they must give you <b>all</b> of them and you <b>go again</b>.</li>
+        <li>If they have none, they say <b>"Go Fish!"</b> and you take the top card of the pond. If you fished the very rank you asked for, show it and <b>go again</b>. Otherwise your turn ends.</li>
+        <li>When you collect all <b>four</b> cards of a rank, that is a <b>book</b> — it is laid down automatically.</li>
+        <li>If your hand becomes empty, you draw one card from the pond (if any). A player with no cards and an empty pond is out.</li>
+        <li>The game ends when all 13 books are made. The player with the <b>most books wins</b> (equal most = a tie).</li>
+      </ol>
+      <h3>Computer friends</h3>
+      <table>
+        <tr><th>Level</th><th>How they play</th></tr>
+        <tr><td>Easy</td><td>Ask a random player for a random rank they hold. Forget everything.</td></tr>
+        <tr><td>Normal</td><td>Remember who <b>asked</b> for which rank (that player must hold it) — but forget a few things now and then.</td></tr>
+        <tr><td>Hard</td><td>Perfect memory: who asked for what, who handed over what, who fished what was shown, and who said "Go Fish". Picks the ask with the best chance.</td></tr>
+      </table>
+      <h3>Variant notes</h3>
+      <p>Books are laid down as soon as they are complete. A lucky fish (drawing the rank you asked for) gives another turn. Players with an empty hand draw one card when it is their turn.</p>
+      <h3>Version &amp; your stats</h3>
+      <p>Go Fish version <b id="verRules"></b> · family card-games · works offline · auto-saves after every move.</p>
+      <div id="statsBox"></div>
+      <p><button class="tb" id="btnResetStats">Reset stats</button></p>
+    </div>
+  </section>
+
+  <section class="panel" id="tab-odds">
+    <div class="doc">
+      <h2>Odds &amp; Strategy</h2>
+      <div class="live" id="liveBox"></div>
+      <div class="cols" style="margin-top:14px">
+        <div class="calc">
+          <h3>Does this friend have my rank?</h3>
+          <p style="font-size:13px">You hold <b>k</b> cards of a rank, so <b>m = 4 − k</b> are somewhere else. The friend you ask has <b>h</b> cards, and there are <b>U</b> unknown cards in total (all other hands + pond). If you know nothing else, the friend's hand is a random h of the U cards, so (hypergeometric):<br><span class="mono">P(at least one) = 1 − C(U−m, h) / C(U, h)</span></p>
+          <label>Cards of the rank you hold k: <b id="kV"></b></label><input type="range" id="kSl" min="1" max="3" value="1">
+          <label>Cards in friend's hand h: <b id="hV"></b></label><input type="range" id="hSl" min="1" max="20" value="5">
+          <label>Unknown cards U (other hands + pond): <b id="uV"></b></label><input type="range" id="uSl" min="3" max="51" value="37">
+          <div class="res" id="hyRes"></div>
+        </div>
+        <div class="calc">
+          <h3>Fishing chance</h3>
+          <p style="font-size:13px">If you have to "Go Fish", what is the chance the pond card is the rank you asked for? With <b>m</b> missing cards of that rank, of which <b>j</b> are known to be in other hands, and <b>U</b> unknown cards: the pond chance is about <span class="mono">(m − j) / U</span> for the next card if the unknown cards are well mixed.</p>
+          <label>Missing cards m: <b id="mV"></b></label><input type="range" id="mSl" min="1" max="3" value="3">
+          <label>Of those, known to be held by friends j: <b id="jV"></b></label><input type="range" id="jSl" min="0" max="3" value="0">
+          <label>Unknown cards U: <b id="u2V"></b></label><input type="range" id="u2Sl" min="1" max="51" value="30">
+          <div class="res" id="fishRes"></div>
+        </div>
+        <div class="calc">
+          <h3>Why ask for what others asked for?</h3>
+          <p style="font-size:13px">A player can only ask for a rank they <b>hold</b>. So when Meena asks Ravi for 9s and hears "Go Fish", you now know Meena has at least one 9: asking Meena for 9s is a <b>100%</b> sure hit (unless she has since laid down a book or given them away). Compare with a blind ask:</p>
+          <label>Blind ask — friend's hand size h: <b id="bhV"></b></label><input type="range" id="bhSl" min="1" max="15" value="6">
+          <div class="res" id="blindRes"></div>
+          <p style="font-size:13px">With 3 of that rank missing among 30 unknown cards. A remembered ask beats almost any blind guess — that is what the Normal and Hard computer friends use.</p>
+        </div>
+      </div>
+      <h3>Strategy tips</h3>
+      <ul>
+        <li>Listen! Every ask tells you that player holds that rank.</li>
+        <li>If someone takes cards from you, they now hold at least those cards plus one — ask them back for that rank.</li>
+        <li>Ask the player with the <b>most cards</b> when you have no other clue — more cards, more chance.</li>
+        <li>Ask for the rank where you hold the <b>most</b> cards (3 of 4): one hit makes a book.</li>
+        <li>Asking reveals your rank to everyone — with only 1 card of a rank, others may come for it.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+<div class="modalbg" id="modalbg"><div class="modal" id="modal"></div></div>
+
+<script>
+"use strict";
+const APP_VERSION = "1.0.0";
+const SAVE_KEY="cg_go_fish_v1", STATS_KEY="cg_go_fish_stats";
+const RN=["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+const RNP=["Aces","2s","3s","4s","5s","6s","7s","8s","9s","10s","Jacks","Queens","Kings"];
+const SY=["♣","♦","♥","♠"];
+const NAMES=["You","Arun","Meena","Ravi"], FACES=["🙂","🧒","👧","👦"];
+const rankOf=c=>c%13, suitOf=c=>Math.floor(c/13), isRed=s=>s===1||s===2;
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function rnd(a){ return a[Math.floor(Math.random()*a.length)]; }
+function C(n,k){ if(k<0||k>n||n<0) return 0; k=Math.min(k,n-k); let r=1; for(let i=1;i<=k;i++) r=r*(n-k+i)/i; return r; }
+/* P(hand of h from U unknown contains at least one of m target cards) */
+function pAtLeastOne(U,m,h){ if(m<=0||h<=0) return 0; if(h>U) h=U; return 1-C(U-m,h)/C(U,h); }
+
+/* ============ state ============ */
+let S=null, FAST=false, GEN=0;
+const UI={tab:"play", sel:-1};
+function blankStats(){ return {played:0, won:0, ties:0, bestBooks:0, streak:0, bestStreak:0}; }
+let STATS=blankStats();
+
+/* Knowledge model: know[o][p][r] = minimum number of rank r that observer o knows player p holds;
+   none[o][p][r] = true if o knows p has NONE of rank r (since p's last pick-up). */
+function freshKnow(n){ const k=[], z=[]; for(let o=0;o<n;o++){ k.push([]); z.push([]); for(let p=0;p<n;p++){ k[o].push(new Array(13).fill(0)); z[o].push(new Array(13).fill(false)); } } return {k,z}; }
+
+function newGame(nOpp){
+  GEN++;
+  const n = 1 + (nOpp || (S? S.n-1 : +document.getElementById("oppSel").value || 3));
+  const diff = (S && S.diff) || document.getElementById("diffSel").value || "normal";
+  const deck=shuffle([...Array(52).keys()]);
+  const hs=n===3?7:5;
+  const hands=[]; for(let i=0;i<n;i++) hands.push(deck.splice(0,hs));
+  const kn=freshKnow(n);
+  try{ document.getElementById("oppSel").value=String(n-1); document.getElementById("diffSel").value=diff; }catch(e){}
+  S={v:1, n, diff, hands, pond:deck, books:hands.map(()=>[]), turn:0, phase:"play", log:[], know:kn.k, none:kn.z, speech:new Array(n).fill(""), lastNew:[], result:null, asksMade:0};
+  for(let p=0;p<n;p++) checkBooks(p,true);
+  pushLog("New game! "+(n-1)+" friends, "+hs+" cards each. You go first.");
+  UI.sel=-1; startTurn();
+}
+function pushLog(t){ S.log.unshift(t); if(S.log.length>40) S.log.length=40; }
+function countRank(p,r){ return S.hands[p].filter(c=>rankOf(c)===r).length; }
+function ranksHeld(p){ const s=new Set(S.hands[p].map(rankOf)); return [...s].sort((a,b)=>a-b); }
+function totalBooks(){ return S.books.reduce((a,b)=>a+b.length,0); }
+function active(p){ return S.hands[p].length>0 || S.pond.length>0; }
+function otherActive(p){ const r=[]; for(let q=0;q<S.n;q++) if(q!==p && S.hands[q].length>0) r.push(q); return r; }
+
+function checkBooks(p, silent){
+  for(let r=0;r<13;r++){
+    if(countRank(p,r)===4){
+      S.hands[p]=S.hands[p].filter(c=>rankOf(c)!==r);
+      S.books[p].push(r);
+      for(let o=0;o<S.n;o++) for(let q=0;q<S.n;q++){ S.know[o][q][r]=0; S.none[o][q][r]=true; }
+      if(!silent) pushLog((p===0?"You make":NAMES[p]+" makes")+" a book of "+RNP[r]+"! 📚");
+    }
+  }
+}
+/* draw one card for p; returns the card or -1 */
+function drawFor(p){
+  if(!S.pond.length) return -1;
+  const c=S.pond.shift(); S.hands[p].push(c);
+  for(let o=0;o<S.n;o++) S.none[o][p][rankOf(c)]=false; // nobody (except p) knows what was drawn
+  return c;
+}
+
+function startTurn(){
+  if(S.phase!=="play") return;
+  if(totalBooks()===13 || (S.pond.length===0 && S.hands.every(h=>h.length===0))){ endGame(); return; }
+  let guard=0;
+  while(guard++<S.n+1){
+    const p=S.turn;
+    if(S.hands[p].length===0){
+      if(S.pond.length){ const c=drawFor(p); pushLog((p===0?"Your hand was empty — you draw a card.":NAMES[p]+"'s hand was empty — draws a card.")); if(p===0) S.lastNew=[c]; checkBooks(p); }
+      else { S.turn=(p+1)%S.n; continue; }
+    }
+    if(S.hands[p].length && otherActive(p).length===0){
+      // nobody to ask: draw from pond if possible, else game over
+      if(S.pond.length){ drawFor(p); checkBooks(p); pushLog(NAMES[p]+" has nobody to ask and draws."); S.turn=(p+1)%S.n; continue; }
+      endGame(); return;
+    }
+    break;
+  }
+  if(totalBooks()===13){ endGame(); return; }
+  after();
+}
+function after(){
+  save(); render();
+  if(S.phase==="play" && S.turn!==0) schedule(aiTurn, 900);
+}
+const Q=[]; let draining=false;
+function schedule(fn,ms){ const g=GEN; const run=()=>{ if(g===GEN) fn(); };
+  if(FAST){ Q.push(run); if(!draining){ draining=true; try{ while(Q.length) Q.shift()(); } finally{ draining=false; } } } else setTimeout(run,ms); }
+
+/* the core move */
+function ask(asker, target, rank){
+  if(S.phase!=="play" || asker!==S.turn || asker===target || target<0 || target>=S.n) return false;
+  if(countRank(asker,rank)===0 || S.hands[target].length===0) return false;
+  S.asksMade++;
+  S.speech=S.speech.map(()=>"");
+  const aN=asker===0?"You":NAMES[asker], tN=target===0?"you":NAMES[target];
+  S.speech[asker]=tN.replace(/^you$/,"You")+", got any "+RNP[rank]+"?";
+  // everyone learns the asker holds >= 1 of rank
+  for(let o=0;o<S.n;o++){ S.know[o][asker][rank]=Math.max(S.know[o][asker][rank],1); S.none[o][asker][rank]=false; }
+  const given=S.hands[target].filter(c=>rankOf(c)===rank);
+  let again=false;
+  S.lastNew=[];
+  if(given.length){
+    S.hands[target]=S.hands[target].filter(c=>rankOf(c)!==rank);
+    S.hands[asker].push(...given);
+    if(asker===0) S.lastNew=given.slice();
+    for(let o=0;o<S.n;o++){ S.know[o][target][rank]=0; S.none[o][target][rank]=true; S.know[o][asker][rank]=countRank(asker,rank); }
+    S.speech[target]=given.length===1?"Here you go — one "+RN[rank]+".":"Here are "+given.length+" "+RNP[rank]+".";
+    pushLog(aN+" asked "+tN+" for "+RNP[rank]+" and got "+given.length+"! Go again.");
+    again=true;
+  } else {
+    for(let o=0;o<S.n;o++){ S.none[o][target][rank]=true; S.know[o][target][rank]=0; }
+    S.speech[target]="Go Fish! 🐟";
+    const c=drawFor(asker);
+    if(c<0){ pushLog(aN+" asked "+tN+" for "+RNP[rank]+" — Go Fish, but the pond is empty."); }
+    else if(rankOf(c)===rank){
+      for(let o=0;o<S.n;o++) S.know[o][asker][rank]=Math.max(S.know[o][asker][rank],countRank(asker,rank)>=2?2:1);
+      if(asker===0) S.lastNew=[c];
+      pushLog(aN+" asked "+tN+" for "+RNP[rank]+" — Go Fish… and fished a "+RN[rank]+"! Lucky — go again.");
+      S.speech[asker]="I fished my wish! 🎣"; again=true;
+    } else {
+      if(asker===0) S.lastNew=[c];
+      pushLog(aN+" asked "+tN+" for "+RNP[rank]+" — Go Fish!"+(asker===0?" You drew the "+RN[rankOf(c)]+SY[suitOf(c)]+".":""));
+    }
+  }
+  checkBooks(asker);
+  // Normal difficulty: occasional forgetting
+  if(S.diff==="normal"){ for(let o=1;o<S.n;o++) if(Math.random()<0.12){ const p=Math.floor(Math.random()*S.n), r=Math.floor(Math.random()*13); S.know[o][p][r]=0; S.none[o][p][r]=false; } }
+  if(!again || S.hands[asker].length===0) S.turn=(asker+1)%S.n;
+  if(asker===0 && !ranksHeld(0).includes(UI.sel)) UI.sel=-1;
+  startTurn();
+  return true;
+}
+
+/* ============ AI ============ */
+function unknownCount(o){ // cards o cannot see: other hands + pond
+  let u=S.pond.length; for(let p=0;p<S.n;p++) if(p!==o) u+=S.hands[p].length; return u;
+}
+function probHas(o,t,r){
+  // P(target t holds >=1 of rank r), from o's knowledge
+  if(S.know[o][t][r]>0) return 1;
+  if(S.none[o][t][r]) return 0;
+  const mine=countRank(o,r); let knownElse=0;
+  for(let p=0;p<S.n;p++) if(p!==o && p!==t) knownElse+=S.know[o][p][r];
+  const m=Math.max(0,4-mine-knownElse);
+  // unknown pool for this rank: unknown cards minus cards already pinned
+  let pinned=0; for(let p=0;p<S.n;p++) if(p!==o) for(let x=0;x<13;x++) pinned+=S.know[o][p][x];
+  const U=Math.max(1,unknownCount(o)-pinned);
+  let pinnedT=0; for(let x=0;x<13;x++) pinnedT+=S.know[o][t][x];
+  const h=Math.max(0,S.hands[t].length-pinnedT);
+  return pAtLeastOne(U,Math.min(m,U),Math.min(h,U));
+}
+function bestAsk(o, useKnow){
+  const ranks=ranksHeld(o), targets=otherActive(o);
+  let best=null;
+  for(const r of ranks) for(const t of targets){
+    const p = useKnow ? probHas(o,t,r) : pAtLeastOne(unknownCount(o),4-countRank(o,r),S.hands[t].length);
+    const score=p + 0.04*countRank(o,r) + 0.001*S.hands[t].length + Math.random()*1e-4;
+    if(!best || score>best.score) best={t,r,p,score};
+  }
+  return best;
+}
+function aiTurn(){
+  if(S.phase!=="play" || S.turn===0) return;
+  const o=S.turn, targets=otherActive(o), ranks=ranksHeld(o);
+  if(!targets.length || !ranks.length){ startTurn(); return; }
+  let t,r;
+  if(S.diff==="easy"){ t=rnd(targets); r=rnd(ranks); }
+  else if(S.diff==="normal"){
+    // use only "asked/received" memory (know), plus blind otherwise
+    let hit=null;
+    for(const rr of ranks) for(const tt of targets) if(S.know[o][tt][rr]>0 && (!hit || countRank(o,rr)>countRank(o,hit.r))) hit={t:tt,r:rr};
+    if(hit){ t=hit.t; r=hit.r; }
+    else { r=ranks.reduce((a,b)=>countRank(o,b)>countRank(o,a)?b:(countRank(o,b)===countRank(o,a)&&Math.random()<.5?b:a)); const cand=targets.filter(x=>!S.none[o][x][r]); t=rnd(cand.length?cand:targets); }
+  } else { const b=bestAsk(o,true); t=b.t; r=b.r; }
+  ask(o,t,r);
+}
+
+/* ============ end ============ */
+function endGame(){
+  if(S.phase==="over") return;
+  S.phase="over";
+  const counts=S.books.map(b=>b.length), max=Math.max(...counts), winners=counts.map((c,i)=>c===max?i:-1).filter(i=>i>=0);
+  const youWin=winners.includes(0), tie=winners.length>1;
+  S.result={counts,winners,youWin,tie};
+  STATS.played++;
+  if(youWin && !tie){ STATS.won++; STATS.streak++; STATS.bestStreak=Math.max(STATS.bestStreak,STATS.streak); }
+  else { if(youWin&&tie) STATS.ties++; STATS.streak=0; }
+  STATS.bestBooks=Math.max(STATS.bestBooks,counts[0]);
+  saveStats();
+  pushLog("Game over!");
+  save(); render(); showResult();
+}
+function showResult(){
+  const r=S.result;
+  const title = r.youWin ? (r.tie?"It's a tie! 🤝":"You win! 🏆") : (r.tie?NAMES[r.winners[0]]+" and "+r.winners.slice(1).map(i=>NAMES[i]).join(", ")+" tie":NAMES[r.winners[0]]+" wins!");
+  let h='<h2>'+title+'</h2><table>';
+  r.counts.map((c,i)=>({c,i})).sort((a,b)=>b.c-a.c).forEach(x=>{ h+='<tr><td>'+FACES[x.i]+' '+NAMES[x.i]+'</td><td><b>'+x.c+'</b> book'+(x.c===1?'':'s')+'</td><td>'+S.books[x.i].map(b=>RN[b]).join(' ')+'</td></tr>'; });
+  h+='</table><p>Games won: '+STATS.won+' of '+STATS.played+'.</p>';
+  showModal(h,[{label:"Play again",fn:()=>newGame()}]);
+}
+
+/* ============ persistence ============ */
+function save(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(S)); }catch(e){} }
+function loadSave(){ try{ const t=localStorage.getItem(SAVE_KEY); if(!t) return null; const o=JSON.parse(t); return o&&o.v===1&&o.hands?o:null; }catch(e){ return null; } }
+function saveStats(){ try{ localStorage.setItem(STATS_KEY,JSON.stringify(STATS)); }catch(e){} }
+function loadStats(){ try{ const t=localStorage.getItem(STATS_KEY); if(t) STATS=Object.assign(blankStats(),JSON.parse(t)); }catch(e){} }
+
+/* ============ render ============ */
+const $=id=>document.getElementById(id);
+function cardHTML(c,cls){ const s=suitOf(c); return '<div class="card '+(isRed(s)?'red ':'')+(cls||'')+'"><span class="cr">'+RN[rankOf(c)]+'</span><span class="cs">'+SY[s]+'</span><span class="cc">'+SY[s]+'</span></div>'; }
+function render(){
+  if(!S) return;
+  // opponents
+  let o='';
+  for(let p=1;p<S.n;p++){
+    const nCards=S.hands[p].length;
+    let fan=''; for(let i=0;i<Math.min(nCards,12);i++) fan+='<div class="mini"></div>';
+    o+='<div class="opp'+(S.turn===p&&S.phase==="play"?' turn':'')+'" data-p="'+p+'"><div class="oname"><span class="face">'+FACES[p]+'</span>'+NAMES[p]+'</div>'+
+      '<div class="speech">'+(S.speech[p]||'')+'</div><div class="fan">'+fan+'</div><div class="oinfo">'+nCards+' card'+(nCards===1?'':'s')+' · '+S.books[p].length+' book'+(S.books[p].length===1?'':'s')+'</div>'+
+      '<div class="books">'+S.books[p].map(r=>'<span class="book">'+RN[r]+'</span>').join('')+'</div></div>';
+  }
+  $("opps").innerHTML=o;
+  // pond
+  let pc=''; for(let i=0;i<Math.min(3,S.pond.length);i++) pc+='<div class="card back" style="left:'+(i*6)+'px;top:'+(i*4)+'px"></div>';
+  $("pondcards").innerHTML=pc; $("ponddesc").textContent='Pond: '+S.pond.length+' card'+(S.pond.length===1?'':'s');
+  $("log").innerHTML=S.log.slice(0,12).map(t=>'<div>'+t+'</div>').join('');
+  // my hand grouped by rank
+  const byRank={}; S.hands[0].forEach(c=>{ (byRank[rankOf(c)]=byRank[rankOf(c)]||[]).push(c); });
+  const myTurn=S.phase==="play"&&S.turn===0;
+  let h='';
+  Object.keys(byRank).map(Number).sort((a,b)=>a-b).forEach(r=>{
+    h+='<div class="group'+(UI.sel===r?' sel':'')+'" data-r="'+r+'">'+byRank[r].sort((a,b)=>suitOf(a)-suitOf(b)).map(c=>cardHTML(c,S.lastNew.includes(c)?'new':'')).join('')+'</div>';
+  });
+  if(!S.hands[0].length) h='<div class="hint">No cards in your hand.</div>';
+  $("hand").innerHTML=h;
+  $("mybooks").innerHTML=S.books[0].length?'<span class="oinfo">Your books:</span> '+S.books[0].map(r=>'<span class="book">'+RN[r]+'</span>').join(''):'<span class="oinfo">Your books: none yet</span>';
+  // ask buttons
+  let a='';
+  if(myTurn){
+    if(UI.sel<0) a='<div class="hint">👇 Tap a group of your cards to choose a rank to ask for.</div>';
+    else otherActive(0).forEach(p=>{ a+='<button class="ask" data-t="'+p+'">'+FACES[p]+' Ask '+NAMES[p]+' for '+RNP[UI.sel]+'<small>'+S.hands[p].length+' cards</small></button>'; });
+  }
+  $("asks").innerHTML=a;
+  let st;
+  if(S.phase==="over") st="Game over — tap New for another game.";
+  else if(myTurn) st= UI.sel<0 ? "Your turn — pick a rank you hold." : "Your turn — who will you ask for "+RNP[UI.sel]+"?";
+  else st=NAMES[S.turn]+" is thinking… "+FACES[S.turn];
+  $("status").textContent=st;
+  if(UI.tab==="odds") renderLive();
+}
+
+/* ============ modal ============ */
+function showModal(html,buttons){
+  $("modal").innerHTML=html+'<div class="btns">'+buttons.map((b,i)=>'<button data-mb="'+i+'" class="'+(b.alt?'alt':'')+'">'+b.label+'</button>').join('')+'</div>';
+  $("modalbg").classList.add("show");
+  $("modal").querySelectorAll("[data-mb]").forEach(el=>el.onclick=()=>{ hideModal(); buttons[+el.dataset.mb].fn(); });
+}
+function hideModal(){ $("modalbg").classList.remove("show"); }
+
+/* ============ Rules / Odds ============ */
+function renderStats(){ const s=STATS; $("statsBox").innerHTML='<table><tr><td>Games played</td><td>'+s.played+'</td></tr><tr><td>Games won</td><td>'+s.won+'</td></tr><tr><td>Ties for first</td><td>'+s.ties+'</td></tr><tr><td>Most books in a game</td><td>'+s.bestBooks+'</td></tr><tr><td>Win streak (current / best)</td><td>'+s.streak+' / '+s.bestStreak+'</td></tr></table>'; }
+function pct(x){ return (100*x).toFixed(1)+'%'; }
+function renderCalcs(){
+  const k=+$("kSl").value, h=+$("hSl").value, U=+$("uSl").value, m=4-k;
+  $("kV").textContent=k; $("hV").textContent=h; $("uV").textContent=U;
+  const hh=Math.min(h,U);
+  $("hyRes").textContent= 'm = '+m+' · P = 1 − C('+(U-m)+','+hh+')/C('+U+','+hh+') = '+pct(pAtLeastOne(U,m,hh));
+  let mm=+$("mSl").value; const jS=$("jSl"); jS.max=mm; let j=Math.min(+jS.value,mm); const U2=+$("u2Sl").value;
+  $("mV").textContent=mm; $("jV").textContent=j; $("u2V").textContent=U2;
+  $("fishRes").textContent='Next pond card is your rank: '+(mm-j)+'/'+U2+' = '+pct((mm-j)/U2);
+  const bh=+$("bhSl").value; $("bhV").textContent=bh;
+  $("blindRes").textContent='Blind ask: 1 − C(27,'+bh+')/C(30,'+bh+') = '+pct(pAtLeastOne(30,3,bh))+' vs remembered ask: 100%';
+}
+function renderLive(){
+  if(!S){ $("liveBox").innerHTML=''; return; }
+  const U=unknownCount(0);
+  let h='<h3 style="margin-top:0">Live readout</h3><div>Pond: <b>'+S.pond.length+'</b> · unknown cards (friends\' hands + pond): <b>'+U+'</b> · books made: <b>'+totalBooks()+'/13</b></div>';
+  const ranks=ranksHeld(0), targets=otherActive(0);
+  if(S.phase==="play" && ranks.length && targets.length){
+    const rows=[];
+    for(const r of ranks) for(const t of targets) rows.push({r,t,p:probHas(0,t,r)});
+    rows.sort((a,b)=>b.p-a.p || countRank(0,b.r)-countRank(0,a.r));
+    const b=rows[0];
+    h+='<div style="margin-top:6px">Best ask right now: <b>'+NAMES[b.t]+' for '+RNP[b.r]+'</b> — '+pct(b.p)+(b.p===1?' (they asked for it — sure thing!)':'')+'</div>';
+    h+='<table style="margin-top:6px"><tr><th>Ask</th><th>You hold</th><th>Chance they have it</th><th>Why</th></tr>';
+    rows.slice(0,8).forEach(x=>{ const why = S.know[0][x.t][x.r]>0?'they asked for it / took it':S.none[0][x.t][x.r]?'they said Go Fish (and have not drawn since)':'hypergeometric guess'; h+='<tr><td>'+NAMES[x.t]+' · '+RNP[x.r]+'</td><td>'+countRank(0,x.r)+'</td><td><b>'+pct(x.p)+'</b></td><td>'+why+'</td></tr>'; });
+    h+='</table><div style="font-size:13px">Guesses use P = 1 − C(U′−m, h′)/C(U′, h′), where cards you already know about are removed from U′ and h′.</div>';
+  } else h+='<div>No ask to make right now.</div>';
+  $("liveBox").innerHTML=h;
+}
+function showTab(t){
+  UI.tab=t;
+  ["play","rules","odds"].forEach(x=>$("tab-"+x).classList.toggle("show",x===t));
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("sel",b.dataset.tab===t));
+  $("btnRules").classList.toggle("sel",t==="rules"); $("btnOdds").classList.toggle("sel",t==="odds");
+  if(t==="rules") renderStats();
+  if(t==="odds"){ renderLive(); renderCalcs(); }
+}
+
+/* ============ events ============ */
+function bind(){
+  $("verTop").textContent="v"+APP_VERSION; $("verRules").textContent=APP_VERSION;
+  document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+  $("btnRules").onclick=()=>showTab(UI.tab==="rules"?"play":"rules");
+  $("btnOdds").onclick=()=>showTab(UI.tab==="odds"?"play":"odds");
+  const startNew=()=>{ const n=+$("oppSel").value; newGame(n); showTab("play"); };
+  $("btnNew").onclick=()=>{ if(S && S.phase==="play" && S.asksMade>0) showModal('<h2>Start a new game?</h2><p>The current game will be lost.</p>',[{label:"Cancel",alt:true,fn:()=>{}},{label:"New game",fn:startNew}]); else startNew(); };
+  $("oppSel").onchange=()=>{ if(S && S.asksMade===0 && S.phase==="play") startNew(); };
+  $("diffSel").onchange=e=>{ if(S){ S.diff=e.target.value; save(); } };
+  if(!document.documentElement.requestFullscreen) $("btnFull").style.display="none";
+  $("btnFull").onclick=()=>{ try{ if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(()=>{}); }catch(e){} };
+  $("hand").addEventListener("click",e=>{ const g=e.target.closest(".group"); if(!g||!S||S.phase!=="play"||S.turn!==0) return; UI.sel=+g.dataset.r; render(); });
+  $("asks").addEventListener("click",e=>{ const b=e.target.closest("[data-t]"); if(!b||UI.sel<0) return; ask(0,+b.dataset.t,UI.sel); });
+  $("opps").addEventListener("click",e=>{ const o=e.target.closest(".opp"); if(!o||!S||S.turn!==0||UI.sel<0||S.phase!=="play") return; const t=+o.dataset.p; if(S.hands[t].length) ask(0,t,UI.sel); });
+  ["kSl","hSl","uSl","mSl","jSl","u2Sl","bhSl"].forEach(id=>$(id).oninput=renderCalcs);
+  $("btnResetStats").onclick=()=>{ STATS=blankStats(); saveStats(); renderStats(); };
+}
+
+window.__game={
+  get state(){ return S; },
+  newGame(n){ hideModal(); newGame(n); },
+  setFast(v){ FAST=!!v; },
+  setDifficulty(d){ if(S) S.diff=d; $("diffSel").value=d; },
+  ask(t,r){ return ask(0,t,r); },
+  legalAsks(){ if(!S||S.phase!=="play"||S.turn!==0) return []; const out=[]; for(const r of ranksHeld(0)) for(const t of otherActive(0)) out.push({t,r}); return out; },
+  bestAsk(){ return bestAsk(0,true); },
+  pAtLeastOne, probHas, showTab, version:APP_VERSION
+};
+
+bind(); loadStats();
+(function boot(){
+  const saved=loadSave();
+  if(saved && saved.phase==="play"){
+    S=saved; $("diffSel").value=S.diff; $("oppSel").value=String(S.n-1); UI.sel=-1; render();
+    showModal('<h2>Welcome back! 🐟</h2><p>You have a saved game ('+saved.pond.length+' cards in the pond, you have '+saved.books[0].length+' books).</p>',[
+      {label:"New game",alt:true,fn:()=>newGame(+$("oppSel").value)},
+      {label:"Resume saved game",fn:()=>{ GEN++; after(); }}]);
+  } else newGame();
+})();
+</script>
+</body>
+</html>

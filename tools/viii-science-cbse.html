@@ -2,10 +2,11 @@
 <!--
 TOOL:    VIII Science CBSE (NCERT Curiosity)
 FAMILY:  learning-explorers
-VERSION: 1.3.1
-DATE:    2026-10-04
+VERSION: 1.4.0
+DATE:    2026-10-15
 CHAT:    Science Explorer for Class 8 (claude.ai, 2026-10-04)
-CHANGES: 1.3.1 - page heading, title and certificates renamed to VIII Science CBSE for the public site
+CHANGES: 1.4.0 - hideable chapter sidebar on wide screens (button / M key, remembered); keyboard animation control P play, S step, X pause (animations + outbreak, moon, handwash labs) with on-screen hints
+         1.3.1 - page heading, title and certificates renamed to VIII Science CBSE for the public site
          1.3.0 - Added chapters 10-13 (light, keeping time with the skies, nature in harmony, Earth); all 13 chapters complete
 STATUS:  All 13 chapters of NCERT Curiosity Class 8 complete
 -->
@@ -52,13 +53,21 @@ input,select{font:inherit}
 .sitem .cert{font-size:15px}
 #main{flex:1;min-width:0;padding:20px 28px 60px}
 #phonetabs{display:none}
+.ptab{flex:none;border:1px solid var(--line);background:#fff;border-radius:20px;padding:5px 12px;font-size:15px;white-space:nowrap}
+.ptab.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* hideable sidebar (wide screens): chapter tabs take its place */
+@media (min-width:901px){
+  body.nosb #sidebar{display:none}
+  body.nosb #phonetabs{display:flex;flex-wrap:wrap;position:sticky;top:60px;z-index:40;gap:6px;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+}
+.khint{font-size:13px;color:var(--muted);white-space:nowrap}
+.khint kbd,.actl .khint kbd{background:#eef1f6;border:1px solid #d5dbe5;border-bottom-width:2px;border-radius:5px;padding:0 5px;font-family:inherit;font-size:12.5px;color:var(--ink)}
 @media (max-width:900px){
   #sidebar{display:none}
   #main{padding:14px 14px 70px}
   #phonetabs{display:flex;position:sticky;top:60px;z-index:40;overflow-x:auto;gap:6px;padding:8px 10px;background:var(--panel);border-bottom:1px solid var(--line);scrollbar-width:none}
   #phonetabs::-webkit-scrollbar{display:none}
-  .ptab{flex:none;border:1px solid var(--line);background:#fff;border-radius:20px;padding:5px 12px;font-size:15px;white-space:nowrap}
-  .ptab.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  #sbt,.khint{display:none!important}
   #topbar .brand small{display:none}
   .hero .floaty{display:none}
   .hero h1{font-size:27px}
@@ -268,6 +277,7 @@ svg .pop{transform-box:fill-box;transform-origin:center}
 </head>
 <body>
 <header id="topbar"><span class="brand" id="brand">🔬 VIII Science CBSE <small>NCERT Curiosity</small></span><span class="sp"></span>
+<button class="tbtn" id="sbt" title="Hide / show the chapter list (M)" aria-pressed="false">⇤ Hide chapters</button>
 <button class="tbtn" id="fsb" title="Full screen">⛶ Full screen</button></header>
 <nav id="phonetabs"></nav>
 <div id="layout"><aside id="sidebar"></aside><main id="main"></main></div>
@@ -275,7 +285,7 @@ svg .pop{transform-box:fill-box;transform-origin:center}
 <script>
 /* ===================== Science Explorer engine ===================== */
 "use strict";
-const APPVER = "1.3.1";
+const APPVER = "1.4.0";
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -396,19 +406,35 @@ const LV = {
   chal: { name: "🏆 Challenge", sub: "Think deeper", need: 3 }
 };
 
+/* ===================== Keyboard-driven sequences (P play · S step · X pause) ===================== */
+/* Every stepped animation / animated lab registers {el, running(), play(), step(), pause()}.
+   The keyboard targets the one that is running and visible, otherwise the most visible one. */
+const SEQ = [];
+function seqReg(c) { SEQ.push(c); return c; }
+function seqTarget() {
+  for (let i = SEQ.length - 1; i >= 0; i--) if (!SEQ[i].el.isConnected) SEQ.splice(i, 1);
+  const vh = window.innerHeight, vw = window.innerWidth;
+  const vis = c => { const r = c.el.getBoundingClientRect(); return Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 60)) * Math.max(0, Math.min(r.right, vw) - Math.max(r.left, 0)); };
+  const run = SEQ.find(c => c.running() && vis(c) > 0); if (run) return run;
+  let best = null, bv = 0; SEQ.forEach(c => { const v = vis(c); if (v > bv) { bv = v; best = c; } });
+  return best;
+}
+const KHINT = '<span class="khint" title="Keyboard shortcuts"><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause</span>';
+
 /* ===================== Animations (stepped) ===================== */
 class Anim {
   constructor(host, def, cc) {
     this.def = def; this.host = host; this.i = 0; this.timer = null; this.cc = cc;
     host.innerHTML = `<div class="anim"><div class="stage"></div><div class="acap"></div>
 <div class="actl"><button class="b0" title="Start again">⏮</button><button class="bp" title="Step back (←)">◀ Back</button>
-<button class="pp" title="Play / pause (Space)">▶ Play</button><button class="bn" title="Step forward (→)">Next ▶</button>
-<div class="prog"><i></i></div><span class="stp"></span></div></div>`;
+<button class="pp" title="Play / pause (Space) · P play · X pause">▶ Play</button><button class="bn" title="Step forward (→ or S)">Next ▶</button>
+<div class="prog"><i></i></div><span class="khint" title="Keyboard shortcuts"><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause</span><span class="stp"></span></div></div>`;
     this.stage = $(".stage", host); this.cap = $(".acap", host);
     $(".b0", host).onclick = () => { this.stop(); this.go(0); };
     $(".bp", host).onclick = () => { this.stop(); this.prev(); };
     $(".bn", host).onclick = () => { this.stop(); this.next(); };
     $(".pp", host).onclick = () => this.toggle();
+    seqReg({ el: host, running: () => !!this.timer, play: () => { if (!this.timer) this.play(); }, step: () => { this.stop(); this.next(); }, pause: () => this.stop() });
     this.go(0);
   }
   get n() { return this.def.steps.length; }
@@ -528,7 +554,7 @@ function renderNav() {
     } else {
       h += `<button class="sitem" data-ch="${r.n}"><span class="em">${r.em}</span><span class="tx" style="color:#8a93a3">${r.n}. ${esc(shortTitle(r.title))}</span><span class="soon">soon</span></button>`;
     }
-    p += `<button class="ptab ${on ? "on" : ""}" data-ch="${r.n}">${r.em} ${r.n}</button>`;
+    p += `<button class="ptab ${on ? "on" : ""}" data-ch="${r.n}" title="${esc(r.n + ". " + shortTitle(r.title))}">${r.em} ${r.n}</button>`;
   }
   p += `<button class="ptab ${St.view === "certs" ? "on" : ""}" data-go="certs">🎓 Certificates</button>`;
   sb.innerHTML = h; pt.innerHTML = p;
@@ -607,7 +633,7 @@ function renderLearn(tb, ch, startAtEnd) {
 <div class="card"><h2>${c.em || ""} ${esc(c.title)}</h2>${c.html}<div id="animhost"></div>
 ${c.after || ""}
 ${c.tips && c.tips.length ? `<div class="tips">${c.tips.map(t => `<div class="tip ${t[0]}"><b class="tl">${tipLab[t[0]]}</b>${t[1]}</div>`).join("")}</div>` : ""}</div>
-<p class="kbd">Card ${St.card + 1} of ${n} · <kbd>→</kbd> steps the animation, then moves to the next card · <kbd>Space</kbd> play/pause</p>`;
+<p class="kbd">Card ${St.card + 1} of ${n} · <kbd>→</kbd> steps the animation, then moves to the next card · <kbd>Space</kbd> play/pause · <kbd>P</kbd> play · <kbd>S</kbd> one step · <kbd>X</kbd> pause · <kbd>M</kbd> hide/show chapters</p>`;
   $("#cprev").disabled = St.card === 0;
   $("#cnext").textContent = St.card === n - 1 ? "Go to Lab 🧪" : "Next ▶";
   $("#cprev").onclick = () => cardGo(St.card - 1);
@@ -871,6 +897,32 @@ document.addEventListener("keydown", e => {
   }
 });
 
+/* ---------- sidebar hide/show (wide screens) + P/S/X sequence keys ---------- */
+const SBKEY = KEY + ".sbHidden";
+function setSidebar(hidden, save) {
+  document.body.classList.toggle("nosb", hidden);
+  const b = $("#sbt");
+  if (b) { b.textContent = hidden ? "☰ Chapters" : "⇤ Hide chapters"; b.setAttribute("aria-pressed", hidden ? "true" : "false"); b.title = (hidden ? "Show" : "Hide") + " the chapter list (M)"; }
+  if (save) try { localStorage.setItem(SBKEY, hidden ? "1" : "0"); } catch (e) { }
+  const onTab = $("#phonetabs .ptab.on"); if (hidden && onTab) try { onTab.scrollIntoView({ inline: "center", block: "nearest" }); } catch (e) { }
+}
+function toggleSidebar() { setSidebar(!document.body.classList.contains("nosb"), true); }
+const TEXTY = /^(text|search|number|email|tel|url|password|date|time|datetime-local|month|week)$/i;
+document.addEventListener("keydown", e => {
+  if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;   // a lab (e.g. reaction timer) already used the key
+  if ($("#modal").classList.contains("show")) return;
+  const ae = document.activeElement, tag = ae ? ae.tagName : "";
+  if (tag === "TEXTAREA" || tag === "SELECT" || (ae && ae.isContentEditable) || (tag === "INPUT" && TEXTY.test(ae.type || "text"))) return;
+  const k = (e.key || "").toLowerCase();
+  if (k === "m") { if (!e.repeat) { e.preventDefault(); toggleSidebar(); } return; }
+  if (k !== "p" && k !== "s" && k !== "x") return;
+  const t = seqTarget(); if (!t) return;
+  e.preventDefault();
+  if (k === "p") { if (!e.repeat) t.play(); }
+  else if (k === "s") t.step();
+  else t.pause();
+});
+
 /* ---------- fullscreen ---------- */
 function toggleFS() {
   try {
@@ -888,6 +940,9 @@ function boot() {
   document.body.prepend(defs);
   CHAPTERS.sort((a, b) => a.n - b.n);
   $("#fsb").onclick = toggleFS;
+  let sbh = false; try { sbh = localStorage.getItem(SBKEY) === "1"; } catch (e) { }
+  setSidebar(sbh, false);
+  $("#sbt").onclick = toggleSidebar;
   document.addEventListener("fullscreenchange", () => { $("#fsb").textContent = document.fullscreenElement ? "⤢ Exit full screen" : "⛶ Full screen"; });
   $("#brand").onclick = () => go({ view: "home" });
   go({ view: "home" });
@@ -2092,7 +2147,7 @@ ${sharp ? "✅ In focus" : "🔄 Blurry — turn the focus knob"}${sp === "bact"
       root.innerHTML = `<div class="ctrls"><div class="ctrl"><label>Vaccinated: <span class="val" id="vv">0</span>%</label><input type="range" id="vc" min="0" max="90" step="10" value="0"></div>
 <div class="ctrl"><label>People each sick person meets per day: <span class="val" id="mv">3</span></label><input type="range" id="mt" min="1" max="6" value="3"></div>
 <div class="ctrl"><label>Habits</label><div><label><input type="checkbox" id="hw"> 🧼 Handwashing</label> <label><input type="checkbox" id="mk"> 😷 Masks</label></div></div></div>
-<p><button class="lbtn" id="run">▶ Run</button> <button class="lbtn ghost" id="stp">Next day ▶</button> <button class="lbtn ghost" id="rs">↺ Reset</button></p>
+<p><button class="lbtn" id="run" title="Run / pause (P · X)">▶ Run</button> <button class="lbtn ghost" id="stp" title="One day (S)">Next day ▶</button> <button class="lbtn ghost" id="rs">↺ Reset</button> ${KHINT}</p>
 <div class="two"><div class="labstage"><svg id="tw" viewBox="0 0 400 400"></svg></div><div><div class="labstage"><svg id="tg" viewBox="0 0 400 220"></svg></div><div class="labout" id="to"></div></div></div>`;
       let ppl, day, hist, timer;
       const vc = () => +$("#vc", root).value, mt = () => +$("#mt", root).value;
@@ -2134,6 +2189,7 @@ ${sharp ? "✅ In focus" : "🔄 Blurry — turn the focus knob"}${sp === "bact"
       $("#stp", root).onclick = () => { stop(); stepDay(); };
       $("#rs", root).onclick = reset;
       $("#run", root).onclick = () => { if (timer) { stop(); return; } if (count().I === 0) reset(); $("#run", root).textContent = "⏸ Pause"; timer = setInterval(stepDay, 500); };
+      seqReg({ el: root, running: () => !!timer, play: () => { if (!timer) $("#run", root).click(); }, step: () => $("#stp", root).click(), pause: stop });
       reset();
       return () => clearInterval(timer);
     }
@@ -2144,7 +2200,7 @@ ${sharp ? "✅ In focus" : "🔄 Blurry — turn the focus knob"}${sp === "bact"
     intro: "Germs hide between fingers and under nails. Press <b>Start</b> and follow each step — the full wash takes at least 20 seconds.",
     init(root, col) {
       const ST = [["💧", "Wet hands and apply soap"], ["🤲", "Rub palms together"], ["✋", "Rub the back of each hand"], ["🖐️", "Interlace fingers — scrub between them"], ["👍", "Rub each thumb"], ["💅", "Scrub fingertips and nails in your palm"], ["🔄", "Rub the wrists"], ["🚿", "Rinse well and dry with a clean towel"]];
-      root.innerHTML = `<div class="two"><div style="text-align:center"><svg id="wt" viewBox="0 0 300 300" style="max-width:320px;width:100%"></svg><p><button class="lbtn" id="ws">▶ Start</button></p></div><div><ol id="wl" style="font-size:19px;line-height:1.9">${ST.map(s => `<li>${s[0]} ${s[1]}</li>`).join("")}</ol></div></div>`;
+      root.innerHTML = `<div class="two"><div style="text-align:center"><svg id="wt" viewBox="0 0 300 300" style="max-width:320px;width:100%"></svg><p><button class="lbtn" id="ws" title="Start (P) · S next step · X pause">▶ Start</button></p><p>${KHINT}</p></div><div><ol id="wl" style="font-size:19px;line-height:1.9">${ST.map(s => `<li>${s[0]} ${s[1]}</li>`).join("")}</ol></div></div>`;
       let t = 0, timer;
       const total = 24;
       const draw = () => {
@@ -2155,7 +2211,10 @@ ${sharp ? "✅ In focus" : "🔄 Blurry — turn the focus knob"}${sp === "bact"
           S.t(150, 130, t >= total ? "✅" : ST[k][0], { size: 60 }) + S.t(150, 200, t >= total ? "Clean!" : `${Math.ceil(total - t)} s`, { size: 30, w: 800, fill: col });
         $$("#wl li", root).forEach((li, i) => { li.style.fontWeight = i === k && t > 0 && t < total ? 800 : 400; li.style.color = i < k || t >= total ? "#14935a" : i === k && t > 0 ? col : ""; });
       };
-      $("#ws", root).onclick = () => { clearInterval(timer); t = 0; timer = setInterval(() => { t += .1; if (t >= total) { t = total; clearInterval(timer); } draw(); }, 100); };
+      const runFrom = t0 => { clearInterval(timer); t = t0; timer = setInterval(() => { t += .1; if (t >= total) { t = total; clearInterval(timer); timer = null; } draw(); }, 100); };
+      const pauseW = () => { clearInterval(timer); timer = null; };
+      $("#ws", root).onclick = () => runFrom(0);
+      seqReg({ el: root, running: () => !!timer, play: () => { if (!timer) runFrom(t >= total ? 0 : t); }, step: () => { pauseW(); const sl = total / ST.length; t = t >= total ? sl : Math.min(total, (Math.floor(t / sl + 1e-6) + 1) * sl); draw(); }, pause: pauseW });
       draw();
       return () => clearInterval(timer);
     }
@@ -4561,7 +4620,7 @@ ${sharp ? "✅ In focus" : "🔄 Blurry — turn the focus knob"}${sp === "bact"
     em: "🌓", title: "Moon phase simulator",
     intro: "Drag the day slider through a lunar month. The left view is from space (Sun on the left); the right shows what you see from Earth.",
     init(root, col) {
-      root.innerHTML = `<div class="ctrls"><div class="ctrl"><label>Day of lunar month: <span class="val" id="dv">0</span></label><input type="range" id="dy" min="0" max="29.5" step="0.5" value="0" style="width:300px"></div><div class="ctrl"><label>&nbsp;</label><button class="lbtn" id="pl">▶ Play month</button></div></div>
+      root.innerHTML = `<div class="ctrls"><div class="ctrl"><label>Day of lunar month: <span class="val" id="dv">0</span></label><input type="range" id="dy" min="0" max="29.5" step="0.5" value="0" style="width:300px"></div><div class="ctrl"><label>&nbsp;</label><button class="lbtn" id="pl" title="Play / pause (P · X) · S = next day">▶ Play month</button> ${KHINT}</div></div>
 <div class="two"><div class="labstage"><svg id="mo" viewBox="0 0 400 300"></svg></div><div class="labstage" style="background:${NIGHT}"><svg id="mv" viewBox="0 0 400 300"></svg></div></div><div class="labout" id="mt"></div>`;
       let d = 0, timer;
       const draw = () => {
@@ -4573,7 +4632,11 @@ ${sharp ? "✅ In focus" : "🔄 Blurry — turn the focus knob"}${sp === "bact"
         $("#mt", root).innerHTML = `<b>Day ${d}</b> · <b>${phaseName(th)}</b> · about <span style="font-size:22px;font-weight:800;color:${col}">${lit}%</span> of the disc lit<br><small>${th < 180 ? "Waxing — lit on the right (as seen from India), growing each night." : "Waning — lit on the left, shrinking each night."} The Moon rises about 50 minutes later each day.</small>`;
       };
       $("#dy", root).oninput = e => { d = +e.target.value; $("#dv", root).textContent = d; draw(); };
-      $("#pl", root).onclick = () => { clearInterval(timer); d = 0; timer = setInterval(() => { d = +(d + .5).toFixed(1); if (d > 29.5) { clearInterval(timer); return; } $("#dy", root).value = d; $("#dv", root).textContent = d; draw(); }, 120); };
+      const setD = v => { d = v; $("#dy", root).value = d; $("#dv", root).textContent = d; draw(); };
+      const pauseM = () => { clearInterval(timer); timer = null; $("#pl", root).textContent = "▶ Play month"; };
+      const playM = () => { if (timer) return; if (d >= 29.5) setD(0); $("#pl", root).textContent = "⏸ Pause"; timer = setInterval(() => { const n = +(d + .5).toFixed(1); if (n > 29.5) { pauseM(); return; } setD(n); }, 120); };
+      $("#pl", root).onclick = () => timer ? pauseM() : playM();
+      seqReg({ el: root, running: () => !!timer, play: playM, step: () => { pauseM(); setD(d >= 29.5 ? 0 : Math.min(29.5, Math.floor(d) + 1)); }, pause: pauseM });
       draw();
       return () => clearInterval(timer);
     }

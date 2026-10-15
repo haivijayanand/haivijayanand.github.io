@@ -2,10 +2,11 @@
 <!--
 TOOL:    VIII Social Science CBSE ( / NCERT Exploring Society: India and Beyond, Parts 1 and 2)
 FAMILY:  learning-explorers
-VERSION: 2.0.1
-DATE:    2026-10-04
+VERSION: 2.1.0
+DATE:    2026-10-15
 CHAT:    Social Science Explorer for Class 8 (claude.ai, 2026-10-04)
-CHANGES: 2.0.1 - page heading, title and certificates renamed to VIII Social Science CBSE for the public site
+CHANGES: 2.1.0 - hideable chapter sidebar on wide screens (top-bar button or M key, remembered); keyboard animation control P play/resume, S single step, X pause; shortcut hints near animation controls; fixed sideways scroll on phones
+         2.0.1 - page heading, title and certificates renamed to VIII Social Science CBSE for the public site
          2.0.0 - Added Part 2 (8 chapters: World Geography, Long Road to Independence, Indian Architecture, Judiciary, Citizenship, Population, Urban Landscape, Cultural Currents); app now covers both parts with a champion award per part
 STATUS:  Part 1 (7 chapters) and Part 2 (8 chapters) ready
 -->
@@ -49,6 +50,13 @@ button{font:inherit;cursor:pointer}
 .iconbtn{background:none;border:1px solid var(--line);color:var(--ink);border-radius:8px;width:38px;height:36px;font-size:1.1rem}
 .iconbtn:hover{background:var(--soft)}
 #menuBtn{display:none}
+#sideBtn{width:auto;padding:0 10px;font-size:.9rem;white-space:nowrap}
+@media (min-width:861px){
+  #app.side-hidden{grid-template-columns:1fr}
+  #app.side-hidden #topbar{grid-column:1}
+  #app.side-hidden #sidebar{display:none}
+  #app.side-hidden #main{max-width:1320px;width:100%;margin:0 auto}
+}
 #app{display:grid;grid-template-columns:270px 1fr;grid-template-rows:auto 1fr;min-height:100vh}
 #topbar{grid-column:1/3}
 #sidebar{background:var(--panel);border-right:1px solid var(--line);padding:12px 10px;overflow-y:auto;height:calc(100vh - 53px);position:sticky;top:53px}
@@ -64,9 +72,12 @@ button{font:inherit;cursor:pointer}
 .side-ch .stars{color:var(--gold);font-size:.75rem;display:block}
 .side-home{font-weight:bold}
 @media (max-width:860px){
-  #app{grid-template-columns:1fr}
+  #app{grid-template-columns:minmax(0,1fr)}
   #topbar{grid-column:1}
+  .brand{min-width:0;font-size:1.05rem}
+  .brand>span:last-child{overflow:hidden;text-overflow:ellipsis}
   #menuBtn{display:block}
+  #sideBtn{display:none}
   #sidebar{position:fixed;left:0;top:53px;width:280px;z-index:30;transform:translateX(-105%);transition:transform .2s;box-shadow:var(--shadow)}
   #sidebar.open{transform:none}
   #main{padding:14px 16px 60px}
@@ -106,6 +117,8 @@ h2{font-size:1.3rem;margin:.6em 0 .4em}
 .stepdots{display:flex;gap:4px;margin-left:auto}
 .stepdots span{width:9px;height:9px;border-radius:50%;background:var(--line)}
 .stepdots span.on{background:var(--accent2)}
+.animkeys{color:var(--muted);font-size:.8rem;margin-top:6px}
+@media (hover:none) and (pointer:coarse){.animkeys{display:none}}
 .keyfacts{background:var(--soft);border-left:4px solid var(--gold);padding:10px 14px;border-radius:8px;margin-top:12px}
 .keyfacts ul{margin:4px 0;padding-left:20px}
 .term{border-bottom:1px dashed var(--accent2);cursor:help}
@@ -194,6 +207,7 @@ table.simple th{background:var(--soft)}
 <div id="app">
   <header id="topbar">
     <button id="menuBtn" class="iconbtn" aria-label="Menu">&#9776;</button>
+    <button id="sideBtn" class="iconbtn" title="Hide the chapter list (key M)" aria-controls="sidebar" aria-expanded="true">&#8676; Hide</button>
     <div class="brand" id="brandHome"><span class="logo">&#127757;</span> <span>VIII Social Science CBSE</span></div>
     <div class="spacer"></div>
     <button id="themeBtn" class="iconbtn" title="Light / dark">&#127763;</button>
@@ -205,7 +219,7 @@ table.simple th{background:var(--soft)}
 <script>
 "use strict";
 /* ===== Social Science Explorer engine ===== */
-const SSE = { chapters: {}, version: "2.0.1" };
+const SSE = { chapters: {}, version: "2.1.0" };
 
 /* ---------- small utils ---------- */
 const R = {
@@ -316,6 +330,9 @@ const App = {
     Store.load();
     if (Store.data.theme) document.documentElement.setAttribute("data-theme", Store.data.theme);
     $("#menuBtn").onclick = () => $("#sidebar").classList.toggle("open");
+    let hid = false; try { hid = localStorage.getItem("sse8_side_hidden") === "1"; } catch (e) {}
+    this.setSide(hid);
+    $("#sideBtn").onclick = () => this.toggleSide();
     $("#brandHome").onclick = () => this.go("home");
     $("#themeBtn").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"); const nx = cur === "dark" ? "light" : "dark"; document.documentElement.setAttribute("data-theme", nx); Store.data.theme = nx; Store.save(); };
     $("#fsBtn").onclick = () => { if (!document.fullscreenElement) document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(() => {}); else document.exitFullscreen && document.exitFullscreen(); };
@@ -388,11 +405,26 @@ const App = {
       m.appendChild(g);
     }
     m.appendChild(h("div", { class: "card", style: "margin-top:18px" }, `<h3 style="margin-top:0">Keyboard shortcuts</h3>
-      <p style="margin:0"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> step through animations (and on to the next card) &middot; <kbd>Space</kbd> play/pause &middot; in Practice: <kbd>1</kbd>&ndash;<kbd>4</kbd> pick an option, <kbd>Enter</kbd> check / next, <kbd>&larr;</kbd> <kbd>&rarr;</kbd> move between questions, <kbd>H</kbd> hint.</p>`));
+      <p style="margin:0"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> step through animations (and on to the next card) &middot; <kbd>Space</kbd> play/pause &middot; <kbd>P</kbd> play &middot; <kbd>S</kbd> one step &middot; <kbd>X</kbd> pause &middot; <kbd>M</kbd> hide/show the chapter list &middot; in Practice: <kbd>1</kbd>&ndash;<kbd>4</kbd> pick an option, <kbd>Enter</kbd> check / next, <kbd>&larr;</kbd> <kbd>&rarr;</kbd> move between questions, <kbd>H</kbd> hint.</p>`));
+  },
+  /* wide-screen sidebar show/hide (phone layout uses the slide-in menu instead) */
+  setSide(hidden){
+    $("#app").classList.toggle("side-hidden", hidden);
+    const b = $("#sideBtn");
+    b.innerHTML = hidden ? "&#9776; Chapters" : "&#8676; Hide";
+    b.title = hidden ? "Show the chapter list (key M)" : "Hide the chapter list (key M)";
+    b.setAttribute("aria-expanded", hidden ? "false" : "true");
+    try { localStorage.setItem("sse8_side_hidden", hidden ? "1" : "0"); } catch (e) {}
+  },
+  toggleSide(){
+    if (matchMedia("(max-width:860px)").matches) $("#sidebar").classList.toggle("open");
+    else this.setSide(!$("#app").classList.contains("side-hidden"));
   },
   key(e){
-    if (this.cur.view !== "ch") return;
     const tag = (e.target.tagName || "").toLowerCase();
+    const typing = tag === "input" || tag === "textarea" || tag === "select" || (e.target.isContentEditable === true);
+    if (!typing && !e.ctrlKey && !e.altKey && !e.metaKey && (e.key === "m" || e.key === "M")){ e.preventDefault(); this.toggleSide(); return; }
+    if (this.cur.view !== "ch") return;
     if (this.cur.tab === "learn") Learn.key(e, tag);
     else if (this.cur.tab === "practice") Practice.key(e, tag);
   }
@@ -416,7 +448,8 @@ const Learn = {
     card.innerHTML = `<h2 style="margin-top:0">${esc(c.title)}</h2>${c.text ? `<p>${c.text}</p>` : ""}
       <div class="animwrap"><svg id="animSvg" viewBox="0 0 600 340" xmlns="http://www.w3.org/2000/svg" role="img"></svg></div>
       <div class="caption" id="animCap"></div>
-      <div class="ctrls"><button class="btn sec small" id="backBtn">&#9664; Back</button><button class="btn small" id="nextBtn">Next &#9654;</button><button class="btn sec small" id="playBtn">&#9654; Play</button><div class="stepdots" id="dots"></div></div>
+      <div class="ctrls"><button class="btn sec small" id="backBtn" title="Previous step (&larr;)">&#9664; Back</button><button class="btn small" id="nextBtn" title="Next step (S or &rarr;)">Next &#9654;</button><button class="btn sec small" id="playBtn" title="Play (P) / Pause (X)">&#9654; Play</button><div class="stepdots" id="dots"></div></div>
+      <div class="animkeys">Keys: <kbd>P</kbd> play &middot; <kbd>S</kbd> step &middot; <kbd>X</kbd> pause &middot; <kbd>&larr;</kbd><kbd>&rarr;</kbd> back/next &middot; <kbd>M</kbd> hide/show chapters</div>
       ${c.facts ? `<div class="keyfacts"><b>Key points</b><ul>${c.facts.map(f => `<li>${f}</li>`).join("")}</ul></div>` : ""}`;
     el.appendChild(card);
     const nn = h("div", { class: "row", style: "justify-content:space-between" });
@@ -444,6 +477,11 @@ const Learn = {
   },
   play(){
     if (Anim.timer) return Anim.stop();
+    this.playOn();
+  },
+  /* start or resume continuous play (no toggle) */
+  playOn(){
+    if (Anim.timer || !$("#animSvg")) return;
     if (this.s === this.ch.learn[this.i].steps.length - 1) { this.s = 0; this.draw(); }
     $("#playBtn").textContent = "⏸ Pause";
     Anim.timer = setInterval(() => { if (!this.step(1)) Anim.stop(); }, 2600);
@@ -459,6 +497,14 @@ const Learn = {
     if (e.key === "ArrowRight"){ e.preventDefault(); Anim.stop(); if (!this.step(1)) this.card(1); }
     else if (e.key === "ArrowLeft"){ e.preventDefault(); Anim.stop(); if (this.s === 0) { if (this.i > 0){ this.i--; App.render(); this.s = this.ch.learn[this.i].steps.length - 1; this.draw(); } } else this.step(-1); }
     else if (e.key === " " && tag !== "button"){ e.preventDefault(); this.play(); }
+    else if (tag === "select" || e.ctrlKey || e.altKey || e.metaKey || !$("#animSvg")) return;
+    else if (e.key === "p" || e.key === "P"){ e.preventDefault(); this.playOn(); }
+    else if (e.key === "x" || e.key === "X"){ e.preventDefault(); Anim.stop(); }
+    else if (e.key === "s" || e.key === "S"){
+      // single step: stop continuous play; at the last step start the animation again from step 1
+      e.preventDefault(); Anim.stop();
+      if (this.s === this.ch.learn[this.i].steps.length - 1){ this.s = 0; this.draw(); } else this.step(1);
+    }
   }
 };
 

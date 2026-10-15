@@ -2,10 +2,11 @@
 <!--
 TOOL:    Direct & Indirect Speech (Class VIII English)
 FAMILY:  school-edu / direct-indirect-speech
-VERSION: 1.1.1
-DATE:    2026-10-05
+VERSION: 1.2.0
+DATE:    2026-10-15
 CHAT:    English Expo - Direct & Indirect Speech deck (Class VIII)
-CHANGES: 1.1.1 - public copy: student, teacher and school names and school logo removed; speech-bubble emblem instead
+CHANGES: 1.2.0 - keyboard play controls: P play (auto-advance converter steps, or the slide deck elsewhere), S one step, X pause; Play button in top bar; shortcut hints; M still opens the slide list
+         1.1.1 - public copy: student, teacher and school names and school logo removed; speech-bubble emblem instead
          1.1.0 - team names + guide on title/end slides; logo text; Show all / Hide all everywhere; all-steps view in converter; optional soft background music
          1.0.1 - fixed flip-card and converter text wrapping; answers on example/mistake slides now hidden until tapped; compact Practice Lab filters
          1.0.0 - initial release: 22-slide swipeable deck, 5-step converter, flip-card rules, 1148-sentence practice lab, levelled 5-question quiz with scoreboard
@@ -62,6 +63,10 @@ html,body{height:100%;background:#1f2022;overflow:hidden;font-family:var(--sans)
 .nav:hover{background:var(--gold-d)}
 .nav:disabled{opacity:.25;cursor:default}
 #counter{font-size:15px;color:var(--grey-l);font-variant-numeric:tabular-nums}
+#mid{display:flex;flex-direction:column;align-items:center;gap:2px}
+.khint{font-size:12.5px;color:var(--grey-l);letter-spacing:.3px}
+.khint kbd{font-family:var(--sans);font-size:11.5px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;background:#fff;color:var(--grey)}
+#bPlay.on{background:var(--gold);border-color:var(--gold);color:#3b2d00}
 #progress{position:absolute;left:0;bottom:0;height:5px;background:var(--gold);z-index:6;transition:width .4s}
 #menu{position:absolute;inset:60px 0 0 0;background:rgba(251,248,241,.98);z-index:20;display:none;padding:30px 60px;
   overflow:auto}
@@ -262,6 +267,7 @@ table.cmp td:first-child{font-weight:600;color:var(--grey);width:22%}
     <span class="ev">English Expo · Direct &amp; Indirect Speech</span>
     <span class="sp"></span>
     <span id="music"><button class="tbtn" id="bMusic" title="Background music">♪ Music: Off</button><input type="range" id="vol" min="0" max="100" value="35" title="Music volume"></span>
+    <button class="tbtn" id="bPlay" title="Play / pause: P play · S step · X pause">▶ Play</button>
     <button class="tbtn" id="bMenu" title="All slides (M)">☰ Slides</button>
     <button class="tbtn" id="bFull" title="Full screen (F)">⛶ Full screen</button>
   </div>
@@ -409,10 +415,11 @@ table.cmp td:first-child{font-weight:600;color:var(--grey);width:22%}
     <div id="conv-cap" style="margin-top:14px"></div>
     <div class="lab-ctrl">
       <button class="btn ghost" id="conv-back">◀ Back</button>
-      <button class="btn gold" id="conv-next">Next step ▶</button>
+      <button class="btn gold" id="conv-next" title="Next step (S)">Next step ▶</button>
       <button class="btn ghost" id="conv-reset">↺ Restart</button>
       <button class="btn" id="conv-all">📋 Show all steps</button>
     </div>
+    <div class="khint" style="text-align:center;margin-top:8px"><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause</div>
     </div>
     <div id="convAll"></div>
   </section>
@@ -642,7 +649,7 @@ table.cmp td:first-child{font-weight:600;color:var(--grey);width:22%}
   <div id="menu"><h3>Jump to a slide</h3><div class="grid" id="menugrid"></div></div>
   <div id="bottombar">
     <button class="nav" id="prev" aria-label="Previous slide">‹</button>
-    <span id="counter"></span>
+    <span id="mid"><span id="counter"></span><span class="khint" id="khint"><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause · <kbd>M</kbd> slides · <kbd>F</kbd> full screen</span></span>
     <button class="nav" id="next" aria-label="Next slide">›</button>
   </div>
   <div id="progress"></div>
@@ -663,7 +670,8 @@ function fit(){
   stage.style.transform = `scale(${s})`;
 }
 window.addEventListener('resize', fit); fit();
-function go(n){
+function go(n, auto){
+  if (!auto && typeof playStop === 'function') playStop();
   n = Math.max(0, Math.min(slides.length - 1, n));
   slides.forEach((s, i) => { s.classList.toggle('active', i === n); s.classList.toggle('left', i < n); });
   cur = n;
@@ -677,7 +685,12 @@ function go(n){
 document.getElementById('prev').onclick = () => go(cur - 1);
 document.getElementById('next').onclick = () => go(cur + 1);
 document.addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT') { if (e.key === 'Escape') e.target.blur(); return; }
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || e.target.isContentEditable) { if (e.key === 'Escape') e.target.blur(); return; }
+  if (e.ctrlKey || e.altKey || e.metaKey) return;
+  const k = e.key.toLowerCase();
+  if (k === 'p') { playStart(); e.preventDefault(); return; }
+  if (k === 's') { playStop(); playStep(); e.preventDefault(); return; }
+  if (k === 'x') { playStop(); e.preventDefault(); return; }
   if (['ArrowRight', 'PageDown'].includes(e.key)) { go(cur + 1); e.preventDefault(); }
   else if (['ArrowLeft', 'PageUp'].includes(e.key)) { go(cur - 1); e.preventDefault(); }
   else if (e.key === 'Home') go(0);
@@ -840,6 +853,49 @@ document.querySelectorAll('#conv-tabs button[data-x]').forEach(b => b.onclick = 
   cx = +b.dataset.x; cs = 0; renderConv(); if (convAllOn) renderAll();
 });
 renderConv();
+
+/* ---------------- play controls: P play · S step · X pause
+   On the converter slide they drive the 5-step converter; elsewhere they move through the deck.
+   Deck play stops on the interactive Practice Lab / Quiz slides and at the end. */
+const IDX_CONV = slides.findIndex(s => s.dataset.title === 'Steps to convert');
+const IDX_LAB = slides.findIndex(s => s.querySelector('#lab-card'));
+const CONV_MS = 2600, DECK_MS = 7000;
+var playTimer = null;  // var: go() may run before this line
+function onConv(){ return cur === IDX_CONV; }
+function setPlayUI(){
+  const b = document.getElementById('bPlay'), on = !!playTimer;
+  b.classList.toggle('on', on);
+  b.textContent = on ? '⏸ Pause' : '▶ Play';
+}
+function playStep(){
+  if (onConv()) {
+    if (convAllOn) { setAll(false); renderConv(); return true; }
+    if (cs < CONV[cx].length - 1) { cs++; renderConv(); return true; }
+    return false;
+  }
+  if (cur < slides.length - 1) { go(cur + 1, true); return true; }
+  return false;
+}
+function playStop(){ if (playTimer) { clearInterval(playTimer); playTimer = null; } setPlayUI(); }
+function playStart(){
+  if (playTimer) return;
+  if (onConv()) {
+    if (convAllOn) { setAll(false); renderConv(); }
+    if (cs >= CONV[cx].length - 1) { cs = 0; renderConv(); }
+  } else if (cur === slides.length - 1 || cur === IDX_LAB || cur === IDX_QUIZ) return;
+  const conv = onConv();
+  playTimer = setInterval(() => {
+    if (conv !== onConv() || !playStep()) return playStop();
+    if (conv && cs >= CONV[cx].length - 1) return playStop();
+    if (!conv && (cur === IDX_LAB || cur === IDX_QUIZ || cur === slides.length - 1)) playStop();
+  }, conv ? CONV_MS : DECK_MS);
+  setPlayUI();
+}
+document.getElementById('bPlay').onclick = () => playTimer ? playStop() : playStart();
+/* a manual tap / swipe in the slide area pauses play */
+document.getElementById('viewport').addEventListener('pointerdown', e => {
+  if (playTimer && !e.target.closest('#bPlay')) playStop();
+}, true);
 
 /* ---------------- helpers */
 const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');

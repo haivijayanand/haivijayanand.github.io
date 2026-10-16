@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<!--
+TOOL: rubiks-cube.html - 3x3 Rubik's Cube with Nine-Ring Permutation View
+FAMILY: games (GitHub Pages, tools/ Games and music)
+VERSION: 1.4.1
+DATE: 2026-10-16
+CHAT: 3x3 Rubik's cube page with the 9 coloured-dot rings bonus
+CHANGES: 1.4.1 - published to the Games and music section as tools/rubiks-cube.html
+         1.4.0 - engraved face letters (U D F B L R) with clockwise turn arrows on every face, including the unfolded hidden faces; toggle to hide them
+         1.3.0 - hover highlights a square; drag a square or press an arrow key to slide its row/column (works on the unfolded faces too); right-drag or drag empty space rotates the view; , and . step the log
+         1.2.0 - hidden faces unfolded flat like a cube net (all 9 tiles visible); random start; recorded move log with step/jump/replay/copy; small key = clockwise, capital = anticlockwise; arrows step; white centre at bottom by default and on Reset view
+         1.1.0 - floating projections of the hidden faces; top/front colour picker set by centre tiles; orientation lock (slices turn outer layers)
+         1.0.0 - first release: CSS-3D cube, 9-ring stereographic dot map, scramble/solve, sticker tracking with trail, fullscreen
+STATUS: public
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cube and Nine Rings</title>
+<style>
+:root{
+  --ink:#0b1029; --panel:#121a3d; --panel2:#18214a; --chalk:#e9ecf7; --dim:#9aa3c7;
+  --cyan:#79d4e8; --track:#4a5378; --line:#2a3462;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua","URW Palladio L",Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ink);color:var(--chalk)}
+body{font-family:var(--sans);min-height:100vh;
+  background:
+    radial-gradient(1px 1px at 12% 18%,#fff8 50%,transparent 51%),
+    radial-gradient(1px 1px at 72% 9%,#fff6 50%,transparent 51%),
+    radial-gradient(1px 1px at 40% 64%,#fff5 50%,transparent 51%),
+    radial-gradient(1px 1px at 88% 42%,#fff7 50%,transparent 51%),
+    radial-gradient(1px 1px at 22% 86%,#fff5 50%,transparent 51%),
+    radial-gradient(1.5px 1.5px at 60% 30%,#bfe9ff80 50%,transparent 51%),
+    radial-gradient(1200px 700px at 50% -10%,#1a2350 0%,var(--ink) 60%);
+  background-attachment:fixed}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:20px clamp(16px,2.5vw,36px) 10px}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(26px,3vw,40px);margin:0;letter-spacing:.2px;color:var(--chalk)}
+.sub{font-family:var(--serif);color:var(--dim);font-size:16px;margin:4px 0 0}
+.chip{display:inline-block;border:1px solid #79d4e866;color:var(--cyan);border-radius:999px;padding:3px 12px;font-size:13px;font-family:var(--serif);margin-bottom:8px}
+.hbtns{display:flex;gap:8px}
+button{font:inherit;font-size:14px;color:var(--chalk);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:#79d4e899}
+button:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+button.primary{background:#1d3a55;border-color:#79d4e877}
+button:disabled{opacity:.45;cursor:default}
+
+.stage{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:6px clamp(16px,2.5vw,36px)}
+.panel{position:relative;background:linear-gradient(180deg,#121a3dcc,#0e1534cc);border:1px solid var(--line);border-radius:14px;overflow:hidden;height:min(68vh,720px);min-height:380px}
+.ptitle{position:absolute;left:16px;top:12px;font-family:var(--serif);font-size:17px;color:var(--dim);pointer-events:none;z-index:2}
+.hint{position:absolute;left:16px;bottom:12px;font-size:12.5px;color:#8a93b8;pointer-events:none;z-index:2}
+
+/* 3D cube */
+#scene{position:absolute;inset:0;cursor:grab;touch-action:none;user-select:none}
+#scene.orbiting{cursor:grabbing}
+#scene .face[data-s]{cursor:pointer}
+#cube{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d}
+.cubie{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;transform-origin:0 0 0}
+.face{position:absolute;background:#05060c;border-radius:3px;transform-origin:50% 50%}
+.stk{position:absolute;inset:6%;border-radius:14%;box-shadow:inset 0 0 0 1px #0003, inset 0 -6px 10px #0002}
+.face.ghost{background:transparent}
+.face.ghost .stk{inset:7%;opacity:.95;transition:opacity .15s}
+.plate{position:absolute;border:1px dashed #79d4e866;border-radius:6px;background:#79d4e80f;pointer-events:none}
+.face.ghost.off .stk{opacity:0}
+.flab{position:absolute;pointer-events:none}
+.flab svg{width:100%;height:100%;display:block;overflow:visible}
+.face.hov .stk{outline:3px solid #ffffff;outline-offset:-1px;box-shadow:0 0 0 5px #0b1029cc, 0 0 16px 4px #ffffffaa;filter:brightness(1.12)}
+.face.trk .stk{animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px #79d4e8, 0 0 18px #79d4e8}50%{box-shadow:0 0 0 1px #79d4e8, 0 0 4px #79d4e8}}
+
+.mvbox{position:absolute;right:20px;top:14px;text-align:center;z-index:2;pointer-events:none}
+#mvLetter{font-family:var(--serif);font-size:56px;line-height:1;color:var(--cyan);min-height:56px}
+#mvCount{font-family:var(--serif);color:var(--dim);font-size:15px;margin-top:4px}
+#solved{position:absolute;left:16px;top:40px;font-size:13px;color:#0b1029;background:var(--cyan);border-radius:999px;padding:2px 10px;z-index:2;transition:opacity .3s}
+
+#rings{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:manipulation}
+#trackInfo{position:absolute;left:16px;right:16px;bottom:12px;font-family:var(--serif);font-size:15px;color:var(--chalk);z-index:2;pointer-events:none;line-height:1.4}
+#trackInfo b{color:var(--cyan);font-weight:600}
+
+/* controls */
+.controls{display:grid;grid-template-columns:auto 1fr;gap:14px 22px;padding:14px clamp(16px,2.5vw,36px) 4px;align-items:start}
+.pad{display:flex;flex-wrap:wrap;gap:6px}
+.grp{display:flex;flex-direction:column;gap:4px;align-items:stretch}
+.grp button{min-width:44px;padding:5px 0;font-weight:600;font-size:14px;position:relative}
+.grp button.base{border-top:3px solid var(--fc,#79d4e8)}
+.side{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.row label{font-size:13px;color:var(--dim);display:flex;align-items:center;gap:8px}
+input[type=range]{accent-color:var(--cyan);width:140px}
+select{font:inherit;font-size:14px;background:#0c1231;border:1px solid var(--line);color:var(--chalk);border-radius:8px;padding:6px 8px}
+input[type=text]{font:inherit;font-size:14px;background:#0c1231;border:1px solid var(--line);color:var(--chalk);border-radius:8px;padding:7px 10px;flex:1;min-width:200px}
+#msg{font-size:13px;color:var(--dim);min-height:18px}
+.logbar{margin:12px clamp(16px,2.5vw,36px) 0;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#0f1638cc}
+.lhead{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.lhead h2{font-family:var(--serif);font-weight:400;font-size:18px;margin:0;color:var(--chalk)}
+#logStart,#logPos{font-family:var(--serif);font-size:15px;color:var(--dim)}
+.nav{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.nav button{padding:5px 11px}
+#logList{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;max-height:96px;overflow-y:auto;padding:2px}
+.mchip{font-family:var(--serif);font-size:15px;padding:2px 9px;border-radius:6px;min-width:34px}
+.mchip.done{color:var(--chalk);background:#1b2a55}
+.mchip.ahead{color:#7c84a8;background:transparent;border-style:dashed}
+.mchip.here{color:#0b1029;background:var(--cyan);border-color:var(--cyan)}
+
+.explain{padding:18px clamp(16px,2.5vw,36px) 40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px 36px}
+.explain h2{font-family:var(--serif);font-weight:400;font-size:21px;margin:14px 0 6px;color:var(--chalk)}
+.explain p{font-family:var(--serif);font-size:16.5px;line-height:1.6;color:#c8cee6;margin:0 0 8px;max-width:62ch}
+.explain code{font-family:var(--serif);color:var(--cyan)}
+.legend{display:grid;grid-template-columns:auto auto auto auto;gap:4px 14px;font-family:var(--serif);font-size:15.5px;color:#c8cee6;max-width:420px}
+.legend span:nth-child(4n+1){color:var(--dim)}
+
+:fullscreen .panel{height:calc(100vh - 230px)}
+@media (max-width:900px){
+  .stage{grid-template-columns:1fr}
+  .panel{height:60vh}
+  .controls{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){.face.trk .stk{animation:none;box-shadow:0 0 0 3px #79d4e8}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <span class="chip">43 quintillion states, 9 rings, 54 dots</span>
+    <h1>The cube as nine interlocking rings</h1>
+    <p class="sub">Every turn of a 3×3 cube is one ring sliding three places. Turn it, scramble it, and follow a single sticker on both views.</p>
+  </div>
+  <div class="hbtns">
+    <button id="btnFs" title="Full screen (F11 also works)">Full screen</button>
+  </div>
+</header>
+
+<main class="stage">
+  <section class="panel" id="cubePanel" aria-label="3D cube">
+    <div class="ptitle">Cube</div>
+    <div id="solved">Solved</div>
+    <div class="mvbox"><div id="mvLetter"></div><div id="mvCount"></div></div>
+    <div id="scene"><div id="cube"></div></div>
+    <div class="hint">Hover a square, then drag it or press an arrow key to slide its row. Drag empty space or right-drag to look around. Click a square to track it.</div>
+  </section>
+  <section class="panel" id="ringPanel" aria-label="Nine-ring map">
+    <div class="ptitle">Nine rings</div>
+    <canvas id="rings"></canvas>
+    <div id="trackInfo"></div>
+  </section>
+</main>
+
+<section class="logbar" aria-label="Your moves">
+  <div class="lhead">
+    <h2>Your moves</h2><span id="logStart"></span><span id="logPos"></span>
+    <div class="nav">
+      <button id="btnFirst" title="Starting position (Home)">⏮ Start</button>
+      <button id="btnPrev" title="Previous step (←)">◀ Back</button>
+      <button id="btnNext" title="Next step (→)">Next ▶</button>
+      <button id="btnLast" title="Latest move (End)">Latest ⏭</button>
+      <button id="btnPlay" title="Play from here or pause (Space)">Play</button>
+      <button id="btnReplay" title="Play the whole log from the start">Replay</button>
+      <button id="btnCopy" title="Copy the moves as text">Copy</button>
+    </div>
+  </div>
+  <div id="logList"></div>
+</section>
+
+<section class="controls">
+  <div class="pad" id="pad" aria-label="Moves"></div>
+  <div class="side">
+    <div class="row">
+      <button class="primary" id="btnRandom">Random start</button>
+      <button id="btnDemo">Watch: scramble and solve</button>
+      <button id="btnScr">Scramble 15</button>
+      <button id="btnSolve">Solve</button>
+      <button id="btnReset">Reset</button>
+    </div>
+    <div class="row">
+      <label>Top colour <select id="selTop"></select></label>
+      <label>Front colour <select id="selFront"></select></label>
+      <label><input type="checkbox" id="chkLock"> Keep this orientation</label>
+      <label><input type="checkbox" id="chkHints" checked> Show hidden faces</label>
+      <label><input type="checkbox" id="chkLetters" checked> Face letters</label>
+    </div>
+    <div class="row">
+      <input type="text" id="alg" placeholder="Type moves, e.g. R U R' U' M2 E S'" aria-label="Move sequence">
+      <button id="btnRun">Run moves</button>
+    </div>
+    <div class="row">
+      <label>Speed <input type="range" id="speed" min="0" max="100" value="55"></label>
+      <label><input type="checkbox" id="chkTrail" checked> Show trail</label>
+      <button id="btnClear">Clear trail</button>
+      <button id="btnView">Reset view</button>
+    </div>
+    <div id="msg"></div>
+  </div>
+</section>
+
+<section class="explain">
+  <div>
+    <h2>Why nine rings</h2>
+    <p>The cube has nine layers: three across each axis. Around every layer runs a belt of 12 stickers, and those belts are the rings. Nine belts of 12 make 108 places, but there are only 54 stickers, because every sticker sits where exactly two belts cross. So each dot on the map is a crossing point of two rings.</p>
+    <p>A quarter turn slides one ring by three places (90° is 3 of its 12 slots). A face turn such as <code>U</code> also spins the eight stickers lying flat on that face. The slice turns <code>M</code>, <code>E</code> and <code>S</code> move a ring with no face attached, and they are the only turns that move centres. Track the white centre: only <code>M</code> and <code>S</code> carry it.</p>
+    <p>The letters engraved on the faces name the move for that side, and the arrow shows which way it turns: pressing <code>f</code> turns the front face the way its arrow points, and <code>F</code> turns it back. The letters stay with the position (U is always on top), whatever colour is there.</p>
+    <p>To turn by hand, hover a square and drag it the way you want it to go, or press an arrow key: only the row or column through that square slides. Dragging a centre square slides the middle layer. This works on the folded-open faces too.</p>
+    <p>The three faces you cannot see are drawn folded open, like a cube net. Each one is hinged on its shared edge with a visible face and laid flat beside it, so its stickers line up with the rows and columns they touch.</p>
+  </div>
+  <div>
+    <h2>How the map is drawn</h2>
+    <p>Each sticker is pushed out onto a sphere so that every belt lies flat in a plane. A stereographic projection, seen from behind the down-left-back corner, turns those plane sections into nine true circles on the page, with the up, front and right faces in the middle. A gentle radial squeeze then evens out the spacing, so the tracks become smooth closed loops. A turn is a real rotation of the sphere, which is why the dots glide along their tracks.</p>
+    <div class="legend" aria-label="Ring names">
+      <span>Left–right axis</span><span>L</span><span>M</span><span>R</span>
+      <span>Down–up axis</span><span>D</span><span>E</span><span>U</span>
+      <span>Back–front axis</span><span>B</span><span>S</span><span>F</span>
+    </div>
+  </div>
+  <div>
+    <h2>The count</h2>
+    <p>Corners can be arranged 8! ways and twisted 3<sup>7</sup> ways, edges arranged 12! ways and flipped 2<sup>11</sup> ways, and half of those combinations are unreachable by parity. That gives 43,252,003,274,489,856,000 reachable positions.</p>
+    <p><b>Top colour</b> and <b>Front colour</b> turn the whole cube until the chosen centre tiles sit there, because the centre tile decides each face's colour. Tick <b>Keep this orientation</b> to hold them there: a slice turn such as <code>M</code> is then done as the two outer layers turning the other way, which gives the same pattern without moving the centres.</p>
+    <p><b>Random start</b> mixes the cube with 25 face turns, keeping the white centre at the bottom. Every move you make after that is logged under <b>Your moves</b>: step through it with the arrow keys, click any move to jump there, or press <b>Replay</b> to watch the whole solve again. Making a new move partway back replaces the moves ahead of it.</p>
+    <p><b>Solve</b> undoes your logged moves and then the starting turns. It is an exact rewind, not a general solving method.</p>
+  </div>
+</section>
+
+<script>
+'use strict';
+/* ---------- maths helpers ---------- */
+const A = 0.45;      // in-face spread of stickers on the sphere
+const G = 0.40;      // radial squeeze exponent for the ring map
+const COL = {U:'#f2f2f2', D:'#ffd21f', F:'#11a052', B:'#1f5ad6', R:'#c8102e', L:'#ff6a13'};
+const CNAME = {U:'White', D:'Yellow', F:'Green', B:'Blue', R:'Red', L:'Orange'};
+const FNAME = {U:'top', D:'bottom', F:'front', B:'back', R:'right', L:'left'};
+const RING = [['L','M','R'],['D','E','U'],['B','S','F']];
+const DIRS = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+const I3 = () => [[1,0,0],[0,1,0],[0,0,1]];
+const dot = (a,b) => a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const cross = (a,b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+const nrm = a => { const l = Math.hypot(a[0],a[1],a[2]); return [a[0]/l,a[1]/l,a[2]/l]; };
+const add = (...vs) => [0,1,2].map(i => vs.reduce((s,v) => s+v[i], 0));
+const scl = (v,k) => v.map(x => x*k);
+const mv = (M,v) => [0,1,2].map(i => M[i][0]*v[0]+M[i][1]*v[1]+M[i][2]*v[2]);
+const mm = (P,Q) => [0,1,2].map(i => [0,1,2].map(j => P[i][0]*Q[0][j]+P[i][1]*Q[1][j]+P[i][2]*Q[2][j]));
+const rnd = M => M.map(r => r.map(v => Math.round(v)+0));
+function rot(ax,t){ const c=Math.cos(t), s=Math.sin(t);
+  if(ax===0) return [[1,0,0],[0,c,-s],[0,s,c]];
+  if(ax===1) return [[c,0,s],[0,1,0],[-s,0,c]];
+  return [[c,-s,0],[s,c,0],[0,0,1]]; }
+function faceName(n){ if(n[0]>.5)return'R'; if(n[0]<-.5)return'L'; if(n[1]>.5)return'U'; if(n[1]<-.5)return'D'; if(n[2]>.5)return'F'; return'B'; }
+const FDIR = {R:[1,0,0], L:[-1,0,0], U:[0,1,0], D:[0,-1,0], F:[0,0,1], B:[0,0,-1]};
+const $ = s => document.querySelector(s);
+const div = c => { const d=document.createElement('div'); d.className=c; return d; };
+
+/* world (y up) -> CSS (y down) matrix3d */
+const SG = [1,-1,1];
+function css(R,t){ const o=[];
+  for(let j=0;j<3;j++){ for(let i=0;i<3;i++) o.push(SG[i]*SG[j]*R[i][j]); o.push(0); }
+  o.push(t[0], -t[1], t[2], 1);
+  return 'matrix3d(' + o.map(v => +v.toFixed(5)).join(',') + ')'; }
+const basis = (e1,e2,e3) => [0,1,2].map(i => [e1[i], e2[i], e3[i]]);
+
+/* ---------- build cube ---------- */
+const cubeEl = $('#cube');
+const GAP = 0.35;        // gap between a face and its unfolded hidden neighbour, in cubie sizes
+const cubies = [], stickers = [];
+let S = 60;
+for(let x=-1;x<=1;x++) for(let y=-1;y<=1;y++) for(let z=-1;z<=1;z++){
+  if(!x && !y && !z) continue;
+  const c = {p:[x,y,z], O:I3(), el:div('cubie'), faces:[]};
+  DIRS.forEach(d => {
+    const f = div('face'); const k = d.findIndex(v => v!==0);
+    const u = [0,0,0]; u[(k+1)%3] = 1;
+    f._R = basis(u, cross(d,u), d); f._n = d;
+    if(c.p[k] === d[k]){
+      const s = div('stk'); const name = faceName(d);
+      s.style.background = COL[name]; f.appendChild(s);
+      const st = {id:stickers.length, cubie:c, ln:d, home:name, color:COL[name], el:f,
+                  kind:['centre','edge','corner'][Math.abs(x)+Math.abs(y)+Math.abs(z)-1]};
+      f.dataset.s = st.id; stickers.push(st);
+      const g = div('face ghost'); const gs = div('stk'); gs.style.background = COL[name]; g.appendChild(gs);
+      g.dataset.s = st.id; st.ghost = g; cubeEl.appendChild(g);
+    }
+    c.faces.push(f); c.el.appendChild(f);
+  });
+  cubies.push(c); cubeEl.appendChild(c.el);
+}
+const plates = {}; Object.keys(FDIR).forEach(k => { plates[k] = div('plate'); cubeEl.appendChild(plates[k]); });
+
+/* engraved face letters: each face position carries its move letter and a clockwise arrow
+   (the way that letter turns it, seen from outside that face) */
+const FUP = {U:[0,0,-1], D:[0,0,1], F:[0,1,0], B:[0,1,0], L:[0,1,0], R:[0,1,0]};
+function engraving(letter){
+  const r = 112, a0 = -125, a1 = 105, rad = d => d*Math.PI/180;
+  const P = d => [r*Math.cos(rad(d)), r*Math.sin(rad(d))];
+  const [x0,y0] = P(a0), [x1,y1] = P(a1);
+  const tx = -Math.sin(rad(a1)), ty = Math.cos(rad(a1)), nx = Math.cos(rad(a1)), ny = Math.sin(rad(a1));
+  const tip = [x1+tx*26, y1+ty*26], b1 = [x1+nx*15, y1+ny*15], b2 = [x1-nx*15, y1-ny*15];
+  const arc = `M${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 1 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+  const head = `M${b1.map(v=>v.toFixed(1)).join(' ')} L${tip.map(v=>v.toFixed(1)).join(' ')} L${b2.map(v=>v.toFixed(1)).join(' ')} Z`;
+  const layer = (dx, dy, col) => `<g transform="translate(${dx} ${dy})" fill="none" stroke="${col}">
+      <path d="${arc}" stroke-width="10" stroke-linecap="round"/>
+      <path d="${head}" fill="${col}" stroke-width="3" stroke-linejoin="round"/>
+      <text x="0" y="4" text-anchor="middle" dominant-baseline="middle" font-size="96" font-weight="700"
+        font-family="Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif" fill="${col}" stroke="none">${letter}</text></g>`;
+  // light lip below-right, dark cut on top: reads as cut into the plastic
+  return `<svg viewBox="-150 -150 300 300" aria-hidden="true">${layer(2.5,2.5,'rgba(255,255,255,.38)')}${layer(0,0,'rgba(8,10,24,.50)')}</svg>`;
+}
+const labels = {}; let lettersOn = true;
+Object.keys(FDIR).forEach(k => { const d = div('flab'); d.innerHTML = engraving(k); labels[k] = d; cubeEl.appendChild(d); });
+function layoutFaces(){
+  const F = S*0.96;
+  cubies.forEach(c => c.faces.forEach(f => {
+    f.style.width = f.style.height = F+'px'; f.style.left = f.style.top = (-F/2)+'px';
+    f.style.transform = css(f._R, f._n.map(v => v*S*0.48));
+  }));
+  stickers.forEach(st => { const g = st.ghost; g.style.width = g.style.height = F+'px'; g.style.left = g.style.top = (-F/2)+'px'; });
+  const P = S*3.12; Object.values(plates).forEach(p => { p.style.width = p.style.height = P+'px'; p.style.left = p.style.top = (-P/2)+'px'; });
+  const Lb = S*2.9; Object.values(labels).forEach(l => { l.style.width = l.style.height = Lb+'px'; l.style.left = l.style.top = (-Lb/2)+'px'; });
+}
+function placeCubie(c, R){
+  const M = R ? mm(R, c.O) : c.O;
+  const p = c.p.map(v => v*S);
+  c.el.style.transform = css(M, R ? mv(R,p) : p);
+}
+const placeAll = () => cubies.forEach(c => placeCubie(c));
+const stN = st => mv(st.cubie.O, st.ln);
+
+/* camera */
+const YAW0 = -35, PITCH0 = 25;
+let yaw = YAW0, pitch = PITCH0;
+const camR = () => mm(rot(0,pitch*Math.PI/180), rot(1,yaw*Math.PI/180));
+function placeCam(){ cubeEl.style.transform = css(camR(),[0,0,0]); updateGhosts(); }
+
+/* ---------- hidden faces, unfolded like a cube net ----------
+   Each face turned away from the viewer is hinged open about its edge with the
+   most visible neighbouring face, so it lies flat in that face's plane, beside the cube. */
+let hintsOn = true, net = [];
+function computeNet(){
+  const Rc = camR(), facing = n => mv(Rc, n)[2];
+  const out = [];
+  if(!hintsOn) return out;
+  Object.entries(FDIR).forEach(([k,n]) => {
+    if(facing(n) >= 0.12) return;
+    let best = null, bf = 0.12;
+    Object.entries(FDIR).forEach(([j,m]) => { if(Math.abs(dot(n,m)) > .5) return; const f = facing(m); if(f >= bf){ bf = f; best = m; } });
+    if(best) out.push({k, n, m:best, a:cross(n,best)});
+  });
+  return out;
+}
+function updateGhosts(){
+  net = computeNet();
+  const byFace = {}; net.forEach(h => byFace[h.k] = h);
+  Object.entries(plates).forEach(([k,p]) => {
+    const h = byFace[k]; if(!h){ p.style.display = 'none'; return; }
+    p.style.display = ''; p.style.transform = css(basis(h.a, cross(h.m,h.a), h.m), scl(add(scl(h.m,1.47), scl(h.n,3+GAP)), S));
+  });
+  stickers.forEach(st => {
+    const g = st.ghost, h = byFace[faceName(stN(st))];
+    if(!h){ g.style.display = 'none'; return; }
+    const p = st.cubie.p;
+    const pos = add(scl(h.m,1.48), scl(h.n, 3+GAP-dot(p,h.m)), scl(h.a, dot(p,h.a)));
+    g.style.display = ''; g.style.transform = css(basis(h.a, cross(h.m,h.a), h.m), scl(pos,S));
+  });
+  // letters: on the face itself, or on its unfolded panel when the face is hidden
+  const Rc = camR();
+  Object.entries(labels).forEach(([k,el]) => {
+    if(!lettersOn){ el.style.display = 'none'; return; }
+    const n = FDIR[k], u = FUP[k], r = cross(u, n), h = byFace[k];
+    el.style.display = '';
+    // turn the letter in 90 degree steps so it reads upright on screen (the arrow keeps its sense)
+    const upright = (E1, E2) => [[E1,E2],[E2,scl(E1,-1)],[scl(E1,-1),scl(E2,-1)],[scl(E2,-1),E1]]
+      .reduce((best,c) => mv(Rc,c[1])[1] > mv(Rc,best[1])[1] ? c : best);
+    if(!h){ const [rr,uu] = upright(r,u); el.style.transform = css(basis(rr, uu, n), scl(n, S*1.5+1)); return; }
+    const unf = v => add(scl(h.a, dot(v,h.a)), scl(h.n, -dot(v,h.m)), scl(h.m, dot(v,h.n)));
+    const [rr,uu] = upright(unf(r), unf(u));
+    el.style.transform = css(basis(rr, uu, h.m), add(scl(h.m, S*1.5+1), scl(h.n, S*(3+GAP))));
+  });
+  paintHover();
+}
+
+/* ---------- hover a square, then swipe it or press an arrow ----------
+   The highlight belongs to a place on the cube (face + cubie position), not to a sticker,
+   so after a turn it stays where your pointer is. */
+let hov = null;                                   // {n:[face normal], p:[cubie position]}
+const same = (a,b) => a.every((v,i) => Math.round(v) === Math.round(b[i]));
+const slotOf = el => { const st = stickers[+el.dataset.s]; return {n:stN(st), p:st.cubie.p.slice()}; };
+const stickerAt = sl => stickers.find(st => same(stN(st), sl.n) && same(st.cubie.p, sl.p));
+function paintHover(){
+  document.querySelectorAll('.face.hov').forEach(el => el.classList.remove('hov'));
+  if(!hov) return;
+  const st = stickerAt(hov); if(!st) return;
+  const inNet = net.some(h => same(h.n, hov.n));
+  (inNet ? st.ghost : st.el).classList.add('hov');
+}
+function setHover(sl){ hov = sl; paintHover(); }
+/* screen direction (sx right, sy down) on the square at slot sl -> the layer turn that slides it that way */
+function slideSlot(sl, sx, sy){
+  const h = net.find(h => same(h.n, sl.n)), Rc = camR(), cands = [];
+  if(h){            // unfolded face: net axis a is face axis a, net axis n is face axis -m
+    cands.push({scr:h.a, face:h.a}, {scr:scl(h.a,-1), face:scl(h.a,-1)}, {scr:h.n, face:scl(h.m,-1)}, {scr:scl(h.n,-1), face:h.m});
+  } else {
+    [0,1,2].filter(i => Math.abs(sl.n[i]) < .5).forEach(i => [1,-1].forEach(g => { const v = [0,0,0]; v[i] = g; cands.push({scr:v, face:v}); }));
+  }
+  let best = null, bs = -2;
+  cands.forEach(c => { const q = mv(Rc, c.scr), L = Math.hypot(q[0], q[1]) || 1, d = (q[0]*sx - q[1]*sy)/L; if(d > bs){ bs = d; best = c; } });
+  const w = cross(sl.n, best.face);              // turning +90 deg about n x d moves the square along d
+  const k = w.findIndex(v => Math.abs(v) > .5), sg = Math.sign(w[k]);
+  const letter = RING[k][Math.round(sl.p[k])+1];
+  const name = letter + (MV[letter][2] === sg ? '' : "'");
+  userMove(name);
+  say(`${name}: that ${k===1 ? 'row' : 'layer'} slides. ${KEYHINT}`);
+}
+function fit(){
+  const b = $('#cubePanel').getBoundingClientRect(), W = b.width, H = b.height;
+  net = computeNet();
+  const Rc = camR(), pts = [];
+  for(const sx of [-1.5,1.5]) for(const sy of [-1.5,1.5]) for(const sz of [-1.5,1.5]) pts.push([sx,sy,sz]);
+  net.forEach(h => { const C = add(scl(h.m,1.5), scl(h.n,3+GAP));
+    for(const u of [-1.5,1.5]) for(const v of [-1.5,1.5]) pts.push(add(C, scl(h.a,u), scl(h.n,v))); });
+  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+  pts.forEach(p => { const q = mv(Rc,p); x0=Math.min(x0,q[0]); x1=Math.max(x1,q[0]); y0=Math.min(y0,q[1]); y1=Math.max(y1,q[1]); });
+  const top = 44, bottom = 34, aw = W-32, ah = H-top-bottom;
+  S = Math.min(aw/(x1-x0), ah/(y1-y0))*0.86;
+  S = Math.min(S, Math.min(W,H)*0.165);
+  const L = W/2 - (x0+x1)/2*S, T = top + ah/2 + (y0+y1)/2*S;
+  cubeEl.style.left = L+'px'; cubeEl.style.top = T+'px';
+  $('#scene').style.perspective = (S*18)+'px'; $('#scene').style.perspectiveOrigin = `${L}px ${T}px`;
+  layoutFaces(); placeAll(); updateGhosts();
+}
+
+/* ---------- moves ---------- */
+const MV = {U:[1,[1],-1], D:[1,[-1],1], R:[0,[1],-1], L:[0,[-1],1], F:[2,[1],-1], B:[2,[-1],1],
+            M:[0,[0],1], E:[1,[0],1], S:[2,[0],-1], x:[0,[-1,0,1],-1], y:[1,[-1,0,1],-1], z:[2,[-1,0,1],-1]};
+function parse(tok){
+  const m = /^([UDLRFBMESxyz])(2'?|'2?|)$/.exec(tok); if(!m) return null;
+  const [ax, layers, dir] = MV[m[1]];
+  const twice = m[2].includes('2'), prime = m[2].includes("'") && !twice;
+  return {name:m[1]+(twice?'2':prime?"'":''), ax, layers, angle: dir*(Math.PI/2)*(prime?-1:1)*(twice?2:1), twice};
+}
+const inverse = m => m.endsWith('2') ? m : m.endsWith("'") ? m.slice(0,-1) : m+"'";
+const isWhole = m => /^[xyz]/.test(m);
+function resolve(m, lock){
+  const mo = parse(m); if(!mo) return null;
+  let layers = mo.layers, angle = mo.angle;
+  // kept orientation: a slice turn becomes the two outer layers turning the other way, so centres stay put
+  if(lock && layers.length === 1 && layers[0] === 0){ layers = [-1,1]; angle = -angle; }
+  return {...mo, layers, angle};
+}
+function commit(r, set){
+  const R = rnd(rot(r.ax, r.angle));
+  (set || cubies.filter(c => r.layers.includes(c.p[r.ax]))).forEach(c => {
+    c.p = mv(R, c.p).map(v => Math.round(v)+0); c.O = rnd(mm(R, c.O)); placeCubie(c); });
+}
+const instant = (m, lock) => commit(resolve(m, lock));
+const snapshot = () => cubies.map(c => ({p:c.p.slice(), O:c.O.map(r => r.slice())}));
+function restore(s){ cubies.forEach((c,i) => { c.p = s[i].p.slice(); c.O = s[i].O.map(r => r.slice()); placeCubie(c); }); }
+
+/* ---------- move log ----------
+   log   : every move you make from the starting position, {m, lock}
+   pos   : how many of them are applied right now (the cube on screen)
+   vpos  : pos once the queued animations finish
+   start : snapshot of the starting position, plus the path that made it from solved */
+let queue = [], cur = null, seq = null, dirty = true, dur = 380, lockOn = false;
+let log = [], pos = 0, vpos = 0, playing = false, paused = false;
+let homeSnap, startSnap, startPath = [], startLabel = 'Solved cube';
+
+function busy(){ return !!cur || queue.length > 0; }
+function frame(now){
+  if(!cur && queue.length && !(paused && queue[0].play)) startItem(queue.shift(), now);
+  if(cur){
+    const k = (now-cur.t0)/cur.dur;
+    if(k >= 1) finishCur();
+    else if(!cur.pause){ cur.theta = cur.angle*ease(k); const R = rot(cur.ax, cur.theta); cur.set.forEach(c => placeCubie(c,R)); dirty = true; }
+  }
+  if(dirty){ drawRings(); dirty = false; }
+  requestAnimationFrame(frame);
+}
+const ease = k => k<.5 ? 4*k*k*k : 1-Math.pow(-2*k+2,3)/2;
+function startItem(it, now){
+  if(it.then){ it.then(); cur = {pause:true, t0:now, dur:1}; return; }
+  if(it.pause){ cur = {pause:true, t0:now, dur:it.pause}; return; }
+  const r = resolve(it.m, it.lock); if(!r) return;
+  const set = new Set(cubies.filter(c => r.layers.includes(c.p[r.ax])));
+  stickers.forEach(st => { if(set.has(st.cubie)) st.ghost.classList.add('off'); });
+  $('#solved').style.opacity = 0;
+  cur = {...r, it, set, t0:now, dur: dur*(r.twice?1.5:1), theta:0};
+  $('#mvLetter').textContent = r.name;
+  $('#mvCount').textContent = (seq && it.seqd) ? `${seq.label} ${seq.done+1} / ${seq.total}` : '';
+}
+function finishCur(){
+  if(cur.pause){ cur = null; return; }
+  commit(cur, cur.set);
+  stickers.forEach(st => st.ghost.classList.remove('off'));
+  const src = cur.it.src;
+  if(src === 'user' || src === 'redo') pos++; else if(src === 'undo') pos--;
+  if(seq && cur.it.seqd){ seq.done++; if(seq.done >= seq.total) seq = null; }
+  cur = null;
+  if(playing && !queue.some(q => q.play)){ playing = false; paused = false; }
+  afterChange();
+}
+function afterChange(){
+  updateGhosts(); updateOrient(); updateInfo(); renderLog(); dirty = true;   // updateGhosts also repaints the hover highlight
+  if(!busy() && pos > 0 && startPath.length && isSolved()) say(`Solved in ${pos} move${pos>1?'s':''}. Press Replay to watch your solve again.`);
+}
+
+function record(m, lock, seqd){           // a new move by you: anything after the cursor is dropped
+  log.length = vpos; log.push({m, lock}); vpos++;
+  queue.push({m, lock, src:'user', seqd});
+}
+function userMove(m){
+  stopPlay();
+  if(lockOn && isWhole(m)) return say(LOCKMSG);
+  seq = null; record(parse(m).name, lockOn, false); renderLog();
+}
+function stepBack(){
+  stopPlay();
+  if(vpos === 0) return say('This is the starting position.');
+  vpos--; const h = log[vpos]; queue.push({m:inverse(h.m), lock:h.lock, src:'undo'}); renderLog();
+}
+function stepFwd(){
+  stopPlay();
+  if(vpos >= log.length) return say(log.length ? 'This is your latest move.' : 'No moves recorded yet.');
+  const h = log[vpos]; vpos++; queue.push({m:h.m, lock:h.lock, src:'redo'}); renderLog();
+}
+function play(){
+  if(vpos >= log.length) return say(log.length ? 'At your latest move. Press Replay to watch from the start.' : 'No moves recorded yet.');
+  const n = log.length - vpos;
+  seq = {label:'Replay', total:n, done:0};
+  for(let i=vpos;i<log.length;i++) queue.push({m:log[i].m, lock:log[i].lock, src:'redo', seqd:true, play:true});
+  vpos = log.length; playing = true; paused = false;
+  say('Playing your moves. Space pauses; an arrow key stops and steps.'); renderLog();
+}
+function stopPlay(){
+  if(!playing) return;
+  const n = queue.filter(q => q.play).length;
+  queue = queue.filter(q => !q.play); vpos -= n; playing = false; paused = false; seq = null; renderLog();
+}
+function togglePlay(){
+  if(playing){ paused = !paused; say(paused ? 'Paused. Space resumes.' : 'Playing.'); renderLog(); return; }
+  if(busy()) return say('Wait for the current turns to finish.');
+  play();
+}
+function jumpTo(k){
+  stopPlay();
+  if(busy()) return say('Wait for the current turns to finish.');
+  k = Math.max(0, Math.min(log.length, k));
+  if(k < pos){ restore(startSnap); pos = 0; }
+  for(; pos < k; pos++) instant(log[pos].m, log[pos].lock);
+  vpos = pos; trail = []; afterChange();
+}
+function replay(){
+  stopPlay();
+  if(busy()) return say('Wait for the current turns to finish.');
+  if(!log.length) return say('No moves recorded yet. Make a random start and start solving.');
+  restore(startSnap); pos = vpos = 0; trail = []; afterChange();
+  queue.push({pause:450}); play();
+}
+function newStart(path, label){
+  startPath = path; startLabel = label; startSnap = snapshot();
+  log = []; pos = vpos = 0; trail = []; afterChange();
+}
+
+/* ---------- sphere + ring map ---------- */
+function sphereQ(p,n){ const t = [p[0]-n[0], p[1]-n[1], p[2]-n[2]]; const h = Math.sqrt(1-A*A*dot(t,t));
+  return [A*t[0]+n[0]*h, A*t[1]+n[1]*h, A*t[2]+n[2]*h]; }
+const PZ = nrm([-1,-1,-1]), PX = nrm(cross(PZ,[0,1,0])), PY = cross(PZ,PX);
+let T2 = [[1,0],[0,1]];
+function raw(q){ const w2 = dot(q,PZ); let X = dot(q,PX)/(1-w2), Y = -dot(q,PY)/(1-w2);
+  const r = Math.hypot(X,Y); if(r > 1e-12){ const f = Math.pow(r,G-1); X*=f; Y*=f; } return [X,Y]; }
+function unit(q){ const [X,Y] = raw(q); return [T2[0][0]*X+T2[0][1]*Y, T2[1][0]*X+T2[1][1]*Y]; }
+(function orientMap(){
+  const u = raw([0,1,0]); const d = -Math.PI/2 - Math.atan2(u[1],u[0]);
+  T2 = [[Math.cos(d),-Math.sin(d)],[Math.sin(d),Math.cos(d)]];
+  const U = unit([0,1,0]), R = unit([1,0,0]), F = unit([0,0,1]);
+  if((R[0]-U[0])*(F[1]-U[1]) - (R[1]-U[1])*(F[0]-U[0]) < 0) T2[0] = T2[0].map(v => -v);
+})();
+const rings = [];
+for(let ax=0; ax<3; ax++) for(let v=-1; v<=1; v++){
+  const e = [0,0,0]; e[ax]=1; const u=[0,0,0]; u[(ax+1)%3]=1; const w=[0,0,0]; w[(ax+2)%3]=1;
+  const rho = Math.sqrt(1-A*A*v*v), pts = [];
+  for(let i=0;i<=360;i++){ const t = i/360*2*Math.PI, c = Math.cos(t), s = Math.sin(t);
+    pts.push(unit([A*v*e[0]+rho*(c*u[0]+s*w[0]), A*v*e[1]+rho*(c*u[1]+s*w[1]), A*v*e[2]+rho*(c*u[2]+s*w[2])])); }
+  let far = pts[0]; pts.forEach(p => { if(Math.hypot(...p) > Math.hypot(...far)) far = p; });
+  rings.push({ax, v, name:RING[ax][v+1], pts, far});
+}
+let maxR = 0; rings.forEach(r => r.pts.forEach(p => maxR = Math.max(maxR, Math.hypot(...p))));
+const homeUnits = stickers.map(st => unit(sphereQ(st.cubie.p, stN(st))));
+let minD = 1e9; homeUnits.forEach((a,i) => homeUnits.forEach((b,j) => { if(i<j) minD = Math.min(minD, Math.hypot(a[0]-b[0],a[1]-b[1])); }));
+
+function stickerUnit(st){
+  let q = sphereQ(st.cubie.p, stN(st));
+  if(cur && !cur.pause && cur.set.has(st.cubie)) q = mv(rot(cur.ax, cur.theta), q);
+  return unit(q);
+}
+
+const cv = $('#rings'), ctx = cv.getContext('2d');
+let W=0, H=0, DPR=1, scale=1, ox=0, oy=0, rDot=6, stars=[];
+function sizeCanvas(){
+  const b = cv.getBoundingClientRect(); DPR = window.devicePixelRatio||1;
+  W = b.width; H = b.height; cv.width = W*DPR; cv.height = H*DPR;
+  scale = (Math.min(W, H-40)/2 - 26)/maxR; ox = W/2; oy = H/2 - 6;
+  rDot = Math.max(3, Math.min(10, 0.42*minD*scale));
+  let s = 7; const r = () => (s = (s*16807)%2147483647)/2147483647;
+  stars = Array.from({length:90}, () => [r()*W, r()*H, r()*1.2+.2, r()*.5+.15]);
+  dirty = true;
+}
+const toPx = u => [ox+u[0]*scale, oy+u[1]*scale];
+
+let tracked = stickers.find(st => st.home==='U' && st.kind==='centre').id;
+let trail = [], showTrail = true;
+
+function activeRings(){
+  if(!cur || cur.pause) return new Set();
+  return new Set(rings.filter(r => r.ax===cur.ax && cur.layers.includes(r.v)));
+}
+function drawRings(){
+  ctx.setTransform(DPR,0,0,DPR,0,0); ctx.clearRect(0,0,W,H);
+  stars.forEach(([x,y,r,a]) => { ctx.fillStyle = `rgba(220,230,255,${a})`; ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill(); });
+  const act = activeRings();
+  const strokeRing = r => { ctx.beginPath(); r.pts.forEach((p,i) => { const [x,y] = toPx(p); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }); ctx.stroke(); };
+  ctx.lineWidth = 1.4; ctx.strokeStyle = '#4a5378';
+  rings.forEach(r => { if(!act.has(r)) strokeRing(r); });
+  if(act.size){ ctx.save(); ctx.shadowColor = '#bfefff'; ctx.shadowBlur = 12; ctx.lineWidth = 3; ctx.strokeStyle = '#e9f7ff';
+    act.forEach(r => strokeRing(r)); ctx.restore(); }
+  ctx.font = `15px ${getComputedStyle(document.body).getPropertyValue('--serif')}`; ctx.textAlign='center'; ctx.textBaseline='middle';
+  rings.forEach(r => { const L = Math.hypot(...r.far), k = (L*scale+14)/(L*scale);
+    const [x,y] = toPx([r.far[0]*k, r.far[1]*k]);
+    ctx.fillStyle = act.has(r) ? '#79d4e8' : '#8a93b8'; ctx.fillText(r.name, x, y); });
+  const tst = stickers[tracked], tu = stickerUnit(tst);
+  const last = trail[trail.length-1];
+  if(!last || Math.hypot(last[0]-tu[0], last[1]-tu[1]) > 0.003){ trail.push(tu); if(trail.length > 1500) trail.shift(); }
+  if(showTrail && trail.length > 1){
+    ctx.lineWidth = 2; ctx.lineCap = 'round';
+    for(let i=1;i<trail.length;i++){ const a = 0.15 + 0.7*i/trail.length;
+      ctx.strokeStyle = `rgba(121,212,232,${a})`; ctx.beginPath(); ctx.moveTo(...toPx(trail[i-1])); ctx.lineTo(...toPx(trail[i])); ctx.stroke(); }
+  }
+  stickers.forEach(st => { if(st.id === tracked) return; const [x,y] = toPx(stickerUnit(st));
+    ctx.beginPath(); ctx.arc(x,y,rDot,0,7); ctx.fillStyle = st.color; ctx.fill();
+    ctx.lineWidth = 1.2; ctx.strokeStyle = '#0b1029'; ctx.stroke(); });
+  const [tx,ty] = toPx(tu);
+  ctx.save(); ctx.shadowColor = '#79d4e8'; ctx.shadowBlur = 16;
+  ctx.beginPath(); ctx.arc(tx,ty,rDot*1.35,0,7); ctx.fillStyle = tst.color; ctx.fill();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = '#79d4e8'; ctx.stroke(); ctx.restore();
+}
+
+/* ---------- info / tracking ---------- */
+function isSolved(){
+  const byFace = {};
+  for(const st of stickers){ const f = faceName(stN(st)); (byFace[f] ||= new Set()).add(st.home); }
+  return Object.values(byFace).every(s => s.size === 1);
+}
+function updateInfo(){
+  const ok = isSolved();
+  $('#solved').style.opacity = ok ? 1 : 0;
+  $('#solved').textContent = (ok && pos > 0 && startPath.length) ? `Solved in ${pos} moves` : 'Solved';
+  stickers.forEach(st => { st.el.classList.toggle('trk', st.id === tracked); st.ghost.classList.toggle('trk', st.id === tracked); });
+  const st = stickers[tracked], n = stN(st), p = st.cubie.p;
+  const on = [0,1,2].filter(k => Math.round(n[k]) === 0).map(k => RING[k][p[k]+1]);
+  $('#trackInfo').innerHTML = `Tracking the <b>${CNAME[st.home].toLowerCase()} ${st.kind}</b>. It is on the ${FNAME[faceName(n)]} face and rides rings <b>${on[0]}</b> and <b>${on[1]}</b>.`;
+  if(!busy()) $('#mvCount').textContent = log.length ? `Step ${pos} / ${log.length}` : '';
+}
+function track(id){ tracked = id; trail = []; updateInfo(); dirty = true; }
+
+/* ---------- move log strip ---------- */
+const logList = $('#logList');
+function renderLog(){
+  const vp = playing ? pos : vpos;             // while playing, follow the cube on screen
+  logList.innerHTML = '';
+  const mk = (txt, i, cls, title) => { const b = document.createElement('button'); b.className = 'mchip '+cls; b.textContent = txt;
+    b.title = title; b.onclick = () => jumpTo(i); logList.appendChild(b); return b; };
+  mk('Start', 0, vp === 0 ? 'here' : 'done', 'Go to the starting position (Home)');
+  log.forEach((h,i) => mk(h.m, i+1,
+    i+1 === vp ? 'here' : i < vp ? 'done' : 'ahead', `Go to step ${i+1}`));
+  const here = logList.querySelector('.here'); if(here) here.scrollIntoView({block:'nearest', inline:'nearest'});
+  $('#logStart').textContent = `Start: ${startLabel}.`;
+  $('#logPos').textContent = log.length ? `Step ${vp} of ${log.length}` : 'No moves yet';
+  $('#btnPlay').textContent = playing && !paused ? 'Pause' : 'Play';
+  $('#btnPrev').disabled = $('#btnFirst').disabled = vp === 0;
+  $('#btnNext').disabled = $('#btnLast').disabled = vp >= log.length;
+}
+
+/* ---------- UI ---------- */
+const PADC = {U:COL.U,D:COL.D,L:COL.L,R:COL.R,F:COL.F,B:COL.B,M:'#79d4e8',E:'#79d4e8',S:'#79d4e8',x:'#9aa3c7',y:'#9aa3c7',z:'#9aa3c7'};
+Object.keys(MV).forEach(k => {
+  const g = div('grp'), lo = k.toLowerCase(), up = k.toUpperCase();
+  [k, k+"'", k+'2'].forEach((m,i) => { const b = document.createElement('button'); b.textContent = m;
+    if(i===0){ b.className = 'base'; b.style.setProperty('--fc', PADC[k]); }
+    b.title = i===0 ? `${k} clockwise (key ${lo})` : i===1 ? `${k} anticlockwise (key ${up})` : `${k} twice`;
+    b.onclick = () => userMove(m); g.appendChild(b); });
+  $('#pad').appendChild(g);
+});
+function say(t){ $('#msg').textContent = t; }
+const KEYHINT = 'Hover a square, then drag it or press ← ↑ → ↓.';
+const KEYMSG = 'Keys: small letter turns clockwise (l = L), capital turns back (L = L\'), for u d l r f b m e s x y z. Hover a square and press ← ↑ → ↓ to slide its row. With no square highlighted, ← → step through your moves; , and . always step. Home/End jump, Space plays, Esc clears the highlight.';
+const LOCKMSG = 'Orientation is kept fixed. Untick "Keep this orientation" to turn the whole cube with x, y, z.';
+function randomMoves(n, faces){
+  const out = []; let lastAx = -1;
+  while(out.length < n){ const f = faces[Math.floor(Math.random()*faces.length)], ax = MV[f][0];
+    if(ax === lastAx) continue; lastAx = ax; out.push(f + ['', "'", '2'][Math.floor(Math.random()*3)]); }
+  return out;
+}
+function doReset(){
+  queue = []; cur = null; seq = null; playing = false; paused = false;
+  stickers.forEach(st => st.ghost.classList.remove('off'));
+  restore(homeSnap); $('#mvLetter').textContent = '';
+  newStart([], 'Solved cube');
+}
+$('#btnRandom').onclick = () => {
+  stopPlay(); if(busy()) return say('Wait for the current turns to finish.');
+  doReset();
+  const s = randomMoves(25, 'UDLRFB');
+  s.forEach(m => instant(m, false));
+  newStart(s.map(m => ({m, lock:false})), 'random, 25 face turns, white centre at the bottom');
+  $('#mvLetter').textContent = '';
+  say('New random start. Solve it: every move is recorded below, and Replay plays your solve back.');
+};
+$('#btnScr').onclick = () => {
+  stopPlay(); if(busy()) return say('Wait for the current turns to finish.');
+  const path = startPath.concat(log.slice(0,pos)), s = randomMoves(15, 'UDLRFBMES');
+  seq = {label:'Scramble', total:s.length, done:0};
+  s.forEach(m => queue.push({m, lock:false, src:'free', seqd:true}));
+  queue.push({then:() => newStart(path.concat(s.map(m => ({m, lock:false}))), 'scrambled with 15 turns')});
+  trail = []; say('Scrambling with 15 random turns, slices included.');
+};
+$('#btnSolve').onclick = () => {
+  stopPlay(); if(busy()) return say('Wait for the current turns to finish.');
+  if(!pos && !startPath.length) return say('Already solved. Make a random start first.');
+  const back = [];
+  for(let i=pos-1;i>=0;i--) back.push({m:inverse(log[i].m), lock:log[i].lock, src:'undo', seqd:true});
+  startPath.slice().reverse().forEach(h => back.push({m:inverse(h.m), lock:h.lock, src:'free', seqd:true}));
+  seq = {label:'Solve', total:back.length, done:0}; vpos = 0;
+  back.forEach(it => queue.push(it));
+  queue.push({then:() => newStart([], 'Solved cube')});
+  say(`Undoing ${pos} of your moves, then the ${startPath.length} starting turns.`);
+};
+$('#btnDemo').onclick = () => {
+  stopPlay(); if(busy()) return say('Wait for the current turns to finish.');
+  doReset();
+  track(stickers.find(st => st.home==='U' && st.kind==='centre').id);
+  const s = randomMoves(15, 'UDLRFBMES');
+  seq = {label:'Scramble', total:s.length, done:0};
+  s.forEach(m => queue.push({m, lock:lockOn, src:'free', seqd:true}));
+  queue.push({pause:900});
+  queue.push({then:() => { seq = {label:'Solve', total:s.length, done:0};
+    s.slice().reverse().forEach(m => queue.push({m:inverse(m), lock:lockOn, src:'free', seqd:true})); }});
+  say('Watch the white centre: it only moves on M and S turns.');
+};
+$('#btnReset').onclick = () => { doReset(); say('Back to the solved cube, white centre at the bottom.'); };
+$('#btnRun').onclick = runAlg;
+$('#alg').addEventListener('keydown', e => { if(e.key === 'Enter') runAlg(); });
+function runAlg(){
+  const toks = $('#alg').value.replace(/[’‘`]/g,"'").trim().split(/\s+/).filter(Boolean);
+  if(!toks.length) return say('Type some moves first, separated by spaces.');
+  const bad = toks.filter(t => !parse(t));
+  if(bad.length) return say(`Not a move: ${bad.join(' ')}. Use U D L R F B M E S x y z with ' or 2.`);
+  if(lockOn && toks.some(isWhole)) return say(LOCKMSG);
+  stopPlay();
+  seq = toks.length > 1 ? {label:'Run', total:toks.length, done:0} : null;
+  toks.forEach(t => record(parse(t).name, lockOn, toks.length > 1)); renderLog();
+  say(`Running ${toks.length} move${toks.length>1?'s':''}. They are added to your log.`);
+}
+const speedEl = $('#speed'); const setSpeed = () => { dur = 900 - speedEl.value*7.5; }; speedEl.oninput = setSpeed; setSpeed();
+$('#chkTrail').onchange = e => { showTrail = e.target.checked; dirty = true; };
+$('#btnClear').onclick = () => { trail = []; dirty = true; };
+$('#btnView').onclick = resetView;
+function resetView(){
+  yaw = YAW0; pitch = PITCH0; placeCam(); fit();
+  const at = centreAt('U');                    // where the white centre is now
+  if(at === 'D') return say('View reset. White centre is at the bottom.');
+  if(lockOn) return say('View reset. Orientation is kept, so the white centre stays where it is.');
+  stopPlay(); if(busy()) return say('View reset. Wait for the turns to finish, then press it again to bring white to the bottom.');
+  const fix = {U:['x2'], F:["x'"], B:['x'], R:['z'], L:["z'"]}[at];
+  fix.forEach(m => record(m, false, false)); renderLog();
+  say(`View reset. Turning the whole cube (${fix.join(' ')}) so the white centre is at the bottom.`);
+}
+$('#btnFirst').onclick = () => jumpTo(0);
+$('#btnLast').onclick = () => jumpTo(log.length);
+$('#btnPrev').onclick = stepBack;
+$('#btnNext').onclick = stepFwd;
+$('#btnPlay').onclick = togglePlay;
+$('#btnReplay').onclick = replay;
+$('#btnCopy').onclick = async () => {
+  if(!log.length) return say('No moves recorded yet.');
+  const txt = log.map(h => h.m).join(' ');
+  try{ await navigator.clipboard.writeText(txt); say(`Copied ${log.length} moves: ${txt}`); }
+  catch(e){ $('#alg').value = txt; say('Copy was blocked by the browser, so the moves are in the move box instead.'); }
+};
+$('#btnFs').onclick = () => { if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.(); };
+document.addEventListener('fullscreenchange', () => { $('#btnFs').textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen'; });
+
+document.addEventListener('keydown', e => {
+  const tg = e.target.tagName;
+  if(tg === 'INPUT' || tg === 'SELECT' || tg === 'TEXTAREA' || e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key;
+  const AR = {ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1]}[k];
+  if(AR && hov){ slideSlot(hov, AR[0], AR[1]); e.preventDefault(); return; }
+  if(k === 'ArrowLeft' || k === ','){ stepBack(); e.preventDefault(); return; }
+  if(k === 'ArrowRight' || k === '.'){ stepFwd(); e.preventDefault(); return; }
+  if(k === 'Escape'){ setHover(null); return; }
+  if(k === 'Home'){ jumpTo(0); e.preventDefault(); return; }
+  if(k === 'End'){ jumpTo(log.length); e.preventDefault(); return; }
+  if(k === ' '){ togglePlay(); e.preventDefault(); return; }
+  if(!/^[udlrfbmesxyz]$/i.test(k)) return;
+  const base = /[xyz]/i.test(k) ? k.toLowerCase() : k.toUpperCase();
+  const prime = k !== k.toLowerCase();       // capital letter = anticlockwise
+  userMove(base + (prime ? "'" : '')); e.preventDefault();
+});
+
+/* pointer on the cube: drag a square = slide its row; drag empty space or right-drag = look around; click = track */
+const scene = $('#scene'); let drag = null;
+const faceUnder = t => t && t.closest ? t.closest('.face[data-s]') : null;
+scene.addEventListener('contextmenu', e => e.preventDefault());
+scene.addEventListener('pointerdown', e => {
+  const f = faceUnder(e.target);
+  const swipe = f && e.button === 0 && !e.shiftKey;
+  if(f) setHover(slotOf(f));
+  drag = {x:e.clientX, y:e.clientY, yaw, pitch, moved:false, f, mode: swipe ? 'swipe' : 'orbit', done:false};
+  if(!swipe) scene.classList.add('orbiting');
+  scene.setPointerCapture(e.pointerId);
+});
+scene.addEventListener('pointermove', e => {
+  if(!drag){ const f = faceUnder(e.target); if(f) setHover(slotOf(f)); return; }
+  const dx = e.clientX-drag.x, dy = e.clientY-drag.y, d = Math.hypot(dx,dy);
+  if(d > 5) drag.moved = true;
+  if(drag.mode === 'swipe'){
+    if(!drag.done && d > 14){ drag.done = true; slideSlot(hov, dx/d, dy/d); }   // one quarter turn per swipe
+    return;
+  }
+  yaw = drag.yaw + dx*0.4; pitch = Math.max(-89, Math.min(89, drag.pitch + dy*0.4)); placeCam();
+});
+scene.addEventListener('pointerup', () => {
+  if(drag && !drag.moved && drag.f) track(+drag.f.dataset.s);
+  else if(drag && drag.mode === 'orbit' && drag.moved) fit();
+  scene.classList.remove('orbiting');
+  drag = null;
+});
+$('#cubePanel').addEventListener('pointerleave', () => { if(!drag) setHover(null); });
+cv.addEventListener('click', e => { const b = cv.getBoundingClientRect(), x = e.clientX-b.left, y = e.clientY-b.top;
+  let best = null, bd = 1e9; stickers.forEach(st => { const [px,py] = toPx(stickerUnit(st)); const d = Math.hypot(px-x, py-y); if(d < bd){ bd = d; best = st; } });
+  if(best && bd < rDot*2.2) track(best.id); });
+
+/* orientation: centre tiles decide which colour is on top and in front */
+const OPP = {U:'D',D:'U',F:'B',B:'F',R:'L',L:'R'};
+const HOMES = ['U','D','F','B','R','L'];
+const centreSt = h => stickers.find(s => s.home === h && s.kind === 'centre');
+const centreAt = h => faceName(stN(centreSt(h)));          // where colour h's centre is now
+const homeOn = f => HOMES.find(h => centreAt(h) === f);     // which colour's centre is on face f
+const selTop = $('#selTop'), selFront = $('#selFront');
+HOMES.forEach(h => selTop.add(new Option(CNAME[h], h)));
+function updateOrient(){
+  const t = homeOn('U'), f = homeOn('F');
+  selTop.value = t;
+  selFront.innerHTML = '';
+  HOMES.filter(h => h !== t && h !== OPP[t]).forEach(h => selFront.add(new Option(CNAME[h], h)));
+  selFront.value = f;
+  selTop.disabled = selFront.disabled = lockOn;
+}
+function orient(list, what){
+  if(!list.length) return;
+  stopPlay(); seq = null; list.forEach(m => record(m, false, false)); renderLog();
+  say(`Turning the whole cube so ${what}.`);
+}
+selTop.onchange = () => {
+  if(busy()){ updateOrient(); return say('Wait for the current turns to finish.'); }
+  const h = selTop.value;
+  orient({U:[], D:['x2'], F:['x'], B:["x'"], R:["z'"], L:['z']}[centreAt(h)], `the ${CNAME[h].toLowerCase()} centre is on top`);
+};
+selFront.onchange = () => {
+  if(busy()){ updateOrient(); return say('Wait for the current turns to finish.'); }
+  const h = selFront.value;
+  orient({F:[], R:['y'], L:["y'"], B:['y2']}[centreAt(h)], `the ${CNAME[h].toLowerCase()} centre faces you`);
+};
+$('#chkLock').onchange = e => { lockOn = e.target.checked; updateOrient();
+  say(lockOn ? 'Orientation kept: centres stay put, so M, E and S now turn the two outer layers the other way.' : 'Orientation free: M, E and S move the centres again.'); };
+$('#chkHints').onchange = e => { hintsOn = e.target.checked; fit(); };
+$('#chkLetters').onchange = e => { lettersOn = e.target.checked; updateGhosts(); };
+
+/* start: solved, white centre at the bottom, green in front */
+instant('z2', false);
+homeSnap = snapshot(); startSnap = homeSnap;
+new ResizeObserver(fit).observe($('#cubePanel'));
+new ResizeObserver(sizeCanvas).observe($('#ringPanel'));
+placeCam(); fit(); sizeCanvas(); updateOrient(); updateInfo(); renderLog(); say(KEYMSG);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,10 +1,11 @@
 <!--
 TOOL:    zen-series/_image_prompts.md — picture prompts for every Zen Series story
 FAMILY:  zen-series
-VERSION: 1.1.0
-DATE:    2026-10-08
+VERSION: 1.2.0
+DATE:    2026-10-20
 CHAT:    Zen Series — adding more stories
-CHANGES: 1.1.0 - prompts for Stories 11-20
+CHANGES: 1.2.0 - prompts for Stories 21-40 added
+         1.1.0 - prompts for Stories 11-20
          1.0.0 - prompts for Stories 01-10, matched to the picture file name each page looks for
 STATUS:  working. The leading underscore keeps this file off the public site.
 -->
@@ -95,3 +96,83 @@ Save as: `images/zen-19-the-stone-mind.png`
 ## 20 — The Invisible Sutras
 Save as: `images/zen-20-the-invisible-sutras.png`
 > *Style prefix* + A humble monk hands out bowls of rice to a line of hungry villagers, while behind him a tall stack of carved wooden printing blocks waits unfinished.
+
+## 21 — Wash Your Bowl
+Save as: `images/zen-21-wash-your-bowl.png`
+> *Style prefix* + In a quiet monastery kitchen yard, a young monk kneels at a wooden basin rinsing a simple rice bowl, while an old master stands nearby watching with a gentle smile.
+
+## 22 — The Finger and the Moon
+Save as: `images/zen-22-the-finger-and-the-moon.png`
+> *Style prefix* + On a clear night, a humble young teacher points up at a large pale full moon, while a nun sits beside him holding an open scroll of scripture.
+
+## 23 — Right and Wrong
+Save as: `images/zen-23-right-and-wrong.png`
+> *Style prefix* + In a temple hall, a group of indignant monks stand together on one side; in the centre a calm master sits; on the other side a lone young pupil kneels with his head bowed, a single tear falling.
+
+## 24 — Obedience
+Save as: `images/zen-24-obedience.png`
+> *Style prefix* + In a crowded lecture hall, an old master stands calmly as a proud priest steps first to his left and then to his right, dotted footsteps showing his path across the floor.
+
+## 25 — The Sound of One Hand
+Save as: `images/zen-25-the-sound-of-one-hand.png`
+> *Style prefix* + A twelve-year-old novice sits very still beside a quiet pool at night; a single drop of water falls, sending rings across the surface.
+
+## 26 — Chop Wood, Carry Water
+Save as: `images/zen-26-chop-wood-carry-water.png`
+> *Style prefix* + An old monk walks steadily along a mountain path with two wooden water buckets on a shoulder pole, passing a neat pile of freshly chopped logs and an axe resting on a stump.
+
+## 27 — The Monk and the Scorpion
+Save as: `images/zen-27-the-monk-and-the-scorpion.png`
+> *Style prefix* + An old monk stands at the edge of a slow river, bending to lift a small red scorpion out of the water on the palm of his hand, while a companion watches from the bank.
+
+## 28 — The Gift Not Taken
+Save as: `images/zen-28-the-gift-not-taken.png`
+> *Style prefix* + On a village road, an angry man leans forward, thrusting a small red gift box towards a calm teacher who sits quietly, hands resting in his lap, not reaching for it.
+
+## 29 — Let the Mud Settle
+Save as: `images/zen-29-let-the-mud-settle.png`
+> *Style prefix* + A small forest stream is half churned with mud where a bullock cart has just crossed, its wheel tracks leading away, while further along the water is calm and clear and a monk sits waiting patiently beside it.
+
+## 30 — The Blind Man’s Lantern
+Save as: `images/zen-30-the-blind-mans-lantern.png`
+> *Style prefix* + On a dark village street at night, a blind man walks holding a paper lantern whose candle has gone out, as another traveller stumbles into him from the shadows.
+
+## 31 — The Perfect Garden
+Save as: `images/zen-31-the-perfect-garden.png`
+> *Style prefix* + In a spotless Japanese tea garden with neat stepping stones, an old tea master gently shakes the branch of a maple tree, and a few red leaves drift down onto the freshly swept path.
+
+## 32 — The Archer Over the Gorge
+Save as: `images/zen-32-the-archer-over-the-gorge.png`
+> *Style prefix* + An old archer stands balanced on a single narrow log bridging a deep mountain gorge, drawing his bow towards a distant tree, while a young champion clings nervously to the cliff edge behind him.
+
+## 33 — No Merit
+Save as: `images/zen-33-no-merit.png`
+> *Style prefix* + A richly robed emperor stands before rows of new temple roofs he has built, facing a plain, bearded monk who sits calmly on the floor in front of him.
+
+## 34 — Bring Me Your Mind
+Save as: `images/zen-34-bring-me-your-mind.png`
+> *Style prefix* + In softly falling snow outside a mountain cave, a young monk kneels with his empty hands held out, cupped as if offering something, before an old master sitting calmly at the cave mouth.
+
+## 35 — The Tea Master and the Ronin
+Save as: `images/zen-35-the-tea-master-and-the-ronin.png`
+> *Style prefix* + On a riverbank at dawn, a calm tea master stands with a red tea bowl held quietly before him, facing a rough masterless samurai who has raised his sword, now hesitating.
+
+## 36 — Attention
+Save as: `images/zen-36-attention.png`
+> *Style prefix* + An old master kneels before a tall blank hanging scroll and brushes three bold vertical characters down it in black ink, a single red seal pressed at the bottom.
+
+## 37 — Who Should Give Thanks?
+Save as: `images/zen-37-who-should-give-thanks.png`
+> *Style prefix* + A well-dressed merchant leans forward holding out a heavy box filled with gold coins, while an old master sits unmoved on a mat, looking at him with mild amusement.
+
+## 38 — The Flower Sermon
+Save as: `images/zen-38-the-flower-sermon.png`
+> *Style prefix* + On a mountain peak, a serene teacher sits holding up a single red lotus flower in silence before a semicircle of seated monks; one of them, at the edge, is quietly smiling.
+
+## 39 — The Empty Boat
+Save as: `images/zen-39-the-empty-boat.png`
+> *Style prefix* + On a misty river, an empty wooden boat drifts gently into the side of a small boat in which a man sits, startled, his oar raised.
+
+## 40 — The Raft
+Save as: `images/zen-40-the-raft.png`
+> *Style prefix* + On the far bank of a wide river, a simple bamboo raft lies pulled up on the sand, while a traveller walks lightly away along the shore, leaving it behind.

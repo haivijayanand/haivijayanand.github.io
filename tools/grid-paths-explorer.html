@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<!--
+TOOL: Grid Paths Explorer
+FAMILY: maths-explainers
+VERSION: 1.0.0
+DATE: 2026-10-24
+CHAT: How many paths? Grid path counting (any route, up/right only, one broken stick) with factorials and combinations
+CHANGES: 1.0.0 initial release: 7 chapters, live path counters, breakable sticks, Pascal fill, self-avoiding path counter, keyboard M/P/S/X/F
+STATUS: stable
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grid Paths Explorer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: app shell. Collapsible chapter sidebar left; each chapter = brass-rod grid stage + explanation column, side by side on wide screens, stacked on phones. */
+:root{
+  --bg:#eceff3; --panel:#ffffff; --ink:#1a2130; --muted:#586174; --line:#d3d9e2;
+  --rod:#c7a463; --rod-dk:#8c6c33; --bead:#7a5a44; --path:#0f7a6f; --path-soft:#0f7a6f22;
+  --accent:#94651a; --accent-soft:#94651a18; --start:#13803c; --end:#c2312b; --chip:#e3e7ee;
+  --f-display:"Fraunces", Georgia, "Times New Roman", serif;
+  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0a1120; --panel:#111a2c; --ink:#e7ebf2; --muted:#9aa4b6; --line:#25314a;
+  --rod:#d6b97f; --rod-dk:#6b5228; --bead:#93705a; --path:#3fd2c1; --path-soft:#3fd2c122;
+  --accent:#e2b565; --accent-soft:#e2b56520; --start:#3ad48a; --end:#f2594f; --chip:#1b2640; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0a1120; --panel:#111a2c; --ink:#e7ebf2; --muted:#9aa4b6; --line:#25314a;
+  --rod:#d6b97f; --rod-dk:#6b5228; --bead:#93705a; --path:#3fd2c1; --path-soft:#3fd2c122;
+  --accent:#e2b565; --accent-soft:#e2b56520; --start:#3ad48a; --end:#f2594f; --chip:#1b2640; color-scheme:dark }
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55}
+*{box-sizing:border-box}
+button,select,input{font:inherit;color:inherit}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line);background:var(--panel)}
+.top h1{font-family:var(--f-display);font-weight:700;font-size:1.35rem;margin:0;letter-spacing:.2px}
+.top h1 span{color:var(--accent)}
+.top .sp{flex:1}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 12px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible,.nav button:focus-visible,.slot:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--panel);font-weight:700}
+kbd{font-family:var(--f-mono);font-size:.78em;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--chip)}
+.state{font-family:var(--f-mono);font-size:.8rem;padding:3px 9px;border-radius:99px;background:var(--chip);color:var(--muted)}
+.state.on{background:var(--path-soft);color:var(--path)}
+.shell{display:flex;min-height:calc(100% - 58px)}
+aside{width:270px;flex:none;border-right:1px solid var(--line);background:var(--panel);padding:16px;display:flex;flex-direction:column;gap:18px}
+aside.hide{display:none}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{text-align:left;border:0;background:none;padding:8px 10px;border-radius:8px;cursor:pointer;display:flex;gap:10px;align-items:baseline}
+.nav button b{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);width:1.2em}
+.nav button.cur{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.nav button.cur b{color:var(--accent)}
+.lbl{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.ctl{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ctl label{display:flex;flex-direction:column;font-size:.85rem;color:var(--muted);gap:3px}
+.ctl select{border:1px solid var(--line);border-radius:6px;padding:4px;background:var(--bg)}
+.keys{font-size:.85rem;color:var(--muted);display:grid;grid-template-columns:auto 1fr;gap:4px 10px}
+main{flex:1;min-width:0;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ch{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:28px;align-items:start}
+.ch[hidden]{display:none}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
+.stage svg.grid{width:100%;height:auto;display:block;max-height:72vh}
+.stage .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.txt{min-width:0;max-width:68ch}
+.txt h2{font-family:var(--f-display);font-weight:700;font-size:1.9rem;line-height:1.15;margin:0 0 6px;text-wrap:balance}
+.txt h3{font-family:var(--f-display);font-weight:500;font-size:1.2rem;margin:22px 0 6px}
+.eyebrow{font-family:var(--f-mono);font-size:.78rem;color:var(--accent);letter-spacing:.06em}
+.txt p{margin:8px 0}
+.mono{font-family:var(--f-mono)}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.q{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;padding:14px 0;border-top:1px solid var(--line)}
+.q .n{font-family:var(--f-display);font-size:1.6rem;color:var(--accent);line-height:1}
+.q .big{font-family:var(--f-mono);font-size:1.45rem;font-weight:600;color:var(--ink);overflow-wrap:anywhere}
+.q small{color:var(--muted)}
+.formula{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:12px 0;font-family:var(--f-mono);font-size:1.02rem;overflow-x:auto;line-height:2}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 3px;line-height:1.25}
+.frac>span:first-child{border-bottom:1.5px solid currentColor;padding:0 4px}
+.word{display:flex;flex-wrap:wrap;gap:4px;margin:10px 0}
+.word span{font-family:var(--f-mono);font-weight:600;width:28px;height:32px;display:grid;place-items:center;border-radius:6px;background:var(--chip);color:var(--muted)}
+.word span.R{background:var(--accent-soft);color:var(--accent)}
+.word span.U{background:var(--path-soft);color:var(--path)}
+.slots{display:flex;flex-wrap:wrap;gap:4px;margin:10px 0}
+.slot{width:34px;height:42px;border-radius:7px;border:1px solid var(--line);cursor:pointer;font-family:var(--f-mono);font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent);line-height:1.1}
+.slot small{font-size:.62rem;color:var(--muted);font-weight:400}
+.slot.U{background:var(--path-soft);color:var(--path);border-color:var(--path)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;margin-top:10px}
+.tile{border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--panel);text-align:center;font-family:var(--f-mono);font-size:.78rem}
+.tile svg{width:100%;height:auto;display:block}
+.perm{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.perm span{font-family:var(--f-mono);padding:2px 8px;border-radius:6px;background:var(--chip)}
+.rng{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.rng label{display:flex;gap:6px;align-items:center}
+input[type=range]{accent-color:var(--accent)}
+.note{border-left:3px solid var(--accent);padding:4px 0 4px 12px;color:var(--muted);margin:12px 0}
+table.t{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.92rem}
+table.t th,table.t td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:right}
+table.t th:first-child,table.t td:first-child{text-align:left}
+table.t th{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tw{overflow-x:auto}
+/* svg */
+.rod{stroke:var(--rod);stroke-width:7;stroke-linecap:round}
+.rodsh{stroke:var(--rod-dk);stroke-width:9;stroke-linecap:round;opacity:.45}
+.brk{stroke:var(--end);stroke-width:6;stroke-linecap:round}
+.hit{stroke:transparent;stroke-width:20;cursor:pointer}
+.hit:hover{stroke:var(--accent-soft)}
+.bead{fill:var(--bead);stroke:var(--rod-dk);stroke-width:1.5}
+.pth{fill:none;stroke:var(--path);stroke-width:7;stroke-linecap:round;stroke-linejoin:round}
+.head{fill:var(--path)}
+.lab rect{fill:var(--panel);stroke:var(--accent);stroke-width:1.2}
+.lab text{fill:var(--ink);font-family:var(--f-mono);font-size:12px;font-weight:600}
+.lab.new rect{fill:var(--accent)} .lab.new text{fill:var(--panel)}
+.lab.zero rect{stroke:var(--end)} .lab.zero text{fill:var(--end)}
+.se{font-family:var(--f-display);font-weight:700;font-size:20px}
+.mini line{stroke:var(--line);stroke-width:2}
+.mini polyline{fill:none;stroke:var(--path);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+@media (max-width:980px){ .ch{grid-template-columns:1fr} aside{position:fixed;z-index:20;top:0;bottom:0;left:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-top:calc(16px + env(safe-area-inset-top,0px));box-shadow:0 0 0 100vmax #0006;overflow:auto} }
+@media (max-width:560px){ .top .hint{display:none} .txt h2{font-size:1.5rem} }
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+</style>
+<style>body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+<div class="top">
+  <button class="btn" id="tgl" title="Show / hide chapters (M)">☰ <kbd>M</kbd></button>
+  <h1>How many <span>paths?</span></h1>
+  <div class="sp"></div>
+  <span class="hint" style="color:var(--muted);font-size:.85rem"><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause</span>
+  <span class="state" id="st">Paused</span>
+  <button class="btn" id="fs" title="Full screen (F)">⛶ Full screen</button>
+</div>
+
+<div class="shell">
+<aside id="side">
+  <div>
+    <div class="lbl">Chapters</div>
+    <nav class="nav" id="nav"></nav>
+  </div>
+  <div>
+    <div class="lbl" style="margin-bottom:6px">Grid size (dots)</div>
+    <div class="ctl">
+      <label for="gw">Across<select id="gw"></select></label>
+      <label for="gh">Up<select id="gh"></select></label>
+    </div>
+    <p style="font-size:.82rem;color:var(--muted);margin:8px 0 0">The reel uses 10 × 8 dots: 9 sticks across, 7 sticks up.</p>
+  </div>
+  <div>
+    <div class="lbl" style="margin-bottom:6px">Keyboard</div>
+    <div class="keys">
+      <kbd>M</kbd><span>hide / show this panel</span>
+      <kbd>P</kbd><span>play animation</span>
+      <kbd>S</kbd><span>one step</span>
+      <kbd>X</kbd><span>pause</span>
+      <kbd>F</kbd><span>full screen</span>
+      <kbd>1–7</kbd><span>jump to chapter</span>
+    </div>
+  </div>
+</aside>
+
+<main id="main">
+
+<!-- 1 -->
+<section class="ch" id="c1">
+  <div class="stage"><div id="g1"></div>
+    <div class="bar"><button class="btn" id="b1reel">Break the reel's stick</button><button class="btn" id="b1mend">Mend all sticks</button><span style="color:var(--muted);font-size:.85rem">Click any stick to break or mend it.</span></div>
+  </div>
+  <div class="txt">
+    <div class="eyebrow">THE PUZZLE</div>
+    <h2>An ant walks the sticks from S to E</h2>
+    <p>The frame is made of dots joined by sticks. The ant can only walk along sticks. We ask three questions, each harder than the last.</p>
+    <div class="q"><div class="n">1</div><div><b>Any direction, never visiting a dot twice</b><div class="big num" id="a1">…</div><small id="a1s">Counted by computer. There is no neat formula (chapter 7).</small></div></div>
+    <div class="q"><div class="n">2</div><div><b>Only up and right</b><div class="big num" id="a2"></div><small id="a2s"></small></div></div>
+    <div class="q"><div class="n">3</div><div><b>One stick is broken</b><div class="big num" id="a3"></div><small id="a3s"></small></div></div>
+    <p class="note">Why “never visiting a dot twice” in Q1? If the ant may go round in circles, it can loop forever and the number of walks is infinite. So the sensible question is about <b>simple paths</b>.</p>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="ch" id="c2" hidden>
+  <div class="stage"><div id="g2"></div>
+    <div class="bar"><button class="btn pri" data-a="p">▶ Play</button><button class="btn" data-a="s">Step</button><button class="btn" data-a="x">Pause</button><button class="btn" id="b2new">New path</button></div>
+  </div>
+  <div class="txt">
+    <div class="eyebrow">UP AND RIGHT ONLY</div>
+    <h2>Every path is a word made of R and U</h2>
+    <p>Each move is either <b class="mono" style="color:var(--accent)">R</b> (one stick right) or <b class="mono" style="color:var(--path)">U</b> (one stick up). Write the moves down and the path becomes a word.</p>
+    <div class="word" id="w2"></div>
+    <p id="t2"></p>
+    <h3>The key observation</h3>
+    <p id="t2b"></p>
+    <p>So the length never changes. Only the <b>order</b> of R's and U's changes. Counting paths is the same as counting the different ways to arrange the letters of the word. That is a job for factorials.</p>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="ch" id="c3" hidden>
+  <div class="stage">
+    <div class="lbl">Small case: arrange R's and U's</div>
+    <div class="rng"><label for="r3">R <input type="range" id="r3" min="1" max="4" value="3"> <span id="r3v" class="num"></span></label><label for="u3">U <input type="range" id="u3" min="1" max="4" value="2"> <span id="u3v" class="num"></span></label></div>
+    <div class="bar" style="margin-top:0"><button class="btn pri" data-a="p">▶ Play</button><button class="btn" data-a="s">Step</button><button class="btn" data-a="x">Pause</button><button class="btn" id="b3all">Show all</button><span class="num" id="c3n" style="color:var(--muted)"></span></div>
+    <div class="tiles" id="tl3"></div>
+  </div>
+  <div class="txt">
+    <div class="eyebrow">FACTORIALS</div>
+    <h2>Counting arrangements with n!</h2>
+    <p><b>n factorial</b>, written <span class="mono">n!</span>, is the product of all whole numbers from n down to 1. It counts the ways to put n <b>different</b> things in a row: n choices for the first place, n−1 for the second, and so on.</p>
+    <div class="rng"><label for="n3">n = <input type="range" id="n3" min="1" max="16" value="4"> <span id="n3v" class="num"></span></label></div>
+    <div class="formula" id="f3"></div>
+    <div class="perm" id="p3"></div>
+    <h3>When letters repeat</h3>
+    <p id="t3"></p>
+    <div class="formula" id="f3b"></div>
+    <p>The rule: <b>arrangements of a word = (total letters)! ÷ (product of the factorials of each repeated letter).</b> By convention <span class="mono">0! = 1</span>, so a letter that appears zero times changes nothing.</p>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="ch" id="c4" hidden>
+  <div class="stage"><div id="g4"></div>
+    <div class="bar"><button class="btn pri" data-a="p">▶ Run through all</button><button class="btn" data-a="s">Next path</button><button class="btn" data-a="x">Pause</button><button class="btn" id="b4first">First path</button></div>
+  </div>
+  <div class="txt">
+    <div class="eyebrow">COMBINATIONS</div>
+    <h2>Choose which moves are U</h2>
+    <p id="t4a"></p>
+    <div class="slots" id="sl4"></div>
+    <p id="t4s" class="num"></p>
+    <p>Picking a set of positions without caring about order is a <b>combination</b>. The number of ways to choose r things from n is</p>
+    <div class="formula">ⁿCᵣ = <span class="frac"><span>n!</span><span>r! (n − r)!</span></span></div>
+    <div class="formula" id="f4"></div>
+    <p class="note" id="t4n"></p>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="ch" id="c5" hidden>
+  <div class="stage"><div id="g5"></div>
+    <div class="bar"><button class="btn pri" data-a="p">▶ Play</button><button class="btn" data-a="s">Step</button><button class="btn" data-a="x">Pause</button><button class="btn" id="b5r">Reset</button></div>
+  </div>
+  <div class="txt">
+    <div class="eyebrow">ADDING, NOT MULTIPLYING</div>
+    <h2>Count the ways to reach each dot</h2>
+    <p>There is a second way to get the same answer, and it keeps working when the grid is damaged.</p>
+    <p>To arrive at a dot moving only up or right, the ant's last step came either <b>from the left</b> or <b>from below</b>. So:</p>
+    <div class="formula">ways(dot) = ways(dot on the left) + ways(dot below)</div>
+    <p>Dots on the bottom edge and left edge can be reached in only 1 way. Press <kbd>S</kbd> to fill one diagonal at a time.</p>
+    <p id="t5" class="num"></p>
+    <p class="note">These numbers are Pascal's triangle turned on its side. Each one is a combination: the dot that is a steps right and b steps up shows <span class="mono">⁽ᵃ⁺ᵇ⁾C_b</span>.</p>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="ch" id="c6" hidden>
+  <div class="stage"><div id="g6"></div>
+    <div class="bar"><button class="btn pri" data-a="p">▶ Play</button><button class="btn" data-a="s">Step</button><button class="btn" data-a="x">Pause</button><button class="btn" id="b6r">Reset fill</button><button class="btn" id="b6reel">Reel's stick</button><button class="btn" id="b6mend">Mend all</button></div>
+  </div>
+  <div class="txt">
+    <div class="eyebrow">ONE STICK IS BROKEN</div>
+    <h2>Subtract the paths that need the broken stick</h2>
+    <p>Click any stick on the grid to break it (click again to mend). The broken stick is drawn in red.</p>
+    <h3>Method 1: count the bad paths</h3>
+    <div id="t6"></div>
+    <h3>Method 2: add along the grid</h3>
+    <p>Run the fill. A broken stick simply passes on nothing, so the dot above or to the right of it gets fewer ways. This method works for any number of broken sticks.</p>
+    <p id="t6b" class="num"></p>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="ch" id="c7" hidden>
+  <div class="stage"><div id="g7"></div>
+    <div class="bar"><button class="btn pri" data-a="p">▶ Play</button><button class="btn" data-a="s">Step</button><button class="btn" data-a="x">Pause</button><button class="btn" id="b7new">Another path</button></div>
+  </div>
+  <div class="txt">
+    <div class="eyebrow">ANY DIRECTION</div>
+    <h2>When the ant may wander</h2>
+    <p>Now the ant can go up, down, left or right, but it may never step on a dot it has already visited. Mathematicians call these <b>self-avoiding paths</b>.</p>
+    <div class="q" style="border-top:0"><div class="n">∞?</div><div><b>Simple paths from S to E on this grid</b><div class="big num" id="a7">…</div><small id="a7s"></small></div></div>
+    <h3>Why no formula?</h3>
+    <p>Up-and-right paths always have the same length, so we could count letter arrangements. A wandering path can be short or very long, and whether a move is allowed depends on <b>everywhere the ant has already been</b>. No one has found a closed formula. These numbers are found by computer, sweeping a line across the grid and keeping track of how the half-built path pieces connect.</p>
+    <div class="tw"><table class="t" id="tb7"><thead><tr><th>Square grid (dots)</th><th>Up &amp; right</th><th>Any direction</th></tr></thead><tbody></tbody></table></div>
+    <p class="note">Look at the last column: it explodes far faster than the factorial-based column. That is why the reel's first question has such a large answer.</p>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+/* ============ state ============ */
+const CH=[["c1","The puzzle"],["c2","Paths as words"],["c3","Factorials"],["c4","Combinations"],["c5","Adding up the grid"],["c6","A broken stick"],["c7","Any direction"]];
+let W=10,H=8;
+const REEL="5,2|5,3";
+let broken=new Set([REEL]);
+let cur=0, timer=null;
+const $=id=>document.getElementById(id);
+const fmt=n=>typeof n==="bigint"?n.toLocaleString("en-US"):Number(n).toLocaleString("en-US");
+function ek(a,b){const s1=a[0]+","+a[1],s2=b[0]+","+b[1];return (a[0]<b[0]||(a[0]===b[0]&&a[1]<b[1]))?s1+"|"+s2:s2+"|"+s1}
+function allEdges(){const e=[];for(let x=0;x<W;x++)for(let y=0;y<H;y++){if(y+1<H)e.push({a:[x,y],b:[x,y+1],k:ek([x,y],[x,y+1])});if(x+1<W)e.push({a:[x,y],b:[x+1,y],k:ek([x,y],[x+1,y])})}return e}
+function fact(n){let r=1n;for(let i=2n;i<=BigInt(n);i++)r*=i;return r}
+function C(n,r){if(r<0||r>n)return 0;let v=1;for(let i=1;i<=r;i++)v=v*(n-r+i)/i;return Math.round(v)}
+function sci(b){const s=b.toString();if(s.length<7)return "";return "≈ "+s[0]+"."+s.slice(1,3)+" × 10"+String(s.length-1).replace(/\d/g,d=>"⁰¹²³⁴⁵⁶⁷⁸⁹"[d])}
+function frac(a,b){return `<span class="frac"><span>${a}</span><span>${b}</span></span>`}
+
+/* ============ grid drawing ============ */
+function gridSVG(o){
+  o=o||{};const G=56,M=36,w=(W-1)*G+2*M,h=(H-1)*G+2*M+8;
+  const X=x=>M+x*G,Y=y=>M+(H-1-y)*G;let s=`<svg class="grid" viewBox="0 0 ${w} ${h}" role="img" aria-label="Grid of ${W} by ${H} dots from S to E">`;
+  const E=allEdges(),useB=o.useBroken;
+  for(const e of E){const x1=X(e.a[0]),y1=Y(e.a[1]),x2=X(e.b[0]),y2=Y(e.b[1]);
+    if(useB&&broken.has(e.k)){const p=t=>[x1+(x2-x1)*t,y1+(y2-y1)*t];const[a1,b1]=p(.32),[a2,b2]=p(.68);
+      s+=`<line class="brk" x1="${x1}" y1="${y1}" x2="${a1}" y2="${b1}"/><line class="brk" x1="${a2}" y1="${b2}" x2="${x2}" y2="${y2}"/>`;}
+    else s+=`<line class="rodsh" x1="${x1}" y1="${y1+1.5}" x2="${x2}" y2="${y2+1.5}"/><line class="rod" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;}
+  if(o.path&&o.path.length>1)s+=`<polyline class="pth" points="${o.path.map(p=>X(p[0])+","+Y(p[1])).join(" ")}"/>`;
+  for(let x=0;x<W;x++)for(let y=0;y<H;y++){const lb=o.labels?o.labels(x,y):null;
+    if(lb){const t=String(lb.t),bw=Math.max(22,t.length*7.6+10);s+=`<g class="lab ${lb.c||""}"><rect x="${X(x)-bw/2}" y="${Y(y)-11}" width="${bw}" height="22" rx="6"/><text x="${X(x)}" y="${Y(y)+4.5}" text-anchor="middle">${t}</text></g>`}
+    else s+=`<circle class="bead" cx="${X(x)}" cy="${Y(y)}" r="7.5"/>`}
+  if(o.path&&o.path.length){const p=o.path[o.path.length-1];s+=`<circle class="head" cx="${X(p[0])}" cy="${Y(p[1])}" r="9"/>`}
+  s+=`<text class="se" x="${X(0)-24}" y="${Y(0)+26}" fill="var(--start)">S</text><text class="se" x="${X(W-1)+10}" y="${Y(H-1)-12}" fill="var(--end)">E</text>`;
+  if(o.click)for(const e of E)s+=`<line class="hit" data-k="${e.k}" x1="${X(e.a[0])}" y1="${Y(e.a[1])}" x2="${X(e.b[0])}" y2="${Y(e.b[1])}"><title>Break / mend this stick</title></line>`;
+  return s+"</svg>";
+}
+function bindClicks(el){el.onclick=ev=>{const k=ev.target.dataset&&ev.target.dataset.k;if(!k)return;broken.has(k)?broken.delete(k):broken.add(k);countsChanged()}}
+
+/* ============ counting ============ */
+function monoTable(useB){ // ways to each dot, up/right only
+  const f=[];for(let x=0;x<W;x++){f.push([]);for(let y=0;y<H;y++){let v=(x===0&&y===0)?1:0;
+    if(x>0&&!(useB&&broken.has(ek([x-1,y],[x,y]))))v+=f[x-1][y];
+    if(y>0&&!(useB&&broken.has(ek([x,y-1],[x,y]))))v+=f[x][y-1];f[x][y]=v}}return f}
+function monoFrom(useB){ // ways from each dot to E
+  const g=[];for(let x=W-1;x>=0;x--){g[x]=[];}
+  for(let x=W-1;x>=0;x--)for(let y=H-1;y>=0;y--){let v=(x===W-1&&y===H-1)?1:0;
+    if(x<W-1&&!(useB&&broken.has(ek([x,y],[x+1,y]))))v+=g[x+1][y];
+    if(y<H-1&&!(useB&&broken.has(ek([x,y],[x,y+1]))))v+=g[x][y+1];g[x][y]=v}return g}
+/*DP-START*/
+function countSimple(Wd,Hd,brokenKeys){ // frontier (mate) method, exact BigInt count of simple S-E paths
+  const idx=(x,y)=>x*Hd+y,N=Wd*Hd;const bset=new Set();
+  for(const k of brokenKeys){const[p,q]=k.split("|").map(s=>s.split(",").map(Number));if(p[0]<Wd&&q[0]<Wd&&p[1]<Hd&&q[1]<Hd)bset.add(idx(p[0],p[1])+"-"+idx(q[0],q[1]))}
+  let edges=[];for(let x=0;x<Wd;x++)for(let y=0;y<Hd;y++){if(y+1<Hd)edges.push([idx(x,y),idx(x,y+1)]);if(x+1<Wd)edges.push([idx(x,y),idx(x+1,y)])}
+  edges=edges.filter(([u,v])=>!bset.has(u+"-"+v));
+  const last={};edges.forEach(([u,v],i)=>{last[u]=i;last[v]=i});
+  const s=0,t=N-1;if(last[s]===undefined||last[t]===undefined)return 0n;
+  let states=new Map();states.set(s+","+t+";"+t+","+s,[[[s,t],[t,s]],1n]);let total=0n;
+  edges.forEach(([u,v],i)=>{const nw=new Map();
+    for(const[,[ent,c]]of states){
+      for(let opt=0;opt<2;opt++){const mm=new Map(ent);
+        if(opt){const a=mm.has(u)?mm.get(u):u,b=mm.has(v)?mm.get(v):v;if(a===-1||b===-1)continue;
+          if(a===v){let bad=false;for(const[k,val]of mm){if(k!==u&&k!==v&&val!==k&&val!==-1){bad=true;break}}if(!bad)total+=c;continue}
+          mm.set(a,b);mm.set(b,a);if(a!==u)mm.set(u,-1);if(b!==v)mm.set(v,-1)}
+        let ok=true;for(const w of[u,v]){if(last[w]===i){const val=mm.has(w)?mm.get(w):w;if(val!==w&&val!==-1){ok=false;break}mm.delete(w)}}
+        if(!ok)continue;const arr=[...mm.entries()].sort((p,q)=>p[0]-q[0]);const key=arr.join(";");
+        const ex=nw.get(key);if(ex)ex[1]+=c;else nw.set(key,[arr,c])}}
+    states=nw});
+  return total;
+}
+/*DP-END*/
+const simpleCache=new Map();
+function simpleAsync(Wd,Hd,bk,cb){const key=Wd+"x"+Hd+":"+[...bk].sort().join(";");if(simpleCache.has(key)){cb(simpleCache.get(key));return}
+  setTimeout(()=>{const v=countSimple(Wd,Hd,bk);simpleCache.set(key,v);cb(v)},30)}
+
+/* ============ chapter 1 ============ */
+function r1(){
+  $("g1").innerHTML=gridSVG({useBroken:true,click:true});
+  const n=W-1,m=H-1,tot=C(n+m,m);
+  $("a2").textContent=fmt(tot);
+  $("a2s").innerHTML=`${n} R moves and ${m} U moves in any order: <span class="mono">${n+m}C${m} = ${n+m}! ÷ (${n}! × ${m}!)</span>`;
+  const f=monoTable(true)[W-1][H-1];
+  if(broken.size===0){$("a3").textContent="(no stick broken)";$("a3s").textContent="Click a stick on the grid, or press “Break the reel's stick”."}
+  else{$("a3").textContent=fmt(f)+" (up & right)";$("a3s").textContent="…";
+    simpleAsync(W,H,broken,v=>{if(cur===0)$("a3s").innerHTML=`${fmt(tot)} − ${fmt(tot-f)} paths that needed the broken stick${broken.size>1?"s":""}. Any direction: <b class="num">${fmt(v)}</b> simple paths.`});}
+  $("a1").textContent="counting…";
+  simpleAsync(W,H,new Set(),v=>{if(cur===0){$("a1").textContent=fmt(v);$("a1s").innerHTML=`${sci(v)} simple paths. Counted by computer; there is no neat formula (chapter 7).`}});
+}
+$("b1reel").onclick=$("b6reel").onclick=()=>{broken=new Set(W>5&&H>3?[REEL]:[ek([Math.floor(W/2),Math.floor(H/2)-1],[Math.floor(W/2),Math.floor(H/2)])]);countsChanged()};
+$("b1mend").onclick=$("b6mend").onclick=()=>{broken.clear();countsChanged()};
+bindClicks($("g1"));bindClicks($("g6"));
+
+/* ============ chapter 2 ============ */
+let p2=[[0,0]],mv2="";
+function step2(){const p=p2[p2.length-1];if(p[0]===W-1&&p[1]===H-1)return false;
+  let d;if(p[0]===W-1)d="U";else if(p[1]===H-1)d="R";else d=Math.random()<(W-1-p[0])/((W-1-p[0])+(H-1-p[1]))?"R":"U";
+  p2.push(d==="R"?[p[0]+1,p[1]]:[p[0],p[1]+1]);mv2+=d;r2();return true}
+function reset2(){p2=[[0,0]];mv2="";r2()}
+function r2(){$("g2").innerHTML=gridSVG({path:p2});const n=W-1,m=H-1,L=n+m;
+  let w="";for(let i=0;i<L;i++){const c=mv2[i]||"";w+=`<span class="${c}">${c||"·"}</span>`}$("w2").innerHTML=w;
+  const r=(mv2.match(/R/g)||[]).length,u=(mv2.match(/U/g)||[]).length;
+  $("t2").innerHTML=mv2.length<L?`So far: <b class="num">${r}</b> R and <b class="num">${u}</b> U. Press <kbd>S</kbd> for the next move.`:`Done: <b class="mono">${mv2}</b>. That is ${r} R's and ${u} U's.`;
+  $("t2b").innerHTML=`To get from S to E the ant must go <b>${n}</b> sticks right and <b>${m}</b> sticks up, whatever route it takes. So every up-and-right path is a word of exactly <b>${L}</b> letters: <b>${n}</b> R's and <b>${m}</b> U's.`}
+$("b2new").onclick=()=>{reset2();while(step2());};
+
+/* ============ chapter 3 ============ */
+let shown3=0;
+function words(r,u){const out=[];(function go(s,a,b){if(!a&&!b){out.push(s);return}if(a)go(s+"R",a-1,b);if(b)go(s+"U",a,b-1)})("",r,u);return out}
+function mini(wd,r,u){const g=12,m=5,w=r*g+2*m,h=u*g+2*m;let s=`<svg class="mini" viewBox="0 0 ${w} ${h}">`;
+  for(let x=0;x<=r;x++)s+=`<line x1="${m+x*g}" y1="${m}" x2="${m+x*g}" y2="${m+u*g}"/>`;for(let y=0;y<=u;y++)s+=`<line x1="${m}" y1="${m+y*g}" x2="${m+r*g}" y2="${m+y*g}"/>`;
+  let x=0,y=0,pts=[[x,y]];for(const c of wd){c==="R"?x++:y++;pts.push([x,y])}
+  return s+`<polyline points="${pts.map(p=>(m+p[0]*g)+","+(m+(u-p[1])*g)).join(" ")}"/></svg>`}
+function r3(){const r=+$("r3").value,u=+$("u3").value;$("r3v").textContent=r;$("u3v").textContent=u;
+  const ws=words(r,u);shown3=Math.min(shown3,ws.length);
+  $("tl3").innerHTML=ws.slice(0,shown3).map(w=>`<div class="tile">${mini(w,r,u)}${w}</div>`).join("");
+  $("c3n").textContent=`${shown3} of ${ws.length} found`;
+  const n=+$("n3").value;$("n3v").textContent=n;
+  const terms=[];for(let i=n;i>=1;i--)terms.push(i);
+  $("f3").innerHTML=`${n}! = ${terms.join(" × ")} = <b>${fmt(fact(n))}</b>`;
+  if(n<=4){const L="ABCD".slice(0,n).split("");const ps=[];(function go(a,rest){if(!rest.length){ps.push(a.join(""));return}rest.forEach((c,i)=>go(a.concat(c),rest.filter((_,j)=>j!==i)))})([],L);
+    $("p3").innerHTML=`<span style="background:none;padding-left:0;color:var(--muted)">All ${ps.length} orders of ${L.join(", ")}:</span>`+ps.map(p=>`<span>${p}</span>`).join("")}
+  else $("p3").innerHTML=`<span style="background:none;padding-left:0;color:var(--muted)">Too many to list: ${fmt(fact(n))} orders. Slide n down to 4 or less to see them.</span>`;
+  const T=r+u;
+  $("t3").innerHTML=`The word on the left has <b>${r}</b> R's and <b>${u}</b> U's. If every letter were different (R₁, R₂, … U₁, U₂, …) there would be <b>${T}! = ${fmt(fact(T))}</b> orders. But swapping the R's among themselves gives the same word, and there are ${r}! ways to do that. The same goes for the U's (${u}! ways). So each distinct word was counted ${r}! × ${u}! times.`;
+  $("f3b").innerHTML=`arrangements = ${frac(T+"!",r+"! × "+u+"!")} = ${frac(fmt(fact(T)),fmt(fact(r))+" × "+fmt(fact(u)))} = <b>${fmt(C(T,u))}</b> &nbsp;✓ matches the tiles`}
+["r3","u3"].forEach(i=>$(i).oninput=()=>{shown3=0;r3()});$("n3").oninput=r3;
+function step3(){const n=C(+$("r3").value+ +$("u3").value,+$("u3").value);if(shown3>=n)return false;shown3++;r3();return true}
+$("b3all").onclick=()=>{shown3=999;r3()};
+
+/* ============ chapter 4 ============ */
+let slots4=[];
+function initSlots(){const L=W+H-2;slots4=Array(L).fill(false);for(let i=0;i<H-1;i++)slots4[i*2+1<L?i*2+1:L-1-i]=true;if(slots4.filter(Boolean).length!==H-1){slots4=Array(L).fill(false);for(let i=L-(H-1);i<L;i++)slots4[i]=true}}
+function firstSlots(){const L=W+H-2;slots4=Array(L).fill(false);for(let i=0;i<H-1;i++)slots4[i]=true}
+function rank4(){const n=slots4.length,k=H-1;const p=slots4.map((b,i)=>b?i:-1).filter(i=>i>=0);let r=0,prev=-1;
+  p.forEach((pi,i)=>{for(let j=prev+1;j<pi;j++)r+=C(n-1-j,k-1-i);prev=pi});return r}
+function next4(){const n=slots4.length,k=H-1;const p=slots4.map((b,i)=>b?i:-1).filter(i=>i>=0);if(p.length!==k){firstSlots();r4();return true}
+  let i=k-1;while(i>=0&&p[i]===n-k+i)i--;if(i<0){firstSlots();r4();return false}
+  p[i]++;for(let j=i+1;j<k;j++)p[j]=p[j-1]+1;slots4=Array(n).fill(false);p.forEach(q=>slots4[q]=true);r4();return true}
+function r4(){const n=W+H-2,k=H-1,cnt=slots4.filter(Boolean).length;let path=null;
+  if(cnt===k){let x=0,y=0;path=[[0,0]];slots4.forEach(b=>{b?y++:x++;path.push([x,y])})}
+  $("g4").innerHTML=gridSVG({path});
+  $("sl4").innerHTML=slots4.map((b,i)=>`<button class="slot ${b?"U":""}" data-i="${i}" aria-label="Move ${i+1}: ${b?"U":"R"}">${b?"U":"R"}<small>${i+1}</small></button>`).join("");
+  $("t4a").innerHTML=`The word has <b>${n}</b> places. Once we decide which <b>${k}</b> of them hold a U, the other ${n-k} must be R, and the path is fixed. Click the boxes to choose the U places; the path on the grid follows your choice.`;
+  const tot=C(n,k);
+  $("t4s").innerHTML=cnt===k?`Valid path. In dictionary order this is path <b>#${fmt(rank4()+1)}</b> of <b>${fmt(tot)}</b>.`:`<span style="color:var(--end)">You have ${cnt} U's. A path needs exactly ${k}. Click boxes to change.</span>`;
+  const top=[],bot=[];for(let i=0;i<k;i++){top.push(n-i);bot.push(k-i)}
+  $("f4").innerHTML=`${n}C${k} = ${frac(n+"!",k+"! × "+(n-k)+"!")} = ${frac(top.join("·"),bot.join("·"))} = <b>${fmt(tot)}</b>`;
+  $("t4n").innerHTML=`Same answer from the other side: choose the ${n-k} R places instead. ${n}C${n-k} = ${n}C${k} = ${fmt(tot)}. Choosing what to take is the same as choosing what to leave.`}
+$("sl4").onclick=ev=>{const b=ev.target.closest(".slot");if(!b)return;const i=+b.dataset.i;slots4[i]=!slots4[i];r4()};
+$("b4first").onclick=()=>{firstSlots();r4()};
+
+/* ============ chapters 5 & 6: diagonal fill ============ */
+const fill={c5:0,c6:0};
+function rFill(id,useB){const f=monoTable(useB),d=fill[id],maxd=W+H-2;
+  $( id==="c5"?"g5":"g6").innerHTML=gridSVG({useBroken:useB,click:useB,labels:(x,y)=>x+y<d?{t:f[x][y],c:(x+y===d-1?"new ":"")+(f[x][y]===0?"zero":"")}:null});
+  return {f,d,maxd}}
+function r5(){const {f,d,maxd}=rFill("c5",false);
+  $("t5").innerHTML=d===0?"Press Play or Step to start filling.":d>maxd?`E is reached in <b>${fmt(f[W-1][H-1])}</b> ways, the same as ${W+H-2}C${H-1}.`:
+    `Diagonal ${d-1} filled.`+(d>1&&W>1&&H>1?` Example: the dot at (${Math.min(d-1,W-1)}, ${d-1-Math.min(d-1,W-1)}) = ${exampleSum(f,Math.min(d-1,W-1),d-1-Math.min(d-1,W-1),false)}`:"")}
+function exampleSum(f,x,y,useB){const a=x>0&&!(useB&&broken.has(ek([x-1,y],[x,y])))?f[x-1][y]:0,b=y>0&&!(useB&&broken.has(ek([x,y-1],[x,y])))?f[x][y-1]:0;return `${fmt(a)} (left) + ${fmt(b)} (below) = ${fmt(a+b)}`}
+function stepFill(id){if(fill[id]>W+H-2)return false;fill[id]++;id==="c5"?r5():r6();return true}
+$("b5r").onclick=()=>{fill.c5=0;r5()};$("b6r").onclick=()=>{fill.c6=0;r6()};
+function r6(){const {f,d,maxd}=rFill("c6",true);const n=W-1,m=H-1,tot=C(n+m,m),fin=f[W-1][H-1];let h="";
+  if(broken.size===0)h=`<p>No stick is broken, so all <b>${fmt(tot)}</b> paths survive. Click a stick to break it.</p>`;
+  else if(broken.size===1){const[k]=[...broken];const[a,b]=k.split("|").map(s=>s.split(",").map(Number));
+    const toA=C(a[0]+a[1],a[1]),fromB=C((W-1-b[0])+(H-1-b[1]),H-1-b[1]);
+    h=`<p>The broken stick joins dot (${a}) to dot (${b}). A path uses it only if it goes <b>S → (${a})</b>, crosses the stick, then goes <b>(${b}) → E</b>.</p>
+    <div class="formula">S → (${a}): ${a[0]+a[1]}C${a[1]} = ${fmt(toA)}<br>(${b}) → E: ${(W-1-b[0])+(H-1-b[1])}C${H-1-b[1]} = ${fmt(fromB)}<br>bad paths = ${fmt(toA)} × ${fmt(fromB)} = ${fmt(toA*fromB)}<br>good paths = ${fmt(tot)} − ${fmt(toA*fromB)} = <b>${fmt(tot-toA*fromB)}</b></div>
+    <p>We <b>multiply</b> because every way of reaching the stick can be joined to every way of finishing after it. This is the multiplication principle.</p>`}
+  else h=`<p>${broken.size} sticks are broken. Simple subtraction now over-counts paths that needed two broken sticks (they would be removed twice). Fixing that is called <b>inclusion–exclusion</b>. Method 2 below handles it automatically: <b>${fmt(fin)}</b> paths survive.</p>`;
+  $("t6").innerHTML=h;
+  $("t6b").innerHTML=d===0?"Press Play or Step to fill.":d>maxd?`Fill complete: E shows <b>${fmt(fin)}</b>${broken.size===1?", matching Method 1":""}.`:`Diagonal ${d-1} filled.`}
+
+/* ============ chapter 7: random self-avoiding path ============ */
+let p7=[],full7=[];
+function neighbors(p){const out=[];[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const q=[p[0]+dx,p[1]+dy];if(q[0]>=0&&q[0]<W&&q[1]>=0&&q[1]<H&&!broken.has(ek(p,q)))out.push(q)});return out}
+function reach(from,vis){const k=q=>q[0]*H+q[1];const seen=new Set([k(from)]);const st=[from];while(st.length){const p=st.pop();if(p[0]===W-1&&p[1]===H-1)return true;for(const q of neighbors(p)){const kq=k(q);if(!seen.has(kq)&&!vis.has(kq)){seen.add(kq);st.push(q)}}}return false}
+function genSAW(){const k=q=>q[0]*H+q[1];let p=[0,0];const vis=new Set([0]);const path=[p];if(!reach(p,new Set()))return null;
+  while(!(p[0]===W-1&&p[1]===H-1)){const ns=neighbors(p).filter(q=>!vis.has(k(q)));ns.sort(()=>Math.random()-.5);
+    // prefer moves away from E early so paths wander
+    let pick=null;for(const q of ns){if(q[0]===W-1&&q[1]===H-1&&path.length<(W*H)/2&&ns.length>1)continue;if(reach(q,vis)){pick=q;break}}
+    if(!pick)pick=ns.find(q=>reach(q,vis));if(!pick)return path;vis.add(k(pick));path.push(pick);p=pick}return path}
+function new7(){full7=genSAW()||[];p7=full7.slice(0,1);r7()}
+function step7(){if(p7.length>=full7.length)return false;p7=full7.slice(0,p7.length+1);r7();return true}
+function r7(){$("g7").innerHTML=gridSVG({useBroken:true,path:p7});
+  simpleAsync(W,H,broken,v=>{if(cur===6){$("a7").textContent=fmt(v);$("a7s").innerHTML=`${sci(v)} on this ${W} × ${H} grid${broken.size?" with "+broken.size+" broken stick"+(broken.size>1?"s":""):""}. The path drawn has ${Math.max(0,full7.length-1)} sticks; an up-and-right path has only ${W+H-2}.`}})}
+function table7(){const tb=$("tb7").querySelector("tbody");tb.innerHTML="";let n=2;
+  (function nx(){if(n>7||cur!==6)return;const nn=n;simpleAsync(nn,nn,new Set(),v=>{tb.insertAdjacentHTML("beforeend",`<tr><td>${nn} × ${nn}</td><td class="num">${fmt(C(2*nn-2,nn-1))}</td><td class="num">${fmt(v)}</td></tr>`);n++;nx()})})()}
+$("b7new").onclick=new7;
+
+/* ============ navigation, animation, keys ============ */
+const render=[r1,r2,r3,r4,()=>r5(),()=>r6(),r7];
+const stepper=[null,step2,step3,next4,()=>stepFill("c5"),()=>stepFill("c6"),step7];
+const speed=[0,260,350,110,500,500,140];
+function countsChanged(){render[cur]()}
+function show(i){pause();cur=i;CH.forEach(([id],j)=>$(id).hidden=j!==i);
+  $("nav").querySelectorAll("button").forEach((b,j)=>b.classList.toggle("cur",j===i));
+  render[i]();if(i===6)table7();try{localStorage.setItem("gpe-ch",i)}catch(e){}
+  if(matchMedia("(max-width:980px)").matches)$("side").classList.add("hide");$("main").scrollTop=0}
+function play(){const f=stepper[cur];if(!f||timer)return;$("st").textContent="Playing";$("st").classList.add("on");
+  timer=setInterval(()=>{if(!f()){ if(cur===1||cur===6){ cur===1?reset2():new7(); } else pause(); }},speed[cur])}
+function pause(){clearInterval(timer);timer=null;$("st").textContent="Paused";$("st").classList.remove("on")}
+function step(){pause();const f=stepper[cur];if(!f)return;if(!f()){if(cur===1){reset2()}else if(cur===6){new7()}}}
+$("nav").innerHTML=CH.map(([,n],i)=>`<button data-i="${i}"><b>${i+1}</b>${n}</button>`).join("");
+$("nav").onclick=e=>{const b=e.target.closest("button");if(b)show(+b.dataset.i)};
+document.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>({p:play,s:step,x:pause})[b.dataset.a]());
+$("tgl").onclick=()=>$("side").classList.toggle("hide");
+function fsToggle(){try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}}
+$("fs").onclick=fsToggle;
+document.addEventListener("keydown",e=>{if(e.target.matches("input,select,textarea")||e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key.toLowerCase();
+  if(k==="m")$("side").classList.toggle("hide");else if(k==="p")play();else if(k==="s")step();else if(k==="x")pause();else if(k==="f")fsToggle();
+  else if(/^[1-7]$/.test(k))show(+k-1);else return;e.preventDefault()});
+/* grid size */
+for(let i=3;i<=10;i++)$("gw").insertAdjacentHTML("beforeend",`<option ${i===W?"selected":""}>${i}</option>`);
+for(let i=3;i<=8;i++)$("gh").insertAdjacentHTML("beforeend",`<option ${i===H?"selected":""}>${i}</option>`);
+function resize(){W=+$("gw").value;H=+$("gh").value;broken=new Set([...broken].filter(k=>k.split("|").every(s=>{const[x,y]=s.split(",").map(Number);return x<W&&y<H})));
+  fill.c5=fill.c6=0;initSlots();reset2();new7();render[cur]()}
+$("gw").onchange=$("gh").onchange=resize;
+/* boot */
+initSlots();new7();reset2();for(let i=0;i<5;i++)step2();
+if(innerWidth<=980)$("side").classList.add("hide");
+let start=0;try{start=+localStorage.getItem("gpe-ch")||0}catch(e){}
+show(Math.min(Math.max(start,0),6));
+</script>
+
+</body>
+</html>

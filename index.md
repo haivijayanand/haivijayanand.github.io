@@ -1,7 +1,7 @@
 ---
-# TOOL: index.md | FAMILY: SITE | VERSION: 2.2.0 | DATE: 2026-10-11
+# TOOL: index.md | FAMILY: SITE | VERSION: 2.3.0 | DATE: 2026-10-25
 # CHAT: Offline HTML inventory and online links
-# CHANGES: 2.2.0 - Life Books card added; 2.1.0 - Zen Series card added; 2.0.0 - home page is now a short guide to the four sections (Speaks, Tools, Book Review, Engineering Articles); article list moved to /engineering/
+# CHANGES: 2.3.0 - Technical Papers card added; 2.2.0 - Life Books card added; 2.1.0 - Zen Series card added; 2.0.0 - home page is now a short guide to the four sections (Speaks, Tools, Book Review, Engineering Articles); article list moved to /engineering/
 layout: default
 title: Home
 ---
@@ -18,7 +18,7 @@ title: Home
 </style>
 
 <p class="hm-intro">Welcome. This site collects my writing and the small browser tools I build: essays on life and work,
-interactive engineering and learning tools, daily book reviews on management and on life and family, short Zen stories and longer engineering articles. Pick a section below.</p>
+interactive engineering and learning tools, daily book reviews on management and on life and family, short Zen stories, longer engineering articles and referenced technical papers. Pick a section below.</p>
 
 <div class="hm-grid">
   <a class="hm-card" href="/speaks/" style="--c:#2c6a9e">
@@ -50,5 +50,10 @@ interactive engineering and learning tools, daily book reviews on management and
     <b>Engineering Articles →</b>
     <span>Longer technical write-ups with worked analysis and plots: mechanical design, materials, orbital mechanics and Python visualisation.</span>
     <small>{{ site.posts | size }} articles so far</small>
+  </a>
+  <a class="hm-card" href="/papers/" style="--c:#1d4e89">
+    <b>Technical Papers →</b>
+    <span>Longer, referenced reviews of engineering and technology topics, readable online or downloadable as an A4 PDF. First paper: the history and future of exoskeletons.</span>
+    <small>A growing series · HTML + PDF</small>
   </a>
 </div>

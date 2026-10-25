@@ -41,11 +41,17 @@ In 1890 the Russian engineer Nicholas Yagn received US patent [US420179](https:/
 
 In the 1960s the US Army and Navy funded General Electric, led by Ralph Mosher, to build **Hardiman I**, a full-body hydraulic "man amplifier" meant to let one operator lift about 680 kg (1,500 lb). The machine itself weighed about 680 kg and measured about 1.8 × 1.0 × 0.7 m. [\[2\]](https://bigenc.ru/c/promyshlennyi-ekzoskelet-d127ff) GE's final report of 30 August 1971 documented the programme. [\[3\]](https://www.uab.edu/inquiro/issues/past-issues/volume-9/exosuits-past-present-and-future) Only a single arm ever worked reliably; whole-body operation produced violent, uncontrolled motion. The lesson was that the hard problem is not force but **human–machine coordination**: without fast, precise control the suit was too bulky and dangerous to use. [\[4\]](https://eu.36kr.com/en/p/3846942086462088) GE reused the hydraulic master–slave work in its quadruped *Walking Truck*.
 
+!fig[hardiman]
+
 In parallel, Mihajlo Vukobratović's group at the Mihajlo Pupin Institute in Belgrade built pneumatically powered lower-limb exoskeletons for paraplegic patients in the late 1960s and early 1970s. Their balance work led to the zero-moment-point (ZMP) concept that still underpins biped and exoskeleton gait control.
+
+!fig[pupin-1972]
 
 ### 3.3 Defence-funded renaissance (1990–2010)
 
 In 1992 Yoshiyuki Sankai at the University of Tsukuba began the work that became **HAL (Hybrid Assistive Limb)**, among the first exoskeletons with real market potential. [\[3\]](https://www.uab.edu/inquiro/issues/past-issues/volume-9/exosuits-past-present-and-future) HAL reads bioelectric (surface EMG) signals at the skin to detect the wearer's intent before the joint moves.
+
+!fig[hal]
 
 In 2000 DARPA launched the **Exoskeletons for Human Performance Augmentation (EHPA)** programme, a US$50 million, five-year effort. [\[5\]](https://web.stanford.edu/group/resna/SIG-11/archive/exoskeleton.htm) From 23 proposals it selected UC Berkeley, Sarcos Research, Oak Ridge National Laboratory and Millennium Jet; Sarcos and Oak Ridge were to develop full-body suits. [\[5\]](https://web.stanford.edu/group/resna/SIG-11/archive/exoskeleton.htm) The target was a suit that let a soldier carry roughly double the 50 kg an unaided soldier is expected to carry, and march faster and longer. [\[6\]](https://spectrum.ieee.org/the-rise-of-the-body-bots)
 
@@ -53,6 +59,8 @@ Two results shaped the industry:
 
 - **BLEEX** (Berkeley Lower Extremity Exoskeleton, H. Kazerooni) carried a substantial external load plus its own weight while walking, energetically autonomous, in 2005–2006. [\[3\]](https://www.uab.edu/inquiro/issues/past-issues/volume-9/exosuits-past-present-and-future) BLEEX became the base for **HULC** (Human Universal Load Carrier), licensed to Lockheed Martin, and the spin-out company that became **Ekso Bionics**. [\[7\]](https://www.mddionline.com/regulatory-quality/an-exoskeleton-first-fda-clears-rewalk)
 - **Sarcos XOS / XOS 2** (later under Raytheon) demonstrated full-body powered strength augmentation, with the wearer lifting heavy loads repeatedly. It was tethered to an external power supply, which limited field use.
+
+!fig[hulc, army-2007]
 
 ### 3.4 Commercial era (2010–present)
 
@@ -154,6 +162,8 @@ The industry is fragmented: no company dominates all segments, and many firms ar
 
 Wandercraft's Eve is the first self-balancing exoskeleton for personal use; users do not need crutches. Its clearance rested on a three-site trial, and Medicare already pays for personal exoskeletons under billing code K1007. [\[18\]](https://www.wandercraft.eu/articles/wandercraft-receives-fda-clearance-for-eve-the-worlds-first-self-balancing-personal-exoskeleton-for-eligible-wheelchair-users-living-with-spinal-cord-injuries-at-any-level)
 
+!fig[eksonr, herrera]
+
 ### 6.2 Industrial and occupational
 
 | Company (country) | Key products | Type | Notes |
@@ -169,6 +179,8 @@ Wandercraft's Eve is the first self-balancing exoskeleton for personal use; user
 | [German Bionic](https://germanbionic.com) (Germany) | Apogee | Powered, AI-connected back assist | Filed for bankruptcy in November 2025 [\[26\]](https://www.cbinsights.com/company/german-bionic) |
 
 Passive shoulder and back devices are the volume product. Powered industrial suits have struggled commercially: German Bionic's insolvency and Sarcos's exit from its Guardian XO heavy-lift suit (the company reorganised as Palladyne AI in 2024) show how hard it is to make a powered industrial suit pay back on the shop floor.
+
+!fig[mate-xt, navy-shipyard]
 
 ### 6.3 Military and defence
 
@@ -241,6 +253,8 @@ Over the next decade exoskeletons are likely to become lighter, cheaper and more
 | Military and first responder | Knee and hip load-carriage aids, logistics lifting suits, passive tool-support arms; trials in high-altitude and mountain operations | Integrated soldier systems sharing power with radios and sensors; hybrid devices that are passive by default and powered on demand | Silent, rugged, low-heat designs; better batteries; doctrine and training that use the devices |
 | Consumer and sport | Hip-assist for hiking, commuting and elderly walking sells in the hundreds of thousands of units; retail channels expand | Exos treated like e-bikes: mass-market, regulated as mobility products; integration with fitness apps | Independent safety and performance testing; truthful specifications |
 
+!fig[honda-walking]
+
 ### 9.1 Technology directions
 
 - **Soft and hybrid architectures** that weigh 1–3 kg and switch between passive and powered modes.
@@ -252,6 +266,8 @@ Over the next decade exoskeletons are likely to become lighter, cheaper and more
 ### 9.2 Relevance to India
 
 India has a large rehabilitation need and a defence requirement for load carriage in high-altitude terrain, but imported medical exoskeletons at US$80,000 or more are out of reach for most users. Indian industry and DRDO laboratories have started building local capability: the TASL–DRDO passive infantry exoskeleton, the Svaya–DRDO active demonstrator, and work by start-ups such as Newndra. [\[31\]](https://www.cbinsights.com/company/genelek-technologies) The Bureau of Indian Standards held a workshop on exoskeleton safety and use, [\[31\]](https://www.cbinsights.com/company/genelek-technologies) a first step toward a national framework.
+
+!fig[palon-guwahati]
 
 The main opportunities are:
 

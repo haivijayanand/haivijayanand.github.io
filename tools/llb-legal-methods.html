@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Legal Methods – B.Com. LL.B. Semester I
+FAMILY:  law-explorers
+VERSION: 1.0.0
+DATE:    2026-10-28
+CHAT:    Kaavya Study Materials – TNNLU B.Com. LL.B. Semester I explorers (claude.ai, 2026-10-28)
+CHANGES: 1.0.0 - first release: 7 units with labs (law sorter, custom tests, court hierarchy animation, binding-precedent finder, annotated Act, vehicles-in-the-park, judgment tagging, citation decoder, memorial order), flashcards, maxims, leading cases, quiz, case brief builder, references
+STATUS:  Complete for Semester I reference syllabus; replace unit details when TNNLU's official course outline is issued
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Offline interactive Legal Methods explorer for first-semester B.Com. LL.B. / B.A. LL.B. students: concept and sources of law, Indian courts and precedent, reading statutes and cases, legal research and citation, moot court, with flashcards, maxims, quiz and a case brief builder.">
+<title>Legal Methods – Semester I</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+<style>
+:root{
+  --bg:#f5f1e8; --card:#fffdf8; --ink:#1f1b16; --muted:#6b6257; --rule:#e2d9c8;
+  --accent:#7a1f2b; --accent2:#a8462f; --gold:#9a7412; --ok:#2e7d4f; --bad:#b3261e; --info:#2c5d8a;
+  --side:#2a1d1f; --side-ink:#f3e9e4; --side-muted:#c9b6ae; --hl:#f6e7c1; --chip:#efe6d6;
+  --shadow:0 1px 3px rgba(40,25,10,.08); --bar:#7a1f2b; --bar2:#a8462f;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17130f; --card:#211b16; --ink:#efe7dc; --muted:#a99c8c; --rule:#3a3129;
+  --accent:#e0828d; --accent2:#e59a7c; --gold:#e0bf5a; --ok:#6cc58e; --bad:#ff8a80; --info:#8ab8e6;
+  --side:#0f0b09; --side-ink:#efe7dc; --side-muted:#a99c8c; --hl:#4a3b1c; --chip:#2c241d; --bar:#4e1520; --bar2:#6e2a1f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17130f; --card:#211b16; --ink:#efe7dc; --muted:#a99c8c; --rule:#3a3129;
+  --accent:#e0828d; --accent2:#e59a7c; --gold:#e0bf5a; --ok:#6cc58e; --bad:#ff8a80; --info:#8ab8e6;
+  --side:#0f0b09; --side-ink:#efe7dc; --side-muted:#a99c8c; --hl:#4a3b1c; --chip:#2c241d; --bar:#4e1520; --bar2:#6e2a1f; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 "Segoe UI",system-ui,-apple-system,sans-serif}
+h1,h2,h3,h4{font-family:Georgia,"Times New Roman",serif;line-height:1.25}
+a{color:var(--info)}
+button{font:inherit;cursor:pointer}
+#top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--bar);color:#fff;box-shadow:var(--shadow)}
+#top h1{margin:0;font-size:19px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#top h1 small{font-family:"Segoe UI",system-ui,sans-serif;font-weight:400;opacity:.85;font-size:13px;margin-left:8px}
+.tbtn{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:5px 11px;font-size:14px}
+.tbtn:hover{background:rgba(255,255,255,.26)}
+.tbtn kbd{font-size:11px;opacity:.8;margin-left:4px}
+#prog{font-size:13px;opacity:.9;white-space:nowrap}
+#wrap{display:flex;min-height:calc(100vh - 50px)}
+#side{width:270px;flex:0 0 270px;background:var(--side);color:var(--side-ink);padding:14px 10px 30px;position:sticky;top:50px;height:calc(100vh - 50px);overflow:auto}
+body.sb-hidden #side{display:none}
+#side .grp{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--side-muted);margin:16px 8px 6px}
+#side a{display:flex;align-items:center;gap:8px;color:var(--side-ink);text-decoration:none;padding:7px 10px;border-radius:8px;font-size:14.5px}
+#side a:hover{background:rgba(255,255,255,.08)}
+#side a.on{background:rgba(255,255,255,.16);font-weight:600}
+#side a .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.12);font-size:12px;flex:0 0 22px}
+#side a .done{margin-left:auto;color:#8fd6a8;font-size:13px}
+#main{flex:1;min-width:0;padding:22px 32px 60px}
+.inner{max-width:1500px;margin:0 auto}
+@media (max-width:900px){
+  #side{position:fixed;left:0;top:50px;z-index:30;box-shadow:4px 0 20px rgba(0,0,0,.3)}
+  body:not(.sb-open) #side{display:none}
+  body.sb-open.sb-hidden #side{display:block}
+  #main{padding:16px}
+  #top h1 small,#prog{display:none}
+}
+.hero{background:linear-gradient(120deg,var(--bar),var(--bar2));color:#fff;border-radius:14px;padding:22px 26px;margin-bottom:20px}
+.hero h2{margin:0 0 6px;font-size:28px}
+.hero p{margin:4px 0;opacity:.95;max-width:900px}
+.unitban{border-left:6px solid var(--accent);background:var(--card);border-radius:10px;padding:16px 20px;margin-bottom:18px;box-shadow:var(--shadow)}
+.unitban .k{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);font-weight:700}
+.unitban h2{margin:2px 0 6px;font-size:26px}
+.unitban p{margin:0;color:var(--muted)}
+.two{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1150px){.two{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:16px 20px;margin-bottom:18px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 8px;font-size:20px;color:var(--accent)}
+.card h4{margin:14px 0 6px;font-size:17px}
+.lab{border-top:4px solid var(--gold)}
+.lab h3{color:var(--gold)}
+.lab h3::before{content:"LAB · ";font-family:"Segoe UI",system-ui,sans-serif;font-size:12px;letter-spacing:.1em;vertical-align:middle}
+.key{background:var(--hl);border-radius:10px;padding:12px 16px;margin:10px 0;border-left:4px solid var(--gold)}
+.key b:first-child{color:var(--gold)}
+.ex{background:var(--chip);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:15px}
+.ex::before{content:"Example  ";font-weight:700;color:var(--info);font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:15px}
+table.t th,table.t td{border:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+table.t th{background:var(--chip)}
+.chip{display:inline-block;background:var(--chip);border-radius:999px;padding:1px 10px;font-size:13px;margin:2px 3px 2px 0}
+.btn{background:var(--bar);color:#fff;border:0;border-radius:8px;padding:7px 14px;margin:3px 4px 3px 0;font-size:14.5px}
+.btn:hover{filter:brightness(1.1)}
+.btn.sec{background:var(--chip);color:var(--ink);border:1px solid var(--rule)}
+.btn.sm{padding:4px 10px;font-size:13.5px}
+.btn:disabled{opacity:.45;cursor:default}
+.fb{margin-top:8px;padding:8px 12px;border-radius:8px;font-size:15px}
+.fb.ok{background:color-mix(in srgb,var(--ok) 15%,transparent);border-left:4px solid var(--ok)}
+.fb.bad{background:color-mix(in srgb,var(--bad) 13%,transparent);border-left:4px solid var(--bad)}
+.fb.info{background:color-mix(in srgb,var(--info) 13%,transparent);border-left:4px solid var(--info)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,input[type=text],textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--rule);border-radius:8px;padding:6px 9px}
+textarea{width:100%;min-height:64px;resize:vertical}
+input[type=text]{min-width:0}
+.ucards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.ucard{background:var(--card);border:1px solid var(--rule);border-top:4px solid var(--accent);border-radius:12px;padding:14px 16px;cursor:pointer;box-shadow:var(--shadow);color:var(--ink);text-decoration:none;display:block}
+.ucard:hover{border-color:var(--accent);transform:translateY(-1px)}
+.ucard .k{font-size:12px;color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.ucard b{display:block;font-family:Georgia,serif;font-size:18px;margin:2px 0 4px}
+.ucard span{color:var(--muted);font-size:14px}
+.ucard .st{display:block;margin-top:6px;font-size:13px;color:var(--ok)}
+.anim .stage{background:var(--bg);border:1px solid var(--rule);border-radius:10px;padding:8px;overflow:auto}
+.anim svg{width:100%;height:auto;display:block;max-height:560px}
+.anim .cap{min-height:3.2em;margin:8px 2px;font-size:15.5px}
+.anim .hint{font-size:12.5px;color:var(--muted)}
+.anim .hint kbd,.kbd{color:var(--ink);background:var(--chip);border:1px solid var(--rule);border-radius:4px;padding:0 5px;font-size:12px;font-family:ui-monospace,Consolas,monospace}
+svg .node rect{fill:var(--card);stroke:var(--rule);stroke-width:1.5}
+svg .node text{fill:var(--ink);font:600 20px "Segoe UI",system-ui,sans-serif}
+svg .node .sub{fill:var(--muted);font:15px "Segoe UI",system-ui,sans-serif;font-weight:400}
+svg .node.hi rect{stroke:var(--accent);stroke-width:3;fill:var(--hl)}
+svg .edge{stroke:var(--muted);stroke-width:1.6;fill:none}
+svg .edge.hi{stroke:var(--accent);stroke-width:3.5}
+svg .fade{opacity:0;transition:opacity .45s}
+svg .show{opacity:1}
+.sentence{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:10px;align-items:start;padding:7px 0;border-bottom:1px dashed var(--rule)}
+.sentence.ok select{border-color:var(--ok);outline:2px solid color-mix(in srgb,var(--ok) 40%,transparent)}
+.sentence.bad select{border-color:var(--bad);outline:2px solid color-mix(in srgb,var(--bad) 40%,transparent)}
+.sentence .why{grid-column:1/-1;font-size:14px;color:var(--muted)}
+.act{background:var(--bg);border:1px solid var(--rule);border-radius:10px;padding:14px 18px;font-family:Georgia,serif;font-size:15.5px}
+.act .part{cursor:pointer;border-radius:4px;padding:1px 2px;transition:background .15s}
+.act .part:hover{background:var(--hl)}
+.act .part.sel{background:var(--hl);outline:2px solid var(--gold)}
+.act .c{text-align:center}
+.order li{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--rule);border-radius:8px;padding:6px 10px;margin:5px 0}
+.order li span{flex:1}
+.order li.ok{border-color:var(--ok)} .order li.bad{border-color:var(--bad)}
+.flash{perspective:1200px;max-width:720px;margin:10px auto}
+.fc{position:relative;height:260px;transition:transform .5s;transform-style:preserve-3d;cursor:pointer}
+.fc.flip{transform:rotateY(180deg)}
+.fc>div{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;border:1px solid var(--rule);box-shadow:var(--shadow)}
+.fc .front{background:var(--card)}
+.fc .front b{font-family:Georgia,serif;font-size:30px;color:var(--accent)}
+.fc .back{background:var(--hl);transform:rotateY(180deg);font-size:18px}
+.fc small{color:var(--muted);margin-top:10px;font-size:13px}
+.q{margin:12px 0;padding:12px 16px;background:var(--bg);border:1px solid var(--rule);border-radius:10px}
+.q .qt{font-weight:600;margin-bottom:6px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+@media (max-width:700px){.opts{grid-template-columns:1fr}}
+.opt{text-align:left;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:8px 12px;color:var(--ink)}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--card))}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--card))}
+.score{font-size:22px;font-family:Georgia,serif}
+.casecards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+.cc{background:var(--card);border:1px solid var(--rule);border-left:5px solid var(--accent);border-radius:10px;padding:12px 14px}
+.cc b{font-family:Georgia,serif;font-size:16.5px}
+.cc .cit{font:13px ui-monospace,Consolas,monospace;color:var(--muted);display:block;margin:2px 0 6px}
+.cc p{margin:4px 0;font-size:14.5px}
+.search{width:100%;max-width:420px}
+.foot{margin-top:30px;color:var(--muted);font-size:13px;border-top:1px solid var(--rule);padding-top:10px}
+.decode{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:10px}
+.decode div{background:var(--chip);border-radius:8px;padding:8px 10px}
+.decode div small{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.decode div b{font-size:17px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:50}
+.toast.on{opacity:1}
+@media print{#top,#side,.noprint{display:none!important}#main{padding:0}.card{break-inside:avoid;box-shadow:none}}
+</style>
+</head>
+<body>
+<header id="top">
+  <button class="tbtn" id="sbBtn" title="Show or hide the unit list (M)">☰<kbd>M</kbd></button>
+  <h1>⚖️ Legal Methods <small>B.Com. LL.B. (Hons.) · Semester I</small></h1>
+  <span id="prog"></span>
+  <button class="tbtn" id="themeBtn" title="Light or dark theme">☾ Theme</button>
+  <button class="tbtn" id="fsBtn" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<div id="wrap">
+  <nav id="side" aria-label="Units"></nav>
+  <main id="main"><div class="inner" id="view"></div></main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+"use strict";
+/* ============================================================
+   DATA
+   ============================================================ */
+const UNITS = [
+ {id:"u1", n:1, title:"Concept of Law", short:"What law is, what it does, and how it is classified."},
+ {id:"u2", n:2, title:"Sources of Law", short:"Custom, legislation, precedent, the Constitution and equity."},
+ {id:"u3", n:3, title:"Legal Systems and Courts", short:"Common law vs civil law; India's court hierarchy; Article 141."},
+ {id:"u4", n:4, title:"Reading a Statute", short:"Parts of an Act; literal, golden, mischief and purposive rules."},
+ {id:"u5", n:5, title:"Reading a Case", short:"Ratio and obiter; stare decisis; briefing a judgment."},
+ {id:"u6", n:6, title:"Legal Research and Citation", short:"Law reports, citations, databases and referencing style."},
+ {id:"u7", n:7, title:"Moot Court and Advocacy", short:"Memorials, oral rounds and courtroom etiquette."}
+];
+const EXTRAS = [
+ {id:"flash", ic:"🃏", title:"Flashcards"},
+ {id:"maxims", ic:"📜", title:"Latin maxims"},
+ {id:"cases", ic:"🏛️", title:"Leading cases"},
+ {id:"quiz", ic:"✅", title:"Quiz"},
+ {id:"brief", ic:"📝", title:"Case brief builder"},
+ {id:"refs", ic:"📚", title:"References"}
+];
+
+const FLASH = [
+ ["Law","A body of rules, recognised and enforced by the State, that governs conduct in society."],
+ ["Rule of law","Everyone, including the government, is subject to the law; no arbitrary power (A.V. Dicey)."],
+ ["Substantive law","Law that creates rights and duties, e.g. the law of contract or crimes."],
+ ["Procedural law","Law that says how rights are enforced in court, e.g. the Code of Civil Procedure."],
+ ["Public law","Governs the relation between the State and individuals: constitutional, administrative, criminal law."],
+ ["Private law","Governs relations between private persons: contract, torts, property, family law."],
+ ["Custom","A rule observed continuously and uniformly for a long time, which has obtained the force of law."],
+ ["Legislation","Law made by a competent legislature – Parliament or a State Legislature."],
+ ["Delegated legislation","Rules, regulations or bye-laws made by an executive body under power given by a parent Act."],
+ ["Precedent","An earlier judicial decision that is followed in later cases on similar facts."],
+ ["Stare decisis","'Stand by what has been decided' – courts follow earlier decisions on the same point of law."],
+ ["Ratio decidendi","The legal principle on which a case is decided; the binding part of a judgment."],
+ ["Obiter dictum","A remark by the judge 'by the way' that is not necessary for the decision; persuasive only."],
+ ["Per incuriam","A decision given in ignorance of a binding statute or precedent; it loses its binding force."],
+ ["Sub silentio","A point not argued or considered by the court; a decision on it is not a binding precedent."],
+ ["Overruling","A higher court (or larger bench) declares that an earlier decision in another case was wrong."],
+ ["Reversing","A higher court sets aside the decision of a lower court in the same case, on appeal."],
+ ["Distinguishing","Not following a precedent because the material facts of the present case are different."],
+ ["Article 141","Law declared by the Supreme Court is binding on all courts within the territory of India."],
+ ["Article 13","Laws inconsistent with Fundamental Rights are void; 'law' includes custom and usage."],
+ ["Literal rule","Give the words of a statute their plain, ordinary meaning, even if the result seems harsh."],
+ ["Golden rule","Depart from the literal meaning only to avoid an absurd or repugnant result."],
+ ["Mischief rule","Ask what mischief the Act was meant to cure and interpret it to suppress that mischief (Heydon's Case, 1584)."],
+ ["Purposive approach","Interpret the words to carry out the purpose of the legislation as a whole."],
+ ["Harmonious construction","Read two conflicting provisions so that both can operate, without one destroying the other."],
+ ["Proviso","A clause beginning 'Provided that…' which creates an exception or condition to the main section."],
+ ["Primary source","The law itself: Constitution, statutes, rules, judgments."],
+ ["Secondary source","Writing about the law: textbooks, commentaries, articles, law reviews."],
+ ["Memorial","The written submission of a party in a moot court competition."],
+ ["Neutral citation","A court-assigned citation independent of any publisher, e.g. 2023 INSC 1 for the Supreme Court."]
+];
+
+const MAXIMS = [
+ ["Stare decisis","Stand by what has been decided.","Courts follow earlier decisions on the same point."],
+ ["Ratio decidendi","The reason for the decision.","The binding principle of a judgment."],
+ ["Obiter dictum (pl. dicta)","Said by the way.","Remarks not needed for the decision; persuasive only."],
+ ["Per incuriam","Through lack of care.","A decision that missed a binding statute or precedent."],
+ ["Sub silentio","In silence.","A point the court decided without argument or consideration."],
+ ["Ubi jus ibi remedium","Where there is a right, there is a remedy.","Basis of many tort and writ remedies (Ashby v White)."],
+ ["Audi alteram partem","Hear the other side.","Rule of natural justice: no one is condemned unheard."],
+ ["Nemo judex in causa sua","No one should be a judge in their own cause.","Rule against bias in natural justice."],
+ ["Ignorantia juris non excusat","Ignorance of the law is no excuse.","A person cannot escape liability by saying they did not know the law."],
+ ["Ejusdem generis","Of the same kind.","General words after specific words take their colour: 'cars, buses and other vehicles' means road vehicles."],
+ ["Noscitur a sociis","A word is known by the company it keeps.","Read an unclear word in the light of the words around it."],
+ ["Expressio unius est exclusio alterius","Expressing one thing excludes the other.","If a law lists items, those not listed are presumed excluded."],
+ ["Generalia specialibus non derogant","General provisions do not override special ones.","A special law prevails over a general law on the same subject."],
+ ["Lex posterior derogat priori","A later law overrides an earlier one.","When two laws of equal rank conflict, the later one prevails."],
+ ["Ut res magis valeat quam pereat","Let the thing rather stand than fall.","Prefer the interpretation that makes a provision work."],
+ ["Delegatus non potest delegare","A delegate cannot delegate further.","A body given law-making power cannot hand it on without authority."],
+ ["Actus curiae neminem gravabit","An act of the court shall prejudice no one.","Delay or error by the court should not harm a party."],
+ ["Res judicata","A matter already judged.","The same issue between the same parties cannot be tried again."],
+ ["Ultra vires","Beyond the powers.","Action or rule made outside the legal power given; void."],
+ ["Locus standi","Place to stand.","The right of a person to bring a case before the court."],
+ ["Amicus curiae","Friend of the court.","A person who assists the court on a point of law."],
+ ["Suo motu","On its own motion.","A court acting without anyone filing a case."],
+ ["Prima facie","At first sight.","Enough evidence to raise a case, unless rebutted."],
+ ["Bona fide","In good faith.","Honest, without fraud or bad intention."],
+ ["Inter alia","Among other things.","Used when only some items of a list are mentioned."],
+ ["Mutatis mutandis","With necessary changes.","Apply the same rule with changes needed for the new situation."]
+];
+
+const CASES = [
+ {n:"Heydon's Case", c:"(1584) 3 Co Rep 7a", u:4, p:"Laid down the mischief rule: find the common law before the Act, the mischief it did not cover, the remedy Parliament chose, and the true reason for that remedy."},
+ {n:"Whiteley v Chappell", c:"(1868) LR 4 QB 147", u:4, p:"Literal rule. Impersonating 'a person entitled to vote' did not cover impersonating a dead voter, because a dead person is not entitled to vote."},
+ {n:"Adler v George", c:"[1964] 2 QB 7", u:4, p:"Golden rule. 'In the vicinity of' a prohibited place was read to include being inside it, to avoid an absurd result."},
+ {n:"Smith v Hughes", c:"[1960] 1 WLR 830", u:4, p:"Mischief rule. Soliciting 'in a street' covered women calling from balconies and windows, because the mischief was soliciting that people in the street could see and hear."},
+ {n:"Venkataramana Devaru v State of Mysore", c:"AIR 1958 SC 255", u:4, p:"Harmonious construction of Articles 25(2)(b) and 26(b): both provisions given effect without one cancelling the other."},
+ {n:"In re Delhi Laws Act", c:"AIR 1951 SC 332", u:2, p:"Legislature may delegate subordinate law-making power but cannot delegate its essential legislative function."},
+ {n:"Kesavananda Bharati v State of Kerala", c:"(1973) 4 SCC 225", u:1, p:"Parliament can amend the Constitution but not destroy its basic structure; rule of law and judicial review are part of it."},
+ {n:"Indira Nehru Gandhi v Raj Narain", c:"1975 Supp SCC 1", u:1, p:"Free and fair elections and the rule of law are part of the basic structure."},
+ {n:"ADM Jabalpur v Shivkant Shukla", c:"(1976) 2 SCC 521", u:5, p:"During the Emergency the majority held that no one could approach courts to enforce Article 21. Later overruled in Puttaswamy – a classic example of overruling."},
+ {n:"K.S. Puttaswamy v Union of India", c:"(2017) 10 SCC 1", u:5, p:"Nine-judge bench: privacy is a fundamental right; expressly overruled ADM Jabalpur on Article 21."},
+ {n:"Maneka Gandhi v Union of India", c:"(1978) 1 SCC 248 = AIR 1978 SC 597", u:6, p:"'Procedure established by law' under Article 21 must be fair, just and reasonable. Useful for practising parallel citations."},
+ {n:"State of U.P. v Synthetics and Chemicals Ltd", c:"(1991) 4 SCC 139", u:5, p:"Explained per incuriam and sub silentio: a decision on a point not argued is not a binding precedent."},
+ {n:"Central Board of Dawoodi Bohra Community v State of Maharashtra", c:"(2005) 2 SCC 673", u:3, p:"Rules on bench strength: a larger bench binds a smaller one; a bench that doubts a coordinate bench must refer the issue to a larger bench."},
+ {n:"Union of India v Raghubir Singh", c:"(1989) 2 SCC 754", u:3, p:"Constitution Bench on the binding effect of decisions of benches of different strength within the Supreme Court."},
+ {n:"Donoghue v Stevenson", c:"[1932] AC 562", u:5, p:"Snail-in-the-bottle case: Lord Atkin's 'neighbour principle'. Used everywhere to practise finding the ratio and separating it from wider remarks."}
+];
+
+/* Quiz bank: [unit, question, options, correct index, explanation] */
+const QUIZ = [
+ [1,"Who described the rule of law in terms of supremacy of law, equality before law and rights flowing from ordinary law?",["John Austin","A.V. Dicey","H.L.A. Hart","Hans Kelsen"],1,"A.V. Dicey, Introduction to the Study of the Law of the Constitution (1885)."],
+ [1,"The Code of Civil Procedure, 1908 is an example of…",["Substantive law","Procedural law","Customary law","International law"],1,"It lays down how civil suits are filed and tried, i.e. procedure."],
+ [1,"Which of these is private law?",["Constitutional law","Administrative law","Law of contract","Criminal law"],2,"Contract governs relations between private persons."],
+ [1,"Austin defined law as…",["The command of a sovereign backed by sanction","The general will of the people","A system of norms based on a Grundnorm","Rules of recognition and change"],0,"Austin's command theory: command + sovereign + sanction."],
+ [1,"In which case did the Supreme Court hold that Parliament cannot destroy the basic structure of the Constitution?",["Maneka Gandhi","Kesavananda Bharati","ADM Jabalpur","Raghubir Singh"],1,"Kesavananda Bharati v State of Kerala (1973) 4 SCC 225."],
+ [2,"Which is NOT a requirement for a valid custom?",["Antiquity","Continuity","Reasonableness","Approval by Parliament"],3,"A custom does not need Parliament's approval; it must be ancient, continuous, certain, reasonable and not against public policy or statute."],
+ [2,"Rules made by a Ministry under power given by an Act are called…",["Supreme legislation","Delegated legislation","Precedent","Custom"],1,"They are subordinate or delegated legislation."],
+ [2,"Under Article 13(3)(a), 'law' includes…",["Only Acts of Parliament","Custom or usage having the force of law","Only Supreme Court judgments","Only rules and orders"],1,"Article 13(3)(a) expressly includes custom or usage having the force of law."],
+ [2,"Which case held that the legislature cannot delegate its essential legislative function?",["In re Delhi Laws Act","Heydon's Case","Smith v Hughes","Puttaswamy"],0,"In re Delhi Laws Act, AIR 1951 SC 332."],
+ [2,"Where no statute or precedent applies, Indian courts have historically decided according to…",["Justice, equity and good conscience","Natural law only","Foreign codes","The Directive Principles"],0,"A residuary source used by Indian courts since colonial times."],
+ [3,"Which Article makes the law declared by the Supreme Court binding on all courts in India?",["Article 32","Article 136","Article 141","Article 226"],2,"Article 141."],
+ [3,"Tiruchirappalli district falls under which bench of the Madras High Court?",["Principal Seat, Chennai","Madurai Bench","Coimbatore Bench","Puducherry Bench"],1,"The Madurai Bench hears matters from the southern districts, including Tiruchirappalli."],
+ [3,"A decision of the Bombay High Court is, for a district court in Tamil Nadu,…",["Binding","Persuasive only","Void","Binding if unanimous"],1,"High Court decisions bind courts subordinate to that High Court; elsewhere they are only persuasive."],
+ [3,"India's legal system is mainly based on…",["Civil law (codes only)","Common law with codified statutes","Islamic law","Socialist law"],1,"India follows the common law tradition (precedent, adversarial trial) with many codified Acts."],
+ [3,"A two-judge bench of the Supreme Court doubts a decision of another two-judge bench. What should it do?",["Overrule it","Ignore it","Refer the question to a larger bench","Ask the High Court"],2,"Dawoodi Bohra (2005): coordinate benches are bound; doubts go to a larger bench."],
+ [4,"The mischief rule was laid down in…",["Heydon's Case","Whiteley v Chappell","Adler v George","Donoghue v Stevenson"],0,"Heydon's Case (1584)."],
+ [4,"A clause beginning 'Provided that…' is called a…",["Preamble","Proviso","Explanation","Schedule"],1,"A proviso carves out an exception or adds a condition."],
+ [4,"Whiteley v Chappell is an example of the…",["Literal rule","Golden rule","Mischief rule","Purposive approach"],0,"The plain words 'entitled to vote' were applied even though the result defeated the purpose."],
+ [4,"'Cars, buses, lorries and other vehicles' – a court reads 'other vehicles' as road vehicles only. This is…",["Noscitur a sociis","Ejusdem generis","Expressio unius","Res judicata"],1,"General words following specific words of one kind are limited to that kind."],
+ [4,"Harmonious construction means…",["Reading two provisions so both can operate","Choosing the later provision","Ignoring the proviso","Following the preamble only"],0,"Venkataramana Devaru (1958) is the leading example."],
+ [5,"The binding part of a judgment is the…",["Obiter dictum","Ratio decidendi","Headnote","Dissent"],1,"Only the ratio binds; obiter is persuasive."],
+ [5,"A higher court sets aside the judgment of the lower court in the same case. This is…",["Overruling","Reversing","Distinguishing","Per incuriam"],1,"Reversal happens on appeal in the same case; overruling concerns a different, earlier case."],
+ [5,"Puttaswamy (2017) did what to ADM Jabalpur (1976)?",["Followed it","Distinguished it","Overruled it","Reversed it"],2,"A later, larger bench overruled the earlier decision in a different case."],
+ [5,"Goodhart's method for finding the ratio focuses on…",["The judge's longest paragraph","The material facts and the decision on them","The headnote","The dissenting opinion"],1,"Goodhart (1930): ratio = material facts as treated by the judge + the decision."],
+ [5,"Wambaugh's test asks you to…",["Count the judges","Invert the proposition and see if the decision would change","Read only the headnote","Check the publisher"],1,"If reversing a proposition would not change the result, it is not the ratio."],
+ [6,"In '(1973) 4 SCC 225', what does 4 stand for?",["Bench strength","Volume","Page","Paragraph"],1,"Year 1973, volume 4 of Supreme Court Cases, page 225."],
+ [6,"Which of these is a free, government source for the text of Central Acts?",["SCC Online","Manupatra","India Code","Westlaw"],2,"indiacode.nic.in is the official free repository of Central and State Acts."],
+ [6,"'2023 INSC 1' is a…",["AIR citation","Neutral citation of the Supreme Court","Madras Law Journal citation","Bluebook rule"],1,"The Supreme Court began neutral citations in 2023."],
+ [6,"A textbook by G.P. Singh on interpretation is a…",["Primary source","Secondary source","Delegated legislation","Precedent"],1,"Commentary about the law is a secondary source."],
+ [7,"Which part of a memorial states the court's power to hear the matter?",["Prayer","Statement of jurisdiction","Index of authorities","Summary of arguments"],1,"The statement of jurisdiction comes before the facts."],
+ [7,"The last part of a memorial, asking the court for specific relief, is the…",["Prayer","Issues raised","Statement of facts","Cover page"],0,"The prayer ends the memorial."],
+ [7,"Who usually argues first in a moot court?",["Respondent","Petitioner/Appellant","Judge","Amicus"],1,"The petitioner or appellant opens, the respondent replies, then rebuttal and sur-rebuttal if allowed."]
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const KEY = "llb_legal_methods_v1", SBKEY = "llb_lm_sidebar";
+const S = {d:{done:{}, best:{}, briefs:[]},
+  load(){try{const s=localStorage.getItem(KEY); if(s) Object.assign(this.d, JSON.parse(s));}catch(e){}},
+  save(){try{localStorage.setItem(KEY, JSON.stringify(this.d));}catch(e){}}};
+S.load();
+let cur = "home";
+let anim = null;          // active animation controller for P/S/X
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function toast(m){const t=$("#toast"); t.textContent=m; t.classList.add("on"); clearTimeout(toast.h); toast.h=setTimeout(()=>t.classList.remove("on"),1800);}
+function shuffle(a){a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a;}
+
+/* ============================================================
+   SIDEBAR / CHROME
+   ============================================================ */
+function renderSide(){
+  const done = S.d.done;
+  let h = `<a href="#home" data-go="home" class="${cur==="home"?"on":""}"><span class="n">⌂</span>Home</a><div class="grp">Units</div>`;
+  for(const u of UNITS) h += `<a href="#${u.id}" data-go="${u.id}" class="${cur===u.id?"on":""}"><span class="n">${u.n}</span>${u.title}${done[u.id]?'<span class="done">✓</span>':""}</a>`;
+  h += `<div class="grp">Practise and revise</div>`;
+  for(const x of EXTRAS) h += `<a href="#${x.id}" data-go="${x.id}" class="${cur===x.id?"on":""}"><span class="n">${x.ic}</span>${x.title}</a>`;
+  $("#side").innerHTML = h;
+  const nd = UNITS.filter(u=>done[u.id]).length;
+  $("#prog").textContent = `${nd} of ${UNITS.length} units done`;
+}
+function setSidebar(hidden, save){
+  if(window.innerWidth<=900){ document.body.classList.toggle("sb-open", !hidden); document.body.classList.remove("sb-hidden"); }
+  else { document.body.classList.toggle("sb-hidden", hidden); }
+  if(save) try{localStorage.setItem(SBKEY, hidden?"1":"0");}catch(e){}
+}
+function sidebarHidden(){ return window.innerWidth<=900 ? !document.body.classList.contains("sb-open") : document.body.classList.contains("sb-hidden"); }
+function toggleFS(){ if(!document.fullscreenElement){ (document.documentElement.requestFullscreen||function(){}).call(document.documentElement); } else document.exitFullscreen(); }
+function setTheme(t){ if(t) document.documentElement.setAttribute("data-theme",t); else document.documentElement.removeAttribute("data-theme"); try{localStorage.setItem("llb_theme", t||"");}catch(e){} }
+
+/* ============================================================
+   ROUTER
+   ============================================================ */
+function go(id, push=true){
+  if(anim){ anim.stop(); anim=null; }
+  cur = id;
+  const V = VIEWS[id] || VIEWS.home;
+  $("#view").innerHTML = V.html();
+  if(V.init) V.init();
+  renderSide();
+  if(push) try{ history.replaceState(null,"","#"+id);}catch(e){}
+  $("#main").scrollTop = 0; window.scrollTo(0,0);
+  if(window.innerWidth<=900) setSidebar(true,false);
+}
+function unitHead(n){ const u=UNITS[n-1]; return `<div class="unitban"><div class="k">Unit ${u.n} of ${UNITS.length}</div><h2>${u.title}</h2><p>${u.short}</p></div>`; }
+function unitFoot(n){
+  const u=UNITS[n-1], prev=UNITS[n-2], next=UNITS[n];
+  const d=S.d.done[u.id];
+  return `<div class="card noprint"><h3>Check yourself</h3><div id="qs${n}"></div>
+  <div class="row" style="margin-top:10px"><button class="btn" data-done="${u.id}">${d?"✓ Marked as done":"Mark this unit as done"}</button>
+  ${prev?`<button class="btn sec" data-go="${prev.id}">← Unit ${prev.n}</button>`:""}
+  ${next?`<button class="btn sec" data-go="${next.id}">Unit ${next.n} →</button>`:`<button class="btn sec" data-go="quiz">Take the full quiz →</button>`}</div></div>`;
+}
+function miniQuiz(n){
+  const box=$("#qs"+n); if(!box) return;
+  const qs = shuffle(QUIZ.filter(q=>q[0]===n)).slice(0,3);
+  box.innerHTML = qs.map((q,i)=>qHTML(q,"m"+n+"_"+i)).join("");
+  bindQ(box);
+}
+function qHTML(q,id){
+  const order = shuffle(q[2].map((t,i)=>i));
+  return `<div class="q" data-q="${id}" data-ans="${q[3]}"><div class="qt">${esc(q[1])}</div><div class="opts">${order.map(i=>`<button class="opt" data-i="${i}">${esc(q[2][i])}</button>`).join("")}</div><div class="exp" hidden></div><div data-expl="${esc(q[4])}" hidden></div></div>`;
+}
+function bindQ(root, onAns){
+  $$(".q",root).forEach(qd=>{
+    $$(".opt",qd).forEach(b=>b.addEventListener("click",()=>{
+      const ans=+qd.dataset.ans, i=+b.dataset.i;
+      $$(".opt",qd).forEach(o=>{o.disabled=true; if(+o.dataset.i===ans) o.classList.add("right");});
+      if(i!==ans) b.classList.add("wrong");
+      const ex=$(".exp",qd); ex.hidden=false; ex.className="exp fb "+(i===ans?"ok":"bad");
+      ex.textContent=(i===ans?"Correct. ":"Not quite. ")+$("[data-expl]",qd).dataset.expl;
+      if(onAns) onAns(i===ans);
+    }));
+  });
+}
+
+/* ============================================================
+   STEP ANIMATION ENGINE  (P play · S step · X pause)
+   ============================================================ */
+function makeAnim(rootSel, steps, apply){
+  const root=$(rootSel); let i=-1, timer=null;
+  const cap=$(".cap",root), ctr=$(".ctr",root);
+  function show(k){ i=Math.max(-1,Math.min(steps.length-1,k)); apply(i); cap.innerHTML = i<0?"Press <b>P</b> to play or <b>S</b> to step through.":steps[i]; ctr.textContent=(i+1)+" / "+steps.length; }
+  const ctl = {
+    step(){ if(i>=steps.length-1){ this.pause(); return;} show(i+1); },
+    back(){ show(i-1); },
+    play(){ if(timer) return; if(i>=steps.length-1) show(-1); timer=setInterval(()=>{ if(i>=steps.length-1){ctl.pause();return;} show(i+1);},2200); ctl.step(); },
+    pause(){ clearInterval(timer); timer=null; },
+    reset(){ this.pause(); show(-1); },
+    stop(){ this.pause(); }
+  };
+  $$("[data-a]",root).forEach(b=>b.addEventListener("click",()=>ctl[b.dataset.a]()));
+  show(-1);
+  return ctl;
+}
+function animBox(id,title,svg){
+  return `<div class="card anim" id="${id}"><h3>${title}</h3><div class="stage">${svg}</div><div class="cap"></div>
+  <div class="row"><button class="btn sm" data-a="play">▶ Play <span class="kbd">P</span></button><button class="btn sm sec" data-a="step">Step <span class="kbd">S</span></button><button class="btn sm sec" data-a="pause">❚❚ Pause <span class="kbd">X</span></button><button class="btn sm sec" data-a="back">◀ Back</button><button class="btn sm sec" data-a="reset">↺ Reset</button><span class="hint ctr" style="margin-left:auto"></span></div></div>`;
+}
+
+/* ============================================================
+   VIEWS
+   ============================================================ */
+const VIEWS = {};
+
+VIEWS.home = { html(){
+  const done=S.d.done;
+  return `<div class="hero"><h2>Legal Methods</h2>
+  <p>The first law course at a law school teaches you how lawyers think: what law is, where it comes from, how courts are arranged, and how to read a statute and a judgment.</p>
+  <p>Every later paper, from Contracts to the Constitution, uses these skills. Work through the seven units, try each lab, then revise with flashcards and the quiz.</p></div>
+  <div class="ucards">${UNITS.map(u=>`<a class="ucard" data-go="${u.id}"><span class="k">Unit ${u.n}</span><b>${u.title}</b><span>${u.short}</span>${done[u.id]?'<span class="st">✓ Done</span>':""}</a>`).join("")}
+  ${EXTRAS.map(x=>`<a class="ucard" data-go="${x.id}" style="border-top-color:var(--gold)"><span class="k" style="color:var(--gold)">${x.ic} Revise</span><b>${x.title}</b></a>`).join("")}</div>
+  <div class="two" style="margin-top:18px">
+   <div class="card"><h3>How to use this</h3>
+   <ol><li>Read a unit's key idea first, then the explanation.</li><li>Do the lab on the right; it shows the idea in action.</li><li>Answer the three check questions at the bottom and mark the unit done.</li><li>Before exams: flashcards, maxims, leading cases, then the full quiz.</li><li>Use the case brief builder for every judgment set in class.</li></ol></div>
+   <div class="card"><h3>Keyboard</h3><table class="t">
+   <tr><td><span class="kbd">M</span></td><td>Show or hide the unit list</td></tr>
+   <tr><td><span class="kbd">P</span> / <span class="kbd">S</span> / <span class="kbd">X</span></td><td>Play, step, pause the animation on the page</td></tr>
+   <tr><td><span class="kbd">F</span></td><td>Full screen</td></tr>
+   <tr><td><span class="kbd">←</span> <span class="kbd">→</span> <span class="kbd">Space</span></td><td>Flashcards: previous, next, flip</td></tr>
+   <tr><td><span class="kbd">[</span> <span class="kbd">]</span></td><td>Previous or next unit</td></tr></table>
+   <p style="font-size:13.5px;color:var(--muted)">Progress and saved case briefs stay in this browser only. Works fully offline.</p></div></div>
+  <div class="card"><h3>About this syllabus</h3><p>The units follow the standard Legal Methods course taught in the first semester at Indian national law universities. TNNLU gives each class its own course outline; when it arrives, compare its unit list with this one and focus on any extra topics.</p></div>
+  ${footer()}`;
+}};
+
+/* ---------------- UNIT 1 ---------------- */
+const SORT_ITEMS = [
+ ["The Bharatiya Nyaya Sanhita, 2023 defines theft and its punishment.","pub","Criminal law is public law: the State prosecutes the offender."],
+ ["A shopkeeper sues a customer for an unpaid bill.","priv","A dispute between private persons under contract law."],
+ ["Rules on how to file an appeal in the High Court.","proc","Procedural: they govern how a case moves through court."],
+ ["A tenant's right to a notice before eviction.","subs","Substantive: it creates a right."],
+ ["The Constitution's rule that the President is elected indirectly.","pub","Constitutional law organises the State itself."],
+ ["Two neighbours dispute a boundary wall.","priv","Property dispute between private persons."],
+ ["The Bharatiya Sakshya Adhiniyam, 2023 on how facts are proved.","proc","Evidence law is generally treated as procedural (adjectival) law."],
+ ["The rule that a minor's agreement is void.","subs","Substantive rule of contract law."]
+];
+const LABELS = {pub:"Public law",priv:"Private law",subs:"Substantive",proc:"Procedural"};
+VIEWS.u1 = { html(){ return unitHead(1)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key"><b>Law</b> is a set of rules made or recognised by the State, applied by courts, and backed by sanctions. It aims at order <i>and</i> justice.</div>
+ <h4>Definitions to know</h4>
+ <table class="t"><tr><th>Jurist</th><th>Definition (in short)</th><th>School</th></tr>
+ <tr><td>John Austin</td><td>Law is the command of the sovereign, backed by a sanction.</td><td>Analytical / positivist</td></tr>
+ <tr><td>Salmond</td><td>Law is the body of principles recognised and applied by the State in the administration of justice.</td><td>Analytical (court-centred)</td></tr>
+ <tr><td>Holland</td><td>A general rule of external human action enforced by a sovereign political authority.</td><td>Analytical</td></tr>
+ <tr><td>Hans Kelsen</td><td>A hierarchy of norms, each valid because of a higher norm, ending in the basic norm (Grundnorm).</td><td>Pure theory</td></tr>
+ <tr><td>H.L.A. Hart</td><td>A union of primary rules (duties) and secondary rules (recognition, change, adjudication).</td><td>Modern positivist</td></tr>
+ <tr><td>Roscoe Pound</td><td>Law is social engineering: balancing competing interests in society.</td><td>Sociological</td></tr></table>
+ <h4>What law does</h4>
+ <ul><li><b>Keeps order</b> – settles disputes peacefully.</li><li><b>Protects rights</b> – life, liberty, property.</li><li><b>Guides behaviour</b> – tells people what they may and may not do.</li><li><b>Brings change</b> – e.g. laws abolishing untouchability (Article 17) or child marriage.</li></ul>
+ <h4>Law, morality and justice</h4>
+ <p>Law and morality overlap (murder is both illegal and immoral) but are not the same. Lying to a friend is immoral but usually not illegal; parking on the wrong side is illegal but hardly immoral. Justice is the goal law aims at; a law can be valid yet unjust, which is why courts test laws against the Constitution.</p>
+ </div>
+ <div class="card"><h3>Rule of law</h3>
+ <p>A.V. Dicey (1885) gave three meanings:</p>
+ <ol><li><b>Supremacy of law</b> – no one is punished except for a breach of law proved in ordinary courts; no arbitrary power.</li><li><b>Equality before law</b> – officials and citizens are subject to the same law and courts.</li><li><b>Rights from ordinary law</b> – in England, rights came from court decisions rather than a written constitution.</li></ol>
+ <p>In India, Article 14 guarantees equality before law, and the Supreme Court has held the rule of law to be part of the Constitution's <b>basic structure</b> (<i>Kesavananda Bharati</i>, 1973; <i>Indira Nehru Gandhi v Raj Narain</i>, 1975).</p>
+ <div class="ex">The Prime Minister's election can be challenged in court like anyone else's – that is equality before law in action (<i>Indira Nehru Gandhi v Raj Narain</i>).</div></div>
+</div><div>
+ <div class="card"><h3>Classifying law</h3>
+ <table class="t"><tr><th>Pair</th><th>Meaning</th><th>Examples</th></tr>
+ <tr><td><b>Public</b> / Private</td><td>State vs individual / between individuals</td><td>Constitutional, criminal, tax / contract, torts, family</td></tr>
+ <tr><td><b>Substantive</b> / Procedural</td><td>Creates rights and duties / how they are enforced</td><td>Contract Act, BNS / CPC, BNSS, evidence law</td></tr>
+ <tr><td><b>Civil</b> / Criminal</td><td>Remedy is compensation or order / remedy is punishment</td><td>Breach of contract suit / theft prosecution</td></tr>
+ <tr><td><b>National</b> / International</td><td>Within a State / between States</td><td>Companies Act / UN Charter, treaties</td></tr></table></div>
+ <div class="card lab"><h3>Sort the law</h3><p>Choose the right label for each situation.</p><div id="sorter"></div>
+ <div class="row"><button class="btn" id="sortCheck">Check answers</button><button class="btn sec" id="sortReset">Try again</button><span id="sortScore"></span></div></div>
+</div></div>`+unitFoot(1)+footer(); },
+ init(){
+  const box=$("#sorter");
+  box.innerHTML = SORT_ITEMS.map((it,i)=>{
+    const pair = (it[1]==="pub"||it[1]==="priv") ? ["pub","priv"] : ["subs","proc"];
+    return `<div class="sentence" data-i="${i}"><div>${esc(it[0])}</div><select><option value="">Choose…</option>${pair.map(p=>`<option value="${p}">${LABELS[p]}</option>`).join("")}</select><div class="why" hidden>${esc(it[2])}</div></div>`;}).join("");
+  $("#sortCheck").onclick=()=>{ let s=0; $$("#sorter .sentence").forEach(r=>{const it=SORT_ITEMS[+r.dataset.i], v=$("select",r).value; r.classList.remove("ok","bad"); r.classList.add(v===it[1]?"ok":"bad"); if(v===it[1]) s++; $(".why",r).hidden=false;}); $("#sortScore").textContent=`${s} / ${SORT_ITEMS.length} correct`; };
+  $("#sortReset").onclick=()=>VIEWS.u1.init();
+  miniQuiz(1);
+ }};
+
+/* ---------------- UNIT 2 ---------------- */
+const CUSTOM_TESTS = ["Antiquity – observed for a long time","Continuity – followed without break","Certainty – clear and definite","Reasonableness – not unreasonable","Not against public policy or any statute"];
+const CUSTOM_CASES = [
+ {t:"For over 200 years, a fishing village on the Coromandel coast has let all families dry nets on a common beach strip, without interruption. The rule is clear and harms no one.", a:[1,1,1,1,1], v:true, why:"All five tests are met, so it can be a valid local custom."},
+ {t:"A community in one district says girls must be married before 14 'as our elders always did'.", a:[1,1,1,0,0], v:false, why:"Old and continuous, but it is unreasonable and conflicts with the Prohibition of Child Marriage Act, 2006. Statute overrides custom."},
+ {t:"A trader says merchants in his street 'sometimes' give a 30-day credit period, 'depending on the mood', started a few years ago.", a:[0,0,0,1,1], v:false, why:"Fails antiquity, continuity and certainty: it is recent, irregular and vague."}
+];
+VIEWS.u2 = { html(){ return unitHead(2)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key"><b>Sources of law</b> are where a legal rule gets its authority. In India today the main sources are the <b>Constitution</b>, <b>legislation</b> and <b>precedent</b>; <b>custom</b> and <b>equity</b> fill gaps.</div>
+ <h4>1. The Constitution – the highest source</h4>
+ <p>Every other law must agree with it. Under <b>Article 13</b>, any law that takes away Fundamental Rights is void, and 'law' here expressly includes custom and usage having the force of law.</p>
+ <h4>2. Legislation</h4>
+ <ul><li><b>Supreme legislation</b>: Acts of Parliament and State Legislatures, within the subjects given to them by the Seventh Schedule (Union, State and Concurrent Lists).</li>
+ <li><b>Delegated (subordinate) legislation</b>: rules, regulations, notifications and bye-laws made by the executive under power given by an Act. It must stay within that Act (<i>ultra vires</i> otherwise). The legislature cannot hand over its <i>essential</i> law-making function (<i>In re Delhi Laws Act</i>, 1951).</li></ul>
+ <h4>3. Precedent</h4><p>Decisions of higher courts bind lower courts (stare decisis). Article 141 makes Supreme Court law binding everywhere in India. Studied in detail in Unit 5.</p>
+ <h4>4. Custom</h4><p>The oldest source. Section 3(a) of the Hindu Marriage Act, 1955 defines custom as a rule that, having been <b>continuously and uniformly observed for a long time</b>, has obtained the force of law, provided it is <b>certain</b>, <b>not unreasonable</b> and <b>not opposed to public policy</b>.</p>
+ <p>Kinds: <b>general</b> custom (whole country), <b>local</b> custom (a region), <b>family</b> custom, and <b>conventional usage</b> (trade practice that becomes part of contracts).</p>
+ <h4>5. Justice, equity and good conscience</h4><p>Where no statute, precedent or custom applies, Indian courts decided cases by 'justice, equity and good conscience' – a residuary source going back to colonial regulations.</p>
+ <h4>Secondary influences</h4><p>Writings of jurists, foreign judgments, international conventions and reports of the Law Commission of India do not bind courts but often persuade them.</p></div>
+</div><div>
+ <div class="card"><h3>Which source wins?</h3>
+ <table class="t"><tr><th>Conflict</th><th>Result</th></tr>
+ <tr><td>Statute vs Constitution</td><td>Constitution wins; statute void to the extent of conflict.</td></tr>
+ <tr><td>Rule vs parent Act</td><td>Act wins; rule is ultra vires.</td></tr>
+ <tr><td>Custom vs statute</td><td>Statute wins.</td></tr>
+ <tr><td>Precedent vs later statute</td><td>Legislature can change the law declared by a court (but not the Constitution's basic structure).</td></tr>
+ <tr><td>Central law vs State law (Concurrent List)</td><td>Central law generally prevails – Article 254.</td></tr></table></div>
+ <div class="card lab"><h3>Is this a valid custom?</h3><p>Read each case, tick the tests it passes, then decide.</p><div id="custom"></div></div>
+</div></div>`+unitFoot(2)+footer(); },
+ init(){
+  $("#custom").innerHTML = CUSTOM_CASES.map((c,ci)=>`<div class="q" data-c="${ci}"><div class="qt">Case ${ci+1}</div><p style="margin:4px 0 8px">${esc(c.t)}</p>
+   ${CUSTOM_TESTS.map((t,ti)=>`<label style="display:block;font-size:14.5px"><input type="checkbox" data-t="${ti}"> ${t}</label>`).join("")}
+   <div class="row" style="margin-top:6px"><button class="btn sm" data-v="1">Valid custom</button><button class="btn sm sec" data-v="0">Not valid</button></div><div class="out"></div></div>`).join("");
+  $$("#custom .q").forEach(q=>{ $$("[data-v]",q).forEach(b=>b.onclick=()=>{
+    const c=CUSTOM_CASES[+q.dataset.c], ticks=$$("input",q).map(x=>x.checked?1:0);
+    const tOK = ticks.every((v,i)=>v===c.a[i]), vOK = (b.dataset.v==="1")===c.v;
+    $(".out",q).innerHTML = `<div class="fb ${tOK&&vOK?"ok":vOK?"info":"bad"}">${vOK?"Your verdict is right. ":"Your verdict is not right. "}${tOK?"":"Check the tests again: model answer ticks "+c.a.map((v,i)=>v?CUSTOM_TESTS[i].split(" –")[0]:null).filter(Boolean).join(", ")+". "}${esc(c.why)}</div>`;
+  });});
+  miniQuiz(2);
+ }};
+
+/* ---------------- UNIT 3 ---------------- */
+const COURT_SVG = `<svg viewBox="0 0 900 520" role="img" aria-label="Court hierarchy">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<g id="c0" class="node fade"><rect x="300" y="14" width="300" height="62" rx="10"/><text x="450" y="42" text-anchor="middle">Supreme Court of India</text><text x="450" y="62" text-anchor="middle" class="sub">Art. 141: its law binds all courts</text></g>
+<g id="c1" class="node fade"><rect x="270" y="126" width="360" height="62" rx="10"/><text x="450" y="154" text-anchor="middle">High Court of Madras</text><text x="450" y="174" text-anchor="middle" class="sub">Madurai Bench covers Tiruchirappalli</text></g>
+<g id="c2" class="node fade"><rect x="40" y="250" width="360" height="62" rx="10"/><text x="220" y="278" text-anchor="middle">District Court (civil)</text><text x="220" y="298" text-anchor="middle" class="sub">Principal District Judge</text></g>
+<g id="c3" class="node fade"><rect x="500" y="250" width="360" height="62" rx="10"/><text x="680" y="278" text-anchor="middle">Sessions Court (criminal)</text><text x="680" y="298" text-anchor="middle" class="sub">Serious offences</text></g>
+<g id="c4" class="node fade"><rect x="40" y="372" width="360" height="62" rx="10"/><text x="220" y="400" text-anchor="middle">Sub-Judge · District Munsif</text><text x="220" y="420" text-anchor="middle" class="sub">Civil suits by money value</text></g>
+<g id="c5" class="node fade"><rect x="500" y="372" width="360" height="62" rx="10"/><text x="680" y="400" text-anchor="middle">Judicial Magistrates</text><text x="680" y="420" text-anchor="middle" class="sub">CJM · JM I and II class (BNSS)</text></g>
+<g id="c6" class="node fade"><rect x="270" y="456" width="360" height="58" rx="10"/><text x="450" y="481" text-anchor="middle">Tribunals and commissions</text><text x="450" y="503" text-anchor="middle" class="sub">NCLT, consumer, tax…</text></g>
+<path id="e1" class="edge fade" d="M450 126 V76" marker-end="url(#ah)" style="color:var(--muted)"/>
+<path id="e2" class="edge fade" d="M220 250 V218 H420 V188" marker-end="url(#ah)" style="color:var(--muted)"/>
+<path id="e3" class="edge fade" d="M680 250 V218 H480 V188" marker-end="url(#ah)" style="color:var(--muted)"/>
+<path id="e4" class="edge fade" d="M220 372 V312" marker-end="url(#ah)" style="color:var(--muted)"/>
+<path id="e5" class="edge fade" d="M680 372 V312" marker-end="url(#ah)" style="color:var(--muted)"/>
+<path id="e6" class="edge fade" d="M630 487 H880 V100 H600" marker-end="url(#ah)" style="color:var(--muted)"/>
+</svg>`;
+const COURT_STEPS = [
+ ["c0",[],"At the top is the <b>Supreme Court</b>. It hears appeals, writ petitions under Article 32, and constitutional questions. Its law binds every court in India (Article 141)."],
+ ["c1",["e1"],"Each State has a <b>High Court</b>. Tamil Nadu's is the Madras High Court; the <b>Madurai Bench</b> hears cases from Tiruchirappalli. Appeals go up to the Supreme Court."],
+ ["c2",["e2"],"In each district, the <b>District Court</b> is the principal civil court. Appeals from it go to the High Court."],
+ ["c3",["e3"],"The <b>Sessions Court</b> tries serious crimes such as murder. Appeals go to the High Court."],
+ ["c4",["e4"],"Below the District Court are the <b>Subordinate Judges</b> and <b>District Munsifs</b>, who try civil suits depending on their money value."],
+ ["c5",["e5"],"Criminal cases start before <b>Judicial Magistrates</b>. The BNSS, 2023 lists Courts of Session, Judicial Magistrates of the first and second class, and Executive Magistrates."],
+ ["c6",["e6"],"Specialised <b>tribunals</b> and <b>commissions</b> decide company, consumer, tax and service disputes. Their orders can be challenged in the High Court or Supreme Court."],
+ [null,["e5","e3","e1"],"Follow one path: a theft case starts before a Magistrate, an appeal goes to the Sessions Court, then a revision or appeal to the High Court, and finally a petition to the Supreme Court."],
+ [null,[],"<b>Precedent flows down:</b> each court is bound by decisions of the courts above it in its own line. Courts in Tamil Nadu follow the Madras High Court and the Supreme Court."]
+];
+const SRC = {SC5:["Supreme Court, Constitution Bench (5 judges)","SC",5],SC2:["Supreme Court, bench of 2 judges","SC",2],MHC2:["Madras High Court, Division Bench (2)","MHC",2],MHC1:["Madras High Court, single judge","MHC",1],BHC:["Bombay High Court, Division Bench","BHC",2],DCT:["District Court, Tiruchirappalli","DC",1]};
+const TGT = {SC3:["Supreme Court, bench of 3","SC",3],SC2:["Supreme Court, bench of 2","SC",2],MHC1:["Madras High Court, single judge","MHC",1],MHC2:["Madras High Court, Division Bench","MHC",2],BHC:["Bombay High Court","BHC",2],DCT:["District Court, Tiruchirappalli","DC",1],JM:["Judicial Magistrate, Tiruchirappalli","JM",0]};
+function bindingAnswer(s,t){
+  const [ , sc, ss]=SRC[s], [ , tc, ts]=TGT[t];
+  if(sc==="SC"){
+    if(tc!=="SC") return ["Binding","Article 141: law declared by the Supreme Court binds all courts in India."];
+    if(ss>ts) return ["Binding","A decision of a larger bench binds a smaller bench of the same court."];
+    if(ss===ts) return ["Binding (refer if in doubt)","A coordinate bench is bound; if it disagrees it must refer the question to a larger bench (Dawoodi Bohra, 2005)."];
+    return ["Not binding","A larger bench is not bound by a smaller bench and may overrule it."];
+  }
+  if(sc==="MHC"){
+    if(tc==="SC") return ["Persuasive only","A High Court decision never binds the Supreme Court."];
+    if(tc==="BHC") return ["Persuasive only","One High Court's decision does not bind another High Court."];
+    if(tc==="MHC"){ if(ss>ts) return ["Binding","A Division Bench binds a single judge of the same High Court."]; if(ss===ts) return ["Binding (refer if in doubt)","A coordinate bench of the same High Court is followed; doubts go to a larger bench."]; return ["Not binding","A larger bench may overrule a single judge."]; }
+    return ["Binding","Courts subordinate to the Madras High Court in Tamil Nadu must follow its decisions."];
+  }
+  if(sc==="BHC"){
+    if(tc==="BHC") return ["Binding on its own benches","Follow the bench-strength rule within the Bombay High Court."];
+    return ["Persuasive only","A High Court binds only courts subordinate to it; elsewhere its view is persuasive."];
+  }
+  return ["Not a binding precedent","Trial court decisions bind the parties in that case but are not binding precedents for other courts."];
+}
+VIEWS.u3 = { html(){ return unitHead(3)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key"><b>India follows the common law tradition</b>: judges' decisions are a source of law, trials are adversarial, and a single integrated hierarchy of courts applies both Central and State laws.</div>
+ <h4>Major legal families</h4>
+ <table class="t"><tr><th></th><th>Common law</th><th>Civil law</th></tr>
+ <tr><td>Origin</td><td>England, judge-made law</td><td>Roman law, Napoleonic Code (France), German Civil Code</td></tr>
+ <tr><td>Main source</td><td>Precedent plus statutes</td><td>Comprehensive codes</td></tr>
+ <tr><td>Role of judges</td><td>Make law through precedent</td><td>Apply the code; precedent less binding</td></tr>
+ <tr><td>Trial</td><td>Adversarial – lawyers lead, judge is umpire</td><td>Inquisitorial – judge investigates</td></tr>
+ <tr><td>Countries</td><td>UK, USA, India, Australia</td><td>France, Germany, Japan, most of Latin America</td></tr></table>
+ <p>Other systems include religious law (e.g. Islamic law in some countries) and customary law. India is a <b>mixed</b> system: common law courts, codified Acts, and personal laws for marriage and succession.</p>
+ <h4>Features of the Indian judiciary</h4>
+ <ul><li><b>Single integrated system</b> – unlike the USA, there are no separate federal and state court systems.</li>
+ <li><b>Independent</b> – judges' tenure and salaries are protected; the basic structure includes judicial review.</li>
+ <li><b>Writ jurisdiction</b> – Supreme Court (Article 32) and High Courts (Article 226) can issue habeas corpus, mandamus, prohibition, certiorari and quo warranto.</li>
+ <li><b>Benches</b> – the Supreme Court sits in benches of 2 or 3; a Constitution Bench of at least 5 decides substantial questions of constitutional interpretation (Article 145(3)).</li></ul></div>
+ <div class="card lab"><h3>Is it binding?</h3><p>Pick the court that gave the earlier decision and the court deciding a new case.</p>
+ <div class="row"><label>Earlier decision by<br><select id="bsrc">${Object.entries(SRC).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join("")}</select></label>
+ <label>Court deciding now<br><select id="btgt">${Object.entries(TGT).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join("")}</select></label></div>
+ <div id="bout"></div></div>
+</div><div>
+ ${animBox("courtAnim","India's court hierarchy (Tamil Nadu example)",COURT_SVG)}
+ <div class="card"><h3>Articles to remember</h3><table class="t">
+ <tr><td>Art. 32</td><td>Right to move the Supreme Court for Fundamental Rights</td></tr>
+ <tr><td>Art. 136</td><td>Special leave to appeal from any court or tribunal</td></tr>
+ <tr><td>Art. 141</td><td>Supreme Court's law binds all courts</td></tr>
+ <tr><td>Art. 142</td><td>Supreme Court may pass orders for complete justice</td></tr>
+ <tr><td>Art. 144</td><td>All authorities shall act in aid of the Supreme Court</td></tr>
+ <tr><td>Art. 226</td><td>High Courts' writ power (wider than Art. 32)</td></tr>
+ <tr><td>Art. 227</td><td>High Court's superintendence over courts in its State</td></tr></table></div>
+</div></div>`+unitFoot(3)+footer(); },
+ init(){
+  const all=["c0","c1","c2","c3","c4","c5","c6"], edges=["e1","e2","e3","e4","e5","e6"];
+  anim = makeAnim("#courtAnim", COURT_STEPS.map(s=>s[2]), i=>{
+    all.forEach(id=>{const g=document.getElementById(id); g.classList.toggle("show", COURT_STEPS.slice(0,i+1).some(s=>s[0]===id)); g.classList.remove("hi");});
+    edges.forEach(id=>{const e=document.getElementById(id); e.classList.toggle("show", COURT_STEPS.slice(0,i+1).some(s=>s[1].includes(id))); e.classList.remove("hi");});
+    if(i>=0){ const s=COURT_STEPS[i]; if(s[0]) document.getElementById(s[0]).classList.add("hi"); s[1].forEach(id=>document.getElementById(id).classList.add("hi"));
+      if(i===7){ ["c5","c3","c1","c0"].forEach(id=>document.getElementById(id).classList.add("hi")); }
+      if(i===8){ all.forEach(id=>document.getElementById(id).classList.add("show")); edges.forEach(id=>document.getElementById(id).classList.add("show")); } }
+  });
+  const upd=()=>{ const [r,w]=bindingAnswer($("#bsrc").value,$("#btgt").value); $("#bout").innerHTML=`<div class="fb ${r.startsWith("Binding")?"ok":"info"}"><b>${r}.</b> ${w}</div>`; };
+  $("#bsrc").onchange=upd; $("#btgt").onchange=upd; upd();
+  miniQuiz(3);
+ }};
+
+/* ---------------- UNIT 4 ---------------- */
+const ACT_PARTS = {
+ title:["Long title","Describes the purpose of the Act in a sentence. It helps interpret doubtful words but cannot override clear words."],
+ pre:["Preamble","Explains why the Act was made (the mischief). Used as a key to the mind of the legislature when words are ambiguous."],
+ short:["Short title, extent and commencement","Section 1 usually gives the name used to cite the Act, the territory it covers, and when it comes into force (often 'on such date as the Government may notify')."],
+ def:["Definition clause","Gives special meanings. 'Means' gives an exhaustive definition; 'includes' extends the ordinary meaning. Applies 'unless the context otherwise requires'."],
+ main:["Substantive section","The operative rule: creates a duty, right or prohibition."],
+ prov:["Proviso","Begins 'Provided that'. Carves out an exception from, or adds a condition to, the main section. It is read with the section it qualifies."],
+ expl:["Explanation","Clarifies the meaning of the section; it does not enlarge its scope beyond what it explains."],
+ ill:["Illustration","A worked example showing how the section applies. Helpful but cannot control the section's plain words."],
+ pen:["Penalty section","States the punishment for breaking the Act."],
+ rule:["Rule-making power","Delegates power to the Government to make rules. Rules made under it are delegated legislation and must stay within the Act."],
+ sch:["Schedule","Details placed at the end of the Act – forms, lists, rates. It is part of the Act."]
+};
+const PARK = [
+ ["An ambulance enters the park to reach an injured child.",{L:"Banned – an ambulance is a vehicle.",G:"Allowed – banning it would be absurd and endanger life.",M:"Allowed – the mischief was noise and danger to visitors, not rescue."}],
+ ["A three-year-old rides a tricycle on the path.",{L:"Arguably banned – a tricycle is a vehicle in ordinary speech.",G:"Allowed – punishing a toddler is absurd.",M:"Allowed – a tricycle causes none of the mischief aimed at."}],
+ ["A decommissioned army tank is placed as a war memorial.",{L:"Banned – it is a vehicle.",G:"Probably allowed – no absurdity, but also no danger.",M:"Allowed – it never moves, so there is no traffic mischief."}],
+ ["A visitor uses an electric wheelchair.",{L:"Possibly banned – it is a motorised carriage.",G:"Allowed – excluding disabled visitors is repugnant.",M:"Allowed – the purpose was safety and calm, which a wheelchair does not threaten."}],
+ ["A delivery van drives across the lawn as a shortcut.",{L:"Banned.",G:"Banned – no absurdity in applying the plain words.",M:"Banned – exactly the mischief the rule targets."}]
+];
+VIEWS.u4 = { html(){ return unitHead(4)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key"><b>Interpretation</b> is finding the meaning of the words the legislature used. Start with the plain words; move to other aids only when the words are unclear or lead to absurdity.</div>
+ <h4>The main rules</h4>
+ <table class="t"><tr><th>Rule</th><th>What it says</th><th>Case</th></tr>
+ <tr><td><b>Literal</b></td><td>Give words their plain, ordinary meaning, even if the result is harsh.</td><td><i>Whiteley v Chappell</i> (1868): impersonating a <i>dead</i> voter was not impersonating a person 'entitled to vote'.</td></tr>
+ <tr><td><b>Golden</b></td><td>Modify the literal meaning only as far as needed to avoid absurdity or repugnance.</td><td><i>Adler v George</i> (1964): 'in the vicinity of' a prohibited place included being inside it.</td></tr>
+ <tr><td><b>Mischief</b></td><td>Ask: what was the law before, what mischief did it not cover, what remedy did Parliament give, and why? Read the Act to suppress the mischief.</td><td><i>Heydon's Case</i> (1584); <i>Smith v Hughes</i> (1960): soliciting from a balcony was soliciting 'in a street'.</td></tr>
+ <tr><td><b>Purposive</b></td><td>Read the words in the light of the Act's overall purpose; the modern, dominant approach.</td><td>Widely used by the Supreme Court in social welfare laws.</td></tr>
+ <tr><td><b>Harmonious</b></td><td>Where two provisions seem to conflict, read them so both can work.</td><td><i>Venkataramana Devaru v State of Mysore</i> (1958).</td></tr></table>
+ <h4>Aids to interpretation</h4>
+ <ul><li><b>Internal</b>: long title, preamble, headings, definitions, provisos, explanations, illustrations, schedules.</li>
+ <li><b>External</b>: dictionaries, Statement of Objects and Reasons, parliamentary debates, Law Commission reports, earlier and later Acts on the same subject, the General Clauses Act, 1897.</li>
+ <li><b>Maxims</b>: ejusdem generis, noscitur a sociis, expressio unius… (see Latin maxims).</li></ul>
+ <h4>Where to read Acts</h4><p>Use the official text on <b>India Code</b> (indiacode.nic.in) and check whether the section has been amended since your textbook was printed.</p></div>
+</div><div>
+ <div class="card lab"><h3>Anatomy of an Act</h3><p>A made-up Act for practice. Click any highlighted part.</p>
+ <div class="act" id="act">
+  <div class="c"><b class="part" data-p="short">THE CAMPUS CYCLE SAFETY ACT, 2026</b><br><i>(Illustrative Act No. 1 of 2026 – not a real law)</i></div>
+  <p class="part" data-p="title"><i>An Act to provide for the safe use of bicycles on university campuses and for matters connected therewith.</i></p>
+  <p class="part" data-p="pre">WHEREAS accidents involving bicycles ridden at speed on campus roads have injured students and staff; AND WHEREAS it is expedient to regulate such use;</p>
+  <p><span class="part" data-p="short"><b>1. Short title, extent and commencement.</b> (1) This Act may be called the Campus Cycle Safety Act, 2026. (2) It extends to the whole of the State. (3) It shall come into force on such date as the Government may, by notification, appoint.</span></p>
+  <p><span class="part" data-p="def"><b>2. Definitions.</b> In this Act, unless the context otherwise requires, (a) "bicycle" includes a tricycle and an electric cycle with a speed not exceeding 25 km/h; (b) "campus" means land owned or occupied by a university.</span></p>
+  <p><span class="part" data-p="main"><b>3. Speed limit.</b> No person shall ride a bicycle on a campus at a speed exceeding 15 km/h:</span>
+  <span class="part" data-p="prov">Provided that this section shall not apply to a person riding to summon medical help in an emergency.</span><br>
+  <span class="part" data-p="expl"><i>Explanation.</i>—For the purposes of this section, a bicycle being pushed by hand is not being ridden.</span><br>
+  <span class="part" data-p="ill"><i>Illustration.</i>—A rides at 20 km/h to catch a class. A contravenes section 3.</span></p>
+  <p class="part" data-p="pen"><b>4. Penalty.</b> Whoever contravenes section 3 shall be liable to a fine which may extend to five hundred rupees.</p>
+  <p class="part" data-p="rule"><b>5. Power to make rules.</b> The Government may, by notification, make rules to carry out the purposes of this Act.</p>
+  <p class="part" data-p="sch"><b>THE SCHEDULE</b> [See section 5] – Form of notice to be displayed at campus gates.</p>
+ </div><div id="actOut" class="fb info">Click a part of the Act to see what it is called and how it is used.</div></div>
+ <div class="card lab"><h3>No vehicles in the park</h3><p>H.L.A. Hart's famous puzzle (1958). A bye-law says: <b>"No vehicle shall be taken into the park."</b> Choose a situation and an approach.</p>
+ <div class="row"><select id="pkS">${PARK.map((p,i)=>`<option value="${i}">${esc(p[0])}</option>`).join("")}</select></div>
+ <div class="row" style="margin-top:6px"><button class="btn sm" data-r="L">Literal rule</button><button class="btn sm" data-r="G">Golden rule</button><button class="btn sm" data-r="M">Mischief rule</button><button class="btn sm sec" data-r="all">Compare all</button></div><div id="pkOut"></div></div>
+</div></div>`+unitFoot(4)+footer(); },
+ init(){
+  $$("#act .part").forEach(p=>p.onclick=()=>{ $$("#act .part").forEach(x=>x.classList.remove("sel")); $$(`#act .part[data-p="${p.dataset.p}"]`).forEach(x=>x.classList.add("sel")); const a=ACT_PARTS[p.dataset.p]; $("#actOut").innerHTML=`<b>${a[0]}.</b> ${a[1]}`; });
+  const names={L:"Literal rule",G:"Golden rule",M:"Mischief rule"};
+  $$("[data-r]").forEach(b=>b.onclick=()=>{ const p=PARK[+$("#pkS").value][1];
+    $("#pkOut").innerHTML = b.dataset.r==="all" ? `<table class="t">${Object.keys(names).map(k=>`<tr><th>${names[k]}</th><td>${p[k]}</td></tr>`).join("")}</table><p style="font-size:14px;color:var(--muted)">Notice how the literal rule is predictable but can be harsh, while the mischief rule needs you to know the law's purpose.</p>` : `<div class="fb info"><b>${names[b.dataset.r]}:</b> ${p[b.dataset.r]}</div>`; });
+  miniQuiz(4);
+ }};
+
+/* ---------------- UNIT 5 ---------------- */
+const JUDG = [
+ ["The appellant, Meena, bought a sealed bottle of coconut oil from the respondent's shop in Tiruchirappalli.","F","A fact of the case."],
+ ["On using it, she suffered burns because the oil contained a caustic chemical.","F","A material fact – it is the injury that gives rise to the claim."],
+ ["The question is whether a manufacturer who sells goods in sealed packs owes a duty of care to the ultimate consumer.","I","The legal issue the court must decide."],
+ ["Counsel for the respondent argued that the respondent had no contract with Meena's family members and so owed them nothing.","A","An argument of a party – not part of the court's reasoning."],
+ ["We hold that a manufacturer of goods sold in a form that prevents intermediate inspection owes a duty of reasonable care to the consumer.","R","The principle needed to decide this case on its material facts – the ratio."],
+ ["It may well be that the same principle would apply to builders of houses, though we need not decide that today.","O","Said by the way; not needed for the decision – obiter."],
+ ["The respondent failed to take reasonable care, and the appeal is therefore allowed with compensation of Rs 50,000.","D","The decision (the order) on the facts."]
+];
+const TAGN={F:"Fact",I:"Issue",A:"Argument",R:"Ratio",O:"Obiter",D:"Decision"};
+const GOOD_STEPS = [
+ "Step 1 – List the facts as the judge states them.",
+ "Step 2 – Mark which facts the judge treats as <b>material</b> (essential) and which are not (the shop's town, the brand of oil).",
+ "Step 3 – Note the <b>decision</b> on those material facts: duty of care owed; appeal allowed.",
+ "Step 4 – State the principle that links material facts to the decision. That is the <b>ratio</b> (Goodhart's method, 1930).",
+ "Step 5 – Test it with Wambaugh's <b>inversion test</b>: reverse the proposition. If the decision would change, it is the ratio; if not, it is obiter."
+];
+VIEWS.u5 = { html(){ return unitHead(5)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key"><b>Stare decisis</b>: like cases are decided alike. Only the <b>ratio decidendi</b> of a higher court binds; everything else in the judgment is at most persuasive.</div>
+ <h4>Parts of a judgment</h4><p>Cause title (parties, court, date) → facts → issues → arguments of both sides → analysis of law and precedents → <b>ratio</b> → decision and order. Separate concurring or dissenting opinions may follow.</p>
+ <h4>Ratio vs obiter</h4>
+ <table class="t"><tr><th>Ratio decidendi</th><th>Obiter dictum</th></tr>
+ <tr><td>The principle necessary for the decision on the material facts</td><td>Statements not needed for the decision – hypotheticals, wider remarks</td></tr>
+ <tr><td>Binding on lower courts (and coordinate benches)</td><td>Persuasive; Supreme Court obiter is given great weight by lower courts</td></tr></table>
+ <h4>When a precedent loses force</h4>
+ <ul><li><b>Overruled</b> – a higher court or larger bench declares it wrong (e.g. <i>Puttaswamy</i>, 2017, overruled <i>ADM Jabalpur</i>, 1976).</li>
+ <li><b>Reversed</b> – set aside on appeal in the same case.</li>
+ <li><b>Distinguished</b> – the material facts are different, so it does not apply.</li>
+ <li><b>Per incuriam</b> – given in ignorance of a binding statute or precedent.</li>
+ <li><b>Sub silentio</b> – the point was not argued or considered (<i>State of U.P. v Synthetics and Chemicals</i>, 1991).</li>
+ <li><b>Changed by statute</b> – the legislature alters the law the decision applied.</li></ul>
+ <h4>Briefing a case (FIRAC)</h4><p><b>F</b>acts · <b>I</b>ssues · <b>R</b>ule (law applied) · <b>A</b>nalysis (court's reasoning) · <b>C</b>onclusion. Use the <a href="#brief" data-go="brief">case brief builder</a> for every case taught in class.</p></div>
+ ${animBox("goodAnim","Finding the ratio: Goodhart's method",`<svg viewBox="0 0 800 220"><g id="g0" class="node fade"><rect x="10" y="20" width="180" height="70" rx="10"/><text x="100" y="52" text-anchor="middle">All facts</text><text x="100" y="72" text-anchor="middle" class="sub">as stated by the judge</text></g><g id="g1" class="node fade"><rect x="210" y="20" width="180" height="70" rx="10"/><text x="300" y="52" text-anchor="middle">Material facts</text><text x="300" y="72" text-anchor="middle" class="sub">the ones that matter</text></g><g id="g2" class="node fade"><rect x="410" y="20" width="180" height="70" rx="10"/><text x="500" y="52" text-anchor="middle">Decision</text><text x="500" y="72" text-anchor="middle" class="sub">on those facts</text></g><g id="g3" class="node fade"><rect x="610" y="20" width="180" height="70" rx="10"/><text x="700" y="52" text-anchor="middle">Ratio</text><text x="700" y="72" text-anchor="middle" class="sub">facts + decision → rule</text></g><g id="g4" class="node fade"><rect x="210" y="130" width="380" height="70" rx="10"/><text x="400" y="162" text-anchor="middle">Inversion test (Wambaugh)</text><text x="400" y="182" text-anchor="middle" class="sub">reverse it – does the result change?</text></g></svg>`)}
+</div><div>
+ <div class="card lab"><h3>Tag the judgment</h3><p>A short, made-up judgment based on the idea in <i>Donoghue v Stevenson</i>. Label each sentence.</p><div id="judg"></div>
+ <div class="row"><button class="btn" id="jCheck">Check</button><button class="btn sec" id="jReset">Reset</button><span id="jScore"></span></div></div>
+ <div class="card"><h3>Overruling vs reversing</h3>
+ <table class="t"><tr><th></th><th>Overruling</th><th>Reversing</th></tr>
+ <tr><td>Which case?</td><td>An earlier, different case</td><td>The same case, on appeal</td></tr>
+ <tr><td>Who?</td><td>Higher court or larger bench</td><td>Appellate court</td></tr>
+ <tr><td>Effect on parties of old case</td><td>Not reopened</td><td>Lower court's order set aside</td></tr></table>
+ <div class="ex">Prospective overruling: in <i>I.C. Golaknath v State of Punjab</i> (1967) the Supreme Court applied its new rule only to the future, so earlier amendments were left untouched.</div></div>
+</div></div>`+unitFoot(5)+footer(); },
+ init(){
+  const build=()=>{ $("#judg").innerHTML = JUDG.map((s,i)=>`<div class="sentence" data-i="${i}"><div>${i+1}. ${esc(s[0])}</div><select><option value="">Label…</option>${Object.entries(TAGN).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select><div class="why" hidden>${esc(s[2])}</div></div>`).join(""); $("#jScore").textContent=""; };
+  build();
+  $("#jCheck").onclick=()=>{ let s=0; $$("#judg .sentence").forEach(r=>{const j=JUDG[+r.dataset.i], v=$("select",r).value; r.classList.remove("ok","bad"); r.classList.add(v===j[1]?"ok":"bad"); if(v===j[1]) s++; $(".why",r).hidden=false; $(".why",r).textContent=TAGN[j[1]]+": "+j[2];}); $("#jScore").textContent=`${s} / ${JUDG.length} correct`; };
+  $("#jReset").onclick=build;
+  anim = makeAnim("#goodAnim", GOOD_STEPS, i=>{ ["g0","g1","g2","g3","g4"].forEach((id,k)=>{const g=document.getElementById(id); g.classList.toggle("show",k<=i); g.classList.toggle("hi",k===i);}); });
+  miniQuiz(5);
+ }};
+
+/* ---------------- UNIT 6 ---------------- */
+const REPORTERS = {SCC:"Supreme Court Cases (Eastern Book Company)",SCR:"Supreme Court Reports (official reporter)",AIR:"All India Reporter",MLJ:"Madras Law Journal",SCALE:"Supreme Court Almanac (SCALE)",JT:"Judgments Today",INSC:"Supreme Court neutral citation",AC:"Appeal Cases (UK, House of Lords / Privy Council)",QB:"Queen's Bench (UK)",WLR:"Weekly Law Reports (UK)"};
+const COURTS = {SC:"Supreme Court of India",Mad:"Madras High Court",Bom:"Bombay High Court",Cal:"Calcutta High Court",Del:"Delhi High Court",Ker:"Kerala High Court",Kar:"Karnataka High Court",All:"Allahabad High Court",PC:"Privy Council"};
+function decodeCitation(s){
+  s=s.trim(); let m;
+  if((m=s.match(/^\(?(\d{4})\)?\s*(\d+)\s*(SCC|SCR|MLJ|SCALE|JT)\s*(\d+)$/i))) return {Year:m[1],Volume:m[2],Reporter:REPORTERS[m[3].toUpperCase()]||m[3],Page:m[4],Note:"Read as: year, volume of that year, report series, first page."};
+  if((m=s.match(/^\[(\d{4})\]\s*(\d+)?\s*(SCR|AC|QB|WLR)\s*(\d+)$/i))) return {Year:m[1],Volume:m[2]||"–",Reporter:REPORTERS[m[3].toUpperCase()]||m[3],Page:m[4],Note:"Square brackets: the year is needed to find the volume."};
+  if((m=s.match(/^(\d{4})\s*Supp\s*(SCC)\s*(\d+)$/i))) return {Year:m[1],Volume:"Supplement",Reporter:REPORTERS.SCC,Page:m[3],Note:"Supp = supplementary volume of that year."};
+  if((m=s.match(/^AIR\s*(\d{4})\s*([A-Za-z]+)\s*(\d+)$/i))) return {Year:m[1],Court:COURTS[m[2][0].toUpperCase()+m[2].slice(1).toLowerCase()]||COURTS[m[2].toUpperCase()]||m[2],Reporter:REPORTERS.AIR,Page:m[3],Note:"AIR: year, court, page. No volume number."};
+  if((m=s.match(/^(\d{4})\s*INSC\s*(\d+)$/i))) return {Year:m[1],Court:"Supreme Court of India",Number:m[2],Reporter:REPORTERS.INSC,Note:"Neutral citation: assigned by the court, the same in every database."};
+  if((m=s.match(/^\(?(\d{4})\)?\s*(\d+)?\s*(LR)\s*(\d+)\s*(QB|IA)\s*(\d+)$/i))) return {Year:m[1],Volume:m[4],Reporter:"Law Reports, "+m[5].toUpperCase(),Page:m[6],Note:"Older English Law Reports."};
+  return null;
+}
+VIEWS.u6 = { html(){ return unitHead(6)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key"><b>Research</b> means finding the current, authoritative law and showing exactly where it comes from. Start with <b>primary sources</b>, use <b>secondary sources</b> to understand them, and <b>cite</b> every one.</div>
+ <table class="t"><tr><th>Primary sources</th><th>Secondary sources</th></tr>
+ <tr><td>Constitution, Acts, rules, notifications, judgments, treaties</td><td>Textbooks, commentaries, journal articles, Law Commission reports, encyclopaedias, dictionaries</td></tr></table>
+ <h4>Law reports</h4>
+ <table class="t"><tr><th>Abbreviation</th><th>Report</th></tr>${Object.entries(REPORTERS).slice(0,7).map(([k,v])=>`<tr><td><b>${k}</b></td><td>${v}</td></tr>`).join("")}</table>
+ <p>One case is often reported in several series. <i>Maneka Gandhi</i> is <b>(1978) 1 SCC 248</b> and also <b>AIR 1978 SC 597</b> – these are <i>parallel citations</i>.</p>
+ <h4>Databases</h4>
+ <ul><li><b>Free</b>: India Code (Acts), Indian Kanoon (judgments), Supreme Court and High Court websites, eCourts services.</li>
+ <li><b>Subscription (via the TNNLU library)</b>: SCC Online, Manupatra, and international databases such as Westlaw, LexisNexis, HeinOnline and JSTOR.</li></ul>
+ <h4>Research steps</h4><ol><li>Frame the question precisely.</li><li>Read a textbook chapter for the big picture.</li><li>Find the statute and check amendments on India Code.</li><li>Find leading cases; check whether they are still good law (later citing cases).</li><li>Write it up, citing every source in one consistent style.</li></ol>
+ <h4>Citation style</h4><p>Law schools commonly use <b>OSCOLA</b> or the <b>Bluebook</b>. Follow whichever your course outline or moot rules require, and keep it consistent. Footnotes go at the end of the sentence they support. Copying without citing is plagiarism and is treated seriously.</p></div>
+</div><div>
+ <div class="card lab"><h3>Citation decoder</h3><p>Type a citation or pick an example.</p>
+ <div class="row"><input type="text" id="citIn" placeholder="e.g. (1973) 4 SCC 225" style="flex:1"><button class="btn" id="citGo">Decode</button></div>
+ <div class="row" style="margin-top:6px">${["(1973) 4 SCC 225","AIR 1978 SC 597","2023 INSC 1","1975 Supp SCC 1","[1932] AC 562","AIR 1958 SC 255"].map(c=>`<button class="btn sm sec" data-cit="${c}">${c}</button>`).join("")}</div>
+ <div id="citOut"></div></div>
+ <div class="card"><h3>OSCOLA in brief</h3>
+ <table class="t"><tr><th>Source</th><th>Pattern</th></tr>
+ <tr><td>Case</td><td><i>Maneka Gandhi v Union of India</i> (1978) 1 SCC 248</td></tr>
+ <tr><td>Pinpoint</td><td><i>Maneka Gandhi v Union of India</i> (1978) 1 SCC 248 [56]</td></tr>
+ <tr><td>Statute</td><td>Indian Contract Act 1872, s 10</td></tr>
+ <tr><td>Constitution</td><td>Constitution of India, art 21</td></tr>
+ <tr><td>Book</td><td>Glanville Williams, <i>Learning the Law</i> (17th edn, Sweet &amp; Maxwell 2020) 45</td></tr>
+ <tr><td>Article</td><td>AL Goodhart, 'Determining the Ratio Decidendi of a Case' (1930) 40 Yale LJ 161</td></tr></table>
+ <p style="font-size:14px;color:var(--muted)">Case names in italics; no full stops in abbreviations; pinpoint page or paragraph at the end.</p></div>
+</div></div>`+unitFoot(6)+footer(); },
+ init(){
+  const run=v=>{ const r=decodeCitation(v); $("#citOut").innerHTML = r ? `<div class="decode">${Object.entries(r).filter(([k])=>k!=="Note").map(([k,x])=>`<div><small>${k}</small><b>${esc(x)}</b></div>`).join("")}</div><div class="fb info">${r.Note}</div>` : `<div class="fb bad">Pattern not recognised. Try forms like (1973) 4 SCC 225, AIR 1978 SC 597 or 2023 INSC 1.</div>`; };
+  $("#citGo").onclick=()=>run($("#citIn").value);
+  $("#citIn").onkeydown=e=>{ if(e.key==="Enter") run(e.target.value); };
+  $$("[data-cit]").forEach(b=>b.onclick=()=>{ $("#citIn").value=b.dataset.cit; run(b.dataset.cit); });
+  miniQuiz(6);
+ }};
+
+/* ---------------- UNIT 7 ---------------- */
+const MEMORIAL = ["Cover page","Table of contents","List of abbreviations","Index of authorities","Statement of jurisdiction","Statement of facts","Issues raised","Summary of arguments","Arguments advanced","Prayer"];
+VIEWS.u7 = { html(){ return unitHead(7)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key"><b>A moot</b> is a mock appeal on a hypothetical problem. Teams write a <b>memorial</b> for each side and argue before judges. It trains research, writing and oral advocacy together.</div>
+ <h4>The process</h4><ol><li><b>Read the problem</b> several times; list facts, dates, parties and the court.</li><li><b>Frame issues</b> – usually 3 or 4 questions of law.</li><li><b>Research</b> statutes, cases and articles for both sides.</li><li><b>Write the memorial</b> in the prescribed format and word limit.</li><li><b>Prepare oral arguments</b>: a road-map, key authorities, answers to likely questions.</li><li><b>Argue</b>: petitioner first, then respondent, then rebuttal and sur-rebuttal where allowed.</li></ol>
+ <h4>Oral rounds – practical tips</h4>
+ <ul><li>Begin by introducing yourself and your co-counsel, and seek permission to proceed.</li><li>Give a road-map: "I will address two issues: first…, second…".</li><li>Answer the judge's question directly, then return to your argument.</li><li>Cite authority briefly: case name, court, year and the proposition – not long quotations.</li><li>Watch time; ask for extra time politely if needed.</li><li>Address the bench respectfully. The Bar Council of India has suggested "Your Honour" or "Hon'ble Court"; many Indian courts still hear "My Lord" or "Your Lordship". Follow the competition's rules.</li></ul>
+ <h4>Dress and conduct</h4><p>Advocates wear a black coat or gown with white bands; students in moots usually wear formal black and white. Stand when addressing the bench and never interrupt opposing counsel.</p></div>
+</div><div>
+ <div class="card lab"><h3>Order the memorial</h3><p>Use the arrows to put the parts of a memorial in the right order.</p><ul class="order" id="memo" style="list-style:none;padding:0"></ul>
+ <div class="row"><button class="btn" id="mCheck">Check order</button><button class="btn sec" id="mShuf">Shuffle again</button><span id="mScore"></span></div></div>
+ <div class="card"><h3>What each part does</h3><table class="t">
+ <tr><td><b>Index of authorities</b></td><td>Lists every case, statute and book cited, with page numbers.</td></tr>
+ <tr><td><b>Statement of jurisdiction</b></td><td>The provision under which the court hears the matter (e.g. Article 32 or Article 136).</td></tr>
+ <tr><td><b>Statement of facts</b></td><td>Neutral, concise facts from the problem – no arguments.</td></tr>
+ <tr><td><b>Issues raised</b></td><td>The questions of law, framed as questions.</td></tr>
+ <tr><td><b>Summary of arguments</b></td><td>One paragraph per issue giving your answer.</td></tr>
+ <tr><td><b>Arguments advanced</b></td><td>The detailed reasoning with authorities.</td></tr>
+ <tr><td><b>Prayer</b></td><td>The exact relief asked for, "and pass any other order this Hon'ble Court may deem fit".</td></tr></table></div>
+</div></div>`+unitFoot(7)+footer(); },
+ init(){
+  let items = shuffle(MEMORIAL);
+  const draw=()=>{ $("#memo").innerHTML = items.map((t,i)=>`<li data-t="${esc(t)}"><b>${i+1}.</b><span>${esc(t)}</span><button class="btn sm sec" data-up="${i}" ${i===0?"disabled":""}>▲</button><button class="btn sm sec" data-dn="${i}" ${i===items.length-1?"disabled":""}>▼</button></li>`).join("");
+    $$("[data-up]").forEach(b=>b.onclick=()=>{const i=+b.dataset.up; [items[i-1],items[i]]=[items[i],items[i-1]]; draw();});
+    $$("[data-dn]").forEach(b=>b.onclick=()=>{const i=+b.dataset.dn; [items[i+1],items[i]]=[items[i],items[i+1]]; draw();}); };
+  draw();
+  $("#mCheck").onclick=()=>{ let s=0; $$("#memo li").forEach((li,i)=>{ const ok=items[i]===MEMORIAL[i]; li.classList.toggle("ok",ok); li.classList.toggle("bad",!ok); if(ok) s++; }); $("#mScore").textContent = s===MEMORIAL.length ? "All in order. Well done!" : `${s} / ${MEMORIAL.length} in the right place`; };
+  $("#mShuf").onclick=()=>{ items=shuffle(MEMORIAL); draw(); $("#mScore").textContent=""; };
+  miniQuiz(7);
+ }};
+
+/* ---------------- FLASHCARDS ---------------- */
+let fIdx=0, fDeck=FLASH.slice();
+VIEWS.flash = { html(){ return `<div class="unitban"><div class="k">Revise</div><h2>Flashcards</h2><p>${FLASH.length} key terms. Click the card or press Space to flip; use ← → to move.</p></div>
+ <div class="card"><div class="flash"><div class="fc" id="fc"><div class="front"><b id="fFront"></b><small>Click or Space to see the meaning</small></div><div class="back"><div id="fBack"></div><small id="fCount"></small></div></div></div>
+ <div class="row" style="justify-content:center"><button class="btn sec" id="fPrev">← Previous</button><button class="btn" id="fFlip">Flip</button><button class="btn sec" id="fNext">Next →</button><button class="btn sec" id="fShuf">Shuffle</button><span id="fPos" style="margin-left:10px;color:var(--muted)"></span></div></div>`+footer(); },
+ init(){ fIdx=0; this.show(); $("#fc").onclick=()=>$("#fc").classList.toggle("flip"); $("#fFlip").onclick=()=>$("#fc").classList.toggle("flip"); $("#fPrev").onclick=()=>this.move(-1); $("#fNext").onclick=()=>this.move(1); $("#fShuf").onclick=()=>{fDeck=shuffle(FLASH); fIdx=0; this.show();}; },
+ show(){ const c=fDeck[fIdx]; $("#fc").classList.remove("flip"); $("#fFront").textContent=c[0]; $("#fBack").textContent=c[1]; $("#fPos").textContent=`${fIdx+1} / ${fDeck.length}`; },
+ move(d){ fIdx=(fIdx+d+fDeck.length)%fDeck.length; this.show(); }
+};
+
+/* ---------------- MAXIMS ---------------- */
+VIEWS.maxims = { html(){ return `<div class="unitban"><div class="k">Revise</div><h2>Latin maxims and terms</h2><p>Phrases you will meet in judgments from the first week. Search to filter.</p></div>
+ <div class="card"><input type="text" id="mxS" class="search" placeholder="Search maxims…"><table class="t" style="margin-top:10px"><thead><tr><th>Maxim</th><th>Literal meaning</th><th>How it is used</th></tr></thead><tbody id="mxB"></tbody></table></div>`+footer(); },
+ init(){ const draw=q=>{ q=(q||"").toLowerCase(); $("#mxB").innerHTML=MAXIMS.filter(m=>m.join(" ").toLowerCase().includes(q)).map(m=>`<tr><td><b><i>${esc(m[0])}</i></b></td><td>${esc(m[1])}</td><td>${esc(m[2])}</td></tr>`).join(""); }; draw(); $("#mxS").oninput=e=>draw(e.target.value); }};
+
+/* ---------------- CASES ---------------- */
+VIEWS.cases = { html(){ return `<div class="unitban"><div class="k">Revise</div><h2>Leading cases</h2><p>The cases used in this course. Each name links to a free search on Indian Kanoon (needs internet).</p></div>
+ <div class="card"><input type="text" id="csS" class="search" placeholder="Search cases…"></div><div class="casecards" id="csB"></div>`+footer(); },
+ init(){ const draw=q=>{ q=(q||"").toLowerCase(); $("#csB").innerHTML=CASES.filter(c=>(c.n+c.c+c.p).toLowerCase().includes(q)).map(c=>`<div class="cc"><b><a href="https://indiankanoon.org/search/?formInput=${encodeURIComponent(c.n)}" target="_blank" rel="noopener">${esc(c.n)}</a></b><span class="cit">${esc(c.c)} · Unit ${c.u}</span><p>${esc(c.p)}</p></div>`).join(""); }; draw(); $("#csS").oninput=e=>draw(e.target.value); }};
+
+/* ---------------- QUIZ ---------------- */
+VIEWS.quiz = { html(){ return `<div class="unitban"><div class="k">Test yourself</div><h2>Quiz</h2><p>${QUIZ.length} questions in the bank. Pick a unit or take a mixed set of 10.</p></div>
+ <div class="card"><div class="row"><select id="qU"><option value="0">All units (10 random)</option>${UNITS.map(u=>`<option value="${u.n}">Unit ${u.n}: ${u.title}</option>`).join("")}</select><button class="btn" id="qStart">Start</button><span id="qBest" style="color:var(--muted)"></span></div></div>
+ <div class="card" id="qBox" hidden><div id="qList"></div><div class="row" style="margin-top:10px"><span class="score" id="qScore"></span></div></div>`+footer(); },
+ init(){
+  const best=()=>{ const b=S.d.best, u=$("#qU").value; $("#qBest").textContent = b[u]!=null ? `Best: ${b[u]}%` : ""; };
+  $("#qU").onchange=best; best();
+  $("#qStart").onclick=()=>{
+    const u=+$("#qU").value; const pool = u? QUIZ.filter(q=>q[0]===u) : QUIZ; const set = shuffle(pool).slice(0, u?pool.length:10);
+    let got=0, ans=0; $("#qBox").hidden=false; $("#qList").innerHTML=set.map((q,i)=>qHTML(q,"q"+i)).join(""); $("#qScore").textContent=`0 / ${set.length}`;
+    bindQ($("#qList"), ok=>{ ans++; if(ok) got++; $("#qScore").textContent=`${got} / ${set.length}` + (ans===set.length?`  ·  ${Math.round(100*got/set.length)}%`:"");
+      if(ans===set.length){ const pct=Math.round(100*got/set.length), k=String(u); if(S.d.best[k]==null||pct>S.d.best[k]){S.d.best[k]=pct; S.save();} best(); toast(pct>=80?"Excellent!":pct>=50?"Good – revise the ones you missed.":"Revisit the units and try again."); } });
+  };
+ }};
+
+/* ---------------- CASE BRIEF BUILDER ---------------- */
+const BF = [["name","Case name"],["cit","Citation"],["court","Court and bench (judges)"],["facts","Facts (material facts only)"],["issues","Issues"],["argsP","Arguments – petitioner / appellant"],["argsR","Arguments – respondent"],["held","Held (decision)"],["ratio","Ratio decidendi"],["obiter","Obiter dicta"],["notes","My comments – do I agree? Is it still good law?"]];
+let briefEdit = -1;
+VIEWS.brief = { html(){ return `<div class="unitban"><div class="k">Practise</div><h2>Case brief builder</h2><p>Brief every judgment taught in class. Briefs are saved in this browser; download them as text to keep a copy.</p></div>
+ <div class="two"><div class="card"><h3 id="bfTitle">New brief</h3>${BF.map(([k,l])=>`<label style="display:block;margin:8px 0 2px;font-weight:600;font-size:14px">${l}</label>${k==="name"||k==="cit"||k==="court"?`<input type="text" id="bf_${k}" style="width:100%">`:`<textarea id="bf_${k}"></textarea>`}`).join("")}
+ <div class="row" style="margin-top:10px"><button class="btn" id="bfSave">Save brief</button><button class="btn sec" id="bfNew">Clear</button><button class="btn sec" id="bfDl">Download as .txt</button><button class="btn sec" onclick="window.print()">Print</button></div></div>
+ <div class="card"><h3>Saved briefs</h3><div id="bfList"></div><div class="key" style="margin-top:14px"><b>Tip.</b> Keep each brief to one page. If you cannot state the ratio in two sentences, read the judgment's analysis again.</div></div></div>`+footer(); },
+ init(){ briefEdit=-1; this.list(); $("#bfSave").onclick=()=>this.save(); $("#bfNew").onclick=()=>{briefEdit=-1; BF.forEach(([k])=>$("#bf_"+k).value=""); $("#bfTitle").textContent="New brief";}; $("#bfDl").onclick=()=>this.dl(); },
+ collect(){ const o={}; BF.forEach(([k])=>o[k]=$("#bf_"+k).value.trim()); return o; },
+ save(){ const o=this.collect(); if(!o.name){toast("Add a case name first"); return;} if(briefEdit>=0) S.d.briefs[briefEdit]=o; else S.d.briefs.push(o); S.save(); briefEdit=S.d.briefs.indexOf(o); toast("Brief saved"); this.list(); },
+ list(){ const b=S.d.briefs; $("#bfList").innerHTML = b.length ? b.map((x,i)=>`<div class="row" style="border-bottom:1px solid var(--rule);padding:6px 0"><span style="flex:1"><b>${esc(x.name)}</b><br><small style="color:var(--muted)">${esc(x.cit||"")}</small></span><button class="btn sm sec" data-ed="${i}">Open</button><button class="btn sm sec" data-del="${i}">Delete</button></div>`).join("") : `<p style="color:var(--muted)">No briefs yet.</p>`;
+   $$("[data-ed]").forEach(btn=>btn.onclick=()=>{ briefEdit=+btn.dataset.ed; const x=S.d.briefs[briefEdit]; BF.forEach(([k])=>$("#bf_"+k).value=x[k]||""); $("#bfTitle").textContent="Editing: "+x.name; });
+   $$("[data-del]").forEach(btn=>btn.onclick=()=>{ S.d.briefs.splice(+btn.dataset.del,1); S.save(); briefEdit=-1; this.list(); }); },
+ dl(){ const o=this.collect(); const txt=BF.map(([k,l])=>l.toUpperCase()+"\n"+(o[k]||"-")+"\n").join("\n"); const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"})); a.download=(o.name||"case-brief").replace(/[^\w\- ]+/g,"").slice(0,60)+".txt"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); }
+};
+
+/* ---------------- REFERENCES ---------------- */
+VIEWS.refs = { html(){ return `<div class="unitban"><div class="k">Read further</div><h2>References</h2><p>Books are in the TNNLU library; online sources need internet.</p></div>
+ <div class="two"><div class="card"><h3>Books</h3><table class="t"><tr><th>Book</th><th>Use it for</th></tr>
+ <tr><td>Glanville Williams (ed. A.T.H. Smith), <i>Learning the Law</i>, Sweet &amp; Maxwell</td><td>Start here: short, friendly guide to reading cases and statutes. Units 1, 4, 5</td></tr>
+ <tr><td>Tushar Kanti Saha, <i>Textbook on Legal Methods, Legal Systems and Research</i>, Universal Law Publishing</td><td>Indian syllabus coverage of all units</td></tr>
+ <tr><td>Frederick Schauer, <i>Thinking Like a Lawyer</i>, Harvard University Press (2009)</td><td>Precedent, rules and legal reasoning. Units 4, 5</td></tr>
+ <tr><td>Ian McLeod, <i>Legal Method</i>, Palgrave Macmillan</td><td>Sources of law, statutes and precedent. Units 2, 4, 5</td></tr>
+ <tr><td>N.R. Madhava Menon (ed.), <i>Clinical Legal Education</i>, Eastern Book Company</td><td>Moots, client counselling, legal aid. Unit 7</td></tr>
+ <tr><td>S.N. Jain (ed.), <i>Legal Research and Methodology</i>, Indian Law Institute</td><td>Research methods. Unit 6</td></tr>
+ <tr><td>P. Ishwara Bhat, <i>Idea and Methods of Legal Research</i>, Oxford University Press (2019)</td><td>Deeper reading on research. Unit 6</td></tr>
+ <tr><td>G.P. Singh, <i>Principles of Statutory Interpretation</i>, LexisNexis</td><td>The standard reference on interpretation. Unit 4</td></tr>
+ <tr><td>M.P. Jain, <i>Outlines of Indian Legal and Constitutional History</i>, LexisNexis</td><td>Origins of Indian courts. Unit 3</td></tr>
+ <tr><td>P.J. Fitzgerald, <i>Salmond on Jurisprudence</i>, Universal / Sweet &amp; Maxwell</td><td>Definitions and sources of law. Units 1, 2</td></tr></table></div>
+ <div><div class="card"><h3>Articles and primary texts</h3><ul>
+ <li>A.L. Goodhart, 'Determining the Ratio Decidendi of a Case' (1930) 40 Yale Law Journal 161</li>
+ <li>H.L.A. Hart, 'Positivism and the Separation of Law and Morals' (1958) 71 Harvard Law Review 593 – the 'vehicles in the park' example</li>
+ <li>Constitution of India: Articles 13, 14, 32, 124–147, 141, 142, 214–231</li>
+ <li>General Clauses Act, 1897 – definitions and rules applying to all Central Acts</li></ul></div>
+ <div class="card"><h3>Online sources</h3><ul>
+ <li><a href="https://www.indiacode.nic.in" target="_blank" rel="noopener">India Code</a> – official text of Central and State Acts</li>
+ <li><a href="https://legislative.gov.in/constitution-of-india/" target="_blank" rel="noopener">Constitution of India</a> – Legislative Department, Government of India</li>
+ <li><a href="https://www.sci.gov.in" target="_blank" rel="noopener">Supreme Court of India</a> – judgments, cause lists</li>
+ <li><a href="https://www.mhc.tn.gov.in" target="_blank" rel="noopener">Madras High Court</a> – judgments and orders, including the Madurai Bench</li>
+ <li><a href="https://indiankanoon.org" target="_blank" rel="noopener">Indian Kanoon</a> – free judgment search</li>
+ <li><a href="https://ecourts.gov.in" target="_blank" rel="noopener">eCourts Services</a> – case status in district courts</li>
+ <li><a href="https://lawcommissionofindia.nic.in" target="_blank" rel="noopener">Law Commission of India</a> – reports</li>
+ <li><a href="https://www.law.ox.ac.uk/oscola" target="_blank" rel="noopener">OSCOLA</a> – citation guide (University of Oxford)</li>
+ <li><a href="https://www.tnnlulibrary.net" target="_blank" rel="noopener">TNNLU Library</a> – access to SCC Online, Manupatra and other e-resources</li></ul></div></div></div>`+footer(); }};
+
+function footer(){ return `<div class="foot">Legal Methods explorer · v1.0.0 · Reference material for first-semester law students, based on the standard Legal Methods syllabus at Indian national law universities. Always check against your own course outline and the current text of the law.</div>`; }
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+document.addEventListener("click", e=>{
+  const g=e.target.closest("[data-go]"); if(g){ e.preventDefault(); go(g.dataset.go); return; }
+  const d=e.target.closest("[data-done]"); if(d){ const id=d.dataset.done; S.d.done[id]=!S.d.done[id]; S.save(); d.textContent=S.d.done[id]?"✓ Marked as done":"Mark this unit as done"; renderSide(); toast(S.d.done[id]?"Unit marked as done":"Unit unmarked"); }
+});
+document.addEventListener("keydown", e=>{
+  if(e.target.matches("input,textarea,select")||e.ctrlKey||e.metaKey||e.altKey) return;
+  const k=e.key.toLowerCase();
+  if(k==="m"){ setSidebar(!sidebarHidden(), true); }
+  else if(k==="f"){ toggleFS(); }
+  else if(anim && k==="p"){ anim.play(); }
+  else if(anim && k==="s"){ anim.pause(); anim.step(); }
+  else if(anim && k==="x"){ anim.pause(); }
+  else if(cur==="flash" && (e.key==="ArrowRight"||e.key==="ArrowLeft")){ VIEWS.flash.move(e.key==="ArrowRight"?1:-1); }
+  else if(cur==="flash" && e.key===" "){ e.preventDefault(); $("#fc").classList.toggle("flip"); }
+  else if(k==="["||k==="]"){ const i=UNITS.findIndex(u=>u.id===cur); const ni = i<0 ? (k==="]"?0:-1) : i+(k==="]"?1:-1); if(ni>=0&&ni<UNITS.length) go(UNITS[ni].id); }
+});
+$("#sbBtn").onclick=()=>setSidebar(!sidebarHidden(), true);
+$("#fsBtn").onclick=toggleFS;
+$("#themeBtn").onclick=()=>{ const dark = document.documentElement.getAttribute("data-theme")==="dark" || (!document.documentElement.getAttribute("data-theme") && matchMedia("(prefers-color-scheme:dark)").matches); setTheme(dark?"light":"dark"); };
+document.addEventListener("fullscreenchange",()=>{ $("#fsBtn").textContent = document.fullscreenElement ? "⛶ Exit full screen" : "⛶ Full screen"; });
+(function boot(){
+  try{ const t=localStorage.getItem("llb_theme"); if(t) setTheme(t); }catch(e){}
+  let h=false; try{ h=localStorage.getItem(SBKEY)==="1"; }catch(e){}
+  setSidebar(window.innerWidth<=900 ? true : h, false);
+  const start=(location.hash||"").slice(1);
+  go(VIEWS[start]?start:"home", false);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Financial Accounting & Practical Auditing – B.Com. LL.B. Semester I
+FAMILY:  law-explorers
+VERSION: 1.0.0
+DATE:    2026-10-28
+CHAT:    Kaavya Study Materials – TNNLU B.Com. LL.B. Semester I explorers (claude.ai, 2026-10-28)
+CHANGES: 1.0.0 - first release: 5 units; accounting-equation and ledger-posting animations; journal, BRS and final-accounts generators with worked solutions; depreciation calculator with chart; error, audit-opinion and vouching labs; flashcards, glossary, formula sheet, quiz, references
+STATUS:  Complete for Semester I reference syllabus; replace unit details when TNNLU's official course outline is issued
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Offline interactive Financial Accounting and Practical Auditing explorer for first-semester B.Com. LL.B. students: concepts, journal and ledger, trial balance, bank reconciliation, depreciation, final accounts and auditing, with practice generators and worked solutions.">
+<title>Financial Accounting – Semester I</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📒</text></svg>">
+<style>
+:root{
+  --bg:#f5f1e8; --card:#fffdf8; --ink:#1f1b16; --muted:#6b6257; --rule:#e2d9c8;
+  --accent:#7a1f2b; --accent2:#a8462f; --gold:#9a7412; --ok:#2e7d4f; --bad:#b3261e; --info:#2c5d8a;
+  --side:#2a1d1f; --side-ink:#f3e9e4; --side-muted:#c9b6ae; --hl:#f6e7c1; --chip:#efe6d6;
+  --shadow:0 1px 3px rgba(40,25,10,.08); --bar:#7a1f2b; --bar2:#a8462f;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17130f; --card:#211b16; --ink:#efe7dc; --muted:#a99c8c; --rule:#3a3129;
+  --accent:#e0828d; --accent2:#e59a7c; --gold:#e0bf5a; --ok:#6cc58e; --bad:#ff8a80; --info:#8ab8e6;
+  --side:#0f0b09; --side-ink:#efe7dc; --side-muted:#a99c8c; --hl:#4a3b1c; --chip:#2c241d; --bar:#4e1520; --bar2:#6e2a1f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17130f; --card:#211b16; --ink:#efe7dc; --muted:#a99c8c; --rule:#3a3129;
+  --accent:#e0828d; --accent2:#e59a7c; --gold:#e0bf5a; --ok:#6cc58e; --bad:#ff8a80; --info:#8ab8e6;
+  --side:#0f0b09; --side-ink:#efe7dc; --side-muted:#a99c8c; --hl:#4a3b1c; --chip:#2c241d; --bar:#4e1520; --bar2:#6e2a1f; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 "Segoe UI",system-ui,-apple-system,sans-serif}
+h1,h2,h3,h4{font-family:Georgia,"Times New Roman",serif;line-height:1.25}
+a{color:var(--info)}
+button{font:inherit;cursor:pointer}
+#top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--bar);color:#fff;box-shadow:var(--shadow)}
+#top h1{margin:0;font-size:19px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#top h1 small{font-family:"Segoe UI",system-ui,sans-serif;font-weight:400;opacity:.85;font-size:13px;margin-left:8px}
+.tbtn{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:5px 11px;font-size:14px}
+.tbtn:hover{background:rgba(255,255,255,.26)}
+.tbtn kbd{font-size:11px;opacity:.8;margin-left:4px}
+#prog{font-size:13px;opacity:.9;white-space:nowrap}
+#wrap{display:flex;min-height:calc(100vh - 50px)}
+#side{width:270px;flex:0 0 270px;background:var(--side);color:var(--side-ink);padding:14px 10px 30px;position:sticky;top:50px;height:calc(100vh - 50px);overflow:auto}
+body.sb-hidden #side{display:none}
+#side .grp{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--side-muted);margin:16px 8px 6px}
+#side a{display:flex;align-items:center;gap:8px;color:var(--side-ink);text-decoration:none;padding:7px 10px;border-radius:8px;font-size:14.5px}
+#side a:hover{background:rgba(255,255,255,.08)}
+#side a.on{background:rgba(255,255,255,.16);font-weight:600}
+#side a .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.12);font-size:12px;flex:0 0 22px}
+#side a .done{margin-left:auto;color:#8fd6a8;font-size:13px}
+#main{flex:1;min-width:0;padding:22px 32px 60px}
+.inner{max-width:1500px;margin:0 auto}
+@media (max-width:900px){
+  #side{position:fixed;left:0;top:50px;z-index:30;box-shadow:4px 0 20px rgba(0,0,0,.3)}
+  body:not(.sb-open) #side{display:none}
+  body.sb-open.sb-hidden #side{display:block}
+  #main{padding:16px}
+  #top h1 small,#prog{display:none}
+}
+.hero{background:linear-gradient(120deg,var(--bar),var(--bar2));color:#fff;border-radius:14px;padding:22px 26px;margin-bottom:20px}
+.hero h2{margin:0 0 6px;font-size:28px}
+.hero p{margin:4px 0;opacity:.95;max-width:900px}
+.unitban{border-left:6px solid var(--accent);background:var(--card);border-radius:10px;padding:16px 20px;margin-bottom:18px;box-shadow:var(--shadow)}
+.unitban .k{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);font-weight:700}
+.unitban h2{margin:2px 0 6px;font-size:26px}
+.unitban p{margin:0;color:var(--muted)}
+.two{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1150px){.two{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:16px 20px;margin-bottom:18px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 8px;font-size:20px;color:var(--accent)}
+.card h4{margin:14px 0 6px;font-size:17px}
+.lab{border-top:4px solid var(--gold)}
+.lab h3{color:var(--gold)}
+.lab h3::before{content:"LAB · ";font-family:"Segoe UI",system-ui,sans-serif;font-size:12px;letter-spacing:.1em;vertical-align:middle}
+.key{background:var(--hl);border-radius:10px;padding:12px 16px;margin:10px 0;border-left:4px solid var(--gold)}
+.key b:first-child{color:var(--gold)}
+.ex{background:var(--chip);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:15px}
+.ex::before{content:"Example  ";font-weight:700;color:var(--info);font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:15px}
+table.t th,table.t td{border:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+table.t th{background:var(--chip)}
+.chip{display:inline-block;background:var(--chip);border-radius:999px;padding:1px 10px;font-size:13px;margin:2px 3px 2px 0}
+.btn{background:var(--bar);color:#fff;border:0;border-radius:8px;padding:7px 14px;margin:3px 4px 3px 0;font-size:14.5px}
+.btn:hover{filter:brightness(1.1)}
+.btn.sec{background:var(--chip);color:var(--ink);border:1px solid var(--rule)}
+.btn.sm{padding:4px 10px;font-size:13.5px}
+.btn:disabled{opacity:.45;cursor:default}
+.fb{margin-top:8px;padding:8px 12px;border-radius:8px;font-size:15px}
+.fb.ok{background:color-mix(in srgb,var(--ok) 15%,transparent);border-left:4px solid var(--ok)}
+.fb.bad{background:color-mix(in srgb,var(--bad) 13%,transparent);border-left:4px solid var(--bad)}
+.fb.info{background:color-mix(in srgb,var(--info) 13%,transparent);border-left:4px solid var(--info)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,input[type=text],textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--rule);border-radius:8px;padding:6px 9px}
+textarea{width:100%;min-height:64px;resize:vertical}
+input[type=text]{min-width:0}
+.ucards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.ucard{background:var(--card);border:1px solid var(--rule);border-top:4px solid var(--accent);border-radius:12px;padding:14px 16px;cursor:pointer;box-shadow:var(--shadow);color:var(--ink);text-decoration:none;display:block}
+.ucard:hover{border-color:var(--accent);transform:translateY(-1px)}
+.ucard .k{font-size:12px;color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.ucard b{display:block;font-family:Georgia,serif;font-size:18px;margin:2px 0 4px}
+.ucard span{color:var(--muted);font-size:14px}
+.ucard .st{display:block;margin-top:6px;font-size:13px;color:var(--ok)}
+.anim .stage{background:var(--bg);border:1px solid var(--rule);border-radius:10px;padding:8px;overflow:auto}
+.anim svg{width:100%;height:auto;display:block;max-height:560px}
+.anim .cap{min-height:3.2em;margin:8px 2px;font-size:15.5px}
+.anim .hint{font-size:12.5px;color:var(--muted)}
+.anim .hint kbd,.kbd{color:var(--ink);background:var(--chip);border:1px solid var(--rule);border-radius:4px;padding:0 5px;font-size:12px;font-family:ui-monospace,Consolas,monospace}
+svg .node rect{fill:var(--card);stroke:var(--rule);stroke-width:1.5}
+svg .node text{fill:var(--ink);font:600 20px "Segoe UI",system-ui,sans-serif}
+svg .node .sub{fill:var(--muted);font:15px "Segoe UI",system-ui,sans-serif;font-weight:400}
+svg .node.hi rect{stroke:var(--accent);stroke-width:3;fill:var(--hl)}
+svg .edge{stroke:var(--muted);stroke-width:1.6;fill:none}
+svg .edge.hi{stroke:var(--accent);stroke-width:3.5}
+svg .fade{opacity:0;transition:opacity .45s}
+svg .show{opacity:1}
+.sentence{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:10px;align-items:start;padding:7px 0;border-bottom:1px dashed var(--rule)}
+.sentence.ok select{border-color:var(--ok);outline:2px solid color-mix(in srgb,var(--ok) 40%,transparent)}
+.sentence.bad select{border-color:var(--bad);outline:2px solid color-mix(in srgb,var(--bad) 40%,transparent)}
+.sentence .why{grid-column:1/-1;font-size:14px;color:var(--muted)}
+.act{background:var(--bg);border:1px solid var(--rule);border-radius:10px;padding:14px 18px;font-family:Georgia,serif;font-size:15.5px}
+.act .part{cursor:pointer;border-radius:4px;padding:1px 2px;transition:background .15s}
+.act .part:hover{background:var(--hl)}
+.act .part.sel{background:var(--hl);outline:2px solid var(--gold)}
+.act .c{text-align:center}
+.order li{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--rule);border-radius:8px;padding:6px 10px;margin:5px 0}
+.order li span{flex:1}
+.order li.ok{border-color:var(--ok)} .order li.bad{border-color:var(--bad)}
+.flash{perspective:1200px;max-width:720px;margin:10px auto}
+.fc{position:relative;height:260px;transition:transform .5s;transform-style:preserve-3d;cursor:pointer}
+.fc.flip{transform:rotateY(180deg)}
+.fc>div{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;border:1px solid var(--rule);box-shadow:var(--shadow)}
+.fc .front{background:var(--card)}
+.fc .front b{font-family:Georgia,serif;font-size:30px;color:var(--accent)}
+.fc .back{background:var(--hl);transform:rotateY(180deg);font-size:18px}
+.fc small{color:var(--muted);margin-top:10px;font-size:13px}
+.q{margin:12px 0;padding:12px 16px;background:var(--bg);border:1px solid var(--rule);border-radius:10px}
+.q .qt{font-weight:600;margin-bottom:6px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+@media (max-width:700px){.opts{grid-template-columns:1fr}}
+.opt{text-align:left;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:8px 12px;color:var(--ink)}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--card))}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--card))}
+.score{font-size:22px;font-family:Georgia,serif}
+.btn.right{background:color-mix(in srgb,var(--ok) 28%,var(--card));border-color:var(--ok);color:var(--ink);opacity:1}
+.btn.wrong{background:color-mix(in srgb,var(--bad) 24%,var(--card));border-color:var(--bad);color:var(--ink);opacity:1}
+.casecards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+.cc{background:var(--card);border:1px solid var(--rule);border-left:5px solid var(--accent);border-radius:10px;padding:12px 14px}
+.cc b{font-family:Georgia,serif;font-size:16.5px}
+.cc .cit{font:13px ui-monospace,Consolas,monospace;color:var(--muted);display:block;margin:2px 0 6px}
+.cc p{margin:4px 0;font-size:14.5px}
+.search{width:100%;max-width:420px}
+.foot{margin-top:30px;color:var(--muted);font-size:13px;border-top:1px solid var(--rule);padding-top:10px}
+.decode{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:10px}
+.decode div{background:var(--chip);border-radius:8px;padding:8px 10px}
+.decode div small{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.decode div b{font-size:17px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:50}
+.toast.on{opacity:1}
+@media print{#top,#side,.noprint{display:none!important}#main{padding:0}.card{break-inside:avoid;box-shadow:none}}
+</style>
+</head>
+<body>
+<header id="top">
+  <button class="tbtn" id="sbBtn" title="Show or hide the unit list (M)">☰<kbd>M</kbd></button>
+  <h1>📒 Financial Accounting &amp; Auditing <small>B.Com. LL.B. (Hons.) · Semester I</small></h1>
+  <span id="prog"></span>
+  <button class="tbtn" id="themeBtn" title="Light or dark theme">☾ Theme</button>
+  <button class="tbtn" id="fsBtn" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<div id="wrap">
+  <nav id="side" aria-label="Units"></nav>
+  <main id="main"><div class="inner" id="view"></div></main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+"use strict";
+/* ============================================================
+   DATA
+   ============================================================ */
+const UNITS = [
+ {id:"u1", n:1, title:"Basics of Accounting", short:"Meaning, users, concepts and conventions, the accounting equation."},
+ {id:"u2", n:2, title:"Journal and Ledger", short:"Double entry, the golden rules, journal entries, posting and balancing."},
+ {id:"u3", n:3, title:"Trial Balance, BRS and Depreciation", short:"Trial balance, errors, bank reconciliation, SLM and WDV depreciation."},
+ {id:"u4", n:4, title:"Final Accounts", short:"Trading account, profit and loss account and balance sheet with adjustments."},
+ {id:"u5", n:5, title:"Practical Auditing", short:"Audit objectives, internal control, vouching, verification, auditor's report."}
+];
+const EXTRAS = [
+ {id:"practice", ic:"🔁", title:"Practice generator"},
+ {id:"flash", ic:"🃏", title:"Flashcards"},
+ {id:"glossary", ic:"📖", title:"Glossary"},
+ {id:"formulas", ic:"🧮", title:"Formula sheet"},
+ {id:"quiz", ic:"✅", title:"Quiz"},
+ {id:"refs", ic:"📚", title:"References"}
+];
+
+const FLASH = [
+ ["Accounting","Identifying, measuring, recording, classifying, summarising and communicating financial information to users."],
+ ["Book-keeping","The recording part of accounting: journal and ledger."],
+ ["Accounting equation","Assets = Liabilities + Capital."],
+ ["Business entity concept","The business is separate from its owner; the owner's private transactions are not recorded."],
+ ["Money measurement concept","Only transactions measurable in money are recorded."],
+ ["Going concern","The business is assumed to continue for the foreseeable future."],
+ ["Accrual concept","Income and expenses are recorded when earned or incurred, not when cash moves."],
+ ["Matching concept","Expenses are matched with the revenue of the same period."],
+ ["Conservatism (prudence)","Anticipate no profit, provide for all possible losses."],
+ ["Consistency","Use the same accounting methods year after year so results can be compared."],
+ ["Materiality","Record and disclose items that would influence users' decisions; trivial items may be simplified."],
+ ["Personal account","Account of a person, firm, company or bank. Debit the receiver, credit the giver."],
+ ["Real account","Account of an asset. Debit what comes in, credit what goes out."],
+ ["Nominal account","Account of an expense, loss, income or gain. Debit expenses and losses, credit incomes and gains."],
+ ["Journal","Book of original entry where transactions are first recorded in date order."],
+ ["Ledger","Book of final entry with a separate account for each item."],
+ ["Trial balance","A list of ledger balances to check arithmetical accuracy: debit total = credit total."],
+ ["Compensating error","Two errors that cancel each other's effect on the trial balance."],
+ ["Error of principle","Wrong classification, e.g. treating a capital expense as revenue."],
+ ["Bank reconciliation statement","A statement explaining the difference between the cash book's bank balance and the pass book balance."],
+ ["Depreciation","Systematic allocation of an asset's cost, less residual value, over its useful life."],
+ ["Straight line method","Equal depreciation every year: (Cost − Residual value) ÷ Useful life."],
+ ["Written down value method","A fixed percentage on the reducing book value each year."],
+ ["Gross profit","Net sales − cost of goods sold."],
+ ["Net profit","Gross profit + other incomes − all indirect expenses."],
+ ["Outstanding expense","Expense of the current year not yet paid; a liability."],
+ ["Prepaid expense","Expense paid in advance for the next year; an asset."],
+ ["Audit","Independent examination of financial statements to express an opinion on whether they give a true and fair view."],
+ ["Vouching","Checking entries in the books against documentary evidence (vouchers)."],
+ ["Verification","Confirming the existence, ownership, valuation and presentation of assets and liabilities."],
+ ["Internal check","Arranging work so that one person's work is automatically checked by another."],
+ ["Qualified opinion","'Except for' opinion: the statements are true and fair except for a specific, not pervasive, matter."]
+];
+
+const GLOSSARY = [
+ ["Assets","Resources owned or controlled that bring future benefit: cash, stock, debtors, machinery.","Fixed (non-current) and current assets."],
+ ["Liabilities","Amounts owed to outsiders: creditors, loans, outstanding expenses.","Current and non-current."],
+ ["Capital","Owner's investment in the business; the business owes it to the owner.","Increases with profit, decreases with drawings."],
+ ["Drawings","Cash or goods taken by the owner for personal use.","Deducted from capital."],
+ ["Debtors (trade receivables)","Customers who owe money for credit sales.","Current asset."],
+ ["Creditors (trade payables)","Suppliers to whom money is owed for credit purchases.","Current liability."],
+ ["Capital expenditure","Spending that gives benefit over several years, e.g. buying machinery.","Shown in the balance sheet."],
+ ["Revenue expenditure","Spending whose benefit ends within the year, e.g. rent, wages.","Charged to trading or P&L account."],
+ ["Direct expenses","Expenses on buying or making goods: wages, carriage inwards, factory power.","Trading account."],
+ ["Indirect expenses","Office, selling and finance expenses: salaries, rent, advertising.","Profit and loss account."],
+ ["Contra entry","An entry affecting both cash and bank columns, e.g. cash deposited into bank.","Marked 'C' in the cash book."],
+ ["Narration","Short explanation written below a journal entry.","Starts with '(Being …)'."],
+ ["Balancing","Finding the difference between the two sides of a ledger account.","Balance c/d and b/d."],
+ ["Suspense account","Temporary account to make a trial balance agree until errors are found.","Closed once errors are rectified."],
+ ["Cheque not yet presented","Cheque issued and entered in the cash book but not yet paid by the bank.","Common BRS item."],
+ ["Residual (salvage) value","Estimated value of an asset at the end of its useful life.","Used in depreciation."],
+ ["Closing stock","Unsold goods at the end of the year, valued at cost or net realisable value, whichever is lower.","Credit side of trading account; asset in balance sheet."],
+ ["True and fair view","The auditor's test: the statements present the position without material misstatement.","Basis of the audit opinion."],
+ ["Standards on Auditing (SA)","Auditing standards issued by ICAI, e.g. SA 200, SA 500, SA 700.","Mandatory for auditors in India."],
+ ["Audit evidence","Information used by the auditor to reach conclusions (SA 500).","Must be sufficient and appropriate."],
+ ["Materiality (audit)","The size of misstatement that could influence users' decisions (SA 320).","Guides audit planning."],
+ ["Audit trail","The path from a source document through the books to the financial statements.","Used in vouching."],
+ ["Statutory audit","Audit required by law, e.g. company audit under the Companies Act, 2013.","Done by a Chartered Accountant."],
+ ["Internal audit","Continuous review of operations and controls by the organisation's own or outsourced staff.","Supports management."],
+ ["CARO","Companies (Auditor's Report) Order, 2020 – extra matters auditors report for many companies.","Issued under Section 143(11)."]
+];
+
+const QUIZ = [
+ [1,"Which is the accounting equation?",["Assets = Liabilities − Capital","Assets = Liabilities + Capital","Capital = Assets + Liabilities","Liabilities = Assets + Capital"],1,"Every asset is financed either by outsiders (liabilities) or by the owner (capital)."],
+ [1,"The owner pays his house rent from business cash. Under the business entity concept this is…",["A business expense","Drawings","A liability","Capital"],1,"Personal expenses paid by the business are the owner's drawings."],
+ [1,"Recording income when earned rather than when received follows the…",["Cash concept","Accrual concept","Money measurement concept","Cost concept"],1,"Accrual basis."],
+ [1,"'Anticipate no profit, provide for all losses' is the convention of…",["Consistency","Materiality","Conservatism","Full disclosure"],2,"Also called prudence."],
+ [1,"Which are the fundamental accounting assumptions under AS 1?",["Going concern, consistency, accrual","Cost, realisation, matching","Entity, money, period","Prudence, materiality, disclosure"],0,"If they are followed, no disclosure is needed; if not, it must be disclosed."],
+ [1,"Started business with cash ₹1,00,000. Effect on the equation?",["Assets +, Capital +","Assets +, Liabilities +","Assets −, Capital −","No effect"],0,"Cash (asset) and capital both rise by ₹1,00,000."],
+ [2,"Goods bought on credit from Ravi. The journal entry is…",["Dr Ravi, Cr Purchases","Dr Purchases, Cr Ravi","Dr Cash, Cr Ravi","Dr Purchases, Cr Cash"],1,"Purchases (nominal/expense) debited; Ravi (giver) credited."],
+ [2,"Rent paid in cash: which account is credited?",["Rent","Cash","Capital","Landlord"],1,"Cash goes out (real account) – credit."],
+ [2,"Cash withdrawn by the owner for personal use is debited to…",["Cash","Capital","Drawings","Expenses"],2,"Drawings reduces capital."],
+ [2,"Cash deposited into the bank is a…",["Compound entry","Contra entry","Opening entry","Rectification entry"],1,"Affects both cash and bank columns."],
+ [2,"'Debit the receiver, credit the giver' applies to…",["Real accounts","Nominal accounts","Personal accounts","All accounts"],2,"Golden rule for personal accounts."],
+ [2,"A ledger account with a debit balance usually represents…",["An asset or an expense","A liability or an income","Capital","Sales"],0,"Assets and expenses carry debit balances."],
+ [3,"A trial balance mainly checks…",["Arithmetical accuracy","That there is no fraud","Profitability","Tax liability"],0,"Some errors (omission, compensating, principle) do not show up."],
+ [3,"Which error does NOT affect the trial balance?",["Wrong totalling of sales book","Posting to the wrong side","Complete omission of a transaction","Posting only one side"],2,"Both debit and credit are missing, so totals still agree."],
+ [3,"Purchase of machinery debited to Purchases account is an error of…",["Omission","Commission","Principle","Compensating"],2,"Capital expenditure treated as revenue."],
+ [3,"Cheques issued but not yet presented make the pass book balance…",["Lower than the cash book","Higher than the cash book","Equal","Negative always"],1,"Cash book is already reduced; the bank has not paid yet."],
+ [3,"Bank charges debited only in the pass book make the pass book balance…",["Higher","Lower","Equal","Double"],1,"The bank has deducted them; the cash book has not."],
+ [3,"Under the straight line method depreciation is…",["Equal every year","Higher in early years","Zero after the first year","Based on market value"],0,"(Cost − residual value) ÷ useful life."],
+ [3,"Under the WDV method the asset's book value…",["Becomes zero quickly","Never reaches zero","Rises","Is fixed"],1,"A percentage of a falling balance never reaches zero."],
+ [4,"Carriage inwards is shown in the…",["Trading account","Profit and loss account","Balance sheet","Cash book only"],0,"A direct expense of bringing goods in."],
+ [4,"Outstanding salary is shown…",["Only in the P&L","Added to salaries in P&L and as a liability","As an asset","Deducted from capital"],1,"Every adjustment affects two places."],
+ [4,"Prepaid insurance appears in the balance sheet as…",["A liability","An asset","Capital","Income"],1,"Paid in advance – a benefit still to be received."],
+ [4,"Closing stock given outside the trial balance is shown…",["Only in the balance sheet","In the trading account (credit) and balance sheet","Only in the trading account","Nowhere"],1,"Two-fold effect."],
+ [4,"Gross profit is…",["Sales − cost of goods sold","Sales − all expenses","Net profit + drawings","Assets − liabilities"],0,"Cost of goods sold = opening stock + purchases + direct expenses − closing stock."],
+ [5,"The primary objective of a statutory audit is to…",["Detect all frauds","Express an opinion on whether statements give a true and fair view","Prepare accounts","Compute tax"],1,"SA 200. Detecting fraud is not the main objective, though auditors must respond to fraud risk (SA 240)."],
+ [5,"Checking entries against documentary evidence is called…",["Verification","Vouching","Valuation","Posting"],1,"Vouching is the 'backbone of auditing'."],
+ [5,"Under the Companies Act, 2013 the first auditor of a non-government company is appointed by the Board within…",["30 days of registration","90 days","6 months","1 year"],0,"Section 139(6)."],
+ [5,"A listed company's audit firm can serve at most…",["One term of 5 years","Two terms of 5 consecutive years","Three terms","No limit"],1,"Section 139(2) rotation; an individual auditor, one term of 5 years."],
+ [5,"An 'except for' opinion is a…",["Unmodified opinion","Qualified opinion","Adverse opinion","Disclaimer"],1,"SA 705: material but not pervasive misstatement."],
+ [5,"When the auditor cannot obtain sufficient evidence and the possible effects are pervasive, the auditor gives…",["A qualified opinion","An adverse opinion","A disclaimer of opinion","An unmodified opinion"],2,"SA 705."]
+];
+
+/* Account classification for journal practice */
+const ACC = {
+ "Cash":"Real","Bank":"Personal","Capital":"Personal","Drawings":"Personal","Purchases":"Nominal","Sales":"Nominal",
+ "Rent":"Nominal","Salary":"Nominal","Wages":"Nominal","Commission received":"Nominal","Interest received":"Nominal",
+ "Furniture":"Real","Machinery":"Real","Ravi (supplier)":"Personal","Meena (customer)":"Personal","Bank loan":"Personal","Electricity":"Nominal"
+};
+/* [text with {a}, debit, credit, explanation] */
+const JT = [
+ ["Started business with cash ₹{a}.","Cash","Capital","Cash (real) comes in – debit. Capital is the owner (personal), the giver – credit."],
+ ["Bought goods for cash ₹{a}.","Purchases","Cash","Purchases is an expense (nominal) – debit. Cash goes out – credit."],
+ ["Bought goods on credit from Ravi ₹{a}.","Purchases","Ravi (supplier)","Purchases – debit. Ravi gives the goods (personal, giver) – credit."],
+ ["Sold goods for cash ₹{a}.","Cash","Sales","Cash comes in – debit. Sales is an income (nominal) – credit."],
+ ["Sold goods on credit to Meena ₹{a}.","Meena (customer)","Sales","Meena receives the goods – debit. Sales income – credit."],
+ ["Paid rent ₹{a} in cash.","Rent","Cash","Rent is an expense – debit. Cash goes out – credit."],
+ ["Paid salaries ₹{a} in cash.","Salary","Cash","Expense – debit; cash out – credit."],
+ ["Paid wages ₹{a} by cheque.","Wages","Bank","Expense – debit. The bank (personal) gives – credit."],
+ ["Received commission ₹{a} in cash.","Cash","Commission received","Cash in – debit. Income – credit."],
+ ["Bought furniture for ₹{a}, paying by cheque.","Furniture","Bank","Furniture (real) comes in – debit. Bank – credit."],
+ ["Purchased machinery for ₹{a} in cash.","Machinery","Cash","Asset in – debit; cash out – credit. Not 'Purchases' – that is for goods to resell."],
+ ["Deposited cash ₹{a} into the bank.","Bank","Cash","Bank receives – debit; cash goes out – credit. A contra entry."],
+ ["Paid ₹{a} to Ravi in cash.","Ravi (supplier)","Cash","Ravi receives – debit; cash out – credit."],
+ ["Received a cheque of ₹{a} from Meena and deposited it.","Bank","Meena (customer)","Bank receives – debit; Meena gives – credit."],
+ ["Withdrew cash ₹{a} for personal use.","Drawings","Cash","Drawings (owner as receiver) – debit; cash out – credit."],
+ ["Took a loan of ₹{a} from the bank; amount credited to the current account.","Bank","Bank loan","Bank balance rises – debit. The lender (bank loan account) – credit."],
+ ["Paid electricity bill ₹{a} in cash.","Electricity","Cash","Expense – debit; cash out – credit."],
+ ["Received interest ₹{a} by cheque.","Bank","Interest received","Bank receives – debit; income – credit."]
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const KEY = "llb_accounts_v1", SBKEY = "llb_acc_sidebar";
+const S = {d:{done:{}, best:{}, briefs:[]},
+  load(){try{const s=localStorage.getItem(KEY); if(s) Object.assign(this.d, JSON.parse(s));}catch(e){}},
+  save(){try{localStorage.setItem(KEY, JSON.stringify(this.d));}catch(e){}}};
+S.load();
+let cur = "home";
+let anim = null;          // active animation controller for P/S/X
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function toast(m){const t=$("#toast"); t.textContent=m; t.classList.add("on"); clearTimeout(toast.h); toast.h=setTimeout(()=>t.classList.remove("on"),1800);}
+function shuffle(a){a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a;}
+
+/* ============================================================
+   SIDEBAR / CHROME
+   ============================================================ */
+function renderSide(){
+  const done = S.d.done;
+  let h = `<a href="#home" data-go="home" class="${cur==="home"?"on":""}"><span class="n">⌂</span>Home</a><div class="grp">Units</div>`;
+  for(const u of UNITS) h += `<a href="#${u.id}" data-go="${u.id}" class="${cur===u.id?"on":""}"><span class="n">${u.n}</span>${u.title}${done[u.id]?'<span class="done">✓</span>':""}</a>`;
+  h += `<div class="grp">Practise and revise</div>`;
+  for(const x of EXTRAS) h += `<a href="#${x.id}" data-go="${x.id}" class="${cur===x.id?"on":""}"><span class="n">${x.ic}</span>${x.title}</a>`;
+  $("#side").innerHTML = h;
+  const nd = UNITS.filter(u=>done[u.id]).length;
+  $("#prog").textContent = `${nd} of ${UNITS.length} units done`;
+}
+function setSidebar(hidden, save){
+  if(window.innerWidth<=900){ document.body.classList.toggle("sb-open", !hidden); document.body.classList.remove("sb-hidden"); }
+  else { document.body.classList.toggle("sb-hidden", hidden); }
+  if(save) try{localStorage.setItem(SBKEY, hidden?"1":"0");}catch(e){}
+}
+function sidebarHidden(){ return window.innerWidth<=900 ? !document.body.classList.contains("sb-open") : document.body.classList.contains("sb-hidden"); }
+function toggleFS(){ if(!document.fullscreenElement){ (document.documentElement.requestFullscreen||function(){}).call(document.documentElement); } else document.exitFullscreen(); }
+function setTheme(t){ if(t) document.documentElement.setAttribute("data-theme",t); else document.documentElement.removeAttribute("data-theme"); try{localStorage.setItem("llb_theme", t||"");}catch(e){} }
+
+/* ============================================================
+   ROUTER
+   ============================================================ */
+function go(id, push=true){
+  if(anim){ anim.stop(); anim=null; }
+  cur = id;
+  const V = VIEWS[id] || VIEWS.home;
+  $("#view").innerHTML = V.html();
+  if(V.init) V.init();
+  renderSide();
+  if(push) try{ history.replaceState(null,"","#"+id);}catch(e){}
+  $("#main").scrollTop = 0; window.scrollTo(0,0);
+  if(window.innerWidth<=900) setSidebar(true,false);
+}
+function unitHead(n){ const u=UNITS[n-1]; return `<div class="unitban"><div class="k">Unit ${u.n} of ${UNITS.length}</div><h2>${u.title}</h2><p>${u.short}</p></div>`; }
+function unitFoot(n){
+  const u=UNITS[n-1], prev=UNITS[n-2], next=UNITS[n];
+  const d=S.d.done[u.id];
+  return `<div class="card noprint"><h3>Check yourself</h3><div id="qs${n}"></div>
+  <div class="row" style="margin-top:10px"><button class="btn" data-done="${u.id}">${d?"✓ Marked as done":"Mark this unit as done"}</button>
+  ${prev?`<button class="btn sec" data-go="${prev.id}">← Unit ${prev.n}</button>`:""}
+  ${next?`<button class="btn sec" data-go="${next.id}">Unit ${next.n} →</button>`:`<button class="btn sec" data-go="quiz">Take the full quiz →</button>`}</div></div>`;
+}
+function miniQuiz(n){
+  const box=$("#qs"+n); if(!box) return;
+  const qs = shuffle(QUIZ.filter(q=>q[0]===n)).slice(0,3);
+  box.innerHTML = qs.map((q,i)=>qHTML(q,"m"+n+"_"+i)).join("");
+  bindQ(box);
+}
+function qHTML(q,id){
+  const order = shuffle(q[2].map((t,i)=>i));
+  return `<div class="q" data-q="${id}" data-ans="${q[3]}"><div class="qt">${esc(q[1])}</div><div class="opts">${order.map(i=>`<button class="opt" data-i="${i}">${esc(q[2][i])}</button>`).join("")}</div><div class="exp" hidden></div><div data-expl="${esc(q[4])}" hidden></div></div>`;
+}
+function bindQ(root, onAns){
+  $$(".q",root).forEach(qd=>{
+    $$(".opt",qd).forEach(b=>b.addEventListener("click",()=>{
+      const ans=+qd.dataset.ans, i=+b.dataset.i;
+      $$(".opt",qd).forEach(o=>{o.disabled=true; if(+o.dataset.i===ans) o.classList.add("right");});
+      if(i!==ans) b.classList.add("wrong");
+      const ex=$(".exp",qd); ex.hidden=false; ex.className="exp fb "+(i===ans?"ok":"bad");
+      ex.textContent=(i===ans?"Correct. ":"Not quite. ")+$("[data-expl]",qd).dataset.expl;
+      if(onAns) onAns(i===ans);
+    }));
+  });
+}
+
+/* ============================================================
+   STEP ANIMATION ENGINE  (P play · S step · X pause)
+   ============================================================ */
+function makeAnim(rootSel, steps, apply){
+  const root=$(rootSel); let i=-1, timer=null;
+  const cap=$(".cap",root), ctr=$(".ctr",root);
+  function show(k){ i=Math.max(-1,Math.min(steps.length-1,k)); apply(i); cap.innerHTML = i<0?"Press <b>P</b> to play or <b>S</b> to step through.":steps[i]; ctr.textContent=(i+1)+" / "+steps.length; }
+  const ctl = {
+    step(){ if(i>=steps.length-1){ this.pause(); return;} show(i+1); },
+    back(){ show(i-1); },
+    play(){ if(timer) return; if(i>=steps.length-1) show(-1); timer=setInterval(()=>{ if(i>=steps.length-1){ctl.pause();return;} show(i+1);},2200); ctl.step(); },
+    pause(){ clearInterval(timer); timer=null; },
+    reset(){ this.pause(); show(-1); },
+    stop(){ this.pause(); }
+  };
+  $$("[data-a]",root).forEach(b=>b.addEventListener("click",()=>ctl[b.dataset.a]()));
+  show(-1);
+  return ctl;
+}
+function animBox(id,title,svg){
+  return `<div class="card anim" id="${id}"><h3>${title}</h3><div class="stage">${svg}</div><div class="cap"></div>
+  <div class="row"><button class="btn sm" data-a="play">▶ Play <span class="kbd">P</span></button><button class="btn sm sec" data-a="step">Step <span class="kbd">S</span></button><button class="btn sm sec" data-a="pause">❚❚ Pause <span class="kbd">X</span></button><button class="btn sm sec" data-a="back">◀ Back</button><button class="btn sm sec" data-a="reset">↺ Reset</button><span class="hint ctr" style="margin-left:auto"></span></div></div>`;
+}
+
+/* ============================================================
+   VIEWS
+   ============================================================ */
+const VIEWS = {};
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const fmt = n => (n<0?"−":"")+"₹"+Math.abs(Math.round(n)).toLocaleString("en-IN");
+const num = n => Math.round(n).toLocaleString("en-IN");
+const rnd = (a,b,step=1000) => a + step*Math.floor(Math.random()*((b-a)/step+1));
+const parseAmt = s => { const v=parseFloat(String(s).replace(/[₹,\s]/g,"")); return isNaN(v)?null:v; };
+
+function choiceLab(sel, items, opts){
+  const box=$(sel), id=sel.slice(1);
+  box.innerHTML = items.map((it,i)=>`<div class="q" data-i="${i}"><div class="qt">${i+1}. ${esc(it[0])}</div><div class="row">${Object.entries(opts).map(([k,v])=>`<button class="btn sm sec" data-k="${k}">${v}</button>`).join("")}</div><div class="out"></div></div>`).join("")
+   + `<div class="row"><span class="score" style="font-size:17px" id="${id}Score"></span><button class="btn sm sec" id="${id}Again">Try again</button></div>`;
+  let got=0, ans=0;
+  $$(".q",box).forEach(q=>$$("[data-k]",q).forEach(b=>b.onclick=()=>{
+    const it=items[+q.dataset.i]; if(q.dataset.answered) return; q.dataset.answered=1; ans++;
+    const ok=b.dataset.k===it[1]; if(ok) got++;
+    $$("[data-k]",q).forEach(x=>{ x.disabled=true; if(x.dataset.k===it[1]) x.classList.add("right"); });
+    if(!ok) b.classList.add("wrong");
+    $(".out",q).innerHTML=`<div class="fb ${ok?"ok":"bad"}">${ok?"Correct.":"Answer: "+opts[it[1]]+"."} ${esc(it[2])}</div>`;
+    $("#"+id+"Score").textContent=`${got} / ${ans} correct` + (ans===items.length?" – all done":"");
+  }));
+  $("#"+id+"Again").onclick=()=>choiceLab(sel,items,opts);
+}
+
+/* ---------- Journal entry practice ---------- */
+function journalPractice(sel, n){
+  const box=$(sel), accts=Object.keys(ACC).sort();
+  const set = shuffle(JT).slice(0,n).map(t=>({t, a:rnd(2000,90000,500)}));
+  const opt = `<option value="">Choose…</option>`+accts.map(a=>`<option>${a}</option>`).join("");
+  box.innerHTML = set.map((s,i)=>`<div class="q" data-i="${i}"><div class="qt">${i+1}. ${s.t[0].replace("{a}",num(s.a))}</div>
+   <div class="row"><label>Debit <select class="dr">${opt}</select></label><label>Credit <select class="cr">${opt}</select></label><button class="btn sm">Check</button></div><div class="out"></div></div>`).join("")
+   + `<div class="row"><button class="btn sec" id="${sel.slice(1)}New">New set</button><span id="${sel.slice(1)}Sc"></span></div>`;
+  let got=0;
+  $$(".q",box).forEach(q=>$("button",q).onclick=()=>{
+    const s=set[+q.dataset.i], dr=$(".dr",q).value, cr=$(".cr",q).value, ok = dr===s.t[1] && cr===s.t[2];
+    if(ok && !q.dataset.ok){ got++; q.dataset.ok=1; }
+    $(".out",q).innerHTML = `<div class="fb ${ok?"ok":"bad"}">${ok?"Correct.":"Not quite."}<br><span style="font-family:ui-monospace,Consolas,monospace">${esc(s.t[1])} A/c ........ Dr ${num(s.a)}<br>&nbsp;&nbsp;&nbsp;To ${esc(s.t[2])} A/c ........ ${num(s.a)}</span><br><small>${esc(s.t[1])}: ${ACC[s.t[1]]} account · ${esc(s.t[2])}: ${ACC[s.t[2]]} account. ${esc(s.t[3])}</small></div>`;
+    $("#"+sel.slice(1)+"Sc").textContent=`${got} / ${set.length} right`;
+  });
+  $("#"+sel.slice(1)+"New").onclick=()=>journalPractice(sel,n);
+}
+
+/* ---------- BRS generator ---------- */
+const BRS_ITEMS = [
+ ["Cheques issued but not yet presented for payment",1],
+ ["Cheques deposited but not yet credited by the bank",-1],
+ ["Bank charges debited in the pass book only",-1],
+ ["Interest credited by the bank, not yet in the cash book",1],
+ ["Amount deposited directly into the bank by a customer",1],
+ ["Insurance premium paid by the bank under standing instruction",-1],
+ ["Dividend collected by the bank on our behalf",1]
+];
+function brsPractice(sel){
+  const box=$(sel), id=sel.slice(1);
+  const cb = rnd(20000,80000,500);
+  const items = shuffle(BRS_ITEMS).slice(0,4).map(x=>({t:x[0], s:x[1], a:rnd(500,9000,100)}));
+  const pb = cb + items.reduce((t,x)=>t+x.s*x.a,0);
+  box.innerHTML = `<p>On 31 March the <b>cash book</b> shows a debit (favourable) bank balance of <b>${fmt(cb)}</b>. The difference from the pass book is due to:</p>
+   <ol>${items.map(x=>`<li>${x.t}: ${fmt(x.a)}</li>`).join("")}</ol>
+   <div class="row"><label>Balance as per pass book (₹) <input type="text" id="${id}In" style="width:150px"></label><button class="btn sm" id="${id}Ck">Check</button><button class="btn sm sec" id="${id}Sol">Show statement</button><button class="btn sm sec" id="${id}New">New problem</button></div><div id="${id}Out"></div>`;
+  const sol = ()=>{ const add=items.filter(x=>x.s>0), less=items.filter(x=>x.s<0);
+   return `<table class="t"><tr><th colspan="2">Bank Reconciliation Statement as on 31 March</th><th>₹</th></tr>
+   <tr><td colspan="2">Balance as per cash book (Dr)</td><td style="text-align:right">${num(cb)}</td></tr>
+   <tr><td colspan="3"><b>Add:</b></td></tr>${add.map(x=>`<tr><td style="width:24px"></td><td>${x.t}</td><td style="text-align:right">${num(x.a)}</td></tr>`).join("")||"<tr><td></td><td>–</td><td></td></tr>"}
+   <tr><td colspan="3"><b>Less:</b></td></tr>${less.map(x=>`<tr><td></td><td>${x.t}</td><td style="text-align:right">(${num(x.a)})</td></tr>`).join("")||"<tr><td></td><td>–</td><td></td></tr>"}
+   <tr><th colspan="2">Balance as per pass book</th><th style="text-align:right">${num(pb)}</th></tr></table>
+   <p style="font-size:14px;color:var(--muted)">Rule of thumb: start from the cash book; <b>add</b> items that make the bank's balance higher than ours, <b>subtract</b> items that make it lower.</p>`; };
+  $("#"+id+"Ck").onclick=()=>{ const v=parseAmt($("#"+id+"In").value); $("#"+id+"Out").innerHTML = v===null?`<div class="fb bad">Enter a number.</div>`: v===pb?`<div class="fb ok">Correct – ${fmt(pb)}.</div>`+sol():`<div class="fb bad">Not quite. Check which items are added and which are subtracted.</div>`; };
+  $("#"+id+"Sol").onclick=()=>$("#"+id+"Out").innerHTML=sol();
+  $("#"+id+"New").onclick=()=>brsPractice(sel);
+}
+
+/* ---------- Final accounts generator ---------- */
+function makeFA(){
+  for(let k=0;k<200;k++){
+    const f={os:rnd(20000,60000), p:rnd(150000,300000), w:rnd(10000,30000), ci:rnd(2000,8000,500), sal:rnd(20000,50000), rent:rnd(12000,36000), off:rnd(5000,15000,500),
+      dr:rnd(10000,30000), deb:rnd(30000,80000), cash:rnd(10000,40000), fur:rnd(20000,50000), mac:rnd(50000,150000,5000), cred:rnd(20000,60000)};
+    f.sales = Math.round(f.p*(1.35+Math.random()*0.45)/1000)*1000;
+    f.cap = f.os+f.p+f.w+f.ci+f.sal+f.rent+f.off+f.dr+f.deb+f.cash+f.fur+f.mac - f.sales - f.cred;
+    f.cs=rnd(25000,70000); f.outSal=rnd(2000,6000,500); f.preRent=rnd(1000,4000,500); f.depR=10; f.dep=f.mac*f.depR/100;
+    f.cogs=f.os+f.p+f.w+f.ci-f.cs; f.gp=f.sales-f.cogs;
+    f.np=f.gp-(f.sal+f.outSal)-(f.rent-f.preRent)-f.off-f.dep;
+    f.assets=f.cash+f.deb+f.fur+(f.mac-f.dep)+f.cs+f.preRent;
+    f.liab=f.cred+f.outSal+f.cap+f.np-f.dr;
+    if(f.cap>=50000 && f.np>=5000 && Math.abs(f.assets-f.liab)<0.5) return f;
+  }
+}
+function faPractice(sel){
+  const box=$(sel), id=sel.slice(1), f=makeFA();
+  const tb=[["Opening stock",f.os,0],["Purchases",f.p,0],["Sales",0,f.sales],["Wages",f.w,0],["Carriage inwards",f.ci,0],["Salaries",f.sal,0],["Rent",f.rent,0],["Office expenses",f.off,0],["Drawings",f.dr,0],["Debtors",f.deb,0],["Creditors",0,f.cred],["Cash in hand",f.cash,0],["Furniture",f.fur,0],["Machinery",f.mac,0],["Capital",0,f.cap]];
+  const tdr=tb.reduce((t,x)=>t+x[1],0), tcr=tb.reduce((t,x)=>t+x[2],0);
+  box.innerHTML = `<p>Trial balance of <b>Sakthi Traders</b> as on 31 March:</p>
+  <table class="t" style="max-width:560px"><tr><th>Account</th><th style="text-align:right">Dr ₹</th><th style="text-align:right">Cr ₹</th></tr>${tb.map(r=>`<tr><td>${r[0]}</td><td style="text-align:right">${r[1]?num(r[1]):""}</td><td style="text-align:right">${r[2]?num(r[2]):""}</td></tr>`).join("")}<tr><th>Total</th><th style="text-align:right">${num(tdr)}</th><th style="text-align:right">${num(tcr)}</th></tr></table>
+  <p><b>Adjustments:</b> (1) Closing stock ${fmt(f.cs)}. (2) Salaries outstanding ${fmt(f.outSal)}. (3) Rent prepaid ${fmt(f.preRent)}. (4) Depreciate machinery at ${f.depR}%.</p>
+  <div class="row"><label>Gross profit <input type="text" id="${id}gp" style="width:120px"></label><label>Net profit <input type="text" id="${id}np" style="width:120px"></label><label>Balance sheet total <input type="text" id="${id}bs" style="width:130px"></label></div>
+  <div class="row" style="margin-top:6px"><button class="btn sm" id="${id}Ck">Check</button><button class="btn sm sec" id="${id}Sol">Show worked solution</button><button class="btn sm sec" id="${id}New">New problem</button></div><div id="${id}Out"></div>`;
+  const R=(l,v)=>`<tr><td>${l}</td><td style="text-align:right">${v===""?"":num(v)}</td></tr>`;
+  const two=(title,L,Rr,tot,hl="Dr",hr="Cr")=>`<h4>${title}</h4><div class="two" style="gap:0"><table class="t" style="margin:0"><tr><th>${hl}</th><th style="text-align:right">₹</th></tr>${L.join("")}<tr><th>Total</th><th style="text-align:right">${num(tot)}</th></tr></table><table class="t" style="margin:0"><tr><th>${hr}</th><th style="text-align:right">₹</th></tr>${Rr.join("")}<tr><th>Total</th><th style="text-align:right">${num(tot)}</th></tr></table></div>`;
+  const sol=()=>{
+    const tTot=f.os+f.p+f.w+f.ci+f.gp, pTot=f.gp;
+    return two("Trading Account for the year ended 31 March",[R("To Opening stock",f.os),R("To Purchases",f.p),R("To Wages",f.w),R("To Carriage inwards",f.ci),R("<b>To Gross profit c/d</b>",f.gp)],[R("By Sales",f.sales),R("By Closing stock",f.cs)],tTot)
+     + two("Profit and Loss Account for the year ended 31 March",[R(`To Salaries ${num(f.sal)} + outstanding ${num(f.outSal)}`,f.sal+f.outSal),R(`To Rent ${num(f.rent)} − prepaid ${num(f.preRent)}`,f.rent-f.preRent),R("To Office expenses",f.off),R(`To Depreciation on machinery @ ${f.depR}%`,f.dep),R("<b>To Net profit</b> (to capital)",f.np)],[R("By Gross profit b/d",f.gp)],pTot)
+     + two("Balance Sheet as on 31 March",[R("Creditors",f.cred),R("Outstanding salaries",f.outSal),R(`Capital ${num(f.cap)} + net profit ${num(f.np)} − drawings ${num(f.dr)}`,f.cap+f.np-f.dr)],[R("Cash in hand",f.cash),R("Debtors",f.deb),R("Closing stock",f.cs),R("Prepaid rent",f.preRent),R("Furniture",f.fur),R(`Machinery ${num(f.mac)} − depreciation ${num(f.dep)}`,f.mac-f.dep)],f.assets,"Liabilities","Assets")
+     + `<p style="font-size:14px;color:var(--muted)">Each adjustment appears twice: closing stock in the trading account and as an asset; outstanding salary added to the expense and shown as a liability; prepaid rent deducted from the expense and shown as an asset; depreciation charged to P&amp;L and deducted from the asset.</p>`; };
+  $("#"+id+"Ck").onclick=()=>{ const g=parseAmt($("#"+id+"gp").value), n=parseAmt($("#"+id+"np").value), b=parseAmt($("#"+id+"bs").value);
+    const c=(v,t,l)=>`<li>${l}: ${v===null?"not entered":v===t?"✓ correct":"✗ should be "+fmt(t)}</li>`;
+    const all=g===f.gp&&n===f.np&&b===f.assets;
+    $("#"+id+"Out").innerHTML=`<div class="fb ${all?"ok":"info"}"><ul style="margin:0">${c(g,f.gp,"Gross profit")}${c(n,f.np,"Net profit")}${c(b,f.assets,"Balance sheet total")}</ul></div>`+(all?"":"<p>Open the worked solution to see where the difference is.</p>"); };
+  $("#"+id+"Sol").onclick=()=>$("#"+id+"Out").innerHTML=sol();
+  $("#"+id+"New").onclick=()=>faPractice(sel);
+}
+
+/* ============================================================
+   VIEWS
+   ============================================================ */
+VIEWS.home = { html(){
+  const done=S.d.done;
+  return `<div class="hero"><h2>Financial Accounting &amp; Practical Auditing</h2>
+  <p>Accounting is the language of business – and of company law, taxation and corporate disputes you will meet later in law school. This course takes you from the accounting equation to final accounts, then to how an auditor checks them.</p>
+  <p>Read each unit, then <b>practise</b>: the journal, bank reconciliation and final accounts generators give a new problem every time, with a worked solution.</p></div>
+  <div class="ucards">${UNITS.map(u=>`<a class="ucard" data-go="${u.id}"><span class="k">Unit ${u.n}</span><b>${u.title}</b><span>${u.short}</span>${done[u.id]?'<span class="st">✓ Done</span>':""}</a>`).join("")}
+  ${EXTRAS.map(x=>`<a class="ucard" data-go="${x.id}" style="border-top-color:var(--gold)"><span class="k" style="color:var(--gold)">${x.ic} Revise</span><b>${x.title}</b></a>`).join("")}</div>
+  <div class="two" style="margin-top:18px">
+   <div class="card"><h3>How to study accounting</h3><ol><li>Learn the golden rules until they are automatic – everything else rests on them.</li><li>Do at least ten journal entries a day for the first two weeks.</li><li>For every adjustment, ask: which <b>two</b> places does it go?</li><li>Write neat formats: examiners award marks for correct headings, dates and narrations.</li><li>Never memorise a final accounts answer – generate a new one and solve it.</li></ol></div>
+   <div class="card"><h3>Keyboard</h3><table class="t">
+   <tr><td><span class="kbd">M</span></td><td>Show or hide the unit list</td></tr>
+   <tr><td><span class="kbd">P</span> / <span class="kbd">S</span> / <span class="kbd">X</span></td><td>Play, step, pause the animation on the page</td></tr>
+   <tr><td><span class="kbd">F</span></td><td>Full screen</td></tr>
+   <tr><td><span class="kbd">←</span> <span class="kbd">→</span> <span class="kbd">Space</span></td><td>Flashcards: previous, next, flip</td></tr>
+   <tr><td><span class="kbd">[</span> <span class="kbd">]</span></td><td>Previous or next unit</td></tr></table>
+   <p style="font-size:13.5px;color:var(--muted)">Progress stays in this browser only. Works fully offline.</p></div></div>
+  <div class="card"><h3>About this syllabus</h3><p>Units 1–4 follow the standard first-year B.Com. financial accounting syllabus; Unit 5 covers the basics of practical auditing. Compare with TNNLU's course outline when it is issued and focus on any extra topics.</p></div>
+  ${footer()}`;
+}};
+
+/* ---------------- UNIT 1 ---------------- */
+let EQ = null;
+function makeEQ(){
+  const c0=rnd(100000,300000,10000), loan=rnd(50000,150000,10000), mach=rnd(40000,120000,5000), gc=rnd(20000,60000,5000), gsold=Math.round(gc*0.6/1000)*1000, sp=gsold+rnd(5000,20000,1000), rent=rnd(3000,9000,500), dr=rnd(2000,8000,500);
+  return [
+   {t:`Started business with cash ${fmt(c0)}`, d:{cash:c0, cap:c0}, e:"Asset (cash) and capital both rise."},
+   {t:`Borrowed ${fmt(loan)} from a bank`, d:{cash:loan, loan:loan}, e:"Asset rises; a liability (loan) rises."},
+   {t:`Bought machinery for cash ${fmt(mach)}`, d:{cash:-mach, mach:mach}, e:"One asset falls, another rises – totals unchanged."},
+   {t:`Bought goods on credit ${fmt(gc)}`, d:{stock:gc, cred:gc}, e:"Stock (asset) and creditors (liability) rise."},
+   {t:`Sold goods costing ${fmt(gsold)} for cash ${fmt(sp)}`, d:{cash:sp, stock:-gsold, cap:sp-gsold}, e:"Cash rises by the sale price and stock falls by the cost; the difference is profit, which increases capital."},
+   {t:`Paid rent ${fmt(rent)}`, d:{cash:-rent, cap:-rent}, e:"An expense reduces cash and reduces capital."},
+   {t:`Owner withdrew ${fmt(dr)} for personal use`, d:{cash:-dr, cap:-dr}, e:"Drawings reduce cash and capital."}
+  ];
+}
+function drawEQ(i){
+  const cols=["cash","stock","mach","cred","loan","cap"], st={cash:0,stock:0,mach:0,cred:0,loan:0,cap:0};
+  let rows="";
+  EQ.forEach((tr,k)=>{ if(k<=i){ cols.forEach(c=>st[c]+=tr.d[c]||0); const A=st.cash+st.stock+st.mach, L=st.cred+st.loan+st.cap;
+    rows+=`<tr style="${k===i?"background:var(--hl)":""}"><td>${k+1}. ${tr.t}</td>${cols.map(c=>`<td style="text-align:right">${num(st[c])}</td>`).join("")}<td style="text-align:center">${A===L?"✓":"✗"}</td></tr>`; } });
+  $("#eqBody").innerHTML = rows || `<tr><td colspan="8" style="color:var(--muted)">Press P or S to apply the first transaction.</td></tr>`;
+}
+VIEWS.u1 = { html(){ return unitHead(1)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key"><b>Accounting</b> identifies, records, classifies, summarises and communicates financial information so that users can make decisions. Every transaction keeps the equation <b>Assets = Liabilities + Capital</b> in balance.</div>
+ <h4>Users of accounts</h4><table class="t"><tr><th>Internal</th><th>External</th></tr><tr><td>Owners, managers, employees</td><td>Investors, lenders and banks, creditors, government and tax authorities, regulators, the public</td></tr></table>
+ <h4>Book-keeping vs accounting</h4><p>Book-keeping is the clerical recording (journal, ledger). Accounting goes further – it summarises, analyses and interprets. Accountancy is the whole body of knowledge.</p>
+ <h4>Accounting concepts</h4><table class="t">
+ <tr><td><b>Business entity</b></td><td>Business and owner are separate.</td></tr>
+ <tr><td><b>Money measurement</b></td><td>Only events measurable in money are recorded – staff morale is not.</td></tr>
+ <tr><td><b>Going concern</b></td><td>The business will continue; assets are shown at cost less depreciation, not break-up value.</td></tr>
+ <tr><td><b>Accounting period</b></td><td>Results are measured for a period – in India usually 1 April to 31 March.</td></tr>
+ <tr><td><b>Cost</b></td><td>Assets are recorded at purchase price.</td></tr>
+ <tr><td><b>Dual aspect</b></td><td>Every transaction has two sides: debit and credit.</td></tr>
+ <tr><td><b>Realisation</b></td><td>Revenue is recognised when goods are delivered or services rendered.</td></tr>
+ <tr><td><b>Accrual</b></td><td>Record income and expenses when earned or incurred.</td></tr>
+ <tr><td><b>Matching</b></td><td>Set expenses against the revenue they helped earn.</td></tr></table>
+ <h4>Conventions</h4><p><b>Conservatism</b> (provide for losses, not for expected profits) · <b>Consistency</b> · <b>Materiality</b> · <b>Full disclosure</b>.</p>
+ <h4>Accounting standards in India</h4><p>The ICAI issues <b>Accounting Standards (AS)</b> for non-corporate and smaller entities. Larger companies follow <b>Ind AS</b>, converged with IFRS and notified under the Companies (Indian Accounting Standards) Rules, 2015. AS 1 names three fundamental assumptions: going concern, consistency and accrual.</p></div>
+</div><div>
+ ${animBox("eqAnim","The equation always balances",`<div style="overflow:auto"><table class="t" style="font-size:14px;min-width:620px"><tr><th>Transaction</th><th>Cash</th><th>Stock</th><th>Machinery</th><th>Creditors</th><th>Loan</th><th>Capital</th><th>A = L + C</th></tr><tbody id="eqBody"></tbody></table></div><div class="row noprint"><button class="btn sm sec" id="eqNew">New numbers</button></div>`)}
+ <div class="card"><h3>Five types of account</h3><table class="t"><tr><th>Type</th><th>Increase</th><th>Decrease</th><th>Normal balance</th></tr>
+ <tr><td>Assets</td><td>Debit</td><td>Credit</td><td>Debit</td></tr><tr><td>Expenses and losses</td><td>Debit</td><td>Credit</td><td>Debit</td></tr><tr><td>Liabilities</td><td>Credit</td><td>Debit</td><td>Credit</td></tr><tr><td>Capital</td><td>Credit</td><td>Debit</td><td>Credit</td></tr><tr><td>Revenue and gains</td><td>Credit</td><td>Debit</td><td>Credit</td></tr></table>
+ <p style="font-size:14px;color:var(--muted)">This 'modern' approach gives the same entries as the traditional golden rules in Unit 2.</p></div>
+</div></div>`+unitFoot(1)+footer(); },
+ init(){
+  EQ=makeEQ();
+  anim = makeAnim("#eqAnim", [...EQ.map(t=>t.e)], i=>drawEQ(i));
+  $("#eqNew").onclick=()=>{ EQ=makeEQ(); anim.reset(); };
+  miniQuiz(1);
+ }};
+
+/* ---------------- UNIT 2 ---------------- */
+const LEDGER_TX = [
+ ["Started business with cash","Cash","Capital",50000],
+ ["Bought goods for cash","Purchases","Cash",20000],
+ ["Bought goods on credit from Ravi","Purchases","Ravi",10000],
+ ["Sold goods for cash","Cash","Sales",30000],
+ ["Paid rent","Rent","Cash",5000],
+ ["Paid Ravi in part","Ravi","Cash",6000]
+];
+const LEDGER_AC = ["Cash","Capital","Purchases","Ravi","Sales","Rent"];
+function drawLedger(i){
+  const L={}; LEDGER_AC.forEach(a=>L[a]={dr:[],cr:[]});
+  LEDGER_TX.forEach((t,k)=>{ if(k<=i && k<LEDGER_TX.length){ L[t[1]].dr.push([`To ${t[2]} A/c`,t[3],k===i]); L[t[2]].cr.push([`By ${t[1]} A/c`,t[3],k===i]); } });
+  const balancing = i>=LEDGER_TX.length;
+  $("#ledger").innerHTML = LEDGER_AC.map(a=>{
+    const d=L[a].dr, c=L[a].cr, sd=d.reduce((s,x)=>s+x[1],0), sc=c.reduce((s,x)=>s+x[1],0);
+    let dRows=d.slice(), cRows=c.slice(), tot=null;
+    if(balancing && (sd||sc)){ if(sd>sc) cRows.push([`By Balance c/d`,sd-sc,true]); else if(sc>sd) dRows.push([`To Balance c/d`,sc-sd,true]); tot=Math.max(sd,sc); }
+    const n=Math.max(dRows.length,cRows.length,1), cell=x=>x?`<td style="${x[2]?"background:var(--hl);font-weight:600":""}">${x[0]}</td><td style="text-align:right;${x[2]?"background:var(--hl);font-weight:600":""}">${num(x[1])}</td>`:"<td></td><td></td>";
+    let rows=""; for(let r=0;r<n;r++) rows+=`<tr>${cell(dRows[r])}${cell(cRows[r])}</tr>`;
+    if(tot) rows+=`<tr><th></th><th style="text-align:right">${num(tot)}</th><th></th><th style="text-align:right">${num(tot)}</th></tr>`;
+    return `<div><div style="text-align:center;font-weight:700;font-family:Georgia,serif">${a} Account</div><table class="t" style="font-size:13px;margin-top:2px"><tr><th>Dr</th><th>₹</th><th>Cr</th><th>₹</th></tr>${rows}</table></div>`;
+  }).join("");
+}
+const LEDGER_STEPS = [...LEDGER_TX.map(t=>`<b>${t[0]}</b> ${fmt(t[3])}: journal entry <i>${t[1]} A/c Dr, To ${t[2]} A/c</i>. Post to the <b>debit</b> side of ${t[1]} ('To ${t[2]}') and the <b>credit</b> side of ${t[2]} ('By ${t[1]}').`),
+ "<b>Balancing:</b> total each side; put the difference on the smaller side as 'Balance c/d'. Cash has a debit balance of ₹49,000 – cash in hand. Ravi has a credit balance of ₹4,000 – still owed to him."];
+VIEWS.u2 = { html(){ return unitHead(2)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key"><b>Double entry</b>: every transaction affects at least two accounts – one is debited and another credited with the same amount. So total debits always equal total credits.</div>
+ <h4>The golden rules (traditional approach)</h4><table class="t"><tr><th>Type of account</th><th>Debit</th><th>Credit</th></tr>
+ <tr><td><b>Personal</b> – persons, firms, banks, capital, drawings</td><td>The receiver</td><td>The giver</td></tr>
+ <tr><td><b>Real</b> – assets: cash, furniture, machinery, goods</td><td>What comes in</td><td>What goes out</td></tr>
+ <tr><td><b>Nominal</b> – expenses, losses, incomes, gains</td><td>All expenses and losses</td><td>All incomes and gains</td></tr></table>
+ <div class="ex">Paid salary ₹10,000 in cash. Salary is nominal (expense) – debit. Cash is real and goes out – credit. <span style="font-family:ui-monospace,Consolas,monospace">Salary A/c Dr 10,000 / To Cash A/c 10,000</span>.</div>
+ <h4>The journal</h4><p>Columns: Date · Particulars · L.F. (ledger folio) · Debit ₹ · Credit ₹. The debit account is written first with 'Dr'; the credit account on the next line starting with 'To'; then the narration '(Being …)'. A <b>compound entry</b> has more than one debit or credit.</p>
+ <h4>Subsidiary books</h4><p>Busy businesses split the journal: <b>cash book</b> (single, double or triple column), <b>purchases book</b> and <b>sales book</b> (credit goods only), purchases returns and sales returns books, bills books, and the <b>journal proper</b> for everything else.</p>
+ <h4>The ledger</h4><p>Each account has a debit side ('To …') and a credit side ('By …'). Posting copies each journal entry to both accounts. Balancing finds the difference: assets and expenses usually show debit balances; liabilities, capital and incomes show credit balances.</p></div>
+ <div class="card lab"><h3>Write the journal entry</h3><p>Choose the account to debit and the account to credit. A new set appears each time.</p><div id="jp"></div></div>
+</div><div>
+ ${animBox("ledAnim","From journal to ledger",`<div id="ledger" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px"></div>`)}
+</div></div>`+unitFoot(2)+footer(); },
+ init(){ anim = makeAnim("#ledAnim", LEDGER_STEPS, i=>drawLedger(i)); journalPractice("#jp",6); miniQuiz(2); }};
+
+/* ---------------- UNIT 3 ---------------- */
+const ERR_ITEMS = [
+ ["A credit sale of ₹5,000 to Meena was not recorded in the books at all.","OM","Error of omission – complete omission does not affect the trial balance."],
+ ["₹3,000 received from Arun was credited to Varun's account.","COM","Error of commission – right class of account, wrong person. The trial balance still agrees."],
+ ["Purchase of a computer for office use was debited to Purchases account.","PR","Error of principle – capital expenditure treated as revenue."],
+ ["Sales book was undercast by ₹1,000 and wages account was overcast by ₹1,000.","CP","Compensating errors cancel each other; the trial balance agrees."],
+ ["Rent of ₹2,000 was posted to the credit side of rent account.","TB","Posting to the wrong side affects the trial balance (by double the amount)."]
+];
+VIEWS.u3 = { html(){ return unitHead(3)+`
+<div class="two"><div>
+ <div class="card"><h3>Trial balance</h3><div class="key">A <b>trial balance</b> lists every ledger balance; if debits equal credits the books are <b>arithmetically</b> correct. It does not prove there are no errors.</div>
+ <table class="t"><tr><th>Error</th><th>Example</th><th>Trial balance affected?</th></tr>
+ <tr><td>Omission (complete)</td><td>Transaction not recorded</td><td>No</td></tr><tr><td>Omission (partial)</td><td>Only one side posted</td><td>Yes</td></tr>
+ <tr><td>Commission</td><td>Posted to the wrong person's account</td><td>No</td></tr><tr><td>Principle</td><td>Capital item treated as revenue</td><td>No</td></tr>
+ <tr><td>Compensating</td><td>Two errors cancel out</td><td>No</td></tr><tr><td>Casting / wrong side / wrong amount in one account</td><td>Totalling or posting mistakes</td><td>Yes</td></tr></table>
+ <p>Until errors are found, the difference is put in a <b>suspense account</b>; it is closed as each error is rectified.</p></div>
+ <div class="card"><h3>Bank reconciliation statement</h3><p>The <b>cash book</b> (our record) and the <b>pass book</b> or bank statement (the bank's record) rarely agree on a given date because of timing differences and items one side has not yet recorded.</p>
+ <table class="t"><tr><th>Starting from cash book balance (Dr)…</th><th></th></tr>
+ <tr><td>Cheques issued but not presented</td><td>Add</td></tr><tr><td>Cheques deposited but not cleared</td><td>Subtract</td></tr>
+ <tr><td>Bank charges, direct payments by bank</td><td>Subtract</td></tr><tr><td>Interest credited, direct deposits, dividends collected</td><td>Add</td></tr></table>
+ <p style="font-size:14px;color:var(--muted)">Starting from an overdraft (credit) balance, every sign reverses.</p></div>
+ <div class="card"><h3>Depreciation</h3><p>Depreciation spreads an asset's cost over its useful life (AS 10 / Ind AS 16; Schedule II of the Companies Act, 2013 gives useful lives for companies). Causes: wear and tear, passage of time, obsolescence, depletion.</p>
+ <table class="t"><tr><th>Straight line (SLM)</th><th>Written down value (WDV)</th></tr>
+ <tr><td>Same amount every year</td><td>Same percentage on the reducing balance</td></tr><tr><td>(Cost − residual) ÷ life</td><td>Rate × opening book value</td></tr>
+ <tr><td>Simple; suits assets used evenly</td><td>Higher charge early; suits assets that lose value fast; used for income-tax</td></tr><tr><td>Book value reaches residual value</td><td>Book value never reaches zero</td></tr></table></div>
+</div><div>
+ <div class="card lab"><h3>Classify the error</h3><div id="errLab"></div></div>
+ <div class="card lab"><h3>Bank reconciliation practice</h3><div id="brs"></div></div>
+ <div class="card lab"><h3>Depreciation calculator</h3>
+ <div class="row"><label>Cost ₹ <input type="text" id="dC" value="100000" style="width:110px"></label><label>Residual ₹ <input type="text" id="dS" value="10000" style="width:100px"></label><label>Life (years) <input type="text" id="dN" value="5" style="width:60px"></label><button class="btn sm" id="dGo">Calculate</button></div>
+ <div id="dOut"></div></div>
+</div></div>`+unitFoot(3)+footer(); },
+ init(){
+  choiceLab("#errLab",ERR_ITEMS,{OM:"Omission",COM:"Commission",PR:"Principle",CP:"Compensating",TB:"Affects trial balance"});
+  brsPractice("#brs");
+  const calc=()=>{ const C=parseAmt($("#dC").value), Sv=parseAmt($("#dS").value), N=Math.round(parseAmt($("#dN").value));
+    if(!(C>0)||Sv===null||Sv<0||Sv>=C||!(N>=1&&N<=40)){ $("#dOut").innerHTML=`<div class="fb bad">Enter cost &gt; residual ≥ 0 and a life of 1–40 years.</div>`; return; }
+    const sl=(C-Sv)/N, r = Sv>0 ? 1-Math.pow(Sv/C,1/N) : 0.25, rp=Math.round(r*10000)/100;
+    let bs=C, bw=C, rows="", ptsS=[[0,C]], ptsW=[[0,C]];
+    for(let y=1;y<=N;y++){ const dw=bw*rp/100; bs-=sl; bw-=dw; ptsS.push([y,bs]); ptsW.push([y,bw]); rows+=`<tr><td>${y}</td><td style="text-align:right">${num(sl)}</td><td style="text-align:right">${num(bs)}</td><td style="text-align:right">${num(dw)}</td><td style="text-align:right">${num(bw)}</td></tr>`; }
+    const W=560,H=220,px=y=>40+y*(W-60)/N, py=v=>H-30-(v/C)*(H-50), line=p=>p.map(q=>px(q[0]).toFixed(1)+","+py(q[1]).toFixed(1)).join(" ");
+    const svg=`<svg viewBox="0 0 ${W} ${H+4}" style="width:100%;max-width:${W}px"><line x1="40" y1="${H-30}" x2="${W-20}" y2="${H-30}" stroke="var(--muted)"/><line x1="40" y1="20" x2="40" y2="${H-30}" stroke="var(--muted)"/>
+     ${Array.from({length:N+1},(_,y)=>`<text x="${px(y)}" y="${H-12}" text-anchor="middle" font-size="12" fill="var(--muted)">${y}</text>`).join("")}
+     <text x="${(40+W-20)/2}" y="${H}" text-anchor="middle" font-size="12" fill="var(--muted)">year</text><text x="44" y="16" font-size="12" fill="var(--muted)">book value</text>
+     <polyline points="${line(ptsS)}" fill="none" stroke="var(--accent)" stroke-width="3"/><polyline points="${line(ptsW)}" fill="none" stroke="var(--info)" stroke-width="3" stroke-dasharray="6 4"/>
+     <text x="${px(Math.floor(N/2))+6}" y="${py(ptsS[Math.floor(N/2)][1])-14}" text-anchor="start" font-size="13" fill="var(--accent)" font-weight="600">SLM (straight line)</text><text x="${px(Math.floor(N/2))-6}" y="${py(ptsW[Math.floor(N/2)][1])+22}" text-anchor="end" font-size="13" fill="var(--info)" font-weight="600">WDV ${rp}%</text></svg>`;
+    $("#dOut").innerHTML=`<p>SLM: ${fmt(sl)} a year (${(100*sl/C).toFixed(2)}% of cost). WDV rate that brings ${fmt(C)} down to ${fmt(Sv)} in ${N} years: <b>${rp}%</b> = 1 − (residual ÷ cost)<sup>1/n</sup>${Sv>0?"":" (residual is zero, so 25% is used as an example rate)"}.</p>${svg}
+    <table class="t" style="font-size:14px"><tr><th>Year</th><th>SLM depreciation</th><th>SLM book value</th><th>WDV depreciation</th><th>WDV book value</th></tr>${rows}</table>`; };
+  $("#dGo").onclick=calc; calc();
+  miniQuiz(3);
+ }};
+
+/* ---------------- UNIT 4 ---------------- */
+VIEWS.u4 = { html(){ return unitHead(4)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key"><b>Final accounts</b> of a sole trader: the <b>Trading Account</b> finds gross profit, the <b>Profit and Loss Account</b> finds net profit, and the <b>Balance Sheet</b> shows assets and liabilities on the last day of the year.</div>
+ <h4>Where does each item go?</h4><table class="t"><tr><th>Trading account</th><th>Profit and loss account</th><th>Balance sheet</th></tr>
+ <tr><td>Opening stock, purchases (less returns), sales (less returns), wages, carriage inwards, freight, factory power, closing stock</td><td>Salaries, rent, office and selling expenses, carriage outwards, bad debts, depreciation, interest; other incomes such as commission and discount received</td><td>Capital (+ net profit − drawings), loans, creditors, outstanding expenses; fixed assets (less depreciation), stock, debtors, cash, bank, prepaid expenses</td></tr></table>
+ <h4>Common adjustments – each goes to two places</h4><table class="t"><tr><th>Adjustment</th><th>First effect</th><th>Second effect</th></tr>
+ <tr><td>Closing stock</td><td>Credit of trading account</td><td>Asset in balance sheet</td></tr>
+ <tr><td>Outstanding expense</td><td>Add to that expense</td><td>Liability</td></tr>
+ <tr><td>Prepaid expense</td><td>Deduct from that expense</td><td>Asset</td></tr>
+ <tr><td>Accrued income</td><td>Add to that income</td><td>Asset</td></tr>
+ <tr><td>Income received in advance</td><td>Deduct from that income</td><td>Liability</td></tr>
+ <tr><td>Depreciation</td><td>Debit P&amp;L</td><td>Deduct from asset</td></tr>
+ <tr><td>Bad debts and provision for doubtful debts</td><td>Debit P&amp;L</td><td>Deduct from debtors</td></tr>
+ <tr><td>Interest on capital</td><td>Debit P&amp;L</td><td>Add to capital</td></tr></table>
+ <h4>Formats</h4><p>Sole traders traditionally use the horizontal ('T') format shown in the worked solutions. Companies must use the vertical format in <b>Schedule III</b> of the Companies Act, 2013.</p></div>
+</div><div>
+ <div class="card lab"><h3>Prepare final accounts</h3><p>A new trial balance each time. Work it out on paper, enter the three figures and check.</p><div id="fa"></div></div>
+</div></div>`+unitFoot(4)+footer(); },
+ init(){ faPractice("#fa"); miniQuiz(4); }};
+
+/* ---------------- UNIT 5 ---------------- */
+const OPIN_ITEMS = [
+ ["Everything is properly stated; no material misstatement found.","UN","Unmodified ('clean') opinion – SA 700."],
+ ["Inventory is overstated by a material amount, but the rest of the statements are fine.","QU","Material but not pervasive misstatement – qualified ('except for') opinion, SA 705."],
+ ["Revenue, assets and liabilities are all materially misstated throughout the statements.","AD","Material and pervasive misstatement – adverse opinion."],
+ ["Management refuses access to most books, so the auditor cannot obtain evidence on most items.","DI","Unable to obtain sufficient evidence, possible effects pervasive – disclaimer of opinion."],
+ ["Statements are fine, but the auditor wants to draw attention to a major pending lawsuit already disclosed in the notes.","EM","Unmodified opinion with an Emphasis of Matter paragraph – SA 706."]
+];
+const VOUCH_ITEMS = [
+ ["Cash purchase of stationery, ₹2,400.","CM","Check the cash memo or bill: date, name, amount, approval."],
+ ["Purchase of a new machine for ₹6 lakh.","INV","Check the supplier's invoice, purchase order, board approval and installation report."],
+ ["Monthly salary payments.","PAY","Check the salary register, attendance records, appointment letters and bank transfer list."],
+ ["Credit sale of goods to a dealer.","SALE","Check the copy of the sales invoice, delivery challan and the customer's acknowledgement."],
+ ["Interest received on fixed deposit.","BANK","Check the bank statement or FD advice and the interest certificate."]
+];
+VIEWS.u5 = { html(){ return unitHead(5)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key">An <b>audit</b> is an independent examination of financial statements so that the auditor can express an <b>opinion</b> on whether they give a <b>true and fair view</b>. The auditor gives reasonable – not absolute – assurance (SA 200).</div>
+ <h4>Objectives</h4><ul><li><b>Primary</b>: report on true and fair view.</li><li><b>Secondary</b>: detect and prevent errors and frauds. Auditors must assess fraud risk (SA 240) but are not guarantors against all fraud.</li></ul>
+ <h4>Types of audit</h4><table class="t"><tr><td><b>Statutory</b></td><td>Required by law – companies (Companies Act, 2013), banks, co-operative societies; tax audit under the income-tax law.</td></tr><tr><td><b>Internal</b></td><td>Continuous review by the organisation's own or outsourced staff (SA 610 governs how external auditors use it).</td></tr><tr><td><b>Continuous / periodic / interim</b></td><td>By timing: throughout the year, after year-end, or part-way through.</td></tr><tr><td><b>Government audit</b></td><td>By the Comptroller and Auditor General of India (CAG) for government departments and companies.</td></tr></table>
+ <h4>Internal control, internal check, internal audit</h4><p><b>Internal control</b> is the whole system of policies that protect assets and ensure reliable records. <b>Internal check</b> is part of it: dividing work so that no one handles a transaction from start to finish (the cashier does not keep the ledger). <b>Internal audit</b> reviews whether the controls work. Strong controls let the auditor rely on <b>test checking</b> (sampling) instead of checking every entry.</p>
+ <h4>Vouching and verification</h4><p><b>Vouching</b> checks that each entry is supported by a genuine, authorised document – 'the backbone of auditing'. <b>Verification</b> confirms that assets and liabilities in the balance sheet <b>exist</b>, are <b>owned</b>, are properly <b>valued</b> and are free of undisclosed charges – e.g. physical count of cash and stock, title deeds for land, bank confirmations.</p></div>
+ <div class="card"><h3>Company auditors under the Companies Act, 2013</h3><table class="t">
+ <tr><td>Sec. 139(6)</td><td>First auditor of a non-government company appointed by the Board within 30 days of registration</td></tr>
+ <tr><td>Sec. 139(1)</td><td>Appointed at the first AGM for a term from that AGM to the sixth AGM (five years)</td></tr>
+ <tr><td>Sec. 139(2)</td><td>Rotation for listed and prescribed companies: an individual for one term of five years; a firm for two terms of five years</td></tr>
+ <tr><td>Sec. 141</td><td>Only a Chartered Accountant or CA firm; lists disqualifications</td></tr>
+ <tr><td>Sec. 143</td><td>Powers (access to books, information) and duties; the audit report; Sec. 143(12) reporting of fraud</td></tr>
+ <tr><td>Sec. 144</td><td>Services an auditor must not provide, e.g. book-keeping, internal audit, investment advice</td></tr>
+ <tr><td>CARO 2020</td><td>Additional matters reported for many companies</td></tr></table></div>
+</div><div>
+ <div class="card"><h3>The auditor's opinion</h3><table class="t"><tr><th>Situation</th><th>Opinion</th></tr><tr><td>No material misstatement</td><td><b>Unmodified</b> (clean)</td></tr><tr><td>Material, not pervasive</td><td><b>Qualified</b> ('except for')</td></tr><tr><td>Material and pervasive</td><td><b>Adverse</b></td></tr><tr><td>Cannot get evidence; possible effects pervasive</td><td><b>Disclaimer</b> of opinion</td></tr></table>
+ <p style="font-size:14px;color:var(--muted)">SA 700 (forming an opinion), SA 705 (modifications), SA 706 (emphasis of matter and other matter paragraphs).</p></div>
+ <div class="card lab"><h3>Which opinion?</h3><div id="opLab"></div></div>
+ <div class="card lab"><h3>What would you vouch?</h3><div id="vLab"></div></div>
+</div></div>`+unitFoot(5)+footer(); },
+ init(){
+  choiceLab("#opLab",OPIN_ITEMS,{UN:"Unmodified",QU:"Qualified",AD:"Adverse",DI:"Disclaimer",EM:"Unmodified + emphasis of matter"});
+  choiceLab("#vLab",VOUCH_ITEMS,{CM:"Cash memo",INV:"Invoice + approvals",PAY:"Payroll records",SALE:"Sales invoice + challan",BANK:"Bank statement / advice"});
+  miniQuiz(5);
+ }};
+
+/* ---------------- PRACTICE HUB ---------------- */
+VIEWS.practice = { html(){ return `<div class="unitban"><div class="k">Practise</div><h2>Practice generator</h2><p>Every problem uses fresh numbers. Do them on paper first, then check.</p></div>
+ <div class="two"><div><div class="card lab"><h3>Journal entries (10)</h3><div id="pj"></div></div></div>
+ <div><div class="card lab"><h3>Bank reconciliation</h3><div id="pb"></div></div><div class="card lab"><h3>Final accounts</h3><div id="pf"></div></div></div></div>`+footer(); },
+ init(){ journalPractice("#pj",10); brsPractice("#pb"); faPractice("#pf"); }};
+
+/* ---------------- GLOSSARY ---------------- */
+VIEWS.glossary = { html(){ return `<div class="unitban"><div class="k">Revise</div><h2>Glossary</h2><p>Accounting and auditing terms in plain words.</p></div>
+ <div class="card"><input type="text" id="gS" class="search" placeholder="Search terms…"><table class="t" style="margin-top:10px"><thead><tr><th>Term</th><th>Meaning</th><th>Note</th></tr></thead><tbody id="gB"></tbody></table></div>`+footer(); },
+ init(){ const draw=q=>{ q=(q||"").toLowerCase(); $("#gB").innerHTML=GLOSSARY.filter(m=>m.join(" ").toLowerCase().includes(q)).map(m=>`<tr><td><b>${esc(m[0])}</b></td><td>${esc(m[1])}</td><td>${esc(m[2])}</td></tr>`).join(""); }; draw(); $("#gS").oninput=e=>draw(e.target.value); }};
+
+/* ---------------- FORMULAS ---------------- */
+VIEWS.formulas = { html(){ return `<div class="unitban"><div class="k">Revise</div><h2>Formula sheet</h2><p>Everything you need to compute in this course on one page. Print it with Ctrl+P.</p></div>
+ <div class="two"><div class="card"><table class="t">
+ <tr><th colspan="2">Basics</th></tr>
+ <tr><td>Accounting equation</td><td>Assets = Liabilities + Capital</td></tr>
+ <tr><td>Closing capital</td><td>Opening capital + additional capital + net profit − drawings</td></tr>
+ <tr><td>Profit (statement of affairs method)</td><td>Closing capital − opening capital + drawings − additional capital</td></tr>
+ <tr><th colspan="2">Final accounts</th></tr>
+ <tr><td>Cost of goods sold</td><td>Opening stock + purchases + direct expenses − closing stock</td></tr>
+ <tr><td>Gross profit</td><td>Net sales − cost of goods sold</td></tr>
+ <tr><td>Net profit</td><td>Gross profit + other incomes − indirect expenses</td></tr>
+ <tr><td>Net sales / purchases</td><td>Sales − sales returns; purchases − purchases returns</td></tr>
+ <tr><th colspan="2">Depreciation</th></tr>
+ <tr><td>Straight line</td><td>(Cost − residual value) ÷ useful life</td></tr>
+ <tr><td>SLM rate</td><td>Annual depreciation ÷ cost × 100</td></tr>
+ <tr><td>WDV depreciation</td><td>Rate × opening book value</td></tr>
+ <tr><td>WDV rate</td><td>1 − (residual ÷ cost)<sup>1/n</sup></td></tr>
+ <tr><td>Profit or loss on sale of asset</td><td>Sale price − book value on date of sale</td></tr></table></div>
+ <div class="card"><table class="t">
+ <tr><th colspan="2">Ratios worth knowing</th></tr>
+ <tr><td>Gross profit ratio</td><td>Gross profit ÷ net sales × 100</td></tr>
+ <tr><td>Net profit ratio</td><td>Net profit ÷ net sales × 100</td></tr>
+ <tr><td>Current ratio</td><td>Current assets ÷ current liabilities</td></tr>
+ <tr><td>Working capital</td><td>Current assets − current liabilities</td></tr>
+ <tr><td>Stock turnover</td><td>Cost of goods sold ÷ average stock</td></tr>
+ <tr><td>Average stock</td><td>(Opening stock + closing stock) ÷ 2</td></tr>
+ <tr><th colspan="2">Bank reconciliation (from favourable cash book balance)</th></tr>
+ <tr><td>Add</td><td>Cheques issued not presented; interest and dividends credited by bank; direct deposits</td></tr>
+ <tr><td>Less</td><td>Cheques deposited not cleared; bank charges; direct payments by bank; dishonoured cheques</td></tr></table></div></div>`+footer(); }};
+
+/* ---------------- REFERENCES ---------------- */
+VIEWS.refs = { html(){ return `<div class="unitban"><div class="k">Read further</div><h2>References</h2><p>Books are in the TNNLU library; online sources need internet.</p></div>
+ <div class="two"><div class="card"><h3>Books</h3><table class="t"><tr><th>Book</th><th>Use it for</th></tr>
+ <tr><td>T.S. Grewal, <i>Double Entry Book Keeping</i> / <i>Introduction to Accountancy</i>, Sultan Chand / S. Chand</td><td>Gentlest start if you did not study accountancy in school</td></tr>
+ <tr><td>R.L. Gupta &amp; V.K. Gupta, <i>Principles and Practice of Accountancy</i>, Sultan Chand</td><td>Standard B.Com. text with many solved problems</td></tr>
+ <tr><td>S.N. Maheshwari, S.K. Maheshwari &amp; S.K. Maheshwari, <i>Financial Accounting</i>, Vikas</td><td>Clear theory and exercises</td></tr>
+ <tr><td>M.C. Shukla, T.S. Grewal &amp; S.C. Gupta, <i>Advanced Accounts</i> Vol. I, S. Chand</td><td>Reference for advanced problems</td></tr>
+ <tr><td>S.P. Jain &amp; K.L. Narang, <i>Financial Accounting</i>, Kalyani</td><td>Exam-oriented practice</td></tr>
+ <tr><td>B.N. Tandon, S. Sudharsanam &amp; S. Sundharabahu, <i>A Handbook of Practical Auditing</i>, S. Chand</td><td>Practical auditing – vouching, verification, company audit</td></tr>
+ <tr><td>Dinkar Pagare, <i>Principles and Practice of Auditing</i>, Sultan Chand</td><td>Readable auditing text</td></tr>
+ <tr><td>Aruna Jha, <i>Auditing and Assurance</i>, Taxmann</td><td>Standards on Auditing explained</td></tr></table></div>
+ <div><div class="card"><h3>Free official study material</h3><ul>
+ <li>ICAI Board of Studies – Foundation paper <i>Accounting</i> and Intermediate paper <i>Auditing and Ethics</i> study material (free PDFs) on the <a href="https://boslive.icai.org" target="_blank" rel="noopener">BoS Knowledge Portal</a></li>
+ <li><a href="https://www.icai.org" target="_blank" rel="noopener">ICAI</a> – Accounting Standards and Standards on Auditing</li>
+ <li><a href="https://www.mca.gov.in" target="_blank" rel="noopener">Ministry of Corporate Affairs</a> – Companies Act, 2013, Schedules II and III, Ind AS rules, CARO 2020</li>
+ <li><a href="https://www.indiacode.nic.in" target="_blank" rel="noopener">India Code</a> – text of the Companies Act, 2013</li>
+ <li><a href="https://ncert.nic.in/textbook.php" target="_blank" rel="noopener">NCERT</a> – Class XI and XII Accountancy textbooks, free and very clear for basics</li></ul></div>
+ <div class="card"><h3>Statutes and standards mentioned</h3><ul><li>Companies Act, 2013 – Sections 128–148 (accounts and audit), Schedules II and III</li><li>AS 1 (disclosure of accounting policies), AS 10 (property, plant and equipment); Ind AS 16</li><li>SA 200, 240, 315, 320, 500, 610, 700, 705, 706</li></ul></div></div></div>`+footer(); }};
+
+function footer(){ return `<div class="foot">Financial Accounting &amp; Practical Auditing explorer · v1.0.0 · Reference material for first-semester B.Com. LL.B. students, based on the standard first-year B.Com. syllabus. Always check against your own course outline and the latest standards.</div>`; }
+
+/* ---------------- FLASHCARDS ---------------- */
+let fIdx=0, fDeck=FLASH.slice();
+VIEWS.flash = { html(){ return `<div class="unitban"><div class="k">Revise</div><h2>Flashcards</h2><p>${FLASH.length} key terms. Click the card or press Space to flip; use ← → to move.</p></div>
+ <div class="card"><div class="flash"><div class="fc" id="fc"><div class="front"><b id="fFront"></b><small>Click or Space to see the meaning</small></div><div class="back"><div id="fBack"></div><small id="fCount"></small></div></div></div>
+ <div class="row" style="justify-content:center"><button class="btn sec" id="fPrev">← Previous</button><button class="btn" id="fFlip">Flip</button><button class="btn sec" id="fNext">Next →</button><button class="btn sec" id="fShuf">Shuffle</button><span id="fPos" style="margin-left:10px;color:var(--muted)"></span></div></div>`+footer(); },
+ init(){ fIdx=0; this.show(); $("#fc").onclick=()=>$("#fc").classList.toggle("flip"); $("#fFlip").onclick=()=>$("#fc").classList.toggle("flip"); $("#fPrev").onclick=()=>this.move(-1); $("#fNext").onclick=()=>this.move(1); $("#fShuf").onclick=()=>{fDeck=shuffle(FLASH); fIdx=0; this.show();}; },
+ show(){ const c=fDeck[fIdx]; $("#fc").classList.remove("flip"); $("#fFront").textContent=c[0]; $("#fBack").textContent=c[1]; $("#fPos").textContent=`${fIdx+1} / ${fDeck.length}`; },
+ move(d){ fIdx=(fIdx+d+fDeck.length)%fDeck.length; this.show(); }
+};
+
+/* ---------------- QUIZ ---------------- */
+VIEWS.quiz = { html(){ return `<div class="unitban"><div class="k">Test yourself</div><h2>Quiz</h2><p>${QUIZ.length} questions in the bank. Pick a unit or take a mixed set of 10.</p></div>
+ <div class="card"><div class="row"><select id="qU"><option value="0">All units (10 random)</option>${UNITS.map(u=>`<option value="${u.n}">Unit ${u.n}: ${u.title}</option>`).join("")}</select><button class="btn" id="qStart">Start</button><span id="qBest" style="color:var(--muted)"></span></div></div>
+ <div class="card" id="qBox" hidden><div id="qList"></div><div class="row" style="margin-top:10px"><span class="score" id="qScore"></span></div></div>`+footer(); },
+ init(){
+  const best=()=>{ const b=S.d.best, u=$("#qU").value; $("#qBest").textContent = b[u]!=null ? `Best: ${b[u]}%` : ""; };
+  $("#qU").onchange=best; best();
+  $("#qStart").onclick=()=>{
+    const u=+$("#qU").value; const pool = u? QUIZ.filter(q=>q[0]===u) : QUIZ; const set = shuffle(pool).slice(0, u?pool.length:10);
+    let got=0, ans=0; $("#qBox").hidden=false; $("#qList").innerHTML=set.map((q,i)=>qHTML(q,"q"+i)).join(""); $("#qScore").textContent=`0 / ${set.length}`;
+    bindQ($("#qList"), ok=>{ ans++; if(ok) got++; $("#qScore").textContent=`${got} / ${set.length}` + (ans===set.length?`  ·  ${Math.round(100*got/set.length)}%`:"");
+      if(ans===set.length){ const pct=Math.round(100*got/set.length), k=String(u); if(S.d.best[k]==null||pct>S.d.best[k]){S.d.best[k]=pct; S.save();} best(); toast(pct>=80?"Excellent!":pct>=50?"Good – revise the ones you missed.":"Revisit the units and try again."); } });
+  };
+ }};
+
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+document.addEventListener("click", e=>{
+  const g=e.target.closest("[data-go]"); if(g){ e.preventDefault(); go(g.dataset.go); return; }
+  const d=e.target.closest("[data-done]"); if(d){ const id=d.dataset.done; S.d.done[id]=!S.d.done[id]; S.save(); d.textContent=S.d.done[id]?"✓ Marked as done":"Mark this unit as done"; renderSide(); toast(S.d.done[id]?"Unit marked as done":"Unit unmarked"); }
+});
+document.addEventListener("keydown", e=>{
+  if(e.target.matches("input,textarea,select")||e.ctrlKey||e.metaKey||e.altKey) return;
+  const k=e.key.toLowerCase();
+  if(k==="m"){ setSidebar(!sidebarHidden(), true); }
+  else if(k==="f"){ toggleFS(); }
+  else if(anim && k==="p"){ anim.play(); }
+  else if(anim && k==="s"){ anim.pause(); anim.step(); }
+  else if(anim && k==="x"){ anim.pause(); }
+  else if(cur==="flash" && (e.key==="ArrowRight"||e.key==="ArrowLeft")){ VIEWS.flash.move(e.key==="ArrowRight"?1:-1); }
+  else if(cur==="flash" && e.key===" "){ e.preventDefault(); $("#fc").classList.toggle("flip"); }
+  else if(k==="["||k==="]"){ const i=UNITS.findIndex(u=>u.id===cur); const ni = i<0 ? (k==="]"?0:-1) : i+(k==="]"?1:-1); if(ni>=0&&ni<UNITS.length) go(UNITS[ni].id); }
+});
+$("#sbBtn").onclick=()=>setSidebar(!sidebarHidden(), true);
+$("#fsBtn").onclick=toggleFS;
+$("#themeBtn").onclick=()=>{ const dark = document.documentElement.getAttribute("data-theme")==="dark" || (!document.documentElement.getAttribute("data-theme") && matchMedia("(prefers-color-scheme:dark)").matches); setTheme(dark?"light":"dark"); };
+document.addEventListener("fullscreenchange",()=>{ $("#fsBtn").textContent = document.fullscreenElement ? "⛶ Exit full screen" : "⛶ Full screen"; });
+(function boot(){
+  try{ const t=localStorage.getItem("llb_theme"); if(t) setTheme(t); }catch(e){}
+  let h=false; try{ h=localStorage.getItem(SBKEY)==="1"; }catch(e){}
+  setSidebar(window.innerWidth<=900 ? true : h, false);
+  const start=(location.hash||"").slice(1);
+  go(VIEWS[start]?start:"home", false);
+})();
+</script>
+</body>
+</html>

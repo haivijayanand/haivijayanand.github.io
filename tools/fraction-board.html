@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<!--
+TOOL: Fraction Board
+FAMILY: school-math
+VERSION: 1.0.0
+DATE: 2026-10-31
+CHAT: Interactive fraction operations board (add, subtract, multiply, divide) with step-by-step guided solving and pies
+CHANGES: 1.0.0 - first release: random and own problems, guided steps with H hint / F fill, LCM and HCF working, pie pictures, show-all, play mode
+STATUS: active
+-->
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fraction Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Nunito:wght@400;600;800&display=swap">
+<style>
+/* Layout: classroom wall — sidebar of controls on the left, a framed chalk board filling the rest; problem strip on top, step card + picture panel below */
+:root{
+  --wall:#e3e7df; --panel:#f3f5f0; --ink:#1c2925; --muted:#58675f; --line:#c6cfc7; --accent:#2c6a52; --accent-ink:#ffffff;
+  --rim:#8b6b47; --board:#22392f; --board-2:#2b463b; --chalk:#eef2e7; --chalk-dim:#a8bcb0; --chalk-faint:#5f7d70;
+  --ca:#f1d26a; --cb:#7cc4e6; --cr:#f39cb6; --ok:#93dd9d; --bad:#ff8c7c; --hl:#ffd38c;
+  --f-chalk:'Kalam','Comic Sans MS','Segoe Print',cursive;
+  --f-ui:'Nunito','Segoe UI',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --wall:#111714; --panel:#18201c; --ink:#e2eae4; --muted:#93a59a; --line:#2a3731; --accent:#7cc7a3; --accent-ink:#0f1a15; --rim:#6e553a; color-scheme:dark}}
+:root[data-theme="dark"]{--wall:#111714; --panel:#18201c; --ink:#e2eae4; --muted:#93a59a; --line:#2a3731; --accent:#7cc7a3; --accent-ink:#0f1a15; --rim:#6e553a; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--wall);color:var(--ink);font-family:var(--f-ui);font-size:15px}
+*{box-sizing:border-box}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--hl);outline-offset:2px}
+.app{display:grid;grid-template-rows:auto 1fr;height:100%}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line);background:var(--panel)}
+.brand{font-family:var(--f-chalk);font-weight:700;font-size:26px;letter-spacing:.5px;color:var(--accent);margin-right:6px}
+.opname{font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-size:12px}
+.hspace{flex:1}
+.hb{border:1px solid var(--line);background:var(--wall);color:var(--ink);padding:7px 12px;border-radius:8px;font-weight:600;display:inline-flex;gap:6px;align-items:center}
+.hb:hover{border-color:var(--accent)}
+.hb.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+kbd{font-family:var(--f-ui);font-size:11px;font-weight:800;border:1px solid currentColor;border-radius:4px;padding:0 4px;opacity:.75}
+.main{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));min-height:0}
+.app.nosb .main{grid-template-columns:minmax(0,1fr)}
+.app.nosb aside{display:none}
+aside{overflow:auto;display:flex;flex-direction:column;gap:14px;min-height:0}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.box h3{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.fin{display:flex;align-items:center;gap:8px}
+.fin .who{width:52px;font-weight:700;font-size:13px;color:var(--muted)}
+.fin input{width:52px;padding:5px;border:1px solid var(--line);border-radius:6px;background:var(--wall);color:var(--ink);font:600 16px var(--f-ui);text-align:center}
+.stack{display:flex;flex-direction:column;align-items:center;gap:3px}
+.stack .bar{width:56px;height:2px;background:var(--ink)}
+.opsel{display:flex;gap:6px}
+.opsel button{flex:1;border:1px solid var(--line);background:var(--wall);color:var(--ink);border-radius:8px;padding:6px 0;font-size:20px;font-weight:800}
+.opsel button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.go{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:9px;font-weight:800}
+.msg{margin:0;font-size:13px;color:#c0392b;min-height:1em}
+.chk{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:14px}
+.chk label{display:flex;gap:5px;align-items:center}
+select{font:inherit;padding:4px;border-radius:6px;border:1px solid var(--line);background:var(--wall);color:var(--ink)}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:5px 10px;font-size:13px;margin:0}
+.keys dt{font-weight:800}
+.keys dd{margin:0;color:var(--muted)}
+.score{font-size:13px;color:var(--muted)}
+
+/* board */
+.board{background:radial-gradient(ellipse at 20% 10%,var(--board-2),transparent 60%),radial-gradient(ellipse at 90% 90%,var(--board-2),transparent 55%),var(--board);border:10px solid var(--rim);border-radius:12px;box-shadow:inset 0 0 40px rgba(0,0,0,.35);color:var(--chalk);overflow:auto;min-height:0;padding:16px 20px;display:flex;flex-direction:column;gap:16px}
+.strip{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;padding-bottom:14px;border-bottom:2px dashed var(--chalk-faint)}
+.opnd{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.opnd .lab{font-family:var(--f-chalk);font-size:26px;display:flex;align-items:center;gap:8px}
+.opnd small{font-family:var(--f-ui);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--chalk-dim)}
+.bigop{font-family:var(--f-chalk);font-size:44px;color:var(--chalk)}
+.qm{font-family:var(--f-chalk);font-size:44px;color:var(--chalk-dim)}
+.pies{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;max-width:100%}
+.pie{max-width:100%;height:auto}
+.pie .rimc{fill:none;stroke:var(--chalk);stroke-width:2}
+.pie .cut{stroke:var(--chalk);stroke-width:1.2;opacity:.75}
+.pa{fill:var(--ca)} .pb{fill:var(--cb)} .pr{fill:var(--cr)}
+.more{font-family:var(--f-chalk);font-size:18px;color:var(--chalk-dim)}
+
+.stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,360px);gap:22px;align-items:start}
+.card{display:flex;flex-direction:column;gap:12px;min-width:0}
+.stag{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk-dim);font-weight:800}
+.stitle{margin:0;font-family:var(--f-chalk);font-weight:700;font-size:32px;color:var(--ca);line-height:1.1;text-wrap:balance}
+.sexp{margin:0;max-width:68ch;line-height:1.55;font-size:16px;color:var(--chalk)}
+.sexp b{color:var(--hl)}
+.work{font-family:var(--f-chalk);font-size:30px;display:flex;flex-direction:column;gap:16px;padding:14px 16px;border:2px solid var(--chalk-faint);border-radius:10px;overflow-x:auto}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:.25em .35em}
+.row.sm{font-size:22px}
+.lbl{font-family:var(--f-ui);font-size:15px;color:var(--chalk-dim);font-weight:600}
+.op{margin:0 .1em}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.15;margin:0 .1em}
+.fr>.fn{padding:0 .2em .05em;border-bottom:3px solid currentColor;white-space:nowrap}
+.fr>.fd{padding:.05em .2em 0;white-space:nowrap}
+.mx{display:inline-flex;align-items:center}
+.mx>.mw{margin-right:.05em;font-size:1.15em}
+.hlt{color:var(--hl);font-weight:700}
+.blank{font:inherit;font-size:.92em;text-align:center;background:rgba(0,0,0,.18);color:var(--hl);border:2px dashed var(--chalk-dim);border-radius:7px;padding:0 .1em;line-height:1.2;min-width:2.2ch}
+.blank:focus{border-color:var(--hl);outline:none;background:rgba(255,211,140,.08)}
+.blank.bad{border-color:var(--bad);border-style:solid;animation:shake .35s}
+.blank.pulse{animation:pulse 1s 2}
+.done{display:inline-block;padding:0 .25em;border-radius:7px;border:2px solid var(--ok);color:var(--ok);line-height:1.2}
+.done.filled{border-color:var(--cb);color:var(--cb)}
+.ansv{color:var(--hl)}
+.mirror{color:var(--chalk-dim)}
+.mirror.k{color:var(--ok)}
+.choice{display:inline-flex;gap:6px;flex-wrap:wrap}
+.chbtn{font-family:var(--f-chalk);font-size:20px;background:transparent;color:var(--chalk);border:2px dashed var(--chalk-dim);border-radius:20px;padding:0 12px}
+.chbtn:hover{border-color:var(--hl)}
+.chbtn.ok{border:2px solid var(--ok);color:var(--ok)}
+.chbtn.filled{border:2px solid var(--cb);color:var(--cb)}
+.chbtn.bad{border-color:var(--bad);color:var(--bad);animation:shake .35s}
+.chbtn:disabled{cursor:default;opacity:.45}
+.chbtn.ok:disabled,.chbtn.filled:disabled{opacity:1}
+.mul,.fac{display:inline-block;font-size:19px;padding:0 .3em;border-radius:6px;color:var(--chalk-dim)}
+.fac.cm{color:var(--chalk);text-decoration:underline dotted}
+.solved .target,.all .target{background:var(--hl);color:var(--board)}
+.tip{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-radius:10px;background:rgba(0,0,0,.2);font-size:15px;line-height:1.45;max-width:72ch}
+.tip .tl{font-weight:800;letter-spacing:.1em;text-transform:uppercase;font-size:11px;padding-top:3px;color:var(--chalk-dim);flex:none}
+.tip.hint .tl{color:var(--hl)} .tip.bad .tl{color:var(--bad)} .tip.ok .tl{color:var(--ok)}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.cb{background:transparent;color:var(--chalk);border:2px solid var(--chalk-faint);border-radius:9px;padding:6px 14px;font-weight:700;display:inline-flex;gap:8px;align-items:center}
+.cb:hover{border-color:var(--chalk)}
+.cb.pri{background:var(--chalk);color:var(--board);border-color:var(--chalk)}
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.side h4{margin:0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk-dim)}
+.pb-fig{margin:0;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px;border:1px dashed var(--chalk-faint);border-radius:10px}
+.pb-fig figcaption{font-size:13px;color:var(--chalk-dim);text-align:center;line-height:1.4}
+.arrowdn{text-align:center;font-family:var(--f-chalk);font-size:22px;color:var(--chalk-dim)}
+.nav{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:auto;padding-top:12px;border-top:2px dashed var(--chalk-faint)}
+.arrow{font-family:var(--f-chalk);font-size:22px;background:transparent;color:var(--chalk);border:2px solid var(--chalk);border-radius:40px;padding:4px 18px}
+.arrow:disabled{opacity:.3;cursor:default}
+.dots{display:flex;gap:6px;flex-wrap:wrap;flex:1;justify-content:center}
+.dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--chalk-faint);background:transparent;color:var(--chalk-dim);font-size:12px;font-weight:800;padding:0}
+.dot.dn{border-color:var(--ok);color:var(--ok)}
+.dot.cur{background:var(--chalk);color:var(--board);border-color:var(--chalk)}
+.allwrap{display:flex;flex-direction:column;gap:22px}
+.allstep{display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,340px);gap:18px;padding-bottom:20px;border-bottom:2px dashed var(--chalk-faint)}
+.allstep .work{font-size:26px}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(255,211,140,.35)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+@media (max-width:900px){
+  .main{grid-template-columns:minmax(0,1fr)}
+  aside{order:2;overflow:visible}
+  .stage,.allstep{grid-template-columns:minmax(0,1fr)}
+  .work{font-size:24px}.row.sm{font-size:19px}.stitle{font-size:26px}
+  .board{border-width:6px;padding:12px}
+}
+</style>
+
+<div class="app" id="app">
+  <header>
+    <span class="brand">Fraction Board</span>
+    <span class="opname" id="opname"></span>
+    <span class="hspace"></span>
+    <button class="hb" id="bMenu" title="Show or hide the side panel">Panel <kbd>M</kbd></button>
+    <button class="hb" id="bNew">New problem <kbd>N</kbd></button>
+    <button class="hb" id="bAll">All steps <kbd>A</kbd></button>
+    <button class="hb" id="bPlay">Play <kbd>P</kbd></button>
+    <button class="hb" id="bFull">Full screen</button>
+  </header>
+  <div class="main">
+    <aside>
+      <section class="box ed" id="editor">
+        <h3>Make your own problem</h3>
+        <div class="fin"><span class="who">First</span><input id="aw" type="number" min="0" placeholder="0" aria-label="first whole number"><div class="stack"><input id="an" type="number" min="0" aria-label="first numerator"><span class="bar"></span><input id="ad" type="number" min="1" aria-label="first denominator"></div></div>
+        <div class="opsel" id="opsel"><button data-op="add" title="Add">+</button><button data-op="sub" title="Subtract">−</button><button data-op="mul" title="Multiply">×</button><button data-op="div" title="Divide">÷</button></div>
+        <div class="fin"><span class="who">Second</span><input id="bw" type="number" min="0" placeholder="0" aria-label="second whole number"><div class="stack"><input id="bn" type="number" min="0" aria-label="second numerator"><span class="bar"></span><input id="bd" type="number" min="1" aria-label="second denominator"></div></div>
+        <button class="go" id="solveBtn">Solve this problem</button>
+        <p class="msg" id="edMsg"></p>
+        <p class="score" style="margin:0">Left box = whole number (leave empty or 0 for a plain fraction).</p>
+      </section>
+      <section class="box">
+        <h3>Random problems</h3>
+        <div class="chk"><label><input type="checkbox" id="o_add" checked>Add</label><label><input type="checkbox" id="o_sub" checked>Subtract</label><label><input type="checkbox" id="o_mul" checked>Multiply</label><label><input type="checkbox" id="o_div" checked>Divide</label></div>
+        <div class="chk"><label><input type="checkbox" id="k_proper" checked>Proper</label><label><input type="checkbox" id="k_improper" checked>Improper</label><label><input type="checkbox" id="k_mixed" checked>Mixed</label></div>
+        <label class="chk">Denominators up to <select id="maxd"><option>6</option><option>9</option><option selected>12</option></select></label>
+        <button class="go" id="rndBtn">New random problem</button>
+      </section>
+      <section class="box">
+        <h3>Keyboard</h3>
+        <dl class="keys">
+          <dt>→ or S</dt><dd>Next step</dd>
+          <dt>←</dt><dd>Previous step</dd>
+          <dt>Enter</dt><dd>Check my answers</dd>
+          <dt>H</dt><dd>Hint for the box</dd>
+          <dt>F</dt><dd>Fill one box</dd>
+          <dt>P / X</dt><dd>Play / pause the solution</dd>
+          <dt>A</dt><dd>All steps at once</dd>
+          <dt>N</dt><dd>New random problem</dd>
+          <dt>M</dt><dd>Hide or show this panel</dd>
+        </dl>
+        <p class="score" id="score"></p>
+      </section>
+    </aside>
+    <main class="board" id="board">
+      <div class="strip" id="strip"></div>
+      <div id="stepView">
+        <div class="stage">
+          <div class="card" id="card"></div>
+          <div class="side"><h4>Picture it</h4><div id="visual" class="side"></div></div>
+        </div>
+      </div>
+      <div id="allView" class="allwrap" hidden></div>
+      <div class="nav" id="nav">
+        <button class="arrow" id="prev" aria-label="Previous step">◀ Back</button>
+        <div class="dots" id="dots"></div>
+        <button class="arrow" id="next" aria-label="Next step">Next ▶</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+/* ---------- maths helpers ---------- */
+const gcd=(a,b)=>{a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b]}return a||1};
+const lcm=(a,b)=>a/gcd(a,b)*b;
+function primeFactors(n){const f=[];let d=2;while(n>1&&d*d<=n){while(n%d===0){f.push(d);n/=d}d++}if(n>1)f.push(n);return f}
+function factors(n){n=Math.abs(n);const f=[];for(let i=1;i<=n;i++)if(n%i===0)f.push(i);return f}
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+
+/* ---------- display helpers ---------- */
+const OPS={add:{s:'+',name:'Addition'},sub:{s:'−',name:'Subtraction'},mul:{s:'×',name:'Multiplication'},div:{s:'÷',name:'Division'}};
+const fr=(n,d)=>`<span class="fr"><span class="fn">${n}</span><span class="fd">${d}</span></span>`;
+const mx=(w,n,d)=>`<span class="mx"><span class="mw">${w}</span>${fr(n,d)}</span>`;
+const opHTML=o=>o.w>0?mx(o.w,o.n,o.d):fr(o.n,o.d);
+const opText=o=>o.w>0?`${o.w} ${o.n}/${o.d}`:`${o.n}/${o.d}`;
+const kindOf=o=>o.w>0?'mixed':(o.n>=o.d?'improper':'proper');
+const impN=o=>o.w*o.d+o.n;
+const sym=s=>`<span class="op">${s}</span>`;
+const EQ='<span class="op">=</span>';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* pies: k filled slices of a pie cut into D */
+function pieSVG(k,D,cls,s){
+  const r=s/2-2,c=s/2;let g='';
+  if(k>=D) g+=`<circle cx="${c}" cy="${c}" r="${r}" class="${cls}"/>`;
+  else if(k>0){
+    const a0=-Math.PI/2,a1=a0+2*Math.PI*k/D,large=k/D>0.5?1:0;
+    g+=`<path class="${cls}" d="M${c},${c} L${(c+r*Math.cos(a0)).toFixed(2)},${(c+r*Math.sin(a0)).toFixed(2)} A${r},${r} 0 ${large} 1 ${(c+r*Math.cos(a1)).toFixed(2)},${(c+r*Math.sin(a1)).toFixed(2)} Z"/>`;
+  }
+  if(D>1&&D<=60) for(let i=0;i<D;i++){const a=-Math.PI/2+2*Math.PI*i/D;g+=`<line class="cut" x1="${c}" y1="${c}" x2="${(c+r*Math.cos(a)).toFixed(2)}" y2="${(c+r*Math.sin(a)).toFixed(2)}"/>`}
+  g+=`<circle cx="${c}" cy="${c}" r="${r}" class="rimc"/>`;
+  return `<svg class="pie" viewBox="0 0 ${s} ${s}" width="${s}" height="${s}" role="img" aria-label="${k} of ${D} slices">${g}</svg>`;
+}
+function pies(N,D,cls,s=64){
+  N=Math.abs(N);if(D<=0)return'';
+  const w=Math.floor(N/D),r=N%D,show=Math.min(w,8);let out='';
+  for(let i=0;i<show;i++)out+=pieSVG(D,D,cls,s);
+  if(w>show)out+=`<span class="more">+${w-show} more whole</span>`;
+  if(r||N===0)out+=pieSVG(r,D,cls,s);
+  return out;
+}
+function describe(N,D){
+  N=Math.abs(N);const w=Math.floor(N/D),r=N%D;
+  if(N===0)return'nothing shaded';
+  if(w===0)return`${r} of ${D} equal slices shaded`;
+  if(r===0)return`${w} whole pie${w>1?'s':''}`;
+  return`${w} whole pie${w>1?'s':''} and ${r} of ${D} slices`;
+}
+const fig=(N,D,cls,cap)=>`<figure class="pb-fig"><div class="pies">${pies(N,D,cls)}</div><figcaption>${cap}</figcaption></figure>`;
+
+/* ---------- state ---------- */
+let BL={},bc=0,steps=[],cur=0,mode='step',prob=null,final=null,tip=null,playT=null,score={me:0,fill:0},edOp='add';
+function bl(ans,hint,choices){const id='b'+(bc++);BL[id]={ans:String(ans),hint,choices,val:'',st:'',wrong:''};bl.last=id;return`[[${id}]]`}
+const mir=id=>`{{${id}}}`;
+const blanksOf=i=>[...steps[i].work.matchAll(/\[\[(b\d+)\]\]/g)].map(m=>m[1]);
+const isDone=id=>BL[id].st==='ok'||BL[id].st==='filled';
+const stepDone=i=>blanksOf(i).every(isDone);
+
+/* ---------- step builder ---------- */
+function build(){
+  BL={};bc=0;steps=[];cur=0;tip=null;score={me:0,fill:0};
+  const {a,b,op}=prob,S=OPS[op].s;
+  const N1=impN(a),D1=a.d,N2=impN(b),D2=b.d;
+
+  // 1. read
+  const kh='Proper: top is smaller than bottom. Improper: top is equal to or bigger than bottom. Mixed: a whole number sitting next to a proper fraction.';
+  const kc=['proper','improper','mixed'];
+  steps.push({title:'Read the problem',
+    explain:`We have to work out <b>${opText(a)} ${S} ${opText(b)}</b>. Before solving, give each fraction its name.`,
+    work:`<div class="row">${opHTML(a)} ${sym(S)} ${opHTML(b)} ${EQ} <span class="mirror">?</span></div>
+      <div class="row sm"><span class="lbl">The first fraction is</span> ${bl(kindOf(a),kh,kc)}</div>
+      <div class="row sm"><span class="lbl">The second fraction is</span> ${bl(kindOf(b),kh,kc)}</div>`,
+    visual:fig(N1,D1,'pa',`${opText(a)}: ${describe(N1,D1)}`)+fig(N2,D2,'pb',`${opText(b)}: ${describe(N2,D2)}`)});
+
+  // 2. mixed -> improper
+  if(a.w>0||b.w>0){
+    let rows='',vis='';
+    for(const [o,cls] of [[a,'pa'],[b,'pb']]) if(o.w>0){
+      const t1=bl(o.w*o.d,`Multiply the whole number ${o.w} by the denominator ${o.d}.`);
+      const t2=bl(impN(o),`Add the numerator ${o.n} to the answer of the first box.`);
+      rows+=`<div class="row">${opHTML(o)} ${EQ} ${fr(`${o.w} × ${o.d} + ${o.n}`,o.d)} ${EQ} ${fr(`${t1} + ${o.n}`,o.d)} ${EQ} ${fr(t2,o.d)}</div>`;
+      vis+=fig(impN(o),o.d,cls,`${o.w} whole pie${o.w>1?'s':''} × ${o.d} slices each, plus ${o.n} more slices`);
+    }
+    steps.push({title:'Change mixed fractions to improper fractions',
+      explain:`A mixed fraction has whole pies plus a part. Cut every whole pie into slices: <b>whole × denominator</b> gives the slices in the whole pies, then <b>add the numerator</b> for the extra slices. The denominator stays the same.`,
+      work:rows,visual:vis});
+  }
+
+  if(op==='add'||op==='sub'){
+    steps.push({title:'Check the denominators',
+      explain:`We can only add or subtract pieces of the <b>same size</b>. The denominator tells the size of each piece (how many equal slices the whole pie is cut into). If the denominators are the same, we can go straight to the numerators. If they are different, we must first find a common denominator using the LCM.`,
+      work:`<div class="row">${fr(N1,`<span class="hlt">${D1}</span>`)} ${sym(S)} ${fr(N2,`<span class="hlt">${D2}</span>`)}</div>
+        <div class="row sm"><span class="lbl">The denominators ${D1} and ${D2} are</span> ${bl(D1===D2?'Same':'Different','Compare the two bottom numbers.',['Same','Different'])}</div>`,
+      visual:fig(N1,D1,'pa',`Slices are 1/${D1} of a pie`)+fig(N2,D2,'pb',`Slices are 1/${D2} of a pie`)});
+    let L=D1,A2=N1,B2=N2;
+    if(D1!==D2){
+      L=lcm(D1,D2);
+      const multRow=D=>{const cnt=L/D;let it=[];
+        if(cnt<=12){for(let k=1;k<=cnt+1;k++){const m=k*D;it.push(`<span class="mul ${m===L?'target':''}">${m}</span>`)}}
+        else{for(let k=1;k<=9;k++)it.push(`<span class="mul">${k*D}</span>`);it.push('<span class="mul">…</span>',`<span class="mul target">${L}</span>`)}
+        return`<div class="row sm"><span class="lbl">Multiples of ${D}:</span> ${it.join(' ')} <span class="mul">…</span></div>`};
+      const pf=n=>{const f=primeFactors(n);return f.length===1?`${n} is prime`:`${n} = ${f.join(' × ')}`};
+      const cnt={};for(const n of [D1,D2]){const c={};primeFactors(n).forEach(p=>c[p]=(c[p]||0)+1);for(const p in c)cnt[p]=Math.max(cnt[p]||0,c[p])}
+      const prod=Object.keys(cnt).map(Number).sort((x,y)=>x-y).flatMap(p=>Array(cnt[p]).fill(p)).join(' × ');
+      steps.push({title:'Find the LCM of the denominators',
+        explain:`The <b>LCM</b> (Lowest Common Multiple) is the smallest number that both ${D1} and ${D2} divide into exactly. It becomes the new common denominator. Method 1: list the multiples of each number until one appears in both lists. Method 2: break each number into primes, then multiply each prime the <b>most times</b> it appears in either number.`,
+        work:multRow(D1)+multRow(D2)+
+          `<div class="row sm"><span class="lbl">Prime factors:</span> ${pf(D1)} <span class="lbl">and</span> ${pf(D2)}</div>
+           <div class="row"><span class="lbl">LCM =</span> ${prod} ${EQ} ${bl(L,'Find the first number that appears in both lists of multiples (or multiply the primes shown).')}</div>`,
+        visual:`<figure class="pb-fig"><div class="pies">${pieSVG(0,D1,'pa',64)}${pieSVG(0,D2,'pb',64)}${pieSVG(0,L,'pr',64)}</figure>`.replace('</figure>','</div><figcaption>A pie cut into '+D1+' and into '+D2+' slices can both be re-cut into '+L+' equal slices.</figcaption></figure>')});
+      let rows='',vis='';
+      const parts=[];
+      for(const [N,D,cls] of [[N1,D1,'pa'],[N2,D2,'pb']]){
+        const f=L/D;
+        const t=bl(f,`How many times does ${D} go into ${L}? (${L} ÷ ${D})`);const id=bl.last;
+        const t2=bl(N*f,`Multiply the numerator ${N} by the number in the first box.`);
+        rows+=`<div class="row sm"><span class="lbl">Remaining factor: ${L} ÷ ${D} =</span> ${t}</div>
+               <div class="row">${fr(N,D)} ${EQ} ${fr(`${N} × ${mir(id)}`,`${D} × ${mir(id)}`)} ${EQ} ${fr(t2,L)}</div>`;
+        vis+=fig(N,D,cls,`${N}/${D}`)+`<div class="arrowdn">↓ cut each slice into ${f}</div>`+fig(N*f,L,cls,`${N*f}/${L} — the same amount`);
+        parts.push(N*f);
+      }
+      [A2,B2]=parts;
+      steps.push({title:'Make the denominators the same',
+        explain:`Multiply the <b>top and bottom by the same number</b> (the remaining factor of the LCM). The value does not change: we are only cutting every slice into smaller equal slices, so each fraction now has denominator ${L}.`,
+        work:rows,visual:vis});
+    }
+    const R=op==='add'?A2+B2:A2-B2;
+    const t=bl(R,op==='add'?`Add the two numerators ${A2} and ${B2}.`:`Take ${B2} away from ${A2}.`);
+    steps.push({title:op==='add'?'Add the numerators':'Subtract the numerators',
+      explain:`Now the pieces are the same size, so just ${op==='add'?'add':'subtract'} the numerators. <b>Keep the denominator ${L}</b> — the size of the slices does not change, so we never ${op==='add'?'add':'subtract'} the denominators.`,
+      work:`<div class="row">${fr(A2,L)} ${sym(S)} ${fr(B2,L)} ${EQ} ${fr(`${A2} ${S} ${B2}`,L)} ${EQ} ${fr(t,L)}</div>`,
+      visual:fig(A2,L,'pa',`${A2}/${L}`)+`<div class="arrowdn">${S}</div>`+fig(B2,L,'pb',`${B2}/${L}`)+`<div class="arrowdn">=</div>`+fig(R,L,'pr',`${R<0?'−':''}${Math.abs(R)}/${L}${R<0?' (a negative amount)':''}`)});
+    tail(R,L,false);
+  } else {
+    let n2=N2,d2=D2;
+    if(op==='div'){
+      const t1=bl(D2,'Flip: the old bottom number goes on top.'),t2=bl(N2,'Flip: the old top number goes to the bottom.');
+      steps.push({title:'Keep, Change, Flip',
+        explain:`To divide by a fraction, <b>Keep</b> the first fraction, <b>Change</b> ÷ into ×, and <b>Flip</b> the second fraction upside down (its reciprocal). Why? Dividing by ${N2}/${D2} asks “how many ${N2}/${D2}s fit inside?”, which is the same as multiplying by ${D2}/${N2}.`,
+        work:`<div class="row">${fr(N1,D1)} ${sym('÷')} ${fr(N2,D2)} ${EQ} ${fr(N1,D1)} ${sym('×')} ${fr(t1,t2)}</div>`,
+        visual:fig(N2,D2,'pb',`${N2}/${D2}`)+`<div class="arrowdn">↓ flip</div>`+fig(D2,N2,'pb',`${D2}/${N2} — the reciprocal`)});
+      n2=D2;d2=N2;
+    }
+    const P=N1*n2,Q=D1*d2;
+    const t1=bl(P,`Multiply the numerators: ${N1} × ${n2}.`),t2=bl(Q,`Multiply the denominators: ${D1} × ${d2}.`);
+    steps.push({title:'Multiply straight across',
+      explain:`Multiplication does <b>not</b> need a common denominator. Multiply <b>top × top</b> for the new numerator and <b>bottom × bottom</b> for the new denominator.${op==='mul'?` Think of ${fr(N1,D1)} × ${fr(N2,D2)} as “${N2}/${D2} <i>of</i> ${N1}/${D1}”.`:''}`,
+      work:`<div class="row">${fr(N1,D1)} ${sym('×')} ${fr(n2,d2)} ${EQ} ${fr(`${N1} × ${n2}`,`${D1} × ${d2}`)} ${EQ} ${fr(t1,t2)}</div>`,
+      visual:fig(N1,D1,'pa',`${N1}/${D1}`)+`<div class="arrowdn">×</div>`+fig(n2,d2,'pb',`${n2}/${d2}`)+`<div class="arrowdn">=</div>`+fig(P,Q,'pr',`${P}/${Q}: ${describe(P,Q)}`)});
+    tail(P,Q,true);
+  }
+}
+
+function tail(R,Q,isMul){
+  const {a,b,op}=prob,S=OPS[op].s;
+  const neg=R<0,aR=Math.abs(R),sg=neg?'−':'';
+  const expr=`${opHTML(a)} ${sym(S)} ${opHTML(b)}`;
+  if(R===0){
+    final={neg:false,N:0,D:1};
+    steps.push({title:'Answer',explain:'Nothing is left over, so the answer is 0.',work:`<div class="row">${expr} ${EQ} 0</div>`,visual:fig(0,Q,'pr','an empty pie')});
+    return;
+  }
+  const g=gcd(aR,Q),fa=factors(aR),fb=factors(Q),com=new Set(fa.filter(x=>fb.includes(x)));
+  const flist=arr=>arr.map(x=>`<span class="fac ${com.has(x)?'cm':''} ${x===g?'target':''}">${x}</span>`).join(' ');
+  const t=bl(g,'Look for the biggest number that is in both factor lists (the underlined ones are common).');const id=bl.last;
+  const n=aR/g,d=Q/g;
+  const t2=bl(n,`Divide ${aR} by the HCF.`),t3=bl(d,`Divide ${Q} by the HCF.`);
+  steps.push({title:'Simplify — remove common factors',
+    explain:(g>1?`Divide the top and bottom by their <b>HCF</b> (Highest Common Factor). The amount stays the same, but the numbers become as small as possible (lowest terms).`
+      :`Check for a common factor. When the HCF is <b>1</b>, the fraction is already in its lowest terms — dividing by 1 changes nothing.`)
+      +(isMul?' Shortcut for next time: you can cancel common factors before multiplying.':''),
+    work:`<div class="row sm"><span class="lbl">Factors of ${aR}:</span> ${flist(fa)}</div>
+      <div class="row sm"><span class="lbl">Factors of ${Q}:</span> ${flist(fb)}</div>
+      <div class="row"><span class="lbl">HCF =</span> ${t}</div>
+      <div class="row">${sg}${fr(aR,Q)} ${EQ} ${sg}${fr(`${aR} ÷ ${mir(id)}`,`${Q} ÷ ${mir(id)}`)} ${EQ} ${sg}${fr(t2,t3)}</div>`,
+    visual:fig(aR,Q,'pr',`${aR}/${Q}`)+`<div class="arrowdn">↓ same amount, bigger slices</div>`+fig(n,d,'pr',`${n}/${d}`)});
+  final={neg,N:n,D:d};
+  if(d>1&&n>d){
+    const q=Math.floor(n/d),r=n%d;
+    const t4=bl(q,`How many whole times does ${d} fit into ${n}?`);const i1=bl.last;
+    const t5=bl(r,`Take (whole number × ${d}) away from ${n}. What is left?`);const i2=bl.last;
+    steps.push({title:'Write it as a mixed fraction',
+      explain:`${n}/${d} is improper (top bigger than bottom), so it holds at least one whole pie. Divide the numerator by the denominator: the <b>quotient</b> is the number of whole pies and the <b>remainder</b> is the slices left over. The denominator stays ${d}.`,
+      work:`<div class="row"><span class="lbl">${n} ÷ ${d} =</span> ${t4} <span class="lbl">remainder</span> ${t5}</div>
+        <div class="row">${sg}${fr(n,d)} ${EQ} ${sg}${mx(mir(i1),mir(i2),d)}</div>`,
+      visual:fig(n,d,'pr',describe(n,d))});
+  }
+  const res=resultHTML();
+  const imp=d===1?`${sg}${n}`:`${sg}${fr(n,d)}`;
+  steps.push({title:'Answer',
+    explain:d===1?`The denominator became 1, so the answer is a whole number: <b>${sg}${n}</b>.`
+      :(n>d?`Final answer: as an improper fraction <b>${sg}${n}/${d}</b>, as a mixed fraction <b>${sg}${Math.floor(n/d)} ${n%d}/${d}</b>.`:`Final answer in lowest terms: <b>${sg}${n}/${d}</b>.`),
+    work:`<div class="row">${expr} ${EQ} ${imp}${n>d&&d>1?` ${EQ} ${res}`:''}</div>`,
+    visual:fig(n,d,'pr',`${neg?'A negative amount: ':''}${describe(n,d)}`)});
+}
+function resultHTML(){
+  if(!final)return'?';const {neg,N,D}=final,sg=neg?'−':'';
+  if(N===0)return'0';if(D===1)return sg+N;
+  if(N>D)return sg+mx(Math.floor(N/D),N%D,D);return sg+fr(N,D);
+}
+
+/* ---------- rendering ---------- */
+function renderTokens(html,reveal){
+  return html.replace(/\[\[(b\d+)\]\]/g,(m,id)=>{const b=BL[id];
+    if(reveal)return`<span class="ansv">${b.ans}</span>`;
+    if(b.choices){const dn=isDone(id);return`<span class="choice">`+b.choices.map(c=>{let cl='';if(dn&&c===b.ans)cl=b.st;else if(!dn&&c===b.wrong)cl='bad';return`<button type="button" class="chbtn ${cl}" data-id="${id}" data-v="${c}" ${dn?'disabled':''}>${c}</button>`}).join('')+`</span>`}
+    if(isDone(id))return`<span class="done ${b.st}">${b.ans}</span>`;
+    return`<input class="blank ${b.st}" id="${id}" data-id="${id}" value="${esc(b.val)}" inputmode="numeric" autocomplete="off" spellcheck="false" style="width:${b.ans.length+1.4}ch" aria-label="answer box">`;
+  }).replace(/\{\{(b\d+)\}\}/g,(m,id)=>{const k=reveal||isDone(id);return`<span class="mirror ${k?'k':''}">${k?BL[id].ans:'?'}</span>`});
+}
+function renderStrip(){
+  const {a,b,op}=prob;const showRes=mode==='all'||cur===steps.length-1;
+  let res='<span class="qm">?</span>';
+  if(showRes&&final){res=`<div class="opnd"><div class="pies">${pies(final.N,final.D,'pr',52)}</div><div class="lab">${resultHTML()}</div></div>`}
+  $('#strip').innerHTML=`<div class="opnd"><div class="pies">${pies(impN(a),a.d,'pa',52)}</div><div class="lab">${opHTML(a)}<small>${kindOf(a)}</small></div></div>
+    <span class="bigop">${OPS[op].s}</span>
+    <div class="opnd"><div class="pies">${pies(impN(b),b.d,'pb',52)}</div><div class="lab">${opHTML(b)}<small>${kindOf(b)}</small></div></div>
+    <span class="bigop">=</span>${res}`;
+  $('#opname').textContent=OPS[op].name;
+}
+function renderStep(){
+  const s=steps[cur],ids=blanksOf(cur),done=ids.every(isDone);
+  let tl='Your turn',tt='Fill the dashed boxes, then press Enter to check. Stuck? H gives a hint, F fills one box.',tc='';
+  if(!ids.length){tl='Read';tt=cur===steps.length-1?'Well done! Press N for a new problem, or change the numbers in the side panel.':'Read this step, then press → to go on.'}
+  else if(done){tl='Done';tc='ok';tt=cur===steps.length-1?'Problem solved! Press N for a new one.':'Step complete ✓ Press → (or S) for the next step.'}
+  if(tip&&!done){tl=tip.l;tt=tip.t;tc=tip.c}
+  $('#card').innerHTML=`<div class="stag">Step ${cur+1} of ${steps.length}</div>
+    <h2 class="stitle">${s.title}</h2><p class="sexp">${s.explain}</p>
+    <div class="work ${done?'solved':''}">${renderTokens(s.work,false)}</div>
+    <div class="tip ${tc}"><span class="tl">${tl}</span><span>${tt}</span></div>
+    ${ids.length&&!done?`<div class="acts"><button class="cb pri" data-act="check">Check <kbd>Enter</kbd></button><button class="cb" data-act="hint">Hint <kbd>H</kbd></button><button class="cb" data-act="fill">Fill a box <kbd>F</kbd></button><button class="cb" data-act="fillall">Fill this step</button></div>`:''}`;
+  $('#visual').innerHTML=s.visual||'';
+  $('#dots').innerHTML=steps.map((x,i)=>`<button class="dot ${i===cur?'cur':''} ${stepDone(i)&&blanksOf(i).length?'dn':''}" data-go="${i}" title="${esc(x.title)}">${i+1}</button>`).join('');
+  $('#prev').disabled=cur===0;$('#next').disabled=cur===steps.length-1;
+  renderStrip();updScore();
+}
+function renderAll(){
+  $('#allView').innerHTML=steps.map((s,i)=>`<section class="allstep"><div class="card"><div class="stag">Step ${i+1} of ${steps.length}</div><h2 class="stitle">${s.title}</h2><p class="sexp">${s.explain}</p><div class="work all">${renderTokens(s.work,true)}</div></div><div class="side">${s.visual||''}</div></section>`).join('');
+  renderStrip();
+}
+function render(){
+  const all=mode==='all';
+  $('#stepView').hidden=all;$('#nav').hidden=all;$('#allView').hidden=!all;
+  $('#bAll').classList.toggle('on',all);$('#bAll').firstChild.textContent=all?'Step by step ':'All steps ';
+  all?renderAll():renderStep();
+}
+function updScore(){$('#score').textContent=`Boxes you solved: ${score.me} · boxes revealed: ${score.fill}`}
+const finePtr=matchMedia('(pointer:fine)').matches;
+function focusNext(){if(!finePtr||mode!=='step')return;const el=$('#card input.blank');if(el)el.focus()}
+
+/* ---------- actions ---------- */
+function go(i){if(i<0||i>=steps.length)return;cur=i;tip=null;render();focusNext()}
+function markOk(id,by){const b=BL[id];if(isDone(id))return;b.st=by;b.val=b.ans;by==='ok'?score.me++:score.fill++}
+function targetBlank(){const ae=document.activeElement;const ids=blanksOf(cur).filter(id=>!isDone(id));
+  if(ae&&ae.dataset&&ae.dataset.id&&ids.includes(ae.dataset.id))return ae.dataset.id;return ids[0]}
+function hint(){if(mode!=='step')return;const id=targetBlank();if(!id)return;tip={l:'Hint',t:BL[id].hint,c:'hint'};renderStep();
+  const el=document.getElementById(id);if(el){el.classList.add('pulse');el.focus()}}
+function fillOne(){if(mode!=='step')return;const id=targetBlank();if(!id)return;markOk(id,'filled');tip=null;renderStep();focusNext()}
+function fillStep(){blanksOf(cur).forEach(id=>markOk(id,'filled'));tip=null;renderStep()}
+function check(){
+  if(mode!=='step')return;const ids=blanksOf(cur).filter(id=>!isDone(id));if(!ids.length)return;
+  let wrong=0,empty=0;
+  ids.forEach(id=>{const b=BL[id];if(b.choices){empty++;return}if(b.val===''){empty++;return}
+    if(Number(b.val)===Number(b.ans))markOk(id,'ok');else{b.st='bad';wrong++}});
+  tip=wrong?{l:'Not yet',t:`${wrong} box${wrong>1?'es are':' is'} not right (red). Try again, or press H for a hint.`,c:'bad'}
+    :empty?{l:'Keep going',t:'Some boxes are still empty.',c:''}:null;
+  renderStep();
+  const bad=$('#card input.blank.bad');if(bad&&finePtr)bad.focus();else focusNext();
+}
+function toggleAll(){stopPlay();mode=mode==='all'?'step':'all';render()}
+function togglePanel(){$('#app').classList.toggle('nosb')}
+function play(){if(playT)return;if(mode==='all'){mode='step';render()}$('#bPlay').classList.add('on');$('#bPlay').firstChild.textContent='Pause ';
+  playT=setInterval(()=>{const ids=blanksOf(cur).filter(id=>!isDone(id));
+    if(ids.length){markOk(ids[0],'filled');tip=null;renderStep()}
+    else if(cur<steps.length-1){go(cur+1)}else stopPlay()},1400)}
+function stopPlay(){if(playT){clearInterval(playT);playT=null}$('#bPlay').classList.remove('on');$('#bPlay').firstChild.textContent='Play '}
+function full(){const d=document;if(d.fullscreenElement){d.exitFullscreen&&d.exitFullscreen().catch(()=>{})}else{const r=d.documentElement.requestFullscreen;r&&r.call(d.documentElement).catch(()=>{})}}
+
+/* ---------- problems ---------- */
+function newProblem(p){stopPlay();prob=p;mode='step';build();toEditor();render();focusNext()}
+function makeOperand(kind,maxD,small){
+  const d=rnd(2,maxD);
+  if(kind==='proper')return{w:0,n:rnd(1,d-1),d};
+  if(kind==='improper'){let n=rnd(d+1,small?2*d:3*d);if(n%d===0)n++;return{w:0,n,d}}
+  return{w:rnd(1,small?2:3),n:rnd(1,d-1),d};
+}
+const val=o=>impN(o)/o.d;
+function randomProblem(){
+  const ops=['add','sub','mul','div'].filter(o=>$('#o_'+o).checked);
+  const kinds=['proper','improper','mixed'].filter(k=>$('#k_'+k).checked);
+  const op=pick(ops.length?ops:['add']),ks=kinds.length?kinds:['proper'],maxD=+$('#maxd').value;
+  const small=op==='mul'||op==='div';
+  let a,b,tries=0;
+  do{a=makeOperand(pick(ks),maxD,small);b=makeOperand(pick(ks),maxD,small);tries++}
+  while(tries<50&&(val(a)===val(b)||(op==='sub'&&false)));
+  if(op==='sub'&&val(a)<val(b))[a,b]=[b,a];
+  newProblem({a,b,op});
+}
+function toEditor(){const {a,b,op}=prob;
+  $('#aw').value=a.w||'';$('#an').value=a.n;$('#ad').value=a.d;$('#bw').value=b.w||'';$('#bn').value=b.n;$('#bd').value=b.d;setEdOp(op);$('#edMsg').textContent=''}
+function setEdOp(op){edOp=op;document.querySelectorAll('#opsel button').forEach(x=>x.classList.toggle('on',x.dataset.op===op))}
+function readOp(p){const w=parseInt($('#'+p+'w').value||'0',10),n=parseInt($('#'+p+'n').value,10),d=parseInt($('#'+p+'d').value,10);
+  if([w,n,d].some(x=>isNaN(x)))return'Fill in every numerator and denominator.';
+  if(w<0||n<0)return'Use whole numbers that are 0 or more.';
+  if(d<1)return'A denominator must be 1 or more (you cannot cut a pie into 0 slices).';
+  if(d>60||n>500||w>50)return'Please keep the numbers small (denominator up to 60).';
+  if(w>0&&n===0)return{w:0,n:w*d,d};
+  return{w,n,d}}
+function solveEditor(){
+  const a=readOp('a'),b=readOp('b');const m=$('#edMsg');
+  if(typeof a==='string'){m.textContent='First fraction: '+a;return}
+  if(typeof b==='string'){m.textContent='Second fraction: '+b;return}
+  if(edOp==='div'&&impN(b)===0){m.textContent='We cannot divide by zero. Change the second fraction.';return}
+  m.textContent='';newProblem({a,b,op:edOp});
+}
+
+/* ---------- events ---------- */
+const $=s=>document.querySelector(s);
+$('#card').addEventListener('input',e=>{const el=e.target;if(!el.classList.contains('blank'))return;
+  el.value=el.value.replace(/[^0-9\-]/g,'');const b=BL[el.dataset.id];b.val=el.value;
+  if(b.st==='bad'){b.st='';el.classList.remove('bad')}
+  if(el.value!==''&&el.value!=='-'&&Number(el.value)===Number(b.ans)){markOk(el.dataset.id,'ok');
+    const allDone=stepDone(cur);tip=allDone?null:{l:'Correct',t:'Good! Now the next box.',c:'ok'};renderStep();focusNext()}});
+$('#card').addEventListener('click',e=>{const c=e.target.closest('.chbtn');
+  if(c){const b=BL[c.dataset.id];if(c.dataset.v===b.ans){markOk(c.dataset.id,'ok');tip=stepDone(cur)?null:{l:'Correct',t:'Good! Now the next one.',c:'ok'}}
+    else{b.wrong=c.dataset.v;tip={l:'Not quite',t:b.hint,c:'bad'}}renderStep();focusNext();return}
+  const a=e.target.closest('[data-act]');if(!a)return;
+  ({check,hint,fill:fillOne,fillall:fillStep})[a.dataset.act]();});
+$('#dots').addEventListener('click',e=>{const d=e.target.closest('[data-go]');if(d)go(+d.dataset.go)});
+$('#prev').onclick=()=>go(cur-1);$('#next').onclick=()=>go(cur+1);
+$('#bNew').onclick=randomProblem;$('#rndBtn').onclick=randomProblem;$('#bAll').onclick=toggleAll;
+$('#bPlay').onclick=()=>playT?stopPlay():play();$('#bMenu').onclick=togglePanel;$('#bFull').onclick=full;
+$('#solveBtn').onclick=solveEditor;
+$('#opsel').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setEdOp(b.dataset.op)});
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey)return;const t=e.target;
+  if(t.closest&&t.closest('.ed')){if(e.key==='Enter'){e.preventDefault();solveEditor()}return}
+  if(t.tagName==='SELECT'||(t.tagName==='INPUT'&&t.type==='checkbox'&&e.key===' '))return;
+  const k=e.key.length===1?e.key.toLowerCase():e.key;
+  const map={ArrowRight:()=>go(cur+1),s:()=>go(cur+1),ArrowLeft:()=>go(cur-1),Enter:check,h:hint,f:fillOne,
+    p:play,x:stopPlay,a:toggleAll,n:randomProblem,m:togglePanel,Home:()=>go(0),End:()=>go(steps.length-1)};
+  if(map[k]){e.preventDefault();if(mode==='all'&&['ArrowRight','ArrowLeft','s','Home','End'].includes(k))return;map[k]()}
+});
+
+/* ---------- start: an example to open with ---------- */
+if(innerWidth<900)$('#app').classList.add('nosb');
+newProblem({a:{w:1,n:1,d:4},b:{w:0,n:5,d:6},op:'add'});
+</script>

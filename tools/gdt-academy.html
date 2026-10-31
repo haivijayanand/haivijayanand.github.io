@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<!--
+TOOL: gdt-academy.html
+FAMILY: engineering-learning
+VERSION: 1.0.1
+DATE: 2026-10-31
+CHAT: Interactive GD&T learning page with chapters, quizzes and certificates
+CHANGES: 1.0.1 — standalone HTML document for GitHub Pages (tools/gdt-academy.html), with its own head and reset
+         1.0.0 — first release: 8 chapters (ASME Y14.5-2018), interactive figures, 5-question quiz per chapter, per-chapter and course certificates (PNG)
+STATUS: active
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>GD&amp;T Academy</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: drafting-sheet workbook — collapsible chapter rail on the left, a bordered "drawing sheet" on the right with prose beside a live figure on wide screens */
+:root{
+  --bg:#e9eeed; --sheet:#fbfcfb; --ink:#17212b; --muted:#566370; --line:#c6d0d2; --soft:#eef3f2;
+  --accent:#1f4fa3; --accent-ink:#ffffff; --zone:#e3a21a; --zone-fill:rgba(227,162,26,.18);
+  --datum:#0f7b6c; --pass:#1b7f3b; --fail:#b3261e; --pass-bg:#e2f2e6; --fail-bg:#f8e3e1;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0b141d; --sheet:#111d29; --ink:#dbe5ec; --muted:#8e9eab; --line:#2a3a49; --soft:#162534;
+  --accent:#7ea8ff; --accent-ink:#0b141d; --zone:#f0b53d; --zone-fill:rgba(240,181,61,.16);
+  --datum:#3cc2ad; --pass:#5fcf83; --fail:#ff8a7f; --pass-bg:#173326; --fail-bg:#3a1c1b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b141d; --sheet:#111d29; --ink:#dbe5ec; --muted:#8e9eab; --line:#2a3a49; --soft:#162534;
+  --accent:#7ea8ff; --accent-ink:#0b141d; --zone:#f0b53d; --zone-fill:rgba(240,181,61,.16);
+  --datum:#3cc2ad; --pass:#5fcf83; --fail:#ff8a7f; --pass-bg:#173326; --fail-bg:#3a1c1b; color-scheme:dark}
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15.5px;line-height:1.6}
+*{box-sizing:border-box}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:100%}
+.app.nav-hidden{grid-template-columns:0 minmax(0,1fr)}
+.app.nav-hidden .rail{visibility:hidden}
+
+/* rail */
+.rail{position:sticky;top:env(safe-area-inset-top,0px);height:calc(100vh - env(safe-area-inset-top,0px));overflow:auto;border-right:1px solid var(--line);background:var(--sheet);display:flex;flex-direction:column;padding-block:18px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:14px;gap:14px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-mark{display:flex;border:1.5px solid var(--ink)}
+.brand-mark span{font-family:var(--f-mono);font-size:12px;padding:2px 6px;border-right:1.5px solid var(--ink);display:flex;align-items:center}
+.brand-mark span:last-child{border-right:0}
+.brand h1{font-family:var(--f-display);font-weight:700;font-size:26px;letter-spacing:.02em;margin:0;line-height:1}
+.brand small{display:block;font-family:var(--f-mono);font-size:10.5px;color:var(--muted);letter-spacing:.06em}
+.progress{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.bar{height:6px;background:var(--soft);border:1px solid var(--line);margin-top:6px}
+.bar i{display:block;height:100%;background:var(--pass);width:0;transition:width .4s}
+.toc{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.toc a{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:8px;padding:7px 8px;text-decoration:none;color:var(--ink);border:1px solid transparent}
+.toc a:hover{background:var(--soft)}
+.toc a.on{border-color:var(--ink);background:var(--soft)}
+.toc .no{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.toc .nm{font-size:14px;line-height:1.3}
+.chip{font-family:var(--f-mono);font-size:10.5px;padding:1px 6px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip.ok{border-color:var(--pass);color:var(--pass)}
+.rail-foot{margin-top:auto;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:8px}
+.keys{font-family:var(--f-mono);font-size:11px;line-height:1.7}
+kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;padding:0 4px;background:var(--soft)}
+
+/* top bar */
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;align-items:center;gap:8px;background:var(--bg);border-bottom:1px solid var(--line);padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.topbar .crumb{font-family:var(--f-mono);font-size:12px;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn{border:1px solid var(--ink);background:var(--sheet);padding:6px 12px;cursor:pointer;font-size:13.5px;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--soft)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{padding:3px 9px;font-size:12.5px}
+
+/* sheet */
+.wrap{padding-block:22px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sheet{background:var(--sheet);border:1px solid var(--ink);outline:1px solid var(--ink);outline-offset:5px;margin:6px;max-width:1500px;margin-inline:auto;position:relative}
+.zones{display:flex;border-bottom:1px solid var(--line);font-family:var(--f-mono);font-size:10px;color:var(--muted)}
+.zones span{flex:1;text-align:center;border-right:1px solid var(--line);padding:1px 0}
+.zones span:last-child{border-right:0}
+.sheet-in{padding:clamp(16px,3vw,40px)}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h2.ch-title{font-family:var(--f-display);font-weight:700;font-size:clamp(34px,4.4vw,54px);line-height:1;margin:6px 0 12px;text-wrap:balance;letter-spacing:.005em}
+.lead{font-size:17px;max-width:70ch;color:var(--ink)}
+h3{font-family:var(--f-display);font-weight:600;font-size:25px;margin:30px 0 8px;letter-spacing:.01em;text-wrap:balance}
+h4{font-size:15px;margin:18px 0 4px}
+p{margin:0 0 12px;max-width:70ch}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(18px,3vw,40px);align-items:start}
+.cols>*{min-width:0}
+ul.pts{margin:0 0 12px;padding-left:20px;max-width:68ch}
+ul.pts li{margin-bottom:6px}
+.term{font-weight:600}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.note{border-left:3px solid var(--datum);background:var(--soft);padding:10px 14px;margin:14px 0;max-width:70ch;font-size:14.5px}
+.note b{color:var(--datum)}
+
+/* figure */
+.fig{border:1px solid var(--line);background:var(--sheet);display:flex;flex-direction:column}
+.fig-head{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding:6px 12px;font-family:var(--f-mono);font-size:11.5px;color:var(--muted);letter-spacing:.04em;flex-wrap:wrap}
+.fig-body{padding:14px;display:flex;flex-direction:column;gap:12px}
+.fig svg{width:100%;height:auto;display:block;max-width:100%}
+.ctl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 16px}
+.ctl label{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted);min-width:0}
+.ctl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctl input[type=number],.ctl select{border:1px solid var(--line);background:var(--sheet);padding:5px 8px;font-family:var(--f-mono);font-size:13px;width:100%}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.ro{border:1px solid var(--line);padding:6px 10px}
+.ro small{display:block;font-size:11px;color:var(--muted);font-family:var(--f-mono);letter-spacing:.03em}
+.ro b{font-family:var(--f-mono);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
+.verdict{font-family:var(--f-mono);font-weight:600;font-size:13px;padding:2px 8px;border:1px solid}
+.verdict.ok{color:var(--pass);border-color:var(--pass);background:var(--pass-bg)}
+.verdict.no{color:var(--fail);border-color:var(--fail);background:var(--fail-bg)}
+.fig-cap{font-size:13px;color:var(--muted)}
+
+/* FCF */
+.fcf{display:inline-flex;border:1.5px solid var(--ink);font-family:var(--f-mono);font-size:15px;line-height:1;vertical-align:middle;background:var(--sheet)}
+.fcf>span{padding:5px 8px;border-right:1.5px solid var(--ink);display:flex;align-items:center;gap:2px;min-height:30px}
+.fcf>span:last-child{border-right:0}
+.fcf svg{width:20px;height:20px}
+.basic{font-family:var(--f-mono);border:1.3px solid var(--ink);padding:1px 6px}
+.datum-tag{display:inline-flex;align-items:center;justify-content:center;font-family:var(--f-mono);border:1.5px solid var(--ink);width:24px;height:24px;font-weight:600}
+.fcf-ex{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.fcf-ex>div{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.fcf-ex p{margin:0;font-size:14px;flex:1;min-width:200px}
+
+/* symbol grid */
+.symgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+.sym{border:1px solid var(--line);background:var(--sheet);padding:8px 4px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11.5px;text-align:center;line-height:1.2}
+.sym svg{width:30px;height:30px}
+.sym:hover{background:var(--soft)}
+.sym.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.sym.gone{opacity:.6}
+.symcard{border:1px solid var(--line);padding:12px 14px;display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:start}
+.symcard svg{width:48px;height:48px}
+.symcard dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;margin:6px 0 0;font-size:13px}
+.symcard dt{color:var(--muted);font-family:var(--f-mono);font-size:11.5px}
+.symcard dd{margin:0}
+.cat{font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dof{display:flex;gap:6px;flex-wrap:wrap}
+.dof span{font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);padding:2px 8px}
+.dof span.off{text-decoration:line-through;color:var(--muted);background:var(--soft);border-style:dashed}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg .btn[aria-pressed="true"]{background:var(--ink);color:var(--sheet)}
+
+/* quiz */
+.quiz{border-top:2px solid var(--ink);margin-top:36px;padding-top:6px}
+.qhead{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+.q{border:1px solid var(--line);padding:14px 16px;margin:12px 0;max-width:900px}
+.q .qn{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.q .qt{font-weight:600;margin:2px 0 10px}
+.q label.opt{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px;align-items:start;padding:6px 8px;border:1px solid transparent;cursor:pointer}
+.q label.opt:hover{background:var(--soft)}
+.q label.opt input{margin-top:5px;accent-color:var(--accent)}
+.q.graded label.opt{cursor:default}
+.q label.opt.right{border-color:var(--pass);background:var(--pass-bg)}
+.q label.opt.wrong{border-color:var(--fail);background:var(--fail-bg)}
+.q .why{font-size:14px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);color:var(--muted)}
+.q .why b{color:var(--ink)}
+.score{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:14px 0}
+.score .big{font-family:var(--f-display);font-weight:700;font-size:36px;line-height:1}
+
+/* certificate */
+.cert{border-top:2px solid var(--ink);margin-top:36px;padding-top:6px}
+.cert-box{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:24px;align-items:start;margin-top:10px}
+.cert-box>*{min-width:0}
+.cert-img{border:1px solid var(--line);width:100%;max-width:100%;display:block;background:#fff}
+.locked{border:1px dashed var(--line);padding:22px;color:var(--muted);text-align:center;font-size:14px}
+.field{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);margin-bottom:12px}
+.field input{border:1px solid var(--ink);background:var(--sheet);padding:7px 10px;font-size:15px;color:var(--ink)}
+.msg{font-size:13px;color:var(--muted);min-height:1.3em;margin-top:8px}
+
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:40px;border-top:1px solid var(--line);padding-top:16px;flex-wrap:wrap}
+
+/* home */
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:20px}
+.card{border:1px solid var(--line);padding:14px 16px;text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:6px;background:var(--sheet)}
+.card:hover{border-color:var(--ink)}
+.card .top{display:flex;justify-content:space-between;align-items:center}
+.card .no{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.card h4{font-family:var(--f-display);font-weight:600;font-size:22px;margin:0;line-height:1.1}
+.card p{font-size:13.5px;color:var(--muted);margin:0}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;font-size:14px;min-width:520px}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+th{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--soft)}
+td svg{width:22px;height:22px;vertical-align:middle}
+
+@media (max-width:1000px){.cols{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:820px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .rail{position:fixed;inset:0 auto 0 0;width:min(300px,86vw);z-index:20;height:100%;box-shadow:0 0 0 100vmax rgba(0,0,0,.35);padding-top:calc(18px + env(safe-area-inset-top,0px))}
+  .app:not(.nav-open) .rail{display:none}
+  .app.nav-hidden{grid-template-columns:minmax(0,1fr)}
+  .cert-box{grid-template-columns:minmax(0,1fr)}
+  .ctl{grid-template-columns:minmax(0,1fr)}
+  .zones span:nth-child(n+5){display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <aside class="rail" id="rail" aria-label="Chapters">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"><span id="brandSym"></span><span>Ø0.05 Ⓜ</span><span>A</span></div>
+      <div><h1>GD&amp;T Academy</h1><small>ASME Y14.5-2018 · 8 CHAPTERS</small></div>
+    </div>
+    <div class="progress"><span id="progTxt">0 of 8 chapters passed</span><div class="bar"><i id="progBar"></i></div></div>
+    <ul class="toc" id="toc"></ul>
+    <div class="rail-foot">
+      <div class="keys"><kbd>M</kbd> hide/show chapters · <kbd>F</kbd> full screen<br><kbd>[</kbd> <kbd>]</kbd> previous / next chapter<br><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause (runout)</div>
+      <button class="btn sm" id="resetBtn" type="button">Reset progress</button>
+      <div id="resetConfirm" hidden>Clear all scores and certificates? <button class="btn sm" id="resetYes" type="button">Yes, clear</button> <button class="btn sm" id="resetNo" type="button">Keep</button></div>
+    </div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <button class="btn sm" id="navBtn" type="button" aria-label="Hide or show chapter list (M)">☰ Chapters</button>
+      <div class="crumb" id="crumb">GD&amp;T Academy</div>
+      <button class="btn sm" id="prevBtn" type="button" aria-label="Previous chapter">‹</button>
+      <button class="btn sm" id="nextBtn" type="button" aria-label="Next chapter">›</button>
+      <button class="btn sm" id="fsBtn" type="button" aria-label="Full screen (F)">⛶ Full screen</button>
+    </div>
+    <div class="wrap">
+      <div class="sheet">
+        <div class="zones" aria-hidden="true"><span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span></div>
+        <div class="sheet-in" id="view"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- symbols ---------- */
+const P={
+ straightness:'<path d="M3 12H21"/>',
+ flatness:'<path d="M3 17L8 7H21L16 17Z"/>',
+ circularity:'<circle cx="12" cy="12" r="7.5"/>',
+ cylindricity:'<circle cx="12" cy="12" r="6"/><path d="M3.5 19.5L9.5 4M14.5 20L20.5 4.5"/>',
+ profileLine:'<path d="M4 17A8 8 0 0 1 20 17"/>',
+ profileSurface:'<path d="M4 17A8 8 0 0 1 20 17Z"/>',
+ parallelism:'<path d="M5 19L11 5M13 19L19 5"/>',
+ perpendicularity:'<path d="M4 19H20M12 19V5"/>',
+ angularity:'<path d="M4 19H20M4 19L18 7"/>',
+ position:'<circle cx="12" cy="12" r="6"/><path d="M12 3V21M3 12H21"/>',
+ concentricity:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/>',
+ symmetry:'<path d="M3 12H21M6.5 7.5H17.5M6.5 16.5H17.5"/>',
+ circularRunout:'<path d="M6 20L15 7"/><path d="M17.5 3.5L16.9 10.2L11.7 6.6Z" fill="currentColor"/>',
+ totalRunout:'<path d="M3 20H13M3 20L11 8M10 20L18 8"/><path d="M13 4L12.6 10.4L7.6 7.2Z" fill="currentColor"/><path d="M20 4L19.6 10.4L14.6 7.2Z" fill="currentColor"/>'
+};
+function sym(k){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+P[k]+'</svg>';}
+function fcf(k,tol,datums){let h='<span class="fcf" role="img" aria-label="feature control frame"><span>'+sym(k)+'</span><span>'+tol+'</span>';(datums||[]).forEach(d=>h+='<span>'+d+'</span>');return h+'</span>';}
+document.getElementById('brandSym').innerHTML=sym('position');
+
+const SYMS=[
+ ['straightness','Straightness','Form','No','Yes — when applied to a feature of size (median line)','Line elements, or the derived median line of a cylinder, lie within a zone.'],
+ ['flatness','Flatness','Form','No','Yes — when applied to a feature of size (median plane)','All points of a surface lie between two parallel planes t apart.'],
+ ['circularity','Circularity','Form','No','No','Each circular cross-section lies between two concentric circles.'],
+ ['cylindricity','Cylindricity','Form','No','No','Whole surface lies between two coaxial cylinders — controls roundness, straightness and taper together.'],
+ ['profileLine','Profile of a line','Profile','Optional','Datum features only','Each 2D line element lies within a boundary offset from the true profile.'],
+ ['profileSurface','Profile of a surface','Profile','Optional','Datum features only','The whole surface lies between two boundaries offset from the true profile. The most versatile control.'],
+ ['parallelism','Parallelism','Orientation','Yes','Yes — on features of size','Surface or axis lies within a zone parallel to a datum.'],
+ ['perpendicularity','Perpendicularity','Orientation','Yes','Yes — on features of size','Surface or axis lies within a zone at 90° to a datum.'],
+ ['angularity','Angularity','Orientation','Yes','Yes — on features of size','Surface or axis lies within a zone at a basic angle to a datum.'],
+ ['position','Position','Location','Yes (almost always)','Yes','Axis or centre plane lies within a zone located by basic dimensions from datums.'],
+ ['circularRunout','Circular runout','Runout','Yes (axis)','No','FIM at each circular element while the part turns 360° about the datum axis.'],
+ ['totalRunout','Total runout','Runout','Yes (axis)','No','FIM over the whole surface, the indicator travelling along it while the part turns.'],
+ ['concentricity','Concentricity','Location (removed 2018)','Yes','No','Removed from Y14.5-2018. Use position, runout or profile instead.'],
+ ['symmetry','Symmetry','Location (removed 2018)','Yes','No','Removed from Y14.5-2018. Use position or profile instead.']
+];
+
+/* ---------- storage ---------- */
+const KEY='gdtAcademy.v1';
+let S={name:'',res:{}};
+try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object')S=Object.assign(S,o);}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+
+/* ---------- chapters ---------- */
+const CH=[
+{id:'ch1',t:'Why GD&T',s:'The limits of ± tolerancing and what a geometric language fixes.',fig:'zone',
+body:`<p class="lead">A drawing has one job: describe a part so that every supplier who makes it, and every inspector who checks it, reaches the same verdict. Plus/minus tolerancing alone often fails that test. GD&amp;T (Geometric Dimensioning and Tolerancing) is the symbolic language that closes the gap.</p>
+<h3>Where ± tolerancing breaks down</h3>
+<ul class="pts">
+<li><span class="term">Square zones.</span> Locating a hole with ±0.1 in X and in Y makes a 0.2 × 0.2 square zone. A hole 0.14 off along the diagonal is accepted; one 0.11 off straight along X is rejected, yet the second fits the mating part better.</li>
+<li><span class="term">No stated origin.</span> ± dimensions do not say which surface the part rests on during inspection. Two inspectors can fixture the same part differently and get different answers.</li>
+<li><span class="term">Tolerance stack-up.</span> Chains of ± dimensions accumulate, and nothing controls form or orientation of the features themselves.</li>
+</ul>
+<h3>What GD&amp;T adds</h3>
+<ul class="pts">
+<li><span class="term">Basic dimensions</span> — theoretically exact values shown in a box, e.g. <span class="basic">25</span>. They carry no tolerance; the tolerance lives in the feature control frame.</li>
+<li><span class="term">Datums</span> — a declared reference frame that mirrors how the part is assembled and how it is fixtured for inspection.</li>
+<li><span class="term">Tolerance zones that match function</span> — a round zone for a round pin in a round hole, giving 57% more usable area than the inscribed square.</li>
+<li><span class="term">Material condition modifiers</span> — bonus tolerance when a hole is made larger than its smallest size, which raises yield with no loss of assembly.</li>
+</ul>
+<div class="note"><b>Standards.</b> In the US and in most defence and aerospace programmes the governing standard is ASME Y14.5 (current edition 2018). The ISO world uses the GPS series, chiefly ISO 1101. The symbols look alike but some defaults differ, so always check the standard named in the title block.</div>`,
+q:[
+['A hole is located by ±0.1 in X and ±0.1 in Y. The equivalent cylindrical zone that circumscribes this square has about how much more area?',['57% more','25% more','100% more','The same area'],0,'The square is 0.2 × 0.2 = 0.04. Its circumscribing circle has diameter 0.2√2 = 0.283 and area 0.0628, which is 1.57 times the square.'],
+['A dimension enclosed in a rectangle on a drawing is a…',['Reference dimension','Basic dimension','Inspection dimension','Maximum dimension'],1,'A boxed dimension is basic: theoretically exact. Its tolerance comes from the feature control frame that refers to it.'],
+['Which standard governs GD&T on drawings that cite ASME?',['ISO 2768','ASME Y14.5','ASME B46.1','IS 919'],1,'ASME Y14.5 (2018 edition) defines the GD&T symbols and rules. B46.1 covers surface texture; ISO 2768 is a general tolerance standard.'],
+['A key weakness of pure ± coordinate tolerancing is that it…',['Cannot express sizes','Does not define the inspection origin or set-up','Always needs a CMM','Gives circular zones'],1,'± chains do not say which surfaces the part is located on, so two inspectors can fixture it differently and disagree.'],
+['A hole measured 0.11 off nominal in X and 0 in Y is checked against ±0.1 in X and Y. What happens?',['Accepted, it is within a round zone','Rejected by ±, although it is closer than a diagonal 0.14 error that ± accepts','Accepted, Y is perfect','Rejected and also scrapped by any GD&T callout'],1,'The ± square rejects it, yet its radial error 0.11 is smaller than the 0.141 the square accepts on the diagonal. A Ø0.283 position zone would accept both.']
+]},
+{id:'ch2',t:'Symbols & the Feature Control Frame',s:'The 12 characteristics and how to read a frame left to right.',fig:'symbols',
+body:`<p class="lead">Every geometric requirement is written in a <span class="term">feature control frame</span> (FCF): a row of boxes read left to right like a sentence. Learn the boxes and you can read any GD&amp;T drawing.</p>
+<h3>Reading the frame</h3>
+<div class="fcf-ex"><div>${fcf('position','Ø0.25 Ⓜ',['A','B','C'])}<p>“The <b>position</b> of this hole must lie within a <b>cylindrical zone Ø0.25</b> at <b>MMC</b>, relative to datums <b>A</b> (primary), <b>B</b> (secondary) and <b>C</b> (tertiary).”</p></div></div>
+<ul class="pts">
+<li><span class="term">Box 1 — characteristic symbol.</span> What is controlled.</li>
+<li><span class="term">Box 2 — tolerance.</span> Zone size, prefixed with Ø when the zone is cylindrical, followed by modifiers such as Ⓜ (MMC), Ⓛ (LMC), Ⓟ (projected zone), Ⓕ (free state), Ⓤ (unequal profile).</li>
+<li><span class="term">Boxes 3–5 — datum references</span> in order of precedence, not alphabetical order.</li>
+</ul>
+<h3>Five families</h3>
+<div class="tbl"><table><thead><tr><th>Family</th><th>Symbols</th><th>Datum?</th><th>Controls</th></tr></thead><tbody>
+<tr><td>Form</td><td>${sym('straightness')} ${sym('flatness')} ${sym('circularity')} ${sym('cylindricity')}</td><td>Never</td><td>Shape of a single feature</td></tr>
+<tr><td>Orientation</td><td>${sym('parallelism')} ${sym('perpendicularity')} ${sym('angularity')}</td><td>Always</td><td>Tilt relative to datums</td></tr>
+<tr><td>Location</td><td>${sym('position')}</td><td>Usually</td><td>Location (and orientation) of features of size</td></tr>
+<tr><td>Profile</td><td>${sym('profileLine')} ${sym('profileSurface')}</td><td>Optional</td><td>Form, orientation, location, size — depending on datums</td></tr>
+<tr><td>Runout</td><td>${sym('circularRunout')} ${sym('totalRunout')}</td><td>Always (an axis)</td><td>Surfaces of revolution about a datum axis</td></tr>
+</tbody></table></div>
+<div class="note"><b>2018 change.</b> Y14.5-2009 listed 14 characteristics. The 2018 edition removed <b>concentricity</b> and <b>symmetry</b>, because they need median-point analysis that is hard to inspect and rarely matches function. Older drawings still carry them.</div>`,
+q:[
+['Which family of controls never references a datum?',['Orientation','Runout','Form','Location'],2,'Form tolerances (straightness, flatness, circularity, cylindricity) describe a feature on its own, so a datum would mean nothing.'],
+['What goes in the first compartment of a feature control frame?',['The primary datum','The tolerance value','The geometric characteristic symbol','The material condition modifier'],2,'Read left to right: characteristic symbol, tolerance (with Ø and modifiers), then datum references.'],
+['A Ø in front of the tolerance value means the zone is…',['A pair of parallel planes','Cylindrical','Spherical','Measured on the diameter only'],1,'Ø makes the zone cylindrical, as used for the axis of a hole or pin. SØ would make it spherical.'],
+['The datum references A | C | B in a frame mean…',['Alphabetical order is required, so it is an error','C is the secondary datum','B is the primary datum','The order has no effect'],1,'Datums are listed in order of precedence. Here A is primary, C secondary and B tertiary. The order changes how the part is fixtured.'],
+['Which characteristic was removed in ASME Y14.5-2018?',['Total runout','Profile of a line','Concentricity','Angularity'],2,'Concentricity and symmetry were removed in 2018. Position, runout or profile are used instead.']
+]},
+{id:'ch3',t:'Datums & the Reference Frame',s:'Datum features, simulators and the 3-2-1 rule.',fig:'drf',
+body:`<p class="lead">A datum is the origin from which a requirement is measured. Datums turn a drawing into a set-up instruction: they say how the part sits on the gauge before anything is measured.</p>
+<h3>Three words that are often confused</h3>
+<ul class="pts">
+<li><span class="term">Datum feature</span> — the real, imperfect surface on the part, tagged with a triangle and a letter such as <span class="datum-tag">A</span>.</li>
+<li><span class="term">Datum feature simulator</span> — the real, near-perfect inspection hardware that contacts it: a surface plate, a gauge pin, an angle plate, a chuck.</li>
+<li><span class="term">Datum</span> — the theoretically exact plane, axis or point derived from the simulator. Measurements start here.</li>
+</ul>
+<h3>Degrees of freedom and 3-2-1</h3>
+<p>A free body has six degrees of freedom: translation along X, Y, Z and rotation about X, Y, Z. The <span class="term">datum reference frame</span> (DRF) removes them in order of precedence.</p>
+<ul class="pts">
+<li><span class="term">Primary (A)</span> — a plane; the part rests on its 3 high points. Removes 3 DOF: one translation and two rotations.</li>
+<li><span class="term">Secondary (B)</span> — perpendicular to A; contact at 2 points. Removes 2 more.</li>
+<li><span class="term">Tertiary (C)</span> — perpendicular to both; contact at 1 point. Removes the last one.</li>
+</ul>
+<p>Choose datum features the way the part is located in its assembly: the large mounting face first, then the locating bore or edge, then the anti-rotation feature.</p>
+<div class="note"><b>Feature-of-size datums.</b> When a datum is a hole or a pin, the simulator is a gauge pin or a ring that expands or contracts to fit (RMB), or is fixed at the MMB size when the reference is followed by Ⓜ.</div>`,
+q:[
+['What is the difference between a datum feature and a datum?',['None, the terms mean the same','The datum feature is the physical surface; the datum is the theoretically exact plane or axis derived from it','The datum is on the part; the datum feature is on the gauge','The datum feature is always an axis'],1,'Datum feature = real imperfect surface. Simulator = inspection hardware. Datum = exact geometry derived from the simulator.'],
+['How many degrees of freedom does a rigid part have before any datum is applied?',['3','4','6','12'],2,'Three translations and three rotations.'],
+['A planar primary datum removes how many degrees of freedom?',['1','2','3','6'],2,'Resting on three points, the part cannot translate normal to the plane or rotate about the two in-plane axes.'],
+['Which is an example of a datum feature simulator?',['The tagged face on the part','A granite surface plate','The boxed dimension','The tolerance zone'],1,'A surface plate, gauge pin or angle plate physically contacts the datum feature and establishes the datum.'],
+['In a 3-2-1 set-up, the tertiary datum plane contacts the part at a minimum of…',['1 point','2 points','3 points','4 points'],0,'Primary 3 points, secondary 2 points, tertiary 1 point. Together they remove all 6 DOF.']
+]},
+{id:'ch4',t:'Form Controls',s:'Straightness, flatness, circularity, cylindricity and Rule #1.',fig:'flat',
+body:`<p class="lead">Form tolerances control the shape of a single feature compared with its perfect counterpart. They have no datums because they say nothing about where the feature is or how it is tilted.</p>
+<h3>The four form controls</h3>
+<div class="fcf-ex">
+<div>${fcf('flatness','0.05')}<p><b>Flatness</b>: all points of the surface lie between two parallel planes 0.05 apart. The planes may tilt freely to fit the surface.</p></div>
+<div>${fcf('straightness','0.02')}<p><b>Straightness</b> of a surface: each line element lies between two parallel lines 0.02 apart.</p></div>
+<div>${fcf('circularity','0.01')}<p><b>Circularity</b>: each cross-section lies between two concentric circles 0.01 apart in radius.</p></div>
+<div>${fcf('cylindricity','0.015')}<p><b>Cylindricity</b>: the whole surface lies between two coaxial cylinders. It covers roundness, straightness and taper at once.</p></div>
+</div>
+<h3>Rule #1 — the envelope principle</h3>
+<p>For a regular feature of size, ASME Y14.5 applies <span class="term">Rule #1</span>: the feature may not cross a boundary of perfect form at MMC. A shaft Ø20.00–20.10 must fit through a perfect Ø20.10 ring gauge. A shaft made at 20.10 everywhere must therefore be perfectly straight; one made at 20.00 may bow by up to 0.10.</p>
+<ul class="pts">
+<li>A form tolerance on a feature already under Rule #1 is a <b>refinement</b>. It must be smaller than the size tolerance to mean anything.</li>
+<li>Straightness or flatness placed under the <b>size dimension</b> controls the derived median line or plane. That overrides Rule #1, and may carry Ⓜ.</li>
+<li>Rule #1 does not apply to stock (bar, sheet), to features marked Ⓕ (free state) or where the drawing notes independency Ⓘ.</li>
+</ul>`,
+q:[
+['The tolerance zone for flatness is…',['A cylinder of diameter t','Two parallel planes t apart','Two concentric circles','A boundary at MMC'],1,'Flatness: two parallel planes separated by the tolerance, free to orient themselves to the surface.'],
+['Rule #1 states that, for a regular feature of size,…',['Perfect form is required at MMC','Perfect form is required at LMC','Form is uncontrolled','RFS applies to datums'],0,'Rule #1, the envelope principle: a feature may not violate a boundary of perfect form at MMC.'],
+['Which single control limits roundness, straightness and taper of a cylinder together?',['Circularity','Straightness','Cylindricity','Flatness'],2,'Cylindricity applies to the whole surface at once; circularity only to separate cross-sections.'],
+['A pin is dimensioned Ø10.0–10.1 and also carries circularity 0.15. Why does that circularity callout add nothing?',['Circularity needs a datum','Rule #1 already limits circularity to 0.1 through the size tolerance','Circularity cannot be applied to pins','0.15 is below gauge resolution'],1,'Rule #1 means size tolerance already bounds form error to 0.1. A form tolerance must be tighter than that to add anything.'],
+['A straightness frame placed directly under a Ø size dimension controls…',['Surface line elements','The derived median line, and it may override Rule #1','The datum axis','Circular runout'],1,'Attached to the size dimension, straightness applies to the derived median line of the feature of size and can allow violation of the MMC envelope.']
+]},
+{id:'ch5',t:'Orientation Controls',s:'Parallelism, perpendicularity and angularity.',fig:'perp',
+body:`<p class="lead">Orientation tolerances control tilt relative to a datum. They do not locate the feature, but they always need at least one datum, because tilt has to be measured against something.</p>
+<div class="fcf-ex">
+<div>${fcf('perpendicularity','0.1',['A'])}<p><b>Perpendicularity</b> of a surface: lies between two parallel planes 0.1 apart that are at 90° to datum A.</p></div>
+<div>${fcf('parallelism','0.05',['A'])}<p><b>Parallelism</b> of a surface: lies between two parallel planes 0.05 apart, parallel to datum A.</p></div>
+<div>${fcf('angularity','0.2',['A'])} <span class="basic">30°</span><p><b>Angularity</b>: as above at a <b>basic</b> angle. The angle carries no ± tolerance; the zone does.</p></div>
+<div>${fcf('perpendicularity','Ø0.05 Ⓜ',['A'])}<p>Applied to a hole or pin, the zone becomes a cylinder that holds the axis, and Ⓜ may be used.</p></div>
+</div>
+<h3>Things to remember</h3>
+<ul class="pts">
+<li>An orientation zone on a surface also limits that surface’s <b>flatness</b>, because every point must stay between the two planes.</li>
+<li>Orientation zones float: they are parallel or perpendicular to the datum but may sit anywhere within the size or location tolerance.</li>
+<li>For a surface h tall, a lean of angle θ produces a deviation of h·tan θ. A tall wall needs a smaller angle error to stay within the same zone.</li>
+</ul>`,
+q:[
+['Which statement about perpendicularity is true?',['It never uses a datum','It always requires a datum reference','It locates the feature','It applies only to holes'],1,'All orientation tolerances need a datum: tilt is relative to something.'],
+['The angle for an angularity control is given as…',['A ± toleranced angle','A basic angle','A reference angle in brackets','It is not given'],1,'The angle is basic (boxed). The tolerance zone in the frame controls the variation.'],
+['A surface has parallelism 0.05 to datum A. What else is limited automatically?',['Its location from A','Its flatness to no more than 0.05','Its surface roughness','Its circular runout'],1,'Every point must lie between two parallel planes 0.05 apart, so the surface cannot be less flat than 0.05.'],
+['A 50 mm tall wall leans so its top is 0.08 mm from a true perpendicular. Perpendicularity tolerance is 0.1. Result?',['Reject','Accept','Cannot be judged without position','Accept only at MMC'],1,'The surface fits within two planes 0.1 apart perpendicular to A, since the full lean is 0.08.'],
+['When perpendicularity Ø0.05 Ⓜ is applied to a hole, the zone is…',['Two parallel planes','A cylinder controlling the axis, with bonus as the hole departs from MMC','A sphere','A circle at one cross-section'],1,'For a feature of size with Ø, the zone is cylindrical about the axis, and Ⓜ allows bonus tolerance.']
+]},
+{id:'ch6',t:'Position',s:'True position, basic dimensions and calculating actual position.',fig:'pos',
+body:`<p class="lead">Position is the most used control on real drawings. It locates features of size such as holes, pins, slots and tabs relative to a datum reference frame.</p>
+<h3>How it works</h3>
+<ul class="pts">
+<li>The <span class="term">true position</span> is the exact location given by <b>basic dimensions</b> from the datums.</li>
+<li>The tolerance zone is centred on true position. For a hole with Ø in the frame it is a cylinder that the actual axis must lie within, through the full depth of the hole.</li>
+<li>Because the zone is a cylinder, position controls <b>orientation</b> of the axis as well as its location.</li>
+</ul>
+<h3>Actual position from measured data</h3>
+<p>If a CMM reports the axis offset by Δx and Δy from true position, the diameter of the smallest zone that contains it is:</p>
+<p class="mono" style="font-size:17px">actual position = 2 · √(Δx² + Δy²)</p>
+<p>Compare that diameter with the tolerance in the frame. Both are diameters, so the factor 2 must not be forgotten. It is the single most common error in position checks.</p>
+<div class="fcf-ex"><div>${fcf('position','Ø0.2',['A','B','C'])}<p>Without a modifier the tolerance is <b>RFS</b> (regardless of feature size): Ø0.2 applies whatever size the hole is made, and there is no bonus. Bonus comes in the next chapter.</p></div></div>`,
+q:[
+['The location of true position is defined by…',['± dimensions','Basic dimensions from datums','The measured hole centre','The tolerance value'],1,'Basic dimensions from the datum reference frame define the theoretically exact location.'],
+['Measured offsets are Δx = 0.03 and Δy = 0.04. What is the actual position (diameter)?',['0.05','0.07','0.10','0.14'],2,'2·√(0.03² + 0.04²) = 2 · 0.05 = 0.10.'],
+['A hole has position Ø0.08 with no modifier. Measured Δx = 0.03, Δy = 0.03. Result?',['Accept: 0.042','Reject: actual position is 0.085','Accept: each axis is under 0.04','Accept at MMC only'],1,'2·√(0.0018) = 0.0849, which exceeds Ø0.08. Checking each axis against half the tolerance would wrongly accept it.'],
+['With no material condition modifier, ASME Y14.5-2018 treats a position tolerance as…',['MMC','LMC','RFS','Undefined'],2,'Rule #2: RFS applies by default unless Ⓜ or Ⓛ is specified.'],
+['Position with a cylindrical zone on a hole controls…',['Only the hole’s location','Location and orientation of the axis','Only the diameter','Surface roughness of the bore'],1,'The axis must lie inside a cylinder through the whole depth, which limits tilt as well as offset.']
+]},
+{id:'ch7',t:'Material Conditions & Bonus',s:'MMC, LMC, RFS, bonus tolerance and virtual condition.',fig:'bonus',
+body:`<p class="lead">Material condition modifiers tie a geometric tolerance to the actual size of the feature. They let functional gauges work and they turn size tolerance that was not used into extra location tolerance.</p>
+<h3>Three conditions</h3>
+<ul class="pts">
+<li><span class="term">MMC — maximum material condition</span> Ⓜ: the size with the most material. Smallest hole, largest pin.</li>
+<li><span class="term">LMC — least material condition</span> Ⓛ: the size with the least material. Largest hole, smallest pin. Used to protect wall thickness.</li>
+<li><span class="term">RFS — regardless of feature size</span>: the default. The tolerance does not change with size.</li>
+</ul>
+<h3>Bonus tolerance</h3>
+<p>With Ⓜ, the stated tolerance applies when the feature is at MMC. As the feature departs from MMC, the difference is added:</p>
+<p class="mono" style="font-size:17px">allowed = stated tolerance + |actual size − MMC size|</p>
+<p>A hole Ø10.0–10.2 with position Ø0.1 Ⓜ, made at Ø10.15, is allowed Ø0.1 + 0.15 = Ø0.25. The larger hole leaves more clearance around the bolt, so it can be further out of position and still assemble.</p>
+<h3>Virtual condition</h3>
+<p>The worst-case boundary that the gauge must clear:</p>
+<ul class="pts"><li>Internal feature (hole): VC = MMC − geometric tolerance</li><li>External feature (pin): VC = MMC + geometric tolerance</li></ul>
+<div class="note"><b>Floating fastener check.</b> For bolts passing through clearance holes in both parts, hole MMC = fastener MMC + position tolerance. A M8 bolt (Ø8.0) with position Ø0.4 needs holes at least Ø8.4.</div>`,
+q:[
+['A hole is dimensioned Ø10.0–10.2. Its MMC size is…',['10.0','10.1','10.2','Depends on the gauge'],0,'For a hole, maximum material is the smallest size.'],
+['A pin is dimensioned Ø9.8–9.9. Its MMC size is…',['9.8','9.85','9.9','10.0'],2,'For a pin, maximum material is the largest size.'],
+['Hole Ø10.0–10.2, position Ø0.1 Ⓜ, actual size Ø10.15. Allowed position tolerance?',['Ø0.10','Ø0.15','Ø0.25','Ø0.35'],2,'Bonus = 10.15 − 10.0 = 0.15. Allowed = 0.1 + 0.15 = 0.25.'],
+['Virtual condition of that hole (Ø10.0–10.2, position Ø0.1 Ⓜ)?',['Ø9.9','Ø10.0','Ø10.1','Ø10.3'],0,'Internal feature: VC = MMC − tolerance = 10.0 − 0.1 = 9.9. A Ø9.9 gauge pin must pass.'],
+['Under ASME Y14.5-2018 Rule #2, when no modifier is shown…',['MMC applies','LMC applies','RFS applies','The tolerance is ignored'],2,'RFS is the default. Ⓜ and Ⓛ must be stated where intended.']
+]},
+{id:'ch8',t:'Profile & Runout',s:'The versatile profile control and runout on rotating parts.',fig:'runout',
+body:`<p class="lead">Profile handles any shape, from a flat face to a turbine blade. Runout is the shop-floor control for parts that rotate: a dial indicator and a datum axis are all it needs.</p>
+<h3>Profile</h3>
+<div class="fcf-ex">
+<div>${fcf('profileSurface','0.2',['A','B','C'])}<p><b>Profile of a surface</b>: the surface lies between two boundaries 0.2 apart, offset equally (±0.1) about the true profile defined by basic dimensions.</p></div>
+<div>${fcf('profileSurface','0.2 Ⓤ 0.05',['A'])}<p>Ⓤ <b>unequal</b>: 0.05 of the 0.2 zone lies outside the material, 0.15 inside.</p></div>
+</div>
+<ul class="pts">
+<li>With datums, profile controls <b>size, form, orientation and location</b> together.</li>
+<li>Without datums it controls form only, and may float.</li>
+<li>Profile of a line works on 2D cross-sections. Profile of a surface works on the whole 3D surface.</li>
+</ul>
+<h3>Runout</h3>
+<div class="fcf-ex">
+<div>${fcf('circularRunout','0.04',['A'])}<p><b>Circular runout</b>: at each circular element, the full indicator movement (FIM) during one turn about datum A must not exceed 0.04.</p></div>
+<div>${fcf('totalRunout','0.06',['A'])}<p><b>Total runout</b>: the indicator travels along the whole surface while the part turns. Controls coaxiality, roundness, straightness and taper together.</p></div>
+</div>
+<p>A shaft whose centre is offset by e from the datum axis gives an FIM of 2e: the surface moves e towards the indicator and e away during a turn.</p>
+<div class="note"><b>Practical use.</b> On the shaft journals of a gearbox, total runout to the bearing-seat axis is the normal way to state the coaxiality that concentricity once tried to express.</div>`,
+q:[
+['With a full datum reference frame, profile of a surface can control…',['Only form','Only location','Size, form, orientation and location','Only orientation'],2,'Profile with datums locates and orients the true profile, so it bounds all four.'],
+['By default, a profile tolerance zone of 0.2 is…',['All outside the material','Bilateral and equal, ±0.1 about the true profile','All inside the material','Doubled to 0.4'],1,'The default is an equal bilateral zone. Ⓤ is used to make it unequal.'],
+['A shaft section is offset 0.02 from the datum axis but otherwise perfect. Circular runout reading (FIM)?',['0.01','0.02','0.04','0.08'],2,'FIM = 2 × eccentricity = 0.04.'],
+['Circular runout is measured…',['Along the whole surface at once','At each circular element while the part turns 360° about the datum axis','Without rotating the part','Relative to the MMC boundary'],1,'Circular runout checks each cross-section independently during a full turn.'],
+['Which control limits cumulative variation of coaxiality, roundness, straightness and taper of a whole cylindrical surface?',['Circular runout','Total runout','Profile of a line','Circularity'],1,'Total runout sweeps the indicator along the surface during rotation, so it captures all of these together.']
+]}
+];
+
+/* ---------- figures ---------- */
+const FIG={};
+const $=(s,r)=> (r||document).querySelector(s);
+const fmt=(v,d)=>Number(v).toFixed(d==null?3:d);
+
+FIG.zone=function(el){
+  el.innerHTML=`<div class="fig"><div class="fig-head"><span>FIG 1 · SQUARE vs CYLINDRICAL ZONE</span><span>click inside the plot to place a hole centre</span></div><div class="fig-body">
+  <svg viewBox="0 0 320 320" id="zSvg" style="cursor:crosshair;max-width:420px;margin:auto" role="img" aria-label="Square and circular tolerance zones"></svg>
+  <div class="ctl"><label for="zT">± tolerance in X and Y: <b class="mono" id="zTv"></b><input type="range" id="zT" min="0.05" max="0.3" step="0.01" value="0.1"></label>
+  <label for="zR">Example hole<select id="zR"><option value="d">Diagonal offset (0.1, 0.1)</option><option value="x">Straight offset (0.11, 0)</option></select></label></div>
+  <div class="readout"><div class="ro"><small>RADIAL ERROR</small><b id="zE"></b></div><div class="ro"><small>± SQUARE</small><b id="zSq"></b></div><div class="ro"><small>Ø ZONE (CIRCUMSCRIBED)</small><b id="zCi"></b></div></div>
+  <div class="fig-cap">The circle passes through the corners of the square, so every hole the square accepts is still accepted, plus the shaded areas the square threw away.</div></div></div>`;
+  const svg=$('#zSvg',el),T=$('#zT',el);let pt={x:0.1,y:0.1};
+  function draw(){
+    const t=+T.value,sc=110/(t*1.5),cx=160,cy=160,R=t*Math.SQRT2*sc,s=t*sc;
+    $('#zTv',el).textContent='±'+fmt(t,2);
+    const px=cx+pt.x*sc,py=cy-pt.y*sc,e=Math.hypot(pt.x,pt.y);
+    const inSq=Math.abs(pt.x)<=t+1e-9&&Math.abs(pt.y)<=t+1e-9,inCi=e<=t*Math.SQRT2+1e-9;
+    svg.innerHTML=`<g stroke="var(--line)" stroke-width="1">${[...Array(9)].map((_,i)=>`<path d="M${20+i*35} 10V310M10 ${20+i*35}H310"/>`).join('')}</g>
+    <circle cx="${cx}" cy="${cy}" r="${R}" fill="var(--zone-fill)" stroke="var(--zone)" stroke-width="2"/>
+    <rect x="${cx-s}" y="${cy-s}" width="${2*s}" height="${2*s}" fill="var(--sheet)" fill-opacity=".55" stroke="var(--accent)" stroke-width="2"/>
+    <path d="M${cx-140} ${cy}H${cx+140}M${cx} ${cy-140}V${cy+140}" stroke="var(--muted)" stroke-dasharray="8 3 2 3"/>
+    <text x="${cx+s+4}" y="${cy-s-4}" font-family="IBM Plex Mono,monospace" font-size="11" fill="var(--accent)">± square</text>
+    <text x="${cx+R*0.72+4}" y="${cy+R*0.72+12}" font-family="IBM Plex Mono,monospace" font-size="11" fill="var(--zone)">Ø${fmt(2*t*Math.SQRT2,3)}</text>
+    <circle cx="${px}" cy="${py}" r="5" fill="${inCi?'var(--pass)':'var(--fail)'}" stroke="var(--sheet)" stroke-width="1.5"/>
+    <path d="M${cx} ${cy}L${px} ${py}" stroke="var(--ink)" stroke-width="1"/>`;
+    $('#zE',el).textContent=fmt(e,3);
+    $('#zSq',el).innerHTML=`<span class="verdict ${inSq?'ok':'no'}">${inSq?'ACCEPT':'REJECT'}</span>`;
+    $('#zCi',el).innerHTML=`<span class="verdict ${inCi?'ok':'no'}">${inCi?'ACCEPT':'REJECT'}</span>`;
+    svg._sc=sc;
+  }
+  svg.addEventListener('click',ev=>{const r=svg.getBoundingClientRect(),k=320/r.width;const x=(ev.clientX-r.left)*k,y=(ev.clientY-r.top)*k;pt={x:(x-160)/svg._sc,y:(160-y)/svg._sc};draw();});
+  T.addEventListener('input',draw);
+  $('#zR',el).addEventListener('change',e=>{pt=e.target.value==='d'?{x:0.1,y:0.1}:{x:0.11,y:0};T.value=0.1;draw();});
+  draw();
+};
+
+FIG.symbols=function(el){
+  el.innerHTML=`<div class="fig"><div class="fig-head"><span>FIG 2 · SYMBOL EXPLORER</span><span>select a symbol</span></div><div class="fig-body">
+  <div class="symgrid" id="sg"></div><div class="symcard" id="sc" aria-live="polite"></div></div></div>`;
+  const g=$('#sg',el);
+  g.innerHTML=SYMS.map((s,i)=>`<button type="button" class="sym${i>11?' gone':''}" data-i="${i}">${sym(s[0])}<span>${s[1]}</span></button>`).join('');
+  function show(i){const s=SYMS[i];g.querySelectorAll('.sym').forEach(b=>b.classList.toggle('on',+b.dataset.i===i));
+    $('#sc',el).innerHTML=`${sym(s[0])}<div><div class="cat">${s[2]}</div><b>${s[1]}</b><p style="margin:4px 0 0;font-size:14px">${s[5]}</p><dl><dt>DATUM</dt><dd>${s[3]}</dd><dt>Ⓜ / Ⓛ</dt><dd>${s[4]}</dd></dl></div>`;}
+  g.addEventListener('click',e=>{const b=e.target.closest('.sym');if(b)show(+b.dataset.i);});
+  show(9);
+};
+
+FIG.drf=function(el){
+  el.innerHTML=`<div class="fig"><div class="fig-head"><span>FIG 3 · 3-2-1 DATUM REFERENCE FRAME</span><span>step through the set-up</span></div><div class="fig-body">
+  <div class="seg" role="group" aria-label="Datum step"><button type="button" class="btn sm" data-s="0">Free part</button><button type="button" class="btn sm" data-s="1">+ Primary A</button><button type="button" class="btn sm" data-s="2">+ Secondary B</button><button type="button" class="btn sm" data-s="3">+ Tertiary C</button></div>
+  <svg viewBox="0 0 360 290" id="dSvg" role="img" aria-label="Block on three datum planes"></svg>
+  <div class="dof" id="dDof"></div><div class="fig-cap" id="dCap"></div></div></div>`;
+  const c30=Math.cos(Math.PI/6),s30=0.5,O={x:180,y:150};
+  const p=(x,y,z)=>[O.x+(x-y)*c30,O.y+(x+y)*s30-z];
+  const poly=(pts,f,st,extra)=>`<polygon points="${pts.map(q=>p(...q).join(',')).join(' ')}" fill="${f}" stroke="${st}" stroke-width="1.3" ${extra||''}/>`;
+  const a=130,b=80,h=60;
+  function draw(n){
+    let s='';
+    if(n>=2)s+=poly([[-20,0,-15],[a+30,0,-15],[a+30,0,h+40],[-20,0,h+40]],'var(--datum)','var(--datum)','fill-opacity=".12"');
+    if(n>=3)s+=poly([[0,-10,-15],[0,b+30,-15],[0,b+30,h+40],[0,-10,h+40]],'var(--accent)','var(--accent)','fill-opacity=".12"');
+    if(n>=1)s+=poly([[-25,-25,0],[a+40,-25,0],[a+40,b+40,0],[-25,b+40,0]],'var(--zone)','var(--zone)','fill-opacity=".16"');
+    const lift=n>=1?0:18;
+    const L=(x,y,z)=>[x,y,z+lift];
+    s+=poly([L(0,0,h),L(a,0,h),L(a,b,h),L(0,b,h)],'var(--soft)','var(--ink)');
+    s+=poly([L(a,0,0),L(a,b,0),L(a,b,h),L(a,0,h)],'var(--sheet)','var(--ink)');
+    s+=poly([L(0,b,0),L(a,b,0),L(a,b,h),L(0,b,h)],'var(--line)','var(--ink)');
+    const dot=(q,col)=>{const [x,y]=p(...q);return `<circle cx="${x}" cy="${y}" r="4.5" fill="${col}" stroke="var(--sheet)" stroke-width="1.5"/>`};
+    if(n>=1)[[25,20,0],[a-20,15,0],[a/2,b-10,0]].forEach(q=>s+=dot(q,'var(--zone)'));
+    if(n>=2)[[25,0,h/2],[a-25,0,h/2]].forEach(q=>s+=dot(q,'var(--datum)'));
+    if(n>=3)s+=dot([0,b/2,h/2],'var(--accent)');
+    const lab=(t,q,col)=>{const [x,y]=p(...q);return `<text x="${x}" y="${y}" font-family="IBM Plex Mono,monospace" font-weight="600" font-size="13" fill="${col}">${t}</text>`};
+    if(n>=1)s+=lab('A',[a+30,b+30,0],'var(--zone)');
+    if(n>=2)s+=lab('B',[a+20,0,h+30],'var(--datum)');
+    if(n>=3)s+=lab('C',[0,b+20,h+30],'var(--accent)');
+    $('#dSvg',el).innerHTML=s;
+    const off=[[],['Tz','Rx','Ry'],['Tz','Rx','Ry','Ty','Rz'],['Tz','Rx','Ry','Ty','Rz','Tx']][n];
+    $('#dDof',el).innerHTML=['Tx','Ty','Tz','Rx','Ry','Rz'].map(d=>`<span class="${off.includes(d)?'off':''}">${d}</span>`).join('')+`<span style="border:0">${6-off.length} of 6 free</span>`;
+    $('#dCap',el).textContent=['Six degrees of freedom: the part can move and turn in any direction.','Primary A: three high points on the surface plate stop Z travel and rotation about X and Y.','Secondary B: two points on a plane at 90° to A stop Y travel and rotation about Z.','Tertiary C: one point stops X travel. The part is fully constrained and ready to measure.'][n];
+    el.querySelectorAll('[data-s]').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.s===n)));
+  }
+  el.addEventListener('click',e=>{const t=e.target.closest('[data-s]');if(t)draw(+t.dataset.s);});
+  draw(3);
+};
+
+FIG.flat=function(el){
+  el.innerHTML=`<div class="fig"><div class="fig-head"><span>FIG 4 · FLATNESS, MINIMUM ZONE</span><span>profile across a face, µm</span></div><div class="fig-body">
+  <svg viewBox="0 0 360 200" id="fSvg" role="img" aria-label="Measured surface points between two parallel lines"></svg>
+  <div class="ctl"><label for="fT">Flatness tolerance (mm): <b class="mono" id="fTv"></b><input type="range" id="fT" min="0.005" max="0.06" step="0.001" value="0.03"></label>
+  <label>&nbsp;<button type="button" class="btn sm" id="fNew">Measure a new surface</button></label></div>
+  <div class="readout"><div class="ro"><small>MIN-ZONE WIDTH</small><b id="fW"></b></div><div class="ro"><small>PEAK − VALLEY (NO TILT)</small><b id="fPV"></b></div><div class="ro"><small>VERDICT</small><b id="fV"></b></div></div>
+  <div class="fig-cap">The two parallel lines may tilt to hug the points. Minimum-zone width is often smaller than plain peak-to-valley, which is why a CMM report and a height gauge can disagree.</div></div></div>`;
+  let pts=[];
+  function gen(){const tilt=(Math.random()-.5)*0.04,n=13;pts=[...Array(n)].map((_,i)=>{const x=i/(n-1);return {x,y:tilt*x*3+(Math.sin(x*6+Math.random())*0.008)+(Math.random()-.5)*0.014};});}
+  function zone(){let best={w:1e9,s:0,lo:0};for(let s=-0.1;s<=0.1;s+=0.0005){let lo=1e9,hi=-1e9;pts.forEach(q=>{const r=q.y-s*q.x;lo=Math.min(lo,r);hi=Math.max(hi,r);});if(hi-lo<best.w)best={w:hi-lo,s,lo};}return best;}
+  function draw(){
+    const t=+$('#fT',el).value;$('#fTv',el).textContent=fmt(t,3);
+    const z=zone(),ys=pts.map(q=>q.y),pv=Math.max(...ys)-Math.min(...ys);
+    const X=x=>30+x*300,ymid=(Math.max(...ys)+Math.min(...ys))/2,K=1400,Y=y=>100-(y-ymid)*K;
+    const ok=z.w<=t;
+    let s=`<path d="M20 100H340" stroke="var(--line)" stroke-dasharray="4 4"/>`;
+    s+=`<path d="M${X(0)} ${Y(z.lo)}L${X(1)} ${Y(z.lo+z.s)}M${X(0)} ${Y(z.lo+z.w)}L${X(1)} ${Y(z.lo+z.w+z.s)}" stroke="var(--zone)" stroke-width="1.8"/>`;
+    s+=`<polygon points="${X(0)},${Y(z.lo)} ${X(1)},${Y(z.lo+z.s)} ${X(1)},${Y(z.lo+z.w+z.s)} ${X(0)},${Y(z.lo+z.w)}" fill="var(--zone-fill)"/>`;
+    s+=`<polyline points="${pts.map(q=>X(q.x)+','+Y(q.y)).join(' ')}" fill="none" stroke="var(--ink)" stroke-width="1.3"/>`;
+    s+=pts.map(q=>`<circle cx="${X(q.x)}" cy="${Y(q.y)}" r="3" fill="var(--accent)"/>`).join('');
+    s+=`<text x="${X(1)-4}" y="${Y(z.lo+z.w+z.s)-6}" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="11" fill="var(--zone)">zone ${fmt(z.w*1000,1)} µm</text>`;
+    $('#fSvg',el).innerHTML=s;
+    $('#fW',el).textContent=fmt(z.w,4);$('#fPV',el).textContent=fmt(pv,4);
+    $('#fV',el).innerHTML=`<span class="verdict ${ok?'ok':'no'}">${ok?'ACCEPT':'REJECT'}</span>`;
+  }
+  $('#fT',el).addEventListener('input',draw);$('#fNew',el).addEventListener('click',()=>{gen();draw();});
+  gen();draw();
+};
+
+FIG.perp=function(el){
+  el.innerHTML=`<div class="fig"><div class="fig-head"><span>FIG 5 · PERPENDICULARITY OF A WALL</span><span>lean drawn exaggerated</span></div><div class="fig-body">
+  <svg viewBox="0 0 360 230" id="pSvg" role="img" aria-label="Leaning wall within a perpendicularity zone"></svg>
+  <div class="ctl"><label for="pA">Lean angle (degrees): <b class="mono" id="pAv"></b><input type="range" id="pA" min="0" max="0.3" step="0.005" value="0.09"></label>
+  <label for="pH">Wall height (mm): <b class="mono" id="pHv"></b><input type="range" id="pH" min="10" max="150" step="5" value="50"></label>
+  <label for="pT">Tolerance (mm)<input type="number" id="pT" min="0.01" step="0.01" value="0.1"></label></div>
+  <div class="readout"><div class="ro"><small>DEVIATION h·tan θ</small><b id="pD"></b></div><div class="ro"><small>VERDICT</small><b id="pV"></b></div></div></div></div>`;
+  function draw(){
+    const a=+$('#pA',el).value,h=+$('#pH',el).value,t=+$('#pT',el).value||0;
+    $('#pAv',el).textContent=fmt(a,3)+'°';$('#pHv',el).textContent=h;
+    const dev=h*Math.tan(a*Math.PI/180),ok=dev<=t;
+    const base=200,H=40+h,zw=70,ex=dev/Math.max(t,1e-6)*zw;
+    const x0=150;
+    let s=`<path d="M20 ${base}H340" stroke="var(--ink)" stroke-width="2"/>`;
+    s+=`<g stroke="var(--datum)" stroke-width="1">${[...Array(16)].map((_,i)=>`<path d="M${30+i*20} ${base}l-8 10"/>`).join('')}</g>`;
+    s+=`<text x="26" y="${base+24}" font-family="IBM Plex Mono,monospace" font-size="12" fill="var(--datum)" font-weight="600">DATUM A</text>`;
+    s+=`<rect x="${x0}" y="${base-H}" width="${zw}" height="${H}" fill="var(--zone-fill)" stroke="var(--zone)" stroke-dasharray="5 3"/>`;
+    s+=`<polygon points="${x0-60},${base} ${x0},${base} ${x0+Math.min(ex,zw*1.6)},${base-H} ${x0-60+Math.min(ex,zw*1.6)},${base-H}" fill="var(--soft)" stroke="${ok?'var(--ink)':'var(--fail)'}" stroke-width="1.6"/>`;
+    s+=`<text x="${x0+zw+8}" y="${base-H+14}" font-family="IBM Plex Mono,monospace" font-size="11" fill="var(--zone)">zone ${fmt(t,2)}</text>`;
+    s+=`<text x="${x0+zw+8}" y="${base-H+30}" font-family="IBM Plex Mono,monospace" font-size="11" fill="var(--muted)">h = ${h}</text>`;
+    $('#pSvg',el).innerHTML=s;
+    $('#pD',el).textContent=fmt(dev,4)+' mm';
+    $('#pV',el).innerHTML=`<span class="verdict ${ok?'ok':'no'}">${ok?'ACCEPT':'REJECT'}</span>`;
+  }
+  el.addEventListener('input',draw);draw();
+};
+
+function zonePlot(svg,tolStated,tolAllowed,dx,dy){
+  const maxT=Math.max(tolAllowed,2*Math.hypot(dx,dy),tolStated)*1.25||0.1,sc=120/(maxT/2),c=150;
+  const X=c+dx*sc,Y=c-dy*sc,ok=2*Math.hypot(dx,dy)<=tolAllowed+1e-9;
+  svg.innerHTML=`<path d="M10 ${c}H290M${c} 10V290" stroke="var(--muted)" stroke-dasharray="8 3 2 3"/>
+  <circle cx="${c}" cy="${c}" r="${tolAllowed/2*sc}" fill="var(--zone-fill)" stroke="var(--zone)" stroke-width="2"/>
+  ${tolAllowed>tolStated+1e-9?`<circle cx="${c}" cy="${c}" r="${tolStated/2*sc}" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 3"/>`:''}
+  <path d="M${c} ${c}L${X} ${Y}" stroke="var(--ink)"/>
+  <circle cx="${X}" cy="${Y}" r="5.5" fill="${ok?'var(--pass)':'var(--fail)'}" stroke="var(--sheet)" stroke-width="1.5"/>
+  <text x="12" y="22" font-family="IBM Plex Mono,monospace" font-size="11" fill="var(--zone)">allowed Ø${fmt(tolAllowed,3)}</text>
+  ${tolAllowed>tolStated+1e-9?`<text x="12" y="38" font-family="IBM Plex Mono,monospace" font-size="11" fill="var(--accent)">stated Ø${fmt(tolStated,3)}</text>`:''}
+  <text x="${c+4}" y="${c+14}" font-family="IBM Plex Mono,monospace" font-size="10" fill="var(--muted)">true position</text>`;
+  return ok;
+}
+
+FIG.pos=function(el){
+  el.innerHTML=`<div class="fig"><div class="fig-head"><span>FIG 6 · ACTUAL POSITION CHECK</span><span>RFS, no bonus</span></div><div class="fig-body">
+  <svg viewBox="0 0 300 300" id="qSvg" style="max-width:380px;margin:auto" role="img" aria-label="Measured axis inside position zone"></svg>
+  <div class="ctl"><label for="qX">Δx measured (mm)<input type="number" id="qX" step="0.005" value="0.03"></label>
+  <label for="qY">Δy measured (mm)<input type="number" id="qY" step="0.005" value="0.04"></label>
+  <label for="qT">Position tolerance Ø (mm)<input type="number" id="qT" step="0.01" min="0" value="0.12"></label></div>
+  <div class="readout"><div class="ro"><small>ACTUAL POSITION Ø</small><b id="qA"></b></div><div class="ro"><small>USED</small><b id="qU"></b></div><div class="ro"><small>VERDICT</small><b id="qV"></b></div></div></div></div>`;
+  function draw(){const dx=+$('#qX',el).value||0,dy=+$('#qY',el).value||0,t=Math.max(+$('#qT',el).value||0,0.001);
+    const ok=zonePlot($('#qSvg',el),t,t,dx,dy),ap=2*Math.hypot(dx,dy);
+    $('#qA',el).textContent=fmt(ap,4);$('#qU',el).textContent=fmt(ap/t*100,0)+' %';
+    $('#qV',el).innerHTML=`<span class="verdict ${ok?'ok':'no'}">${ok?'ACCEPT':'REJECT'}</span>`;}
+  el.addEventListener('input',draw);draw();
+};
+
+FIG.bonus=function(el){
+  el.innerHTML=`<div class="fig"><div class="fig-head"><span>FIG 7 · BONUS TOLERANCE CALCULATOR</span><span>hole or pin</span></div><div class="fig-body">
+  <div class="ctl">
+  <label for="bF">Feature<select id="bF"><option value="h">Hole (internal)</option><option value="p">Pin (external)</option></select></label>
+  <label for="bM">Modifier<select id="bM"><option value="M">Ⓜ MMC</option><option value="L">Ⓛ LMC</option><option value="R">RFS</option></select></label>
+  <label for="bLo">Size lower limit<input type="number" id="bLo" step="0.01" value="10.0"></label>
+  <label for="bHi">Size upper limit<input type="number" id="bHi" step="0.01" value="10.2"></label>
+  <label for="bA">Actual size<input type="number" id="bA" step="0.01" value="10.15"></label>
+  <label for="bT">Stated position Ø<input type="number" id="bT" step="0.01" value="0.1"></label>
+  <label for="bX">Δx measured<input type="number" id="bX" step="0.01" value="0.07"></label>
+  <label for="bY">Δy measured<input type="number" id="bY" step="0.01" value="0.06"></label></div>
+  <svg viewBox="0 0 300 300" id="bSvg" style="max-width:340px;margin:auto" role="img" aria-label="Stated and bonus zones"></svg>
+  <div class="readout"><div class="ro"><small>MMC / LMC</small><b id="bML"></b></div><div class="ro"><small>BONUS</small><b id="bB"></b></div><div class="ro"><small>ALLOWED Ø</small><b id="bAl"></b></div><div class="ro"><small>ACTUAL Ø</small><b id="bAc"></b></div><div class="ro"><small>VIRTUAL COND.</small><b id="bVC"></b></div><div class="ro"><small>VERDICT</small><b id="bV"></b></div></div>
+  <div class="fig-cap" id="bCap"></div></div></div>`;
+  function draw(){
+    const f=$('#bF',el).value,m=$('#bM',el).value,lo=+$('#bLo',el).value,hi=+$('#bHi',el).value,a=+$('#bA',el).value,t=+$('#bT',el).value||0,dx=+$('#bX',el).value||0,dy=+$('#bY',el).value||0;
+    const mmc=f==='h'?lo:hi,lmc=f==='h'?hi:lo,inSize=a>=lo-1e-9&&a<=hi+1e-9;
+    let bonus=0;if(m==='M')bonus=Math.abs(a-mmc);else if(m==='L')bonus=Math.abs(a-lmc);
+    const allowed=t+bonus,ap=2*Math.hypot(dx,dy);
+    const vc=m==='L'?(f==='h'?lmc+t:lmc-t):(f==='h'?mmc-t:mmc+t);
+    const ok=zonePlot($('#bSvg',el),Math.max(t,0.001),Math.max(allowed,0.001),dx,dy)&&inSize;
+    $('#bML',el).textContent=fmt(mmc,2)+' / '+fmt(lmc,2);$('#bB',el).textContent=fmt(bonus,3);$('#bAl',el).textContent=fmt(allowed,3);$('#bAc',el).textContent=fmt(ap,3);
+    $('#bVC',el).textContent=(m==='R'?'— ':'')+fmt(vc,3);
+    $('#bV',el).innerHTML=`<span class="verdict ${ok?'ok':'no'}">${ok?'ACCEPT':(inSize?'REJECT':'SIZE OUT')}</span>`;
+    $('#bCap',el).textContent=m==='R'?'RFS: tolerance stays at the stated value whatever the size. Virtual condition is not used for RFS; the figure shows the MMC-based boundary for reference.':m==='M'?`Ⓜ: bonus grows as the ${f==='h'?'hole gets larger':'pin gets smaller'} than MMC. Virtual condition = MMC ${f==='h'?'−':'+'} tolerance.`:`Ⓛ: bonus grows as the feature moves toward MMC. Used to protect minimum wall thickness. The LMC boundary is shown.`;
+  }
+  el.addEventListener('input',draw);el.addEventListener('change',draw);draw();
+};
+
+let runAnim=null;
+FIG.runout=function(el){
+  el.innerHTML=`<div class="fig"><div class="fig-head"><span>FIG 8 · CIRCULAR RUNOUT ON A DIAL INDICATOR</span><span><kbd>P</kbd> play · <kbd>S</kbd> step 30° · <kbd>X</kbd> pause</span></div><div class="fig-body">
+  <canvas id="rC" width="720" height="380" style="width:100%;height:auto;border:1px solid var(--line)" role="img" aria-label="Rotating shaft with dial indicator and runout trace"></canvas>
+  <div class="ctl"><label for="rE">Eccentricity e (mm): <b class="mono" id="rEv"></b><input type="range" id="rE" min="0" max="0.05" step="0.001" value="0.02"></label>
+  <label for="rO">Out-of-round (mm, 2-lobe): <b class="mono" id="rOv"></b><input type="range" id="rO" min="0" max="0.02" step="0.001" value="0"></label></div>
+  <div class="seg"><button type="button" class="btn sm" id="rP">▶ Play</button><button type="button" class="btn sm" id="rS">Step 30°</button><button type="button" class="btn sm" id="rX">❚❚ Pause</button><button type="button" class="btn sm" id="rR">Reset trace</button></div>
+  <div class="readout"><div class="ro"><small>ANGLE</small><b id="rAng"></b></div><div class="ro"><small>READING</small><b id="rRd"></b></div><div class="ro"><small>FIM SO FAR</small><b id="rF"></b></div><div class="ro"><small>EXPECTED 2e (+ form)</small><b id="rX2"></b></div></div></div></div>`;
+  const cv=$('#rC',el),ctx=cv.getContext('2d');let ang=0,trace=[],playing=false,raf=0,last=0;
+  const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim()||'#888';
+  const rd=a=>{const e=+$('#rE',el).value,o=+$('#rO',el).value;return e*Math.cos(a)+o/2*Math.cos(2*a);};
+  function draw(){
+    const e=+$('#rE',el).value,o=+$('#rO',el).value;$('#rEv',el).textContent=fmt(e,3);$('#rOv',el).textContent=fmt(o,3);
+    ctx.clearRect(0,0,720,380);const ink=css('--ink'),acc=css('--accent'),zone=css('--zone'),mut=css('--muted'),line=css('--line'),dat=css('--datum');
+    const cx=170,cy=200,R=110,mag=1600;
+    ctx.lineWidth=1;ctx.strokeStyle=mut;ctx.setLineDash([10,4,2,4]);ctx.beginPath();ctx.moveTo(cx-150,cy);ctx.lineTo(cx+150,cy);ctx.moveTo(cx,cy-150);ctx.lineTo(cx,cy+150);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();for(let i=0;i<=180;i++){const t=i/180*Math.PI*2;const r=R+(e*Math.cos(t-ang)+o/2*Math.cos(2*(t-ang)))*mag;ctx.lineTo(cx+r*Math.cos(t),cy-r*Math.sin(t));}
+    ctx.closePath();ctx.fillStyle=css('--soft');ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=2;ctx.stroke();
+    const ox=cx+e*mag*Math.cos(ang),oy=cy-e*mag*Math.sin(ang);ctx.fillStyle=acc;ctx.beginPath();ctx.arc(ox,oy,4,0,7);ctx.fill();
+    ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ox+R*0.8*Math.cos(ang),oy-R*0.8*Math.sin(ang));ctx.strokeStyle=acc;ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle=dat;ctx.font='600 12px "IBM Plex Mono",monospace';ctx.fillText('DATUM AXIS A',cx-60,cy+R+40);
+    const r0=rd(ang),tipX=cx+R+r0*mag;
+    ctx.fillStyle=line;ctx.fillRect(tipX,cy-6,60,12);ctx.strokeStyle=ink;ctx.lineWidth=1;ctx.strokeRect(tipX,cy-6,60,12);
+    ctx.beginPath();ctx.arc(tipX+95,cy,34,0,7);ctx.fillStyle=css('--sheet');ctx.fill();ctx.stroke();
+    const na=-Math.PI/2+r0*60;ctx.beginPath();ctx.moveTo(tipX+95,cy);ctx.lineTo(tipX+95+28*Math.cos(na),cy+28*Math.sin(na));ctx.strokeStyle=css('--fail');ctx.lineWidth=2;ctx.stroke();
+    const gx=420,gy=40,gw=280,gh=150;ctx.strokeStyle=line;ctx.lineWidth=1;ctx.strokeRect(gx,gy,gw,gh);
+    ctx.fillStyle=mut;ctx.font='11px "IBM Plex Mono",monospace';ctx.fillText('reading vs angle, 0–360°',gx,gy-8);
+    const span=0.06,Y=v=>gy+gh/2-v/span*gh/2*0.95;
+    ctx.beginPath();ctx.moveTo(gx,Y(0));ctx.lineTo(gx+gw,Y(0));ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
+    if(trace.length){ctx.beginPath();trace.forEach((q,i)=>{const x=gx+q[0]/(Math.PI*2)*gw;i?ctx.lineTo(x,Y(q[1])):ctx.moveTo(x,Y(q[1]));});ctx.strokeStyle=acc;ctx.lineWidth=2;ctx.stroke();
+      const vs=trace.map(q=>q[1]),mx=Math.max(...vs),mn=Math.min(...vs);ctx.fillStyle=zone;ctx.globalAlpha=.18;ctx.fillRect(gx,Y(mx),gw,Y(mn)-Y(mx));ctx.globalAlpha=1;
+      $('#rF',el).textContent=fmt(mx-mn,4);} else $('#rF',el).textContent='—';
+    $('#rAng',el).textContent=fmt(ang*180/Math.PI%360,0)+'°';$('#rRd',el).textContent=(r0>=0?'+':'')+fmt(r0,4);
+    let mx=-1,mn=1;for(let i=0;i<360;i++){const v=rd(i*Math.PI/180);mx=Math.max(mx,v);mn=Math.min(mn,v);}$('#rX2',el).textContent=fmt(mx-mn,4);
+  }
+  function addPoint(){const a=ang%(Math.PI*2);if(a<1e-6&&trace.length>5)trace=[];trace.push([a,rd(ang)]);}
+  function step(dA){ang+=dA;if(ang>=Math.PI*2-1e-9){ang=0;trace.push([Math.PI*2,rd(0)]);draw();trace=[[0,rd(0)]];return;}addPoint();draw();}
+  function loop(ts){if(!playing)return;const dt=last?Math.min(ts-last,50):16;last=ts;step(dt/1000*Math.PI*0.6);raf=requestAnimationFrame(loop);}
+  const api={play(){if(playing)return;playing=true;last=0;raf=requestAnimationFrame(loop);},pause(){playing=false;cancelAnimationFrame(raf);},step(){api.pause();step(Math.PI/6);}};
+  $('#rP',el).onclick=api.play;$('#rX',el).onclick=api.pause;$('#rS',el).onclick=api.step;$('#rR',el).onclick=()=>{trace=[];ang=0;addPoint();draw();};
+  el.querySelectorAll('input').forEach(i=>i.addEventListener('input',()=>{trace=[];ang=0;addPoint();draw();}));
+  addPoint();draw();runAnim=api;
+};
+
+/* ---------- quiz ---------- */
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function renderQuiz(ch,box){
+  const order=ch.q.map(q=>shuffle(q[1].map((t,i)=>i)));
+  const prev=S.res[ch.id];
+  box.innerHTML=`<div class="qhead"><h3>Chapter quiz</h3><span class="mono" style="font-size:12.5px;color:var(--muted)">5 questions · pass mark 4 of 5${prev?` · best ${prev.score}/5`:''}</span></div>
+  <form id="qf">${ch.q.map((q,qi)=>`<fieldset class="q" style="margin-inline:0"><legend class="qn">QUESTION ${qi+1}</legend><div class="qt">${q[0]}</div>
+   ${order[qi].map(oi=>`<label class="opt" for="${ch.id}q${qi}o${oi}"><input type="radio" name="q${qi}" id="${ch.id}q${qi}o${oi}" value="${oi}"><span>${q[1][oi]}</span></label>`).join('')}
+   <div class="why" hidden></div></fieldset>`).join('')}
+  <div class="score" id="qs"><button class="btn pri" type="submit">Submit answers</button><span class="msg" id="qmsg"></span></div></form>`;
+  const f=$('#qf',box);
+  f.addEventListener('submit',ev=>{ev.preventDefault();
+    const ans=ch.q.map((q,qi)=>{const r=f.querySelector(`input[name="q${qi}"]:checked`);return r?+r.value:-1;});
+    if(ans.includes(-1)){$('#qmsg',box).textContent='Answer all five questions before submitting. Unanswered: '+ans.map((a,i)=>a<0?i+1:null).filter(x=>x).join(', ')+'.';return;}
+    let sc=0;
+    f.querySelectorAll('fieldset.q').forEach((fs,qi)=>{const q=ch.q[qi],ok=ans[qi]===q[2];if(ok)sc++;fs.classList.add('graded');
+      fs.querySelectorAll('input').forEach(i=>{i.disabled=true;const l=i.closest('label');if(+i.value===q[2])l.classList.add('right');else if(i.checked)l.classList.add('wrong');});
+      const w=fs.querySelector('.why');w.hidden=false;w.innerHTML=`<b>${ok?'Correct.':'Not quite.'}</b> ${q[3]}`;});
+    const passed=sc>=4,old=S.res[ch.id];
+    if(!old||sc>old.score){S.res[ch.id]={score:sc,passed:passed||!!(old&&old.passed),date:new Date().toISOString().slice(0,10)};save();}
+    $('#qs',box).innerHTML=`<span class="big">${sc}/5</span><span class="verdict ${passed?'ok':'no'}">${passed?'PASSED':'NOT YET — 4 NEEDED'}</span><button class="btn" type="button" id="qr">Retake quiz</button>${passed?'<a class="btn pri" href="#'+ch.id+'-cert" id="qc">View certificate ↓</a>':''}`;
+    $('#qr',box).onclick=()=>renderQuiz(ch,box);
+    renderToc();renderCert(ch,$('#certBox'));
+    if(passed){const c=$('#qc',box);c.onclick=e=>{e.preventDefault();$('#certBox').scrollIntoView({behavior:'smooth'});};}
+  });
+}
+
+/* ---------- certificate ---------- */
+function certId(name,key,date){let h=2166136261;const s=name+'|'+key+'|'+date;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return 'GDT-'+key.toUpperCase()+'-'+(h>>>0).toString(36).toUpperCase().padStart(7,'0').slice(0,7);}
+async function drawCert(opt){
+  try{await document.fonts.ready;}catch(e){}
+  const W=1754,H=1240,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  const ink='#17212b',acc='#1f4fa3',zone='#c98a0c',mut='#5a6672',dat='#0f7b6c';
+  g.fillStyle='#fbfcfb';g.fillRect(0,0,W,H);
+  g.strokeStyle=ink;g.lineWidth=3;g.strokeRect(50,50,W-100,H-100);g.lineWidth=1.2;g.strokeRect(70,70,W-140,H-140);
+  g.font='500 18px "IBM Plex Mono",monospace';g.fillStyle=mut;g.textAlign='center';
+  for(let i=0;i<8;i++){const x=70+(W-140)/8*(i+.5);g.fillText(String(8-i),x,64);g.fillText(String(8-i),x,H-56);if(i){const xx=70+(W-140)/8*i;g.beginPath();g.moveTo(xx,50);g.lineTo(xx,70);g.moveTo(xx,H-70);g.lineTo(xx,H-50);g.stroke();}}
+  ['D','C','B','A'].forEach((L,i)=>{const y=70+(H-140)/4*(i+.5)+6;g.fillText(L,60,y);g.fillText(L,W-60,y);});
+  // FCF motif
+  const fx=W/2-150,fy=150;g.lineWidth=2.5;g.strokeStyle=ink;g.strokeRect(fx,fy,300,58);[70,210,255].forEach(x=>{g.beginPath();g.moveTo(fx+x,fy);g.lineTo(fx+x,fy+58);g.stroke();});
+  g.beginPath();g.arc(fx+35,fy+29,15,0,7);g.moveTo(fx+35,fy+8);g.lineTo(fx+35,fy+50);g.moveTo(fx+14,fy+29);g.lineTo(fx+56,fy+29);g.stroke();
+  g.fillStyle=ink;g.font='500 26px "IBM Plex Mono",monospace';g.fillText('Ø0.05 Ⓜ',fx+140,fy+38);g.fillText('A',fx+232,fy+38);g.fillText('B',fx+278,fy+38);
+  g.fillStyle=acc;g.font='600 24px "IBM Plex Mono",monospace';g.fillText('GD&T ACADEMY  ·  ASME Y14.5-2018',W/2,268);
+  g.fillStyle=ink;g.font='700 104px "Barlow Condensed","Arial Narrow",sans-serif';g.fillText(opt.final?'Certificate of Course Completion':'Certificate of Completion',W/2,380);
+  g.font='italic 400 30px "IBM Plex Sans",sans-serif';g.fillStyle=mut;g.fillText('This certifies that',W/2,450);
+  g.fillStyle=ink;g.font='600 76px "IBM Plex Sans",sans-serif';const nm=opt.name||'Your Name';g.fillText(nm,W/2,545);
+  const nw=Math.min(g.measureText(nm).width+80,1100);g.strokeStyle=zone;g.lineWidth=3;g.beginPath();g.moveTo(W/2-nw/2,570);g.lineTo(W/2+nw/2,570);g.stroke();
+  g.font='400 30px "IBM Plex Sans",sans-serif';g.fillStyle=mut;g.fillText(opt.final?'has completed all eight chapters of':'has completed and passed the assessment for',W/2,630);
+  g.fillStyle=ink;g.font='600 54px "Barlow Condensed","Arial Narrow",sans-serif';g.fillText(opt.title,W/2,700);
+  g.font='500 28px "IBM Plex Mono",monospace';g.fillStyle=dat;g.fillText(opt.scoreLine,W/2,760);
+  // title block
+  const tbx=W-70-760,tby=H-70-250,rows=[['CERTIFICATE NO.',opt.id],['DATE',opt.date],['STANDARD','ASME Y14.5-2018'],['SHEET',opt.sheet]];
+  g.lineWidth=2;g.strokeStyle=ink;g.strokeRect(tbx,tby,760,250);g.textAlign='left';
+  rows.forEach((r,i)=>{const y=tby+i*62.5;if(i){g.beginPath();g.moveTo(tbx,y);g.lineTo(tbx+760,y);g.stroke();}g.font='500 17px "IBM Plex Mono",monospace';g.fillStyle=mut;g.fillText(r[0],tbx+16,y+24);g.font='600 26px "IBM Plex Mono",monospace';g.fillStyle=ink;g.fillText(r[1],tbx+16,y+54);});
+  g.beginPath();g.moveTo(tbx+430,tby);g.lineTo(tbx+430,tby+250);g.stroke();
+  g.font='500 17px "IBM Plex Mono",monospace';g.fillStyle=mut;g.fillText('VERIFIED BY',tbx+446,tby+24);
+  g.font='700 44px "Barlow Condensed",sans-serif';g.fillStyle=acc;g.fillText('GD&T Academy',tbx+446,tby+150);
+  g.font='400 18px "IBM Plex Sans",sans-serif';g.fillStyle=mut;g.fillText('Self-paced study · quiz score recorded',tbx+446,tby+185);
+  // datum flag
+  g.textAlign='left';g.strokeStyle=ink;g.lineWidth=2;const dx=110,dy=H-260;g.strokeRect(dx,dy,70,70);g.font='700 44px "IBM Plex Mono",monospace';g.fillStyle=ink;g.fillText('A',dx+21,dy+51);
+  g.beginPath();g.moveTo(dx+35,dy+70);g.lineTo(dx+35,dy+110);g.stroke();g.beginPath();g.moveTo(dx+15,dy+130);g.lineTo(dx+55,dy+130);g.lineTo(dx+35,dy+110);g.closePath();g.fillStyle=ink;g.fill();
+  g.font='400 20px "IBM Plex Sans",sans-serif';g.fillStyle=mut;g.fillText('Every measurement starts from a datum.',dx+90,dy+60);
+  return c;
+}
+let dlCap=null;
+async function getDownloads(){if(dlCap!==null)return dlCap;try{dlCap=(window.claude&&window.claude.use)?await window.claude.use('downloads'):false;}catch(e){dlCap=false;}return dlCap||false;}
+async function offerPng(canvas,filename,msgEl){
+  const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
+  const d=await getDownloads();
+  if(d){try{await d.save({filename,data:blob});msgEl.textContent='Saved '+filename+'.';}catch(e){msgEl.textContent=e&&e.code==='declined'?'Download cancelled.':'Download is not available here. Right-click the certificate image and choose “Save image as…”.';}return;}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();msgEl.textContent='Download started: '+filename+'. If nothing happens, right-click the image and choose “Save image as…”.';}catch(e){msgEl.textContent='Right-click the certificate image and choose “Save image as…”.';}
+}
+function certBlock(box,opt,locked,lockText){
+  if(locked){box.innerHTML=`<div class="locked">${lockText}</div>`;return;}
+  box.innerHTML=`<div class="cert-box"><div><div class="field"><label for="cName">Name on certificate</label><input id="cName" maxlength="48" placeholder="Your full name" value=""></div>
+  <button class="btn pri" type="button" id="cDl">Download certificate (PNG)</button><div class="msg" id="cMsg" aria-live="polite"></div>
+  <p style="font-size:13px;color:var(--muted);margin-top:10px">A4 landscape at 150 dpi. Your name is kept in this browser only.</p></div>
+  <img class="cert-img" id="cImg" alt="Certificate preview"></div>`;
+  const inp=$('#cName',box);inp.value=S.name||'';
+  let canvas=null,tm=0;
+  async function upd(){opt.name=inp.value.trim();opt.id=certId(opt.name||'-',opt.key,opt.date);canvas=await drawCert(opt);$('#cImg',box).src=canvas.toDataURL('image/png');}
+  inp.addEventListener('input',()=>{S.name=inp.value.trim();save();clearTimeout(tm);tm=setTimeout(upd,250);});
+  $('#cDl',box).addEventListener('click',async()=>{const m=$('#cMsg',box);if(!inp.value.trim()){m.textContent='Enter your name first.';inp.focus();return;}await upd();offerPng(canvas,'GDT_'+opt.key+'_certificate.png',m);});
+  upd();
+}
+function renderCert(ch,box){
+  if(!box)return;const r=S.res[ch.id],n=CH.indexOf(ch)+1;
+  box.innerHTML=`<h3 id="${ch.id}-cert">Chapter certificate</h3><div id="certInner"></div>`;
+  certBlock($('#certInner',box),{key:ch.id,title:'Chapter '+n+' — '+ch.t,scoreLine:r?('Quiz score '+r.score+' / 5  ('+r.score*20+'%)'):'',date:r?r.date:'',sheet:n+' OF 8'},!(r&&r.passed),`Locked. Score at least 4 of 5 in the quiz above to unlock this chapter’s certificate.`);
+}
+
+/* ---------- views ---------- */
+const view=$('#view'),app=$('#app');
+function passedCount(){return CH.filter(c=>S.res[c.id]&&S.res[c.id].passed).length;}
+function renderToc(){
+  const cur=(location.hash||'#home').slice(1).replace(/-cert$/,'');
+  $('#toc').innerHTML=`<li><a href="#home" class="${cur==='home'?'on':''}"><span class="no">00</span><span class="nm">Course overview</span><span></span></a></li>`+
+   CH.map((c,i)=>{const r=S.res[c.id];return `<li><a href="#${c.id}" class="${cur===c.id?'on':''}"><span class="no">${String(i+1).padStart(2,'0')}</span><span class="nm">${c.t}</span><span class="chip ${r&&r.passed?'ok':''}">${r?(r.passed?'✓ '+r.score+'/5':r.score+'/5'):'—'}</span></a></li>`}).join('')+
+   `<li><a href="#final" class="${cur==='final'?'on':''}"><span class="no">★</span><span class="nm">Course certificate</span><span class="chip ${passedCount()===8?'ok':''}">${passedCount()}/8</span></a></li>`;
+  const k=passedCount();$('#progTxt').textContent=k+' of 8 chapters passed';$('#progBar').style.width=(k/8*100)+'%';
+}
+function route(){
+  if(runAnim){runAnim.pause();runAnim=null;}
+  let h=(location.hash||'#home').slice(1);const scrollCert=/-cert$/.test(h);h=h.replace(/-cert$/,'');
+  const idx=CH.findIndex(c=>c.id===h);
+  if(idx>=0)renderChapter(idx);else if(h==='final')renderFinal();else{h='home';renderHome();}
+  renderToc();
+  $('#prevBtn').disabled=h==='home';$('#nextBtn').disabled=h==='final';
+  if(scrollCert){const c=$('#certBox');if(c)c.scrollIntoView();}else window.scrollTo(0,0);
+  if(window.innerWidth<=820)app.classList.remove('nav-open');
+}
+function renderHome(){
+  $('#crumb').textContent='GD&T Academy / Overview';
+  view.innerHTML=`<div class="eyebrow">Self-paced course · ASME Y14.5-2018</div><h2 class="ch-title">Read the drawing the way the inspector will.</h2>
+  <p class="lead">Eight short chapters take you from why ± tolerancing fails to bonus tolerance and runout. Each chapter has a working figure to try values on, a five-question quiz, and a certificate when you score 4 or more. Pass all eight for the course certificate.</p>
+  <div class="fcf-ex"><div>${fcf('position','Ø0.25 Ⓜ',['A','B','C'])}<p>By the end of chapter 7 you will be able to read this frame, compute the allowed tolerance for any hole size and decide accept or reject from CMM data.</p></div></div>
+  <div class="home-grid">${CH.map((c,i)=>{const r=S.res[c.id];return `<a class="card" href="#${c.id}"><div class="top"><span class="no">CHAPTER ${String(i+1).padStart(2,'0')}</span><span class="chip ${r&&r.passed?'ok':''}">${r?(r.passed?'PASSED '+r.score+'/5':'BEST '+r.score+'/5'):'NOT STARTED'}</span></div><h4>${c.t}</h4><p>${c.s}</p></a>`}).join('')}</div>`;
+}
+function renderChapter(i){
+  const c=CH[i];$('#crumb').textContent='GD&T Academy / Chapter '+(i+1)+' / '+c.t;
+  view.innerHTML=`<div class="eyebrow">Chapter ${String(i+1).padStart(2,'0')} of 08</div><h2 class="ch-title">${c.t}</h2>
+  <div class="cols"><div>${c.body}</div><div id="figBox" style="position:sticky;top:70px"></div></div>
+  <section class="quiz" id="quizBox"></section><section class="cert" id="certBox"></section>
+  <div class="pager">${i>0?`<a class="btn" href="#${CH[i-1].id}">‹ ${CH[i-1].t}</a>`:'<a class="btn" href="#home">‹ Overview</a>'}${i<7?`<a class="btn pri" href="#${CH[i+1].id}">${CH[i+1].t} ›</a>`:'<a class="btn pri" href="#final">Course certificate ›</a>'}</div>`;
+  if(window.innerWidth<=1000)$('#figBox').style.position='static';
+  FIG[c.fig]($('#figBox'));renderQuiz(c,$('#quizBox'));renderCert(c,$('#certBox'));
+}
+function renderFinal(){
+  $('#crumb').textContent='GD&T Academy / Course certificate';const k=passedCount();
+  const tot=CH.reduce((a,c)=>a+(S.res[c.id]?S.res[c.id].score:0),0);
+  const dates=CH.map(c=>S.res[c.id]&&S.res[c.id].date).filter(Boolean).sort();
+  view.innerHTML=`<div class="eyebrow">All chapters</div><h2 class="ch-title">Course certificate</h2>
+  <p class="lead">${k===8?'All eight chapters passed. Enter your name to produce the course certificate.':'Pass every chapter quiz to unlock the course certificate. You have passed '+k+' of 8.'}</p>
+  <div class="tbl"><table><thead><tr><th>#</th><th>Chapter</th><th>Best score</th><th>Status</th><th>Date</th></tr></thead><tbody>${CH.map((c,i)=>{const r=S.res[c.id];return `<tr><td class="mono">${i+1}</td><td><a href="#${c.id}">${c.t}</a></td><td class="mono">${r?r.score+'/5':'—'}</td><td>${r&&r.passed?'<span class="verdict ok">PASSED</span>':'<span class="chip">open</span>'}</td><td class="mono">${r&&r.passed?r.date:''}</td></tr>`}).join('')}</tbody></table></div>
+  <section class="cert" id="certBox"><h3>Course certificate</h3><div id="certInner"></div></section>`;
+  certBlock($('#certInner'),{key:'course',final:true,title:'GD&T Fundamentals — 8 chapters',scoreLine:'Total quiz score '+tot+' / 40  ('+Math.round(tot/40*100)+'%)',date:dates[dates.length-1]||'',sheet:'COURSE'},k<8,'Locked. '+(8-k)+' chapter'+(8-k===1?'':'s')+' still to pass.');
+}
+
+/* ---------- controls ---------- */
+function order(){return ['home',...CH.map(c=>c.id),'final'];}
+function go(d){const o=order(),cur=(location.hash||'#home').slice(1).replace(/-cert$/,'');const i=Math.max(0,o.indexOf(cur));const n=o[Math.min(o.length-1,Math.max(0,i+d))];location.hash=n;}
+function toggleNav(){if(window.innerWidth<=820)app.classList.toggle('nav-open');else app.classList.toggle('nav-hidden');}
+function toggleFs(){try{if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen().catch(()=>{});}catch(e){}}
+$('#navBtn').onclick=toggleNav;$('#fsBtn').onclick=toggleFs;$('#prevBtn').onclick=()=>go(-1);$('#nextBtn').onclick=()=>go(1);
+$('#resetBtn').onclick=()=>{$('#resetConfirm').hidden=false;};$('#resetNo').onclick=()=>{$('#resetConfirm').hidden=true;};
+$('#resetYes').onclick=()=>{S={name:S.name,res:{}};save();$('#resetConfirm').hidden=true;route();};
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey)return;const t=e.target;if(t&&(t.tagName==='INPUT'||t.tagName==='SELECT'||t.tagName==='TEXTAREA'))return;
+  const k=e.key.toLowerCase();
+  if(k==='m'){toggleNav();e.preventDefault();}else if(k==='f'){toggleFs();}else if(k==='['){go(-1);}else if(k===']'){go(1);}
+  else if(runAnim&&k==='p')runAnim.play();else if(runAnim&&k==='x')runAnim.pause();else if(runAnim&&k==='s')runAnim.step();
+});
+document.addEventListener('click',e=>{if(window.innerWidth<=820&&app.classList.contains('nav-open')&&!e.target.closest('.rail')&&!e.target.closest('#navBtn'))app.classList.remove('nav-open');});
+window.addEventListener('hashchange',route);
+route();
+})();
+</script>
+
+</body>
+</html>

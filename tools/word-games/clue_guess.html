@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Clue Guess
+FAMILY:  word-games
+VERSION: 1.0.0
+DATE:    2026-10-31
+CHAT:    Word games series - plan and Word Search
+CHANGES: 1.0.0 Initial release: rounds of 5/10/15 words, riddle then meaning clue ladder, letter reveals, Kids/Adult, English/Science/All, themes, 3 levels, streak bonus, on-screen keyboard, personal bests
+STATUS:  Released
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clue Guess</title>
+<style>
+:root{
+  --bg:#f5f3ee; --panel:#ffffff; --ink:#1f2328; --muted:#5f6670; --line:#e3dfd6;
+  --accent:#2f6fde; --accent-ink:#ffffff; --good:#1f9d55; --bad:#d64545; --warn:#c27c0e;
+  --chip:#eef2fb; --box:#fbfaf6; --given:#fff1cc;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14161a; --panel:#1d2025; --ink:#e8e6e3; --muted:#9aa1aa; --line:#2f333a;
+    --accent:#6d9cf0; --accent-ink:#0d1117; --good:#4cc38a; --bad:#f07070; --warn:#e8a838;
+    --chip:#262c37; --box:#22262c; --given:#4a3f22;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14161a; --panel:#1d2025; --ink:#e8e6e3; --muted:#9aa1aa; --line:#2f333a;
+  --accent:#6d9cf0; --accent-ink:#0d1117; --good:#4cc38a; --bad:#f07070; --warn:#e8a838;
+  --chip:#262c37; --box:#22262c; --given:#4a3f22;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,select{font:inherit;color:inherit}
+a{color:var(--accent)}
+
+header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+header.top h1{font-size:20px;margin:0}
+header.top .back{text-decoration:none;font-size:14px}
+.tabs{display:flex;gap:4px}
+.tabs button{border:1px solid var(--line);background:transparent;padding:5px 12px;border-radius:8px;cursor:pointer}
+.tabs button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.stats{display:flex;gap:16px;margin-left:auto;font-variant-numeric:tabular-nums}
+.stats div{display:flex;flex-direction:column;align-items:center;min-width:56px}
+.stats b{font-size:18px}
+.stats span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.btn{border:1px solid var(--line);background:var(--panel);padding:8px 13px;border-radius:9px;cursor:pointer}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+.layout{display:grid;grid-template-columns:270px 1fr 300px;gap:16px;padding:16px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.panel h2{font-size:14px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.field label{font-size:12px;color:var(--muted)}
+.field select{padding:7px 8px;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
+.seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{flex:1;border:0;background:transparent;padding:7px 4px;cursor:pointer}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.best{margin-top:12px;font-size:13px;color:var(--muted)}
+.keys{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.9}
+kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;font-size:11px;background:var(--bg)}
+
+.stage{display:flex;flex-direction:column;align-items:center;gap:16px;min-width:0}
+.card{width:min(760px,100%);background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px 22px}
+.cardHead{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin-bottom:12px}
+.theme{background:var(--chip);border-radius:20px;padding:3px 11px;font-weight:600;color:var(--ink)}
+.worth{font-variant-numeric:tabular-nums}
+.worth b{color:var(--ink);font-size:16px}
+.clue{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:var(--box);margin-bottom:10px;font-size:18px;line-height:1.4}
+.clue .tag{flex:none;font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);padding-top:5px;width:62px}
+.clue.locked{color:var(--muted);font-size:15px;font-style:italic}
+.boxes{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:18px 0 6px}
+.lb{width:var(--bs);height:calc(var(--bs)*1.15);border:2px solid var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:750;font-size:calc(var(--bs)*.55);background:var(--box)}
+.lb.next{border-color:var(--accent)}
+.lb.given{background:var(--given);border-color:var(--warn)}
+.lb.ok{background:var(--good);border-color:var(--good);color:#fff}
+.lb.miss{background:transparent;border-style:dashed;border-color:var(--bad);color:var(--bad)}
+.boxes.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.len{text-align:center;font-size:13px;color:var(--muted)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.msg{min-height:24px;font-weight:600;text-align:center;margin-top:8px}
+.msg.good{color:var(--good)}.msg.bad{color:var(--bad)}
+.answerBox{margin-top:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);font-size:14px}
+.answerBox b{font-size:17px;letter-spacing:1px}
+
+.kbd{display:flex;flex-direction:column;gap:6px;align-items:center;width:min(760px,100%)}
+.kbd .r{display:flex;gap:5px;width:100%;justify-content:center}
+.kbd button{flex:1;max-width:52px;height:46px;border-radius:8px;border:1px solid var(--line);background:var(--panel);font-weight:650;cursor:pointer}
+.kbd button.wide{max-width:96px;flex:1.6;font-size:13px}
+.kbd button:active{background:var(--chip)}
+
+.log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.log li{display:flex;justify-content:space-between;gap:8px;padding:6px 10px;border-radius:8px;background:var(--chip);font-size:14px}
+.log li .w{font-weight:650;letter-spacing:.5px}
+.log li.skip .w{color:var(--bad)}
+.log li.cur{outline:2px solid var(--accent)}
+.log li span:last-child{font-variant-numeric:tabular-nums;color:var(--muted)}
+
+#how{max-width:960px;margin:0 auto;padding:20px 16px 40px}
+#how h2{margin-top:26px}
+#how table{border-collapse:collapse;width:100%;margin:8px 0}
+#how th,#how td{border:1px solid var(--line);padding:7px 10px;text-align:left}
+#how th{background:var(--chip)}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:10;padding:16px}
+.modal[hidden]{display:none}
+.modal .box{background:var(--panel);border-radius:16px;padding:22px;max-width:420px;width:100%;border:1px solid var(--line);max-height:90vh;overflow:auto}
+.modal h3{margin:0 0 12px;font-size:22px}
+.modal table{width:100%;border-collapse:collapse;margin-bottom:14px}
+.modal td{padding:4px 0;border-bottom:1px solid var(--line)}
+.modal td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.modal tr.total td{font-weight:700;font-size:18px;border-bottom:0}
+.newbest{color:var(--good);font-weight:700;margin-bottom:10px}
+
+.stage{--bs:clamp(32px,4.6vw,54px)}
+@media (max-width:1080px){
+  .layout{grid-template-columns:1fr;padding:10px}
+  .stage{order:1}.logPanel{order:2}.settings{order:3}
+  .stats{margin-left:0;width:100%;justify-content:space-around}
+  .keys{display:none}
+  .stage{--bs:clamp(26px,8vw,46px)}
+  .clue{font-size:16px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="back" href="index.html">&larr; Word Games</a>
+  <h1>Clue Guess</h1>
+  <nav class="tabs">
+    <button data-tab="play" class="on">Play</button>
+    <button data-tab="how">How it works</button>
+  </nav>
+  <div class="stats">
+    <div><b id="stScore">0</b><span>Score</span></div>
+    <div><b id="stWord">1/10</b><span>Word</span></div>
+    <div><b id="stStreak">0</b><span>Streak</span></div>
+  </div>
+  <button class="btn" id="fsBtn" title="Full screen (0)">&#x26F6; Full screen</button>
+</header>
+
+<main id="play" class="layout">
+  <aside class="panel settings">
+    <h2>Game</h2>
+    <div class="field"><label>Mode</label>
+      <div class="seg" id="segMode"><button data-v="kids">Kids</button><button data-v="adult">Adult</button></div></div>
+    <div class="field"><label>Topic</label>
+      <div class="seg" id="segTopic"><button data-v="english">English</button><button data-v="science">Science</button><button data-v="all">All</button></div></div>
+    <div class="field"><label for="selTheme">Theme</label><select id="selTheme"></select></div>
+    <div class="field"><label>Level</label>
+      <div class="seg" id="segLevel"><button data-v="easy">Easy</button><button data-v="medium">Medium</button><button data-v="hard">Hard</button></div></div>
+    <div class="field"><label>Words per round</label>
+      <div class="seg" id="segRound"><button data-v="5">5</button><button data-v="10">10</button><button data-v="15">15</button></div></div>
+    <button class="btn primary" id="btnNew">New round</button>
+    <div class="best" id="bestLine"></div>
+    <div class="keys">
+      <div>Type the word, <kbd>Enter</kbd> check / next</div>
+      <div><kbd>1</kbd> meaning &nbsp; <kbd>2</kbd> reveal letter &nbsp; <kbd>3</kbd> skip</div>
+      <div><kbd>9</kbd> new round &nbsp; <kbd>0</kbd> full screen</div>
+    </div>
+  </aside>
+
+  <section class="stage">
+    <div class="card">
+      <div class="cardHead"><span class="theme" id="theme"></span><span class="worth">Worth <b id="worth">0</b></span></div>
+      <div id="clues"></div>
+      <div class="boxes" id="boxes"></div>
+      <div class="len" id="lenLine"></div>
+      <div class="actions">
+        <button class="btn" id="btnDef">Show meaning</button>
+        <button class="btn" id="btnLetter">Reveal a letter</button>
+        <button class="btn" id="btnSkip">Skip</button>
+        <button class="btn primary" id="btnCheck">Check</button>
+      </div>
+      <div class="msg" id="msg"></div>
+      <div id="answerBox"></div>
+    </div>
+    <div class="kbd" id="kbd"></div>
+  </section>
+
+  <aside class="panel logPanel">
+    <h2>This round</h2>
+    <ul class="log" id="log"></ul>
+  </aside>
+</main>
+
+<section id="how" hidden>
+  <h1>How Clue Guess works</h1>
+  <p>Each round has a set of words. For every word you see a riddle-style clue and a row of empty boxes, one per letter. Type your guess and press Check. If you are stuck, buy an easier clue or reveal letters, but each help lowers what the word is worth.</p>
+
+  <h2>The clue ladder</h2>
+  <ol>
+    <li><b>Riddle.</b> An indirect clue, always shown. For example, for CAMEL: "The ship of the desert".</li>
+    <li><b>Meaning.</b> A plain definition, for example "Desert animal with humps". Free on Easy; costs points on Medium and Hard.</li>
+    <li><b>Letters.</b> Each reveal fills one box: the first letter first, then random ones. At least one letter always stays hidden.</li>
+    <li><b>Skip.</b> Shows the answer and scores nothing for that word.</li>
+  </ol>
+  <p>Once a word is solved or skipped, both clues and the answer stay on screen so the word is learnt either way.</p>
+
+  <h2>Levels</h2>
+  <table>
+    <tr><th>Level</th><th>Word worth</th><th>Meaning</th><th>Each letter</th><th>Theme name</th></tr>
+    <tr><td>Easy</td><td>60 + 5 per letter</td><td>Free, shown at start</td><td>&minus;10</td><td>Shown</td></tr>
+    <tr><td>Medium</td><td>90 + 5 per letter</td><td>&minus;20</td><td>&minus;15</td><td>Shown</td></tr>
+    <tr><td>Hard</td><td>120 + 5 per letter</td><td>&minus;30</td><td>&minus;20</td><td>Hidden until you take the meaning</td></tr>
+  </table>
+  <p>Each wrong guess costs 5. A solved word is always worth at least 10.</p>
+
+  <h2>Streak bonus</h2>
+  <p>Solving words in a row builds a streak. The second word in a streak earns +5, the third +10, the fourth +15, and so on. A skip resets the streak to zero.</p>
+
+  <h2>Where the clues come from</h2>
+  <p>The same 319 themed words as Word Search: 159 for Kids and 160 for Adult, in English and Science themes. Each word has a meaning and a separate riddle written to point at the word without naming it. Words don't repeat within a session until every word in your chosen pool has been played.</p>
+</section>
+
+<div class="modal" id="modal" hidden>
+  <div class="box">
+    <h3 id="mTitle">Round complete!</h3>
+    <div class="newbest" id="mBest" hidden>New personal best!</div>
+    <table id="mTable"></table>
+    <div class="row"><button class="btn primary" id="mNext">New round</button><button class="btn" id="mClose">Close</button></div>
+  </div>
+</div>
+
+<script>
+const CB = {"kids":{"english":{"Animals":[["CAT","A pet that purrs and says meow","I chase mice and love a warm lap"],["DOG","A loyal pet that barks","I wag my tail when you come home"],["COW","Farm animal that gives us milk","I say moo and munch grass all day"],["LION","Called the king of the jungle","I have a big mane and a loud roar"],["TIGER","Big cat with black stripes","India's national animal"],["ELEPHANT","Huge animal with a long trunk","I never forget, and my nose can lift logs"],["MONKEY","Loves bananas and climbing trees","I swing from branch to branch using my tail"],["RABBIT","Hopping animal with long ears","I love carrots and live in a burrow"],["HORSE","Animal people ride on","I gallop, and my shoes are made of iron"],["ZEBRA","Horse-like animal with black and white stripes","A road crossing is named after me"],["GIRAFFE","Animal with a very long neck","The tallest animal on land"],["BEAR","Big furry animal that loves honey","I sleep through the winter in a cave"],["DUCK","Bird that quacks and swims","I have webbed feet and a flat orange bill"],["PARROT","Colourful bird that can copy words","A green talking bird with a curved beak"],["SHEEP","Farm animal that gives us wool","I say baa, and my coat becomes sweaters"],["CAMEL","Desert animal with humps","The ship of the desert"],["FROG","Green animal that jumps and croaks","I start life as a tadpole in a pond"],["SNAKE","Long animal with no legs","I hiss and shed my skin"]],"Fruits and Food":[["APPLE","Red or green fruit that keeps the doctor away","One fell on Newton's head"],["BANANA","Long yellow fruit you peel","Monkeys love this curved fruit"],["MANGO","King of fruits in summer","India's national fruit"],["GRAPES","Small round fruits that grow in bunches","Dried, we become raisins"],["ORANGE","A juicy fruit and also a colour","Its name is also its colour"],["PAPAYA","Orange fruit with black seeds inside","Big fruit with orange flesh and a pile of black seeds"],["GUAVA","Green fruit with many tiny seeds","Green fruit eaten with salt and chilli powder"],["RICE","White grains we cook for lunch","Grows in flooded paddy fields"],["BREAD","Baked food made from flour","Sliced for sandwiches and toast"],["MILK","White drink that comes from cows","Curd and butter are made from it"],["HONEY","Sweet food made by bees","Golden and sticky, made in a hive"],["IDLI","Soft steamed rice cake for breakfast","Round, white and served with sambar"],["DOSA","Thin crispy pancake from South India","Spread thin on a hot tawa, sometimes with masala inside"],["CARROT","Orange vegetable rabbits love","An orange root that is good for your eyes"],["POTATO","Vegetable used to make chips","Grows underground and is fried into chips"],["TOMATO","Red vegetable used in sauce","Red and juicy, it is turned into ketchup"],["LEMON","Sour yellow fruit","Squeeze me for a sour drink in summer"]],"Around the Home":[["CHAIR","You sit on it","I have four legs and a back but cannot walk"],["TABLE","You eat or write on it","I have four legs and a flat top where meals are served"],["BED","You sleep on it","You lie on me every night"],["DOOR","You open it to enter a room","You knock on me before you enter"],["WINDOW","Glass opening to see outside","A glass eye in the wall"],["LAMP","Gives light at night","Switch me on to read in the dark"],["CLOCK","Tells the time","I have hands but no fingers, and a face but no eyes"],["MIRROR","You see yourself in it","I show you your own face"],["PILLOW","Soft rest for your head in bed","A soft cushion at the head of the bed"],["SPOON","Used to eat soup","You stir your tea with me"],["PLATE","You eat food from it","A flat dish for your meal"],["KITCHEN","Room where food is cooked","The room with the stove"],["FAN","Spins to keep you cool","I hang from the ceiling and go round and round"],["SOFA","Long soft seat for the family","The whole family sits on me to watch TV"],["BUCKET","Container to carry water","I carry water by my handle"],["BROOM","Used to sweep the floor","A bundle of sticks that sweeps the floor"]],"Colours and Shapes":[["RED","Colour of a ripe tomato","The traffic light colour that means stop"],["BLUE","Colour of a clear sky","Colour of the sea on a sunny day"],["GREEN","Colour of fresh leaves","The traffic light colour that means go"],["YELLOW","Colour of a banana","Colour of a sunflower"],["PURPLE","Colour made by mixing red and blue","Colour of a brinjal's skin"],["PINK","Light red colour of a rose","Colour of candy floss"],["BLACK","Colour of the night sky","Colour of a crow"],["WHITE","Colour of milk","Colour of snow"],["BROWN","Colour of chocolate","Colour of tree bark"],["CIRCLE","Round shape like a wheel","A shape with no corners at all"],["SQUARE","Shape with four equal sides","A chessboard is made of 64 of me"],["TRIANGLE","Shape with three sides","The shape of a slice of pizza"],["OVAL","Shape like an egg","A stretched-out circle"],["STAR","Shape with five points","Twinkle, twinkle, little ..."],["HEART","Shape that means love","The shape on a Valentine's card"],["DIAMOND","Shape like a kite","A square turned onto its corner"]],"Nature and Weather":[["SUN","Gives us light and heat in the day","Our nearest star"],["RAIN","Water falling from clouds","You need an umbrella for me"],["CLOUD","White fluffy thing in the sky","The grey ones bring rain"],["WIND","Moving air","You cannot see me, but I fly your kite"],["SNOW","Soft white ice that falls in cold places","White flakes that fall on the Himalayas in winter"],["RAINBOW","Seven colours in the sky after rain","An arch of seven colours: VIBGYOR"],["RIVER","Long flowing body of water","The Kaveri and the Ganga are examples"],["TREE","Tall plant with a trunk","A tall plant with branches and a trunk"],["FLOWER","Colourful part of a plant","Bees visit me for nectar"],["HILL","Small mountain","Smaller than a mountain and fun to climb"],["SEA","Large body of salty water","Waves crash from it onto the beach"],["STORM","Strong wind with heavy rain","Wild weather that knocks down trees"],["THUNDER","Loud sound after lightning","The rumble that follows a lightning flash"],["SKY","The space above us","Birds fly and clouds float in me"],["MOON","Shines in the night sky","I change shape from full to half to new"],["FOREST","Place with many trees","A home for tigers with thousands of trees"]]},"science":{"Plants":[["ROOT","Part of a plant that grows underground","I drink water from the soil"],["STEM","Holds the plant up","I carry water up from the roots to the leaves"],["LEAF","Green part where plants make food","A green kitchen that cooks with sunlight"],["FLOWER","Part of the plant that makes seeds","The colourful part that later turns into fruit"],["SEED","A new plant grows from it","Plant me and I grow"],["FRUIT","Part of the plant that holds seeds","A ripened flower that holds seeds"],["SOIL","Plants grow in it","Plants stand in me and earthworms live in me"],["SUNLIGHT","Plants need it to make food","The energy leaves use to make food"],["BUD","A flower before it opens","A flower still wrapped up"],["THORN","Sharp point on a rose stem","A rose's sharp guard"],["POLLEN","Yellow powder found in flowers","Bees carry this powder from flower to flower"],["BARK","Hard outer covering of a tree trunk","A tree's tough skin"],["CACTUS","Desert plant with spines","A desert plant that stores water in its thick stem"],["SPROUT","Tiny new plant coming out of a seed","The first tiny shoot from a seed"],["PETAL","Coloured part of a flower","Pull these off a flower one by one"]],"Our Body":[["HEART","Pumps blood around the body","I beat about seventy times a minute"],["LUNGS","Help us breathe","Two air bags in your chest"],["BRAIN","Helps us think and remember","The boss inside your skull"],["BONES","Hard parts that hold up the body","An adult has 206 of them"],["SKIN","Covers the whole body","Your largest organ, wrapped all around you"],["TEETH","Help us chew food","Brush them twice a day"],["TONGUE","Helps us taste","It tastes sweet, salty, sour and bitter"],["STOMACH","Food is churned and digested here","The bag where food goes after you swallow"],["BLOOD","Red liquid flowing in our body","Flows through veins and arteries"],["MUSCLE","Pulls on bones to help us move","Your biceps is one"],["EYES","Help us see","Two windows to see the world"],["EARS","Help us hear","Two flaps on the sides of your head"],["NOSE","Helps us smell","I smell flowers and sneeze in dust"],["SKULL","Bones that protect the brain","A bony helmet for your brain"],["SPINE","Backbone","A column of small bones down your back"]],"Space":[["EARTH","Our home planet","The third planet from the Sun"],["MARS","The red planet","India's Mangalyaan went here"],["JUPITER","Largest planet in our solar system","Giant planet with a Great Red Spot"],["SATURN","Planet with beautiful rings","The planet with the brightest rings"],["VENUS","Hottest planet","The brightest planet in the evening sky"],["STAR","Shines in the night sky by its own light","The Sun is one of these"],["COMET","Icy body with a glowing tail","Halley's is the most famous one"],["ROCKET","Carries astronauts into space","It blasts off from Sriharikota"],["ORBIT","Path around a planet or star","The Moon's path around the Earth"],["PLANET","Big round body that goes around the Sun","Earth is one of eight of these"],["GALAXY","Huge group of millions of stars","The Milky Way is one"],["ASTRONAUT","Person who travels to space","A space traveller in a spacesuit"],["METEOR","Also called a shooting star","A streak of light from a burning space rock"],["CRATER","Bowl-shaped hole on the Moon","A hole on the Moon made by crashing rocks"],["MOON","Earth's natural satellite","Chandrayaan travelled here"]],"Matter and Materials":[["SOLID","State of matter with a fixed shape","A brick is in this state of matter"],["LIQUID","State of matter that flows","Water and oil are in this state of matter"],["GAS","State of matter that spreads to fill a space","Air is in this state of matter"],["ICE","Frozen water","Solid water in your freezer"],["STEAM","Water turned into vapour by heating","Rises from a boiling kettle"],["MELT","To change from solid to liquid","What ice cream does in the sun"],["FREEZE","To change from liquid to solid","What water does when it turns to ice"],["METAL","Shiny material like iron or copper","Iron, copper and gold are all this"],["WOOD","Material that comes from trees","Furniture is often made from this"],["PLASTIC","Light material made from oil","Bottles and buckets are made of this"],["GLASS","Clear material used in windows","Breakable and see-through"],["RUBBER","Stretchy material used in tyres","An eraser is made of this"],["PAPER","Material made from wood pulp","Your notebook is made of this"],["AIR","Mixture of gases we breathe","Invisible, and you breathe it all the time"],["CLAY","Soft earth used to make pots","A potter shapes this on a wheel"]],"Energy and Forces":[["PUSH","A force that moves something away","What you do to a swing to make it go"],["PULL","A force that brings something closer","What you do to the rope in tug of war"],["FORCE","A push or a pull","Measured in newtons"],["ENERGY","Ability to do work","Food gives you this so you can play"],["HEAT","Energy that makes things warm","What a fire gives off"],["LIGHT","Energy that lets us see","It travels faster than anything else"],["SOUND","Energy we hear","It travels as vibrations through the air"],["SHADOW","Dark shape made when light is blocked","Longest in the evening, it follows you everywhere"],["GRAVITY","Force that pulls things down to Earth","Why an apple falls to the ground"],["FRICTION","Force that slows things that rub","Why rubbing your hands makes them warm"],["SPEED","How fast something moves","Measured in kilometres per hour"],["MAGNET","Pulls iron objects towards it","It has a north pole and a south pole"],["BATTERY","Stores electricity for a torch","Cells that power a remote control"],["SWITCH","Turns a circuit on and off","Flip me to turn on the light"],["LEVER","Simple machine like a see-saw","A crowbar is this simple machine"],["PULLEY","Wheel with a rope to lift loads","Lifts a bucket of water from a well"]]}},"adult":{"english":{"Emotions":[["JOY","A feeling of great happiness","You might jump for it"],["ANGER","Strong feeling of displeasure","Seeing red describes this feeling"],["FEAR","Feeling caused by danger","A phobia is an extreme form of it"],["GRIEF","Deep sorrow, especially after a loss","Mourning brings it"],["ENVY","Wanting what someone else has","The green-eyed monster"],["PRIDE","Satisfaction in one's achievements","It goes before a fall"],["SHAME","Painful feeling of having done wrong","It makes you hang your head"],["DELIGHT","Great pleasure","Turkish ___, a sweet"],["ANXIETY","Worry about an uncertain outcome","Butterflies in the stomach before an exam"],["NOSTALGIA","Sentimental longing for the past","Old songs often bring it on"],["EMPATHY","Ability to share another's feelings","Walking in another person's shoes"],["GRATITUDE","Thankfulness","Saying thank you expresses it"],["REMORSE","Deep regret for a wrong committed","The sting of conscience after a wrong"],["SERENITY","Calm, peaceful state of mind","The calm of a still lake at dawn"],["ELATION","Great happiness and excitement","Being over the moon"],["MELANCHOLY","Lasting, thoughtful sadness","The mood of a grey, rainy evening"]],"Professions":[["ARCHITECT","Designs buildings","Draws the plans before the builders start"],["SURGEON","Doctor who performs operations","Works with a scalpel in the theatre"],["LAWYER","Advises and represents clients in law","Argues cases in court"],["JOURNALIST","Writes or reports the news","Covers stories for a newspaper"],["PILOT","Flies an aircraft","Sits in the cockpit"],["PHARMACIST","Prepares and dispenses medicines","Reads the doctor's prescription at the counter"],["ACCOUNTANT","Keeps and audits financial records","Balance sheets and tax returns are this person's work"],["CARPENTER","Makes things from wood","Works with saw and chisel"],["PLUMBER","Fits and repairs water pipes","Fixes your leaking tap"],["ELECTRICIAN","Installs and repairs wiring","Replaces a blown fuse"],["ENGINEER","Designs and builds machines or structures","Designs bridges, machines and circuits"],["SCIENTIST","Studies the natural world by experiment","Tests hypotheses in a lab"],["LIBRARIAN","Manages a collection of books","Keeps the books in order and the room quiet"],["ECONOMIST","Studies production and use of wealth","Studies inflation and GDP"],["SCULPTOR","Carves or models figures","Works in marble or bronze"],["NAVIGATOR","Plans the route of a ship or aircraft","Charts the course"]],"Travel":[["PASSPORT","Official document for foreign travel","Stamped at immigration"],["ITINERARY","Planned route of a journey","A day-by-day travel plan"],["LUGGAGE","Bags and suitcases of a traveller","Checked in at the airline counter"],["BOARDING","Getting on a plane, ship or train","You show this kind of pass at the gate"],["CUSTOMS","Where goods are checked at a border","\"Anything to declare?\""],["LAYOVER","Short stop between two flights","Waiting between connecting flights"],["VISA","Permission to enter a country","A stamp that lets you into a foreign country"],["HOSTEL","Cheap shared lodging","Bunk beds for budget travellers"],["CRUISE","Holiday voyage on a ship","A holiday on a floating hotel"],["VOYAGE","Long journey by sea or space","Columbus's famous 1492 trip"],["SOUVENIR","Keepsake bought on a trip","A fridge magnet bought on holiday"],["TERMINAL","Building where passengers board","The airport building with the departure gates"],["EXCURSION","Short pleasure trip","A day trip out from your hotel"],["TOURIST","Person travelling for pleasure","Snaps photos at famous landmarks"],["JOURNEY","Act of travelling from one place to another","One of a thousand miles begins with a single step"],["COMPASS","Instrument that shows north","Its needle points north"]],"Rich Vocabulary":[["ELOQUENT","Fluent and persuasive in speech","Describes a gifted public speaker"],["CANDID","Frank and honest","Unposed, as in this kind of photo"],["DILIGENT","Careful and hard-working","Describes a student who never skips homework"],["FRUGAL","Sparing with money","The opposite of extravagant"],["METICULOUS","Showing great attention to detail","Describes someone who checks every detail twice"],["PRAGMATIC","Dealing with things sensibly and practically","Prefers what works over what is ideal"],["RESILIENT","Recovers quickly from difficulty","Bounces back like rubber"],["VERBOSE","Using more words than needed","The opposite of concise"],["TENACIOUS","Holding firmly; persistent","Refuses to let go, like a bulldog"],["BENEVOLENT","Kind and well-meaning","A kind ruler might be called this"],["AMBIGUOUS","Open to more than one meaning","A sentence with two possible readings is this"],["EPHEMERAL","Lasting a very short time","Like a soap bubble or a rainbow"],["LUCID","Clear and easy to understand","This kind of dream is one where you know you're dreaming"],["ZEALOUS","Full of eager enthusiasm","Describes an overly eager supporter"],["PRUDENT","Acting with care for the future","Saving for a rainy day is this"],["OBSCURE","Not well known or hard to understand","Describes a poet nobody has heard of"]],"Kitchen and Cooking":[["SIMMER","Cook gently just below boiling","Gentle bubbling for curries and stews"],["SAUTE","Fry quickly in a little fat","French word for quick pan-frying"],["KNEAD","Work dough with the hands","What you do to chapati dough"],["MARINATE","Soak in a seasoned liquid before cooking","Soak chicken in curd and spices overnight"],["GARNISH","Decorate a dish before serving","Coriander leaves sprinkled on top"],["BLANCH","Plunge briefly into boiling water","A quick dip that loosens tomato skins"],["WHISK","Beat quickly to add air","Beat eggs until fluffy"],["SPATULA","Flat tool for lifting and spreading","Flips a dosa on the tawa"],["COLANDER","Bowl with holes for draining","Drains boiled pasta"],["LADLE","Deep long-handled spoon for serving","Serves rasam from the pot"],["SKILLET","Frying pan","A cast-iron frying pan"],["GRATE","Shred food against a rough surface","Turns coconut or cheese into shreds"],["ROAST","Cook with dry heat in an oven","Dry-heat cooking, as with peanuts"],["BRAISE","Brown, then cook slowly in liquid","Slow-cook meat in a covered pot"],["TEMPER","Fry spices in hot oil to add flavour","Mustard seeds crackling in hot oil"],["FERMENT","Let microbes sour a batter or dough","What idli batter does overnight"]]},"science":{"Physics":[["VELOCITY","Speed in a given direction","Speed with a direction attached"],["MOMENTUM","Mass times velocity","The product of mass and velocity"],["INERTIA","Tendency to resist change in motion","Newton's first law describes it"],["TORQUE","Turning effect of a force","Measured in newton-metres"],["FRICTION","Force opposing sliding between surfaces","Brakes rely on it"],["ENTROPY","Measure of disorder in a system","The second law of thermodynamics says it always increases"],["WAVELENGTH","Distance between successive wave crests","Lambda in wave equations"],["FREQUENCY","Number of cycles per second","Measured in hertz"],["RESONANCE","Large vibration at a natural frequency","Why soldiers break step crossing a bridge"],["VOLTAGE","Electric potential difference","Measured in volts"],["CURRENT","Flow of electric charge","Measured in amperes"],["RESISTANCE","Opposition to electric current","Measured in ohms"],["PHOTON","Particle of light","Einstein's packet of light"],["QUANTUM","Smallest discrete amount of energy","Planck's discrete packet of energy"],["DENSITY","Mass per unit volume","Why ice floats on water"],["PRESSURE","Force per unit area","Measured in pascals"]],"Chemistry":[["ATOM","Smallest unit of a chemical element","The smallest particle of an element"],["MOLECULE","Group of atoms bonded together","H2O is one"],["ELECTRON","Negatively charged particle","It orbits the nucleus"],["PROTON","Positively charged particle in the nucleus","Their count gives the atomic number"],["NEUTRON","Uncharged particle in the nucleus","The uncharged particle in the nucleus"],["ISOTOPE","Atoms with different neutron counts","Carbon-14 is one"],["CATALYST","Speeds up a reaction without being used up","Platinum plays this role in a car's exhaust converter"],["OXIDATION","Loss of electrons","Rusting is an example"],["POLYMER","Long chain of repeating units","Nylon and polythene are examples"],["SOLVENT","Liquid that dissolves a substance","Water is called the universal one"],["ALKALI","Base that dissolves in water","Turns red litmus blue"],["ACID","Substance with pH below seven","Turns blue litmus red"],["VALENCE","Combining power of an element","Carbon's is four"],["REACTION","Process that forms new substances","Turns reactants into products"],["CRYSTAL","Solid with a regular repeating structure","Salt and quartz form these"],["ALLOY","Mixture of metals, like brass","Steel is one"]],"Biology":[["CELL","Basic unit of life","The smallest unit of life"],["NUCLEUS","Control centre of a cell","Holds the DNA"],["CHROMOSOME","Thread-like carrier of genes","Humans have 46 of these"],["GENE","Unit of heredity","A stretch of DNA that codes for a protein"],["PROTEIN","Molecule built from amino acids","Made of amino acids"],["ENZYME","Biological catalyst","Amylase in saliva is one"],["MITOCHONDRIA","Powerhouses of the cell","Where ATP is made"],["RIBOSOME","Where proteins are made in a cell","Reads messenger RNA"],["ANTIBODY","Protein that fights infection","Made by B cells"],["HORMONE","Chemical messenger in the blood","Insulin is one"],["NEURON","Nerve cell","Fires electrical signals"],["OSMOSIS","Movement of water across a membrane","Why raisins swell in water"],["MUTATION","Change in DNA sequence","A change in the genetic code"],["EVOLUTION","Change in species over generations","Darwin's theory"],["BACTERIA","Single-celled microorganisms","E. coli is an example"],["VIRUS","Infectious agent that needs a host cell","Causes the common cold"]],"Earth and Climate":[["VOLCANO","Opening where magma erupts","Vesuvius buried Pompeii"],["EARTHQUAKE","Sudden shaking of the ground","Measured on the Richter scale"],["TECTONIC","Relating to movement of Earth's crust","Describes the plates that drift on the mantle"],["MAGMA","Molten rock below the surface","Called lava once it reaches the surface"],["GLACIER","Slow-moving river of ice","Gangotri feeds the Ganga"],["MONSOON","Seasonal wind bringing heavy rain","Reaches Kerala in early June"],["CYCLONE","Rotating storm system","Fani was one in the Bay of Bengal"],["EROSION","Wearing away of land","Carved the Grand Canyon"],["SEDIMENT","Material deposited by water or wind","Settles at the bottom of a riverbed"],["AQUIFER","Underground layer that holds water","The groundwater store that borewells tap"],["HUMIDITY","Amount of water vapour in air","Why Chennai feels sticky"],["OZONE","Gas layer that blocks ultraviolet rays","A molecule of three oxygen atoms"],["CLIMATE","Long-term weather pattern","Weather averaged over decades"],["TSUNAMI","Giant sea wave caused by an earthquake","Struck the Indian coast in December 2004"],["FOSSIL","Preserved remains of ancient life","Dinosaur bones turned to stone"],["MINERAL","Naturally occurring inorganic solid","Quartz and mica are examples"]],"Astronomy":[["NEBULA","Cloud of gas and dust in space","A birthplace of stars"],["QUASAR","Extremely bright galaxy core","Powered by a supermassive black hole"],["PULSAR","Rapidly spinning neutron star","A cosmic lighthouse"],["SUPERNOVA","Explosion of a massive star","A dying star's final explosion"],["ECLIPSE","One body blocking light from another","The Moon blocks the Sun"],["ASTEROID","Small rocky body orbiting the Sun","Ceres is the largest in the belt"],["GALAXY","System of billions of stars","Andromeda is one"],["BLACKHOLE","Region where not even light escapes","Its edge is the event horizon"],["EXOPLANET","Planet outside our solar system","The Kepler telescope found thousands"],["TELESCOPE","Instrument for viewing distant objects","Hubble is one"],["ORBIT","Curved path around a star or planet","A satellite's path"],["COMET","Icy body with a tail near the Sun","Halley's returns every 76 years"],["METEORITE","Space rock that reaches the ground","A shooting star that survived the fall"],["CONSTELLATION","Named pattern of stars","Orion is one"],["SOLSTICE","Longest or shortest day of the year","Falls around 21 June"],["EQUINOX","Day and night of equal length","Falls around 21 March"]]}}};
+/*CORE*/
+const LV={
+  easy:  {base:60, defFree:true,  defCost:0,  letterCost:10, themeShown:true},
+  medium:{base:90, defFree:false, defCost:20, letterCost:15, themeShown:true},
+  hard:  {base:120,defFree:false, defCost:30, letterCost:20, themeShown:false}
+};
+const WRONG_COST=5, MIN_SOLVED=10, STREAK_STEP=5;
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+function shuffleArr(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function themeKeys(mode,topic){
+  const out=[];for(const t of (topic==='all'?['english','science']:[topic]))for(const th in CB[mode][t])out.push(t+'/'+th);return out;
+}
+function poolFor(mode,topic,theme){
+  const keys=theme==='any'?themeKeys(mode,topic):[theme];const out=[];
+  for(const k of keys){const [t,th]=k.split('/');for(const [w,def,riddle] of CB[mode][t][th])out.push({w,def,riddle,theme:th,topic:t});}
+  return out;
+}
+function drawRound(pool,n,seen){
+  let fresh=pool.filter(x=>!seen.has(x.theme+'|'+x.w));
+  if(fresh.length<n){for(const x of pool)seen.delete(x.theme+'|'+x.w);fresh=pool;}
+  // no duplicate word text within a round (some words sit in two themes)
+  const out=[],words=new Set();
+  for(const x of shuffleArr(fresh)){if(out.length>=n)break;if(words.has(x.w))continue;words.add(x.w);out.push(x);}
+  for(const x of out)seen.add(x.theme+'|'+x.w);
+  return out;
+}
+function wordValue(w,lv,st){
+  const L=LV[lv];let v=L.base+5*w.length;
+  if(st.defShown&&!L.defFree)v-=L.defCost;
+  v-=st.reveals*L.letterCost+st.wrong*WRONG_COST;
+  return Math.max(MIN_SOLVED,v);
+}
+/*ENDCORE*/
+
+/* ---------------- UI ---------------- */
+const $=s=>document.querySelector(s);
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}},
+             set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+let cfg=Object.assign({mode:'kids',topic:'english',theme:'any',level:'easy',round:'10'},store.get('hvwg.cg.settings',{}));
+const seen=new Set();
+let R=null, W=null;
+
+function setSeg(id,val){document.querySelectorAll('#'+id+' button').forEach(b=>b.classList.toggle('on',b.dataset.v===String(val)));}
+function bindSeg(id,key){document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{cfg[key]=b.dataset.v;if(key==='mode'||key==='topic')cfg.theme='any';syncUI();newRound();});}
+function syncUI(){
+  setSeg('segMode',cfg.mode);setSeg('segTopic',cfg.topic);setSeg('segLevel',cfg.level);setSeg('segRound',cfg.round);
+  const sel=$('#selTheme');sel.innerHTML='<option value="any">Any theme (mixed)</option>';
+  for(const k of themeKeys(cfg.mode,cfg.topic)){const [t,th]=k.split('/');const o=document.createElement('option');o.value=k;
+    o.textContent=(cfg.topic==='all'?(t==='english'?'English: ':'Science: '):'')+th;sel.appendChild(o);}
+  if(![...sel.options].some(o=>o.value===cfg.theme))cfg.theme='any';
+  sel.value=cfg.theme;store.set('hvwg.cg.settings',cfg);
+}
+const bestKey=()=>`hvwg.cg.best.${cfg.mode}.${cfg.topic}.${cfg.level}.${cfg.round}`;
+function showBest(){const b=store.get(bestKey(),null);$('#bestLine').textContent=b==null?'No best score yet for these settings.':'Best for these settings: '+b;}
+
+function newRound(){
+  const pool=poolFor(cfg.mode,cfg.topic,cfg.theme);
+  R={words:drawRound(pool,+cfg.round,seen),i:0,score:0,streak:0,bestStreak:0,results:[],level:cfg.level,over:false};
+  $('#modal').hidden=true;showBest();startWord();
+}
+function startWord(){
+  const x=R.words[R.i];
+  W={...x,defShown:LV[R.level].defFree,reveals:0,wrong:0,given:new Array(x.w.length).fill(false),typed:new Array(x.w.length).fill(''),done:false,solved:false};
+  msg('');renderAll();
+}
+function renderAll(){renderCard();renderBoxes();renderLog();updateStats();}
+function renderCard(){
+  const L=LV[R.level];
+  $('#theme').textContent=(L.themeShown||W.defShown||W.done)?`${W.theme} · ${W.topic==='english'?'English':'Science'}`:'Theme hidden';
+  $('#worth').textContent=W.done?(W.solved?W.points:0):wordValue(W.w,R.level,W);
+  let h=`<div class="clue"><span class="tag">Riddle</span><span>${W.riddle}</span></div>`;
+  if(W.defShown||W.done)h+=`<div class="clue"><span class="tag">Meaning</span><span>${W.def}</span></div>`;
+  else h+=`<div class="clue locked"><span class="tag">Meaning</span><span>Hidden &middot; show it for &minus;${L.defCost}</span></div>`;
+  $('#clues').innerHTML=h;
+  $('#lenLine').textContent=`${W.w.length} letters`;
+  $('#btnDef').textContent=W.defShown?'Meaning shown':`Show meaning (−${L.defCost})`;
+  $('#btnDef').disabled=W.done||W.defShown;
+  const canReveal=W.given.filter(g=>!g).length>1;
+  $('#btnLetter').textContent=`Reveal a letter (−${L.letterCost})`;
+  $('#btnLetter').disabled=W.done||!canReveal;
+  $('#btnSkip').disabled=W.done;
+  $('#btnCheck').textContent=W.done?(R.i+1<R.words.length?'Next word ⏎':'See results ⏎'):'Check ⏎';
+  $('#answerBox').innerHTML=W.done?`<div class="answerBox"><b>${W.w}</b> &nbsp;&mdash;&nbsp; ${W.def}</div>`:'';
+}
+function nextSlot(){for(let i=0;i<W.w.length;i++)if(!W.given[i]&&!W.typed[i])return i;return -1;}
+function renderBoxes(){
+  const b=$('#boxes');b.innerHTML='';const nx=W.done?-1:nextSlot();
+  for(let i=0;i<W.w.length;i++){
+    const d=document.createElement('div');d.className='lb';
+    if(W.done){d.textContent=W.w[i];d.classList.add(W.solved?'ok':(W.given[i]?'given':'miss'));}
+    else if(W.given[i]){d.textContent=W.w[i];d.classList.add('given');}
+    else{d.textContent=W.typed[i];if(i===nx)d.classList.add('next');}
+    b.appendChild(d);
+  }
+}
+function renderLog(){
+  const ul=$('#log');ul.innerHTML='';
+  R.words.forEach((x,i)=>{const li=document.createElement('li');const r=R.results[i];
+    if(r){li.className=r.solved?'':'skip';li.innerHTML=`<span class="w">${i+1}. ${x.w}</span><span>${r.solved?'+'+(r.points+r.bonus):'skipped'}</span>`;}
+    else{li.innerHTML=`<span class="w">${i+1}. ${'_ '.repeat(x.w.length).trim()}</span><span></span>`;if(i===R.i)li.classList.add('cur');}
+    ul.appendChild(li);});
+}
+function updateStats(){
+  $('#stScore').textContent=R.score;$('#stWord').textContent=`${Math.min(R.i+1,R.words.length)}/${R.words.length}`;$('#stStreak').textContent=R.streak;
+}
+let msgT=null;
+function msg(t,cls){const m=$('#msg');m.textContent=t;m.className='msg'+(cls?' '+cls:'');clearTimeout(msgT);if(t&&cls!=='keep')msgT=setTimeout(()=>{m.textContent='';},3000);}
+
+/* ----- actions ----- */
+function typeLetter(ch){if(!W||W.done)return;const i=nextSlot();if(i<0)return;W.typed[i]=ch;renderBoxes();}
+function backspace(){if(!W||W.done)return;for(let i=W.w.length-1;i>=0;i--)if(!W.given[i]&&W.typed[i]){W.typed[i]='';break;}renderBoxes();}
+function showDef(){if(!W||W.done||W.defShown)return;W.defShown=true;renderCard();}
+function revealLetter(){
+  if(!W||W.done)return;const hidden=[];for(let i=0;i<W.w.length;i++)if(!W.given[i])hidden.push(i);
+  if(hidden.length<=1){msg('The last letter is yours to find');return;}
+  const i=!W.given[0]?0:rnd(hidden);W.given[i]=true;W.typed[i]='';W.reveals++;renderCard();renderBoxes();
+}
+function shake(){const b=$('#boxes');b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');}
+function check(){
+  if(!W)return;
+  if(W.done){advance();return;}
+  if(nextSlot()>=0){msg('Fill every box first','bad');shake();return;}
+  const guess=W.w.split('').map((c,i)=>W.given[i]?c:W.typed[i]).join('');
+  if(guess===W.w){
+    W.points=wordValue(W.w,R.level,W);R.streak++;R.bestStreak=Math.max(R.bestStreak,R.streak);
+    const bonus=STREAK_STEP*(R.streak-1);R.score+=W.points+bonus;
+    R.results[R.i]={solved:true,points:W.points,bonus};W.done=true;W.solved=true;
+    msg(`Correct! +${W.points}${bonus?`  · streak bonus +${bonus}`:''}`,'good');
+  }else{
+    W.wrong++;msg(`Not ${guess}. Try again (−${WRONG_COST})`,'bad');shake();
+    for(let i=0;i<W.w.length;i++)if(!W.given[i])W.typed[i]='';
+  }
+  renderAll();
+}
+function skip(){if(!W||W.done)return;W.done=true;W.solved=false;R.streak=0;R.results[R.i]={solved:false,points:0,bonus:0};msg('Skipped. Here is the answer.','keep');renderAll();}
+function advance(){if(R.i+1<R.words.length){R.i++;startWord();}else endRound();}
+function endRound(){
+  R.over=true;
+  const solved=R.results.filter(r=>r&&r.solved).length,bonus=R.results.reduce((s,r)=>s+(r?r.bonus:0),0);
+  const prev=store.get(bestKey(),null);let newBest=false;
+  if(R.score>0&&(prev==null||R.score>prev)){store.set(bestKey(),R.score);newBest=prev!=null;}
+  if(R.score>store.get('hvwg.best.clueguess',0))store.set('hvwg.best.clueguess',R.score);
+  store.set('hvwg.played.clueguess',store.get('hvwg.played.clueguess',0)+1);
+  showBest();
+  $('#mTitle').textContent=solved===R.words.length?'Perfect round!':'Round complete!';
+  $('#mBest').hidden=!newBest;
+  $('#mTable').innerHTML=`
+    <tr><td>Words solved</td><td>${solved} of ${R.words.length}</td></tr>
+    <tr><td>Best streak</td><td>${R.bestStreak}</td></tr>
+    <tr><td>Streak bonus</td><td>+${bonus}</td></tr>
+    <tr class="total"><td>Score</td><td>${R.score}</td></tr>`;
+  $('#modal').hidden=false;
+}
+
+/* ----- on-screen keyboard ----- */
+(function buildKbd(){
+  const rows=['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'];const k=$('#kbd');
+  rows.forEach((r,ri)=>{const d=document.createElement('div');d.className='r';
+    if(ri===2){const e=document.createElement('button');e.className='wide';e.textContent='Enter';e.onclick=check;d.appendChild(e);}
+    for(const ch of r){const b=document.createElement('button');b.textContent=ch;b.onclick=()=>typeLetter(ch);d.appendChild(b);}
+    if(ri===2){const e=document.createElement('button');e.className='wide';e.innerHTML='&#x232B;';e.onclick=backspace;d.appendChild(e);}
+    k.appendChild(d);});
+})();
+
+/* ----- keyboard ----- */
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  const tag=(e.target.tagName||'').toLowerCase();if(tag==='select')return;
+  const k=e.key;
+  if(!$('#modal').hidden){if(k==='Enter'||k==='9'){e.preventDefault();newRound();}else if(k==='Escape')$('#modal').hidden=true;return;}
+  if(k==='0'){toggleFS();return;}
+  if($('#play').hidden||!R)return;
+  if(k==='9'){newRound();return;}
+  if(R.over)return;
+  if(/^[a-zA-Z]$/.test(k)){typeLetter(k.toUpperCase());return;}
+  if(k==='Enter'){e.preventDefault();check();return;}
+  if(k==='Backspace'){e.preventDefault();backspace();return;}
+  if(k==='1'){showDef();return;}
+  if(k==='2'){revealLetter();return;}
+  if(k==='3'){skip();return;}
+});
+
+/* ----- tabs, fullscreen, controls ----- */
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  $('#play').hidden=b.dataset.tab!=='play';$('#how').hidden=b.dataset.tab!=='how';
+});
+function toggleFS(){
+  if(document.fullscreenElement)document.exitFullscreen();
+  else if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});
+}
+$('#fsBtn').onclick=toggleFS;
+document.addEventListener('fullscreenchange',()=>{$('#fsBtn').innerHTML=document.fullscreenElement?'&#x2715; Exit full screen':'&#x26F6; Full screen';});
+bindSeg('segMode','mode');bindSeg('segTopic','topic');bindSeg('segLevel','level');bindSeg('segRound','round');
+$('#selTheme').onchange=e=>{cfg.theme=e.target.value;store.set('hvwg.cg.settings',cfg);e.target.blur();newRound();};
+$('#btnNew').onclick=newRound;$('#btnDef').onclick=showDef;$('#btnLetter').onclick=revealLetter;$('#btnSkip').onclick=skip;$('#btnCheck').onclick=check;
+$('#mNext').onclick=newRound;$('#mClose').onclick=()=>{$('#modal').hidden=true;};
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(b)b.blur();});
+syncUI();newRound();
+</script>
+</body>
+</html>

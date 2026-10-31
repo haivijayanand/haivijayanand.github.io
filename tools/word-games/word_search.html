@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Word Search
+FAMILY:  word-games
+VERSION: 1.0.0
+DATE:    2026-10-31
+CHAT:    Word games series - plan and Word Search
+CHANGES: 1.0.0 Initial release: Kids/Adult modes, English/Science/All topics, 3 levels, hidden-clue mode, drag/tap/keyboard selection, scoring and personal bests
+STATUS:  Released
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Word Search</title>
+<style>
+:root{
+  --bg:#f5f3ee; --panel:#ffffff; --ink:#1f2328; --muted:#5f6670; --line:#e3dfd6;
+  --accent:#2f6fde; --accent-ink:#ffffff; --good:#1f9d55; --bad:#d64545;
+  --board:#fbfaf6; --sel:rgba(47,111,222,.38); --chip:#eef2fb;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14161a; --panel:#1d2025; --ink:#e8e6e3; --muted:#9aa1aa; --line:#2f333a;
+    --accent:#6d9cf0; --accent-ink:#0d1117; --good:#4cc38a; --bad:#f07070;
+    --board:#22262c; --sel:rgba(109,156,240,.42); --chip:#262c37;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14161a; --panel:#1d2025; --ink:#e8e6e3; --muted:#9aa1aa; --line:#2f333a;
+  --accent:#6d9cf0; --accent-ink:#0d1117; --good:#4cc38a; --bad:#f07070;
+  --board:#22262c; --sel:rgba(109,156,240,.42); --chip:#262c37;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,select{font:inherit;color:inherit}
+a{color:var(--accent)}
+
+header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+header.top h1{font-size:20px;margin:0;letter-spacing:.3px}
+header.top .back{text-decoration:none;font-size:14px}
+.tabs{display:flex;gap:4px}
+.tabs button{border:1px solid var(--line);background:transparent;padding:5px 12px;border-radius:8px;cursor:pointer}
+.tabs button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.stats{display:flex;gap:16px;margin-left:auto;font-variant-numeric:tabular-nums}
+.stats div{display:flex;flex-direction:column;align-items:center;min-width:56px}
+.stats b{font-size:18px}
+.stats span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.btn{border:1px solid var(--line);background:var(--panel);padding:7px 12px;border-radius:9px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+.layout{display:grid;grid-template-columns:270px 1fr 310px;gap:16px;padding:16px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.panel h2{font-size:14px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.field label{font-size:12px;color:var(--muted)}
+.field select{padding:7px 8px;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
+.seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{flex:1;border:0;background:transparent;padding:7px 4px;cursor:pointer}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.check{display:flex;gap:8px;align-items:center;margin:4px 0 12px;cursor:pointer}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.best{margin-top:12px;font-size:13px;color:var(--muted)}
+.keys{margin-top:12px;font-size:12px;color:var(--muted)}
+kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;font-size:11px;background:var(--bg)}
+
+.boardWrap{display:flex;flex-direction:column;align-items:center;min-width:0}
+.themeTitle{font-weight:600;margin-bottom:8px;text-align:center}
+.themeTitle small{color:var(--muted);font-weight:400}
+.board{position:relative;background:var(--board);border:1px solid var(--line);border-radius:14px;touch-action:none;user-select:none;-webkit-user-select:none}
+.board svg{position:absolute;inset:6px;width:calc(100% - 12px);height:calc(100% - 12px);z-index:1;pointer-events:none}
+.cells{position:absolute;inset:6px;display:grid;z-index:2;cursor:pointer}
+.cell{display:flex;align-items:center;justify-content:center;font-weight:650;font-size:var(--fs,20px);border-radius:6px;position:relative}
+.cell.cursor{outline:2px dashed var(--accent);outline-offset:-3px}
+.cell.hint{animation:pulse .5s ease-in-out 5 alternate}
+@keyframes pulse{from{background:transparent}to{background:var(--accent);color:var(--accent-ink)}}
+.msg{min-height:26px;margin-top:10px;font-weight:600;text-align:center}
+.msg.good{color:var(--good)}.msg.bad{color:var(--bad)}
+.board.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+.wordList{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.wordList li{padding:7px 10px;border-radius:9px;background:var(--chip);border-left:5px solid transparent}
+.wordList .w{font-weight:650;letter-spacing:1.5px}
+.wordList .c{font-size:12.5px;color:var(--muted);margin-top:2px}
+.wordList li.found .w{text-decoration:line-through;text-decoration-thickness:2px}
+.wordList .blanks{letter-spacing:3px;font-family:ui-monospace,Consolas,monospace}
+.progress{font-size:13px;color:var(--muted);margin:-4px 0 10px}
+
+#how{max-width:960px;margin:0 auto;padding:20px 16px 40px}
+#how h2{margin-top:26px}
+#how table{border-collapse:collapse;width:100%;margin:8px 0}
+#how th,#how td{border:1px solid var(--line);padding:7px 10px;text-align:left}
+#how th{background:var(--chip)}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:10;padding:16px}
+.modal[hidden]{display:none}
+.modal .box{background:var(--panel);border-radius:16px;padding:22px;max-width:380px;width:100%;border:1px solid var(--line)}
+.modal h3{margin:0 0 12px;font-size:22px}
+.modal table{width:100%;border-collapse:collapse;margin-bottom:14px}
+.modal td{padding:4px 0;border-bottom:1px solid var(--line)}
+.modal td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.modal tr.total td{font-weight:700;font-size:18px;border-bottom:0}
+.newbest{color:var(--good);font-weight:700;margin-bottom:10px}
+
+@media (max-width:980px){
+  .layout{grid-template-columns:1fr;padding:10px}
+  .boardWrap{order:1}.words{order:2}.settings{order:3}
+  .stats{margin-left:0;width:100%;justify-content:space-around}
+  .keys{display:none}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="back" href="index.html">&larr; Word Games</a>
+  <h1>Word Search</h1>
+  <nav class="tabs">
+    <button data-tab="play" class="on">Play</button>
+    <button data-tab="how">How it works</button>
+  </nav>
+  <div class="stats">
+    <div><b id="stScore">0</b><span>Score</span></div>
+    <div><b id="stTime">0:00</b><span>Time</span></div>
+    <div><b id="stFound">0/0</b><span>Found</span></div>
+  </div>
+  <button class="btn" id="fsBtn" title="Full screen (F)">&#x26F6; Full screen</button>
+</header>
+
+<main id="play" class="layout">
+  <aside class="panel settings">
+    <h2>Game</h2>
+    <div class="field"><label>Mode</label>
+      <div class="seg" id="segMode"><button data-v="kids">Kids</button><button data-v="adult">Adult</button></div></div>
+    <div class="field"><label>Topic</label>
+      <div class="seg" id="segTopic"><button data-v="english">English</button><button data-v="science">Science</button><button data-v="all">All</button></div></div>
+    <div class="field"><label for="selTheme">Theme</label><select id="selTheme"></select></div>
+    <div class="field"><label>Level</label>
+      <div class="seg" id="segLevel"><button data-v="easy">Easy</button><button data-v="medium">Medium</button><button data-v="hard">Hard</button></div></div>
+    <label class="check"><input type="checkbox" id="chkHidden"> Hidden mode (clues only, &times;1.5 points)</label>
+    <div class="row">
+      <button class="btn primary" id="btnNew">New puzzle</button>
+      <button class="btn" id="btnHint">Hint (&minus;15)</button>
+      <button class="btn" id="btnGive">Show answers</button>
+    </div>
+    <div class="best" id="bestLine"></div>
+    <div class="keys">
+      <div><kbd>&larr;</kbd><kbd>&uarr;</kbd><kbd>&rarr;</kbd><kbd>&darr;</kbd> move &nbsp; <kbd>Space</kbd> mark start / end</div>
+      <div><kbd>Esc</kbd> cancel &nbsp; <kbd>H</kbd> hint &nbsp; <kbd>N</kbd> new &nbsp; <kbd>F</kbd> full screen</div>
+      <div style="margin-top:6px">Mouse / touch: drag across a word, or tap its first letter then its last.</div>
+    </div>
+  </aside>
+
+  <section class="boardWrap" id="boardWrap">
+    <div class="themeTitle" id="themeTitle"></div>
+    <div class="board" id="board">
+      <svg id="overlay" preserveAspectRatio="none"><g id="foundLines"></g><line id="selLine" stroke-linecap="round" /></svg>
+      <div class="cells" id="cells"></div>
+    </div>
+    <div class="msg" id="msg"></div>
+  </section>
+
+  <aside class="panel words">
+    <h2 id="listTitle">Find these words</h2>
+    <div class="progress" id="progress"></div>
+    <ul class="wordList" id="wordList"></ul>
+  </aside>
+</main>
+
+<section id="how" hidden>
+  <h1>How Word Search works</h1>
+  <p>A set of words from one theme is hidden in a square grid of letters. Find each word by selecting it in a straight line. Every word you find shows its meaning, so the game doubles as a vocabulary builder.</p>
+
+  <h2>How each puzzle is made</h2>
+  <ol>
+    <li><b>Pick the words.</b> Words are drawn at random from the chosen theme. A word is skipped if it is too long for the grid, or if it sits inside another chosen word (for example SUN inside SUNLIGHT), so every answer is unambiguous.</li>
+    <li><b>Place the longest words first.</b> Long words have the fewest legal positions, so they are placed while the grid is still empty.</li>
+    <li><b>Try every position.</b> For each word, the generator checks every starting cell in every direction allowed by the level. A position is legal if each grid square is either empty or already holds the same letter. About half the time it deliberately picks a position that shares a letter with an existing word, which makes the grid tighter and harder to scan.</li>
+    <li><b>Fill the gaps.</b> Empty squares get random letters weighted by how often they occur in English (lots of E, T, A; few Q, Z). This makes the filler look like real text, so words don't stand out.</li>
+  </ol>
+
+  <h2>Levels</h2>
+  <table>
+    <tr><th>Level</th><th>Kids grid / words</th><th>Kids directions</th><th>Adult grid / words</th><th>Adult directions</th></tr>
+    <tr><td>Easy</td><td>8&times;8 / 6</td><td>Across, down</td><td>10&times;10 / 8</td><td>Across, down</td></tr>
+    <tr><td>Medium</td><td>10&times;10 / 8</td><td>+ diagonal down</td><td>12&times;12 / 12</td><td>+ both diagonals</td></tr>
+    <tr><td>Hard</td><td>12&times;12 / 10</td><td>+ both diagonals</td><td>15&times;15 / 16</td><td>All 8 directions, including backwards</td></tr>
+  </table>
+
+  <h2>Scoring</h2>
+  <table>
+    <tr><th>Item</th><th>Points</th></tr>
+    <tr><td>Each word found</td><td>10 &times; letters (&times;1.5 in Hidden mode)</td></tr>
+    <tr><td>Hint (flashes the first letter of a word)</td><td>&minus;15</td></tr>
+    <tr><td>Time bonus</td><td>2 &times; seconds saved under par. Par is 4 s per letter (Kids) or 3 s per letter (Adult)</td></tr>
+    <tr><td>Perfect game (no hints)</td><td>+50</td></tr>
+    <tr><td>Show answers</td><td>Game ends, no bonuses</td></tr>
+  </table>
+  <p>Your best score is kept in this browser for every combination of mode, topic, level and Hidden mode.</p>
+
+  <h2>Selecting words</h2>
+  <p>Your drag snaps to the nearest of the 8 directions, so you don't have to be precise. A word counts whether you select it from its first letter or from its last. On the keyboard, move the dashed cursor with the arrow keys, press Space on the first letter, move to the last letter and press Space again.</p>
+</section>
+
+<div class="modal" id="modal" hidden>
+  <div class="box">
+    <h3 id="mTitle">Puzzle complete!</h3>
+    <div class="newbest" id="mBest" hidden>New personal best!</div>
+    <table id="mTable"></table>
+    <div class="row"><button class="btn primary" id="mNext">Next puzzle</button><button class="btn" id="mClose">Close</button></div>
+  </div>
+</div>
+
+<script>
+/*CORE*/
+const RAW = {
+kids:{
+ english:{
+"Animals":`CAT|A pet that purrs and says meow
+DOG|A loyal pet that barks
+COW|Farm animal that gives us milk
+LION|Called the king of the jungle
+TIGER|Big cat with black stripes
+ELEPHANT|Huge animal with a long trunk
+MONKEY|Loves bananas and climbing trees
+RABBIT|Hopping animal with long ears
+HORSE|Animal people ride on
+ZEBRA|Horse-like animal with black and white stripes
+GIRAFFE|Animal with a very long neck
+BEAR|Big furry animal that loves honey
+DUCK|Bird that quacks and swims
+PARROT|Colourful bird that can copy words
+SHEEP|Farm animal that gives us wool
+CAMEL|Desert animal with humps
+FROG|Green animal that jumps and croaks
+SNAKE|Long animal with no legs`,
+"Fruits and Food":`APPLE|Red or green fruit that keeps the doctor away
+BANANA|Long yellow fruit you peel
+MANGO|King of fruits in summer
+GRAPES|Small round fruits that grow in bunches
+ORANGE|A juicy fruit and also a colour
+PAPAYA|Orange fruit with black seeds inside
+GUAVA|Green fruit with many tiny seeds
+RICE|White grains we cook for lunch
+BREAD|Baked food made from flour
+MILK|White drink that comes from cows
+HONEY|Sweet food made by bees
+IDLI|Soft steamed rice cake for breakfast
+DOSA|Thin crispy pancake from South India
+CARROT|Orange vegetable rabbits love
+POTATO|Vegetable used to make chips
+TOMATO|Red vegetable used in sauce
+LEMON|Sour yellow fruit`,
+"Around the Home":`CHAIR|You sit on it
+TABLE|You eat or write on it
+BED|You sleep on it
+DOOR|You open it to enter a room
+WINDOW|Glass opening to see outside
+LAMP|Gives light at night
+CLOCK|Tells the time
+MIRROR|You see yourself in it
+PILLOW|Soft rest for your head in bed
+SPOON|Used to eat soup
+PLATE|You eat food from it
+KITCHEN|Room where food is cooked
+FAN|Spins to keep you cool
+SOFA|Long soft seat for the family
+BUCKET|Container to carry water
+BROOM|Used to sweep the floor`,
+"Colours and Shapes":`RED|Colour of a ripe tomato
+BLUE|Colour of a clear sky
+GREEN|Colour of fresh leaves
+YELLOW|Colour of a banana
+PURPLE|Colour made by mixing red and blue
+PINK|Light red colour of a rose
+BLACK|Colour of the night sky
+WHITE|Colour of milk
+BROWN|Colour of chocolate
+CIRCLE|Round shape like a wheel
+SQUARE|Shape with four equal sides
+TRIANGLE|Shape with three sides
+OVAL|Shape like an egg
+STAR|Shape with five points
+HEART|Shape that means love
+DIAMOND|Shape like a kite`,
+"Nature and Weather":`SUN|Gives us light and heat in the day
+RAIN|Water falling from clouds
+CLOUD|White fluffy thing in the sky
+WIND|Moving air
+SNOW|Soft white ice that falls in cold places
+RAINBOW|Seven colours in the sky after rain
+RIVER|Long flowing body of water
+TREE|Tall plant with a trunk
+FLOWER|Colourful part of a plant
+HILL|Small mountain
+SEA|Large body of salty water
+STORM|Strong wind with heavy rain
+THUNDER|Loud sound after lightning
+SKY|The space above us
+MOON|Shines in the night sky
+FOREST|Place with many trees`
+ },
+ science:{
+"Plants":`ROOT|Part of a plant that grows underground
+STEM|Holds the plant up
+LEAF|Green part where plants make food
+FLOWER|Part of the plant that makes seeds
+SEED|A new plant grows from it
+FRUIT|Part of the plant that holds seeds
+SOIL|Plants grow in it
+SUNLIGHT|Plants need it to make food
+BUD|A flower before it opens
+THORN|Sharp point on a rose stem
+POLLEN|Yellow powder found in flowers
+BARK|Hard outer covering of a tree trunk
+CACTUS|Desert plant with spines
+SPROUT|Tiny new plant coming out of a seed
+PETAL|Coloured part of a flower`,
+"Our Body":`HEART|Pumps blood around the body
+LUNGS|Help us breathe
+BRAIN|Helps us think and remember
+BONES|Hard parts that hold up the body
+SKIN|Covers the whole body
+TEETH|Help us chew food
+TONGUE|Helps us taste
+STOMACH|Food is churned and digested here
+BLOOD|Red liquid flowing in our body
+MUSCLE|Pulls on bones to help us move
+EYES|Help us see
+EARS|Help us hear
+NOSE|Helps us smell
+SKULL|Bones that protect the brain
+SPINE|Backbone`,
+"Space":`EARTH|Our home planet
+MARS|The red planet
+JUPITER|Largest planet in our solar system
+SATURN|Planet with beautiful rings
+VENUS|Hottest planet
+STAR|Shines in the night sky by its own light
+COMET|Icy body with a glowing tail
+ROCKET|Carries astronauts into space
+ORBIT|Path around a planet or star
+PLANET|Big round body that goes around the Sun
+GALAXY|Huge group of millions of stars
+ASTRONAUT|Person who travels to space
+METEOR|Also called a shooting star
+CRATER|Bowl-shaped hole on the Moon
+MOON|Earth's natural satellite`,
+"Matter and Materials":`SOLID|State of matter with a fixed shape
+LIQUID|State of matter that flows
+GAS|State of matter that spreads to fill a space
+ICE|Frozen water
+STEAM|Water turned into vapour by heating
+MELT|To change from solid to liquid
+FREEZE|To change from liquid to solid
+METAL|Shiny material like iron or copper
+WOOD|Material that comes from trees
+PLASTIC|Light material made from oil
+GLASS|Clear material used in windows
+RUBBER|Stretchy material used in tyres
+PAPER|Material made from wood pulp
+AIR|Mixture of gases we breathe
+CLAY|Soft earth used to make pots`,
+"Energy and Forces":`PUSH|A force that moves something away
+PULL|A force that brings something closer
+FORCE|A push or a pull
+ENERGY|Ability to do work
+HEAT|Energy that makes things warm
+LIGHT|Energy that lets us see
+SOUND|Energy we hear
+SHADOW|Dark shape made when light is blocked
+GRAVITY|Force that pulls things down to Earth
+FRICTION|Force that slows things that rub
+SPEED|How fast something moves
+MAGNET|Pulls iron objects towards it
+BATTERY|Stores electricity for a torch
+SWITCH|Turns a circuit on and off
+LEVER|Simple machine like a see-saw
+PULLEY|Wheel with a rope to lift loads`
+ }
+},
+adult:{
+ english:{
+"Emotions":`JOY|A feeling of great happiness
+ANGER|Strong feeling of displeasure
+FEAR|Feeling caused by danger
+GRIEF|Deep sorrow, especially after a loss
+ENVY|Wanting what someone else has
+PRIDE|Satisfaction in one's achievements
+SHAME|Painful feeling of having done wrong
+DELIGHT|Great pleasure
+ANXIETY|Worry about an uncertain outcome
+NOSTALGIA|Sentimental longing for the past
+EMPATHY|Ability to share another's feelings
+GRATITUDE|Thankfulness
+REMORSE|Deep regret for a wrong committed
+SERENITY|Calm, peaceful state of mind
+ELATION|Great happiness and excitement
+MELANCHOLY|Lasting, thoughtful sadness`,
+"Professions":`ARCHITECT|Designs buildings
+SURGEON|Doctor who performs operations
+LAWYER|Advises and represents clients in law
+JOURNALIST|Writes or reports the news
+PILOT|Flies an aircraft
+PHARMACIST|Prepares and dispenses medicines
+ACCOUNTANT|Keeps and audits financial records
+CARPENTER|Makes things from wood
+PLUMBER|Fits and repairs water pipes
+ELECTRICIAN|Installs and repairs wiring
+ENGINEER|Designs and builds machines or structures
+SCIENTIST|Studies the natural world by experiment
+LIBRARIAN|Manages a collection of books
+ECONOMIST|Studies production and use of wealth
+SCULPTOR|Carves or models figures
+NAVIGATOR|Plans the route of a ship or aircraft`,
+"Travel":`PASSPORT|Official document for foreign travel
+ITINERARY|Planned route of a journey
+LUGGAGE|Bags and suitcases of a traveller
+BOARDING|Getting on a plane, ship or train
+CUSTOMS|Where goods are checked at a border
+LAYOVER|Short stop between two flights
+VISA|Permission to enter a country
+HOSTEL|Cheap shared lodging
+CRUISE|Holiday voyage on a ship
+VOYAGE|Long journey by sea or space
+SOUVENIR|Keepsake bought on a trip
+TERMINAL|Building where passengers board
+EXCURSION|Short pleasure trip
+TOURIST|Person travelling for pleasure
+JOURNEY|Act of travelling from one place to another
+COMPASS|Instrument that shows north`,
+"Rich Vocabulary":`ELOQUENT|Fluent and persuasive in speech
+CANDID|Frank and honest
+DILIGENT|Careful and hard-working
+FRUGAL|Sparing with money
+METICULOUS|Showing great attention to detail
+PRAGMATIC|Dealing with things sensibly and practically
+RESILIENT|Recovers quickly from difficulty
+VERBOSE|Using more words than needed
+TENACIOUS|Holding firmly; persistent
+BENEVOLENT|Kind and well-meaning
+AMBIGUOUS|Open to more than one meaning
+EPHEMERAL|Lasting a very short time
+LUCID|Clear and easy to understand
+ZEALOUS|Full of eager enthusiasm
+PRUDENT|Acting with care for the future
+OBSCURE|Not well known or hard to understand`,
+"Kitchen and Cooking":`SIMMER|Cook gently just below boiling
+SAUTE|Fry quickly in a little fat
+KNEAD|Work dough with the hands
+MARINATE|Soak in a seasoned liquid before cooking
+GARNISH|Decorate a dish before serving
+BLANCH|Plunge briefly into boiling water
+WHISK|Beat quickly to add air
+SPATULA|Flat tool for lifting and spreading
+COLANDER|Bowl with holes for draining
+LADLE|Deep long-handled spoon for serving
+SKILLET|Frying pan
+GRATE|Shred food against a rough surface
+ROAST|Cook with dry heat in an oven
+BRAISE|Brown, then cook slowly in liquid
+TEMPER|Fry spices in hot oil to add flavour
+FERMENT|Let microbes sour a batter or dough`
+ },
+ science:{
+"Physics":`VELOCITY|Speed in a given direction
+MOMENTUM|Mass times velocity
+INERTIA|Tendency to resist change in motion
+TORQUE|Turning effect of a force
+FRICTION|Force opposing sliding between surfaces
+ENTROPY|Measure of disorder in a system
+WAVELENGTH|Distance between successive wave crests
+FREQUENCY|Number of cycles per second
+RESONANCE|Large vibration at a natural frequency
+VOLTAGE|Electric potential difference
+CURRENT|Flow of electric charge
+RESISTANCE|Opposition to electric current
+PHOTON|Particle of light
+QUANTUM|Smallest discrete amount of energy
+DENSITY|Mass per unit volume
+PRESSURE|Force per unit area`,
+"Chemistry":`ATOM|Smallest unit of a chemical element
+MOLECULE|Group of atoms bonded together
+ELECTRON|Negatively charged particle
+PROTON|Positively charged particle in the nucleus
+NEUTRON|Uncharged particle in the nucleus
+ISOTOPE|Atoms with different neutron counts
+CATALYST|Speeds up a reaction without being used up
+OXIDATION|Loss of electrons
+POLYMER|Long chain of repeating units
+SOLVENT|Liquid that dissolves a substance
+ALKALI|Base that dissolves in water
+ACID|Substance with pH below seven
+VALENCE|Combining power of an element
+REACTION|Process that forms new substances
+CRYSTAL|Solid with a regular repeating structure
+ALLOY|Mixture of metals, like brass`,
+"Biology":`CELL|Basic unit of life
+NUCLEUS|Control centre of a cell
+CHROMOSOME|Thread-like carrier of genes
+GENE|Unit of heredity
+PROTEIN|Molecule built from amino acids
+ENZYME|Biological catalyst
+MITOCHONDRIA|Powerhouses of the cell
+RIBOSOME|Where proteins are made in a cell
+ANTIBODY|Protein that fights infection
+HORMONE|Chemical messenger in the blood
+NEURON|Nerve cell
+OSMOSIS|Movement of water across a membrane
+MUTATION|Change in DNA sequence
+EVOLUTION|Change in species over generations
+BACTERIA|Single-celled microorganisms
+VIRUS|Infectious agent that needs a host cell`,
+"Earth and Climate":`VOLCANO|Opening where magma erupts
+EARTHQUAKE|Sudden shaking of the ground
+TECTONIC|Relating to movement of Earth's crust
+MAGMA|Molten rock below the surface
+GLACIER|Slow-moving river of ice
+MONSOON|Seasonal wind bringing heavy rain
+CYCLONE|Rotating storm system
+EROSION|Wearing away of land
+SEDIMENT|Material deposited by water or wind
+AQUIFER|Underground layer that holds water
+HUMIDITY|Amount of water vapour in air
+OZONE|Gas layer that blocks ultraviolet rays
+CLIMATE|Long-term weather pattern
+TSUNAMI|Giant sea wave caused by an earthquake
+FOSSIL|Preserved remains of ancient life
+MINERAL|Naturally occurring inorganic solid`,
+"Astronomy":`NEBULA|Cloud of gas and dust in space
+QUASAR|Extremely bright galaxy core
+PULSAR|Rapidly spinning neutron star
+SUPERNOVA|Explosion of a massive star
+ECLIPSE|One body blocking light from another
+ASTEROID|Small rocky body orbiting the Sun
+GALAXY|System of billions of stars
+BLACKHOLE|Region where not even light escapes
+EXOPLANET|Planet outside our solar system
+TELESCOPE|Instrument for viewing distant objects
+ORBIT|Curved path around a star or planet
+COMET|Icy body with a tail near the Sun
+METEORITE|Space rock that reaches the ground
+CONSTELLATION|Named pattern of stars
+SOLSTICE|Longest or shortest day of the year
+EQUINOX|Day and night of equal length`
+ }
+}};
+
+function parseTheme(s){
+  return s.trim().split('\n').map(l=>{const i=l.indexOf('|');return {w:l.slice(0,i).trim().toUpperCase().replace(/[^A-Z]/g,''),c:l.slice(i+1).trim()};});
+}
+const DATA = {};
+for(const m in RAW){DATA[m]={};for(const t in RAW[m]){DATA[m][t]={};for(const th in RAW[m][t]) DATA[m][t][th]=parseTheme(RAW[m][t][th]);}}
+
+const D_EASY=[[0,1],[1,0]];
+const D_KMED=[[0,1],[1,0],[1,1]];
+const D_MED=[[0,1],[1,0],[1,1],[-1,1]];
+const D_ALL=[[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]];
+const LEVELS={
+  kids:{easy:{n:8,count:6,dirs:D_EASY},medium:{n:10,count:8,dirs:D_KMED},hard:{n:12,count:10,dirs:D_MED}},
+  adult:{easy:{n:10,count:8,dirs:D_EASY},medium:{n:12,count:12,dirs:D_MED},hard:{n:15,count:16,dirs:D_ALL}}
+};
+const FILL="EEEEEEEEEEEETTTTTTTTTAAAAAAAAOOOOOOOIIIIIIINNNNNNNSSSSSSHHHHHHRRRRRRDDDDLLLLCCCUUUMMMWWFFGGYYPPBVKJXQZ";
+
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function themeKeys(mode,topic){
+  const topics= topic==='all'?['english','science']:[topic];
+  const out=[];for(const t of topics) for(const th in DATA[mode][t]) out.push(t+'/'+th);
+  return out;
+}
+function pickWords(pool,count,n){
+  const chosen=[];
+  for(const x of shuffle(pool.filter(x=>x.w.length>=3&&x.w.length<=n))){
+    if(chosen.length>=count) break;
+    if(chosen.some(y=>y.w.includes(x.w)||x.w.includes(y.w))) continue;
+    chosen.push(x);
+  }
+  return chosen;
+}
+function tryPlace(g,w,n,dirs){
+  const opts=[];
+  for(const [dr,dc] of dirs) for(let r=0;r<n;r++) for(let c=0;c<n;c++){
+    const er=r+dr*(w.length-1), ec=c+dc*(w.length-1);
+    if(er<0||er>=n||ec<0||ec>=n) continue;
+    let ok=true, ov=0;
+    for(let i=0;i<w.length;i++){const ch=g[r+dr*i][c+dc*i]; if(ch){ if(ch!==w[i]){ok=false;break;} ov++; }}
+    if(ok&&ov<w.length) opts.push({r,c,dr,dc,ov});
+  }
+  if(!opts.length) return null;
+  const withOv=opts.filter(o=>o.ov>0);
+  const p=(withOv.length&&Math.random()<0.5)?rnd(withOv):rnd(opts);
+  for(let i=0;i<w.length;i++) g[p.r+p.dr*i][p.c+p.dc*i]=w[i];
+  return {r:p.r,c:p.c,dr:p.dr,dc:p.dc};
+}
+function generate(words,n,dirs){
+  let best=null;
+  for(let attempt=0;attempt<25;attempt++){
+    const g=Array.from({length:n},()=>Array(n).fill(''));
+    const placed=[];
+    for(const x of [...words].sort((a,b)=>b.w.length-a.w.length)){
+      const p=tryPlace(g,x.w,n,dirs); if(p) placed.push({...x,...p});
+    }
+    if(!best||placed.length>best.placed.length) best={g,placed};
+    if(placed.length===words.length) break;
+  }
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(!best.g[r][c]) best.g[r][c]=rnd(FILL);
+  // keep list order alphabetical for easier scanning
+  best.placed.sort((a,b)=>a.w<b.w?-1:1);
+  return best;
+}
+/*ENDCORE*/
+
+/* ---------------- UI ---------------- */
+const $=s=>document.querySelector(s);
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}},
+             set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+
+let cfg=Object.assign({mode:'kids',topic:'english',theme:'any',level:'easy',hidden:false},store.get('hvwg.ws.settings',{}));
+let S=null; // game state
+let sel={dragging:false,start:null,end:null,down:null,moved:false,fromAnchor:false};
+let anchor=null, cursor={r:0,c:0}, kbActive=false;
+
+function setSeg(id,val){document.querySelectorAll('#'+id+' button').forEach(b=>b.classList.toggle('on',b.dataset.v===val));}
+function bindSeg(id,key){document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{cfg[key]=b.dataset.v;if(key!=='level')cfg.theme='any';syncUI();newGame();});}
+function syncUI(){
+  setSeg('segMode',cfg.mode);setSeg('segTopic',cfg.topic);setSeg('segLevel',cfg.level);
+  $('#chkHidden').checked=cfg.hidden;
+  const sel=$('#selTheme');sel.innerHTML='';
+  const o=document.createElement('option');o.value='any';o.textContent='Any theme (random)';sel.appendChild(o);
+  for(const k of themeKeys(cfg.mode,cfg.topic)){
+    const [t,th]=k.split('/');const op=document.createElement('option');op.value=k;
+    op.textContent=(cfg.topic==='all'?(t==='english'?'English: ':'Science: '):'')+th;sel.appendChild(op);
+  }
+  if(![...sel.options].some(x=>x.value===cfg.theme)) cfg.theme='any';
+  sel.value=cfg.theme;
+  store.set('hvwg.ws.settings',cfg);
+}
+const bestKey=()=>`hvwg.ws.best.${cfg.mode}.${cfg.topic}.${cfg.level}.${cfg.hidden?1:0}`;
+function showBest(){const b=store.get(bestKey(),null);$('#bestLine').textContent=b==null?'No best score yet for these settings.':'Best for these settings: '+b;}
+
+function newGame(){
+  const L=LEVELS[cfg.mode][cfg.level];
+  const keys=themeKeys(cfg.mode,cfg.topic);
+  const key=cfg.theme==='any'?rnd(keys):cfg.theme;
+  const [t,th]=key.split('/');
+  const words=pickWords(DATA[cfg.mode][t][th],L.count,L.n);
+  const {g,placed}=generate(words,L.n,L.dirs);
+  S={n:L.n,g,words:placed,found:new Array(placed.length).fill(false),score:0,hints:0,
+     elapsed:0,t0:performance.now(),paused:document.hidden,over:false,gaveUp:false,
+     theme:th,topicName:t==='english'?'English':'Science',hidden:cfg.hidden,mode:cfg.mode};
+  anchor=null;cursor={r:0,c:0};
+  renderBoard();renderList();updateStats();showBest();msg('');
+  $('#modal').hidden=true;
+}
+function renderBoard(){
+  const n=S.n,cells=$('#cells');
+  cells.style.gridTemplateColumns=`repeat(${n},1fr)`;cells.style.gridTemplateRows=`repeat(${n},1fr)`;
+  cells.innerHTML='';
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++){const d=document.createElement('div');d.className='cell';d.textContent=S.g[r][c];d.id=`c${r}_${c}`;cells.appendChild(d);}
+  $('#overlay').setAttribute('viewBox',`0 0 ${n} ${n}`);
+  $('#foundLines').innerHTML='';clearSel();
+  $('#themeTitle').innerHTML=`${S.theme} <small>&middot; ${S.topicName} &middot; ${cfg.mode==='kids'?'Kids':'Adult'} &middot; ${cap(cfg.level)}${S.hidden?' &middot; Hidden':''}</small>`;
+  sizeBoard();
+}
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+const hue=i=>(i*137+200)%360;
+function renderList(){
+  const ul=$('#wordList');ul.innerHTML='';
+  $('#listTitle').textContent=S.hidden?'Find words for these clues':'Find these words';
+  S.words.forEach((x,i)=>{
+    const li=document.createElement('li');li.id='w'+i;
+    const f=S.found[i]||S.gaveUp;
+    if(S.found[i]){li.classList.add('found');li.style.borderLeftColor=`hsl(${hue(i)},65%,55%)`;}
+    if(S.hidden){
+      li.innerHTML= f?`<div class="w">${x.w}</div><div class="c">${x.c}</div>`
+                     :`<div class="c" style="color:var(--ink)">${x.c}</div><div class="blanks">${'_ '.repeat(x.w.length).trim()} <small>(${x.w.length})</small></div>`;
+    }else{
+      li.innerHTML=`<div class="w">${x.w}</div>`+(f?`<div class="c">${x.c}</div>`:'');
+      if(!f) li.title='Find it to see its meaning';
+    }
+    ul.appendChild(li);
+  });
+  const k=S.found.filter(Boolean).length;
+  $('#progress').textContent=`${k} of ${S.words.length} found`;
+}
+function sizeBoard(){
+  if(!S) return;
+  const wrap=$('#boardWrap');const mobile=window.innerWidth<=980;
+  let s=wrap.clientWidth;
+  if(!mobile) s=Math.min(s,window.innerHeight-$('header.top').offsetHeight-100);
+  s=Math.max(240,Math.floor(s));
+  const b=$('#board');b.style.width=b.style.height=s+'px';
+  b.style.setProperty('--fs',Math.max(11,(s-12)/S.n*0.55)+'px');
+  $('#selLine').setAttribute('stroke-width',0.78);
+}
+function elapsed(){return S.elapsed+(S.paused||S.over?0:performance.now()-S.t0);}
+function fmt(ms){const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function updateStats(){
+  $('#stScore').textContent=S.score;$('#stTime').textContent=fmt(elapsed());
+  $('#stFound').textContent=S.found.filter(Boolean).length+'/'+S.words.length;
+}
+setInterval(()=>{if(S&&!S.over)$('#stTime').textContent=fmt(elapsed());},250);
+document.addEventListener('visibilitychange',()=>{if(!S||S.over)return;
+  if(document.hidden){S.elapsed+=performance.now()-S.t0;S.paused=true;}else{S.t0=performance.now();S.paused=false;}});
+
+let msgT=null;
+function msg(t,cls){const m=$('#msg');m.textContent=t;m.className='msg'+(cls?' '+cls:'');clearTimeout(msgT);if(t)msgT=setTimeout(()=>{m.textContent='';},2600);}
+
+/* ----- selection ----- */
+const SDIR=[[0,1],[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[-1,1]];
+function snap(a,b){
+  const dr=b.r-a.r,dc=b.c-a.c;
+  if(!dr&&!dc) return {r:a.r,c:a.c};
+  const k=Math.round(Math.atan2(dr,dc)/(Math.PI/4));const [ur,uc]=SDIR[((k%8)+8)%8];
+  let len=Math.max(Math.abs(dr),Math.abs(dc));
+  while(len>0){const r=a.r+ur*len,c=a.c+uc*len;if(r>=0&&r<S.n&&c>=0&&c<S.n)return {r,c};len--;}
+  return {r:a.r,c:a.c};
+}
+const same=(a,b)=>a&&b&&a.r===b.r&&a.c===b.c;
+function drawSel(a,b){
+  const l=$('#selLine');l.setAttribute('x1',a.c+.5);l.setAttribute('y1',a.r+.5);l.setAttribute('x2',b.c+.5);l.setAttribute('y2',b.r+.5);
+  l.setAttribute('stroke','var(--sel)');l.style.display='';
+}
+function clearSel(){$('#selLine').style.display='none';}
+function cellAt(e){
+  const r=$('#cells').getBoundingClientRect();
+  const c=Math.min(S.n-1,Math.max(0,Math.floor((e.clientX-r.left)/r.width*S.n)));
+  const rr=Math.min(S.n-1,Math.max(0,Math.floor((e.clientY-r.top)/r.height*S.n)));
+  return {r:rr,c};
+}
+const board=$('#board');
+board.addEventListener('pointerdown',e=>{
+  if(!S||S.over)return;e.preventDefault();board.setPointerCapture(e.pointerId);
+  const cell=cellAt(e);
+  sel.dragging=true;sel.down=cell;sel.moved=false;sel.fromAnchor=!!anchor;
+  sel.start=anchor||cell;sel.end=anchor?snap(anchor,cell):cell;drawSel(sel.start,sel.end);
+});
+board.addEventListener('pointermove',e=>{
+  if(!sel.dragging)return;const cell=cellAt(e);
+  if(!same(cell,sel.down))sel.moved=true;
+  sel.end=snap(sel.start,cell);drawSel(sel.start,sel.end);
+});
+function endPointer(){
+  if(!sel.dragging)return;sel.dragging=false;
+  if(sel.fromAnchor){anchor=null;if(same(sel.start,sel.end)){clearSel();return;}finish(sel.start,sel.end);}
+  else if(!sel.moved){anchor=sel.start;drawSel(anchor,anchor);}
+  else finish(sel.start,sel.end);
+}
+board.addEventListener('pointerup',endPointer);
+board.addEventListener('pointercancel',()=>{sel.dragging=false;anchor=null;clearSel();});
+
+function finish(a,b){
+  clearSel();
+  const dr=Math.sign(b.r-a.r),dc=Math.sign(b.c-a.c),len=Math.max(Math.abs(b.r-a.r),Math.abs(b.c-a.c))+1;
+  if(len<2)return;
+  let s='';for(let i=0;i<len;i++)s+=S.g[a.r+dr*i][a.c+dc*i];
+  const rev=[...s].reverse().join('');
+  const i=S.words.findIndex((x,k)=>!S.found[k]&&(x.w===s||x.w===rev));
+  if(i<0){
+    const already=S.words.some((x,k)=>S.found[k]&&(x.w===s||x.w===rev));
+    msg(already?'Already found':'Not one of the words','bad');
+    board.classList.remove('shake');void board.offsetWidth;board.classList.add('shake');return;
+  }
+  S.found[i]=true;
+  const pts=Math.round(S.words[i].w.length*10*(S.hidden?1.5:1));S.score+=pts;
+  addFoundLine(a,b,i);renderList();updateStats();
+  msg(`${S.words[i].w}  +${pts}`,'good');
+  if(S.found.every(Boolean)) endGame(false);
+}
+function addFoundLine(a,b,i){
+  const l=document.createElementNS('http://www.w3.org/2000/svg','line');
+  l.setAttribute('x1',a.c+.5);l.setAttribute('y1',a.r+.5);l.setAttribute('x2',b.c+.5);l.setAttribute('y2',b.r+.5);
+  l.setAttribute('stroke',`hsla(${hue(i)},70%,55%,.42)`);l.setAttribute('stroke-width',.78);l.setAttribute('stroke-linecap','round');
+  $('#foundLines').appendChild(l);
+}
+function hint(){
+  if(!S||S.over)return;
+  const left=S.words.map((x,i)=>i).filter(i=>!S.found[i]);if(!left.length)return;
+  const w=S.words[rnd(left)];const el=$(`#c${w.r}_${w.c}`);
+  el.classList.remove('hint');void el.offsetWidth;el.classList.add('hint');
+  S.hints++;S.score=Math.max(0,S.score-15);updateStats();msg('Look at the flashing letter (−15)');
+}
+function giveUp(){
+  if(!S||S.over)return;
+  S.words.forEach((x,i)=>{if(!S.found[i]){const e={r:x.r+x.dr*(x.w.length-1),c:x.c+x.dc*(x.w.length-1)};addFoundLine({r:x.r,c:x.c},e,i);}});
+  S.gaveUp=true;renderList();endGame(true);
+}
+function endGame(gaveUp){
+  S.elapsed=elapsed();S.over=true;anchor=null;clearSel();
+  const letters=S.words.reduce((s,x)=>s+x.w.length,0);
+  const par=letters*(S.mode==='kids'?4:3);
+  const secs=Math.floor(S.elapsed/1000);
+  const wordPts=S.words.reduce((s,x,i)=>s+(S.found[i]?Math.round(x.w.length*10*(S.hidden?1.5:1)):0),0);
+  const timeBonus=gaveUp?0:Math.max(0,par-secs)*2;
+  const perfect=(!gaveUp&&S.hints===0)?50:0;
+  S.score=Math.max(0,wordPts-S.hints*15)+timeBonus+perfect;
+  updateStats();
+  let newBest=false;
+  if(!gaveUp){
+    const prev=store.get(bestKey(),null);if(prev==null||S.score>prev){store.set(bestKey(),S.score);newBest=prev!=null||S.score>0;}
+    const all=store.get('hvwg.best.wordsearch',0);if(S.score>all)store.set('hvwg.best.wordsearch',S.score);
+    const played=store.get('hvwg.played.wordsearch',0);store.set('hvwg.played.wordsearch',played+1);
+  }
+  showBest();
+  $('#mTitle').textContent=gaveUp?'Answers shown':'Puzzle complete!';
+  $('#mBest').hidden=!newBest;
+  $('#mTable').innerHTML=`
+    <tr><td>Words (${S.found.filter(Boolean).length}/${S.words.length})</td><td>${wordPts}</td></tr>
+    <tr><td>Hints (${S.hints} &times; &minus;15)</td><td>${-S.hints*15}</td></tr>
+    <tr><td>Time ${fmt(S.elapsed)} (par ${fmt(par*1000)})</td><td>+${timeBonus}</td></tr>
+    <tr><td>No-hint bonus</td><td>+${perfect}</td></tr>
+    <tr class="total"><td>Total</td><td>${S.score}</td></tr>`;
+  setTimeout(()=>{$('#modal').hidden=false;},gaveUp?900:400);
+}
+
+/* ----- keyboard ----- */
+function drawCursor(){
+  document.querySelectorAll('.cell.cursor').forEach(e=>e.classList.remove('cursor'));
+  if(kbActive&&S){const el=$(`#c${cursor.r}_${cursor.c}`);if(el)el.classList.add('cursor');}
+  if(anchor) drawSel(anchor,snap(anchor,cursor));
+}
+document.addEventListener('keydown',e=>{
+  const tag=(e.target.tagName||'').toLowerCase();if(tag==='select'||tag==='input')return;
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  const k=e.key;
+  if(!$('#modal').hidden){if(k==='Enter'||k===' '||k.toLowerCase()==='n'){e.preventDefault();newGame();}else if(k==='Escape')$('#modal').hidden=true;return;}
+  if(k.toLowerCase()==='f'){toggleFS();return;}
+  if($('#play').hidden||!S)return;
+  const mv={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]}[k];
+  if(mv){e.preventDefault();kbActive=true;cursor.r=Math.min(S.n-1,Math.max(0,cursor.r+mv[0]));cursor.c=Math.min(S.n-1,Math.max(0,cursor.c+mv[1]));drawCursor();return;}
+  if(k===' '||k==='Enter'){e.preventDefault();if(S.over)return;kbActive=true;
+    if(!anchor){anchor={...cursor};drawSel(anchor,anchor);}
+    else{const a=anchor;anchor=null;const b=snap(a,cursor);if(same(a,b))clearSel();else finish(a,b);}
+    drawCursor();return;}
+  if(k==='Escape'){anchor=null;clearSel();return;}
+  if(k.toLowerCase()==='h'){hint();return;}
+  if(k.toLowerCase()==='n'){newGame();return;}
+});
+
+/* ----- tabs, fullscreen, controls ----- */
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  $('#play').hidden=b.dataset.tab!=='play';$('#how').hidden=b.dataset.tab!=='how';
+  if(b.dataset.tab==='play')sizeBoard();
+});
+function toggleFS(){
+  if(document.fullscreenElement)document.exitFullscreen();
+  else if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});
+}
+$('#fsBtn').onclick=toggleFS;
+document.addEventListener('fullscreenchange',()=>{$('#fsBtn').innerHTML=document.fullscreenElement?'&#x2715; Exit full screen':'&#x26F6; Full screen';setTimeout(sizeBoard,60);});
+bindSeg('segMode','mode');bindSeg('segTopic','topic');bindSeg('segLevel','level');
+$('#selTheme').onchange=e=>{cfg.theme=e.target.value;store.set('hvwg.ws.settings',cfg);newGame();e.target.blur();};
+$('#chkHidden').onchange=e=>{cfg.hidden=e.target.checked;store.set('hvwg.ws.settings',cfg);newGame();e.target.blur();};
+$('#btnNew').onclick=newGame;$('#btnHint').onclick=hint;$('#btnGive').onclick=giveUp;
+$('#mNext').onclick=newGame;$('#mClose').onclick=()=>{$('#modal').hidden=true;};
+window.addEventListener('resize',sizeBoard);
+// release focus from clicked buttons so Space/Enter go to the board, not the button
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(b)b.blur();});
+syncUI();newGame();
+</script>
+</body>
+</html>

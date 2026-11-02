@@ -2,10 +2,11 @@
 """
 TOOL:    book-review/_build.py
 FAMILY:  SITE
-VERSION: 1.1.0
-DATE:    2026-10-03
+VERSION: 1.2.0
+DATE:    2026-11-02
 CHAT:    Daily management book review on GitHub Pages
-CHANGES: 1.1.0 - certificate after the quiz: name remembered per device, A4 PDF to save or share (WhatsApp, email)
+CHANGES: 1.2.0 - Listen button on every review page (assets/js/read-aloud.js); word count, quiz and certificate are not read out
+         1.1.0 - certificate after the quiz: name remembered per device, A4 PDF to save or share (WhatsApp, email)
          1.0.0 - renders each _content/<slug>.json into <slug>.html (cover, 300-word summary, 10-question quiz) and rebuilds index.html
 STATUS:  working
 
@@ -18,12 +19,12 @@ Content file (_content/<slug>.json):
   takeaway: one sentence,
   questions: 10 x {q, options: [4 strings], answer: 0-3, why}
 """
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 # review page template version; each page's header lists these plus its own first line
-PAGE_VERSION = "1.1.0"
-PAGE_DATE = "2026-10-03"     # date of the last template change
-PAGE_CHANGES = ["v1.1.0  certificate after the quiz: name remembered on this device, A4 PDF to save or share"]
+PAGE_VERSION = "1.2.0"
+PAGE_DATE = "2026-11-02"     # date of the last template change
+PAGE_CHANGES = ["v1.2.0  Listen button reads the review aloud (summary and takeaway)", "v1.1.0  certificate after the quiz: name remembered on this device, A4 PDF to save or share"]
 
 import datetime as dt
 import hashlib
@@ -392,17 +393,17 @@ def render_page(c, prev_c, next_c):
 
 <h2>Summary</h2>
 {paras}
-<p class="wc">{words} words</p>
+<p class="wc" data-noread>{words} words</p>
 <div class="take"><b>One-line takeaway:</b> {esc(c['takeaway'])}</div>
 
-<h2>Test yourself — 10 questions</h2>
+<h2 data-noread>Test yourself — 10 questions</h2>
 <p class="wc">Tap an option to check it. Each answer shows a short reason.</p>
 <ol class="quiz">
 {chr(10).join(qs)}
 </ol>
 <div class="score"><span id="score"></span><button id="reset" type="button">Try again</button></div>
 
-<section class="cert" id="cert" aria-live="polite">
+<section class="cert" id="cert" data-noread aria-live="polite">
 <h2>Your certificate — <span id="cert-score"></span></h2>
 <label for="cert-name">Name to print on the certificate (remembered on this device)</label>
 <input id="cert-name" type="text" maxlength="60" autocomplete="name" placeholder="Your full name">
@@ -422,6 +423,7 @@ def render_page(c, prev_c, next_c):
 <footer>A short personal summary written for study and discussion. The cover above is an original design for this page, not the publisher's cover. Read the book itself for the full argument.</footer>
 </div>
 <script>window.QUIZ_KEY={key};window.CERT={cert};{CERT_JS}{QUIZ_JS}</script>
+<script src="/assets/js/read-aloud.js" defer></script>
 </body>
 </html>
 """

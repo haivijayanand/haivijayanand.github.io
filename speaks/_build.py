@@ -2,10 +2,11 @@
 """
 TOOL:    speaks/_build.py
 FAMILY:  SITE
-VERSION: 1.3.0
-DATE:    2026-10-09
+VERSION: 1.4.0
+DATE:    2026-11-02
 CHAT:    Blogger to GitHub migration (Vijay Anand Speaks)
-CHANGES: 1.3.0 - index header shrunk to two lines and pinned at the top; Home and Tools links moved into the filter sidebar
+CHANGES: 1.4.0 - Listen button on every essay (assets/js/read-aloud.js); Tamil essays use a Tamil voice when the device has one
+         1.3.0 - index header shrunk to two lines and pinned at the top; Home and Tools links moved into the filter sidebar
          1.2.0 - desktop index (>=1100 px) uses the full width: sticky filter sidebar + responsive card grid
          1.1.0 - topic tags from _topics.json; index gets multi-select language/topic filters (Any/All), sort by date, group by year or topic, shareable URL
          1.0.1 - English/Tamil chips and search now hide rows (CSS [hidden] rule; a.row display:grid was overriding it)
@@ -27,12 +28,12 @@ Topics (_topics.json): { "<content file name without .json>": ["Management", "Ph
   "_topics" lists the allowed topics in the order the filter shows them. Every essay needs at least one.
   Kept apart from _content so running _import_blogger.py again does not wipe them.
 """
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 
-PAGE_VERSION = "1.1.0"
-PAGE_DATE = "2026-10-09"
+PAGE_VERSION = "1.2.0"
+PAGE_DATE = "2026-11-02"
 INDEX_VERSION = "1.3.0"
-PAGE_CHANGES = ["v1.1.0  topic tags that open the list filtered to that topic", "v1.0.0  moved from vijayanandspeaks.blogspot.com"]
+PAGE_CHANGES = ["v1.2.0  Listen button reads the essay aloud", "v1.1.0  topic tags that open the list filtered to that topic", "v1.0.0  moved from vijayanandspeaks.blogspot.com"]
 
 CUSDIS_APP_ID = ""                       # e.g. "a1b2c3d4-...." from cusdis.com → your site → Embed code
 SITE = "https://haivijayanand.github.io"
@@ -285,6 +286,7 @@ def render_post(c, prev, nxt):
   }};
 }})();
 </script>
+<script src="/assets/js/read-aloud.js" defer></script>
 </body>
 </html>
 """)

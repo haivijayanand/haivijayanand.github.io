@@ -1,10 +1,12 @@
 /*
 TOOL:    assets/js/read-aloud.js — "Listen" (read aloud) player for every article on haivijayanand.github.io
 FAMILY:  SITE
-VERSION: 1.0.0
+VERSION: 1.1.0
 DATE:    2026-11-02
 CHAT:    Read aloud button for all articles on the GitHub site
-CHANGES: 1.0.0 - first release: floating Listen button, play/pause, previous/next paragraph, speed, voice choice,
+CHANGES: 1.1.0 - Female / Male voice button (also on phones), picked by known voice names; choice remembered;
+                 tells the reader how to install the other voice when the device has none
+         1.0.0 - first release: floating Listen button, play/pause, previous/next paragraph, speed, voice choice,
                  current paragraph highlighted and kept on screen, English/Tamil voice from the page language,
                  starts from the paragraph at the top of the screen when the reader has scrolled into the article
 STATUS:  working
@@ -95,15 +97,34 @@ code blocks, anything marked data-noread, and the whole section under a heading 
     voices = synth.getVoices().filter(function (v) { return v.lang.toLowerCase().slice(0, 2) === base; });
     voices.sort(function (a, b) { return score(b) - score(a); });
     fillVoiceList();
+    show();
   }
   function score(v) {
     var l = v.lang.toLowerCase().replace("_", "-");
     return (l.slice(-2) === "in" ? 4 : 0) + (/google|natural|neural|online/i.test(v.name) ? 2 : 0) + (v.localService ? 1 : 0);
   }
+  // browsers do not say whether a voice is male or female, so go by the names the common voices use
+  var FEMALE = /female|woman|heera|neerja|veena|kalpana|swara|pallavi|zira|hazel|susan|libby|sonia|natasha|jenny|aria|ava|emma|allison|samantha|karen|moira|tessa|fiona|victoria|serena|kate|nicky|catherine|isha|lekha|kajal|aditi|raveena/i;
+  var MALE = /\bmale\b|ravi|prabhat|rishi|hemant|madhur|valluvar|david|mark|george|james|guy|ryan|daniel|alex|fred|thomas|christopher|eric|oliver|arthur|aaron|rocko/i;
+  function gender(v) { var n = v.name; return /female/i.test(n) ? "f" : /\bmale\b/i.test(n) ? "m" : FEMALE.test(n) ? "f" : MALE.test(n) ? "m" : ""; }
   function currentVoice() {
-    var want = store("ra-voice-" + base);
-    for (var i = 0; i < voices.length; i++) if (voices[i].name === want) return voices[i];
+    var want = store("ra-voice-" + base), g = store("ra-gender"), i;
+    for (i = 0; i < voices.length; i++) if (voices[i].name === want) return voices[i];
+    if (g) for (i = 0; i < voices.length; i++) if (gender(voices[i]) === g) return voices[i];
     return voices[0] || null;
+  }
+  function setGender(g) {
+    var pick = null;
+    for (var i = 0; i < voices.length; i++) if (gender(voices[i]) === g) { pick = voices[i]; break; }
+    if (!pick) {
+      var who = g === "f" ? "female" : "male", tongue = base === "ta" ? "Tamil" : "English";
+      note("This device has no " + who + " " + tongue + " voice the page can pick. " +
+           "Android: Settings → Text-to-speech → Google → " + tongue + " (India) → choose a " + who + " voice. " +
+           "iPhone: Settings → Accessibility → Spoken Content → Voices.");
+      show(); return;
+    }
+    store("ra-gender", g); store("ra-voice-" + base, pick.name); fillVoiceList(); show();
+    if (playing) speak();
   }
 
   /* ---------- player state ---------- */
@@ -182,7 +203,7 @@ code blocks, anything marked data-noread, and the whole section under a heading 
     ".ra-note{position:fixed;left:16px;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:9999;background:#1f2933;color:#f5f5f0;" +
     "font:13px/1.4 system-ui,sans-serif;padding:8px 12px;border-radius:8px;max-width:min(360px,calc(100vw - 32px));box-shadow:0 4px 18px rgba(0,0,0,.28)}" +
     ".ra-now{background:rgba(242,193,78,.22)!important;box-shadow:0 0 0 6px rgba(242,193,78,.22);border-radius:4px;transition:background .3s}" +
-    "@media (max-width:560px){.ra-bar.open select{display:none}.ra-bar button{padding:0 8px}}" +
+    "@media (max-width:560px){.ra-bar.open select,.ra-bar .ra-gl{display:none}.ra-bar button{padding:0 8px}}" +
     "@media print{.ra-bar,.ra-note{display:none!important}.ra-now{background:none!important;box-shadow:none!important}}";
   document.head.appendChild(css);
 
@@ -194,6 +215,7 @@ code blocks, anything marked data-noread, and the whole section under a heading 
     '<button type="button" class="ra-x ra-prev" title="Previous paragraph" aria-label="Previous paragraph">⏮</button>' +
     '<button type="button" class="ra-main" title="Listen to this article"><span class="ra-ico">🔊</span><span class="ra-lbl">Listen</span></button>' +
     '<button type="button" class="ra-x ra-next" title="Next paragraph" aria-label="Next paragraph">⏭</button>' +
+    '<button type="button" class="ra-x ra-gen" title="Switch between a female and a male voice"></button>' +
     '<button type="button" class="ra-x ra-rate" title="Reading speed"></button>' +
     '<select class="ra-voice" title="Voice" aria-label="Voice"></select>' +
     '<span class="ra-prog" aria-live="off"></span>' +
@@ -210,6 +232,9 @@ code blocks, anything marked data-noread, and the whole section under a heading 
     $(".ra-lbl").textContent = playing ? "Pause" : (bar.classList.contains("open") ? "Resume" : "Listen");
     mainBtn.title = playing ? "Pause" : "Listen to this article";
     $(".ra-rate").textContent = rate + "×";
+    var cv = currentVoice(), g = (cv && gender(cv)) || store("ra-gender") || "f";
+    $(".ra-gen").innerHTML = g === "m" ? '♂<span class="ra-gl"> Male</span>' : '♀<span class="ra-gl"> Female</span>';
+    $(".ra-gen").setAttribute("aria-label", (g === "m" ? "Male" : "Female") + " voice. Switch voice");
     $(".ra-prog").textContent = items ? Math.min(idx + 1, items.length) + " / " + items.length : "";
   }
   function note(msg) {
@@ -239,11 +264,16 @@ code blocks, anything marked data-noread, and the whole section under a heading 
   $(".ra-prev").onclick = function () { jump(-1); };
   $(".ra-next").onclick = function () { jump(1); };
   $(".ra-stop").onclick = stop;
+  $(".ra-gen").onclick = function () {
+    var cv = currentVoice(), g = (cv && gender(cv)) || store("ra-gender") || "f";
+    setGender(g === "m" ? "f" : "m");
+  };
   $(".ra-rate").onclick = function () {
     rate = RATES[(RATES.indexOf(rate) + 1) % RATES.length]; store("ra-rate", String(rate)); show();
     if (playing) speak();
   };
-  voiceSel.onchange = function () { store("ra-voice-" + base, voiceSel.value); if (playing) speak(); };
+  voiceSel.onchange = function () { store("ra-voice-" + base, voiceSel.value);
+    var v = currentVoice(); if (v && gender(v)) store("ra-gender", gender(v)); if (playing) speak(); };
 
   loadVoices();
   if (synth.addEventListener) synth.addEventListener("voiceschanged", loadVoices); else synth.onvoiceschanged = loadVoices;

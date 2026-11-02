@@ -1,7 +1,7 @@
 ---
-# TOOL: index.md | FAMILY: SITE | VERSION: 2.4.0 | DATE: 2026-10-28
+# TOOL: index.md | FAMILY: SITE | VERSION: 2.5.0 | DATE: 2026-11-02
 # CHAT: Offline HTML inventory and online links
-# CHANGES: 2.4.0 - Law Study Explorers card added; 2.3.0 - Technical Papers card added; 2.2.0 - Life Books card added; 2.1.0 - Zen Series card added; 2.0.0 - home page is now a short guide to the four sections (Speaks, Tools, Book Review, Engineering Articles); article list moved to /engineering/
+# CHANGES: 2.5.0 - Class VIII Study Explorers card added; Tools card no longer lists the Class 8 pages; 2.4.0 - Law Study Explorers card added; 2.3.0 - Technical Papers card added; 2.2.0 - Life Books card added; 2.1.0 - Zen Series card added; 2.0.0 - home page is now a short guide to the four sections (Speaks, Tools, Book Review, Engineering Articles); article list moved to /engineering/
 layout: default
 title: Home
 ---
@@ -18,7 +18,7 @@ title: Home
 </style>
 
 <p class="hm-intro">Welcome. This site collects my writing and the small browser tools I build: essays on life and work,
-interactive engineering and learning tools, daily book reviews on management and on life and family, study pages for law students, short Zen stories, longer engineering articles and referenced technical papers. Pick a section below.</p>
+interactive engineering and learning tools, daily book reviews on management and on life and family, study pages for Class VIII and law students, short Zen stories, longer engineering articles and referenced technical papers. Pick a section below.</p>
 
 <div class="hm-grid">
   <a class="hm-card" href="/speaks/" style="--c:#2c6a9e">
@@ -28,8 +28,8 @@ interactive engineering and learning tools, daily book reviews on management and
   </a>
   <a class="hm-card" href="/tools/" style="--c:#1f6f5c">
     <b>Tools →</b>
-    <span>Interactive pages that run in your browser and work offline: spring rate, PSD and bearing calculators, rotor balancing, business sim games, Class 8 Maths, Science and Social Science, piano, Sudoku, AstroExplorer and more.</span>
-    <small>Engineering · School education · Games · Astrology</small>
+    <span>Interactive pages that run in your browser and work offline: spring rate, PSD and bearing calculators, rotor balancing, business sim games, GD&amp;T, word and card games, piano, Sudoku, AstroExplorer and more.</span>
+    <small>Engineering · Games · Astrology · General</small>
   </a>
   <a class="hm-card" href="/book-review/" style="--c:#b5591b">
     <b>Book Review →</b>
@@ -60,5 +60,10 @@ interactive engineering and learning tools, daily book reviews on management and
     <b>Law Study Explorers →</b>
     <span>Interactive study pages for the five-year B.Com. LL.B. (Hons.): Legal Methods, Law of Torts, Financial Accounting &amp; Auditing, Business Organisation &amp; Management, Sociology and Business English, with the Semester I syllabus.</span>
     <small>Semester I · 6 courses · works offline</small>
+  </a>
+  <a class="hm-card" href="/class8/" style="--c:#8a6d12">
+    <b>Class VIII Study Explorers →</b>
+    <span>Interactive study pages for Class VIII CBSE / NCERT: Maths (new Ganita Prakash 2026 and CBSE), Science, Social Science and Direct &amp; Indirect Speech, with animations, labs, practice and certificates.</span>
+    <small>4 subjects · 5 explorers · works offline</small>
   </a>
 </div>

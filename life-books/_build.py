@@ -2,10 +2,11 @@
 """
 TOOL:    life-books/_build.py
 FAMILY:  SITE
-VERSION: 1.1.0
-DATE:    2026-11-02
+VERSION: 1.2.0
+DATE:    2026-11-07
 CHAT:    Daily life books review (personal growth, family, love, parenting) on GitHub Pages
-CHANGES: 1.1.0 - Listen button on every review page (assets/js/read-aloud.js); word count, quiz and certificate are not read out
+CHANGES: 1.2.0 - Aa reading settings (light/dark theme, text size, font, line spacing) on every review page (assets/js/reader.js): text size, font, line spacing; text wraps on phones
+         1.1.0 - Listen button on every review page (assets/js/read-aloud.js); word count, quiz and certificate are not read out
          1.0.0 - new section modelled on the Book Review build script 1.1.0: warm cover palettes and motifs, own paths and labels, empty-index message
 STATUS:  working
 
@@ -18,12 +19,12 @@ Content file (_content/<slug>.json):
   takeaway: one sentence,
   questions: 10 x {q, options: [4 strings], answer: 0-3, why}
 """
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 # review page template version; each page's header lists these plus its own first line
-PAGE_VERSION = "1.1.0"
-PAGE_DATE = "2026-11-02"     # date of the last template change
-PAGE_CHANGES = ["v1.1.0  Listen button reads the review aloud (summary and takeaway)", "v1.0.0  page template: cover, summary, quiz and certificate (from Book Review 1.1.0)"]
+PAGE_VERSION = "1.2.0"
+PAGE_DATE = "2026-11-07"     # date of the last template change
+PAGE_CHANGES = ["v1.2.0  Aa button: theme, text size, font, line spacing; wraps to phone screen", "v1.1.0  Listen button reads the review aloud (summary and takeaway)", "v1.0.0  page template: cover, summary, quiz and certificate (from Book Review 1.1.0)"]
 
 import datetime as dt
 import math
@@ -132,6 +133,7 @@ def cover_svg(c):
 STYLE = """
 :root{--bg:#f5f2ea;--card:#fffdf8;--ink:#1d2421;--muted:#5d6763;--rule:#ddd6c8;--brand:#a8456b;--good:#2e7d4f;--bad:#b23a2a}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#161a19;--card:#1f2523;--ink:#e8ece9;--muted:#9aa7a2;--rule:#33403b;--brand:#f08fb0;--good:#6fcf97;--bad:#ff8a7a}}
+:root[data-theme=dark]{--bg:#161a19;--card:#1f2523;--ink:#e8ece9;--muted:#9aa7a2;--rule:#33403b;--brand:#f08fb0;--good:#6fcf97;--bad:#ff8a7a}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 Georgia,'Times New Roman',serif}
 a{color:var(--brand)}
@@ -425,6 +427,7 @@ def render_page(c, prev_c, next_c):
 </div>
 <script>window.QUIZ_KEY={key};window.CERT={cert};{CERT_JS}{QUIZ_JS}</script>
 <script src="/assets/js/read-aloud.js" defer></script>
+<script src="/assets/js/reader.js" defer></script>
 </body>
 </html>
 """

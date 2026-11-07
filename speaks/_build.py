@@ -2,10 +2,11 @@
 """
 TOOL:    speaks/_build.py
 FAMILY:  SITE
-VERSION: 1.4.0
-DATE:    2026-11-02
+VERSION: 1.5.0
+DATE:    2026-11-07
 CHAT:    Blogger to GitHub migration (Vijay Anand Speaks)
-CHANGES: 1.4.0 - Listen button on every essay (assets/js/read-aloud.js); Tamil essays use a Tamil voice when the device has one
+CHANGES: 1.5.0 - Aa reading settings (light/dark theme, text size, font, line spacing) on every essay (assets/js/reader.js): text size, font incl. Tamil, line spacing; text wraps on phones
+         1.4.0 - Listen button on every essay (assets/js/read-aloud.js); Tamil essays use a Tamil voice when the device has one
          1.3.0 - index header shrunk to two lines and pinned at the top; Home and Tools links moved into the filter sidebar
          1.2.0 - desktop index (>=1100 px) uses the full width: sticky filter sidebar + responsive card grid
          1.1.0 - topic tags from _topics.json; index gets multi-select language/topic filters (Any/All), sort by date, group by year or topic, shareable URL
@@ -28,12 +29,12 @@ Topics (_topics.json): { "<content file name without .json>": ["Management", "Ph
   "_topics" lists the allowed topics in the order the filter shows them. Every essay needs at least one.
   Kept apart from _content so running _import_blogger.py again does not wipe them.
 """
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 
-PAGE_VERSION = "1.2.0"
-PAGE_DATE = "2026-11-02"
+PAGE_VERSION = "1.3.0"
+PAGE_DATE = "2026-11-07"
 INDEX_VERSION = "1.3.0"
-PAGE_CHANGES = ["v1.2.0  Listen button reads the essay aloud", "v1.1.0  topic tags that open the list filtered to that topic", "v1.0.0  moved from vijayanandspeaks.blogspot.com"]
+PAGE_CHANGES = ["v1.3.0  Aa button: theme, text size, font, line spacing; wraps to phone screen", "v1.2.0  Listen button reads the essay aloud", "v1.1.0  topic tags that open the list filtered to that topic", "v1.0.0  moved from vijayanandspeaks.blogspot.com"]
 
 CUSDIS_APP_ID = ""                       # e.g. "a1b2c3d4-...." from cusdis.com → your site → Embed code
 SITE = "https://haivijayanand.github.io"
@@ -57,6 +58,7 @@ FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="
 BASE_CSS = """
 :root{--bg:#f5f2ea;--card:#fffdf8;--ink:#1d2421;--muted:#5d6763;--rule:#ddd6c8;--brand:#1f6f5c;--brand-ink:#fdfaf2;--frame:#ebe6da}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#161a19;--card:#1f2523;--ink:#e8ece9;--muted:#9aa7a2;--rule:#33403b;--brand:#5cc3a6;--brand-ink:#10201b;--frame:#11171a}}
+:root[data-theme=dark]{--bg:#161a19;--card:#1f2523;--ink:#e8ece9;--muted:#9aa7a2;--rule:#33403b;--brand:#5cc3a6;--brand-ink:#10201b;--frame:#11171a}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:18px/1.75 Georgia,'Noto Serif Tamil','Times New Roman',serif;-webkit-text-size-adjust:100%}
@@ -287,6 +289,7 @@ def render_post(c, prev, nxt):
 }})();
 </script>
 <script src="/assets/js/read-aloud.js" defer></script>
+<script src="/assets/js/reader.js" defer></script>
 </body>
 </html>
 """)

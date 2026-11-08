@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<!--
+TOOL    : book-review/kaizen.html — Book Review Day 37: Kaizen
+FAMILY  : SITE
+VERSION : 1.3.0
+DATE    : 2026-11-08
+CHAT    : Daily management book review on GitHub Pages
+CHANGES : v1.3.0  Aa button: theme, text size, font, line spacing; wraps to phone screen
+          v1.2.0  Listen button reads the review aloud (summary and takeaway)
+          v1.1.0  certificate after the quiz: name remembered on this device, A4 PDF to save or share
+          v1.0.0  review of Kaizen (Masaaki Imai)
+STATUS  : working
+BUILT BY: book-review/_build.py v1.3.0
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kaizen — Book Review Day 37</title>
+<meta name="description" content="Lasting competitive strength comes from small, continuous improvements made by everyone, every day, rather than from occasional dramatic breakthroughs.">
+<meta name="theme-color" content="#1f6f5c">
+<style>
+:root{--bg:#f5f2ea;--card:#fffdf8;--ink:#1d2421;--muted:#5d6763;--rule:#ddd6c8;--brand:#1f6f5c;--good:#2e7d4f;--bad:#b23a2a}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#161a19;--card:#1f2523;--ink:#e8ece9;--muted:#9aa7a2;--rule:#33403b;--brand:#5cc3a6;--good:#6fcf97;--bad:#ff8a7a}}
+:root[data-theme=dark]{--bg:#161a19;--card:#1f2523;--ink:#e8ece9;--muted:#9aa7a2;--rule:#33403b;--brand:#5cc3a6;--good:#6fcf97;--bad:#ff8a7a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 Georgia,'Times New Roman',serif}
+a{color:var(--brand)}
+.wrap{max-width:780px;margin:0 auto;padding:16px}
+nav.top{font:14px/1.4 Verdana,sans-serif;padding:10px 0 18px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.cover{min-height:92vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:12px 0 28px;border-bottom:1px solid var(--rule)}
+.cover-art{width:min(340px,82vw);height:auto;box-shadow:0 18px 40px rgba(0,0,0,.28),0 2px 6px rgba(0,0,0,.2);border-radius:3px 8px 8px 3px}
+.cover .meta{text-align:center;font:15px/1.5 Verdana,sans-serif;color:var(--muted)}
+.cover .meta b{color:var(--ink)}
+.scroll{font:13px Verdana,sans-serif;color:var(--muted);text-decoration:none}
+h1{font-size:1.9em;line-height:1.2;margin:34px 0 4px}
+.byline{font:14px/1.5 Verdana,sans-serif;color:var(--muted);margin:0 0 22px}
+.theme{border-left:4px solid var(--brand);padding:6px 14px;background:var(--card);font-style:italic;margin:0 0 20px}
+h2{font:700 15px/1.3 Verdana,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);margin:36px 0 10px}
+.take{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:12px 16px;margin:18px 0}
+.wc{font:12px Verdana,sans-serif;color:var(--muted)}
+ol.quiz{padding-left:0;list-style:none;counter-reset:q}
+ol.quiz>li{counter-increment:q;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:14px 16px;margin:0 0 14px}
+ol.quiz>li>p{margin:0 0 10px;font-weight:700}
+ol.quiz>li>p::before{content:counter(q) ". ";color:var(--brand)}
+.opt{display:block;width:100%;text-align:left;font:15px/1.45 Verdana,sans-serif;color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:7px;padding:9px 12px;margin:6px 0;cursor:pointer}
+.opt:hover{border-color:var(--brand)}
+.opt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent)}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent)}
+.opt:disabled{cursor:default}
+.why{display:none;font:14px/1.5 Verdana,sans-serif;color:var(--muted);margin:8px 2px 0}
+li.done .why{display:block}
+.score{font:15px Verdana,sans-serif;position:sticky;bottom:0;background:var(--bg);padding:10px 0;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.score button{font:14px Verdana,sans-serif;background:var(--brand);color:#fff;border:0;border-radius:6px;padding:7px 12px;cursor:pointer}
+.cert{display:none;background:var(--card);border:2px solid var(--brand);border-radius:12px;padding:16px;margin:22px 0}
+.cert.show{display:block}
+.cert h2{margin-top:4px}
+.cert label{display:block;font:14px Verdana,sans-serif;color:var(--muted);margin:0 0 6px}
+.cert input{width:100%;font:18px Georgia,serif;padding:9px 12px;border:1px solid var(--rule);border-radius:7px;background:var(--bg);color:var(--ink)}
+.cert .row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
+.cert button,.cert a.btn{font:14px Verdana,sans-serif;border:1px solid var(--brand);border-radius:7px;padding:9px 14px;cursor:pointer;background:transparent;color:var(--brand);text-decoration:none}
+.cert button.main{background:var(--brand);color:#fff}
+.cert img{display:block;width:100%;height:auto;margin:14px 0 4px;border:1px solid var(--rule);border-radius:4px;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.cert .note{font:13px/1.5 Verdana,sans-serif;color:var(--muted);margin:10px 0 0}
+.cert .hidden{display:none}
+footer{font:13px/1.5 Verdana,sans-serif;color:var(--muted);padding:26px 0 40px}
+@media print{.cover{min-height:auto;page-break-after:always}.cert,.score,nav.top,.scroll{display:none}.why{display:block}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="top"><a href="./">← All book reviews</a><a href="/">K Vijay Anand</a></nav>
+
+<section class="cover">
+<svg class="cover-art" viewBox="0 0 400 600" role="img" aria-label="Cover for Kaizen by Masaaki Imai" xmlns="http://www.w3.org/2000/svg" font-family="Georgia, 'Times New Roman', serif">
+<rect width="400" height="600" fill="#1f6f5c"/>
+<rect x="18" y="18" width="364" height="564" fill="none" stroke="#f2c14e" stroke-width="1.5" opacity=".7"/>
+<rect x="230" y="120" width="16" height="30" rx="2" fill="#f2c14e" opacity="0.45"/><rect x="256" y="102" width="16" height="48" rx="2" fill="#f2c14e" opacity="0.58"/><rect x="282" y="84" width="16" height="66" rx="2" fill="#f2c14e" opacity="0.71"/><rect x="308" y="66" width="16" height="84" rx="2" fill="#f2c14e" opacity="0.84"/><rect x="334" y="48" width="16" height="102" rx="2" fill="#f2c14e" opacity="0.97"/>
+<text x="40" y="60" font-size="13" letter-spacing="3" fill="#f2c14e" font-family="Verdana, sans-serif">BOOK REVIEW · DAY 37</text>
+<line x1="40" y1="200" x2="120" y2="200" stroke="#f2c14e" stroke-width="4"/>
+<text x="40" y="250" font-size="46" font-weight="700" fill="#fdfaf2">Kaizen</text>
+<line x1="40" y1="440" x2="360" y2="440" stroke="#fdfaf2" stroke-width="1" opacity=".4"/>
+<text x="40" y="470" font-size="19" fill="#fdfaf2" opacity=".92">Masaaki Imai</text>
+<text x="40" y="556" font-size="14" fill="#f2c14e" font-family="Verdana, sans-serif">1986</text>
+<text x="360" y="556" font-size="12" fill="#fdfaf2" opacity=".7" text-anchor="end" font-family="Verdana, sans-serif">haivijayanand.github.io</text>
+</svg>
+<div class="meta"><b>Kaizen</b><br>Masaaki Imai · 1986<br>Day 37 · 8 November 2026</div>
+<a class="scroll" href="#summary">Read the summary ↓</a>
+</section>
+
+<article>
+<h1 id="summary">Kaizen</h1>
+<p class="byline">Masaaki Imai · first published 1986 · reviewed by K Vijay Anand</p>
+<p class="theme">Lasting competitive strength comes from small, continuous improvements made by everyone, every day, rather than from occasional dramatic breakthroughs.</p>
+
+<h2>Summary</h2>
+<p>Masaaki Imai wrote this book to explain to Western readers why so many Japanese companies had become formidable competitors. His answer is a single idea: kaizen, a Japanese word for gradual, ongoing improvement that involves everyone in the organisation, from senior managers to workers on the shop floor.</p>
+<p>Imai contrasts kaizen with innovation. Western firms, he argues, tended to rely on big leaps, such as new technology, major investment or a reorganisation, and then let performance slowly decay until the next leap. Kaizen works differently. It is a steady stream of small, low-cost changes that keeps standards rising between breakthroughs. The two approaches are complementary, but the incremental one is often neglected.</p>
+<p>In his view, management has two jobs. Maintenance means setting standards and making sure people follow them. Improvement means raising those standards. The higher a manager sits, the more time should go to improvement, while frontline staff spend more of their effort on maintaining and refining daily work.</p>
+<p>A central theme is process orientation. Rather than judging people only by results, managers should pay attention to the methods, effort and discipline that produce results, because better processes lead to better outcomes over time. Improvement follows the plan-do-check-act cycle, and once a gain is achieved it is locked in as a new standard.</p>
+<p>Imai treats quality as the first priority and asks people to argue with data rather than opinion. He extends the idea of the customer inside the firm: each step should treat the next step as its customer and pass on no defects.</p>
+<p>Kaizen, he says, is an umbrella covering many familiar practices, including company-wide quality control, just-in-time production, suggestion systems, small-group activities and policy deployment from top management.</p>
+<p>The book&#x27;s message is that improvement is a habit and a culture, not a project with an end date.</p>
+<p class="wc" data-noread>301 words</p>
+<div class="take"><b>One-line takeaway:</b> Make small improvements every day, focus on processes as well as results, and turn each gain into a new standard.</div>
+
+<h2 data-noread>Test yourself — 10 questions</h2>
+<p class="wc">Tap an option to check it. Each answer shows a short reason.</p>
+<ol class="quiz">
+<li><p>What does the word &#x27;kaizen&#x27; mean in Imai&#x27;s book?</p><button class="opt" type="button">A. A sudden technological breakthrough</button><button class="opt" type="button">B. Gradual, continuous improvement involving everyone</button><button class="opt" type="button">C. A cost-cutting programme led by consultants</button><button class="opt" type="button">D. A system of performance bonuses</button><div class="why"><b>Answer B.</b> Imai defines kaizen as ongoing, incremental improvement in which everyone in the organisation takes part.</div></li>
+<li><p>How does Imai contrast kaizen with innovation?</p><button class="opt" type="button">A. Innovation is cheap and kaizen is expensive</button><button class="opt" type="button">B. They are the same thing under different names</button><button class="opt" type="button">C. Kaizen is small and continuous, while innovation comes in large, occasional leaps</button><button class="opt" type="button">D. Innovation involves everyone, while kaizen involves only experts</button><div class="why"><b>Answer C.</b> He presents innovation as dramatic step changes and kaizen as a steady flow of small improvements between them.</div></li>
+<li><p>According to Imai, what tends to happen after a major innovation if there is no kaizen?</p><button class="opt" type="button">A. Performance gradually slips back as standards decay</button><button class="opt" type="button">B. Performance keeps rising automatically</button><button class="opt" type="button">C. Costs fall to zero</button><button class="opt" type="button">D. Workers stop needing any standards</button><div class="why"><b>Answer A.</b> Without ongoing maintenance and improvement, the gains from a breakthrough erode over time.</div></li>
+<li><p>What are the two main functions of management in the book?</p><button class="opt" type="button">A. Hiring and firing</button><button class="opt" type="button">B. Budgeting and forecasting</button><button class="opt" type="button">C. Marketing and sales</button><button class="opt" type="button">D. Maintenance and improvement</button><div class="why"><b>Answer D.</b> Imai says managers must both uphold current standards and work to raise them.</div></li>
+<li><p>How should the balance between maintenance and improvement change with seniority?</p><button class="opt" type="button">A. Senior managers should focus only on maintenance</button><button class="opt" type="button">B. Higher-level managers should devote more of their time to improvement</button><button class="opt" type="button">C. Everyone should spend equal time on both</button><button class="opt" type="button">D. Only frontline workers should improve anything</button><div class="why"><b>Answer B.</b> In his model, the share of effort given to improvement grows as one moves up the hierarchy.</div></li>
+<li><p>What does &#x27;process orientation&#x27; ask managers to do?</p><button class="opt" type="button">A. Ignore results completely</button><button class="opt" type="button">B. Judge staff solely on final numbers</button><button class="opt" type="button">C. Pay attention to the methods and effort that produce results, not only the results</button><button class="opt" type="button">D. Replace all processes with automation</button><div class="why"><b>Answer C.</b> Imai argues that improving the process is the reliable path to better results over time.</div></li>
+<li><p>Which cycle does Imai describe as the engine of improvement?</p><button class="opt" type="button">A. Plan-do-check-act</button><button class="opt" type="button">B. Buy-build-sell-repeat</button><button class="opt" type="button">C. Hire-train-review-promote</button><button class="opt" type="button">D. Forecast-budget-spend-audit</button><div class="why"><b>Answer A.</b> The plan-do-check-act cycle is used to test changes and keep improving step by step.</div></li>
+<li><p>What should happen once an improvement has been achieved?</p><button class="opt" type="button">A. It should be kept secret from other teams</button><button class="opt" type="button">B. It should be reversed at the next review</button><button class="opt" type="button">C. It should be left to individuals to follow if they wish</button><button class="opt" type="button">D. It should become the new standard for the work</button><div class="why"><b>Answer D.</b> Standardising each gain prevents backsliding and creates the base for the next improvement.</div></li>
+<li><p>What does treating &#x27;the next process as the customer&#x27; mean?</p><button class="opt" type="button">A. Sending defects downstream for others to fix</button><button class="opt" type="button">B. Each step should deliver defect-free work to the step that follows it</button><button class="opt" type="button">C. Charging internal departments for services</button><button class="opt" type="button">D. Letting external customers design every process</button><div class="why"><b>Answer B.</b> Imai extends customer thinking inside the firm so that no step passes problems on to the next.</div></li>
+<li><p>Which of these does Imai place under the &#x27;kaizen umbrella&#x27;?</p><button class="opt" type="button">A. Hostile takeovers</button><button class="opt" type="button">B. Annual layoffs</button><button class="opt" type="button">C. Company-wide quality control, just-in-time production and suggestion systems</button><button class="opt" type="button">D. Outsourcing all production</button><div class="why"><b>Answer C.</b> He presents many Japanese management practices, including quality control, just-in-time and suggestion systems, as expressions of kaizen.</div></li>
+</ol>
+<div class="score"><span id="score"></span><button id="reset" type="button">Try again</button></div>
+
+<section class="cert" id="cert" data-noread aria-live="polite">
+<h2>Your certificate — <span id="cert-score"></span></h2>
+<label for="cert-name">Name to print on the certificate (remembered on this device)</label>
+<input id="cert-name" type="text" maxlength="60" autocomplete="name" placeholder="Your full name">
+<div class="row"><button id="cert-make" class="main" type="button">Make certificate</button></div>
+<img id="cert-img" class="hidden" alt="Certificate preview">
+<div id="cert-acts" class="row hidden">
+<button id="cert-share" class="main" type="button">Share PDF</button>
+<button id="cert-pdf" type="button">Save PDF</button>
+<button id="cert-wa" type="button">WhatsApp</button>
+<button id="cert-mail" type="button">Email</button>
+</div>
+<p class="note" id="cert-note"></p>
+</section>
+</article>
+
+<nav class="top" style="padding-top:22px"><a href="toyota-production-system.html">← Day 36: Toyota Production System</a><span></span></nav>
+<footer>A short personal summary written for study and discussion. The cover above is an original design for this page, not the publisher's cover. Read the book itself for the full argument.</footer>
+</div>
+<script>window.QUIZ_KEY=[1, 2, 0, 3, 1, 2, 0, 3, 1, 2];window.CERT={"title": "Kaizen", "author": "Masaaki Imai", "day": 37, "url": "https://haivijayanand.github.io/book-review/kaizen.html"};
+(function(){
+  var C=window.CERT;C.when=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  var KEY_NAME='bookReview.name',W=2339,H=1654;
+  var box=document.getElementById('cert'),inp=document.getElementById('cert-name'),
+      prev=document.getElementById('cert-img'),acts=document.getElementById('cert-acts'),
+      note=document.getElementById('cert-note'),last=null;
+  function getName(){try{return localStorage.getItem(KEY_NAME)||'';}catch(e){return '';}}
+  function setName(n){try{localStorage.setItem(KEY_NAME,n);}catch(e){}}
+  inp.value=getName();
+  window.onQuizChange=function(got,done,total){
+    if(done<total){box.classList.remove('show');return;}
+    box.classList.add('show');
+    document.getElementById('cert-score').textContent=got+' / '+total;
+    if(inp.value.trim())make();
+  };
+  function coverImage(){
+    return new Promise(function(ok){
+      var svg=document.querySelector('.cover .cover-art');
+      if(!svg)return ok(null);
+      var src=new XMLSerializer().serializeToString(svg);
+      var img=new Image();img.onload=function(){ok(img);};img.onerror=function(){ok(null);};
+      img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(src);
+    });
+  }
+  function fit(ctx,text,font,size,maxW){
+    do{ctx.font=font.replace('$',size);size-=4;}while(ctx.measureText(text).width>maxW&&size>30);
+  }
+  function draw(name,got,total,cover){
+    var cv=document.createElement('canvas');cv.width=W;cv.height=H;
+    var x=cv.getContext('2d'),G='#1f6f5c',GOLD='#b8892d',INK='#1d2421',MUTE='#5d6763';
+    var SERIF="Georgia,'Noto Serif','Noto Serif Tamil','Latha','Nirmala UI',serif",SANS="Verdana,'Noto Sans','Nirmala UI',sans-serif";
+    x.fillStyle='#fbf7ee';x.fillRect(0,0,W,H);
+    x.strokeStyle=G;x.lineWidth=34;x.strokeRect(40,40,W-80,H-80);
+    x.strokeStyle=GOLD;x.lineWidth=6;x.strokeRect(92,92,W-184,H-184);
+    x.lineWidth=2;x.strokeRect(112,112,W-224,H-224);
+    [[112,112],[W-112,112],[112,H-112],[W-112,H-112]].forEach(function(p){
+      x.save();x.translate(p[0],p[1]);x.rotate(Math.PI/4);x.fillStyle=GOLD;x.fillRect(-22,-22,44,44);
+      x.fillStyle='#fbf7ee';x.fillRect(-10,-10,20,20);x.restore();});
+    var L=230,cx;
+    if(cover){var ch=860,cw=ch*400/600;x.save();x.shadowColor='rgba(0,0,0,.3)';x.shadowBlur=40;x.shadowOffsetY=18;
+      x.drawImage(cover,L,(H-ch)/2,cw,ch);x.restore();cx=L+cw+(W-140-(L+cw))/2;}
+    else cx=W/2;
+    var maxW=W-140-(cover?L+600:L)-120;
+    x.textAlign='center';x.textBaseline='alphabetic';
+    x.fillStyle=G;x.font='bold 40px '+SANS;
+    if(x.letterSpacing!==undefined)x.letterSpacing='10px';
+    x.fillText('BOOK REVIEW · DAY '+C.day,cx,300);
+    if(x.letterSpacing!==undefined)x.letterSpacing='0px';
+    var top=got>=8?'Certificate of Excellence':'Certificate of Completion';
+    x.fillStyle=INK;x.font='bold 112px '+SERIF;x.fillText(top,cx,430);
+    x.strokeStyle=GOLD;x.lineWidth=5;x.beginPath();x.moveTo(cx-260,480);x.lineTo(cx+260,480);x.stroke();
+    x.fillStyle=MUTE;x.font='italic 50px '+SERIF;x.fillText('This is to certify that',cx,590);
+    x.fillStyle=G;fit(x,name,'italic bold $px '+SERIF,124,maxW);x.fillText(name,cx,735);
+    x.strokeStyle=MUTE;x.lineWidth=2;x.beginPath();x.moveTo(cx-maxW/2,775);x.lineTo(cx+maxW/2,775);x.stroke();
+    x.fillStyle=MUTE;x.font='italic 48px '+SERIF;x.fillText('has studied the review of',cx,870);
+    x.fillStyle=INK;fit(x,C.title,'bold $px '+SERIF,80,maxW);x.fillText(C.title,cx,975);
+    fit(x,'by '+C.author,'$px '+SERIF,52,maxW);x.fillStyle=MUTE;x.fillText('by '+C.author,cx,1050);
+    x.fillStyle=INK;x.font='50px '+SERIF;
+    x.fillText('and answered '+got+' of '+total+' questions correctly',cx,1150);
+    var sx=cx+maxW/2-130,sy=1390;
+    x.fillStyle=G;x.beginPath();x.arc(sx,sy,120,0,7);x.fill();
+    x.strokeStyle=GOLD;x.lineWidth=8;x.beginPath();x.arc(sx,sy,102,0,7);x.stroke();
+    x.fillStyle='#fff';x.font='bold 72px '+SERIF;x.fillText(got+'/'+total,sx,sy+20);
+    x.font='bold 24px '+SANS;x.fillText('SCORE',sx,sy+62);
+    var lx=cx-maxW/2+190;
+    x.fillStyle=INK;x.font='46px '+SERIF;x.fillText(C.when,lx,1370);
+    x.strokeStyle=MUTE;x.lineWidth=2;x.beginPath();x.moveTo(lx-190,1395);x.lineTo(lx+190,1395);x.stroke();
+    x.fillStyle=MUTE;x.font='30px '+SANS;x.fillText('Date',lx,1440);
+    x.font='28px '+SANS;x.fillText('haivijayanand.github.io/book-review',cx,H-150);
+    return cv;
+  }
+  function make(){
+    var name=inp.value.trim().replace(/\s+/g,' ');
+    if(!name){inp.focus();note.textContent='Please type your name first.';return;}
+    setName(name);
+    var parts=document.getElementById('cert-score').textContent.split(' / ');
+    coverImage().then(function(cover){
+      var cv=draw(name,+parts[0],+parts[1],cover);
+      prev.src=cv.toDataURL('image/jpeg',0.9);prev.classList.remove('hidden');
+      acts.classList.remove('hidden');last={cv:cv,name:name,got:parts[0]};
+      note.textContent=navigator.share?'Tap Share to send the PDF to WhatsApp, Gmail or any app.':'Save the PDF, then attach it to WhatsApp or email.';
+    });
+  }
+  var jspdf=null;
+  function loadPdf(){
+    if(window.jspdf)return Promise.resolve(window.jspdf);
+    if(jspdf)return jspdf;
+    jspdf=new Promise(function(ok,bad){
+      var s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s.onload=function(){ok(window.jspdf);};s.onerror=function(){jspdf=null;bad();};
+      document.head.appendChild(s);
+    });
+    return jspdf;
+  }
+  function fileName(){return ('Certificate - '+C.title+' - '+last.name).replace(/[\\/:*?"<>|]+/g,'')+'.pdf';}
+  function pdfFile(){
+    return loadPdf().then(function(lib){
+      var d=new lib.jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+      d.setProperties({title:'Certificate: '+C.title,author:'haivijayanand.github.io',subject:'Book Review Day '+C.day});
+      d.addImage(last.cv.toDataURL('image/jpeg',0.92),'JPEG',0,0,297,210);
+      return new File([d.output('blob')],fileName(),{type:'application/pdf'});
+    });
+  }
+  function download(blob,name){
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+    document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
+  }
+  function msg(){return 'I scored '+last.got+'/10 on the "'+C.title+'" book review quiz. '+C.url;}
+  document.getElementById('cert-make').addEventListener('click',make);
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter')make();});
+  document.getElementById('cert-pdf').addEventListener('click',function(){
+    if(!last)return;
+    pdfFile().then(function(f){download(f,f.name);},function(){
+      note.textContent='PDF tool could not load (offline?). Saving as an image instead.';
+      last.cv.toBlob(function(b){download(b,fileName().replace(/pdf$/,'jpg'));},'image/jpeg',0.92);
+    });
+  });
+  var sh=document.getElementById('cert-share');
+  if(!navigator.share)sh.classList.add('hidden');
+  sh.addEventListener('click',function(){
+    if(!last)return;
+    pdfFile().then(function(f){
+      if(navigator.canShare&&navigator.canShare({files:[f]}))
+        return navigator.share({files:[f],title:'Certificate: '+C.title,text:msg()});
+      download(f,f.name);
+      return navigator.share({title:'Certificate: '+C.title,text:msg(),url:C.url});
+    }).catch(function(e){if(e&&e.name!=='AbortError')note.textContent='Sharing did not work here. Use Save PDF and attach the file.';});
+  });
+  document.getElementById('cert-wa').addEventListener('click',function(){
+    if(last)window.open('https://wa.me/?text='+encodeURIComponent(msg()),'_blank');
+  });
+  document.getElementById('cert-mail').addEventListener('click',function(){
+    if(last)location.href='mailto:?subject='+encodeURIComponent('My certificate: '+C.title)+'&body='+encodeURIComponent(msg()+'\n\n(The certificate PDF is attached.)');
+  });
+})();
+
+(function(){
+  var KEY=window.QUIZ_KEY,total=KEY.length,got=0,done=0;
+  var out=document.getElementById('score');
+  function show(){out.textContent='Score: '+got+' / '+done+' answered, '+total+' questions';if(window.onQuizChange)window.onQuizChange(got,done,total);}
+  document.querySelectorAll('ol.quiz>li').forEach(function(li,i){
+    li.querySelectorAll('.opt').forEach(function(b,j){
+      b.addEventListener('click',function(){
+        if(li.classList.contains('done'))return;
+        li.classList.add('done');done++;
+        if(j===KEY[i]){got++;b.classList.add('right');}
+        else{b.classList.add('wrong');li.querySelectorAll('.opt')[KEY[i]].classList.add('right');}
+        li.querySelectorAll('.opt').forEach(function(x){x.disabled=true;});
+        show();
+      });
+    });
+  });
+  document.getElementById('reset').addEventListener('click',function(){
+    got=0;done=0;
+    document.querySelectorAll('ol.quiz>li').forEach(function(li){
+      li.classList.remove('done');
+      li.querySelectorAll('.opt').forEach(function(x){x.disabled=false;x.classList.remove('right','wrong');});
+    });
+    show();
+  });
+  show();
+})();
+</script>
+<script src="/assets/js/read-aloud.js" defer></script>
+<script src="/assets/js/reader.js" defer></script>
+</body>
+</html>

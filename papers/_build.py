@@ -2,10 +2,11 @@
 """
 TOOL:    papers/_build.py
 FAMILY:  papers
-VERSION: 1.4.0
-DATE:    2026-11-07
+VERSION: 1.5.0
+DATE:    2026-11-13
 CHAT:    Exoskeleton technical paper — Technical Papers section
-CHANGES: 1.4.0 - Aa reading settings (light/dark theme, text size, font, line spacing) on the paper (assets/js/reader.js): text size, font, line spacing; text, tables and maths wrap on phones
+CHANGES: 1.5.0 - optional "pdf": "supplied" in _papers.json keeps a hand-made PDF (e.g. IEEE layout) instead of printing the page
+         1.4.0 - Aa reading settings (light/dark theme, text size, font, line spacing) on the paper (assets/js/reader.js): text size, font, line spacing; text, tables and maths wrap on phones
          1.3.0 - Listen button reads the paper aloud (assets/js/read-aloud.js); figures, tables, figure credits and references are skipped
          1.2.0 - figures: !fig[key] / !fig[a, b] markers, numbered captions with author/licence credit, auto Figure credits list
          1.1.0 - side panel: Hide button inside the panel, Hide/Show label on the top-bar button, choice remembered
@@ -25,9 +26,10 @@ Adding a paper:
      (caption, author, licence, licence_url, source) and place them with a line "!fig[key]" or "!fig[a, b]" (side by side).
      Use only public-domain or Creative Commons images and copy the credit from the image's Commons page.
   2. add an entry at the end of _papers.json: no, slug, title, short, author, date (YYYY-MM-DD), tags, summary
+     Optional "pdf": "supplied" — put your own pdf/<slug>.pdf (e.g. IEEE two-column) and the build will not overwrite it.
   3. run this script, then git add papers/ && git commit && git push
 """
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 
 PAGE_VERSION = "1.4.0"
 PAGE_DATE = "2026-11-07"
@@ -524,6 +526,12 @@ def make_pdfs(papers):
         browser = p.chromium.launch()
         page = browser.new_page()
         for pp in papers:
+            if pp.get("pdf") == "supplied":
+                out = PDF_DIR / f"{pp['slug']}.pdf"
+                if not out.exists():
+                    raise SystemExit(f"{pp['slug']}: 'pdf': 'supplied' but pdf/{pp['slug']}.pdf is missing")
+                print(f"  pdf  {out.relative_to(HERE.parent)}  (supplied, kept: {pdf_info(out)})")
+                continue
             src = HERE / f"{pp['slug']}.html"
             out = PDF_DIR / f"{pp['slug']}.pdf"
             page.goto(src.as_uri(), wait_until="load", timeout=60000)

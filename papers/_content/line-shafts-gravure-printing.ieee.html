@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<!--
+TOOL:    papers/_content/line-shafts-gravure-printing.ieee.html
+FAMILY:  papers
+VERSION: 1.0.0
+DATE:    2026-11-13
+CHAT:    Line shafts in gravure printing — Technical Papers section
+CHANGES: 1.0.0 - IEEE two-column A4 source of Technical Paper No. 07; print to pdf/line-shafts-gravure-printing.pdf (supplied PDF)
+STATUS:  working
+-->
+<html><head><meta charset="utf-8">
+<title>Mechanical and Electronic Line Shafts in Gravure Printing</title>
+<style>
+@page { size: A4; margin: 19mm 14mm 20mm 14mm; }
+body { font-family: 'Times New Roman','TeX Gyre Termes','Liberation Serif',serif; font-size: 10pt; line-height: 1.2; color:#000; margin:0; }
+.title { text-align:center; font-size: 22pt; line-height:1.15; margin: 0 0 10px; font-weight: normal; }
+.authors { text-align:center; font-size: 11pt; margin: 0 0 2px; }
+.series { text-align:center; font-size: 8.5pt; font-style: italic; margin: 0 0 14px; }
+.cols { column-count: 2; column-gap: 4.5mm; text-align: justify; hyphens: auto; }
+p { margin: 0; text-indent: 1em; }
+p.ni { text-indent: 0; }
+.abstract, .index { font-weight: bold; font-size: 9pt; text-indent: 0; margin-bottom: 6px; }
+.abstract i, .index i { font-weight: bold; }
+h2 { font-size: 10pt; font-weight: normal; font-variant: small-caps; text-align: center; margin: 10px 0 4px; letter-spacing: .3px; break-after: avoid; }
+h3 { font-size: 10pt; font-weight: normal; font-style: italic; margin: 6px 0 2px; break-after: avoid; }
+ul, ol { margin: 2px 0 4px; padding-left: 14px; }
+li { margin-bottom: 1px; }
+.wide { column-span: all; margin: 8px 0 10px; break-inside: avoid; }
+.tcap { text-align:center; font-size: 8pt; margin-bottom: 3px; }
+.tcap .tn { display:block; letter-spacing:.5px; }
+.tcap .tt { font-variant: small-caps; font-size: 8.5pt; }
+table { border-collapse: collapse; width: 100%; font-size: 8pt; }
+th, td { padding: 2px 5px; vertical-align: top; text-align: left; }
+thead th { border-top: 1px solid #000; border-bottom: .6px solid #000; font-weight: normal; font-variant: small-caps; }
+tbody tr:last-child td { border-bottom: 1px solid #000; }
+.tnote { font-size: 7.5pt; margin-top: 2px; text-indent: 0; }
+figure { margin: 0; text-align: center; }
+figure img { width: 88%; }
+figure.col { margin: 6px 0 8px; break-inside: avoid; }
+figure.col img { width: 100%; }
+figcaption { font-size: 8pt; text-align: justify; margin-top: 3px; }
+.eq { display: flex; justify-content: space-between; align-items: center; margin: 5px 0; font-style: italic; }
+.eq span:first-child { flex: 1; text-align: center; }
+.eq span:last-child { font-style: normal; }
+.refs { font-size: 8pt; text-indent: 0; }
+.refs ol { list-style: none; padding-left: 0; counter-reset: r; margin: 0; }
+.refs li { counter-increment: r; position: relative; padding-left: 22px; margin-bottom: 2px; text-align: left; word-break: break-word; }
+.refs li::before { content: "[" counter(r) "]"; position: absolute; left: 0; }
+</style></head>
+<body>
+<h1 class="title">Mechanical and Electronic Line Shafts in Gravure Printing: History, Evolution and Current Trends</h1>
+<div class="authors">K Vijay Anand</div>
+<div class="series">Technical Paper No. 07 · 13 November 2026 · haivijayanand.github.io/papers</div>
+
+<div class="cols">
+<p class="abstract"><i>Abstract</i>—The electronic line shaft (ELS) has replaced the mechanical line shaft (MLS) as the reference drive architecture for new high-speed rotogravure presses, while MLS presses remain in wide use in cost-sensitive markets. This paper traces how gravure presses came to be synchronized by a single rotating steel shaft, why that shaft limited register accuracy, makeready and flexibility, and how servo drives, digital motion networks and the virtual master axis made it possible to remove it. The two architectures are compared on engineering and economic terms, migration paths for converters are set out, and current trends are reviewed: integrated predictive register control, sleeve-based short-run gravure, energy recovery, connectivity, and competitive pressure from flexographic and digital printing.</p>
+<p class="index"><i>Index Terms</i>—Electronic line shaft, gravure printing, motion control, register control, rotogravure, servo drives, shaftless drive, web handling.</p>
+
+<h2>I. Introduction</h2>
+<p class="ni">A multi-color rotogravure press is only as good as its register: every color must land on the web within a fraction of a millimeter of the colors before it. In a typical flexible-packaging press, 8 to 10 print units sit in line, each separated by a dryer and several meters of web. The print cylinders must turn in a fixed phase relationship to each other while the web stretches, shrinks and changes tension between them.</p>
+<p>The device that holds those cylinders in step is the <i>line shaft</i>. In its original form it is a literal steel shaft running the length of the press, driven by one main motor and geared to every print cylinder. In its modern form it is an <i>electronic line shaft</i>: no shaft at all, but a motion controller that generates a master position signal and commands an individual servo motor on each cylinder to follow it. The following terms are used in this paper.</p>
+<ul>
+<li><i>Mechanical line shaft (MLS):</i> a single motor and a continuous shaft with bevel or worm gearbox take-offs to each print unit; also called shafted or line-shaft drive.</li>
+<li><i>Electronic line shaft (ELS):</i> each print cylinder, and usually each web-handling roller, has its own servo motor, synchronized by a real or virtual master over a motion network; also called shaftless, gearless or sectional drive.</li>
+<li><i>Longitudinal (circumferential) register:</i> the machine-direction alignment of one color to the previous one; the main quantity a line shaft must protect.</li>
+<li><i>Lateral (side) register:</i> cross-direction alignment, corrected by moving the cylinder or the web sideways.</li>
+</ul>
+
+<h2>II. History: From Intaglio Plate to the Shafted Press</h2>
+<p class="ni">Rotogravure was industrialized in the 1890s, and for most of the following century its presses were synchronized by a single mechanical shaft. Gravure descends from intaglio engraving; the key step was Karl Klíč's move from flat plates to engraved copper cylinders around 1879, building on Fox Talbot's photographic screen [1]. Klíč and Samuel Fawcett, with the Storey Brothers of Lancaster, formed the Rembrandt Intaglio Printing Company in 1895 and kept the process secret until an employee carried it to the United States in 1903 [2]. Table I lists the early milestones [1]–[6].</p>
+<p>As presses grew from one or two units to eight, ten or more, the natural way to keep every cylinder in step was the factory's own transmission idea: one prime mover and one shaft. From the 1950s to the 1980s, the line shaft became the backbone of publication and packaging gravure, first with DC main motors and later with AC motors under vector control [7]. Unwind, infeed, outfeed and rewind sections were progressively split off onto their own drives, while the print units stayed on the shaft.</p>
+
+<div class="wide">
+<div class="tcap"><span class="tn">TABLE I</span><span class="tt">Early Milestones of Rotogravure</span></div>
+<table><thead><tr><th style="width:14%">Year</th><th>Milestone</th></tr></thead><tbody>
+<tr><td>1852</td><td>Fox Talbot describes a textile screen for photographic half-tones [1]</td></tr>
+<tr><td>1860</td><td>French patent describes a reel-fed gravure press [3]</td></tr>
+<tr><td>c. 1879</td><td>Klíč engraves copper cylinders instead of plates; rotary gravure is born [1]</td></tr>
+<tr><td>1895</td><td>Rembrandt Intaglio Printing Company founded in Lancaster [4]</td></tr>
+<tr><td>1905–06</td><td>Klíč achieves three-color rotogravure; color gravure prints marketed [4]</td></tr>
+<tr><td>1910</td><td><i>Freiburger Zeitung</i> becomes the first daily to print letterpress and rotogravure together [5]</td></tr>
+<tr><td>1950</td><td>Cerutti builds its first rotogravure press, for Mondadori [6]</td></tr>
+</tbody></table>
+</div>
+
+<h2>III. The Mechanical Line Shaft</h2>
+<p class="ni">The mechanical line shaft is a simple, robust way to hold every print cylinder at the same speed, but it cannot hold them at exactly the same phase. Its accuracy is limited by the stiffness, backlash and wear of a long mechanical chain, and register is corrected indirectly by stretching or shortening the web.</p>
+<h3>A. Architecture</h3>
+<ol>
+<li><i>Main motor and main gearbox:</i> one motor, historically DC and today usually an AC motor on a vector drive, drives the whole printing section.</li>
+<li><i>Line shaft:</i> a continuous steel shaft runs the length of the press on the drive side, supported in plummer blocks, often in sections joined by flexible couplings.</li>
+<li><i>Unit take-offs:</i> at each print unit, a right-angle gearbox (spiral bevel or worm) and a cardan shaft or coupling transmit motion to the print cylinder (Fig. 1).</li>
+<li><i>Impression roller and web:</i> the rubber impression roller and chill rollers are driven by friction from the cylinder and web; infeed, outfeed, unwind and rewind are usually on separate sectional drives.</li>
+<li><i>Register actuators:</i> a motorized compensator roller between units lengthens or shortens the web path to move the image in the machine direction; some designs add a differential or phase-shifting gearbox in the take-off to advance or retard the cylinder directly. Lateral register moves the cylinder axially.</li>
+<li><i>Register control:</i> a scanning head reads register marks and a controller drives the compensator motors in closed loop.</li>
+</ol>
+<figure class="col"><img src="../img/line-shafts-gravure-printing/unit-takeoff.jpg" alt="Unit take-off">
+<figcaption>Fig. 1. Unit take-off on a mechanical line shaft press (plan view): a bevel gearbox turns the line shaft's drive through 90°, an optional register differential trims the phase, and a cardan shaft with two universal joints drives the print cylinder.</figcaption></figure>
+<h3>B. How Register Is Held</h3>
+<p class="ni">The shaft fixes all cylinders to one angular speed, so nominal register is set by mechanical phasing at makeready. During the run, the register controller corrects errors caused by web stretch, tension changes and cylinder diameter differences by moving compensators. Moving a compensator also changes the tension in that web span, and the disturbance propagates to downstream units, which then react in turn [8]. Dynamic models of shaft-coupled print units capture these interactions among cylinder, doctor blade, compensator roller and drive [9].</p>
+<h3>C. Limitations</h3>
+<ul>
+<li><i>Torsional wind-up:</i> the long shaft acts as a torsion spring. Each unit's load (doctor-blade friction, ink drag, bearing drag) twists it differently, and the twist changes with speed, so register drifts during acceleration and deceleration. Converters moving from line shaft to servo drives report this as a primary motivation [10].</li>
+<li><i>Backlash and wear:</i> gear mesh, keyways, splines and couplings add lost motion that grows with age, adding register noise that no controller fully removes (Section III-D).</li>
+<li><i>Torsional and lateral vibration:</i> the shaft, couplings and gear mesh form a lightly damped system with resonances that can appear at particular press speeds, visible as periodic register error or banding.</li>
+<li><i>Coupled web tension:</i> compensator moves disturb tension, so register and tension control fight each other, especially on extensible films.</li>
+<li><i>Long web paths:</i> compensators and their idlers lengthen the web between units, increasing start-up waste and requiring the ink to be fully dry before contact.</li>
+<li><i>Fixed configuration:</i> a unit cannot run independently of the shaft for cleaning or cylinder change while the line runs, and adding or relocating units is a mechanical rebuild.</li>
+<li><i>Maintenance load:</i> gearboxes, couplings and bearings need lubrication, alignment checks and periodic replacement; the press is noisier.</li>
+</ul>
+<h3>D. Backlash in the Take-Off and Its Control</h3>
+<p class="ni">Every element of the take-off in Fig. 1 contributes lost motion between the line shaft and the cylinder.</p>
+<p><i>Bevel gears:</i> gear pairs are cut with deliberate tooth clearance for thermal growth and the oil film, and flank and bearing wear add to it over the years. It is controlled by specifying a higher accuracy grade (ISO 1328 or AGMA) and buying lapped or ground spiral-bevel pairs as matched sets; by setting the mesh with shims at the pinion and gear mounting distances, checked with a dial indicator and a contact-pattern test; by preloading taper-roller or angular-contact bearings so that the shafts cannot float and open the mesh; and, where precision matters, by low-backlash gearboxes rated in arc-minutes or split, spring-loaded anti-backlash gears. Backlash only shows when torque reverses. The steady drag of the doctor blade and impression keeps the teeth on one flank during the run, so the problem appears mainly during acceleration, braking and stops.</p>
+<p><i>Cardan shafts:</i> a cardan shaft has clearance in the needle bearings of its cross trunnions and between the teeth of its telescoping spline. It also has a separate effect that is not backlash: a single universal joint running at an angle transmits a speed that rises and falls twice per revolution, which would appear directly as register error. Engineers cancel this ripple with two joints whose yokes are in phase and whose working angles are equal (a Z or W arrangement), keep those angles small, and specify close-tolerance or preloaded cross bearings and coated or ball splines. Where misalignment is small, a torsionally stiff disc or bellows coupling replaces the cardan altogether.</p>
+<p><i>Across the press:</i> some lost motion always remains and grows with wear, so MLS presses depend on closed-loop register control. The controller removes slow drift but cannot follow backlash crossings during speed ramps. Backlash is therefore checked at overhauls and watched through condition monitoring: rising gear-mesh sidebands, impacting, or register error that appears only during speed changes are typical signs. Removing the shaft, gearbox and cardan altogether is one of the main reasons the ELS holds register better.</p>
+<h3>E. Strengths That Keep It in Service</h3>
+<p class="ni">The MLS remains attractive where capital cost, simplicity and maintainability by mechanical technicians matter more than the last increment of register accuracy. It needs no motion network, has no electronic obsolescence risk, and keeps all units mechanically in step even during an emergency stop. Indian manufacturers still build and export MLS presses rated around 300 m/min for such markets [11].</p>
+
+<h2>IV. Evolution to the Electronic Line Shaft</h2>
+<p class="ni">Shaftless drive was proven on web offset newspaper presses in the early 1990s and reached gravure packaging presses within about a decade. Press makers had experimented with independently driven reelstands and units through the 1970s and 1980s; the turning point was the combination of brushless AC servo motors, digital drives, high-resolution encoders and deterministic motion networks [12].</p>
+<h3>A. Enabling Technologies</h3>
+<ul>
+<li><i>Servo motors and digital drives:</i> permanent-magnet AC motors with absolute or high-count encoders, closed in position, speed and current loops inside the drive.</li>
+<li><i>Motion networks:</i> fiber-optic SERCOS was used by early shaftless presses to carry position commands from a central controller to each drive, with diagnostics and per-motor register offsets visible to the operator [13]. Later systems moved to PROFIBUS DP with motion profiles [10], then to Ethernet-based real-time networks.</li>
+<li><i>Electronic gearing and camming:</i> firmware that lets one axis follow a master at a programmable ratio and phase, so a servo can behave exactly like a gear on a shaft [14].</li>
+<li><i>Integrated register control:</i> camera or mark-sensor systems that write corrections straight into the cylinder phase rather than into a compensator motor.</li>
+</ul>
+<h3>B. Milestones</h3>
+<p class="ni">Table II summarizes the transition. Adoption was not uniform. Early debate centered on reliability, since one failed motor could stop a unit, and on the higher and different skills needed to maintain shaftless presses [12]. Hybrid designs, with a motor per tower and a short shaft inside it, were offered as a middle path. In gravure, Japanese makers such as Orient Sogyo took a sectional AC-vector route that eliminates compensators while retaining their own drive philosophy [15].</p>
+
+<div class="wide">
+<div class="tcap"><span class="tn">TABLE II</span><span class="tt">Milestones in the Transition to Shaftless Drive</span></div>
+<table><thead><tr><th style="width:14%">Period</th><th>Development</th></tr></thead><tbody>
+<tr><td>1970s–80s</td><td>Independently driven reelstands and early experiments with sectional drives [12]</td></tr>
+<tr><td>1990</td><td>MAN Roland demonstrates a shaftless drive on a commercial press at drupa [12]</td></tr>
+<tr><td>1993</td><td>Wifag offers individual AC gearless drive on its OF 370 newspaper press [12]</td></tr>
+<tr><td>Mid-1990s</td><td>Shaftless presses from Wifag, MAN Roland, KBA and Goss sell across Europe, then North America and Asia [16]</td></tr>
+<tr><td>Late 1990s–2000s</td><td>Narrow-web and packaging presses adopt fully servo drives; gravure makers introduce gearless packaging presses with direct cylinder drive [17]</td></tr>
+<tr><td>2006</td><td>Pelican becomes the first Indian maker to build an ELS rotogravure press [18]</td></tr>
+<tr><td>2014</td><td>Kohli Industries shows the E-Press-400, a 400 m/min ELS press marketed with Uteco [19]</td></tr>
+<tr><td>2018</td><td>Pelican begins licensed Indian manufacture of the Cerutti R-982 with shafted and shaftless cylinder chucking [18]</td></tr>
+<tr><td>2020</td><td>Kohli launches the Thea 9one8 shaftless press with Siemens ELS and BST-Eltromat register control [20]</td></tr>
+<tr><td>2020s</td><td>Integrated “intelligent” line shafts combine ELS with predictive register control and register preset at standstill, e.g., BOBST ILS [21]</td></tr>
+</tbody></table>
+</div>
+
+<h2>V. The Electronic Line Shaft</h2>
+<p class="ni">An electronic line shaft replaces the steel shaft with a position signal: a master axis, real or virtual, is broadcast over a real-time network, and every cylinder's servo drive follows it as if geared to a perfectly stiff shaft. Register is then corrected by shifting each cylinder's phase in software rather than by stretching the web. Fig. 2 contrasts the two architectures.</p>
+
+<div class="wide">
+<figure><img src="../img/line-shafts-gravure-printing/mls-vs-els.jpg" alt="MLS vs ELS drive architecture">
+<figcaption>Fig. 2. MLS versus ELS drive architecture (four print units shown). In the MLS, one motor and one shaft drive every unit, and register is corrected through the web; in the ELS, each unit has its own servo following a common master, and register is corrected at the cylinder.</figcaption></figure>
+</div>
+
+<h3>A. Architecture</h3>
+<ul>
+<li><i>Press PLC and HMI:</i> sequencing, interlocks, job recipes and the line speed setpoint.</li>
+<li><i>Master axis:</i> usually a virtual master generated in the motion controller from the speed setpoint; alternatively a real encoder on a high-inertia roller or on an upstream machine [22].</li>
+<li><i>Motion network:</i> a deterministic fieldbus that delivers the master position to every drive each cycle. Network delay is compensated by predicting the master position one cycle ahead so that all axes act on the same command at the same instant [23].</li>
+<li><i>Print cylinder axes:</i> one servo per cylinder, either direct-drive (motor or torque motor on the cylinder shaft or chuck) or through a short, low-backlash gearbox or belt.</li>
+<li><i>Web-handling axes:</i> unwind, infeed, cooling rollers, outfeed and rewind, geared to the master with a tension trim so that each zone's tension is controlled independently.</li>
+<li><i>Register control:</i> mark sensors or cameras measure longitudinal and lateral error; corrections are written into the cylinder phase offsets and, in advanced systems, are predicted from measured web elongation before misregister appears [24].</li>
+</ul>
+<h3>B. Electronic Gearing</h3>
+<p class="ni">Each cylinder axis follows the master with a ratio and a phase offset:</p>
+<div class="eq"><span>θ<sub>i</sub>(t) = (R<sub>ref</sub> / R<sub>i</sub>) θ<sub>m</sub>(t) + φ<sub>i</sub>(t)</span><span>(1)</span></div>
+<p class="ni">where θ<sub>m</sub> is the master position, R<sub>ref</sub> the reference radius that defines web speed, R<sub>i</sub> the radius of cylinder <i>i</i>, and φ<sub>i</sub> the register phase offset. Because R<sub>i</sub> is a parameter, cylinders of slightly different diameters, or a different repeat length, are matched in software. Changing φ<sub>i</sub> moves the image on the web without touching tension in the neighboring spans.</p>
+<h3>C. Register Correction Strategies</h3>
+<ol>
+<li><i>Electronic differential (phase advance or retard):</i> the cylinder itself is moved; no compensator, shortest web path. Its response is limited by how quickly the web between units carries the change downstream.</li>
+<li><i>Compensator roller retained on an ELS press:</i> the web path is changed as before, but cylinders are electronically synchronized. Modeling work shows compensator control can outperform a simple electronic differential, while cascaded reference control lets the differential approach compensator performance [25].</li>
+<li><i>Predictive or feed-forward register:</i> elongation and tension changes are measured and corrected before an error appears, and register is preset at standstill from stored job data [21].</li>
+</ol>
+<p>Supplier opinion has long agreed that an ELS does not remove the need for register control: the drives keep cylinders in step, but only web-side feedback can correct for substrate stretch and tension change [26].</p>
+<h3>D. What the ELS Makes Possible</h3>
+<ul>
+<li><i>Stiffer control loops:</i> removing shafts, couplings and gears removes the spring in the drive train, allowing higher servo gains [27].</li>
+<li><i>Register held through speed changes:</i> every axis follows the same position command during ramps.</li>
+<li><i>Automatic phasing at makeready:</i> a scanning head on the first unit phases all cylinders into register at start-up, cutting waste [6].</li>
+<li><i>Unit independence:</i> a unit can leave line speed, for example to clear clogged cells, and rejoin in register [15].</li>
+<li><i>Recipe recall:</i> phase offsets, tensions and ratios are stored and reloaded for repeat jobs.</li>
+<li><i>Diagnostics:</i> each drive reports torque, following error and temperature, making the press observable.</li>
+</ul>
+
+<h2>VI. Comparison of the Two Architectures</h2>
+<p class="ni">Table III compares the architectures. The ELS wins on register stability, makeready, waste and flexibility; the MLS wins on capital cost, simplicity and the skill profile needed to keep it running.</p>
+
+<div class="wide">
+<div class="tcap"><span class="tn">TABLE III</span><span class="tt">Mechanical Versus Electronic Line Shaft</span></div>
+<table><thead><tr><th style="width:24%">Criterion</th><th style="width:38%">Mechanical line shaft</th><th>Electronic line shaft</th></tr></thead><tbody>
+<tr><td>Synchronization</td><td>Physical shaft; same speed, phase disturbed by wind-up and backlash</td><td>Common position command; phase held by each servo loop</td></tr>
+<tr><td>Register during speed ramps</td><td>Drifts as shaft twist changes</td><td>Held; all axes follow one ramp</td></tr>
+<tr><td>Register actuator</td><td>Compensator roller (web path) or mechanical differential</td><td>Cylinder phase offset; compensator optional</td></tr>
+<tr><td>Interaction with tension</td><td>Strong; compensator moves disturb downstream spans</td><td>Weak; tension zones controlled independently</td></tr>
+<tr><td>Web path and start-up waste</td><td>Longer (compensators, idlers)</td><td>Shorter; automatic phasing at start</td></tr>
+<tr><td>Makeready</td><td>Manual phasing and adjustment</td><td>Recipe recall; register preset at standstill</td></tr>
+<tr><td>Typical speed class<sup>a</sup></td><td>About 300 m/min</td><td>400–450 m/min</td></tr>
+<tr><td>Unit independence</td><td>None while running</td><td>Unit can drop out and rejoin in register</td></tr>
+<tr><td>Reconfiguration</td><td>Mechanical rebuild</td><td>Parameters and an added axis</td></tr>
+<tr><td>Wear items</td><td>Gearboxes, couplings, bearings, oil</td><td>Motor bearings, encoders, cooling fans</td></tr>
+<tr><td>Failure behavior</td><td>Units stay locked together on a stop</td><td>Needs coordinated safe stop; a drive trip stops the line</td></tr>
+<tr><td>Skills</td><td>Mechanical fitters</td><td>Drives, networks and controls engineers</td></tr>
+<tr><td>Obsolescence risk<sup>b</sup></td><td>Low</td><td>Drives and networks change every 10–15 years</td></tr>
+<tr><td>Capital cost</td><td>Lower</td><td>Higher (one servo axis per cylinder and roller)</td></tr>
+</tbody></table>
+<p class="tnote"><sup>a</sup>Indian press makers' published exports and installations [11]. <sup>b</sup>Typical industry planning figure, not a sourced statistic.</p>
+</div>
+
+<h2>VII. Retrofit and Migration Paths</h2>
+<p class="ni">For most converters the choice is not “shaft or no shaft” but how far along a staged path to go, matched to job mix and in-house skills.</p>
+<ol>
+<li><i>Modernize the MLS:</i> replace the DC main drive with an AC vector drive, and fit a digital register controller and sectional servo drives on unwind, infeed, outfeed and rewind. Lowest cost; removes the worst tension problems but not shaft wind-up.</li>
+<li><i>Hybrid shaft-plus-servo:</i> keep the line shaft for base synchronization and add a servo phase corrector or differential at each unit take-off, so register is corrected at the cylinder instead of through the compensator. Indian makers have offered MLS presses with servo technology to export-grade converters [28].</li>
+<li><i>Full ELS conversion:</i> remove the shaft and gearboxes and fit a servo per cylinder with a motion controller and network. Practical only where the frame, cylinder mounting and electrical infrastructure justify it; often close to the cost of a new press.</li>
+<li><i>New ELS press:</i> the usual route for 400–450 m/min capacity, frequent changeovers or extensible films.</li>
+</ol>
+<h3>A. The Indian Flexible-Packaging Context</h3>
+<p class="ni">Gravure remains the backbone of Indian flexible packaging, with more than ten new gravure presses installed for every new CI-flexo press, and likely over a hundred gravure installations a year [11]. Local makers such as Pelican, Kohli, UFlex, C Trivedi and Mohindra supply most of them, with a few high-speed imports from BOBST and W&amp;H. Both architectures are offered side by side: Kohli, for instance, sells its Rhea series with mechanical line shaft and its Thea series with ELS [29]. Before choosing, a converter should answer the following questions.</p>
+<ul>
+<li>What share of jobs are short or repeat runs that would gain from recipe recall and automatic phasing?</li>
+<li>How extensible are the main substrates (thin PE, CPP, BOPP), and how tight are customers' register tolerances?</li>
+<li>Does the plant have drives and network engineers, or a reliable service contract within reach?</li>
+<li>How clean is the plant's power supply, and is there an earthing and EMC plan for many servo drives?</li>
+<li>What will spares and drive replacement cost over a 15–20 year press life?</li>
+</ul>
+
+<h2>VIII. Current Trends</h2>
+<p class="ni">The line shaft debate is largely settled for new high-end presses; the current contest is over makeready time, waste and energy, because shrinking run lengths expose gravure's weakest point. Smithers estimates the combined flexographic and gravure market at about US$358.5 billion in 2026 [30], and judges gravure more vulnerable than flexo on short runs because of long makereadies and cylinder cost [31]. The market for gravure printing machines itself is forecast to grow only slowly, from about US$3.46 billion in 2026 to US$3.67 billion by 2031, with flexible packaging about 55% of it and Asia-Pacific about 42% [32].</p>
+<ul>
+<li><i>Integrated, predictive line shafts:</i> drive and register control are merged; register is preset at standstill from job data, and elongation is corrected before it shows [21], [24].</li>
+<li><i>Short-run gravure with sleeves:</i> lightweight engraved sleeves changed from the side of the press let units sit closer together, which with ELS shortens the web path and set-up waste [33]. Shaftless direct drive to the sleeve is now offered on dedicated short-run presses [17].</li>
+<li><i>Automated changeover:</i> trolley systems carry the next cylinder and ink pan to each unit while the press washes up and swaps cylinders automatically; robotic cylinder handling and machine-learning set-up are emerging [6], [34].</li>
+<li><i>Extended color gamut:</i> a fixed set of inks replaces spot colors, so several SKUs can run with fewer cylinder and ink changes [35].</li>
+<li><i>Lower gravure–flexo crossover:</i> analysts put the run length at which gravure beats flexo near 5000 m² on automated presses [32].</li>
+<li><i>Energy and solvent recovery:</i> dryers dominate press energy; servo-controlled dampers that recirculate dryer air and high-efficiency ventilation are now standard selling points [36]. Servo drives also allow regenerative braking on a common DC bus.</li>
+<li><i>Connectivity and monitoring:</i> OEM platforms collect drive, energy and performance data for remote support and benchmarking; each servo axis is a built-in sensor of torque, following error and temperature.</li>
+<li><i>Cleaner cylinder making:</i> trivalent-chromium plating such as HelioChromeNEO is offered to replace hexavalent chromium trioxide [11].</li>
+<li><i>Made-in-India ELS:</i> Indian makers now export 400–450 m/min ELS presses to the Middle East and Africa while continuing to sell MLS presses where cost dominates [11].</li>
+</ul>
+
+<h2>IX. Engineering Considerations</h2>
+<p class="ni">An ELS moves the press's critical tolerances from the gear train into the drive tuning, the network and the web; each needs deliberate design.</p>
+<h3>A. Drive Sizing and Inertia</h3>
+<p class="ni">Each cylinder servo should be sized for the doctor-blade and impression drag at full speed plus the acceleration torque of the heaviest cylinder or sleeve the press will carry. A low load-to-motor inertia ratio, or a direct-drive torque motor, lets the position loop be tuned stiff without oscillation. The change in inertia between a steel base cylinder and a lightweight sleeve must be considered, since one tuning set may not suit both.</p>
+<h3>B. Network and Timing</h3>
+<p class="ni">The motion network's cycle time and jitter must sit well inside the register budget at maximum speed; at 450 m/min the web moves 7.5 mm every millisecond. Network delay should be compensated by predicting the master position, with all drive clocks synchronized. Earthing, shielding and cable segregation must be planned for many PWM drives in a solvent-laden, ATEX-classified environment.</p>
+<h3>C. Web Tension Zoning</h3>
+<p class="ni">Tension zones between driven rollers should each be controlled with load cells or dancers; without compensators, tension and register are decoupled only if the zones are. Register and tension loops should be tuned to different bandwidths so that they do not fight. Starting tension values for each zone are given in Technical Paper No. 06 of this series.</p>
+<h3>D. Safety and Fault Handling</h3>
+<p class="ni">A coordinated safe stop, with all axes ramping down together on one master, and safe torque off per axis are required. Behavior on a single-drive fault must be defined: stop the line, or let other units continue with the faulty unit disengaged.</p>
+<h3>E. Condition Monitoring</h3>
+<p class="ni">On MLS presses, vibration monitoring of the line-shaft bearings, take-off gearboxes and couplings should attend to gear-mesh and shaft-rotation orders and to torsional resonances at particular speeds. On ELS presses, each axis's torque, following error and motor temperature should be trended: rising torque at constant speed flags doctor-blade, bearing or cylinder problems, and growing following error flags mechanical looseness or tuning drift. On both, logging register error against speed and job lets register problems be traced to mechanics, drives or substrate.</p>
+
+<h2>X. Conclusion</h2>
+<p class="ni">The electronic line shaft is now the default for new high-speed gravure presses, and the mechanical line shaft survives as the economical choice where runs are long, speeds moderate and drives expertise scarce. The shaft gave gravure a century of reliable synchronization, but its wind-up, backlash and reliance on compensators set a floor on register accuracy and makeready waste. Replacing it with a position signal made register a software quantity, shortened web paths and allowed recipes, automatic phasing and unit independence.</p>
+<p>The next gains will come less from the drive architecture itself than from what is built on it: predictive register, sleeve-based quick change, robotic cylinder handling, energy-efficient drying and data-driven maintenance. These will decide whether gravure holds its ground against flexo and digital as run lengths keep falling. For converters in growth markets such as India, a staged path from a modernized MLS to hybrid and full ELS lets investment follow the job mix.</p>
+
+<h2>Acknowledgment</h2>
+<p class="ni">This article was researched and drafted with the assistance of Claude, a large language model (LLM) developed by Anthropic. The AI tool was used for literature search, summarising sources, drafting text and preparing the figures. The author reviewed, edited and verified the content and takes full responsibility for it.</p>
+
+<h2>References</h2>
+<div class="refs"><ol>
+<li>Library of Congress, “The rotogravure process,” <i>Newspaper Pictorials: World War I Rotogravures, 1914–1919</i>. [Online]. Available: https://www.loc.gov/collections/world-war-i-rotogravures/articles-and-essays/the-rotogravure-process/</li>
+<li><i>Encyclopaedia Britannica</i>, “Printing: Gravure and rotogravure (1890s).” [Online]. Available: https://www.britannica.com/topic/printing-publishing/Typecasting-compositors-1880s</li>
+<li>“Rotogravure,” <i>Wikipedia</i>. [Online]. Available: https://en.wikipedia.org/wiki/Rotogravure</li>
+<li>Princeton Univ. Graphic Arts Collection, “Rembrandt Intaglio Printing Company.” [Online]. Available: https://graphicarts.princeton.edu/page/96/?cat=-1</li>
+<li>Princeton Univ. Graphic Arts Collection, “First American rotogravure section, December 1912,” Dec. 2017. [Online]. Available: https://graphicarts.princeton.edu/2017/12/25/first-american-rotogravure-section-december-1912</li>
+<li>N. Coombes, “Rotogravure technology in a changing market,” <i>Labels &amp; Labeling</i>. [Online]. Available: https://www.labelsandlabeling.com/features/rotogravure-technology-changing-market</li>
+<li>“Basic specifications and unit structure,” <i>Packaging South Asia</i>. [Online]. Available: https://packagingsouthasia.com/technology/basic-specifications-and-unit-structure</li>
+<li>“Method for register correction of a processing machine, and a processing machine,” U.S. Patent 8 027 747. [Online]. Available: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8027747</li>
+<li>“Modeling and analysis of rotogravure printing presses,” Oklahoma State Univ., Stillwater, OK, USA. [Online]. Available: https://shareok.org/handle/11244/321977</li>
+<li>“Ward/Kraft sees future in servo technology,” <i>A3 Motion Control</i>. [Online]. Available: https://www.automate.org/motion-control/news/ward-kraft-sees-future-in-servo-technology</li>
+<li>N. Khanna, “Gravure update and the slow appeal of sustainability,” <i>Packaging South Asia</i>, Sep. 3, 2025. [Online]. Available: https://packagingsouthasia.com/type-of-packaging/flexible-packaging/flexo-gravure/gravure-sustainability/</li>
+<li>J. Rosenberg, “The state of shaftless,” <i>Editor &amp; Publisher</i>. [Online]. Available: https://www.editorandpublisher.com/stories/the-state-of-shaftless-p26,99217</li>
+<li>L. Teschler, “Broader appeal for narrow webs,” <i>Machine Design</i>. [Online]. Available: https://www.machinedesign.com/archive/broader-appeal-narrow-webs</li>
+<li>“Line shafting mechanical and electronic,” <i>Machine Design</i>, May 1, 2010. [Online]. Available: https://www.machinedesign.com/mechanical-drives/line-shafting-mechanical-and-electronic</li>
+<li>Orient Sogyo Co., Ltd., “Sectional drive system Type VLS.” [Online]. Available: https://orientsogyo.co.jp/en/?p=508</li>
+<li>J. Rosenberg, “Shaftless sales sampler,” <i>Editor &amp; Publisher</i>. [Online]. Available: https://www.editorandpublisher.com/stories/shaftless-sales-sampler-p34,17542</li>
+<li>P. Covell, “Drupa proved fertile ground for converters interested in gravure,” <i>NS Packaging</i>. [Online]. Available: https://www.nspackaging.com/?p=43824</li>
+<li>R. Aravkar, “Pelican introduces made-in-India Cerutti R-982,” <i>PrintWeek India</i>, Feb. 8, 2018. [Online]. Available: https://www.printweek.in/news/pelican-introduces-india-cerutti-982-28001</li>
+<li>“Kohli, Uteco show new E-Press-400 gravure machine,” <i>Packaging South Asia</i>, 2014. [Online]. Available: https://packagingsouthasia.com/zarchive/kohli-uteco-show-new-e-press-400-gravure-machine</li>
+<li>“Thea 9one8 shaftless ELS rotogravure printing press,” <i>Packaging South Asia</i>, 2020. [Online]. Available: https://packagingsouthasia.com/?p=55664</li>
+<li>BOBST, “LEMANIC RIVIERA ILS – Intelligent Line Shaft.” [Online]. Available: https://www.bobst.com/usen/products/gravure-printing/gravure-printing-presses/features/machine/lemanicr-riviera-ils</li>
+<li>“Motion control puts ink to paper,” <i>A3 Motion Control</i>. [Online]. Available: https://www.automate.org/motion-control/industry-insights/motion-control-puts-ink-to-paper/boa</li>
+<li>“Electronic line shaft with phased lock loop filtering and predicting,” U.S. Patent 7 417 392. [Online]. Available: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/7417392</li>
+<li>BOBST, “Registron S 6100 integrated register control system.” [Online]. Available: https://www.bobst.com/cn/en/products/related/registron-s-6100</li>
+<li>“Machine direction registration dynamics model of a rotary printing press,” Oklahoma State Univ., Stillwater, OK, USA. [Online]. Available: https://shareok.org/handle/11244/322060</li>
+<li>S. Friedman, “What's my line? Experts debate the role of electronic line shafts in register control,” <i>Packaging Impressions</i>. [Online]. Available: https://www.packagingimpressions.com/article/whats-my-line-15507/2</li>
+<li>“Motion control puts ink to paper: Registration responses,” <i>A3 Motion Control</i>. [Online]. Available: https://www.automate.org/motion-control/industry-insights/motion-control-puts-ink-to-paper/aph</li>
+<li>“Pelican's R982 gravure press,” <i>Packaging South Asia</i>. [Online]. Available: https://packagingsouthasia.com/?p=13347</li>
+<li>N. Khanna, Ed., “Kohli Industries celebrates 50 years,” <i>Packaging South Asia</i>. [Online]. Available: https://packagingsouthasia.com/?p=68144</li>
+<li>“Flexographic and gravure printing worth $358.5 bn in 2026,” <i>The Packaging Portal</i>, 2026. [Online]. Available: https://www.thepackagingportal.com/?p=37424</li>
+<li>S. Smyth, “Flexo vs gravure: five-year outlook,” <i>WhatTheyThink</i>, 2026. [Online]. Available: https://whattheythink.com/articles/129814-flexo-vs-gravure-five-year-outlook/</li>
+<li>Mordor Intelligence, “Gravure printing machines – Market share analysis, industry trends &amp; statistics, growth forecasts (2026–2031),” via GII Research. [Online]. Available: https://www.giiresearch.com/report/moi2061843-gravure-printing-machines-market-share-analysis.html</li>
+<li>“Gravure rolls up its sleeves to do battle with flexo,” <i>PFFC</i>. [Online]. Available: https://www.pffc-online.com/print/1439-paper-gravure-rolls-sleeves</li>
+<li>Smithers, “Flexo and gravure: A market outlook,” Mar. 2026. [Online]. Available: https://prd-b4f.smithers.com/resources/2026/march/flexo-and-gravure-a-market-outlook</li>
+<li>BOBST, “BOBST is revolutionizing the gravure printing process with smartGRAVURE.” [Online]. Available: https://www.bobst.com/in/en/news/1715857201-bobst-is-revolutionizing-the-gravure-printing-process-with-smartgravure</li>
+<li>“Pelican highlights Make in India at drupa 2024,” <i>Packaging South Asia</i>, 2024. [Online]. Available: https://packagingsouthasia.com/?p=98172</li>
+</ol></div>
+</div>
+</body></html>

@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<!--
+TOOL: Blown Film Mixture Calculator
+FAMILY: blown-film-mechanics
+VERSION: 1.1.1
+DATE: 2026-11-13
+CHAT: Paper 02 - Mechanical properties of blown PE films by method of mixtures
+CHANGES: 1.1.1 - Method notes link to the published Technical Paper No. 02 | 1.1.0 - Cost components: editable resin/MB prices and conversion inputs, cost build-up per kg and per m2, cost outputs in combination tables | 1.0.1 - Symmetric-skin option for sweeps; chart tick decimals follow range; compact grid tables | 1.0.0 - First release: 1-3 layer recipes, blend + layer mixture model, bounds, flags, combination tables (1 or 2 variables), CSV export, editable library
+STATUS: Companion tool to Technical Paper 02
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blown Film Mixture Calculator</title>
+<style>
+:root{--bg:#f4f3ef;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#8a8984;--line:#dcdbd5;--accent:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--warn:#9a5b00;--warnbg:#fff4dd;--head:#1d2b3a}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{background:var(--head);color:#fff;display:flex;align-items:center;gap:16px;padding:10px 18px;position:sticky;top:0;z-index:5}
+header h1{font-size:17px;margin:0;font-weight:600}
+header .ver{font-size:12px;opacity:.7}
+header .sp{flex:1}
+button{font:inherit;border:1px solid var(--line);background:#fff;border-radius:6px;padding:5px 11px;cursor:pointer;color:var(--ink)}
+button:hover{border-color:var(--accent)}
+button.pri{background:var(--accent);color:#fff;border-color:var(--accent)}
+header button{background:transparent;color:#fff;border-color:#ffffff55}
+nav.tabs{display:flex;gap:4px;padding:8px 18px 0;background:var(--bg);border-bottom:1px solid var(--line)}
+nav.tabs button{border-radius:6px 6px 0 0;border-bottom:none;background:#ebeae5}
+nav.tabs button.on{background:var(--surface);font-weight:600;border-color:var(--line)}
+main{padding:14px 18px 40px}
+.tab{display:none}.tab.on{display:block}
+.grid{display:grid;grid-template-columns:minmax(430px,560px) 1fr;gap:16px;align-items:start}
+@media (max-width:1100px){.grid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.card h2{font-size:15px;margin:0 0 10px}
+.card h3{font-size:13px;margin:12px 0 6px;color:var(--ink2)}
+label.f{display:inline-flex;flex-direction:column;font-size:12px;color:var(--ink2);margin:0 10px 8px 0}
+input[type=number],select{font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink)}
+input[type=number]{width:84px}
+.layer{border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:10px;background:#fff}
+.layer .lh{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.layer .lh b{font-size:13px}
+.layer table{width:100%;border-collapse:collapse}
+.layer td{padding:2px 4px}
+.sum{font-size:12px;margin-left:auto}
+.sum.bad{color:#c62828;font-weight:600}
+.x{border:none;background:none;color:var(--muted);font-size:16px;padding:0 6px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.kpi{border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:#fff}
+.kpi .k{font-size:11.5px;color:var(--ink2)}
+.kpi .v{font-size:21px;font-weight:600;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:11.5px;color:var(--muted)}
+table.res{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px}
+table.res th,table.res td{border-bottom:1px solid #ecebe6;padding:4px 7px;text-align:right;white-space:nowrap}
+table.res th:first-child,table.res td:first-child{text-align:left}
+table.res thead th{background:#f1f0eb;color:var(--ink2);font-weight:600;position:sticky;top:0}
+.conf-High{color:#1b7a3e}.conf-Medium{color:#9a5b00}.conf-Low{color:#c62828}
+.flags li{background:var(--warnbg);color:var(--warn);border-radius:6px;padding:6px 9px;margin:5px 0;list-style:none;font-size:12.5px}
+.flags{padding:0;margin:0}
+.note{font-size:12px;color:var(--ink2)}
+.row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px}
+.scroll{overflow:auto;max-height:520px;border:1px solid var(--line);border-radius:8px}
+.chartbox{position:relative}
+.tip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px;box-shadow:0 2px 8px #0002;display:none;white-space:nowrap}
+.pill{display:inline-block;border-radius:10px;padding:1px 8px;font-size:11px;background:#e9f1fb;color:#1c5aa6;margin-left:6px}
+.lib input[type=number]{width:72px}
+#convtab input[type=number]{width:120px}
+.mono{font-family:Consolas,monospace;font-size:12px}
+@media print{header,nav.tabs,button,.noprint{display:none!important}.tab{display:block!important}.card{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Blown Film Mixture Calculator</h1><span class="ver" id="ver"></span>
+  <span class="sp"></span>
+  <button id="btnFs" title="Toggle full screen (F11 also works)">⛶ Full screen</button>
+</header>
+<nav class="tabs">
+  <button data-t="t1" class="on">Structure &amp; results</button>
+  <button data-t="t2">Combination tables</button>
+  <button data-t="t5">Cost settings</button>
+  <button data-t="t3">Resin library</button>
+  <button data-t="t4">Method notes</button>
+</nav>
+<main>
+<!-- TAB 1 -->
+<section class="tab on" id="t1">
+ <div class="grid">
+  <div>
+   <div class="card">
+    <h2>Film structure</h2>
+    <div class="row">
+     <label class="f">Preset<select id="preset"></select></label>
+     <label class="f">Total gauge (µm)<input type="number" id="thick" value="55" min="5" max="400" step="1"></label>
+     <label class="f">BUR<input type="number" id="bur" value="2.5" min="1" max="6" step="0.1"></label>
+     <label class="f">Layers<select id="nl"><option value="1">1 (mono)</option><option value="2">2</option><option value="3" selected>3</option></select></label>
+    </div>
+    <div id="layers"></div>
+    <p class="note">Enter each layer as wt % of polymers and masterbatches; carriers of masterbatches are counted automatically. Layer ratio is by thickness.</p>
+   </div>
+  </div>
+  <div>
+   <div class="card"><h2>Predicted film properties <span class="pill" id="gsm"></span></h2><div class="kpis" id="kpis"></div></div>
+   <div class="card"><h2>Cost build-up <span class="pill">indicative · ex-GST · edit in Cost settings</span></h2><div class="kpis" id="ckpis"></div><div id="ctab" style="margin-top:10px"></div></div>
+   <div class="card"><h2>Property table</h2><div id="restab"></div>
+    <p class="note">Structure: modulus, yield and break strength use the thickness-weighted (linear, iso-strain) rule. Dart and tear show the inverse (lower) and linear (upper) bounds with the log-rule central value. Elongation shows the linear value and the least-extensible-layer bound. Dart/tear per µm are measured-gauge normalised and do not scale exactly with gauge.</p></div>
+   <div class="card"><h2>Warnings — where the method of mixtures is weak</h2><ul class="flags" id="flags"></ul></div>
+  </div>
+ </div>
+</section>
+
+<!-- TAB 2 -->
+<section class="tab" id="t2">
+ <div class="card">
+  <h2>Generate tables for different combinations</h2>
+  <p class="note">Starts from the structure on the first tab. Variable 1 makes the rows; optional variable 2 makes a grid (one grid per selected property). When a component is varied, the chosen balance component takes up the difference so the layer stays at 100 %.</p>
+  <div id="v1box"></div>
+  <div id="v2box"></div>
+  <h3>Outputs</h3>
+  <div id="outsel" class="row"></div>
+  <div class="row" style="margin-top:8px">
+   <button class="pri" id="btnGen">Generate table</button>
+   <button id="btnCsv">Export CSV</button>
+   <button id="btnPrint">Print / save PDF</button>
+  </div>
+ </div>
+ <div class="card"><h2 id="ctTitle">Result</h2><div id="ctNote" class="note"></div><div class="chartbox" id="chartbox"></div><div id="ctable"></div></div>
+</section>
+
+<!-- TAB 5 -->
+<section class="tab" id="t5">
+ <div class="grid">
+  <div class="card"><h2>Material prices (Rs/kg, basic, ex-GST)</h2>
+   <p class="note">Indicative Indian prices for November 2026 (see Technical Paper 02). Polymer prices are revised every fortnight; replace them with your current purchase prices. Masterbatches are priced as supplied (carrier + active).</p>
+   <div id="pricetab"></div></div>
+  <div class="card"><h2>Conversion cost inputs</h2>
+   <p class="note">Conversion cost per kg = power + labour + capital (depreciation + interest) + overheads + packing. Net waste cost = extra material bought for scrap, less the scrap credit.</p>
+   <div id="convtab" class="row"></div>
+   <div class="row" style="margin-top:10px"><button id="btnResetCost">Reset cost defaults</button></div></div>
+ </div>
+</section>
+
+<!-- TAB 3 -->
+<section class="tab" id="t3">
+ <div class="card lib">
+  <h2>End-member data (editable)</h2>
+  <p class="note">Default values are typical datasheet values (sources in Technical Paper 02). Dart and tear are per µm of the datasheet gauge. Replace them with your own lab data for your grades and line; edits are kept in this browser if storage is available.</p>
+  <div class="scroll" id="libtab"></div>
+  <h3>Mixing exponent per property (1 = linear, 0 = log, −1 = inverse)</h3>
+  <div id="exptab" class="row"></div>
+  <h3>Pairwise excess coefficients a0, a1, a2 (Redlich–Kister, x = w<sub>A</sub> − w<sub>B</sub>)</h3>
+  <div id="exctab"></div>
+  <div class="row" style="margin-top:10px"><button id="btnReset">Reset to literature defaults</button></div>
+ </div>
+</section>
+
+<!-- TAB 4 -->
+<section class="tab" id="t4">
+ <div class="card" style="max-width:980px">
+  <h2>Method notes</h2>
+  <h3>Level 1 — blend inside a layer</h3>
+  <p>P<sub>blend</sub> = M<sub>m</sub>(w<sub>i</sub>, P<sub>i</sub>) + Σ w<sub>A</sub>w<sub>B</sub>·(P<sub>A</sub>+P<sub>B</sub>)/2·(a0 + a1x + a2x²), where M<sub>m</sub> is the weighted power mean of order m: m = 1 linear (Voigt), m = 0 logarithmic, m = −1 inverse (Reuss). Defaults: modulus, yield, break strength and tear use m = 1; elongation m = 0; dart m = −1 (weakest-phase dominated). Excess terms act between resin families (ZN-LLDPE, mLLDPE, LDPE, HDPE). Their values are illustrative: they reproduce the trend shapes reported in the literature and should be refitted to your own data.</p>
+  <p>Density is exact: specific volumes add. Fillers: modulus × (1 + 2.5φ + 14.1φ²) (Guth); yield, break strength and elongation × (1 − 1.21φ<sup>2/3</sup>) (Nicolais–Narkis, no adhesion, a lower bound). Dart and tear are not corrected for filler.</p>
+  <h3>Level 2 — layers in the coextruded film</h3>
+  <p>Layers are strained together in the film plane, so modulus and strengths add by thickness fraction (iso-strain). Fracture properties do not add: dart and tear are reported between the inverse (series) and linear (parallel) bounds, with the thickness-weighted log mean as the central value.</p>
+  <h3>Cost</h3>
+  <p>Material cost of a layer is the wt %-weighted price of its ingredients (masterbatch priced as supplied). Film material cost weights layers by mass (thickness × density). Net waste cost = material × w/(1−w) − scrap credit × w/(1−w). Conversion = specific energy × tariff + labour per hour ÷ output + (straight-line depreciation + interest on half the line cost) ÷ running hours ÷ output + overheads + packing. Rs/m² = Rs/kg × grammage. All prices are indicative and ex-GST.</p>
+  <h3>Why the method fails</h3>
+  <p>Toughness depends on tie-chain density, orientation and crack initiation, not on composition alone. Datasheet values come from different lines and BURs; LDPE changes the orientation frozen in by the bubble; HDPE forms its own crystals; fillers act through dispersion and adhesion; and in a coextrusion the first layer to crack controls the film. Use the predictions to rank and screen formulations, then confirm on the line.</p>
+  <p class="note">Companion tool to: K Vijay Anand, <a href="https://haivijayanand.github.io/papers/blown-film-mechanical-properties-method-of-mixtures.html" target="_blank" rel="noopener">"Predicting the Mechanical Properties and Cost of Blown Polyethylene Films by the Method of Mixtures"</a>, Technical Paper No. 02, haivijayanand.github.io.</p>
+ </div>
+</section>
+</main>
+
+<script>
+/*
+TOOL: Blown Film Mixture Model (shared engine)
+FAMILY: blown-film-mechanics
+VERSION: 1.1.0
+DATE: 2026-11-13
+CHAT: Paper 02 - Mechanical properties of blown PE films by method of mixtures
+CHANGES: 1.1.0 - Cost model: resin/MB prices, waste and scrap credit, conversion components, Rs/kg and Rs/m2 | 1.0.0 - First version: resin library, blend-level power-mean + excess terms, filler corrections, layer bounds
+*/
+(function (root) {
+  'use strict';
+  const VERSION = '1.1.0';
+
+  // ---- Property keys -------------------------------------------------------
+  // E = 1% secant modulus (MPa); Y = tensile yield (MPa); TS = tensile at break (MPa)
+  // EL = elongation at break (%); DART = dart impact per gauge (g/um); TM/TT = Elmendorf tear MD/TD (g/um)
+  const PROPS = ['E_MD','E_TD','Y_MD','Y_TD','TS_MD','TS_TD','EL_MD','EL_TD','DART','TM','TT'];
+  const PROP_INFO = {
+    E_MD:{label:'1% secant modulus MD',unit:'MPa',m:1,conf:'High'},
+    E_TD:{label:'1% secant modulus TD',unit:'MPa',m:1,conf:'High'},
+    Y_MD:{label:'Tensile yield MD',unit:'MPa',m:1,conf:'High'},
+    Y_TD:{label:'Tensile yield TD',unit:'MPa',m:1,conf:'High'},
+    TS_MD:{label:'Tensile at break MD',unit:'MPa',m:1,conf:'Medium'},
+    TS_TD:{label:'Tensile at break TD',unit:'MPa',m:1,conf:'Medium'},
+    EL_MD:{label:'Elongation at break MD',unit:'%',m:0,conf:'Low'},
+    EL_TD:{label:'Elongation at break TD',unit:'%',m:0,conf:'Low'},
+    DART:{label:'Dart impact (A)',unit:'g/µm',m:-1,conf:'Low'},
+    TM:{label:'Elmendorf tear MD',unit:'g/µm',m:1,conf:'Low'},
+    TT:{label:'Elmendorf tear TD',unit:'g/µm',m:1,conf:'Low'}
+  };
+
+  // ---- Resin library (typical datasheet values, normalised per um for dart/tear) ----
+  // t = gauge of datasheet film (um), bur = blow-up ratio of datasheet film
+  function perUm(g, t){ return g / t; }
+  const RESINS = {
+    LDPE:{name:'LDPE',family:'LD',grade:'ExxonMobil LD 100.BW (MI 2.0, 0.923)',rho:0.923,t:38.1,bur:2.5,
+      E_MD:200,E_TD:260,Y_MD:10,Y_TD:11,TS_MD:30,TS_TD:23,EL_MD:240,EL_TD:550,
+      DART:perUm(110,38.1),TM:perUm(290,38.1),TT:perUm(100,38.1)},
+    C4:{name:'LLDPE C4 (ZN)',family:'ZN',grade:'ExxonMobil C4LL 1018 (MI 1.0, 0.918)',rho:0.918,t:25.4,bur:2.5,
+      E_MD:190,E_TD:230,Y_MD:9.6,Y_TD:10,TS_MD:50,TS_TD:36,EL_MD:570,EL_TD:870,
+      DART:perUm(90,25.4),TM:perUm(90,25.4),TT:perUm(450,25.4)},
+    C6:{name:'LLDPE C6 (ZN)',family:'ZN',grade:'ExxonMobil LL 3001.63 (MI 1.0, 0.917 nominal)',rho:0.917,t:25.4,bur:2.5,
+      E_MD:197,E_TD:238,Y_MD:9.31,Y_TD:10.0,TS_MD:57.9,TS_TD:48.1,EL_MD:500,EL_TD:840,
+      DART:perUm(140,25.4),TM:perUm(440,25.4),TT:perUm(740,25.4)},
+    C8:{name:'LLDPE C8 (ZN)',family:'ZN',grade:'Dow DOWLEX 2045G (MI 1.0, 0.920)',rho:0.920,t:25.0,bur:2.5,
+      E_MD:237,E_TD:275,Y_MD:11.3,Y_TD:11.9,TS_MD:47.4,TS_TD:40.6,EL_MD:600,EL_TD:740,
+      DART:perUm(220,25.0),TM:perUm(370,25.0),TT:perUm(630,25.0)},
+    MLL:{name:'mLLDPE C6',family:'M',grade:'ExxonMobil Exceed m 1018 (MI 1.0, 0.918)',rho:0.918,t:25.4,bur:2.5,
+      E_MD:170,E_TD:180,Y_MD:8.7,Y_TD:8.8,TS_MD:60,TS_TD:60,EL_MD:500,EL_TD:640,
+      DART:perUm(550,25.4),TM:perUm(220,25.4),TT:perUm(370,25.4)},
+    HDPE:{name:'HMW-HDPE',family:'HD',grade:'LyondellBasell Alathon L5005 (MI 0.06, 0.949)',rho:0.949,t:20.3,bur:4.0,
+      E_MD:945,E_TD:1050,Y_MD:34.5,Y_TD:29.0,TS_MD:84.1,TS_TD:57.2,EL_MD:320,EL_TD:390,
+      DART:perUm(340,20.3),TM:perUm(11,20.3),TT:perUm(76,20.3)}
+  };
+
+  // ---- Masterbatches / additives -----------------------------------------------
+  // active: 'filler' (enters volume fraction phi) or 'inert' (negligible; dilution only)
+  const ADDITIVES = {
+    CACO3:{name:'CaCO3 filler MB',active:'filler',load:0.75,carrier:'C4',rhoA:2.71,note:'75% coated CaCO3 in C4-LLDPE carrier'},
+    TIO2:{name:'White (TiO2) MB',active:'filler',load:0.60,carrier:'LDPE',rhoA:4.2,note:'60% rutile TiO2 in LDPE carrier'},
+    AB:{name:'Antiblock MB',active:'filler',load:0.20,carrier:'LDPE',rhoA:2.2,note:'20% silica in LDPE carrier'},
+    SLIP:{name:'Slip MB',active:'inert',load:0.05,carrier:'LDPE',rhoA:0.90,note:'5% erucamide in LDPE carrier'},
+    PPA:{name:'Process aid MB',active:'inert',load:0.03,carrier:'C4',rhoA:1.9,note:'3% polymer processing aid in C4 carrier'}
+  };
+
+  // ---- Pairwise excess coefficients (Redlich-Kister form, illustrative) ----------
+  // excess = wA*wB*(PA+PB)/2*(a0 + a1*x + a2*x^2), x = wA - wB (first family listed = A)
+  const EXCESS = {
+    'ZN|LD':{TM:[-2.0,-0.85,0],TT:[0.55,3.03,0.34]},
+    'M|LD': {TM:[-2.0,-0.85,0],TT:[0.55,3.03,0.34]},
+    'ZN|HD':{DART:[-2.13,1.5,0],TM:[-1.5,0,0]},
+    'M|HD': {DART:[-1.07,0.75,0],TM:[-0.75,0,0]},
+    'LD|HD':{DART:[-1.0,0,0],TM:[-1.0,0,0]}
+  };
+  const FAMS = ['ZN','M','LD','HD'];
+
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+
+  // Power mean of order m (m=1 Voigt/linear, m=0 geometric/log rule, m=-1 Reuss/inverse)
+  function powerMean(ws, ps, m){
+    let sw = 0; for (const w of ws) sw += w;
+    if (sw <= 0) return 0;
+    if (m === 0){ let s=0; for(let i=0;i<ws.length;i++){ if(ws[i]>0) s += ws[i]/sw*Math.log(Math.max(ps[i],1e-9)); } return Math.exp(s); }
+    let s=0; for(let i=0;i<ws.length;i++){ if(ws[i]>0) s += ws[i]/sw*Math.pow(Math.max(ps[i],1e-9), m); }
+    return Math.pow(s, 1/m);
+  }
+
+  // Expand a layer recipe {C8:60, LDPE:30, CACO3:10} (wt %) into polymer weights and fillers
+  function expandRecipe(recipe, lib){
+    lib = lib || RESINS;
+    const poly = {}; let fillerMass = 0, fillerVol = 0, inertMass = 0, total = 0;
+    for (const k in recipe){
+      const pct = Number(recipe[k]) || 0; if (pct <= 0) continue; total += pct;
+      if (lib[k]) { poly[k] = (poly[k]||0) + pct; }
+      else if (ADDITIVES[k]) {
+        const a = ADDITIVES[k];
+        poly[a.carrier] = (poly[a.carrier]||0) + pct*(1-a.load);
+        if (a.active === 'filler'){ fillerMass += pct*a.load; fillerVol += pct*a.load/a.rhoA; }
+        else inertMass += pct*a.load;
+      }
+    }
+    let polyMass = 0, polyVol = 0;
+    for (const k in poly){ polyMass += poly[k]; polyVol += poly[k]/lib[k].rho; }
+    const inertVol = inertMass/0.95;
+    const totVol = polyVol + fillerVol + inertVol;
+    const phi = totVol > 0 ? fillerVol/totVol : 0;
+    const rho = totVol > 0 ? total/totVol : 0;
+    return {poly, polyMass, fillerMass, inertMass, total, phi, rho};
+  }
+
+  // Blend-level prediction for one layer
+  function layerProps(recipe, opts){
+    opts = opts || {};
+    const lib = opts.lib || RESINS;
+    const ex = expandRecipe(recipe, lib);
+    const keys = Object.keys(ex.poly);
+    const ws = keys.map(k => ex.poly[k]/ex.polyMass);
+    const out = {rho: ex.rho, phi: ex.phi, wFiller: ex.total>0? ex.fillerMass/ex.total:0, polyWeights:{}, lin:{}, base:{}, excess:{}, value:{}};
+    keys.forEach((k,i)=> out.polyWeights[k]=ws[i]);
+    // family aggregates
+    const famW = {}, famP = {};
+    FAMS.forEach(f=>{ famW[f]=0; famP[f]={}; });
+    keys.forEach((k,i)=>{ famW[lib[k].family] += ws[i]; });
+    for (const p of PROPS){
+      const ps = keys.map(k => lib[k][p]);
+      const m = (opts.exponents && opts.exponents[p] !== undefined) ? opts.exponents[p] : PROP_INFO[p].m;
+      out.lin[p] = powerMean(ws, ps, 1);
+      out.base[p] = powerMean(ws, ps, m);
+      FAMS.forEach(f=>{
+        let s=0,sw=0; keys.forEach((k,i)=>{ if(lib[k].family===f){ s+=ws[i]*lib[k][p]; sw+=ws[i]; } });
+        famP[f][p] = sw>0 ? s/sw : 0;
+      });
+      let exc = 0;
+      if (!opts.noExcess){
+        const EXC = opts.excess || EXCESS;
+        for (const pair in EXC){
+          const c = EXC[pair][p]; if (!c) continue;
+          const [A,B] = pair.split('|');
+          const wA = famW[A], wB = famW[B]; if (wA<=0 || wB<=0) continue;
+          const x = wA - wB;
+          exc += wA*wB*(famP[A][p]+famP[B][p])/2*(c[0] + c[1]*x + c[2]*x*x);
+        }
+      }
+      out.excess[p] = exc;
+      out.value[p] = Math.max(out.base[p] + exc, 0.05*Math.min(...ps));
+    }
+    // filler corrections
+    const phi = ex.phi;
+    if (phi > 0 && !opts.noFiller){
+      const fE = 1 + 2.5*phi + 14.1*phi*phi;          // Guth (Einstein + interaction)
+      const fS = Math.max(1 - 1.21*Math.pow(phi, 2/3), 0.05); // Nicolais-Narkis (no adhesion)
+      out.fillerFactors = {E:fE, S:fS, EL:fS};
+      ['E_MD','E_TD'].forEach(p=> out.value[p]*=fE);
+      ['Y_MD','Y_TD','TS_MD','TS_TD','EL_MD','EL_TD'].forEach(p=> out.value[p]*=fS);
+    } else out.fillerFactors = {E:1,S:1,EL:1};
+    out.famW = famW;
+    return out;
+  }
+
+  // Structure-level prediction: layers = [{name, ratio, recipe}], total thickness um
+  function structureProps(layers, thick, opts){
+    opts = opts || {};
+    const used = layers.filter(L => Number(L.ratio) > 0);
+    const sr = used.reduce((s,L)=>s+Number(L.ratio),0);
+    const res = {layers:[], thick, value:{}, lower:{}, upper:{}, central:{}, flags:[]};
+    used.forEach(L=>{
+      const lp = layerProps(L.recipe, opts);
+      res.layers.push({name:L.name, t: Number(L.ratio)/sr, um: thick*Number(L.ratio)/sr, props: lp, recipe:L.recipe});
+    });
+    res.rho = res.layers.reduce((s,L)=>s+L.t*L.props.rho,0);
+    for (const p of PROPS){
+      const up = res.layers.reduce((s,L)=>s+L.t*L.props.value[p],0);
+      const lo = 1/res.layers.reduce((s,L)=>s+L.t/L.props.value[p],0);
+      const ce = Math.exp(res.layers.reduce((s,L)=>s+L.t*Math.log(L.props.value[p]),0));
+      res.upper[p]=up; res.lower[p]=lo; res.central[p]=ce;
+      if (p==='EL_MD' || p==='EL_TD'){ res.lower[p] = Math.min(...res.layers.map(L=>L.props.value[p])); res.value[p]=up; }
+      else if (p==='DART'||p==='TM'||p==='TT') res.value[p]=ce;
+      else res.value[p]=up;   // Voigt (iso-strain, layers in parallel) for stiffness/strength
+    }
+    res.gauge = {DART: res.value.DART*thick, TM: res.value.TM*thick, TT: res.value.TT*thick,
+                 DART_lo: res.lower.DART*thick, DART_hi: res.upper.DART*thick,
+                 TM_lo: res.lower.TM*thick, TM_hi: res.upper.TM*thick, TT_lo: res.lower.TT*thick, TT_hi: res.upper.TT*thick};
+    res.gsm = res.rho*thick;   // g/m2 (rho g/cm3 x um)
+    // flags
+    res.layers.forEach(L=>{
+      const fw = L.props.famW;
+      if (fw.HD > 0.5) res.flags.push(L.name+': HDPE > 50 % - HDPE end-member data are from BUR 4, high-stalk film; toughness of this layer is not reliable at LLDPE-type conditions.');
+      if (fw.LD > 0.4) res.flags.push(L.name+': LDPE > 40 % - MD tear lies in the reported plateau/minimum region; excess terms are least certain here.');
+      if (L.props.phi > 0) res.flags.push(L.name+': filler volume fraction '+(L.props.phi*100).toFixed(1)+' % - modulus/strength corrected (Guth, Nicolais-Narkis); dart and tear NOT corrected (filler effect on toughness depends on particle size, coating and dispersion).');
+      if (L.props.phi > 0.15) res.flags.push(L.name+': filler volume fraction above 15 % - beyond the range of the dilute filler equations.');
+    });
+    const d = res.layers.map(L=>L.props.value.DART);
+    if (d.length>1 && Math.max(...d)/Math.min(...d) > 3) res.flags.push('Layer dart values differ by more than 3x - the bounds for structure dart are wide; layer interaction (crack initiation in the stiffer/weaker layer) decides the real value.');
+    const e = res.layers.map(L=>L.props.value.EL_MD);
+    if (e.length>1 && Math.max(...e)/Math.min(...e) > 1.8) res.flags.push('Layer elongations differ strongly - film may fail when the least extensible layer breaks; use the lower bound for elongation.');
+    if (opts.bur && (opts.bur < 2 || opts.bur > 3)) res.flags.push('BUR '+opts.bur+' is outside 2.0-3.0; library data (except HDPE) were measured at BUR 2.5, so MD/TD balance will shift.');
+    if (thick < 15 || thick > 150) res.flags.push('Gauge '+thick+' µm is outside 15-150 µm; per-µm dart and tear do not scale linearly with gauge.');
+    return res;
+  }
+
+
+  // ---- Cost model (indicative Indian prices, Rs/kg basic, ex-GST; all editable) ----
+  const PRICES = {LDPE:122, C4:115, C6:120, C8:128, MLL:135, HDPE:110,
+                  CACO3:40, TIO2:250, AB:180, SLIP:200, PPA:450};
+  const CONV = {
+    kwhPerKg:0.35, tariff:8.5,          // power: specific energy (kWh/kg) x tariff (Rs/kWh)
+    output:150,                          // line output, kg/h
+    labourPerHour:600,                   // crew cost per line hour, Rs/h
+    machineCost:12000000, lifeYears:10, hoursPerYear:6000, interest:0.10, // capital
+    overheadPerKg:4.0,                   // rent, maintenance, QC, admin, Rs/kg
+    packingPerKg:2.0,                    // cores, wrap, labels, Rs/kg
+    wastePct:4.0,                        // start-up, trim, off-gauge, % of input
+    scrapValue:55,                       // value of reprocessed/sold scrap, Rs/kg
+    marginPct:0                          // optional selling margin, %
+  };
+  function layerMaterialCost(recipe, prices){
+    prices = prices || PRICES; let s=0, w=0;
+    for (const k in recipe){ const p = Number(recipe[k])||0; if (p<=0) continue; s += p*(prices[k]||0); w += p; }
+    return w>0 ? s/w : 0;
+  }
+  // res = structureProps result; returns cost breakdown per kg and per m2
+  function structureCost(res, prices, conv){
+    prices = prices || PRICES; conv = Object.assign({}, CONV, conv||{});
+    const mass = res.layers.map(L => L.t*L.props.rho); const mt = mass.reduce((a,b)=>a+b,0);
+    const layers = res.layers.map((L,i)=>({name:L.name, massFrac: mass[i]/mt, rsPerKg: layerMaterialCost(L.recipe, prices)}));
+    const matPerKg = layers.reduce((s,L)=>s+L.massFrac*L.rsPerKg,0);
+    const w = Math.min(Math.max(conv.wastePct,0),90)/100;
+    const wasteCost = matPerKg*w/(1-w) - conv.scrapValue*w/(1-w);   // extra input bought minus scrap credit
+    const power = conv.kwhPerKg*conv.tariff;
+    const labour = conv.output>0 ? conv.labourPerHour/conv.output : 0;
+    const capPerHour = conv.machineCost/(conv.lifeYears*conv.hoursPerYear) + conv.machineCost/2*conv.interest/conv.hoursPerYear;
+    const capital = conv.output>0 ? capPerHour/conv.output : 0;
+    const conversion = power + labour + capital + conv.overheadPerKg + conv.packingPerKg;
+    const total = matPerKg + wasteCost + conversion;
+    const price = total*(1+conv.marginPct/100);
+    const kgPerM2 = res.gsm/1000;
+    return {layers, matPerKg, wasteCost, power, labour, capital, overhead:conv.overheadPerKg, packing:conv.packingPerKg,
+            conversion, total, price, perM2: total*kgPerM2, pricePerM2: price*kgPerM2, matPerM2: matPerKg*kgPerM2,
+            m2PerKg: 1/kgPerM2, per1000m2: total*kgPerM2*1000};
+  }
+
+  const API = {VERSION, PRICES, CONV, layerMaterialCost, structureCost, PROPS, PROP_INFO, RESINS, ADDITIVES, EXCESS, powerMean, expandRecipe, layerProps, structureProps, clone};
+  if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.BFM = API;
+})(typeof window !== 'undefined' ? window : this);
+
+</script>
+<script>
+(function(){
+'use strict';
+const APPV='1.1.1';
+document.getElementById('ver').textContent='v'+APPV+' · model '+BFM.VERSION;
+const P=BFM.PROPS, PI=BFM.PROP_INFO;
+let LIB=BFM.clone(BFM.RESINS), EXC=BFM.clone(BFM.EXCESS), EXP={};
+P.forEach(p=>EXP[p]=PI[p].m);
+const STORE='bfm_calc_lib_v1',CSTORE='bfm_calc_cost_v1';
+let PRICES=BFM.clone(BFM.PRICES),CONV=BFM.clone(BFM.CONV);
+try{const c=JSON.parse(localStorage.getItem(CSTORE)||'null');if(c&&c.prices){PRICES=Object.assign(PRICES,c.prices);CONV=Object.assign(CONV,c.conv);}}catch(e){}
+function saveCost(){try{localStorage.setItem(CSTORE,JSON.stringify({prices:PRICES,conv:CONV}));}catch(e){}}
+try{const s=JSON.parse(localStorage.getItem(STORE)||'null'); if(s&&s.lib){LIB=s.lib;EXC=s.exc;EXP=s.exp;}}catch(e){}
+function saveLib(){try{localStorage.setItem(STORE,JSON.stringify({lib:LIB,exc:EXC,exp:EXP}));}catch(e){}}
+const COMP=()=>Object.keys(LIB).map(k=>[k,LIB[k].name]).concat(Object.keys(BFM.ADDITIVES).map(k=>[k,BFM.ADDITIVES[k].name]));
+const cname=k=>LIB[k]?LIB[k].name:(BFM.ADDITIVES[k]?BFM.ADDITIVES[k].name:k);
+const f=(v,d)=>{if(!isFinite(v))return '–';d=(d===undefined)?(Math.abs(v)>=100?0:Math.abs(v)>=10?1:2):d;return v.toFixed(d);};
+
+const PRESETS={
+ 'S1 Liquid-pack (milk-pouch type), 55 µm':{thick:55,bur:2.5,layers:[{name:'A outer',ratio:1,recipe:{C8:50,MLL:30,LDPE:20}},{name:'B core',ratio:2,recipe:{C4:70,LDPE:25,TIO2:5}},{name:'C inner',ratio:1,recipe:{C8:50,MLL:30,LDPE:20}}]},
+ 'S2 Lamination sealant, stiff core, 40 µm':{thick:40,bur:2.5,layers:[{name:'A lam side',ratio:1,recipe:{C4:68,LDPE:30,AB:2}},{name:'B core',ratio:2,recipe:{C8:60,HDPE:30,LDPE:10}},{name:'C seal',ratio:1,recipe:{MLL:88,LDPE:10,SLIP:2}}]},
+ 'S3 Heavy-duty FFS sack, 120 µm':{thick:120,bur:2.5,layers:[{name:'A outer',ratio:1,recipe:{C6:60,MLL:25,LDPE:15}},{name:'B core',ratio:3,recipe:{C6:50,HDPE:30,LDPE:10,CACO3:10}},{name:'C inner',ratio:1,recipe:{C6:60,MLL:25,LDPE:15}}]},
+ 'Mono C8-LLDPE + 20 % LDPE, 25 µm':{thick:25,bur:2.5,layers:[{name:'Mono',ratio:1,recipe:{C8:80,LDPE:20}}]},
+ 'Mono mLLDPE + 10 % LDPE, 25 µm':{thick:25,bur:2.5,layers:[{name:'Mono',ratio:1,recipe:{MLL:90,LDPE:10}}]}
+};
+let ST=BFM.clone(PRESETS['S1 Liquid-pack (milk-pouch type), 55 µm']);
+const $=id=>document.getElementById(id);
+
+// ---------- tabs & full screen ----------
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.id===b.dataset.t));});
+$('btnFs').onclick=()=>{if(!document.fullscreenElement){(document.documentElement.requestFullscreen||function(){}).call(document.documentElement);}else document.exitFullscreen();};
+
+// ---------- structure editor ----------
+const ps=$('preset'); ps.innerHTML='<option value="">— choose —</option>'+Object.keys(PRESETS).map(k=>`<option>${k}</option>`).join('');
+ps.onchange=()=>{if(!ps.value)return;ST=BFM.clone(PRESETS[ps.value]);$('thick').value=ST.thick;$('bur').value=ST.bur;$('nl').value=ST.layers.length;drawLayers();calc();};
+$('thick').oninput=()=>{ST.thick=+$('thick').value;calc();};
+$('bur').oninput=()=>{ST.bur=+$('bur').value;calc();};
+$('nl').onchange=()=>{const n=+$('nl').value;const names=n===1?['Mono']:n===2?['A outer','C inner']:['A outer','B core','C inner'];
+ while(ST.layers.length<n)ST.layers.push({name:'',ratio:1,recipe:{C8:100}});ST.layers=ST.layers.slice(0,n);ST.layers.forEach((L,i)=>L.name=names[i]);drawLayers();calc();};
+function drawLayers(){
+ const box=$('layers');box.innerHTML='';
+ ST.layers.forEach((L,li)=>{
+  const d=document.createElement('div');d.className='layer';
+  const rows=Object.keys(L.recipe).map(k=>`<tr><td><select data-l="${li}" data-k="${k}" class="csel">${COMP().map(([c,n])=>`<option value="${c}" ${c===k?'selected':''}>${n}</option>`).join('')}</select></td><td><input type="number" data-l="${li}" data-k="${k}" class="cval" value="${L.recipe[k]}" step="1" min="0" max="100"> %</td><td><button class="x" data-l="${li}" data-k="${k}" title="Remove">×</button></td></tr>`).join('');
+  d.innerHTML=`<div class="lh"><b>${L.name}</b><label class="f" style="margin:0">ratio<input type="number" class="lr" data-l="${li}" value="${L.ratio}" step="0.5" min="0"></label><span class="sum" id="sum${li}"></span></div><table>${rows}</table><button class="addc" data-l="${li}">+ component</button> <button class="norm" data-l="${li}">Normalise to 100 %</button>`;
+  box.appendChild(d);
+ });
+ box.querySelectorAll('.cval').forEach(i=>i.oninput=()=>{ST.layers[i.dataset.l].recipe[i.dataset.k]=+i.value;calc();});
+ box.querySelectorAll('.csel').forEach(s=>s.onchange=()=>{const R=ST.layers[s.dataset.l].recipe,v=R[s.dataset.k];delete R[s.dataset.k];R[s.value]=(R[s.value]||0)+v;drawLayers();calc();});
+ box.querySelectorAll('.x').forEach(b=>b.onclick=()=>{delete ST.layers[b.dataset.l].recipe[b.dataset.k];drawLayers();calc();});
+ box.querySelectorAll('.lr').forEach(i=>i.oninput=()=>{ST.layers[i.dataset.l].ratio=+i.value;calc();});
+ box.querySelectorAll('.addc').forEach(b=>b.onclick=()=>{const R=ST.layers[b.dataset.l].recipe;const free=COMP().map(c=>c[0]).find(c=>!(c in R));if(free)R[free]=0;drawLayers();calc();});
+ box.querySelectorAll('.norm').forEach(b=>b.onclick=()=>{const R=ST.layers[b.dataset.l].recipe;const s=Object.values(R).reduce((a,c)=>a+c,0);if(s>0)for(const k in R)R[k]=Math.round(R[k]/s*1000)/10;drawLayers();calc();});
+}
+function opts(){return {lib:LIB,excess:EXC,exponents:EXP,bur:ST.bur};}
+function run(st){return BFM.structureProps(st.layers,st.thick,Object.assign(opts(),{bur:st.bur}));}
+
+function calc(){
+ ST.layers.forEach((L,i)=>{const s=Object.values(L.recipe).reduce((a,c)=>a+(+c||0),0);const e=$('sum'+i);if(e){e.textContent='Σ '+f(s,1)+' %';e.classList.toggle('bad',Math.abs(s-100)>0.05);}});
+ const r=run(ST);
+ $('gsm').textContent=f(r.gsm,1)+' g/m² · ρ '+f(r.rho,3)+' g/cm³';
+ const k=[
+  ['1% secant modulus MD / TD',f(r.value.E_MD,0)+' / '+f(r.value.E_TD,0),'MPa · linear rule'],
+  ['Tensile at break MD / TD',f(r.value.TS_MD,1)+' / '+f(r.value.TS_TD,1),'MPa · yield '+f(r.value.Y_MD,1)+' / '+f(r.value.Y_TD,1)],
+  ['Elongation MD / TD',f(r.value.EL_MD,0)+' / '+f(r.value.EL_TD,0),'% · weakest layer '+f(r.lower.EL_MD,0)+' / '+f(r.lower.EL_TD,0)],
+  ['Dart impact (A)',f(r.gauge.DART,0)+' g','bounds '+f(r.gauge.DART_lo,0)+' – '+f(r.gauge.DART_hi,0)+' g'],
+  ['Elmendorf tear MD',f(r.gauge.TM,0)+' g','bounds '+f(r.gauge.TM_lo,0)+' – '+f(r.gauge.TM_hi,0)+' g'],
+  ['Elmendorf tear TD',f(r.gauge.TT,0)+' g','bounds '+f(r.gauge.TT_lo,0)+' – '+f(r.gauge.TT_hi,0)+' g']];
+ $('kpis').innerHTML=k.map(x=>`<div class="kpi"><div class="k">${x[0]}</div><div class="v">${x[1]}</div><div class="s">${x[2]}</div></div>`).join('');
+ // table
+ let h='<div class="scroll"><table class="res"><thead><tr><th>Property</th><th>Unit</th>'+r.layers.map(L=>`<th>${L.name}<br><span class="note">${f(L.um,1)} µm</span></th>`).join('')+'<th>Film</th><th>Lower</th><th>Upper</th><th>Confidence</th></tr></thead><tbody>';
+ h+=`<tr><td>Density</td><td>g/cm³</td>${r.layers.map(L=>`<td>${f(L.props.rho,3)}</td>`).join('')}<td><b>${f(r.rho,3)}</b></td><td></td><td></td><td class="conf-High">Exact</td></tr>`;
+ h+=`<tr><td>Filler volume fraction</td><td>%</td>${r.layers.map(L=>`<td>${f(L.props.phi*100,2)}</td>`).join('')}<td></td><td></td><td></td><td></td></tr>`;
+ P.forEach(p=>{const tough=(p==='DART'||p==='TM'||p==='TT'),el=p.startsWith('EL');
+  h+=`<tr><td>${PI[p].label}</td><td>${PI[p].unit}</td>${r.layers.map(L=>`<td>${f(L.props.value[p])}</td>`).join('')}<td><b>${f(r.value[p])}</b></td><td>${tough||el?f(r.lower[p]):''}</td><td>${tough?f(r.upper[p]):''}</td><td class="conf-${PI[p].conf}">${PI[p].conf}</td></tr>`;});
+ h+='</tbody></table></div>';
+ $('restab').innerHTML=h;
+ const fl=r.flags.slice();
+ ST.layers.forEach(L=>{const s=Object.values(L.recipe).reduce((a,c)=>a+(+c||0),0);if(Math.abs(s-100)>0.05)fl.unshift(L.name+': recipe sums to '+f(s,1)+' % — results use normalised weights.');});
+ drawCost(r);
+ $('flags').innerHTML=fl.length?fl.map(x=>`<li>⚠ ${x}</li>`).join(''):'<li style="background:#eaf6ee;color:#1b7a3e">No range warnings. Toughness values remain screening estimates.</li>';
+ drawVarBoxes();
+}
+
+// ---------- cost ----------
+function drawCost(r){
+ const c=BFM.structureCost(r,PRICES,CONV);
+ const k=[['Total cost','Rs '+f(c.total,1)+'/kg','material Rs '+f(c.matPerKg,1)+' + conversion Rs '+f(c.conversion,1)],
+  ['Cost per area','Rs '+f(c.perM2,2)+'/m²','Rs '+f(c.per1000m2,0)+' per 1000 m²'],
+  ['Film yield',f(c.m2PerKg,1)+' m²/kg',f(r.gsm,1)+' g/m² at '+f(r.thick,0)+' µm'],
+  ['Selling price','Rs '+f(c.price,1)+'/kg','margin '+f(CONV.marginPct,1)+' % · Rs '+f(c.pricePerM2,2)+'/m²']];
+ $('ckpis').innerHTML=k.map(x=>`<div class="kpi"><div class="k">${x[0]}</div><div class="v">${x[1]}</div><div class="s">${x[2]}</div></div>`).join('');
+ const rows=[['Material (blend)',c.matPerKg],['Process waste, net of scrap credit',c.wasteCost],['Power',c.power],['Labour',c.labour],['Capital (depreciation + interest)',c.capital],['Overheads',c.overhead],['Packing',c.packing]];
+ let h='<div class="two" style="display:grid;grid-template-columns:1.2fr 1fr;gap:12px"><table class="res"><thead><tr><th>Component</th><th>Rs/kg</th><th>Rs/m²</th><th>Share</th><th style="width:30%"></th></tr></thead><tbody>';
+ rows.forEach(([n,v])=>{const sh=v/c.total*100;h+=`<tr><td>${n}</td><td>${f(v,2)}</td><td>${f(v*r.gsm/1000,3)}</td><td>${f(sh,1)} %</td><td><div style="height:9px;border-radius:4px;background:#2a78d6;width:${Math.max(0,Math.min(100,sh))}%"></div></td></tr>`;});
+ h+=`<tr><td><b>Total</b></td><td><b>${f(c.total,2)}</b></td><td><b>${f(c.perM2,3)}</b></td><td>100 %</td><td></td></tr></tbody></table>`;
+ h+='<table class="res"><thead><tr><th>Layer</th><th>Mass share</th><th>Material Rs/kg</th></tr></thead><tbody>'+c.layers.map(L=>`<tr><td>${L.name}</td><td>${f(L.massFrac*100,1)} %</td><td>${f(L.rsPerKg,1)}</td></tr>`).join('')+'</tbody></table></div>';
+ h+='<p class="note">Fillers lower Rs/kg but raise density, so check Rs/m² — that is what the customer\'s area of film costs.</p>';
+ $('ctab').innerHTML=h;
+}
+const CONVF=[['kwhPerKg','Specific energy','kWh/kg',0.01],['tariff','Power tariff','Rs/kWh',0.1],['output','Line output','kg/h',1],['labourPerHour','Labour per line hour','Rs/h',10],['machineCost','Line cost','Rs',100000],['lifeYears','Depreciation life','years',1],['hoursPerYear','Running hours','h/year',100],['interest','Interest rate','fraction',0.01],['overheadPerKg','Overheads','Rs/kg',0.5],['packingPerKg','Packing','Rs/kg',0.5],['wastePct','Process waste','% of input',0.5],['scrapValue','Scrap credit','Rs/kg',1],['marginPct','Margin','%',0.5]];
+function drawCostSettings(){
+ const keys=Object.keys(PRICES);
+ $('pricetab').innerHTML='<table class="res" style="width:auto"><thead><tr><th>Material</th><th>Rs/kg</th></tr></thead><tbody>'+keys.map(k=>`<tr><td>${cname(k)}</td><td><input type="number" data-pk="${k}" value="${PRICES[k]}" step="0.5"></td></tr>`).join('')+'</tbody></table>';
+ $('pricetab').querySelectorAll('input').forEach(i=>i.onchange=()=>{PRICES[i.dataset.pk]=+i.value;saveCost();calc();});
+ $('convtab').innerHTML=CONVF.map(([k,n,u,st])=>`<label class="f">${n} (${u})<input type="number" data-ck="${k}" value="${CONV[k]}" step="${st}"></label>`).join('');
+ $('convtab').querySelectorAll('input').forEach(i=>i.onchange=()=>{CONV[i.dataset.ck]=+i.value;saveCost();calc();});
+}
+$('btnResetCost').onclick=()=>{PRICES=BFM.clone(BFM.PRICES);CONV=BFM.clone(BFM.CONV);try{localStorage.removeItem(CSTORE);}catch(e){}drawCostSettings();calc();};
+
+// ---------- combination tables ----------
+const OUTS=[['rho','Density (g/cm³)'],['gsm','Grammage (g/m²)'],['E_MD','Modulus MD (MPa)'],['E_TD','Modulus TD (MPa)'],['Y_MD','Yield MD (MPa)'],['TS_MD','Break MD (MPa)'],['TS_TD','Break TD (MPa)'],['EL_MD','Elong. MD (%)'],['EL_TD','Elong. TD (%)'],['DART_g','Dart (g)'],['DART_lo','Dart lower (g)'],['DART_hi','Dart upper (g)'],['TM_g','Tear MD (g)'],['TT_g','Tear TD (g)'],['MAT_kg','Material (Rs/kg)'],['COST_kg','Total cost (Rs/kg)'],['COST_m2','Cost (Rs/m²)']];
+const DEFOUT=['rho','E_MD','E_TD','TS_MD','DART_g','DART_lo','DART_hi','TM_g','TT_g','COST_kg','COST_m2'];
+$('outsel').innerHTML=OUTS.map(([k,n])=>`<label style="margin-right:12px;font-size:12.5px"><input type="checkbox" value="${k}" ${DEFOUT.includes(k)?'checked':''}> ${n}</label>`).join('');
+function pick(r,k){if(k.startsWith('COST')||k==='MAT_kg'){const c=BFM.structureCost(r,PRICES,CONV);return k==='MAT_kg'?c.matPerKg:k==='COST_kg'?c.total:c.perM2;}if(k==='rho')return r.rho;if(k==='gsm')return r.gsm;if(k==='DART_g')return r.gauge.DART;if(k==='TM_g')return r.gauge.TM;if(k==='TT_g')return r.gauge.TT;if(k.endsWith('_lo')||k.endsWith('_hi'))return r.gauge[k];return r.value[k];}
+const vstate={v1:{type:'comp',layer:0,comp:'',bal:'',from:0,to:40,step:10,sym:1},v2:{type:'none',layer:0,comp:'',bal:'',from:0,to:30,step:10,sym:1}};
+function varBox(id,title,allowNone){
+ const v=vstate[id];const L=ST.layers[Math.min(v.layer,ST.layers.length-1)];v.layer=Math.min(v.layer,ST.layers.length-1);
+ const comps=COMP();
+ if(!v.comp)v.comp=Object.keys(L.recipe)[1]||comps[0][0]; if(!v.bal)v.bal=Object.keys(L.recipe)[0]||comps[0][0];
+ const types=(allowNone?[['none','— none —']]:[]).concat([['comp','Component wt % in a layer'],['ratio','Layer thickness ratio'],['thick','Total gauge (µm)']]);
+ return `<h3>${title}</h3><div class="row">
+ <label class="f">Variable<select data-v="${id}" data-f="type">${types.map(([k,n])=>`<option value="${k}" ${v.type===k?'selected':''}>${n}</option>`).join('')}</select></label>
+ ${v.type==='comp'||v.type==='ratio'?`<label class="f">Layer<select data-v="${id}" data-f="layer">${ST.layers.map((L,i)=>`<option value="${i}" ${v.layer==i?'selected':''}>${L.name}</option>`).join('')}</select></label>`:''}
+ ${v.type==='comp'?`<label class="f">Component varied<select data-v="${id}" data-f="comp">${comps.map(([k,n])=>`<option value="${k}" ${v.comp===k?'selected':''}>${n}</option>`).join('')}</select></label>
+ <label class="f">Balance component<select data-v="${id}" data-f="bal">${comps.map(([k,n])=>`<option value="${k}" ${v.bal===k?'selected':''}>${n}</option>`).join('')}</select></label>`:''}
+ ${(v.type==='comp'||v.type==='ratio')&&ST.layers.length===3&&v.layer!=1?`<label class="f">Both skins<select data-v="${id}" data-f="sym"><option value="1" ${v.sym?'selected':''}>yes (A = C)</option><option value="0" ${!v.sym?'selected':''}>no</option></select></label>`:''}
+ ${v.type!=='none'?`<label class="f">From<input type="number" data-v="${id}" data-f="from" value="${v.from}"></label><label class="f">To<input type="number" data-v="${id}" data-f="to" value="${v.to}"></label><label class="f">Step<input type="number" data-v="${id}" data-f="step" value="${v.step}" min="0.1"></label>`:''}
+ </div>`;
+}
+function drawVarBoxes(){
+ $('v1box').innerHTML=varBox('v1','Variable 1 (rows)',false);$('v2box').innerHTML=varBox('v2','Variable 2 (columns, optional)',true);
+ document.querySelectorAll('[data-v]').forEach(el=>el.onchange=()=>{const v=vstate[el.dataset.v],k=el.dataset.f;v[k]=(k==='type'||k==='comp'||k==='bal')?el.value:+el.value;
+  if(k==='type'){if(v.type==='ratio'){v.from=1;v.to=4;v.step=1;}if(v.type==='thick'){v.from=Math.max(10,ST.thick-20);v.to=ST.thick+20;v.step=10;}if(v.type==='comp'){v.from=0;v.to=40;v.step=10;}}
+  if(k==='layer'){v.comp='';v.bal='';}drawVarBoxes();});
+}
+function series(v){const a=[];if(v.step<=0)return a;for(let x=v.from;x<=v.to+1e-9;x+=v.step)a.push(Math.round(x*1000)/1000);return a.slice(0,200);}
+function applyVar(st,v,x){
+ if(v.type==='thick'){st.thick=x;return true;}
+ if(v.sym&&st.layers.length===3&&v.layer!=1){const o=Object.assign({},v,{sym:0,layer:2-v.layer});if(!applyVar(st,Object.assign({},v,{sym:0}),x))return false;return applyVar(st,o,x);}
+ const L=st.layers[v.layer]; if(!L)return false;
+ if(v.type==='ratio'){L.ratio=x;return true;}
+ if(v.type==='comp'){const R=L.recipe,old=R[v.comp]||0,bal=R[v.bal]||0;if(v.comp===v.bal)return false;const nb=bal+old-x;if(nb<-1e-9)return false;R[v.comp]=x;R[v.bal]=nb;return true;}
+ return true;
+}
+function vlabel(v){if(v.type==='thick')return 'Gauge (µm)';const L=ST.layers[v.layer];const nm=(v.sym&&ST.layers.length===3&&v.layer!=1)?'both skins':L.name;if(v.type==='ratio')return nm+' ratio';return cname(v.comp)+' in '+nm+' (wt %, balance '+cname(v.bal)+')';}
+let LAST=null;
+$('btnGen').onclick=()=>{
+ const outs=[...document.querySelectorAll('#outsel input:checked')].map(i=>i.value);if(!outs.length){alert('Select at least one output.');return;}
+ const v1=vstate.v1,v2=vstate.v2,s1=series(v1),s2=v2.type==='none'?null:series(v2);
+ const lab=Object.fromEntries(OUTS);let html='',csv=[],skipped=0;const flagSet=new Set();
+ $('ctTitle').textContent='Result: '+vlabel(v1)+(s2?' × '+vlabel(v2):'');
+ if(!s2){
+  csv.push([vlabel(v1)].concat(outs.map(o=>lab[o])));
+  html='<div class="scroll"><table class="res"><thead><tr><th>'+vlabel(v1)+'</th>'+outs.map(o=>`<th>${lab[o]}</th>`).join('')+'</tr></thead><tbody>';
+  const pts=[];
+  s1.forEach(x=>{const st=BFM.clone(ST);if(!applyVar(st,v1,x)){skipped++;return;}const r=run(st);r.flags.forEach(q=>flagSet.add(q));
+   const vals=outs.map(o=>pick(r,o));pts.push({x,vals});csv.push([x].concat(vals.map(v=>+v.toFixed(4))));
+   html+=`<tr><td>${x}</td>${vals.map(v=>`<td>${f(v,(Math.abs(v)<5?3:Math.abs(v)<100?1:0))}</td>`).join('')}</tr>`;});
+  html+='</tbody></table></div>';
+  drawChart(pts,outs,lab,vlabel(v1));
+ } else {
+  $('chartbox').innerHTML='';
+  outs.forEach(o=>{
+   html+=`<h3>${lab[o]}</h3><div class="scroll" style="margin-bottom:10px"><table class="res" style="width:auto;min-width:40%"><thead><tr><th>${vlabel(v1)} ↓ / ${vlabel(v2)} →</th>${s2.map(y=>`<th>${y}</th>`).join('')}</tr></thead><tbody>`;
+   csv.push([lab[o]]);csv.push([vlabel(v1)+' \\ '+vlabel(v2)].concat(s2));
+   s1.forEach(x=>{const row=[x];html+=`<tr><td>${x}</td>`;s2.forEach(y=>{const st=BFM.clone(ST);let ok=applyVar(st,v1,x)&&applyVar(st,v2,y);if(!ok){html+='<td>–</td>';row.push('');skipped++;return;}const r=run(st);r.flags.forEach(q=>flagSet.add(q));const v=pick(r,o);row.push(+v.toFixed(4));html+=`<td>${f(v,(Math.abs(v)<5?3:Math.abs(v)<100?1:0))}</td>`;});html+='</tr>';csv.push(row);});
+   html+='</tbody></table></div>';csv.push([]);
+  });
+ }
+ $('ctNote').innerHTML=(skipped?`${skipped} combination(s) skipped: balance component would go below 0 %. `:'')+(flagSet.size?'<ul class="flags">'+[...flagSet].slice(0,8).map(q=>`<li>⚠ ${q}</li>`).join('')+'</ul>':'');
+ $('ctable').innerHTML=html;LAST=csv;
+};
+$('btnCsv').onclick=()=>{if(!LAST){alert('Generate a table first.');return;}const t=LAST.map(r=>r.map(c=>{c=String(c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(',')).join('\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='blown_film_combinations.csv';a.click();};
+$('btnPrint').onclick=()=>window.print();
+
+// simple line chart, one panel per selected output (max 4), with hover tooltip
+function drawChart(pts,outs,lab,xl){
+ const box=$('chartbox');box.innerHTML='';if(pts.length<2)return;
+ const show=outs.slice(0,4),W=300,H=180,ml=48,mb=30,mt=18,mr=10;
+ let svg='';show.forEach((o,ci)=>{const ys=pts.map(p=>p.vals[outs.indexOf(o)]),xs=pts.map(p=>p.x);
+  let y0=Math.min(...ys),y1=Math.max(...ys);if(y1-y0<1e-9){y0-=1;y1+=1;}const pad=(y1-y0)*0.08;y0-=pad;y1+=pad;
+  const X=x=>ml+(x-xs[0])/(xs[xs.length-1]-xs[0]||1)*(W-ml-mr),Y=y=>mt+(1-(y-y0)/(y1-y0))*(H-mt-mb);
+  let g=`<svg width="${W}" height="${H}" style="margin:0 8px 8px 0;background:#fff;border:1px solid var(--line);border-radius:8px" data-ci="${ci}"><text x="${ml}" y="13" font-size="11.5" fill="#0b0b0b">${lab[o]}</text>`;
+  const dec=Math.max(0,Math.ceil(-Math.log10((y1-y0)/3))+1);for(let i=0;i<=3;i++){const v=y0+(y1-y0)*i/3;g+=`<line x1="${ml}" x2="${W-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#ecebe6"/><text x="${ml-4}" y="${Y(v)+3}" font-size="10" text-anchor="end" fill="#8a8984">${v.toFixed(Math.min(dec,4))}</text>`;}
+  g+=`<text x="${(W+ml)/2}" y="${H-6}" font-size="10" text-anchor="middle" fill="#52514e">${xl.length>45?xl.slice(0,45)+'…':xl}</text>`;
+  xs.forEach(x=>g+=`<text x="${X(x)}" y="${H-mb+12}" font-size="9.5" text-anchor="middle" fill="#8a8984">${x}</text>`);
+  g+=`<polyline fill="none" stroke="#2a78d6" stroke-width="2" points="${xs.map((x,i)=>X(x)+','+Y(ys[i])).join(' ')}"/>`;
+  xs.forEach((x,i)=>g+=`<circle cx="${X(x)}" cy="${Y(ys[i])}" r="4" fill="#2a78d6" stroke="#fff" stroke-width="2"/><circle cx="${X(x)}" cy="${Y(ys[i])}" r="12" fill="transparent" class="hit" data-t="${xl.split(' (')[0]} = ${x}: ${f(ys[i],3)}"/>`);
+  svg+=g+'</svg>';});
+ box.innerHTML=svg+'<div class="tip" id="tip"></div>';
+ box.querySelectorAll('.hit').forEach(c=>{c.onmousemove=e=>{const t=$('tip'),r=box.getBoundingClientRect();t.style.display='block';t.textContent=c.dataset.t;t.style.left=(e.clientX-r.left+12)+'px';t.style.top=(e.clientY-r.top-28)+'px';};c.onmouseleave=()=>$('tip').style.display='none';});
+}
+
+// ---------- library editor ----------
+function drawLib(){
+ const cols=['rho'].concat(P);
+ let h='<table class="res"><thead><tr><th>Resin</th><th>Datasheet grade</th><th>Gauge µm</th><th>BUR</th>'+cols.map(c=>`<th>${c==='rho'?'ρ':PI[c].label.replace('Elmendorf ','').replace('Tensile ','')}<br><span class="note">${c==='rho'?'g/cm³':PI[c].unit}</span></th>`).join('')+'</tr></thead><tbody>';
+ for(const k in LIB){const R=LIB[k];h+=`<tr><td>${R.name}</td><td class="note" style="text-align:left">${R.grade}</td><td>${R.t}</td><td>${R.bur}</td>`+cols.map(c=>`<td><input type="number" data-r="${k}" data-c="${c}" value="${+R[c].toFixed(c==='rho'?3:2)}" step="any"></td>`).join('')+'</tr>';}
+ $('libtab').innerHTML=h+'</tbody></table>';
+ $('libtab').querySelectorAll('input').forEach(i=>i.onchange=()=>{LIB[i.dataset.r][i.dataset.c]=+i.value;saveLib();calc();});
+ $('exptab').innerHTML=P.map(p=>`<label class="f">${p}<select data-p="${p}">${[1,0,-1].map(m=>`<option value="${m}" ${EXP[p]===m?'selected':''}>${m}</option>`).join('')}</select></label>`).join('');
+ $('exptab').querySelectorAll('select').forEach(s=>s.onchange=()=>{EXP[s.dataset.p]=+s.value;saveLib();calc();});
+ let e='<table class="res" style="width:auto"><thead><tr><th>Pair A|B</th><th>Property</th><th>a0</th><th>a1</th><th>a2</th></tr></thead><tbody>';
+ for(const pr in EXC)for(const p in EXC[pr])e+=`<tr><td>${pr}</td><td>${PI[p].label}</td>${[0,1,2].map(j=>`<td><input type="number" step="0.05" data-pr="${pr}" data-p="${p}" data-j="${j}" value="${EXC[pr][p][j]}"></td>`).join('')}</tr>`;
+ $('exctab').innerHTML=e+'</tbody></table><p class="note">Families: ZN = Ziegler–Natta LLDPE (C4/C6/C8), M = mLLDPE, LD = LDPE, HD = HDPE.</p>';
+ $('exctab').querySelectorAll('input').forEach(i=>i.onchange=()=>{EXC[i.dataset.pr][i.dataset.p][+i.dataset.j]=+i.value;saveLib();calc();});
+}
+$('btnReset').onclick=()=>{LIB=BFM.clone(BFM.RESINS);EXC=BFM.clone(BFM.EXCESS);P.forEach(p=>EXP[p]=PI[p].m);try{localStorage.removeItem(STORE);}catch(e){}drawLib();calc();};
+
+drawLayers();drawLib();drawCostSettings();calc();
+})();
+</script>
+</body>
+</html>

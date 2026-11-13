@@ -1,0 +1,538 @@
+% TOOL: Paper 02 IEEE LaTeX source (template body; tables inserted by gen_ieee.py)
+% FAMILY: technical-papers
+% VERSION: 1.0.3
+% DATE: 2026-11-13
+% CHAT: Paper 02 - Mechanical properties of blown PE films by method of mixtures
+% CHANGES: 1.0.3 - Fig 2, 3, 5, 7 as single-column stacked figures | 1.0.2 - Float parameters relaxed so wide figures appear near their text | 1.0.1 - Figures 7 and 8 moved earlier so they float before the references | 1.0.0 - IEEE conference format (IEEEtran, A4, two-column) edition of Paper 02 v1.1.0
+\documentclass[conference,a4paper]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage{balance}
+\newcommand{\um}{\,$\mu$m}
+\setcounter{dbltopnumber}{3}\setcounter{topnumber}{3}
+\renewcommand{\dbltopfraction}{0.92}\renewcommand{\topfraction}{0.92}
+\renewcommand{\textfraction}{0.06}\renewcommand{\floatpagefraction}{0.8}\renewcommand{\dblfloatpagefraction}{0.8}
+\begin{document}
+
+\title{Predicting the Mechanical Properties and Cost of Blown Polyethylene Films by the Method of Mixtures: LDPE, LLDPE, mLLDPE, HDPE and Additives in Three-Layer Coextrusions, and Where the Method Fails}
+
+\author{\IEEEauthorblockN{K Vijay Anand}
+\IEEEauthorblockA{Technical Paper 02, Technical Papers series\\
+haivijayanand.github.io}}
+
+\maketitle
+
+\begin{abstract}
+Blown film converters set the stiffness, strength and toughness of polyethylene (PE) films by blending resins in each layer and by choosing the thickness ratio of coextruded layers. This paper builds a two-level method of mixtures for such films. At the first level, the properties of a blended layer are found from those of its resins: a linear (Voigt) rule for stiffness and strength, an inverse (Reuss) rule for dart impact, and pairwise excess terms for tear, with filler corrections for masterbatches. At the second level, layers are combined by thickness fraction under iso-strain for stiffness and strength, while dart and tear are given as bounds. End-member data are typical published values for one LDPE, three Ziegler--Natta LLDPEs (C4, C6, C8), one metallocene LLDPE and one high-molecular-weight HDPE. The method reproduces a reported dart drop for a metallocene LLDPE with 10\% LDPE (observed ratio 0.57, model 0.61, linear rule 0.91), and is applied to three worked three-layer structures. A cost model with indicative Indian prices and the usual conversion components shows that cost per square metre, not per kilogram, is the right measure: 30\% CaCO$_3$ masterbatch cuts cost per kilogram by 18\% but cost per square metre by only 3\% at the same gauge, while metallocene-rich skins allow an 18\% lower cost per square metre at equal predicted dart. A dedicated section explains why mixture rules fail for fracture properties: toughness is controlled by tie chains, frozen-in orientation, separate crystal populations, filler dispersion and crack initiation in the weakest layer, not by composition alone. The method is best used for screening, confirmed on the line. A companion offline calculator generates property and cost tables for any combination.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Blown film, coextrusion, LDPE, LLDPE, metallocene polyethylene, HDPE, rule of mixtures, Voigt--Reuss bounds, dart impact, Elmendorf tear, calcium carbonate masterbatch, film cost.
+\end{IEEEkeywords}
+
+\section{Introduction}
+Most flexible packaging is made by blown film extrusion: molten polyethylene is pushed through an annular die, inflated into a bubble, drawn upward and cooled. The film is rarely a single resin. A lamination sealant web may combine octene LLDPE with 10--50\% LDPE~\cite{savar}; a milk-pouch film combines LLDPE, LDPE and white masterbatch; a heavy-duty sack adds HDPE for stiffness and mineral filler for cost. On a three-layer line, each extruder feeds its own blend, and the layer ratio becomes a further design variable.
+
+Converters need a quick estimate of what a new formulation will do before running it. The natural first tool is the \emph{method of mixtures}: weight each component's property by its share and add. For PE films this is partly right and partly very wrong. Stiffness behaves almost additively; dart impact and tear often do not, and the errors are large enough to mislead a formulation decision.
+
+This paper therefore: 1) sets out a two-level method of mixtures for up to three coextruded layers, each a blend of LDPE, LLDPE (C4, C6, C8), mLLDPE, HDPE and additive masterbatches; 2) shows with literature data where the linear rule breaks down and why; 3) adds the typical cost components so property changes can be weighed against cost per kilogram and per square metre; and 4) provides worked examples and an offline calculator. Properties covered are 1\% secant modulus, tensile yield and break strength, elongation at break, dart impact (ASTM D1709 method A) and Elmendorf tear (ASTM D1922)~\cite{astm}.
+
+\section{Materials and Data}
+\subsection{Resin Classes}
+\emph{LDPE}, made by high-pressure free-radical polymerisation, carries long-chain branches that give high melt strength and bubble stability but few tie chains between lamellae, so its films are relatively weak in dart, tear and puncture~\cite{jpfs}. \emph{Ziegler--Natta LLDPE} (ZN-LLDPE) is a linear copolymer with butene (C4), hexene (C6) or octene (C8); longer comonomers give more tie chains and toughness, but melt strength is low, which is why LDPE is usually blended in. \emph{Metallocene LLDPE} (mLLDPE) has narrow molecular-weight and comonomer distributions; it gives very high dart and puncture and good hot tack, but modest MD tear and low melt strength. \emph{HMW-HDPE} ($\approx$0.95\,g/cm$^3$) is run at high blow-up ratio (BUR) with a long neck and gives stiff, strong, thin films with very low MD tear; in coextrusions it is used in the core.
+
+\subsection{Additive Masterbatches}
+Additives are dosed as masterbatches (MB): a concentrate of the active ingredient in a PE carrier. The carrier is treated as an ordinary resin and the active as a filler (entering the volume fraction $\phi$) or as inert. Defaults: CaCO$_3$ MB, 75\% coated CaCO$_3$ ($\rho=2.71$) in C4-LLDPE; white MB, 60\% rutile TiO$_2$ ($\rho\approx4.2$) in LDPE; antiblock MB, 20\% silica in LDPE; slip MB, 5\% erucamide in LDPE; process-aid MB, about 3\% active in LLDPE. Slip and process aid have no measurable bulk mechanical effect at normal dosages.
+
+\subsection{End-Member Data}
+Table~\ref{tab:lib} lists the end members: typical values (not specifications) from published datasheets of widely used grades that report a full property set with gauge and processing conditions. Dart and tear are divided by gauge (g/$\mu$m; multiply by 25.4 for g/mil). Two points matter for everything that follows: the LDPE and LLDPE films were blown at BUR 2.5 at 25--38\um, whereas the HDPE film was blown at 20\um, BUR 4 with a long neck; and suppliers differ in secant-modulus definition, treated here as comparable for illustration.
+
+\begin{table*}[!t]
+\caption{End-member film properties (typical datasheet values; dart and tear normalised by datasheet gauge)}
+\label{tab:lib}\centering\scriptsize\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{llrrrrrrrrr}
+\toprule
+Class & Representative grade & $\rho$ & Gauge & BUR & $E_{1\%}$ MD/TD & $\sigma_y$ MD/TD & $\sigma_b$ MD/TD & $\varepsilon_b$ MD/TD & Dart & Tear MD/TD \\
+ & & g/cm$^3$ & $\mu$m & & MPa & MPa & MPa & \% & g/$\mu$m & g/$\mu$m \\
+\midrule
+LDPE & ExxonMobil LD 100.BW~\cite{lyd100} & 0.923 & 38.1 & 2.5 & 200/260 & 10.0/11.0 & 30.0/23.0 & 240/550 & 2.89 & 7.61/2.62 \\
+LLDPE C4 (ZN) & ExxonMobil C4LL 1018~\cite{c4ll} & 0.918 & 25.4 & 2.5 & 190/230 & 9.6/10.0 & 50.0/36.0 & 570/870 & 3.54 & 3.54/17.72 \\
+LLDPE C6 (ZN) & ExxonMobil LL 3001.63~\cite{ll3001} & 0.917 & 25.4 & 2.5 & 197/238 & 9.3/10.0 & 57.9/48.1 & 500/840 & 5.51 & 17.32/29.13 \\
+LLDPE C8 (ZN) & Dow DOWLEX 2045G~\cite{dowlex} & 0.920 & 25 & 2.5 & 237/275 & 11.3/11.9 & 47.4/40.6 & 600/740 & 8.80 & 14.80/25.20 \\
+mLLDPE C6 & ExxonMobil Exceed m 1018~\cite{exceed} & 0.918 & 25.4 & 2.5 & 170/180 & 8.7/8.8 & 60.0/60.0 & 500/640 & 21.65 & 8.66/14.57 \\
+HMW-HDPE & LyondellBasell L5005~\cite{l5005} & 0.949 & 20.3 & 4 & 945/1050 & 34.5/29.0 & 84.1/57.2 & 320/390 & 16.75 & 0.54/3.74 \\
+\bottomrule
+\end{tabular}
+\par\vspace{3pt}\parbox{0.95\textwidth}{\scriptsize $E_{1\%}$: 1\% secant modulus; $\sigma_y$: tensile yield; $\sigma_b$: tensile strength at break; $\varepsilon_b$: elongation at break. C6-LLDPE density is the nominal series value; its gauge is taken as the supplier's standard 25.4\,$\mu$m.}
+\end{table*}
+
+\section{The Two-Level Method of Mixtures}
+\begin{figure*}[!t]
+\centering\includegraphics[width=0.92\textwidth]{fig1.pdf}
+\caption{Structure of the two-level method of mixtures used in this paper and in the companion calculator.}
+\label{fig:scheme}
+\end{figure*}
+
+\subsection{Level 1: The Blend Inside a Layer}
+Let a layer contain resins $i=1\ldots n$ with polymer weight fractions $w_i$ (masterbatch carriers included, actives removed). Three classical rules bracket the behaviour of a property $P$~\cite{voigt}:
+\begin{align}
+&\text{Linear (Voigt):} && P=\textstyle\sum w_i P_i \label{eq:voigt}\\
+&\text{Inverse (Reuss):} && 1/P=\textstyle\sum w_i/P_i \label{eq:reuss}\\
+&\text{Logarithmic:} && \ln P=\textstyle\sum w_i \ln P_i \label{eq:log}
+\end{align}
+All are special cases of the weighted power mean of order $m$:
+\begin{equation}
+M_m=\Big(\textstyle\sum w_i P_i^{\,m}\Big)^{1/m},\quad m=1,\;0,\;-1. \label{eq:pm}
+\end{equation}
+A property carried by the continuous, load-sharing structure follows $m\approx1$; one controlled by the weakest link behaves like $m\approx-1$. Defaults: $m=1$ for modulus, yield, break strength and tear; $m=0$ for elongation; $m=-1$ for dart (justified in Section~\ref{sec:blend}).
+
+Some pairs show a maximum or minimum outside the range of the end members, which no power mean can produce. These are handled with a Redlich--Kister excess term~\cite{rk} between resin families $A$ and $B$ (ZN-LLDPE, mLLDPE, LDPE, HDPE):
+\begin{equation}
+\Delta P_{AB}=w_Aw_B\,\tfrac{P_A+P_B}{2}\big[a_0+a_1x+a_2x^2\big],\quad x=w_A-w_B. \label{eq:rk}
+\end{equation}
+The layer value is $P_{\text{layer}}=M_m+\sum\Delta P_{AB}$. Scaling by the mean pair value keeps $a_0,a_1,a_2$ dimensionless. The coefficients in Table~\ref{tab:excess} are \emph{illustrative}: chosen to reproduce the trend shapes reported for LDPE/LLDPE blends~\cite{savar,jpfs} and the stiffness--toughness trade-off of LLDPE/HDPE blends~\cite{elkoun,us6355733}, not fitted to one data set.
+
+\begin{table}[!t]
+\caption{Default Pairwise Excess Coefficients (Others Zero)}
+\label{tab:excess}\centering\footnotesize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llrrr>{\raggedright\arraybackslash}p{2.5cm}}
+\toprule
+Pair $A|B$ & Property & $a_0$ & $a_1$ & $a_2$ & Trend represented \\
+\midrule
+ZN, M\,$|$\,LD & Tear MD & $-2.00$ & $-0.85$ & 0 & fast fall, plateau 40--80\%, rise~\cite{savar} \\
+ZN, M\,$|$\,LD & Tear TD & 0.55 & 3.03 & 0.34 & maximum at low LDPE~\cite{savar} \\
+ZN\,$|$\,HD & Dart & $-2.13$ & 1.50 & 0 & dart falls with HDPE~\cite{elkoun,us6355733} \\
+ZN\,$|$\,HD & Tear MD & $-1.50$ & 0 & 0 & faster than linear loss~\cite{elkoun} \\
+M\,$|$\,HD & Dart, tear & \multicolumn{3}{c}{half of ZN values} & metallocene keeps more~\cite{us12152135} \\
+LD\,$|$\,HD & Dart, tear & $-1.00$ & 0 & 0 & assumed \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Density and Fillers}
+Density is exact because specific volumes add: $1/\rho=\sum x_j/\rho_j$ over all ingredients by weight fraction $x_j$, and $\phi=(x_f/\rho_f)\rho$. For rigid spheres the modulus is raised per Guth~\cite{guth} and strength reduced by the loss of load-bearing section per Nicolais--Narkis~\cite{nicolais,turcsanyi}:
+\begin{align}
+E_c/E_m&=1+2.5\phi+14.1\phi^2, \label{eq:guth}\\
+\sigma_c/\sigma_m&=1-1.21\phi^{2/3}. \label{eq:nn}
+\end{align}
+Equation~\eqref{eq:nn} assumes no adhesion (close to stearate-coated CaCO$_3$), so it is a lower bound; it is also applied to elongation as an approximation. Nielsen's $\varepsilon_c/\varepsilon_m=1-\phi^{1/3}$~\cite{nielsen} predicts larger losses. Dart and tear are not corrected (Section~\ref{sec:fail}).
+
+\subsection{Level 2: Layers in the Coextruded Film}
+In a well-bonded coextrusion all layers strain together in the film plane (iso-strain), so with thickness fractions $t_k$
+\begin{equation}
+E=\textstyle\sum t_kE_k,\quad \sigma\approx\sum t_k\sigma_k,\quad \rho=\sum t_k\rho_k. \label{eq:layer}
+\end{equation}
+For break strength this assumes the layers break at similar strains; elongation is reported both thickness-weighted and as the least extensible layer. Dart and tear are fracture events with no reliable layer rule, so bounds and a central value are reported:
+\begin{equation}
+P_{\text{lo}}=\Big(\textstyle\sum\frac{t_k}{P_k}\Big)^{-1},\; P_{\text{up}}=\sum t_kP_k,\; P_{\text{c}}=e^{\sum t_k\ln P_k}. \label{eq:bounds}
+\end{equation}
+Values in grams are per-$\mu$m values times gauge, itself an approximation.
+
+\section{Why the Method of Mixtures Fails}\label{sec:fail}
+Mixture rules are statements about averages. They hold when each component keeps its own properties inside the blend and the property is a volume average. Film toughness breaks both conditions (Table~\ref{tab:appl}).
+
+\begin{table}[!t]
+\caption{Applicability of Mixture Rules to Blown-Film Properties}
+\label{tab:appl}\centering\footnotesize\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{>{\raggedright\arraybackslash}p{1.45cm}>{\raggedright\arraybackslash}p{1.6cm}>{\raggedright\arraybackslash}p{1.6cm}>{\raggedright\arraybackslash}p{0.95cm}>{\raggedright\arraybackslash}p{1.6cm}}
+\toprule
+Property & Blend level & Layer level & Conf. & Main error source \\
+\midrule
+Density & Exact & Exact & High & None \\
+Modulus & Linear, $\pm$10\% & Linear & High & Crystallinity, orientation \\
+Yield & Linear & Linear & High & As modulus \\
+Break strength & Linear, $\pm$20\% & Linear if co-failing & Medium & Strain hardening \\
+Elongation & Log rule & Weakest layer & Low & First defect / layer \\
+Dart & Inverse + excess & Bounds & Low & Tie chains, orientation, initiation \\
+Elmendorf tear & Linear + excess & Bounds & Low & Frozen-in lamellar orientation \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Toughness Comes From Tie Chains}
+Tear, dart and puncture depend on tie molecules bridging lamellae. LLDPE has many; long-chain-branched LDPE has few. Adding LDPE lowers the tie-chain concentration, and \emph{intrinsic} tear of unoriented plaques falls almost linearly with LDPE~\cite{savar,jpfs}. The film value falls much faster, because orientation adds a second effect.
+
+\subsection{The Bubble Freezes in Orientation}
+LDPE relaxes slowly; even small amounts raise melt strength above the linear rule and lock in more MD orientation~\cite{savar,tas}. MD lamellar orientation rises sharply up to about 20\% LDPE~\cite{savar}, so MD tear drops, passing through a minimum below either pure resin, while CD tear shows a maximum~\cite{savar,us11214659}. An average of end-member film values cannot know that the blend has a different morphology.
+
+\subsection{End-Member Data Come From Different Processes}
+Mixture rules assume end-member values describe each component \emph{as it exists in the blend}; datasheets describe each resin \emph{run alone, on its own line}. The HDPE dart of 16.8\,g/$\mu$m (20\um, BUR 4, long neck) exceeds that of C8-LLDPE, so the linear rule predicts that HDPE raises dart, whereas the reported result is the opposite~\cite{elkoun,us6355733}. The negative excess term is a patch for this, not an explanation.
+
+\subsection{Fracture Is a Weakest-Link Event}
+Modulus averages over volume; fracture starts at the weakest place. This is the basis for the inverse rule for dart, and for bounds across layers: a brittle core may crack first under the dart and the crack run through tough skins, or a tough layer may arrest it, depending on stiffness, adhesion and position.
+
+\subsection{Co-Crystallisation and Synergy}
+LLDPE and LDPE partly co-crystallise depending on branch distribution~\cite{savar}; HDPE forms its own lamellae; mLLDPE and ZN-LLDPE of similar density are close to miscible. Both antagonism (MD tear below both resins) and synergy (MD tear above the linear rule) are reported~\cite{us11214659}; no single rule covers both.
+
+\subsection{Fillers Act Through Dispersion and Adhesion}
+Reports on CaCO$_3$ in LLDPE film disagree: gains in impact with no loss of stiffness~\cite{us5922800}, higher dart and tear from orientation balance and faster cooling~\cite{omya}, or losses when coarse particles or agglomerates start cracks. The outcome depends on particle size, top cut, coating and dispersion, which are not composition variables.
+
+\subsection{Measurement and Data Scatter}
+Elmendorf tear and dart scatter by $\pm$10--20\%; dart methods A and B differ; suppliers report 1\% or 2\% secant modulus at different gauges. Comparisons need a band of at least $\pm$15\%.
+
+\emph{Practical consequence:} use the linear rule with confidence for density, grammage, modulus and yield; use the modified model for the direction and rough size of changes in dart and tear; never use it to accept a film against a toughness specification.
+
+\section{Results at Blend Level}\label{sec:blend}
+\subsection{LDPE in LLDPE and in mLLDPE}
+Tas \emph{et al.} reported that the dart of a single-site LLDPE film fell from about 700\,g to about 400\,g with only 10\% LDPE, a ratio of 0.57~\cite{tas}. The linear rule predicts 0.91; the inverse rule, with no fitted parameter, predicts 0.61 (Fig.~\ref{fig:ldpe}a). For 20\% LDPE in C8-LLDPE the inverse rule gives a 29\% dart loss against 13\% from the linear rule (Table~\ref{tab:ldpe}), consistent with the significant reduction reported in~\cite{savar}. With the excess terms, MD tear falls about 40\% at 20\% LDPE, levels near 5.6\,g/$\mu$m at 50--60\% LDPE (below LDPE itself) and climbs back to 7.6\,g/$\mu$m; TD tear peaks at 10--20\% LDPE and then falls (Fig.~\ref{fig:ldpe}b), the shapes reported in~\cite{savar}.
+
+\begin{figure}[!t]
+\centering\includegraphics[width=\columnwidth]{fig2c.pdf}
+\caption{LDPE added to LLDPE. (a) Dart impact: linear against inverse rule, with the reported 10\% LDPE point for single-site LLDPE~\cite{tas}. (b) Elmendorf tear of C8-LLDPE/LDPE: linear rule against the model with excess terms.}
+\label{fig:ldpe}
+\end{figure}
+
+\begin{table}[!t]
+\caption{C8-LLDPE/LDPE Monolayer Blends: Linear Rule (Lin.) Against Model (Mod.), per $\mu$m}
+\label{tab:ldpe}\centering\footnotesize\setlength{\tabcolsep}{3.2pt}
+\begin{tabular}{rrrrrrrrr}
+\toprule
+LDPE & $\rho$ & $E_{1\%}$ & \multicolumn{2}{c}{Dart, g/$\mu$m} & \multicolumn{2}{c}{Tear MD} & \multicolumn{2}{c}{Tear TD} \\
+wt\% & g/cm$^3$ & MPa & Lin. & Mod. & Lin. & Mod. & Lin. & Mod. \\
+\midrule
+0 & 0.920 & 237 & 8.80 & \textbf{8.80} & 14.80 & \textbf{14.80} & 25.20 & \textbf{25.20} \\
+10 & 0.920 & 233 & 8.21 & \textbf{7.30} & 14.08 & \textbf{11.38} & 22.94 & \textbf{26.94} \\
+20 & 0.921 & 230 & 7.62 & \textbf{6.24} & 13.36 & \textbf{8.86} & 20.68 & \textbf{26.23} \\
+30 & 0.921 & 226 & 7.03 & \textbf{5.45} & 12.64 & \textbf{7.14} & 18.43 & \textbf{23.73} \\
+50 & 0.921 & 218 & 5.84 & \textbf{4.35} & 11.21 & \textbf{5.60} & 13.91 & \textbf{15.83} \\
+80 & 0.922 & 207 & 4.07 & \textbf{3.34} & 9.05 & \textbf{6.38} & 7.14 & \textbf{4.59} \\
+100 & 0.923 & 200 & 2.89 & \textbf{2.89} & 7.61 & \textbf{7.61} & 2.62 & \textbf{2.62} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{HDPE in LLDPE}
+Modulus follows the linear rule and almost doubles at 30\% HDPE (237$\to$449\,MPa MD). With raw datasheet values the linear rule predicts a 27\% \emph{gain} in dart; with the excess term the model predicts a 30\% loss in dart and 45\% in MD tear (Fig.~\ref{fig:hdpe}, Table~\ref{tab:hdpe}), the published direction~\cite{elkoun,us6355733}.
+
+\begin{figure}[!t]
+\centering\includegraphics[width=\columnwidth]{fig3c.pdf}
+\caption{HDPE added to C8-LLDPE. (a) Modulus rises linearly. (b) Dart and MD tear: the linear rule with datasheet end members predicts the wrong direction for dart.}
+\label{fig:hdpe}
+\end{figure}
+
+\begin{table}[!t]
+\caption{HDPE in C8-LLDPE Monolayer Blends}
+\label{tab:hdpe}\centering\footnotesize\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{rrrrrrr}
+\toprule
+HDPE & $\rho$ & $E_{1\%}$ MD/TD & $\sigma_b$ MD & Dart lin. & Dart mod. & Tear MD \\
+wt\% & g/cm$^3$ & MPa & MPa & g/$\mu$m & g/$\mu$m & g/$\mu$m \\
+\midrule
+0 & 0.920 & 237/275 & 47.4 & 8.80 & \textbf{8.80} & \textbf{14.80} \\
+10 & 0.923 & 308/352 & 51.1 & 9.59 & \textbf{8.17} & \textbf{12.34} \\
+20 & 0.926 & 379/430 & 54.7 & 10.39 & \textbf{7.21} & \textbf{10.11} \\
+30 & 0.929 & 449/508 & 58.4 & 11.18 & \textbf{6.16} & \textbf{8.11} \\
+40 & 0.931 & 520/585 & 62.1 & 11.98 & \textbf{5.25} & \textbf{6.34} \\
+50 & 0.934 & 591/662 & 65.8 & 12.77 & \textbf{4.74} & \textbf{4.79} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{CaCO$_3$ Masterbatch in C4-LLDPE}
+A 20\% dose of 75\% MB gives 15\,wt\% CaCO$_3$ but only 5.6\,vol\%. Density rises 11\%; Guth predicts a 19\% modulus gain; the Nicolais--Narkis bound predicts an 18\% loss in break strength and elongation (Fig.~\ref{fig:caco3}, Table~\ref{tab:caco3}). Real films usually lie between that bound and no change; dart and tear are not predicted.
+
+\begin{figure}[!t]
+\centering\includegraphics[width=\columnwidth]{fig4.pdf}
+\caption{Relative change of density, modulus and strength with CaCO$_3$ MB in C4-LLDPE.}
+\label{fig:caco3}
+\end{figure}
+
+\begin{table}[!t]
+\caption{CaCO$_3$ Masterbatch (75\% Filler) in C4-LLDPE}
+\label{tab:caco3}\centering\footnotesize
+\begin{tabular}{rrrrrrr}
+\toprule
+MB & Filler & $\phi$ & $\rho$ & $E_{1\%}$ MD & $\sigma_b$ MD & $\varepsilon_b$ MD \\
+wt\% & wt\% & vol\% & g/cm$^3$ & MPa & MPa & \% \\
+\midrule
+0 & 0.0 & 0.00 & 0.918 & 190 & 50.0 & 570 \\
+5 & 3.8 & 1.30 & 0.941 & 197 & 46.7 & 532 \\
+10 & 7.5 & 2.67 & 0.966 & 205 & 44.6 & 508 \\
+15 & 11.2 & 4.12 & 0.992 & 214 & 42.8 & 488 \\
+20 & 15.0 & 5.64 & 1.019 & 225 & 41.1 & 469 \\
+25 & 18.8 & 7.25 & 1.048 & 239 & 39.5 & 450 \\
+30 & 22.5 & 8.95 & 1.078 & 254 & 37.9 & 432 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Results for Three-Layer Structures}
+\subsection{Worked Structures and Predictions}
+Three illustrative structures were set up (Table~\ref{tab:structs}): S1, a symmetric liquid-pack film; S2, an asymmetric lamination sealant with a 30\% HDPE core and a metallocene seal layer with 10\% LDPE, the level recommended in~\cite{tas}; and S3, a 120\um\ FFS sack film with HDPE and CaCO$_3$ in the core. Table~\ref{tab:pred} gives the predictions. The HDPE-rich cores reach 450--475\,MPa and lift the films to 315\,MPa (S2) and 361\,MPa (S3) MD; because stiffness adds by thickness, a stiff core with tough skins is as effective as blending HDPE everywhere. Dart bounds are narrow in S1 (250--288\,g) but wide in S2 (184--238\,g), where the seal layer (12.2\,g/$\mu$m) is almost four times tougher than the lamination layer (3.3\,g/$\mu$m); there, which layer starts the crack decides the real value.
+
+\begin{table*}[!t]
+\caption{Worked Three-Layer Structures (wt\% in Each Layer; Ratio by Thickness)}
+\label{tab:structs}\centering\footnotesize
+\setlength{\tabcolsep}{4pt}\begin{tabular}{l>{\raggedright\arraybackslash}p{2.6cm}rc>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{3.3cm}}
+\toprule
+ & Application & Gauge, $\mu$m & A:B:C & Layer A (outer) & Layer B (core) & Layer C (inner / seal) \\
+\midrule
+S1 & Liquid-pack (milk-pouch type) film & 55 & 1:2:1 & 50\% C8-LLDPE, 30\% mLLDPE, 20\% LDPE & 70\% C4-LLDPE, 25\% LDPE, 5\% TiO$_2$ MB & 50\% C8-LLDPE, 30\% mLLDPE, 20\% LDPE \\
+S2 & Lamination sealant film with stiff core & 40 & 1:2:1 & 68\% C4-LLDPE, 30\% LDPE, 2\% antiblock MB & 60\% C8-LLDPE, 30\% HDPE, 10\% LDPE & 88\% mLLDPE, 10\% LDPE, 2\% slip MB \\
+S3 & Heavy-duty FFS sack film & 120 & 1:3:1 & 60\% C6-LLDPE, 25\% mLLDPE, 15\% LDPE & 50\% C6-LLDPE, 30\% HDPE, 10\% LDPE, 10\% CaCO$_3$ MB & 60\% C6-LLDPE, 25\% mLLDPE, 15\% LDPE \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[!t]
+\caption{Predicted Properties of the Worked Structures. Film: Linear Rule for Stiffness and Strength, Log-Rule Central Value for Dart and Tear; Lower/Upper Bounds From (10)}
+\label{tab:pred}\centering\footnotesize
+\begin{tabular}{lrrrrrr}
+\toprule
+Property & Layer A & Layer B & Layer C & Film & Lower & Upper \\
+\midrule
+\multicolumn{7}{l}{\textbf{S1} --- Liquid-pack (milk-pouch type) film, 55\,$\mu$m, 51.2 g/m$^2$} \\
+\midrule
+Density, g/cm$^3$ & 0.920 & 0.941 & 0.920 & \textbf{0.931} & & \\
+$E_{1\%}$ MD, MPa & 210 & 196 & 210 & \textbf{203} &  & \\
+$E_{1\%}$ TD, MPa & 244 & 243 & 244 & \textbf{243} &  & \\
+$\sigma_b$ MD, MPa & 47.7 & 42.5 & 47.7 & \textbf{45.1} &  & \\
+$\sigma_b$ TD, MPa & 42.9 & 31.0 & 42.9 & \textbf{36.9} &  & \\
+$\varepsilon_b$ MD, \% & 473 & 429 & 473 & \textbf{451} & 429 & \\
+Dart, g/$\mu$m & 7.15 & 3.33 & 7.15 & \textbf{4.88} & 4.55 & 5.24 \\
+\quad Dart, g at 55\,$\mu$m & & & & \textbf{268} & 250 & 288 \\
+Tear MD, g/$\mu$m & 7.98 & 2.01 & 7.98 & \textbf{4.01} & 3.21 & 4.99 \\
+\quad Tear MD, g at 55\,$\mu$m & & & & \textbf{220} & 177 & 275 \\
+Tear TD, g/$\mu$m & 20.01 & 17.52 & 20.01 & \textbf{18.72} & 18.68 & 18.76 \\
+\quad Tear TD, g at 55\,$\mu$m & & & & \textbf{1030} & 1028 & 1032 \\
+\midrule
+\multicolumn{7}{l}{\textbf{S2} --- Lamination sealant film with stiff core, 40\,$\mu$m, 37.0 g/m$^2$} \\
+\midrule
+Density, g/cm$^3$ & 0.922 & 0.929 & 0.919 & \textbf{0.924} & & \\
+$E_{1\%}$ MD, MPa & 194 & 446 & 174 & \textbf{315} &  & \\
+$E_{1\%}$ TD, MPa & 241 & 506 & 190 & \textbf{361} &  & \\
+$\sigma_b$ MD, MPa & 42.9 & 56.7 & 56.4 & \textbf{53.2} &  & \\
+$\sigma_b$ TD, MPa & 31.3 & 43.8 & 55.6 & \textbf{43.6} &  & \\
+$\varepsilon_b$ MD, \% & 426 & 453 & 458 & \textbf{448} & 426 & \\
+Dart, g/$\mu$m & 3.30 & 4.13 & 12.20 & \textbf{5.12} & 4.60 & 5.94 \\
+\quad Dart, g at 40\,$\mu$m & & & & \textbf{205} & 184 & 238 \\
+Tear MD, g/$\mu$m & 2.04 & 5.98 & 6.28 & \textbf{4.63} & 4.07 & 5.07 \\
+\quad Tear MD, g at 40\,$\mu$m & & & & \textbf{185} & 163 & 203 \\
+Tear TD, g/$\mu$m & 16.68 & 18.30 & 15.90 & \textbf{17.26} & 17.23 & 17.30 \\
+\quad Tear TD, g at 40\,$\mu$m & & & & \textbf{691} & 689 & 692 \\
+\midrule
+\multicolumn{7}{l}{\textbf{S3} --- Heavy-duty FFS sack film, 120\,$\mu$m, 114.3 g/m$^2$} \\
+\midrule
+Density, g/cm$^3$ & 0.918 & 0.976 & 0.918 & \textbf{0.953} & & \\
+$E_{1\%}$ MD, MPa & 191 & 474 & 191 & \textbf{361} &  & \\
+$E_{1\%}$ TD, MPa & 227 & 543 & 227 & \textbf{416} &  & \\
+$\sigma_b$ MD, MPa & 54.2 & 56.3 & 54.2 & \textbf{55.5} &  & \\
+$\sigma_b$ TD, MPa & 47.3 & 42.8 & 47.3 & \textbf{44.6} &  & \\
+$\varepsilon_b$ MD, \% & 448 & 357 & 448 & \textbf{394} & 357 & \\
+Dart, g/$\mu$m & 5.80 & 2.21 & 5.80 & \textbf{3.25} & 2.94 & 3.65 \\
+\quad Dart, g at 120\,$\mu$m & & & & \textbf{390} & 352 & 437 \\
+Tear MD, g/$\mu$m & 10.39 & 6.16 & 10.39 & \textbf{7.59} & 7.36 & 7.85 \\
+\quad Tear MD, g at 120\,$\mu$m & & & & \textbf{911} & 883 & 942 \\
+Tear TD, g/$\mu$m & 24.62 & 19.65 & 24.62 & \textbf{21.51} & 21.38 & 21.64 \\
+\quad Tear TD, g at 120\,$\mu$m & & & & \textbf{2581} & 2566 & 2597 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Layer Ratio and Stiffness--Toughness Map}
+Holding S1's recipes fixed, going from 1:1:1 to 1:6:1 changes the modulus by less than 3\%, but dart falls from about 305 to 222\,g and MD tear from 277 to 156\,g, because the core is the weakest layer (Table~\ref{tab:ratio}, Fig.~\ref{fig:ratio}). In S2, each 10\% HDPE in the core adds about 35\,MPa to film modulus and costs about 20\,g of dart at 40\um\ (Fig.~\ref{fig:map}).
+
+\begin{table}[!t]
+\caption{Structure S1: Layer-Ratio Sweep at 55\,$\mu$m}
+\label{tab:ratio}\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{crrcc}
+\toprule
+A:B:C & $\rho$ & $E_{1\%}$ MD & Dart, g & Tear MD, g \\
+ & g/cm$^3$ & MPa & low / central / up & low / central / up \\
+\midrule
+1:1:1 & 0.927 & 205 & 284 / \textbf{305} / 323 & 221 / \textbf{277} / 329 \\
+1:2:1 & 0.931 & 203 & 250 / \textbf{268} / 288 & 177 / \textbf{220} / 275 \\
+1:3:1 & 0.933 & 201 & 233 / \textbf{249} / 267 & 158 / \textbf{192} / 242 \\
+1:4:1 & 0.934 & 201 & 223 / \textbf{236} / 253 & 147 / \textbf{175} / 220 \\
+1:6:1 & 0.936 & 199 & 212 / \textbf{222} / 236 & 136 / \textbf{156} / 193 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!t]
+\centering\includegraphics[width=\columnwidth]{fig5c.pdf}
+\caption{Structure S1 (55\um): effect of the core share on dart and MD tear, with inverse--linear bounds and the central estimate.}
+\label{fig:ratio}
+\end{figure}
+
+\begin{figure}[!t]
+\centering\includegraphics[width=\columnwidth]{fig6.pdf}
+\caption{Structure S2 (40\um): dart against film modulus as HDPE in the core rises from 0 to 50\%.}
+\label{fig:map}
+\end{figure}
+
+\begin{figure}[!t]
+\centering\includegraphics[width=\columnwidth]{fig7c.pdf}
+\caption{(a) Relative cost per kg and per m$^2$ of 50\um\ C4-LLDPE film with CaCO$_3$ MB at the same gauge. (b) S1 with increasing mLLDPE in the skins, each at the gauge giving the original predicted dart; labels give the gauge.}
+\label{fig:cost}
+\end{figure}
+
+\section{Typical Cost Components}
+All prices are indicative, in Indian rupees, basic and ex-GST, for November 2026; domestic producers revise PE prices roughly every fortnight~\cite{plastemart}, so these illustrate the method only.
+
+\subsection{Cost Structure}
+The cost of 1\,kg of good film is
+\begin{equation}
+C_{\text{film}}=C_{\text{mat}}+C_{\text{waste}}+C_{\text{conv}}. \label{eq:cost}
+\end{equation}
+Layer material cost is the weighted price of its ingredients (MB priced as supplied); layers are weighted by mass:
+\begin{equation}
+C_{\text{mat}}=\textstyle\sum m_kC_{\text{mat},k},\quad m_k=t_k\rho_k\big/\sum t_k\rho_k. \label{eq:mat}
+\end{equation}
+With waste fraction $w$ of input and scrap value $p_s$,
+\begin{equation}
+C_{\text{waste}}=(C_{\text{mat}}-p_s)\,w/(1-w). \label{eq:waste}
+\end{equation}
+Conversion is power (specific energy $\times$ tariff), labour (crew cost per hour $\div$ output), capital (straight-line depreciation plus interest on the average investment, per running hour, $\div$ output), overheads and packing. Modern lines have been certified at about 0.30\,kWh/kg~\cite{psa} and Indian suppliers quote 0.30--0.39\,kWh/kg~\cite{affluent}; 0.35\,kWh/kg is used. Customers buy area, so
+\begin{equation}
+C_{\text{m}^2}=C_{\text{film}}\,\rho\,T/1000\quad(\text{Rs/m}^2,\ \rho\text{ in g/cm}^3,\ T\text{ in }\mu\text{m}). \label{eq:m2}
+\end{equation}
+
+\begin{table}[!t]
+\caption{Indicative Material Prices, November 2026 (Rs/kg, Basic, ex-GST)}
+\label{tab:prices}\centering\footnotesize
+\begin{tabular}{lrl}
+\toprule
+Material & Default & Basis / reported range \\
+\midrule
+LDPE & 122 & 115--130~\cite{ofb1} \\
+C4-LLDPE & 115 & 115--125 (film)~\cite{ofb2} \\
+C6-LLDPE & 120 & 115--125 (film)~\cite{ofb2} \\
+C8-LLDPE & 128 & assumed (imported octene) \\
+mLLDPE & 135 & assumed premium~\cite{emr} \\
+HDPE & 110 & 105--115 (film)~\cite{ofb1} \\
+CaCO$_3$ MB & 40 & 35--50~\cite{indiamart} \\
+TiO$_2$ MB & 250 & 215--275~\cite{indiamart} \\
+antiblock MB & 180 & assumed \\
+slip MB & 200 & assumed \\
+PPA MB & 450 & assumed \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\caption{Default Conversion Cost Inputs}
+\label{tab:conv}\centering\footnotesize
+\begin{tabular}{llr}
+\toprule
+Component & Default inputs & Rs/kg \\
+\midrule
+Power & 0.35 kWh/kg $\times$ Rs 8.5/kWh & 2.97 \\
+Labour & Rs 600/h $\div$ 150 kg/h & 4.00 \\
+Capital & Rs 120 lakh, 10 y, 10\%, 6000 h/y & 2.00 \\
+Overheads & rent, maintenance, QC, admin & 4.00 \\
+Packing & cores, wrap, labels & 2.00 \\
+\midrule
+\textbf{Conversion total} & & \textbf{14.97} \\
+Process waste & 4\% of input; scrap Rs 55/kg & eq.~(13) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!t]
+\centering\includegraphics[width=\columnwidth]{calc_shot.jpg}
+\caption{The Blown Film Mixture Calculator with structure S1 loaded.}
+\label{fig:calc}
+\end{figure}
+
+\subsection{Cost of the Worked Structures}
+Material is about 87\% of total cost in every structure (Table~\ref{tab:scost}), so formulation and gauge, not conversion efficiency, drive cost. S3 is cheapest per kilogram (Rs 132.4) because 61\% of its mass is an HDPE/CaCO$_3$ core, but costliest per square metre (Rs 15.1) because it is 120\um\ thick.
+
+\begin{table}[!t]
+\caption{Cost of the Worked Structures (Default Inputs)}
+\label{tab:scost}\centering\footnotesize\setlength{\tabcolsep}{3.2pt}
+\begin{tabular}{lrrrrrr}
+\toprule
+ & Material & Waste & Conv. & Total & g/m$^2$ & Rs/m$^2$ \\
+ & Rs/kg & Rs/kg & Rs/kg & Rs/kg & & \\
+\midrule
+S1 (55\,$\mu$m) & 126.17 & 2.97 & 14.97 & \textbf{144.11} & 51.2 & \textbf{7.38} \\
+S2 (40\,$\mu$m) & 124.33 & 2.89 & 14.97 & \textbf{142.20} & 37.0 & \textbf{5.26} \\
+S3 (120\,$\mu$m) & 114.92 & 2.50 & 14.97 & \textbf{132.40} & 114.3 & \textbf{15.14} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Filler: Cheaper per Kilogram, Not per Square Metre}
+At 30\% CaCO$_3$ MB in a 50\um\ C4-LLDPE film, cost per kilogram falls 18\%, but density rises from 0.92 to 1.08\,g/cm$^3$, so at the same gauge cost per square metre falls only 3\% (Fig.~\ref{fig:cost}a), with the strength losses noted above.
+
+\subsection{Paying More per Kilogram to Pay Less per Square Metre}
+Replacing C8-LLDPE in S1's skins with mLLDPE and setting each gauge for the same predicted dart (268\,g) raises cost per kilogram only 1.5\% but allows 44 instead of 55\um, cutting cost per square metre by 18\% (Table~\ref{tab:down}, Fig.~\ref{fig:cost}b). Modulus falls 9\%, and the result rests on the lowest-confidence prediction, so it is a reason for a trial, not a result. In S2, raising core HDPE from 0 to 50\% lowers cost per square metre only 2.6\% while modulus nearly doubles and dart falls from 272 to 168\,g: the case for HDPE is stiffness, not price.
+
+
+
+\begin{table}[!t]
+\caption{Equal-Dart Downgauging of S1 With mLLDPE-Rich Skins (Core Unchanged)}
+\label{tab:down}\centering\footnotesize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.3cm}rrrrr}
+\toprule
+Skin recipe (A = C) & Gauge & $E_{1\%}$ MD & Rs/kg & Rs/m$^2$ & $\Delta$Rs/m$^2$ \\
+ & $\mu$m & MPa & & & \% \\
+\midrule
+50\% C8-LLDPE, 30\% mLLDPE, 20\% LDPE & 55.0 & 203 & 144.11 & \textbf{7.38} & +0.0 \\
+30\% C8-LLDPE, 50\% mLLDPE, 20\% LDPE & 52.3 & 196 & 144.83 & \textbf{7.05} & -4.5 \\
+10\% C8-LLDPE, 70\% mLLDPE, 20\% LDPE & 49.4 & 189 & 145.55 & \textbf{6.69} & -9.3 \\
+85\% mLLDPE, 15\% LDPE & 44.4 & 185 & 146.24 & \textbf{6.04} & -18.1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Companion Calculator}
+The method is implemented in a single offline HTML file, \emph{Blown Film Mixture Calculator} (Fig.~\ref{fig:calc}), using the same calculation engine as this paper. It provides: one to three layers with any mix of the six resins and five masterbatches; all properties per layer and for the film, with dart/tear bounds, confidence labels and warnings where the method is weak; a cost build-up in Rs/kg and Rs/m$^2$ with editable prices and conversion inputs; combination tables over one or two variables (component wt\% with a balance component, layer ratio or gauge) with CSV export; and an editable resin library, exponents and excess coefficients so literature data can be replaced by the user's own.
+
+
+
+\section{Guidelines and Limitations}
+Trust the stiffness side: density, grammage, modulus and yield follow mixture rules closely. Treat toughness as a screen. Expect early losses from LDPE, especially in mLLDPE; keep it near 10\% or less~\cite{tas}. Put HDPE in the core and tune toughness with the layer ratio. Compare formulations by cost per square metre at the gauge each needs. Calibrate before relying on the model: run pure resins and two or three blends on your own line, enter the pure-resin values and adjust $a_0$, $a_1$.
+
+The end-member data are typical values from different suppliers and lines, HDPE in particular under very different processing; the excess coefficients are illustrative; only one grade per class is included; orientation is not modelled explicitly (BUR near 2.5 assumed); interlayer adhesion is assumed perfect; validation is limited to one quantitative point and trend shapes; and the cost model uses list prices and generic conversion inputs, omitting freight, discounts and short-run set-up. A measured data set on one three-layer line is the next step.
+
+\section{Conclusion}
+A two-level method of mixtures gives a consistent framework for the mechanical properties of blown PE films with up to three layers. Density is exact and modulus and yield follow the linear rule well. Dart behaves as a weakest-link property: the inverse rule predicts the reported 43\% dart loss for mLLDPE with 10\% LDPE as 39\%, where the linear rule predicts 9\%. Tear needs excess terms because LDPE changes the orientation frozen in during blowing. The linear rule gives the wrong \emph{direction} for dart when HDPE is added to LLDPE because the end-member data were measured under different processing, the clearest demonstration of why mixture rules fail. Material is close to 90\% of film cost, and judged per square metre a 30\% CaCO$_3$ MB saves about 3\% while metallocene skins that permit a thinner film can save about 18\%, subject to trial.
+
+\section*{Acknowledgment}
+The author acknowledges the assistance of Claude, a large language model by Anthropic, in literature search, coding of the calculation engine and calculator, preparation of figures and drafting of the text. All content was reviewed by the author, who is responsible for it.
+
+\balance
+\begin{thebibliography}{99}
+\footnotesize
+\bibitem{lyd100} ExxonMobil Chemical, ``Product datasheet: ExxonMobil LDPE LD 100.BW, blown film,'' rev. Apr. 2018.
+\bibitem{c4ll} ExxonMobil Chemical, ``Product datasheet: ExxonMobil C4LL 1018 series.'' [Online]. Available: \url{https://www.exxonmobilchemical.com/en/chemicals/webapi/dps/v1/datasheets/150000000546/0/en}
+\bibitem{ll3001} ExxonMobil Chemical, ``ExxonMobil LLDPE LL 3001.63 typical properties,'' distributor listing. [Online]. Available: \url{https://sushengpolymer.com/plasmain/npAPZp_ExxonMobil-LLDPE-LL-3001-63/}
+\bibitem{dowlex} Dow Chemical, ``DOWLEX 2045G polyethylene resin.'' [Online]. Available: \url{https://www.dow.com/en-us/pdp.dowlex-2045g-polyethylene-resin.7650z.html}
+\bibitem{exceed} ExxonMobil Chemical, ``Product datasheet: Exceed m 1018.RJ metallocene polyethylene.'' [Online]. Available: \url{https://www.exxonmobilchemical.com/en/chemicals/webapi/dps/v1/datasheets/150000104563/0/en}
+\bibitem{l5005} LyondellBasell, ``Alathon L5005 technical data sheet.'' [Online]. Available: \url{https://lyondellbasell.com}
+\bibitem{savar} N. Savargaonkar, R. Patel, T. Karjala, P. Salibi, and L. Liu, ``Fundamentals of abuse performance of LLDPE/LDPE blends in blown film applications,'' in \emph{Proc. SPE ANTEC}, Las Vegas, NV, USA, 2014; adapted in \emph{Plastics Technology}, Sep. 2014.
+\bibitem{jpfs} ``Study of LLDPE/LDPE blown films over the full composition range, decoupling orientation from intrinsic properties,'' \emph{J. Plast. Film Sheeting}, 2019, doi: 10.1177/8756087919844303.
+\bibitem{tas} P. Tas, S. Marshall, and T. Swabey, ``Processability and film performance of single site sLLDPE/LDPE blends,'' in \emph{Proc. TAPPI European PLACE Conf.}, Vienna, Austria, 2005.
+\bibitem{elkoun} S. Elkoun \emph{et al.}, ``Properties and structure of LLDPE/HDPE three-layer coextruded blown films with blended middle layers,'' in \emph{Proc. SPE ANTEC}, 2003 (as summarised in EP 2 114 671 B1).
+\bibitem{us6355733} US Patent 6\,355\,733 (background on LLDPE/HDPE blend film trade-offs).
+\bibitem{us5922800} Mobil Oil Corp., ``Blends of calcium carbonate and LLDPE,'' US Patent 5\,922\,800.
+\bibitem{omya} Omya, ``Calcium carbonate in polyolefin blown film,'' in \emph{Proc. TAPPI PLACE Conf.}, 2006.
+\bibitem{nicolais} L. Nicolais and M. Narkis, ``Stress--strain behavior of styrene--acrylonitrile/glass bead composites in the glassy region,'' \emph{Polym. Eng. Sci.}, vol. 11, pp. 194--199, 1971.
+\bibitem{turcsanyi} B. Turcs\'anyi, B. Puk\'anszky, and F. T\"ud\H{o}s, ``Composition dependence of tensile yield stress in filled polymers,'' \emph{J. Mater. Sci. Lett.}, vol. 7, pp. 160--162, 1988.
+\bibitem{guth} E. Guth, ``Theory of filler reinforcement,'' \emph{J. Appl. Phys.}, vol. 16, pp. 20--25, 1945.
+\bibitem{nielsen} L. E. Nielsen, ``Simple theory of stress--strain properties of filled polymers,'' \emph{J. Appl. Polym. Sci.}, vol. 10, pp. 97--103, 1966.
+\bibitem{voigt} W. Voigt, \emph{Ann. Phys.}, vol. 38, pp. 573--587, 1889; A. Reuss, \emph{Z. Angew. Math. Mech.}, vol. 9, pp. 49--58, 1929.
+\bibitem{rk} O. Redlich and A. T. Kister, ``Algebraic representation of thermodynamic properties and the classification of solutions,'' \emph{Ind. Eng. Chem.}, vol. 40, pp. 345--348, 1948.
+\bibitem{astm} \emph{Standard Test Methods}, ASTM D882, D1709, D1922, ASTM Int., West Conshohocken, PA, USA.
+\bibitem{us11214659} ``Polymer blends and articles made therefrom,'' US Patent 11\,214\,659.
+\bibitem{us12152135} ``Films made of polyethylene blends for improved bending stiffness and high MD tear resistance,'' US Patent 12\,152\,135.
+\bibitem{ofb1} OfBusiness, ``Polymer prices today,'' accessed Nov. 2026. [Online]. Available: \url{https://www.ofbusiness.com/prices/polymers-packaging}
+\bibitem{ofb2} OfBusiness, ``LLDPE price today,'' accessed Nov. 2026. [Online]. Available: \url{https://www.ofbusiness.com/prices/polymers-packaging/lldpe}
+\bibitem{emr} Expert Market Research, ``m-LLDPE price trends 2026.'' [Online]. Available: \url{https://www.expertmarketresearch.com/price-forecast/mlldpe-price-trends}
+\bibitem{indiamart} IndiaMART supplier listings for PE CaCO$_3$ filler and white masterbatches, accessed Nov. 2026. [Online]. Available: \url{https://m.indiamart.com/micropolycolours/calcium-carbonate-masterbatch.html}
+\bibitem{plastemart} Plastemart, ``Polymer price list: PE, PP, PVC,'' Oct.--Nov. 2026. [Online]. Available: \url{https://www.plastemart.com/polymer-price-list-pe-pp-pvc}
+\bibitem{psa} Packaging South Asia, ``TÜV-certified specific energy of a blown film line.'' [Online]. Available: \url{https://awsa.packagingsouthasia.com/?p=4286}
+\bibitem{affluent} IndiaMART, ``Blown film plant, 40--160 kg/h, 0.30--0.39 kWh/kg.'' [Online]. Available: \url{https://m.indiamart.com/city/ahmedabad/pp-blown-film-plant.html}
+\end{thebibliography}
+\end{document}

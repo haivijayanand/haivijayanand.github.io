@@ -2,10 +2,10 @@
 <!--
 TOOL: Blown Film Mixture Calculator
 FAMILY: blown-film-mechanics
-VERSION: 1.3.0
+VERSION: 1.4.0
 DATE: 2026-11-14
 CHAT: Paper 02 - Mechanical properties of blown PE films by method of mixtures
-CHANGES: 1.3.0 - Process tab: BUR, DDR, die gap, output, frost-line/neck height corrections, bubble mode, kinematics, melt-fracture check, operating windows, BUR and die-gap optimiser; process variables in combination tables | 1.2.0 - 26 industry recipes in groups (dairy, lamination, shrink/stretch, heavy duty, bags) with use notes and sources; new Recipe library tab comparing all recipes, sortable, with CSV export | 1.1.1 - Method notes link to the published Technical Paper No. 02 | 1.1.0 - Cost components: editable resin/MB prices and conversion inputs, cost build-up per kg and per m2, cost outputs in combination tables | 1.0.1 - Symmetric-skin option for sweeps; chart tick decimals follow range; compact grid tables | 1.0.0 - First release: 1-3 layer recipes, blend + layer mixture model, bounds, flags, combination tables (1 or 2 variables), CSV export, editable library
+CHANGES: 1.4.0 - Grade database tab: 28 PE film grades from Indian producers (RIL, GAIL, HPL, HMEL, IOCL, OPaL) and imports traded in India (SABIC, EQUATE, Borouge, QAPCO, LyondellBasell, ExxonMobil, Dow, Chevron Phillips) with datasheet properties, test conditions and sources; filters, sorting, CSV; add grades to the resin library or swap them into the current structure; gaps filled from family reference and marked | 1.3.0 - Process tab: BUR, DDR, die gap, output, frost-line/neck height corrections, bubble mode, kinematics, melt-fracture check, operating windows, BUR and die-gap optimiser; process variables in combination tables | 1.2.0 - 26 industry recipes in groups (dairy, lamination, shrink/stretch, heavy duty, bags) with use notes and sources; new Recipe library tab comparing all recipes, sortable, with CSV export | 1.1.1 - Method notes link to the published Technical Paper No. 02 | 1.1.0 - Cost components: editable resin/MB prices and conversion inputs, cost build-up per kg and per m2, cost outputs in combination tables | 1.0.1 - Symmetric-skin option for sweeps; chart tick decimals follow range; compact grid tables | 1.0.0 - First release: 1-3 layer recipes, blend + layer mixture model, bounds, flags, combination tables (1 or 2 variables), CSV export, editable library
 STATUS: Companion tool to Technical Paper 02
 -->
 <html lang="en">
@@ -67,6 +67,17 @@ table.res thead th{background:#f1f0eb;color:var(--ink2);font-weight:600;position
 .lib input[type=number]{width:72px}
 #convtab input[type=number]{width:120px}
 #reclib td:nth-child(2),#reclib th:nth-child(2){text-align:left;white-space:normal;min-width:260px}
+#gtab td.l,#gtab th.l{text-align:left}
+#gtab td.use{white-space:normal;min-width:220px;max-width:320px;text-align:left;color:var(--ink2);font-size:12px}
+#gtab tr.sel td{background:#e9f1fb}
+#gtab th[data-k]{cursor:pointer}
+.est{color:var(--muted);font-style:italic}
+.gname{color:var(--accent);cursor:pointer;text-decoration:underline dotted}
+.badge{display:inline-block;border-radius:9px;padding:0 7px;font-size:11px;border:1px solid var(--line)}
+.badge.in{background:#eef6ef;color:#1b6b37;border-color:#bfdcc6}
+.badge.im{background:#f3f0fa;color:#4b3a8c;border-color:#d6cdee}
+#gdet .kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px 16px;font-size:13px}
+.okmsg{color:#1b6b37;font-size:12.5px;margin-left:8px}
 .mono{font-family:Consolas,monospace;font-size:12px}
 @media print{header,nav.tabs,button,.noprint{display:none!important}.tab{display:block!important}.card{break-inside:avoid}}
 </style>
@@ -83,6 +94,7 @@ table.res thead th{background:#f1f0eb;color:var(--ink2);font-weight:600;position
   <button data-t="t7">Process &amp; melt fracture</button>
   <button data-t="t6">Recipe library</button>
   <button data-t="t5">Cost settings</button>
+  <button data-t="t8">Grade database (India)</button>
   <button data-t="t3">Resin library</button>
   <button data-t="t4">Method notes</button>
 </nav>
@@ -189,6 +201,24 @@ table.res thead th{background:#f1f0eb;color:var(--ink2);font-weight:600;position
  </div>
 </section>
 
+<!-- TAB 8 -->
+<section class="tab" id="t8">
+ <div class="card">
+  <h2>Polyethylene film grades available in India</h2>
+  <p class="note">Film grades from Indian producers (Reliance, GAIL, Haldia Petrochemicals, HPCL-Mittal Energy, Indian Oil, OPaL) and imported grades commonly traded in India (SABIC, EQUATE, Borouge, QAPCO, LyondellBasell, ExxonMobil, Dow, Chevron Phillips). Values are each producer's typical datasheet figures at its own test film (gauge and BUR shown), converted to the model's units: dart and Elmendorf tear in g per µm. Values shown <span class="est">≈ in grey italics</span> are not on the datasheet: they are filled from the family reference resin of the Resin library (modulus and yield scaled +5 % per 0.001 g/cm³ of density). Datasheets use different lines, gauges and test editions, so compare grades with care. Grade names, availability and data change; confirm with the producer or distributor before buying.</p>
+  <div class="row" style="margin-bottom:8px">
+   <label class="f">Origin<select id="gOrig"><option value="">All</option><option value="India">Made in India</option><option value="Imported">Imported</option></select></label>
+   <label class="f">Type<select id="gFam"><option value="">All</option><option value="ZN">LLDPE (Ziegler–Natta)</option><option value="M">mLLDPE / single-site</option><option value="LD">LDPE</option><option value="HD">HDPE</option></select></label>
+   <label class="f">Producer<select id="gProd"></select></label>
+   <label class="f">Search<input type="text" id="gQ" placeholder="grade, use…" style="font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:5px;width:170px"></label>
+   <button id="gAddAll">Add all shown to library</button><button id="gCsv">Export CSV</button><span id="gMsg" class="okmsg"></span>
+  </div>
+  <div class="scroll" id="gtab" style="max-height:560px"></div>
+  <p class="note">Click a grade name for all eleven properties, test conditions, notes and the source. “Add” puts the grade in the Resin library, so it appears in every layer's component list, in the combination tables and in cost settings (priced at its family default until you enter your price). MI is g/10 min at 190 °C/2.16 kg unless another load is shown.</p>
+ </div>
+ <div class="card" id="gdet" style="display:none"></div>
+</section>
+
 <!-- TAB 3 -->
 <section class="tab" id="t3">
  <div class="card lib">
@@ -216,6 +246,8 @@ table.res thead th{background:#f1f0eb;color:var(--ink2);font-weight:600;position
   <p>With process corrections on, each resin's end-member values are first moved from its datasheet condition to your BUR, draw-down ratio (DDR = die gap ÷ (gauge × BUR)) and frost-line or neck height, using family-specific power laws: break strength MD falls and TD rises with BUR; MD tear falls with DDR; dart rises with BUR to an optimum near BUR 3.3 for LLDPE and falls with DDR and with a high frost line; HMW-HDPE needs a high stalk (best dart at a neck of about 8 die diameters). The mixture rules then apply as before. A melt-fracture check compares the die shear rate with typical sharkskin onset rates. All coefficients are illustrative trend fits; calibrate them on your own line.</p>
   <h3>Recipes</h3>
   <p>The recipe presets are typical industry starting points for each application, built only from this tool's resin and masterbatch library (no tackifiers, carbon black, UV stabilisers or barrier layers). The basis of each is shown when it is loaded. Replace them with your own recipes and resin data before using the numbers.</p>
+  <h3>Grade database (India)</h3>
+  <p>The grade database holds typical datasheet values for film grades made in India and for imported grades traded in India. Each grade keeps its own test film (gauge, BUR, die gap), so when process corrections are on it is moved from its own datasheet condition, not from the family reference. Dart and tear are stored per µm of the test gauge. Properties a datasheet does not give are copied from the family reference resin (C4/C6/C8 LLDPE, mLLDPE, LDPE or HDPE in the Resin library), with modulus and yield scaled +5 % per 0.001 g/cm³ of density, and are marked as estimates. Most Indian datasheets give no secant modulus, and several give no yield, so modulus predictions for structures made from these grades rest on the reference resins. Datasheets also differ in test editions (ASTM or ISO, dart method A or B) and in film lines; values from Method B, from moulded specimens or given only as a bound are noted on the grade and not used as film values.</p>
   <h3>Cost</h3>
   <p>Material cost of a layer is the wt %-weighted price of its ingredients (masterbatch priced as supplied). Film material cost weights layers by mass (thickness × density). Net waste cost = material × w/(1−w) − scrap credit × w/(1−w). Conversion = specific energy × tariff + labour per hour ÷ output + (straight-line depreciation + interest on half the line cost) ÷ running hours ÷ output + overheads + packing. Rs/m² = Rs/kg × grammage. All prices are indicative and ex-GST.</p>
   <h3>Why the method fails</h3>
@@ -613,11 +645,177 @@ CHANGES: 1.2.0 - Process module: BUR, DDR, frost-line/neck height corrections pe
   if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.BFM = API;
 })(typeof window !== 'undefined' ? window : this);
 
+/*
+TOOL: Blown Film Mixture Model - Indian market grade database
+FAMILY: blown-film-mechanics
+VERSION: 1.0.0
+DATE: 2026-11-14
+CHAT: Paper 02 - Mechanical properties of blown PE films by method of mixtures
+CHANGES: 1.0.0 - 28 film grades: 17 from Indian producers (RIL, GAIL, HPL, HMEL, IOCL, OPaL) and 11 imported grades traded in India (SABIC, EQUATE, Borouge, QAPCO, LyondellBasell, ExxonMobil, Dow, Chevron Phillips); datasheet values with test-film conditions and sources; gaps filled from the family reference resin and flagged
+*/
+(function (root) {
+  'use strict';
+  // Units used by the model: E, Y, TS in MPa; EL in %; DART, TM, TT in g per um of film.
+  // Converters for datasheet units
+  const KG = v => +(v * 0.0980665).toFixed(1);   // kg/cm2 -> MPa
+  const NMM = v => +(v * 0.10197).toFixed(2);    // N/mm (Elmendorf) -> g/um
+  const G = (g, t) => +(g / t).toFixed(2);        // grams at gauge t -> g/um
+
+  // fam: ZN = Ziegler-Natta LLDPE, M = metallocene / single-site, LD = LDPE, HD = HDPE
+  // d: values taken from the datasheet (converted). Anything missing is filled from the family reference resin.
+  const RAW = [
+  // ------------------------------------------------ Indian producers
+  {id:'RIL_F18010', prod:'Reliance (RIL)', brand:'Relene', grade:'F18010', origin:'India', ctry:'India', fam:'ZN', com:'C4', tech:'Gas phase',
+   mi:'1.0', rho:0.918, t:40, bur:2.5, gap:1.8, use:'Lamination, liquid packaging, surface protection, stretch cling',
+   d:{Y_MD:12.5,Y_TD:12,TS_MD:38,TS_TD:30,EL_MD:700,EL_TD:800,DART:3.5,TM:3.3,TT:10.3},
+   src:'https://www.ril.com/sites/default/files/2026-08/TDS_F18010.pdf', srcName:'RIL TDS, Apr 2026', note:'The slip/antiblock version F19010 lists the same film values.'},
+  {id:'RIL_JF18010', prod:'Reliance (RIL)', brand:'Relene', grade:'JF18010', origin:'India', ctry:'India', fam:'ZN', com:'C4', tech:'',
+   mi:'1.0', rho:0.920, t:40, bur:2.5, gap:1.8, use:'Flexible packaging and lamination; no slip or antiblock',
+   d:{Y_MD:13,Y_TD:14,TS_MD:50,TS_TD:36,EL_MD:800,EL_TD:1000,DART:3.5,TM:5,TT:15},
+   src:'https://www.ril.com/sites/default/files/2026-08/TDS_JF18010.pdf', srcName:'RIL TDS, Apr 2026'},
+  {id:'RIL_O19010', prod:'Reliance (RIL)', brand:'Relene', grade:'O19010', origin:'India', ctry:'India', fam:'ZN', com:'C8', tech:'',
+   mi:'0.9', rho:0.918, t:40, bur:2.5, gap:1.8, use:'Heavy-duty and liquid packaging needing strong seals (slip/AB)',
+   d:{Y_MD:12.5,Y_TD:13,TS_MD:40,TS_TD:35,EL_MD:650,EL_TD:800,DART:7,TM:13.8,TT:27.6},
+   src:'https://www.ril.com/sites/default/files/2026-08/TDS_O19010.pdf', srcName:'RIL TDS, Apr 2026'},
+  {id:'RIL_1005FY20', prod:'Reliance (RIL)', brand:'Relene', grade:'1005FY20', origin:'India', ctry:'India', fam:'LD', com:'—', tech:'High pressure',
+   mi:'0.5', rho:0.920, t:40, bur:2.0, gap:0.8, use:'Milk-pouch FFS film in blend with LLDPE (slip/AB)',
+   d:{TS_MD:21,TS_TD:20,EL_MD:300,EL_TD:525,DART:3.7},
+   src:'https://www.ril.com/sites/default/files/2026-03/TDS_1005FY20.pdf', srcName:'RIL TDS, Feb 2026'},
+  {id:'RIL_F46003E', prod:'Reliance (RIL)', brand:'Relene', grade:'F46003E', origin:'India', ctry:'India', fam:'HD', com:'—', tech:'',
+   mi:'1.1', rho:0.950, t:40, bur:2.75, gap:0.75, use:'Blend partner for carry bags and coextruded films',
+   d:{Y_MD:29,Y_TD:26,TS_MD:45,TS_TD:40,EL_MD:780,EL_TD:950,DART:2,TM:0.40,TT:0.45},
+   src:'https://insights.viztaar.com/wp-content/uploads/2022/12/Polymers_HDPE_HD-Film_Reliance_F46003E.pdf', srcName:'RIL TDS (Jun 2020), copy on Viztaar', note:'Medium-molecular-weight HDPE; film properties differ strongly from HM-HDPE.'},
+  {id:'RIL_50GF003', prod:'Reliance (RIL)', brand:'Relene', grade:'50GF003', origin:'India', ctry:'India', fam:'HD', com:'—', tech:'Bimodal',
+   mi:'0.30 (5 kg)', rho:0.950, t:20, bur:4, gap:0.75, use:'HM-HDPE film: carry bags, liners',
+   d:{Y_MD:31,Y_TD:32,TS_MD:54,TS_TD:51,EL_MD:600,EL_TD:600,DART:G(38,20),TM:G(0.6,20),TT:G(9.2,20)},
+   src:'https://sushengpolymer.com/media/pdf/TFUkWQ_RELENE-50GF003.pdf', srcName:'RIL data, distributor copy', note:'Elongation listed as >600 %. Dart (38 g at 20 µm) is low for HM-HDPE; confirm with RIL before relying on it.'},
+  {id:'GAIL_F18S010U', prod:'GAIL', brand:'G-Lene', grade:'F18S010U', origin:'India', ctry:'India', fam:'ZN', com:'C4?', tech:'Swing plant',
+   mi:'1.0', rho:0.918, t:25.4, bur:2.5, gap:null, use:'General packaging film, liners (slip/AB)',
+   d:{TS_MD:KG(400),TS_TD:KG(270),EL_MD:580,EL_TD:750,DART:3.0,TM:3,TT:15},
+   src:'https://gailonline.com/pdf/Business_verticals/F18S010U.pdf', srcName:'GAIL TDS', note:'Comonomer not stated; butene assumed. F18A010U (no slip/AB) lists the same values.'},
+  {id:'GAIL_MF18S010U', prod:'GAIL', brand:'G-Lene', grade:'MF18S010U', origin:'India', ctry:'India', fam:'M', com:'C6', tech:'Metallocene',
+   mi:'1.0', rho:0.918, t:40, bur:2.5, gap:null, use:'Liquid and dairy packaging, lamination, heavy-duty bags',
+   d:{TS_MD:KG(500),TS_TD:KG(450),EL_MD:550,EL_TD:650,DART:17,TM:10,TT:15},
+   src:'https://gailonline.com/pdf/Business_verticals/MF18S010U.pdf', srcName:'GAIL TDS', note:'India’s first domestic mLLDPE. BUR not stated (2.5 assumed). GAIL’s web table also shows 870/690 kg/cm² and 20 g/µm; the grade TDS values are used.'},
+  {id:'GAIL_F55HM0003', prod:'GAIL', brand:'G-Lex', grade:'F55HM0003', origin:'India', ctry:'India', fam:'HD', com:'—', tech:'CX slurry, bimodal',
+   mi:'0.09 (I21 13)', rho:0.954, t:20, bur:4, gap:null, use:'HM-HDPE: carry bags, trash bags, freezer bags, liners',
+   d:{Y_MD:KG(350),Y_TD:KG(290),TS_MD:KG(400),TS_TD:KG(350),EL_MD:400,EL_TD:500,DART:5,TM:1,TT:5},
+   src:'https://gailonline.com/PetroChemical_HDPE.html', srcName:'GAIL HDPE specification', note:'Yield from an earlier TDS edition (which also lists dart 7 g/µm and break 500/420 kg/cm²).'},
+  {id:'GAIL_E45A003', prod:'GAIL', brand:'G-Lene', grade:'E45A003', origin:'India', ctry:'India', fam:'HD', com:'—', tech:'Swing plant',
+   mi:'0.3–0.6', rho:0.945, t:25, bur:2.5, gap:null, use:'HDPE for blending with LDPE/LLDPE in lamination films',
+   d:{TS_MD:KG(400),TS_TD:KG(350),EL_MD:750,EL_TD:900,DART:2,TM:0.3,TT:4},
+   src:'https://gailonline.com/PetroChemical_HDPE.html', srcName:'GAIL HDPE specification', note:'GAIL’s brochure gives MFI 0.3, the web table 0.6.'},
+  {id:'HPL_71501S', prod:'Haldia Petrochemicals (HPL)', brand:'Halene-L', grade:'71501S', origin:'India', ctry:'India', fam:'ZN', com:'C4?', tech:'Spherilene',
+   mi:'1.0', rho:0.920, t:25, bur:2.5, gap:2.5, use:'General-purpose packaging film (slip/AB)',
+   d:{Y_MD:10,Y_TD:10,TS_MD:25,TS_TD:16,EL_MD:650,EL_TD:750,DART:4.0,TM:G(150,25),TT:G(400,25)},
+   src:'https://www.polymerupdate.com/IndianProdcuerSpecification/Haldia_Petrochemicals_Ltd_HPL/LLDPE/LLDPE_Film/LLDPE71501S.pdf', srcName:'HPL TDS (2019)', note:'Comonomer not stated; butene assumed.'},
+  {id:'HPL_71602S', prod:'Haldia Petrochemicals (HPL)', brand:'Halene-L', grade:'71602S', origin:'India', ctry:'India', fam:'ZN', com:'C4?', tech:'Spherilene',
+   mi:'2.0', rho:0.920, t:25, bur:2.5, gap:2.5, use:'General-purpose packaging film (slip/AB)',
+   d:{Y_MD:11,Y_TD:10,TS_MD:19,TS_TD:14,EL_MD:700,EL_TD:750,DART:3,TM:G(100,25),TT:G(300,25)},
+   src:'https://www.polymerupdate.com/IndianProdcuerSpecification/Haldia_Petrochemicals_Ltd_HPL/LLDPE/LLDPE_Film/LLDPE71602S.pdf', srcName:'HPL TDS (2019)', note:'Comonomer not stated; butene assumed.'},
+  {id:'HMEL_F0120L', prod:'HPCL-Mittal Energy (HMEL)', brand:'Polysure', grade:'F0120L', origin:'India', ctry:'India', fam:'ZN', com:'C4', tech:'Unipol gas phase',
+   mi:'1.0', rho:0.920, t:25.4, bur:2.5, gap:1.8, use:'General packaging, multilayer, liners, FFS, heavy-duty bags',
+   d:{Y_MD:9,Y_TD:10,TS_MD:37,TS_TD:27,EL_MD:580,EL_TD:690,DART:3.5,TM:6.7,TT:12.6},
+   src:'https://insights.viztaar.com/wp-content/uploads/2023/11/POLYMERS_LLDPE_FILM_HMEL-F0120L.pdf', srcName:'HMEL provisional TDS, copy on Viztaar'},
+  {id:'HMEL_F0218L', prod:'HPCL-Mittal Energy (HMEL)', brand:'Polysure', grade:'F0218L', origin:'India', ctry:'India', fam:'ZN', com:'C4', tech:'Unipol gas phase',
+   mi:'2.0', rho:0.918, t:25.4, bur:2.5, gap:1.8, use:'Liners, air-bubble film, stretch wrap, lamination (no slip/AB)',
+   d:{Y_MD:9,Y_TD:9,TS_MD:29,TS_TD:22,EL_MD:650,EL_TD:760,DART:2.7,TM:5.3,TT:15.2},
+   src:'https://insights.viztaar.com/wp-content/uploads/2023/11/POLYMERS_LLDPE_FILM_HMEL_F0218L-%E2%80%93-2MFI_NON_SLIP.pdf', srcName:'HMEL provisional TDS (May 2021), copy on Viztaar'},
+  {id:'IOCL_010F18A', prod:'Indian Oil (IOCL)', brand:'Propel', grade:'010F18A', origin:'India', ctry:'India', fam:'ZN', com:'C4?', tech:'Sclairtech solution',
+   mi:'0.9', rho:0.918, t:40, bur:2.5, gap:null, use:'Lamination, coextrusion, stretch cling, mulch (no slip/AB)',
+   d:{Y_MD:13,Y_TD:12,TS_MD:39,TS_TD:30,EL_MD:700,EL_TD:850,DART:3.5,TM:3.3,TT:10.2},
+   src:'https://instamine.in/010f18a.html', srcName:'IOCL data via Instamine', note:'Test gauge and BUR not given (40 µm, 2.5 assumed). Comonomer not stated; butene assumed.'},
+  {id:'OPAL_F2001A', prod:'ONGC Petro additions (OPaL)', brand:'OPaLene', grade:'F2001A', origin:'India', ctry:'India', fam:'ZN', com:'C4', tech:'Innovene gas phase',
+   mi:'0.9', rho:0.918, t:40, bur:2.25, gap:1.8, use:'Coextrusion, lamination, drip laterals, agricultural film (no slip/AB)',
+   d:{Y_MD:11,Y_TD:12,TS_MD:44,TS_TD:40,EL_MD:600,EL_TD:800,DART:3.5,TM:3.3,TT:10.3},
+   src:'https://insights.viztaar.com/wp-content/uploads/2023/11/Polymers_LLDPE_LL_FILM-OPAL_F2001A.pdf', srcName:'OPaL provisional TDS, copy on Viztaar'},
+  {id:'OPAL_F2002A', prod:'ONGC Petro additions (OPaL)', brand:'OPaLene', grade:'F2002A', origin:'India', ctry:'India', fam:'ZN', com:'C4', tech:'Innovene gas phase',
+   mi:'2.0', rho:0.920, t:40, bur:2.25, gap:1.8, use:'Stretch and cling film, air-bubble film (no slip/AB)',
+   d:{TS_MD:35,TS_TD:30,EL_MD:800,EL_TD:750,DART:3,TM:3.25,TT:7.5},
+   src:'https://instamine.in/f2002a.html', srcName:'OPaL data via Instamine', note:'Test conditions taken as for F2001A (40 µm, BUR 2.25).'},
+  // ------------------------------------------------ Imported grades traded in India
+  {id:'SABIC_218W', prod:'SABIC', brand:'SABIC LLDPE', grade:'218W / 218WJ', origin:'Imported', ctry:'Saudi Arabia', fam:'ZN', com:'C4', tech:'Gas phase',
+   mi:'2.0', rho:0.918, t:30, bur:2.5, gap:null, use:'General packaging, liners, carrier bags (slip/AB)',
+   d:{E_MD:220,E_TD:260,Y_MD:12,Y_TD:10,TS_MD:35,TS_TD:29,EL_MD:700,EL_TD:750,DART:G(85,30),TM:G(130,30),TT:G(320,30)},
+   src:'https://salesplastics.com/wp-content/uploads/2025/06/SABIC-SABIC%C2%AE-218WJ.pdf', srcName:'SABIC 218WJ TDS, distributor copy', note:'Dart printed as “85 g/µm” in the copy; 85 g at 30 µm is taken.'},
+  {id:'EQUATE_EFDA7047', prod:'EQUATE', brand:'EQUATE PE', grade:'EFDA-7047', origin:'Imported', ctry:'Kuwait', fam:'ZN', com:'C4', tech:'',
+   mi:'1.0', rho:0.918, t:25, bur:2.0, gap:null, use:'Industrial liners, blown stretch wrap, heavy-duty film (no slip/AB)',
+   d:{E_MD:193,E_TD:221,TS_MD:34,TS_TD:26,DART:G(100,25),TM:NMM(35),TT:NMM(135)},
+   src:'https://www.polydisteurope.com/assets/uploads/files/EFDA_7047.pdf', srcName:'EQUATE TDS, distributor copy'},
+  {id:'BOROUGE_FB2230', prod:'Borouge', brand:'Borstar', grade:'FB2230', origin:'Imported', ctry:'UAE', fam:'ZN', com:'C4?', tech:'Borstar bimodal',
+   mi:'0.95 (5 kg)', rho:0.923, t:40, bur:3.0, gap:1.4, use:'Heavy-duty sacks, agricultural film, coextrusion',
+   d:{E_MD:280,E_TD:370,TS_MD:55,TS_TD:45,EL_MD:510,EL_TD:750,DART:G(250,40),TM:NMM(46),TT:NMM(220)},
+   src:'https://www.borealisgroup.com/storage/Datasheets/FB2230-PDS-REG_WORLD-EN-V16-PDS-WORLD-25548-PDS_BORSTAR-FB2230_16_01122023.pdf', srcName:'Borealis PDS Ed. 16 (2023)', note:'ISO tests (modulus ISO 527-3, dart ISO 7765-1). Frost line 3.5 DD. Bimodal: treated as a ZN family member in the excess terms. Older Borouge sheet lists dart 600 g and tear 4/8 N.'},
+  {id:'QAPCO_FD0474', prod:'QAPCO', brand:'Lotrène', grade:'FD0474', origin:'Imported', ctry:'Qatar', fam:'LD', com:'—', tech:'High pressure',
+   mi:'4.0', rho:0.923, t:40, bur:2.5, gap:1.56, use:'High-clarity film: garments, display, bread bags (slip/AB)',
+   d:{Y_MD:11,Y_TD:11,TS_MD:23,TS_TD:20,EL_MD:335,EL_TD:610,DART:G(90,40),TM:NMM(75),TT:NMM(40)},
+   src:'https://qapco.com/storage/2023/04/Lotrène-FD0474-1.pdf', srcName:'QAPCO TDS, Apr 2023'},
+  {id:'LYB_2420F', prod:'LyondellBasell', brand:'Lupolen', grade:'2420F', origin:'Imported', ctry:'Europe', fam:'LD', com:'—', tech:'High pressure tubular',
+   mi:'0.75', rho:0.923, t:50, bur:2.5, gap:null, use:'Shrink, liner, agricultural and food film; LLDPE blending (no additives)',
+   d:{TS_MD:26,TS_TD:24,EL_MD:300,EL_TD:600,DART:G(150,50)},
+   src:'https://www.lyondellbasell.com/en/polymers/p/Lupolen-2420F/61e46490-ed79-4c71-bd7a-35125886bb3a', srcName:'LyondellBasell product page', note:'BUR not stated (2.5 assumed). Listed modulus 260 MPa and yield 11 MPa are moulded-specimen values, not used.'},
+  {id:'XOM_XP8656', prod:'ExxonMobil', brand:'Exceed XP', grade:'8656ML (Exceed Tough+ m 0516.ML)', origin:'Imported', ctry:'USA / Singapore', fam:'M', com:'C6', tech:'Metallocene',
+   mi:'0.5', rho:0.916, t:25.4, bur:2.5, gap:null, use:'Extreme toughness: liquid packaging, heavy-duty sacks, agricultural film',
+   d:{E_MD:180,E_TD:200,TS_MD:70,TS_TD:50,EL_MD:280,EL_TD:630,DART:G(660,25.4),TM:G(680,25.4),TT:G(680,25.4)},
+   src:'https://www.exxonmobilchemical.com/-/media/media-assets/media-library-assets/16/performance_pe_product_finder_row_en.pdf', srcName:'ExxonMobil product finder', note:'Finder data at 1 mil; BUR not stated there (the grade datasheet uses 2.5).'},
+  {id:'XOM_ENABLE2010', prod:'ExxonMobil', brand:'Enable', grade:'2010 series', origin:'Imported', ctry:'USA / Singapore', fam:'M', com:'C6', tech:'Metallocene, long-chain branched',
+   mi:'1.0', rho:0.920, t:25.4, bur:2.5, gap:null, use:'Easy-processing mPE: FFS, lamination, shrink, LDPE replacement',
+   d:{E_MD:200,E_TD:230,TS_MD:50,TS_TD:50,EL_MD:510,EL_TD:720,DART:G(180,25.4),TM:G(130,25.4),TT:G(550,25.4)},
+   src:'https://www.exxonmobilchemical.com/-/media/media-assets/media-library-assets/16/performance_pe_product_finder_row_en.pdf', srcName:'ExxonMobil product finder', note:'BUR not stated (2.5 assumed). Behaves partly like LDPE in blends; the model treats it as mLLDPE.'},
+  {id:'DOW_ELITE5400G', prod:'Dow', brand:'ELITE', grade:'5400G', origin:'Imported', ctry:'USA', fam:'M', com:'C8?', tech:'INSITE single-site',
+   mi:'1.0', rho:0.916, t:25, bur:2.5, gap:1.8, use:'Food and specialty packaging, sealant layers',
+   d:{E_MD:218,E_TD:251,Y_MD:10.4,Y_TD:10.5,TS_MD:38.5,TS_TD:36.3,EL_MD:450,EL_TD:630,TM:G(280,25),TT:G(600,25)},
+   src:'https://russianpolymer.com/pdf/IIGk8O_ELITE-5400G.pdf', srcName:'Dow TDS, distributor copy', note:'Dart is reported by Method B (470 g), which is not comparable with Method A, so the family value is used. Comonomer not stated; octene assumed.'},
+  {id:'CPC_D143', prod:'Chevron Phillips', brand:'Marlex mPACT', grade:'D143', origin:'Imported', ctry:'USA', fam:'M', com:'C6', tech:'Metallocene',
+   mi:'1.4', rho:0.916, t:25, bur:2.5, gap:2.0, use:'Seal layers, clarity packaging, heavy-duty packaging',
+   d:{E_MD:152,E_TD:157,Y_MD:11.7,Y_TD:10,TS_MD:69.6,TS_TD:52.4,EL_MD:520,EL_TD:600,DART:G(800,25),TM:G(240,25),TT:G(420,25)},
+   src:'https://www.sushengpolymer.com/plasmain/hmSrDd_mPact-D143/', srcName:'CPChem TDS, distributor copy', note:'Dart reported as >800 g; 800 g used (a lower bound).'},
+  {id:'XOM_HTA108', prod:'ExxonMobil', brand:'ExxonMobil HDPE', grade:'HTA 108 (HD 6207FL)', origin:'Imported', ctry:'USA', fam:'HD', com:'—', tech:'Homopolymer',
+   mi:'0.70', rho:0.961, t:25, bur:2.5, gap:null, use:'Stiffness and barrier in coextrusion or LLDPE blends',
+   d:{E_MD:1200,E_TD:1700,TS_MD:60,TS_TD:31,EL_MD:510,EL_TD:2,DART:G(30,25),TM:G(10,25),TT:G(200,25)},
+   src:'https://exxonmobilchemical.com/en/chemicals/webapi/dps/v1/datasheets/150000000403/0/en', srcName:'ExxonMobil datasheet', note:'Pocket-blown film: TD is brittle (2 % elongation). Dart <30 g; 30 g used (an upper bound). Use only as a minor blend or coex component.'},
+  {id:'SABIC_F00952', prod:'SABIC', brand:'SABIC HDPE', grade:'F00952', origin:'Imported', ctry:'Saudi Arabia', fam:'HD', com:'—', tech:'HMW copolymer',
+   mi:'0.05 (I21 9)', rho:0.952, t:15, bur:4, gap:null, use:'HM-HDPE: grocery and shopping bags, sack liners',
+   d:{E_MD:1250,E_TD:1500,Y_TD:31,TS_MD:60,TS_TD:56,EL_MD:400,EL_TD:550,DART:G(180,15),TM:G(12,15),TT:G(60,15)},
+   src:'https://www.chemategroup.com/wp-content/uploads/2023/05/SABIC®-HDPE-F00952-TDS.pdf', srcName:'SABIC TDS, distributor copy', note:'Modulus and TD yield are from the TNPP-free twin FJ00952.'}
+  ];
+
+  const PROPS = ['E_MD','E_TD','Y_MD','Y_TD','TS_MD','TS_TD','EL_MD','EL_TD','DART','TM','TT'];
+  // Reference resin (in the base library) used to fill gaps, by family and comonomer
+  function tplKey(g){
+    if (g.fam==='LD') return 'LDPE';
+    if (g.fam==='HD') return 'HDPE';
+    if (g.fam==='M') return 'MLL';
+    const c = String(g.com);
+    if (c.indexOf('C8')===0) return 'C8';
+    if (c.indexOf('C6')===0) return 'C6';
+    return 'C4';
+  }
+  // Modulus and yield scale with density: +5 % per 0.001 g/cm3 against the reference resin (clamped)
+  function rhoFactor(rho, rho0){ return Math.max(0.6, Math.min(1.5, 1 + 50*(rho - rho0))); }
+
+  function toResin(g, base){
+    const tk = tplKey(g), T = base[tk];
+    const r = {name: g.prod.replace(/ \(.*\)/,'')+' '+g.grade.split(' ')[0], family: g.fam,
+      grade: g.prod+' '+g.brand+' '+g.grade+' (MI '+g.mi+', '+g.rho.toFixed(3)+'; '+g.origin+(g.origin==='Imported'?', '+g.ctry:'')+')',
+      rho: g.rho, t: g.t, bur: g.bur, src: g.src, gradeId: g.id, tpl: tk, filled: []};
+    const fr = rhoFactor(g.rho, T.rho);
+    PROPS.forEach(p=>{
+      if (g.d[p] !== undefined) r[p] = g.d[p];
+      else { r[p] = (/^(E|Y)_/.test(p)) ? +(T[p]*fr).toFixed(p[0]==='E'?0:1) : T[p]; r.filled.push(p); }
+    });
+    return r;
+  }
+
+  const API = {VERSION:'1.0.0', RAW, PROPS, tplKey, rhoFactor, toResin};
+  if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.BFM_GRADES = API;
+})(typeof window !== 'undefined' ? window : this);
+
 </script>
 <script>
 (function(){
 'use strict';
-const APPV='1.3.0';
+const APPV='1.4.0';
 document.getElementById('ver').textContent='v'+APPV+' · model '+BFM.VERSION;
 const P=BFM.PROPS, PI=BFM.PROP_INFO;
 let LIB=BFM.clone(BFM.RESINS), EXC=BFM.clone(BFM.EXCESS), EXP={};
@@ -736,6 +934,7 @@ function run(st){const on=st.procOn!==undefined?st.procOn:PROC.on;
  return BFM.structureProps(st.layers,st.thick,Object.assign(opts(),{bur:st.bur}));}
 
 function calc(){
+ ensurePrices();
  ST.layers.forEach((L,i)=>{const s=Object.values(L.recipe).reduce((a,c)=>a+(+c||0),0);const e=$('sum'+i);if(e){e.textContent='Σ '+f(s,1)+' %';e.classList.toggle('bad',Math.abs(s-100)>0.05);}});
  const r=run(ST);
  $('gsm').textContent=f(r.gsm,1)+' g/m² · ρ '+f(r.rho,3)+' g/cm³';
@@ -953,9 +1152,68 @@ function drawLib(){
  $('exctab').innerHTML=e+'</tbody></table><p class="note">Families: ZN = Ziegler–Natta LLDPE (C4/C6/C8), M = mLLDPE, LD = LDPE, HD = HDPE.</p>';
  $('exctab').querySelectorAll('input').forEach(i=>i.onchange=()=>{EXC[i.dataset.pr][i.dataset.p][+i.dataset.j]=+i.value;saveLib();calc();});
 }
-$('btnReset').onclick=()=>{LIB=BFM.clone(BFM.RESINS);EXC=BFM.clone(BFM.EXCESS);P.forEach(p=>EXP[p]=PI[p].m);try{localStorage.removeItem(STORE);}catch(e){}drawLib();calc();};
+$('btnReset').onclick=()=>{const keep=Object.keys(LIB).filter(k=>LIB[k].gradeId);LIB=BFM.clone(BFM.RESINS);keep.forEach(k=>{const g=GDB.RAW.find(x=>x.id===LIB_ID(k));if(g)LIB[k]=GDB.toResin(g,BFM.RESINS);});EXC=BFM.clone(BFM.EXCESS);P.forEach(p=>EXP[p]=PI[p].m);try{localStorage.removeItem(STORE);}catch(e){}if(keep.length)saveLib();drawLib();calc();if(typeof drawGrades==='function')drawGrades();};
+
+// ---------- grade database ----------
+const GDB=window.BFM_GRADES, GK=id=>'G_'+id, LIB_ID=k=>k.replace(/^G_/,'');
+const GFAM={ZN:'LLDPE',M:'mLLDPE',LD:'LDPE',HD:'HDPE'};
+function ensurePrices(){for(const k in LIB){if(PRICES[k]===undefined){const t=LIB[k].tpl;PRICES[k]=PRICES[t]!==undefined?PRICES[t]:(BFM.PRICES[t]||120);}}}
+const GROWS=GDB.RAW.map(g=>({g,r:GDB.toResin(g,BFM.RESINS)}));
+let GSORT={k:'',dir:1},GSEL='';
+$('gProd').innerHTML='<option value="">All</option>'+[...new Set(GDB.RAW.map(g=>g.prod))].map(p=>`<option>${p}</option>`).join('');
+const gv=(x,p,d)=>x.r.filled.includes(p)?`<span class="est" title="Not on datasheet: family reference value">≈${f(x.r[p],d)}</span>`:f(x.r[p],d);
+const GCOLS=[['add','',null],['prod','Producer','prod'],['grade','Grade','grade'],['orig','Origin','origin'],['type','Type','type'],['mi','MI','mi'],['rho','ρ g/cm³','rho'],['film','Test film','t'],
+ ['TS','Break MD/TD MPa','TS_MD'],['E','1 % sec. MD/TD MPa','E_MD'],['DART','Dart g/µm','DART'],['TEAR','Tear MD/TD g/µm','TM'],['cov','Data','cov'],['use','Typical use',null]];
+function gFiltered(){const o=$('gOrig').value,fm=$('gFam').value,pr=$('gProd').value,q=$('gQ').value.trim().toLowerCase();
+ let rows=GROWS.filter(x=>(!o||x.g.origin===o)&&(!fm||x.g.fam===fm)&&(!pr||x.g.prod===pr)&&(!q||(x.g.prod+' '+x.g.brand+' '+x.g.grade+' '+x.g.use+' '+x.g.ctry+' '+x.g.com).toLowerCase().includes(q)));
+ if(GSORT.k){const kv=x=>{const k=GSORT.k;if(k==='prod')return x.g.prod+x.g.grade;if(k==='grade')return x.g.grade;if(k==='origin')return x.g.origin+x.g.ctry;if(k==='type')return x.g.fam+x.g.com;if(k==='mi')return parseFloat(x.g.mi);if(k==='rho')return x.g.rho;if(k==='t')return x.g.t;if(k==='cov')return 11-x.r.filled.length;return x.r[k];};
+  rows=rows.slice().sort((a,b)=>{const A=kv(a),B=kv(b);return (A>B?1:A<B?-1:0)*GSORT.dir;});}
+ return rows;}
+function drawGrades(){const rows=gFiltered();
+ let h='<table class="res"><thead><tr>'+GCOLS.map(([k,n,s])=>`<th class="${['prod','grade','orig','type','use'].includes(k)?'l':''}" ${s?`data-k="${s}"`:''}>${n}${GSORT.k===s&&s?(GSORT.dir>0?' ▲':' ▼'):''}</th>`).join('')+'</tr></thead><tbody>';
+ rows.forEach(x=>{const g=x.g,inLib=!!LIB[GK(g.id)];
+  h+=`<tr class="${GSEL===g.id?'sel':''}"><td>${inLib?'<span title="In the resin library">✓ in library</span>':`<button class="gadd" data-id="${g.id}">Add</button>`}</td><td class="l">${g.prod}</td><td class="l"><span class="gname" data-id="${g.id}">${g.brand} ${g.grade}</span></td>
+  <td class="l"><span class="badge ${g.origin==='India'?'in':'im'}">${g.origin==='India'?'India':'Import · '+g.ctry}</span></td><td class="l">${GFAM[g.fam]}${g.com!=='—'?' '+g.com:''}</td><td>${g.mi}</td><td>${g.rho.toFixed(3)}</td><td>${g.t} µm · ${g.bur}</td>
+  <td>${gv(x,'TS_MD',0)} / ${gv(x,'TS_TD',0)}</td><td>${gv(x,'E_MD',0)} / ${gv(x,'E_TD',0)}</td><td>${gv(x,'DART',1)}</td><td>${gv(x,'TM',1)} / ${gv(x,'TT',1)}</td><td>${11-x.r.filled.length}/11</td><td class="use">${g.use}</td></tr>`;});
+ h+='</tbody></table>';$('gtab').innerHTML=rows.length?h:'<p class="note" style="padding:10px">No grades match these filters.</p>';
+ $('gtab').querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{GSORT.dir=(GSORT.k===th.dataset.k)?-GSORT.dir:1;GSORT.k=th.dataset.k;drawGrades();});
+ $('gtab').querySelectorAll('.gadd').forEach(b=>b.onclick=()=>{addGrade(b.dataset.id);gmsg('Added '+GROWS.find(x=>x.g.id===b.dataset.id).r.name+' to the resin library.');});
+ $('gtab').querySelectorAll('.gname').forEach(s=>s.onclick=()=>{GSEL=s.dataset.id;drawGrades();drawGradeDetail();$('gdet').scrollIntoView({behavior:'smooth',block:'nearest'});});
+}
+function gmsg(t){$('gMsg').textContent=t;clearTimeout(gmsg.h);gmsg.h=setTimeout(()=>$('gMsg').textContent='',4000);}
+function refreshAfterLib(){saveLib();ensurePrices();saveCost();drawLib();drawLayers();drawCostSettings();calc();drawGrades();if(GSEL)drawGradeDetail();}
+function addGrade(id,quiet){const x=GROWS.find(y=>y.g.id===id);if(!x||LIB[GK(id)])return false;LIB[GK(id)]=BFM.clone(x.r);if(!quiet)refreshAfterLib();return true;}
+function usedInST(k){return ST.layers.some(L=>L.recipe[k]!==undefined);}
+function removeGrade(id){const k=GK(id);if(usedInST(k)){gmsg('This grade is used in the current structure; remove it from the layers first.');return;}delete LIB[k];delete PRICES[k];refreshAfterLib();gmsg('Removed from the resin library.');}
+function swapGrade(id){const x=GROWS.find(y=>y.g.id===id),k=GK(id),t=x.r.tpl;addGrade(id,true);let n=0;
+ ST.layers.forEach(L=>{if(L.recipe[t]!==undefined){L.recipe[k]=(L.recipe[k]||0)+L.recipe[t];delete L.recipe[t];n++;}});
+ refreshAfterLib();gmsg(n?`Replaced ${BFM.RESINS[t].name} with ${x.r.name} in ${n} layer(s). See the first tab.`:`The current structure has no ${BFM.RESINS[t].name}; the grade was added to the library only.`);}
+function drawGradeDetail(){const x=GROWS.find(y=>y.g.id===GSEL);if(!x){$('gdet').style.display='none';return;}const g=x.g,r=x.r,inLib=!!LIB[GK(g.id)];
+ const PL={E_MD:['1 % secant modulus MD','MPa',0],E_TD:['1 % secant modulus TD','MPa',0],Y_MD:['Yield MD','MPa',1],Y_TD:['Yield TD','MPa',1],TS_MD:['Break strength MD','MPa',1],TS_TD:['Break strength TD','MPa',1],EL_MD:['Elongation MD','%',0],EL_TD:['Elongation TD','%',0],DART:['Dart impact (F50, A)','g/µm',2],TM:['Elmendorf tear MD','g/µm',2],TT:['Elmendorf tear TD','g/µm',2]};
+ let h=`<h2>${g.prod} — ${g.brand} ${g.grade} <span class="badge ${g.origin==='India'?'in':'im'}">${g.origin==='India'?'Made in India':'Imported from '+g.ctry}</span></h2>
+ <div class="kv"><div><b>Type</b>: ${GFAM[g.fam]}${g.com!=='—'?', comonomer '+g.com.replace('?',' (assumed)'):''}${g.tech?' · '+g.tech:''}</div><div><b>MI</b>: ${g.mi} g/10 min</div><div><b>Density</b>: ${g.rho.toFixed(3)} g/cm³</div>
+ <div><b>Test film</b>: ${g.t} µm, BUR ${g.bur}${g.gap?', die gap '+g.gap+' mm':''}</div><div><b>Gap-fill reference</b>: ${BFM.RESINS[r.tpl].name} (${BFM.RESINS[r.tpl].grade.split(' (')[0]})</div><div><b>Typical use</b>: ${g.use}</div></div>
+ <table class="res" style="width:auto;margin-top:10px"><thead><tr><th>Property</th><th>Value</th><th>Unit</th><th>At test gauge</th><th>Basis</th></tr></thead><tbody>`+
+ GDB.PROPS.map(p=>{const fl=r.filled.includes(p),v=r[p],gauge=['DART','TM','TT'].includes(p)?f(v*g.t,0)+' g':'';return `<tr><td>${PL[p][0]}</td><td>${fl?'<span class="est">≈'+f(v,PL[p][2])+'</span>':f(v,PL[p][2])}</td><td>${PL[p][1]}</td><td>${gauge}</td><td style="text-align:left">${fl?'<span class="est">family reference</span>':'datasheet'}</td></tr>`;}).join('')+'</tbody></table>';
+ if(g.note)h+=`<p class="note"><b>Note:</b> ${g.note}</p>`;
+ h+=`<p class="note"><b>Source:</b> <a href="${g.src}" target="_blank" rel="noopener">${g.srcName}</a> (checked Nov 2026).</p><div class="row">`+
+  (inLib?`<span>✓ In the resin library as “${r.name}”.</span> <button id="gRem">Remove from library</button>`:`<button class="pri" id="gAdd1">Add to resin library</button>`)+
+  ` <button id="gSwap" title="Replaces the family reference resin in every layer of the current structure">Swap into current structure (replaces ${BFM.RESINS[r.tpl].name})</button></div>`;
+ const el=$('gdet');el.innerHTML=h;el.style.display='block';
+ if($('gAdd1'))$('gAdd1').onclick=()=>{addGrade(g.id);gmsg('Added.');};
+ if($('gRem'))$('gRem').onclick=()=>removeGrade(g.id);
+ $('gSwap').onclick=()=>swapGrade(g.id);
+}
+['gOrig','gFam','gProd'].forEach(id=>$(id).onchange=drawGrades);$('gQ').oninput=drawGrades;
+$('gAddAll').onclick=()=>{let n=0;gFiltered().forEach(x=>{if(addGrade(x.g.id,true))n++;});refreshAfterLib();gmsg(n?n+' grade(s) added to the resin library.':'All shown grades are already in the library.');};
+$('gCsv').onclick=()=>{const hd=['Producer','Brand','Grade','Origin','Country','Type','Comonomer','Technology','MI','Density','Test gauge um','Test BUR','Die gap mm'].concat(GDB.PROPS.map(p=>p+(['DART','TM','TT'].includes(p)?' (g/um)':''))).concat(['Filled from family','Use','Source','Note']);
+ const q=v=>{const s=String(v===undefined||v===null?'':v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+ const t=[hd.join(',')].concat(gFiltered().map(x=>{const g=x.g;return [g.prod,g.brand,g.grade,g.origin,g.ctry,GFAM[g.fam],g.com,g.tech,g.mi,g.rho,g.t,g.bur,g.gap||''].concat(GDB.PROPS.map(p=>+x.r[p].toFixed(3))).concat([x.r.filled.join(' '),g.use,g.src,g.note||'']).map(q).join(',');})).join('\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='pe_film_grades_india.csv';a.click();};
+document.querySelector('nav.tabs button[data-t=t8]').addEventListener('click',drawGrades);
 
 drawLayers();drawLib();drawCostSettings();loadPreset('S1 Liquid-pack (milk-pouch type), 55 µm');
+drawGrades();
 })();
 </script>
 </body>

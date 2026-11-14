@@ -2,10 +2,10 @@
 <!--
 TOOL: Blown Film Mixture Calculator
 FAMILY: blown-film-mechanics
-VERSION: 1.1.1
-DATE: 2026-11-13
+VERSION: 1.2.0
+DATE: 2026-11-14
 CHAT: Paper 02 - Mechanical properties of blown PE films by method of mixtures
-CHANGES: 1.1.1 - Method notes link to the published Technical Paper No. 02 | 1.1.0 - Cost components: editable resin/MB prices and conversion inputs, cost build-up per kg and per m2, cost outputs in combination tables | 1.0.1 - Symmetric-skin option for sweeps; chart tick decimals follow range; compact grid tables | 1.0.0 - First release: 1-3 layer recipes, blend + layer mixture model, bounds, flags, combination tables (1 or 2 variables), CSV export, editable library
+CHANGES: 1.2.0 - 26 industry recipes in groups (dairy, lamination, shrink/stretch, heavy duty, bags) with use notes and sources; new Recipe library tab comparing all recipes, sortable, with CSV export | 1.1.1 - Method notes link to the published Technical Paper No. 02 | 1.1.0 - Cost components: editable resin/MB prices and conversion inputs, cost build-up per kg and per m2, cost outputs in combination tables | 1.0.1 - Symmetric-skin option for sweeps; chart tick decimals follow range; compact grid tables | 1.0.0 - First release: 1-3 layer recipes, blend + layer mixture model, bounds, flags, combination tables (1 or 2 variables), CSV export, editable library
 STATUS: Companion tool to Technical Paper 02
 -->
 <html lang="en">
@@ -66,6 +66,7 @@ table.res thead th{background:#f1f0eb;color:var(--ink2);font-weight:600;position
 .pill{display:inline-block;border-radius:10px;padding:1px 8px;font-size:11px;background:#e9f1fb;color:#1c5aa6;margin-left:6px}
 .lib input[type=number]{width:72px}
 #convtab input[type=number]{width:120px}
+#reclib td:nth-child(2),#reclib th:nth-child(2){text-align:left;white-space:normal;min-width:260px}
 .mono{font-family:Consolas,monospace;font-size:12px}
 @media print{header,nav.tabs,button,.noprint{display:none!important}.tab{display:block!important}.card{break-inside:avoid}}
 </style>
@@ -79,6 +80,7 @@ table.res thead th{background:#f1f0eb;color:var(--ink2);font-weight:600;position
 <nav class="tabs">
   <button data-t="t1" class="on">Structure &amp; results</button>
   <button data-t="t2">Combination tables</button>
+  <button data-t="t6">Recipe library</button>
   <button data-t="t5">Cost settings</button>
   <button data-t="t3">Resin library</button>
   <button data-t="t4">Method notes</button>
@@ -91,11 +93,12 @@ table.res thead th{background:#f1f0eb;color:var(--ink2);font-weight:600;position
    <div class="card">
     <h2>Film structure</h2>
     <div class="row">
-     <label class="f">Preset<select id="preset"></select></label>
+     <label class="f">Recipe (industry presets)<select id="preset" style="max-width:340px"></select></label>
      <label class="f">Total gauge (µm)<input type="number" id="thick" value="55" min="5" max="400" step="1"></label>
      <label class="f">BUR<input type="number" id="bur" value="2.5" min="1" max="6" step="0.1"></label>
      <label class="f">Layers<select id="nl"><option value="1">1 (mono)</option><option value="2">2</option><option value="3" selected>3</option></select></label>
     </div>
+    <div id="presetNote" class="note" style="margin:0 0 10px;background:#f1f0eb;border-radius:6px;padding:7px 10px;display:none"></div>
     <div id="layers"></div>
     <p class="note">Enter each layer as wt % of polymers and masterbatches; carriers of masterbatches are counted automatically. Layer ratio is by thickness.</p>
    </div>
@@ -126,6 +129,16 @@ table.res thead th{background:#f1f0eb;color:var(--ink2);font-weight:600;position
   </div>
  </div>
  <div class="card"><h2 id="ctTitle">Result</h2><div id="ctNote" class="note"></div><div class="chartbox" id="chartbox"></div><div id="ctable"></div></div>
+</section>
+
+<!-- TAB 6 -->
+<section class="tab" id="t6">
+ <div class="card">
+  <h2>Recipe library — common flexible-packaging films</h2>
+  <p class="note">Every preset recipe, computed with the current resin library, prices and conversion inputs. Click a column heading to sort; click Load to open a recipe on the first tab. Dart and tear are the central estimates in grams at each recipe's own gauge. Recipes are typical starting points, not any converter's specification.</p>
+  <div class="row" style="margin-bottom:8px"><label class="f">Group<select id="libGroup"></select></label><button id="btnLibCsv">Export CSV</button></div>
+  <div class="scroll" id="reclib" style="max-height:640px"></div>
+ </div>
 </section>
 
 <!-- TAB 5 -->
@@ -164,6 +177,8 @@ table.res thead th{background:#f1f0eb;color:var(--ink2);font-weight:600;position
   <p>Density is exact: specific volumes add. Fillers: modulus × (1 + 2.5φ + 14.1φ²) (Guth); yield, break strength and elongation × (1 − 1.21φ<sup>2/3</sup>) (Nicolais–Narkis, no adhesion, a lower bound). Dart and tear are not corrected for filler.</p>
   <h3>Level 2 — layers in the coextruded film</h3>
   <p>Layers are strained together in the film plane, so modulus and strengths add by thickness fraction (iso-strain). Fracture properties do not add: dart and tear are reported between the inverse (series) and linear (parallel) bounds, with the thickness-weighted log mean as the central value.</p>
+  <h3>Recipes</h3>
+  <p>The recipe presets are typical industry starting points for each application, built only from this tool's resin and masterbatch library (no tackifiers, carbon black, UV stabilisers or barrier layers). The basis of each is shown when it is loaded. Replace them with your own recipes and resin data before using the numbers.</p>
   <h3>Cost</h3>
   <p>Material cost of a layer is the wt %-weighted price of its ingredients (masterbatch priced as supplied). Film material cost weights layers by mass (thickness × density). Net waste cost = material × w/(1−w) − scrap credit × w/(1−w). Conversion = specific energy × tariff + labour per hour ÷ output + (straight-line depreciation + interest on half the line cost) ÷ running hours ÷ output + overheads + packing. Rs/m² = Rs/kg × grammage. All prices are indicative and ex-GST.</p>
   <h3>Why the method fails</h3>
@@ -422,7 +437,7 @@ CHANGES: 1.1.0 - Cost model: resin/MB prices, waste and scrap credit, conversion
 <script>
 (function(){
 'use strict';
-const APPV='1.1.1';
+const APPV='1.2.0';
 document.getElementById('ver').textContent='v'+APPV+' · model '+BFM.VERSION;
 const P=BFM.PROPS, PI=BFM.PROP_INFO;
 let LIB=BFM.clone(BFM.RESINS), EXC=BFM.clone(BFM.EXCESS), EXP={};
@@ -437,13 +452,68 @@ const COMP=()=>Object.keys(LIB).map(k=>[k,LIB[k].name]).concat(Object.keys(BFM.A
 const cname=k=>LIB[k]?LIB[k].name:(BFM.ADDITIVES[k]?BFM.ADDITIVES[k].name:k);
 const f=(v,d)=>{if(!isFinite(v))return '–';d=(d===undefined)?(Math.abs(v)>=100?0:Math.abs(v)>=10?1:2):d;return v.toFixed(d);};
 
-const PRESETS={
- 'S1 Liquid-pack (milk-pouch type), 55 µm':{thick:55,bur:2.5,layers:[{name:'A outer',ratio:1,recipe:{C8:50,MLL:30,LDPE:20}},{name:'B core',ratio:2,recipe:{C4:70,LDPE:25,TIO2:5}},{name:'C inner',ratio:1,recipe:{C8:50,MLL:30,LDPE:20}}]},
- 'S2 Lamination sealant, stiff core, 40 µm':{thick:40,bur:2.5,layers:[{name:'A lam side',ratio:1,recipe:{C4:68,LDPE:30,AB:2}},{name:'B core',ratio:2,recipe:{C8:60,HDPE:30,LDPE:10}},{name:'C seal',ratio:1,recipe:{MLL:88,LDPE:10,SLIP:2}}]},
- 'S3 Heavy-duty FFS sack, 120 µm':{thick:120,bur:2.5,layers:[{name:'A outer',ratio:1,recipe:{C6:60,MLL:25,LDPE:15}},{name:'B core',ratio:3,recipe:{C6:50,HDPE:30,LDPE:10,CACO3:10}},{name:'C inner',ratio:1,recipe:{C6:60,MLL:25,LDPE:15}}]},
- 'Mono C8-LLDPE + 20 % LDPE, 25 µm':{thick:25,bur:2.5,layers:[{name:'Mono',ratio:1,recipe:{C8:80,LDPE:20}}]},
- 'Mono mLLDPE + 10 % LDPE, 25 µm':{thick:25,bur:2.5,layers:[{name:'Mono',ratio:1,recipe:{MLL:90,LDPE:10}}]}
-};
+const L3=(a,b,c,r)=>[{name:'A outer',ratio:r[0],recipe:a},{name:'B core',ratio:r[1],recipe:b},{name:'C inner',ratio:r[2],recipe:c}];
+const MONO=(a)=>[{name:'Mono',ratio:1,recipe:a}];
+const PRESET_LIB=[
+ // ---- Paper 02 worked structures ----
+ {g:'Paper 02 worked structures',n:'S1 Liquid-pack (milk-pouch type), 55 µm',thick:55,bur:2.5,use:'Worked example S1 of Technical Paper No. 02.',src:'Paper 02, Table 7',
+  layers:L3({C8:50,MLL:30,LDPE:20},{C4:70,LDPE:25,TIO2:5},{C8:50,MLL:30,LDPE:20},[1,2,1])},
+ {g:'Paper 02 worked structures',n:'S2 Lamination sealant, stiff core, 40 µm',thick:40,bur:2.5,use:'Worked example S2 of Technical Paper No. 02.',src:'Paper 02, Table 7',
+  layers:[{name:'A lam side',ratio:1,recipe:{C4:68,LDPE:30,AB:2}},{name:'B core',ratio:2,recipe:{C8:60,HDPE:30,LDPE:10}},{name:'C seal',ratio:1,recipe:{MLL:88,LDPE:10,SLIP:2}}]},
+ {g:'Paper 02 worked structures',n:'S3 Heavy-duty FFS sack, 120 µm',thick:120,bur:2.5,use:'Worked example S3 of Technical Paper No. 02.',src:'Paper 02, Table 7',
+  layers:L3({C6:60,MLL:25,LDPE:15},{C6:50,HDPE:30,LDPE:10,CACO3:10},{C6:60,MLL:25,LDPE:15},[1,3,1])},
+ // ---- Dairy and liquids ----
+ {g:'Dairy and liquids',n:'Milk pouch film, 3-layer white, 50 µm',thick:50,bur:2.5,use:'Pasteurised milk ½ L and 1 L pouches on vertical FFS machines. White core for light protection; mLLDPE in the skins for drop and leak resistance; slip on the sealing side.',src:'Typical Indian milk film 50–65 µm; IS 11805 covers LDPE/LLDPE milk pouches',
+  layers:L3({C4:55,MLL:25,LDPE:20},{C4:65,LDPE:25,TIO2:10},{C8:50,MLL:30,LDPE:18,SLIP:2},[1,2,1])},
+ {g:'Dairy and liquids',n:'Milk / curd pouch film, 3-layer white, 65 µm',thick:65,bur:2.5,use:'Heavier milk, curd and buttermilk pouches, or lines that need more drop margin. Same recipe as the 50 µm film at higher gauge.',src:'Typical Indian milk film 50–65 µm',
+  layers:L3({C4:55,MLL:25,LDPE:20},{C4:65,LDPE:25,TIO2:10},{C8:50,MLL:30,LDPE:18,SLIP:2},[1,2,1])},
+ {g:'Dairy and liquids',n:'Edible-oil pouch film (PE coex), 100 µm',thick:100,bur:2.2,use:'½–1 L edible-oil pouches without a barrier layer. HDPE in the core for stiffness on the FFS machine; mLLDPE-rich sealant to seal through oil contamination; slip only on the inner face.',src:'Mono-to-multilayer edible-oil film practice (Mamata, 2014)',
+  layers:L3({C8:60,MLL:30,LDPE:10},{C6:55,HDPE:20,LDPE:15,TIO2:10},{MLL:70,C8:20,LDPE:8,SLIP:2},[1,2,1])},
+ {g:'Dairy and liquids',n:'Drinking-water sachet film, mono, 70 µm',thick:70,bur:2.5,use:'Packaged drinking-water sachets (200–500 mL). Simple LLDPE/LDPE blend; clarity and seal through water splash matter more than very high toughness.',src:'General-purpose LLDPE/LDPE blend practice',
+  layers:MONO({C4:68,LDPE:30,SLIP:2})},
+ // ---- Lamination sealant films ----
+ {g:'Lamination sealant films',n:'General lamination film, mono, 40 µm (70/30)',thick:40,bur:2.5,use:'Sealant web laminated to printed PET or BOPP for general pouches. The 70 % LLDPE / 30 % LDPE "workhorse" blend balances bubble stability and toughness.',src:'SABIC formulation guidance: 70 % LLDPE + 30 % LDPE general-purpose and lamination webs',
+  layers:MONO({C4:68,LDPE:30,SLIP:1,AB:1})},
+ {g:'Lamination sealant films',n:'Snack / spice pouch sealant, 3-layer, 60 µm',thick:60,bur:2.5,use:'Sealant for PET/PE or BOPP/PE pouches. LDPE-rich lamination side bonds well after corona; small HDPE in the core adds stiffness; mLLDPE seal layer for low seal-initiation temperature and hot tack.',src:'Typical 3-layer lamination sealant practice',
+  layers:[{name:'A lam side',ratio:1,recipe:{C4:60,LDPE:40}},{name:'B core',ratio:2,recipe:{C4:70,LDPE:20,HDPE:10}},{name:'C seal',ratio:1,recipe:{MLL:60,C8:30,LDPE:8,SLIP:1,AB:1}}]},
+ {g:'Lamination sealant films',n:'Stand-up pouch sealant, stiff core, 100 µm',thick:100,bur:2.2,use:'Sealant for PET/PE stand-up pouches (detergent, pulses, pet food). 40 % HDPE in the core gives the stiffness that keeps the pouch standing; tough metallocene seal layer.',src:'Typical stand-up pouch sealant practice',
+  layers:[{name:'A lam side',ratio:1,recipe:{C4:70,LDPE:30}},{name:'B core',ratio:2,recipe:{C6:50,HDPE:40,LDPE:10}},{name:'C seal',ratio:1,recipe:{MLL:80,LDPE:15,SLIP:2,AB:3}}]},
+ {g:'Lamination sealant films',n:'Atta / rice 5–10 kg pack sealant, 120 µm',thick:120,bur:2.2,use:'Sealant for printed PET/PE bags of flour, rice and sugar. Thick, stiff HDPE/C6 core for drop and stacking; mLLDPE/C6 seal layer for seal strength with powder in the seal area.',src:'Typical heavy-duty lamination practice',
+  layers:L3({C6:70,LDPE:30},{C6:55,HDPE:35,LDPE:10},{MLL:60,C6:25,LDPE:13,SLIP:2},[1,3,1])},
+ // ---- Shrink and stretch ----
+ {g:'Shrink and stretch films',n:'Collation shrink film, mono, 50 µm (LDPE-rich)',thick:50,bur:3.0,use:'Shrink bundling of bottle and can packs. LDPE gives the shrink; LLDPE adds toughness and holding force. Real shrink films use a fractional-melt LDPE (MI ≈ 0.3); the library LDPE is MI 2, so stiffness and toughness are approximate.',src:'LLDPE/LDPE blends with 30–60 % LDPE are used for collation shrink (Savargaonkar et al., Plastics Technology 2014)',
+  layers:MONO({LDPE:70,C4:30})},
+ {g:'Shrink and stretch films',n:'Collation shrink film, 3-layer, 45 µm',thick:45,bur:3.0,use:'Down-gauged shrink bundling film. mLLDPE in the skins for puncture and clarity; LDPE-rich core for shrink, with some HDPE for holding force and cuttability.',src:'Shrink film practice: LDPE with LLDPE and/or HDPE (US 10,287,074 background)',
+  layers:L3({LDPE:60,MLL:40},{LDPE:70,HDPE:15,C4:15},{LDPE:60,MLL:40},[1,3,1])},
+ {g:'Shrink and stretch films',n:'Blown stretch (pallet) film, 3-layer, 23 µm',thick:23,bur:2.0,use:'Machine pallet wrap. Toughness from C6/C8 and mLLDPE; little LDPE. Real cling layers carry a tackifier (PIB) or a very-low-density resin, which this library does not contain.',src:'Typical blown stretch film practice; mPE recommended for stretch films (PTTGC)',
+  layers:L3({MLL:50,C8:50},{C6:70,MLL:25,LDPE:5},{MLL:50,C8:50},[1,3,1])},
+ // ---- Heavy duty ----
+ {g:'Heavy-duty films',n:'FFS heavy-duty sack, 25 kg, 150 µm',thick:150,bur:2.0,use:'Form-fill-seal sacks for fertiliser, polymer granules and chemicals. Metallocene skins with HDPE for toughness, stiffness and seal; HDPE/C6 core for creep and stacking.',src:'HDS practice: mLLDPE skins with ~10 % HDPE, tough mLLDPE-rich core (W&H / SABIC HDS recipe)',
+  layers:L3({MLL:70,HDPE:10,LDPE:20},{C6:45,MLL:20,HDPE:25,LDPE:10},{MLL:70,HDPE:10,LDPE:18,SLIP:2},[1,2,1])},
+ {g:'Heavy-duty films',n:'High-performance HDS film, mLLDPE-rich, 110 µm',thick:110,bur:1.9,use:'Down-gauged heavy-duty sack film after the published W&H / SABIC recipe: 90 % mLLDPE + 10 % HDPE skins and an mLLDPE core with white masterbatch. The original is 5-layer; shown here as 3 layers. Predicted dart is beyond the range of dart method A at this gauge; heavy sacks are judged by drop tests.',src:'W&H one-pager, Heavy Duty Sack Film (SABIC SUPEER), 110 µm, BUR 1.9',
+  layers:L3({MLL:90,HDPE:10},{MLL:91,TIO2:9},{MLL:90,HDPE:10},[15,46,15])},
+ {g:'Heavy-duty films',n:'Industrial / drum liner, mono, 100 µm',thick:100,bur:2.5,use:'Liners for drums, cartons and woven sacks. Low-cost C4 blend with a little HDPE for stiffness and LDPE for bubble stability.',src:'General liner practice',
+  layers:MONO({C4:70,LDPE:20,HDPE:10})},
+ // ---- Bags and general packaging ----
+ {g:'Bags and general packaging',n:'Garbage bag, filled, mono, 25 µm',thick:25,bur:3.0,use:'Low-cost refuse bags. HDPE for stiffness and tear direction; CaCO₃ masterbatch for cost; LLDPE for puncture. Filler effects on toughness are not predicted.',src:'General refuse-bag practice',
+  layers:MONO({C4:60,HDPE:20,CACO3:20})},
+ {g:'Bags and general packaging',n:'Carry bag, 3-layer, 120 µm (India PWM minimum)',thick:120,bur:3.0,use:'Reusable carry bags at the 120 µm minimum thickness that India’s Plastic Waste Management (Amendment) Rules 2021 require from 31 Dec 2022. HDPE/LLDPE skins; filled core for cost.',src:'Plastic Waste Management (Amendment) Rules, 2021 (India)',
+  layers:L3({HDPE:50,C4:40,LDPE:10},{HDPE:45,C4:30,CACO3:25},{HDPE:50,C4:40,LDPE:10},[1,2,1])},
+ {g:'Bags and general packaging',n:'E-commerce courier bag, 3-layer, 60 µm',thick:60,bur:2.5,use:'Tamper-evident courier bags. White outer for print and opacity; tough inner. Real courier bags often add a black or grey inner layer (carbon black), which this library does not contain.',src:'General courier-bag practice',
+  layers:L3({C4:50,LDPE:30,TIO2:20},{C4:65,LDPE:20,TIO2:15},{C4:60,MLL:20,LDPE:20},[1,2,1])},
+ {g:'Bags and general packaging',n:'Bread / bakery bag, mono, 30 µm',thick:30,bur:2.5,use:'Bread and bun bags where clarity and easy opening matter. LDPE-rich for gloss and low haze; slip and antiblock for opening.',src:'LDPE is widely used for clarity and bulk bags (Flexible Packaging Recycling, ch. 3)',
+  layers:MONO({LDPE:68,C4:28,SLIP:2,AB:2})},
+ {g:'Bags and general packaging',n:'Frozen-food bag, 3-layer, 60 µm',thick:60,bur:2.5,use:'Bags for frozen vegetables and meat. Toughness at low temperature from C8 and mLLDPE; mLLDPE seal layer with slip.',src:'Frozen-food packaging uses LLDPE/mLLDPE (PTTGC application guide)',
+  layers:L3({C8:60,LDPE:40},{C8:70,MLL:20,LDPE:10},{MLL:70,C8:20,LDPE:8,SLIP:2},[1,2,1])},
+ {g:'Bags and general packaging',n:'Garment / poly bag, mono, 30 µm',thick:30,bur:2.5,use:'Clear garment and display bags. LDPE-rich for clarity and soft feel.',src:'General poly-bag practice',
+  layers:MONO({LDPE:78,C4:20,SLIP:1,AB:1})},
+ {g:'Bags and general packaging',n:'Down-gauged general film, mono, 35 µm (LLDPE + mPE + LDPE)',thick:35,bur:2.5,use:'The "high-performance trio" for down-gauging from 50 to 35 µm: LLDPE base, mPE for toughness, LDPE for bubble stability.',src:'SABIC formulation guidance: 55 % LLDPE + 25 % mPE + 20 % LDPE for down-gauging 50 → 35 µm',
+  layers:MONO({C4:55,MLL:25,LDPE:20})},
+ // ---- Simple monolayer blends ----
+ {g:'Simple monolayer blends',n:'Mono C8-LLDPE + 20 % LDPE, 25 µm',thick:25,bur:2.5,use:'Reference blend used in Paper 02, Section 5.1.',src:'Paper 02',layers:MONO({C8:80,LDPE:20})},
+ {g:'Simple monolayer blends',n:'Mono mLLDPE + 10 % LDPE, 25 µm',thick:25,bur:2.5,use:'Reference blend checked against Tas et al. (2005) in Paper 02.',src:'Paper 02',layers:MONO({MLL:90,LDPE:10})}
+];
+const PRESETS={};PRESET_LIB.forEach(p=>PRESETS[p.n]={thick:p.thick,bur:p.bur,layers:p.layers});
 let ST=BFM.clone(PRESETS['S1 Liquid-pack (milk-pouch type), 55 µm']);
 const $=id=>document.getElementById(id);
 
@@ -452,8 +522,11 @@ document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{document.
 $('btnFs').onclick=()=>{if(!document.fullscreenElement){(document.documentElement.requestFullscreen||function(){}).call(document.documentElement);}else document.exitFullscreen();};
 
 // ---------- structure editor ----------
-const ps=$('preset'); ps.innerHTML='<option value="">— choose —</option>'+Object.keys(PRESETS).map(k=>`<option>${k}</option>`).join('');
-ps.onchange=()=>{if(!ps.value)return;ST=BFM.clone(PRESETS[ps.value]);$('thick').value=ST.thick;$('bur').value=ST.bur;$('nl').value=ST.layers.length;drawLayers();calc();};
+const ps=$('preset'); const GROUPS=[...new Set(PRESET_LIB.map(p=>p.g))];
+ps.innerHTML='<option value="">— choose a recipe —</option>'+GROUPS.map(g=>`<optgroup label="${g}">`+PRESET_LIB.filter(p=>p.g===g).map(p=>`<option>${p.n}</option>`).join('')+'</optgroup>').join('');
+function showNote(name){const p=PRESET_LIB.find(x=>x.n===name),el=$('presetNote');if(!p){el.style.display='none';return;}el.style.display='block';el.innerHTML=`<b>Use:</b> ${p.use}<br><b>Basis:</b> ${p.src}. Recipes are typical starting points built from this library's six resins and five masterbatches, not any converter's specification.`;}
+function loadPreset(name){ps.value=name;ST=BFM.clone(PRESETS[name]);$('thick').value=ST.thick;$('bur').value=ST.bur;$('nl').value=ST.layers.length;showNote(name);drawLayers();calc();}
+ps.onchange=()=>{if(!ps.value)return;showNote(ps.value);ST=BFM.clone(PRESETS[ps.value]);$('thick').value=ST.thick;$('bur').value=ST.bur;$('nl').value=ST.layers.length;drawLayers();calc();};
 $('thick').oninput=()=>{ST.thick=+$('thick').value;calc();};
 $('bur').oninput=()=>{ST.bur=+$('bur').value;calc();};
 $('nl').onchange=()=>{const n=+$('nl').value;const names=n===1?['Mono']:n===2?['A outer','C inner']:['A outer','B core','C inner'];
@@ -502,6 +575,26 @@ function calc(){
  $('flags').innerHTML=fl.length?fl.map(x=>`<li>⚠ ${x}</li>`).join(''):'<li style="background:#eaf6ee;color:#1b7a3e">No range warnings. Toughness values remain screening estimates.</li>';
  drawVarBoxes();
 }
+
+// ---------- recipe library ----------
+const RCOLS=[['g','Group',0],['n','Recipe',0],['thick','Gauge µm',0],['ratio','Ratio',0],['rho','ρ g/cm³',3],['gsm','g/m²',1],['E','E MD MPa',0],['TS','σb MD MPa',1],['dart','Dart g',0],['tm','Tear MD g',0],['tt','Tear TD g',0],['kg','Rs/kg',1],['m2','Rs/m²',2],['w','Warnings',0]];
+let RSORT={k:null,dir:1},RROWS=[];
+$('libGroup').innerHTML='<option value="">All groups</option>'+GROUPS.map(g=>`<option>${g}</option>`).join('');
+$('libGroup').onchange=drawRecipeLib;
+function recipeRows(){return PRESET_LIB.map(p=>{const r=run({layers:p.layers,thick:p.thick,bur:p.bur}),c=BFM.structureCost(r,PRICES,CONV);
+ return {g:p.g,n:p.n,thick:p.thick,ratio:p.layers.map(L=>L.ratio).join(':'),rho:r.rho,gsm:r.gsm,E:r.value.E_MD,TS:r.value.TS_MD,dart:r.gauge.DART,tm:r.gauge.TM,tt:r.gauge.TT,kg:c.total,m2:c.perM2,w:r.flags.length};});}
+function drawRecipeLib(){
+ RROWS=recipeRows();const gf=$('libGroup').value;let rows=RROWS.filter(r=>!gf||r.g===gf);
+ if(RSORT.k){const k=RSORT.k;rows=rows.slice().sort((a,b)=>(typeof a[k]==='string'?a[k].localeCompare(b[k]):a[k]-b[k])*RSORT.dir);}
+ let h='<table class="res"><thead><tr>'+RCOLS.map(([k,n])=>`<th data-k="${k}" style="cursor:pointer" title="Sort">${n}${RSORT.k===k?(RSORT.dir>0?' ▲':' ▼'):''}</th>`).join('')+'<th></th></tr></thead><tbody>';
+ rows.forEach(r=>{h+='<tr>'+RCOLS.map(([k,n,d])=>`<td>${typeof r[k]==='number'&&k!=='thick'&&k!=='w'?f(r[k],d):r[k]}</td>`).join('')+`<td><button class="ld" data-n="${r.n.replace(/"/g,'&quot;')}">Load</button></td></tr>`;});
+ $('reclib').innerHTML=h+'</tbody></table>';
+ $('reclib').querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{RSORT.dir=(RSORT.k===th.dataset.k)?-RSORT.dir:1;RSORT.k=th.dataset.k;drawRecipeLib();});
+ $('reclib').querySelectorAll('.ld').forEach(b=>b.onclick=()=>{loadPreset(b.dataset.n);document.querySelector('nav.tabs button[data-t=t1]').click();window.scrollTo(0,0);});
+}
+document.querySelector('nav.tabs button[data-t=t6]').addEventListener('click',drawRecipeLib);
+$('btnLibCsv').onclick=()=>{const rows=RROWS.length?RROWS:recipeRows();const t=[RCOLS.map(c=>c[1]).join(',')].concat(rows.map(r=>RCOLS.map(([k,n,d])=>{const v=typeof r[k]==='number'?+r[k].toFixed(d||0):r[k];const sv=String(v);return /[",\n]/.test(sv)?'"'+sv.replace(/"/g,'""')+'"':sv;}).join(','))).join('\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='blown_film_recipe_library.csv';a.click();};
 
 // ---------- cost ----------
 function drawCost(r){
@@ -630,7 +723,7 @@ function drawLib(){
 }
 $('btnReset').onclick=()=>{LIB=BFM.clone(BFM.RESINS);EXC=BFM.clone(BFM.EXCESS);P.forEach(p=>EXP[p]=PI[p].m);try{localStorage.removeItem(STORE);}catch(e){}drawLib();calc();};
 
-drawLayers();drawLib();drawCostSettings();calc();
+drawLayers();drawLib();drawCostSettings();loadPreset('S1 Liquid-pack (milk-pouch type), 55 µm');
 })();
 </script>
 </body>

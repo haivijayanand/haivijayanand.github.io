@@ -56,8 +56,11 @@ function line(series,o){o=o||{};var W=900,H=o.h||340,L=70,R=20,T=20,B=48,xs=[],y
   var x0=o.xmin!==undefined?o.xmin:Math.min.apply(null,xs),x1=o.xmax!==undefined?o.xmax:Math.max.apply(null,xs),
       y0=o.ymin!==undefined?o.ymin:Math.min(0,Math.min.apply(null,ys)),y1=o.ymax!==undefined?o.ymax:Math.max.apply(null,ys)*1.08||1;
   if(x1===x0)x1=x0+1;if(y1===y0)y1=y0+1;
+  function nice(r){var e=Math.pow(10,Math.floor(Math.log10(r/5))),f=r/5/e;return (f<1.5?1:f<3?2:f<7?5:10)*e;}
+  var ys=nice(y1-y0),xs2=o.xstep||nice(x1-x0);if(o.ymin===undefined)y0=Math.floor(y0/ys)*ys;if(o.ymax===undefined)y1=Math.ceil(y1/ys)*ys;
   var X=function(v){return L+(W-L-R)*(v-x0)/(x1-x0);},Y=function(v){return H-B-(H-T-B)*(v-y0)/(y1-y0);},ru=cssv("--rule"),ink=cssv("--ink"),s="",fy=o.fy||function(v){return num(v);},fx=o.fx||function(v){return num(v);};
-  for(var g=0;g<=5;g++){var yv=y0+(y1-y0)*g/5,xv=x0+(x1-x0)*g/5;s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(yv)+'" y2="'+Y(yv)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(Y(yv)+4)+'" font-size="12" text-anchor="end">'+fy(yv)+'</text><text x="'+X(xv)+'" y="'+(H-B+18)+'" font-size="12" text-anchor="middle">'+fx(xv)+'</text>';}
+  for(var yv=Math.ceil(y0/ys-1e-9)*ys;yv<=y1+1e-9;yv+=ys){s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(yv)+'" y2="'+Y(yv)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(Y(yv)+4)+'" font-size="12" text-anchor="end">'+fy(Math.abs(yv)<ys/1e6?0:yv)+'</text>';}
+  for(var xv=Math.ceil(x0/xs2-1e-9)*xs2;xv<=x1+1e-9;xv+=xs2){s+='<text x="'+X(xv)+'" y="'+(H-B+18)+'" font-size="12" text-anchor="middle">'+fx(Math.abs(xv)<xs2/1e6?0:xv)+'</text>';}
   if(y0<0&&y1>0)s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(0)+'" y2="'+Y(0)+'" stroke="'+cssv("--faint")+'" stroke-width="1.5"/>';
   if(o.xl)s+='<text x="'+((L+W-R)/2)+'" y="'+(H-8)+'" font-size="13" text-anchor="middle">'+esc(o.xl)+'</text>';
   if(o.yl)s+='<text transform="translate(14,'+((T+H-B)/2)+') rotate(-90)" font-size="13" text-anchor="middle">'+esc(o.yl)+'</text>';

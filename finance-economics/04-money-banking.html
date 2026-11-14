@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<!--
+TOOL:    finance-economics/04-money-banking.html — Finance & Economics Topic 04: Money & Banking (three levels)
+FAMILY:  finance-economics
+VERSION: 1.0.0
+DATE:    2026-11-14
+CHAT:    Finance & Economics series — three levels (school, working, expert); Topic 04 Money & Banking
+CHANGES: 1.0.0 - fourth topic: functions and history of money, deposit-loan chain animation, monetary
+                 aggregates, India's bank types, bank P&L and money-multiplier calculators, CRR/SLR,
+                 deposit insurance and scams, NPA cycle, regulation, UPI/CBDC; Nov 2026 snapshot; quizzes
+STATUS:  working
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Money &amp; Banking — Finance &amp; Economics in Three Levels — K Vijay Anand</title>
+<meta name="description" content="Money and banking explained at three levels — for school students, for working people and as a review for experts: what money is, how banks create it, India&#39;s banking system, deposit safety, regulation and digital money.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* Colour-blind-safe palette: blue / orange / purple / gold — no red-vs-green coding */
+  :root{--bg:#f4f2ed;--bg2:#e9e5dc;--card:#fffdf8;--ink:#1d1b18;--soft:#4f4940;--faint:#857c6f;--rule:#d6cdbd;
+        --acc:#1d5fa6;--l1:#d9730d;--l2:#1d5fa6;--l3:#6a3fa0;--gold:#a87908;--hi:#fff1d6}
+  :root[data-theme="dark"]{--bg:#121316;--bg2:#1a1c21;--card:#1f2228;--ink:#ece9e2;--soft:#c3bdb2;--faint:#8c8578;--rule:#33363d;
+        --acc:#6aa8ee;--l1:#f39a3d;--l2:#6aa8ee;--l3:#b28ae6;--gold:#e5b33c;--hi:#3a2f17}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.65}
+  a{color:var(--acc)}
+  .toolbar{position:fixed;top:10px;right:12px;z-index:30;display:flex;gap:8px;font-size:13px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button,.toolbar a{background:var(--card);color:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;text-decoration:none}
+  header{padding:70px 4vw 18px;max-width:1600px;margin:0 auto}
+  .series{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-family:"Playfair Display",serif;font-weight:800;font-size:clamp(46px,7vw,84px);margin:6px 0 4px;line-height:1}
+  .tag{color:var(--soft);max-width:70ch;margin:0}
+  /* level switch */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 0}
+  .levels button{text-align:left;background:var(--card);border:2px solid var(--rule);border-radius:12px;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink)}
+  .levels button b{display:block;font-size:18px}
+  .levels button small{color:var(--faint)}
+  .levels button .k{float:right;font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:0 6px;color:var(--faint)}
+  .levels button[data-l="school"].on{border-color:var(--l1);background:color-mix(in srgb,var(--l1) 10%,var(--card))}
+  .levels button[data-l="working"].on{border-color:var(--l2);background:color-mix(in srgb,var(--l2) 10%,var(--card))}
+  .levels button[data-l="expert"].on{border-color:var(--l3);background:color-mix(in srgb,var(--l3) 10%,var(--card))}
+  /* layout */
+  .wrap{max-width:1600px;margin:0 auto;padding:0 4vw 40px;display:grid;grid-template-columns:250px 1fr;gap:34px}
+  body.nosb .wrap{grid-template-columns:1fr}
+  body.nosb aside{display:none}
+  aside{position:sticky;top:60px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;font-size:14.5px;padding-top:20px}
+  aside .h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  aside a{display:block;padding:5px 10px;border-left:3px solid var(--rule);color:var(--soft);text-decoration:none}
+  aside a:hover{border-left-color:var(--lc);color:var(--ink)}
+  aside .keys{margin-top:18px;color:var(--faint);font-size:12.5px;line-height:1.9}
+  kbd{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--card)}
+  main{min-width:0}
+  .panel{display:none}
+  .panel.on{display:block}
+  #p-school{--lc:var(--l1)} #p-working{--lc:var(--l2)} #p-expert{--lc:var(--l3)}
+  body[data-level="school"]{--lc:var(--l1)} body[data-level="working"]{--lc:var(--l2)} body[data-level="expert"]{--lc:var(--l3)}
+  .lvhead{border-left:6px solid var(--lc);padding:4px 0 4px 16px;margin:24px 0 10px}
+  .lvhead .who{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--lc);font-weight:700}
+  .lvhead p{margin:4px 0 0;color:var(--soft)}
+  section{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:22px 28px;margin:18px 0}
+  h2{font-family:"Playfair Display",serif;font-size:30px;margin:0 0 10px;line-height:1.2}
+  h2 .n{color:var(--lc);margin-right:8px}
+  h3{font-size:18px;margin:20px 0 6px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .box{border:1px solid var(--rule);border-radius:10px;padding:14px 16px;background:var(--bg)}
+  .box b.t{display:block;color:var(--lc);margin-bottom:4px}
+  .def{font-size:20px;border-left:5px solid var(--lc);background:color-mix(in srgb,var(--lc) 8%,transparent);padding:12px 18px;border-radius:0 10px 10px 0;margin:8px 0 14px}
+  .note{background:var(--hi);border-radius:8px;padding:10px 14px;font-size:15.5px}
+  .eq{font-family:"JetBrains Mono",monospace;background:var(--bg2);border-radius:8px;padding:10px 14px;overflow-x:auto;font-size:15px;white-space:pre}
+  table{border-collapse:collapse;width:100%;font-size:15.5px;margin:8px 0}
+  th,td{border-bottom:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:10px}
+  .stat{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--bg)}
+  .stat .v{font-size:28px;white-space:nowrap;font-weight:700;color:var(--acc);line-height:1.1}
+  .stat .l{font-size:13.5px;color:var(--soft)}
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;margin:10px 0}
+  .ctl label{font-size:13.5px;color:var(--soft);display:flex;flex-direction:column;gap:3px}
+  .ctl input[type=number]{width:120px;font:inherit;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)}
+  .ctl input[type=range]{width:200px}
+  .btn{background:var(--lc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--lc);border:1px solid var(--lc)}
+  .out{font-size:18px;margin:8px 0}
+  .out b{color:var(--lc)}
+  svg text{fill:var(--soft);font-family:Inter,sans-serif}
+  /* basket animation */
+  .stage{border:1px dashed var(--rule);border-radius:10px;padding:14px;background:var(--bg);min-height:170px}
+  .stage .yr{font-size:26px;font-weight:700}
+  .stage .yr span{color:var(--l1)}
+  .samosas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:44px}
+  .sam{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:30px solid var(--l1);transition:opacity .3s}
+  .sam.gone{opacity:.15}
+  /* quiz */
+  .q{border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:10px 0;background:var(--bg)}
+  .q p{margin:0 0 8px;font-weight:600}
+  .q button{display:block;width:100%;text-align:left;margin:5px 0;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;font:inherit;color:var(--ink);cursor:pointer}
+  .q button.right{border:2px solid var(--l2);background:color-mix(in srgb,var(--l2) 14%,var(--card))}
+  .q button.right::after{content:"  ✔ correct";font-weight:700;color:var(--l2)}
+  .q button.wrong{border:2px dashed var(--l1)}
+  .q button.wrong::after{content:"  ✘ not this one";font-weight:700;color:var(--l1)}
+  .q .why{display:none;font-size:15px;color:var(--soft);margin-top:6px}
+  .q.done .why{display:block}
+  .score{font-weight:700;color:var(--lc)}
+  footer{max-width:1600px;margin:0 auto;padding:20px 4vw 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--faint)}
+  footer a{color:var(--soft)}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}aside{display:none}.levels{grid-template-columns:1fr}section{padding:18px}}
+  @media print{.toolbar,aside,.levels{display:none}.panel{display:block!important}.wrap{display:block}}
+</style>
+</head>
+<body data-level="school">
+<div class="toolbar">
+  <a href="./">← Series</a>
+  <button id="sbBtn" title="Show / hide contents (M)">☰ Contents</button>
+  <button id="themeBtn" title="Light / dark (T)">◐ Theme</button>
+  <button id="fsBtn" title="Full screen (F)">⤢ Full screen</button>
+</div>
+
+<header>
+  <div class="series">Finance &amp; Economics · Topic 04</div>
+  <h1>Money &amp; Banking</h1>
+  <p class="tag">What money really is, where it comes from, how banks turn deposits into loans (and new money), how safe your savings are, and why banking crises spread around the world. Pick your level.</p>
+  <div class="levels" role="tablist">
+    <button data-l="school" class="on"><span class="k">1</span><b>🎒 School</b><small>From barter to UPI, and how banks lend</small></button>
+    <button data-l="working"><span class="k">2</span><b>💼 Working people</b><small>India's banks, your safety, credit and the system</small></button>
+    <button data-l="expert"><span class="k">3</span><b>🎓 Experts — review</b><small>Money creation, bank economics, regulation</small></button>
+  </div>
+</header>
+
+<div class="wrap">
+<aside id="toc"></aside>
+<main>
+
+<section id="snapshot" style="border-top:4px solid var(--gold)">
+  <h2>Where things stand — November 2026</h2>
+  <div class="snap">
+    <div class="stat"><div class="v">25.47 bn</div><div class="l">UPI transactions in October 2026, a record, worth ₹31.53 lakh crore. Average daily value crossed ₹1 lakh crore for the first time.</div></div>
+    <div class="stat"><div class="v">17.9% / 16.6%</div><div class="l">Year-on-year growth in bank credit (₹232.5 lakh crore) and deposits (₹284.4 lakh crore) as of 15 Oct 2026</div></div>
+    <div class="stat"><div class="v">82%</div><div class="l">Banks' credit-to-deposit ratio (March 2026), up from about 69% in 2021</div></div>
+    <div class="stat"><div class="v">3% / 18%</div><div class="l">CRR (cash banks must keep with the RBI) and SLR (liquid assets, mainly government bonds), as shares of deposits</div></div>
+    <div class="stat"><div class="v">₹5 lakh</div><div class="l">Deposit insurance (DICGC) per depositor, per bank, covering principal and interest together</div></div>
+  </div>
+  <p class="note" style="margin-top:12px">This is a dated snapshot. The RBI publishes banking data every fortnight and NPCI publishes UPI data every month. The ideas below don't change; these numbers will.</p>
+</section>
+
+<!-- ========================= LEVEL 1 : SCHOOL ====================== -->
+<div class="panel on" id="p-school">
+  <div class="lvhead"><div class="who">Level 1 · For school students</div><p>Money is something everyone agrees to accept. Banks are where it sleeps, and where it goes to work.</p></div>
+
+  <section id="s1">
+    <h2><span class="n">1</span>What is money?</h2>
+    <div class="def"><b>Money</b> is anything that people <b>agree</b> to accept in exchange for goods and services.</div>
+    <p>Long ago, people <b>bartered</b>: a farmer swapped rice for a potter's pots. But what if the potter did not want rice? Barter only works when both people want each other's things at the same time. Money solves this problem: the farmer sells rice for money and uses the money to buy pots from anyone.</p>
+    <div class="cols">
+      <div class="box"><b class="t">1 · To pay</b>A <b>medium of exchange</b>: everyone accepts it.</div>
+      <div class="box"><b class="t">2 · To measure</b>A <b>unit of account</b>: we can say a pen costs ₹10 and a book ₹200, and compare them.</div>
+      <div class="box"><b class="t">3 · To save</b>A <b>store of value</b>: you can keep it and use it later (though inflation slowly eats it, as Topic 01 showed).</div>
+    </div>
+  </section>
+
+  <section id="s2">
+    <h2><span class="n">2</span>The story of money</h2>
+    <table>
+      <tr><th>Stage</th><th>What people used</th><th>Problem it solved</th></tr>
+      <tr><td>Barter</td><td>Goods for goods</td><td>No money needed, but very hard to match buyers and sellers</td></tr>
+      <tr><td>Commodity money</td><td>Grain, cattle, salt, shells</td><td>Everyone wanted them, but they were heavy and could spoil</td></tr>
+      <tr><td>Metal coins</td><td>Gold, silver, copper. India's punch-marked coins are among the oldest anywhere.</td><td>Durable and easy to count</td></tr>
+      <tr><td>Paper notes</td><td>A promise from a bank or government</td><td>Light enough to carry large amounts</td></tr>
+      <tr><td>Bank deposits &amp; cards</td><td>Numbers in a bank's books</td><td>Safe, and can be sent far away</td></tr>
+      <tr><td>Digital payments</td><td>UPI, QR codes, wallets, and the RBI's e-rupee</td><td>Instant, cheap payments from a phone. India's UPI handles more than 800 million payments a day.</td></tr>
+    </table>
+    <p class="note">Today's notes are not backed by gold. They have value because the government declares them legal tender, and because all of us trust that others will accept them.</p>
+  </section>
+
+  <section id="s3">
+    <h2><span class="n">3</span>What does a bank do?</h2>
+    <div class="cols">
+      <div class="box"><b class="t">🔒 Keeps money safe</b>Your savings sit in a bank account instead of under the mattress, and they earn a little interest.</div>
+      <div class="box"><b class="t">🤝 Lends money</b>The bank lends part of everyone's savings to people who need it: to build a house, start a shop or buy a tractor.</div>
+      <div class="box"><b class="t">📲 Moves money</b>Cheques, transfers, cards and UPI move money from one account to another in seconds.</div>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="n">4</span>Watch it happen: how lending makes more money</h2>
+    <p>Asha deposits <b>₹1,000</b> in Bank A. The bank keeps a part as <b>reserve</b> and lends the rest to Bala, who pays a shopkeeper, who deposits it in Bank B, which lends part of it again… Press Play.</p>
+    <div class="ctl">
+      <label>Share kept as reserve: <b id="anRateL">20%</b><input type="range" id="anRate" min="5" max="50" step="5" value="20"></label>
+      <button class="btn" id="anPlay">▶ Play (P)</button>
+      <button class="btn ghost" id="anStep">Next round (S)</button>
+      <button class="btn ghost" id="anPause">⏸ Pause (X)</button>
+      <button class="btn ghost" id="anReset">↺ Reset</button>
+    </div>
+    <div class="stage">
+      <div class="yr">Round <span id="anYear">1</span> · total deposits <b id="anTot" style="color:var(--l2)">₹1,000</b> · total loans <b id="anLoan" style="color:var(--l1)">₹0</b></div>
+      <svg id="anChart" viewBox="0 0 900 240" style="width:100%;height:auto;margin-top:6px"></svg>
+      <p id="anMsg" style="margin:6px 0 0;color:var(--soft)">Press Play, or press S to move one round at a time.</p>
+    </div>
+  </section>
+
+  <section id="s5">
+    <h2><span class="n">5</span>Who makes the money?</h2>
+    <ul>
+      <li><b>Notes</b> are issued by the <b>Reserve Bank of India</b>. Look at a note: it carries the Governor's signature and the promise <i>"I promise to pay the bearer the sum of…"</i>.</li>
+      <li><b>Coins</b> (and the ₹1 note) are issued by the <b>Government of India</b> and minted at government mints.</li>
+      <li>Most money today is not notes at all. It is <b>bank deposits</b>, numbers in accounts, and as you just saw, banks create much of it when they lend.</li>
+      <li>The RBI cannot print as much as it likes. Too much money chasing the same goods causes inflation (Topic 01).</li>
+    </ul>
+  </section>
+
+  <section id="s6">
+    <h2><span class="n">6</span>Keeping money safe</h2>
+    <ul>
+      <li>Money in an Indian bank is insured for up to <b>₹5 lakh per person, per bank</b>, so even if a bank fails, small savers get their money back.</li>
+      <li><b>Never share your PIN, OTP or password</b>, not even with someone who says they are from the bank or the police. Real banks never ask.</li>
+      <li>Check before you scan: a UPI <b>PIN is needed only to pay</b>, never to receive money.</li>
+    </ul>
+  </section>
+
+  <section id="s7">
+    <h2><span class="n">7</span>Words to remember</h2>
+    <table>
+      <tr><th>Word</th><th>Meaning</th></tr>
+      <tr><td>Barter</td><td>Swapping goods directly, without money</td></tr>
+      <tr><td>Currency</td><td>Notes and coins</td></tr>
+      <tr><td>Deposit</td><td>Money kept in a bank</td></tr>
+      <tr><td>Loan</td><td>Money borrowed that must be repaid with interest</td></tr>
+      <tr><td>Reserve</td><td>The part of deposits a bank keeps aside and does not lend</td></tr>
+      <tr><td>Legal tender</td><td>Money that the law says must be accepted for payment</td></tr>
+      <tr><td>UPI</td><td>Unified Payments Interface: India's system for instant phone payments</td></tr>
+    </table>
+  </section>
+
+  <section id="s8">
+    <h2><span class="n">8</span>Check yourself</h2>
+    <div class="quiz" data-quiz="school"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 2 : WORKING ===================== -->
+<div class="panel" id="p-working">
+  <div class="lvhead"><div class="who">Level 2 · For working people</div><p>India's money and banking system: what counts as money, who the banks are, how they earn, how safe your deposits are, and why credit matters to the economy. This is education, not financial advice.</p></div>
+
+  <section id="w1">
+    <h2><span class="n">1</span>Money in India today: the measures</h2>
+    <table>
+      <tr><th>Measure</th><th>What it includes</th><th>Why it matters</th></tr>
+      <tr><td><b>M0</b>, reserve money</td><td>Currency in circulation + banks' deposits with the RBI + other deposits with the RBI</td><td>The "base" money the RBI directly controls</td></tr>
+      <tr><td><b>M1</b>, narrow money</td><td>Currency with the public + demand deposits (savings and current accounts) + other deposits with the RBI</td><td>Money ready to spend</td></tr>
+      <tr><td><b>M3</b>, broad money</td><td>M1 + time deposits (FDs, RDs)</td><td>The main measure of the money supply; it grows roughly with nominal GDP</td></tr>
+    </table>
+    <p><b>The digital shift:</b> UPI, launched in 2016, now handles more than 25 billion payments a month. Notes are still widely used, and the stock of currency has kept rising in rupee terms even as digital payments boomed: people pay digitally but still hold cash as a store of value.</p>
+  </section>
+
+  <section id="w2">
+    <h2><span class="n">2</span>Who's who in Indian banking</h2>
+    <table>
+      <tr><th>Type</th><th>Examples / notes</th></tr>
+      <tr><td>Public sector banks</td><td>12 after the 2017–2020 mergers. SBI is the largest bank in the country.</td></tr>
+      <tr><td>Private sector banks</td><td>HDFC Bank, ICICI Bank, Axis Bank, Kotak Mahindra Bank and others</td></tr>
+      <tr><td>Foreign banks</td><td>Operate through branches or wholly owned subsidiaries</td></tr>
+      <tr><td>Small finance banks</td><td>Focus on small borrowers and the underserved</td></tr>
+      <tr><td>Payments banks</td><td>Accept deposits (with caps) and make payments, but cannot lend</td></tr>
+      <tr><td>Regional rural and cooperative banks</td><td>Rural and local credit. Urban cooperative banks are now supervised more closely by the RBI.</td></tr>
+      <tr><td>NBFCs</td><td>Lend but cannot offer cheque-book accounts; a major source of vehicle, gold, microfinance and consumer loans</td></tr>
+    </table>
+  </section>
+
+  <section id="w3">
+    <h2><span class="n">3</span>How a bank earns: a simple P&amp;L</h2>
+    <p>A bank's core income is the <b>net interest margin (NIM)</b>: interest earned on loans and bonds minus interest paid on deposits, as a share of assets. Out of this come staff and branch costs and provisions for bad loans.</p>
+    <div class="ctl">
+      <label>Deposit cost %<input type="number" id="pnD" value="5.5" step="0.1"></label>
+      <label>Loan yield %<input type="number" id="pnL" value="9.5" step="0.1"></label>
+      <label>Bond yield %<input type="number" id="pnB" value="7" step="0.1"></label>
+      <label>Credit-deposit ratio %<input type="number" id="pnCD" value="80" step="1"></label>
+      <label>Operating cost % of assets<input type="number" id="pnO" value="2" step="0.1"></label>
+      <label>Credit cost (bad loans) % of loans<input type="number" id="pnC" value="0.6" step="0.1"></label>
+    </div>
+    <div class="out" id="pnOut"></div>
+    <p class="note">The model is simplified: deposits fund assets one-for-one, and the 3% CRR earns nothing. Fees and other income are ignored, and tax is taken at a flat 25%. Banks' actual NIMs in India are usually around 3–4%.</p>
+    <p>Right now, loans are growing faster than deposits (17.9% versus 16.6% in October 2026). Banks are competing harder for deposits, which keeps FD rates up even when the RBI is not hiking.</p>
+  </section>
+
+  <section id="w4">
+    <h2><span class="n">4</span>Reserves, liquidity and the RBI</h2>
+    <ul>
+      <li><b>CRR, 3%</b>: cash a bank must keep with the RBI, earning no interest. Since 16 October 2026, banks must hold at least 99% of the required CRR every day, up from 90%, to keep overnight rates close to the repo rate.</li>
+      <li><b>SLR, 18%</b>: deposits that must be held in safe, liquid assets, mostly government securities.</li>
+      <li><b>Liquidity</b>: when the banking system has surplus cash, overnight rates drift below the repo rate. When it is short, the RBI lends through repo auctions. Watching liquidity is as important as watching the repo rate (Topic 02).</li>
+    </ul>
+  </section>
+
+  <section id="w5">
+    <h2><span class="n">5</span>Your money: safety and scams</h2>
+    <div class="cols">
+      <div class="box"><b class="t">Deposit insurance</b>DICGC insures up to ₹5 lakh per depositor per bank (raised from ₹1 lakh in 2020), covering savings, current, FD and RD accounts. Large savings can be spread across banks.</div>
+      <div class="box"><b class="t">Not insured</b>Mutual funds, shares, bonds, insurance policies, and deposits with NBFCs or chit funds. Read what you are buying.</div>
+      <div class="box"><b class="t">Common frauds</b>Fake KYC-update calls, "digital arrest" threats (police, CBI or customs never arrest anyone over a video call), QR codes that ask for a PIN to "receive" money, fake investment apps.</div>
+      <div class="box"><b class="t">If it happens</b>Call the national cyber-crime helpline <b>1930</b> immediately, report at cybercrime.gov.in, and tell your bank. Speed improves the chance of freezing the money.</div>
+    </div>
+  </section>
+
+  <section id="w6">
+    <h2><span class="n">6</span>Credit: loans, scores and responsibility</h2>
+    <ul>
+      <li>Your <b>credit score</b> (300–900, from bureaus such as CIBIL) summarises your repayment history. It decides whether you get a loan and at what rate.</li>
+      <li>On-time EMIs and card payments, low credit-card utilisation and a few long-standing accounts all help. Many hard enquiries and missed payments hurt.</li>
+      <li>Being a <b>guarantor</b> or co-borrower makes you legally responsible for the loan.</li>
+      <li>Check your credit report at least once a year; you are entitled to a free report from each bureau.</li>
+    </ul>
+  </section>
+
+  <section id="w7">
+    <h2><span class="n">7</span>Banks and the country</h2>
+    <ul>
+      <li><b>Credit fuels growth.</b> Factories, housing, small businesses and farms all run on bank loans. Strong credit growth in 2026 has supported GDP growth of about 7–8% (Topic 03).</li>
+      <li><b>Bad loans can choke growth.</b> After the 2000s lending boom, banks' gross bad loans (NPAs) rose to about 11% of loans by March 2018. The Insolvency and Bankruptcy Code (2016), recapitalisation of public sector banks and clean-ups brought them below 3% by 2025.</li>
+      <li><b>Failures are handled, not ignored.</b> Yes Bank (2020) was rescued by a consortium led by SBI. The PMC cooperative bank collapse (2019) pushed deposit insurance from ₹1 lakh to ₹5 lakh.</li>
+      <li><b>Financial inclusion.</b> Jan Dhan accounts, Aadhaar-based KYC and UPI have brought hundreds of millions of people into the formal financial system.</li>
+    </ul>
+  </section>
+
+  <section id="w8">
+    <h2><span class="n">8</span>The global picture</h2>
+    <ul>
+      <li><b>2008:</b> US housing loans, sliced into complex securities, went bad. Lehman Brothers failed and credit froze worldwide, leading to tougher global rules (Basel III).</li>
+      <li><b>2023:</b> Silicon Valley Bank failed in about two days, as depositors pulled money via phone apps after losses on bonds held when interest rates rose. In the digital age, bank runs move at internet speed.</li>
+      <li><b>The dollar system:</b> most trade and cross-border lending is in dollars, cleared through US banks and messaged over SWIFT. India is pushing rupee trade settlement and linking UPI with other countries' fast-payment systems.</li>
+      <li><b>Central bank digital currencies</b> (like India's e-rupee) and private stablecoins are competing visions of what digital money should look like.</li>
+    </ul>
+  </section>
+
+  <section id="w9">
+    <h2><span class="n">9</span>Check yourself</h2>
+    <div class="quiz" data-quiz="working"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 3 : EXPERT ====================== -->
+<div class="panel" id="p-expert">
+  <div class="lvhead"><div class="who">Level 3 · Review for experts</div><p>Theories of money, how money is created, monetary aggregates, bank fragility and regulation, India's banking cycle and digital money.</p></div>
+
+  <section id="e1">
+    <h2><span class="n">1</span>What money is: competing theories</h2>
+    <table>
+      <tr><th>View</th><th>Core claim</th><th>Associated with</th></tr>
+      <tr><td>Commodity / metallist</td><td>Money emerged spontaneously from barter as the most saleable good</td><td>Menger (1892)</td></tr>
+      <tr><td>Chartalist / state theory</td><td>Money is a creature of the state: it has value because the state accepts it for taxes</td><td>Knapp (1905); MMT</td></tr>
+      <tr><td>Credit theory</td><td>Money is a transferable IOU. Bank deposits are bank liabilities; currency is a central-bank liability.</td><td>Innes (1913); Minsky ("anyone can create money; the problem is getting it accepted")</td></tr>
+      <tr><td>Search-theoretic</td><td>Money overcomes the double-coincidence problem and limited commitment and record-keeping ("money is memory")</td><td>Kiyotaki–Wright (1989); Kocherlakota (1998)</td></tr>
+    </table>
+  </section>
+
+  <section id="e2">
+    <h2><span class="n">2</span>Money creation: the multiplier and its critique</h2>
+    <div class="eq">Textbook:   M = m·B,    m = (1 + c) / (c + r)        c = currency/deposits,  r = reserves/deposits
+Endogenous: Loans create deposits; banks then obtain reserves at the policy rate (r is not the binding constraint)</div>
+    <div class="ctl">
+      <label>Currency-deposit ratio c<input type="number" id="mmC" value="0.15" step="0.01"></label>
+      <label>Reserve ratio r (CRR + excess)<input type="number" id="mmR" value="0.035" step="0.005"></label>
+      <label>Reserve money B (₹ lakh crore)<input type="number" id="mmB" value="50" step="1"></label>
+    </div>
+    <div class="out" id="mmOut"></div>
+    <ul>
+      <li><b>Endogenous money</b> (Bank of England, "Money creation in the modern economy", 2014): commercial banks create deposits when they lend. Under interest-rate targeting the central bank supplies reserves on demand, so the multiplier is an accounting ratio, not a causal mechanism.</li>
+      <li><b>Real constraints</b> on credit creation are profitability, capital requirements, liquidity rules (LCR, NSFR), borrower demand and the policy rate.</li>
+      <li>India's CRR and SLR are still binding balance-sheet costs, so reserve-requirement changes have real but modest effects on credit through the cost of funds. Daily CRR maintenance (99% from October 2026) is a liquidity-management tool, not a multiplier lever.</li>
+      <li>The inputs above are illustrative. Use them to see why a falling currency ratio, as digital payments spread, raises the measured multiplier.</li>
+    </ul>
+  </section>
+
+  <section id="e3">
+    <h2><span class="n">3</span>Aggregates, velocity and the demand for money</h2>
+    <ul>
+      <li><b>Velocity.</b> V = PY / M. Indian M3 velocity has trended down for decades as the economy has financially deepened, which is one reason money-supply targeting gave way to multiple indicators (1998) and then inflation targeting (2016).</li>
+      <li><b>Demand for money.</b> M/P = L(Y, i). Payment technology lowers the demand for transactions money. UPI may have raised the effective velocity of M1 even as precautionary demand for cash persisted.</li>
+      <li><b>Currency shocks:</b> demonetisation (November 2016) and the withdrawal of the ₹2,000 note (May 2023) were natural experiments in cash demand and deposit inflows. Banks absorbed the resulting liquidity surges through the incremental CRR and reverse-repo operations.</li>
+    </ul>
+  </section>
+
+  <section id="e4">
+    <h2><span class="n">4</span>Why banks are fragile, and how they are regulated</h2>
+    <div class="eq">ROE ≈ ROA × (Assets / Equity)          Capital ratio = Tier-1 + Tier-2 capital / Risk-weighted assets</div>
+    <ul>
+      <li><b>Maturity transformation</b> creates fragility. Diamond–Dybvig (1983) shows that demand deposits can produce self-fulfilling runs. Deposit insurance and a lender of last resort remove the bad equilibrium but create moral hazard.</li>
+      <li><b>Basel III in India:</b> minimum total capital of 9% of risk-weighted assets (stricter than the Basel minimum of 8%), plus a 2.5% capital conservation buffer, giving 11.5%. Liquidity rules require an LCR of at least 100% and an NSFR of at least 100%.</li>
+      <li><b>Prompt Corrective Action</b> triggers on capital, asset quality and leverage. D-SIB surcharges apply to SBI, HDFC Bank and ICICI Bank.</li>
+      <li><b>Lessons from SVB (2023):</b> unhedged duration risk in "safe" government bonds, concentrated uninsured deposits and digital run speed. These prompted a review of how held-to-maturity losses and deposit run-off assumptions are treated.</li>
+    </ul>
+  </section>
+
+  <section id="e5">
+    <h2><span class="n">5</span>India's banking cycle</h2>
+    <ul>
+      <li><b>2004–2011 boom</b> in infrastructure and corporate lending, followed by the "twin balance-sheet" problem of overleveraged firms and stressed banks.</li>
+      <li><b>2015 Asset Quality Review</b>, then gross NPAs peaking at about 11.2% in March 2018; IBC (2016); recapitalisation of public sector banks and their consolidation from 27 to 12 (2017–2020).</li>
+      <li><b>Repair (2019–2025):</b> NPAs fell below 3%, capital buffers rebuilt, and record profits followed.</li>
+      <li><b>2024–2026:</b> credit outran deposits and the credit-deposit ratio rose to about 82%. The RBI argues this is not a funding constraint because investment-deposit ratios fell and capital rose. Risks to watch are unsecured retail loans, microfinance stress and concentration in NBFC lending.</li>
+    </ul>
+  </section>
+
+  <section id="e6">
+    <h2><span class="n">6</span>Digital money and the payments stack</h2>
+    <ul>
+      <li><b>UPI architecture:</b> account-to-account transfers over IMPS rails, an interoperable virtual payment address, and third-party apps on top of a public NPCI switch. Zero MDR on most payments made it spread fast, but leaves its long-term financing an open question. A merchant-fee proposal was deferred in October 2026.</li>
+      <li><b>Market concentration:</b> two apps handle the large majority of UPI volume, which is why NPCI has proposed market-share caps.</li>
+      <li><b>e₹ (CBDC):</b> wholesale and retail pilots since late 2022. Key design choices are whether it is token- or account-based, whether it pays interest (it does not), offline capability and privacy tiers. The policy tension is between the CBDC and bank deposits (disintermediation) and between the CBDC and UPI (overlapping use).</li>
+      <li><b>Stablecoins:</b> private dollar-pegged tokens raise concerns about currency substitution and capital flows in emerging markets. The RBI remains cautious.</li>
+    </ul>
+  </section>
+
+  <section id="e7">
+    <h2><span class="n">7</span>International dimension</h2>
+    <ul>
+      <li><b>Dollar funding markets:</b> global banks' reliance on dollar wholesale funding made Fed swap lines the true global lender of last resort in 2008 and 2020.</li>
+      <li><b>Spillovers:</b> the global financial cycle (Topic 02) runs through bank leverage. Cross-border bank lending is highly procyclical.</li>
+      <li><b>Payment sovereignty:</b> rupee vostro accounts for trade settlement, UPI links with Singapore's PayNow and other systems, and multilateral CBDC projects (BIS mBridge, Nexus) aim to reduce friction and dependence on correspondent-banking chains.</li>
+    </ul>
+  </section>
+
+  <section id="e8">
+    <h2><span class="n">8</span>Review checklist: open questions</h2>
+    <ol>
+      <li>With money created endogenously, what is the right role for reserve requirements in India: monetary tool, prudential buffer, or a tax on banks?</li>
+      <li>Is a rising credit-deposit ratio a funding risk or a sign of efficient intermediation?</li>
+      <li>Who should pay for UPI's infrastructure, and does zero MDR harm competition?</li>
+      <li>Should a retail CBDC be interest-bearing? How large a share of deposits could it pull out of banks?</li>
+      <li>Does deposit insurance of ₹5 lakh strike the right balance between protecting depositors and market discipline?</li>
+      <li>How should regulators treat interest-rate risk in banks' bond books after SVB?</li>
+    </ol>
+  </section>
+
+  <section id="e9">
+    <h2><span class="n">9</span>Check yourself</h2>
+    <div class="quiz" data-quiz="expert"></div>
+  </section>
+</div>
+
+<section id="sources">
+  <h2>Sources and further reading</h2>
+  <ul>
+    <li>NPCI UPI statistics for October 2026, as reported by <a href="https://india.entrepreneur.com/business-news/upi-hits-record-25-47-bn-transactions-in-october-daily-value-crosses-inr-1-l-cr">Entrepreneur India</a> and <a href="https://startuptalky.com/news/upi-payments-set-new-record-in-october/">StartupTalky</a>; the MDR deferral: <a href="https://www.analyticsinsight.net/news/upis-record-breaking-october-puts-merchant-monetization-back-in-focus">Analytics Insight</a>.</li>
+    <li>RBI banking data (fortnight to 15 October 2026), via <a href="https://www.theweek.in/wire-updates/business/2026/10/30/bank-credit-grows-17-94-pc-outpaces-deposit-growth-rbi-data.html">PTI / The Week</a>; credit-deposit ratio: <a href="https://www.newkerala.com/news/a/high-credit-deposit-ratio-does-not-signal-funding-constraint-199.htm">RBI Bulletin coverage</a>; RBI <a href="https://website.rbi.org.in/web/rbi/-/publications/ratios-and-rates-february-20-2026-28765">Ratios and Rates</a>.</li>
+    <li>CRR and SLR: <a href="https://website.rbi.org.in/web/rbi/-/notifications/maintenance-of-cash-reserve-ratio-crr-1">RBI notification (CRR to 3.0% from 29 November 2025)</a>; daily maintenance change: <a href="https://www.sanskritiias.com/current-affairs/rbis-new-crr-rule-2026-key-facts-90-to-99-crr-ndtl-liquidity-management-instruments-basel-iii-liquid">summary of the 9 October 2026 circular</a>; <a href="https://www.xflowpay.com/blog/cash-reserve-ratio">rates table</a>.</li>
+    <li>McLeay, Radia and Thomas (2014), "Money creation in the modern economy", <i>Bank of England Quarterly Bulletin</i> Q1.</li>
+    <li>Diamond, D. and Dybvig, P. (1983), "Bank Runs, Deposit Insurance, and Liquidity", <i>Journal of Political Economy</i>.</li>
+    <li>Kiyotaki, N. and Wright, R. (1989), "On Money as a Medium of Exchange", <i>JPE</i>; Kocherlakota, N. (1998), "Money is Memory", <i>Journal of Economic Theory</i>.</li>
+    <li>RBI, <i>Financial Stability Report</i> (semi-annual) and <i>Report on Trend and Progress of Banking in India</i>.</li>
+    <li>Earlier topics: <a href="01-inflation.html">Inflation</a> · <a href="02-interest-rates.html">Interest Rates</a> · <a href="03-gdp.html">GDP</a>.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<footer>
+  Finance &amp; Economics in Three Levels · Topic 04 · K Vijay Anand · <a href="03-gdp.html">← Topic 03 GDP</a> · <a href="./">All topics</a> · <a href="/">Home</a><br>
+  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.
+  Educational content, not financial advice. Figures dated November 2026.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var root=document.documentElement, body=document.body;
+  var $=function(id){return document.getElementById(id);};
+  var inr=function(x,d){return "₹"+Number(x).toLocaleString("en-IN",{minimumFractionDigits:d||0,maximumFractionDigits:d||0});};
+  var cssv=function(n){return getComputedStyle(root).getPropertyValue(n).trim();};
+
+  try{var t=localStorage.getItem("fe-theme");if(t)root.setAttribute("data-theme",t);}catch(e){}
+  function redraw(){anRender();}
+  function toggleTheme(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("fe-theme",n);}catch(e){}redraw();}
+  function toggleFS(){if(!document.fullscreenElement){(root.requestFullscreen||function(){}).call(root);}else{document.exitFullscreen();}}
+  function toggleSB(){body.classList.toggle("nosb");}
+  $("themeBtn").onclick=toggleTheme; $("fsBtn").onclick=toggleFS; $("sbBtn").onclick=toggleSB;
+
+  var LV=["school","working","expert"];
+  function setLevel(l,noHash){
+    if(LV.indexOf(l)<0)l="school";
+    body.setAttribute("data-level",l);
+    LV.forEach(function(x){$("p-"+x).classList.toggle("on",x===l);});
+    document.querySelectorAll(".levels button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-l")===l);});
+    buildTOC(l);
+    if(!noHash)history.replaceState(null,"","#"+l);
+    redraw();
+  }
+  document.querySelectorAll(".levels button").forEach(function(b){b.onclick=function(){setLevel(b.getAttribute("data-l"));};});
+  function buildTOC(l){
+    var names={school:"School",working:"Working people",expert:"Experts"};
+    var h='<div class="h">Contents · '+names[l]+'</div><a href="#snapshot">Snapshot · Nov 2026</a>';
+    $("p-"+l).querySelectorAll("section").forEach(function(s){
+      var t=s.querySelector("h2").textContent; h+='<a href="#'+s.id+'">'+t.replace(/^(\d+)/,"$1 · ")+'</a>';
+    });
+    h+='<a href="#sources">Sources</a>';
+    h+='<div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> level<br><kbd>M</kbd> hide contents<br><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause<br><kbd>T</kbd> theme · <kbd>F</kbd> full screen</div>';
+    $("toc").innerHTML=h;
+  }
+
+  /* ---------- Level 1: deposit-loan chain animation ---------- */
+  var anK=1, anTimer=null, MAXK=12, D0=1000, NAMES="ABCDEFGHIJKL";
+  function anR(){return +$("anRate").value/100;}
+  function anRender(){
+    var r=anR(), W=900,H=240,L=70,R=10,T=40,B=30, svg="", c1=cssv("--l2"), c2=cssv("--l1"), ru=cssv("--rule");
+    var bw=(W-L-R)/MAXK, y=function(v){return T+(H-T-B)*(1-v/D0);};
+    for(var g=0;g<=4;g++){var gv=D0*g/4;svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(gv)+'" y2="'+y(gv)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(y(gv)+4)+'" font-size="12" text-anchor="end">'+inr(gv)+'</text>';}
+    var totD=0, totL=0;
+    for(var k=0;k<anK;k++){
+      var d=D0*Math.pow(1-r,k), res=d*r, ln=d-res, x=L+k*bw+bw*0.15, w=bw*0.7;
+      totD+=d; totL+=ln;
+      svg+='<rect x="'+x+'" y="'+y(res)+'" width="'+w+'" height="'+(y(0)-y(res))+'" fill="'+c1+'"/>';
+      svg+='<rect x="'+x+'" y="'+y(d)+'" width="'+w+'" height="'+(y(res)-y(d))+'" fill="'+c2+'"/>';
+      svg+='<text x="'+(x+w/2)+'" y="'+(H-10)+'" font-size="12" text-anchor="middle">Bank '+NAMES[k]+'</text>';
+    }
+    svg+='<rect x="'+L+'" y="8" width="14" height="14" fill="'+c2+'"/><text x="'+(L+20)+'" y="20" font-size="14" style="fill:'+c2+';font-weight:600">lent out (top)</text>';
+    svg+='<rect x="'+(L+160)+'" y="8" width="14" height="14" fill="'+c1+'"/><text x="'+(L+180)+'" y="20" font-size="14" style="fill:'+c1+';font-weight:600">kept as reserve (bottom)</text>';
+    $("anChart").innerHTML=svg;
+    $("anYear").textContent=anK; $("anTot").textContent=inr(totD); $("anLoan").textContent=inr(totL);
+    $("anMsg").textContent = anK===1 ? "Bank A keeps "+inr(D0*r)+" and lends "+inr(D0*(1-r))+". Press S to follow where the loan goes."
+      : "From one ₹1,000 deposit, banks now hold "+inr(totD)+" in deposits. If this went on forever it would approach "+inr(D0/r)+" (₹1,000 ÷ "+(r*100).toFixed(0)+"%). A smaller reserve means more lending and more money.";
+  }
+  function anStep(){ if(anK<MAXK){anK++;anRender();} else anPause(); }
+  function anPlay(){ if(anTimer)return; if(anK>=MAXK)anK=1; anTimer=setInterval(anStep,900); }
+  function anPause(){ clearInterval(anTimer); anTimer=null; }
+  $("anPlay").onclick=anPlay; $("anStep").onclick=function(){anPause();anStep();}; $("anPause").onclick=anPause;
+  $("anReset").onclick=function(){anPause();anK=1;anRender();};
+  $("anRate").oninput=function(){$("anRateL").textContent=this.value+"%";anRender();};
+
+  /* ---------- Level 2: bank P&L ---------- */
+  function pnl(){
+    var g=function(id){return (+$(id).value||0)/100;};
+    var d=g("pnD"), l=g("pnL"), b=g("pnB"), cd=g("pnCD"), o=g("pnO"), cc=g("pnC");
+    var crr=0.03, loans=Math.min(cd,1-crr), bonds=Math.max(0,1-crr-loans);
+    var ii=loans*l+bonds*b, ie=d, nim=ii-ie, ppop=nim-o, prov=loans*cc, pbt=ppop-prov, roa=pbt*0.75;
+    $("pnOut").innerHTML="Per ₹100 of deposits: loans "+inr(loans*100,1)+", bonds "+inr(bonds*100,1)+", CRR ₹3. "+
+      "NIM <b>"+(nim*100).toFixed(2)+"%</b> · after operating costs <b>"+(ppop*100).toFixed(2)+"%</b> · after credit costs <b>"+(pbt*100).toFixed(2)+"%</b> · ROA after tax ≈ <b>"+(roa*100).toFixed(2)+"%</b>. "+
+      "With equity at 8% of assets, ROE ≈ <b>"+(roa/0.08*100).toFixed(1)+"%</b>"+(pbt<0?" — the bank is <b>losing money</b>.":".");
+  }
+  ["pnD","pnL","pnB","pnCD","pnO","pnC"].forEach(function(id){$(id).oninput=pnl;}); pnl();
+
+  /* ---------- Level 3: money multiplier ---------- */
+  function mm(){
+    var c=+$("mmC").value||0, r=+$("mmR").value||0, B=+$("mmB").value||0;
+    var m=(c+r)>0?(1+c)/(c+r):0, M=m*B, Dp=M/(1+c), C=M-Dp;
+    $("mmOut").innerHTML="Multiplier m = <b>"+m.toFixed(2)+"</b> → broad money ≈ <b>₹"+M.toFixed(0)+" lakh crore</b> (deposits ₹"+Dp.toFixed(0)+", currency ₹"+C.toFixed(0)+"). "+
+      "Halving c to "+(c/2).toFixed(3)+" would give m = "+((1+c/2)/(c/2+r)).toFixed(2)+".";
+  }
+  ["mmC","mmR","mmB"].forEach(function(id){$(id).oninput=mm;}); mm();
+
+  /* ---------- quizzes ---------- */
+  var Q={
+    school:[
+      ["What is the biggest problem with barter?",["Goods are too cheap","Both people must want each other's goods at the same time","There are too many coins","Banks are closed"],1,"Economists call this the 'double coincidence of wants'. Money removes the need for it."],
+      ["Which is NOT one of the jobs of money?",["Paying for things","Measuring prices","Saving for later","Growing food"],3,"Money is a medium of exchange, a unit of account and a store of value."],
+      ["Who issues currency notes in India?",["The Government of India","The Reserve Bank of India","SBI","The Post Office"],1,"The RBI issues notes; coins and the ₹1 note are issued by the Government."],
+      ["A bank keeps 20% of a ₹1,000 deposit as reserve. How much can it lend?",["₹200","₹800","₹1,000","₹1,200"],1,"₹1,000 − 20% = ₹800 can be lent out."],
+      ["Someone calls saying they are from your bank and asks for your OTP. You should…",["Share it quickly","Never share it and hang up","Share half of it","Send it by SMS"],1,"Banks never ask for an OTP or PIN. Sharing it lets fraudsters take your money."]
+    ],
+    working:[
+      ["Which measure adds time deposits (FDs) to narrow money?",["M0","M1","M3","CRR"],2,"M3 (broad money) = M1 + time deposits."],
+      ["DICGC deposit insurance covers…",["Mutual funds up to ₹5 lakh","Bank deposits up to ₹5 lakh per depositor per bank","All deposits without limit","Only FDs above ₹5 lakh"],1,"Principal and interest together, up to ₹5 lakh per depositor in each bank."],
+      ["CRR is…",["Cash banks must keep with the RBI as a share of deposits","Government bonds banks must hold","The repo rate","A bank's profit"],0,"CRR is 3% of net demand and time liabilities; SLR (18%) covers liquid assets such as government bonds."],
+      ["A 'digital arrest' video call from 'police' demanding money is…",["A legal procedure","A scam: report it on 1930","A tax notice","An RBI rule"],1,"No Indian agency arrests anyone over a video call. Report it immediately."],
+      ["Bank credit growing faster than deposits usually leads banks to…",["Cut FD rates sharply","Compete harder for deposits","Stop lending","Close branches"],1,"Banks need funding, so they raise or hold up deposit rates to attract savers."]
+    ],
+    expert:[
+      ["With c = 0.15 and r = 0.035, the textbook multiplier is about…",["3.5","6.2","8.0","28.6"],1,"(1 + 0.15) / (0.15 + 0.035) = 1.15 / 0.185 ≈ 6.2."],
+      ["The 'endogenous money' view holds that…",["Reserves cause deposits","Loans create deposits, and reserves are supplied at the policy rate","Banks cannot create money","The multiplier is fixed by law"],1,"Under interest-rate targeting, central banks accommodate reserve demand."],
+      ["Diamond–Dybvig shows that bank runs can be…",["Caused only by fraud","Self-fulfilling equilibria","Caused only by insolvency","Prevented by a higher CRR"],1,"Even solvent banks can face runs if depositors expect others to withdraw."],
+      ["India's minimum total capital plus conservation buffer is…",["8%","10.5%","11.5%","15%"],2,"A 9% minimum (above the Basel 8%) plus a 2.5% CCB = 11.5% of RWA."],
+      ["Gross NPAs of Indian banks peaked at about…",["3% in 2025","11.2% in March 2018","25% in 2008","6% in 2014"],1,"After the AQR, GNPAs peaked near 11.2% in March 2018 before the clean-up."]
+    ]
+  };
+  document.querySelectorAll(".quiz").forEach(function(box){
+    var set=Q[box.getAttribute("data-quiz")], score=0, done=0, h="";
+    set.forEach(function(q,qi){
+      h+='<div class="q" data-i="'+qi+'"><p>'+(qi+1)+'. '+q[0]+'</p>';
+      q[1].forEach(function(o,oi){h+='<button data-o="'+oi+'">'+o+'</button>';});
+      h+='<div class="why">'+q[3]+'</div></div>';
+    });
+    h+='<p class="score"></p>'; box.innerHTML=h;
+    box.querySelectorAll(".q").forEach(function(qd){
+      var q=set[+qd.getAttribute("data-i")];
+      qd.querySelectorAll("button").forEach(function(b){
+        b.onclick=function(){
+          if(qd.classList.contains("done"))return;
+          var o=+b.getAttribute("data-o"); qd.classList.add("done"); done++;
+          if(o===q[2])score++; else b.classList.add("wrong");
+          qd.querySelectorAll("button")[q[2]].classList.add("right");
+          box.querySelector(".score").textContent="Score: "+score+" / "+done+(done===set.length?(score===set.length?" — perfect!":" — review the explanations above."):"");
+        };
+      });
+    });
+  });
+
+  document.addEventListener("keydown",function(e){
+    if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
+    var k=e.key.toLowerCase();
+    if(k==="1")setLevel("school"); else if(k==="2")setLevel("working"); else if(k==="3")setLevel("expert");
+    else if(k==="m")toggleSB(); else if(k==="t")toggleTheme(); else if(k==="f")toggleFS();
+    else if(body.getAttribute("data-level")==="school"){
+      if(k==="p"){anPlay();} else if(k==="s"){anPause();anStep();} else if(k==="x"){anPause();}
+    }
+  });
+
+  setLevel((location.hash||"#school").slice(1),true);
+  window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(LV.indexOf(h)>=0)setLevel(h,true);});
+})();
+</script>
+</body>
+</html>

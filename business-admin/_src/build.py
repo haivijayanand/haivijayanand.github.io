@@ -2,15 +2,15 @@
 """
 TOOL:    business-admin/_src/build.py — builds Business Administration chapter pages and hub from _src/NN.html
 FAMILY:  business-admin
-VERSION: 1.0.0
+VERSION: 1.1.0
 DATE:    2026-11-14
 CHAT:    Business Administration series — 50 chapters, three levels (school, working, expert), interactive
-CHANGES: 1.0.0 - syllabus of 50 chapters in 6 parts; wraps chapter sources with header block, toolbar,
+CHANGES: 1.1.0 - injects shared Kaveri Foods data (kf.js) into Part D chapters; 1.0.0 - syllabus of 50 chapters in 6 parts; wraps chapter sources with header block, toolbar,
                  level switch, contents, pager and footer; writes hub index.html
 STATUS:  working
 """
 import json, re, os, html, sys
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.dirname(HERE)
 DATE = "2026-11-14"
 PARTS = {
@@ -92,7 +92,9 @@ def page(n,src):
     out+=('<a href="%s"><small>← Chapter %02d</small>%s</a>'%(fn(n-1),n-1,e(SYL[n-2][2])) if n>1 else '<a href="./"><small>← Series</small>All chapters</a>')
     out+=('<a class="nx" href="%s"><small>Chapter %02d →</small>%s</a>'%(fn(n+1),n+1,e(SYL[n][2])) if n<len(SYL) else '<a class="nx" href="./"><small>Series →</small>All chapters</a>')
     out+='</nav>\n<footer>\n  Business Administration in Three Levels · Chapter %02d · K Vijay Anand · <a href="./">All chapters</a> · <a href="/finance-economics/">Finance &amp; Economics</a> · <a href="/">Home</a><br>\n  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.\n  Educational content, not legal, tax or investment advice. Rules and figures as of November 2026.\n</footer>\n'%n
-    out+='<script>\n'+tag(src,"js")+'\n</script>\n<script src="assets/ba.js"></script>\n</body>\n</html>\n'
+    js=tag(src,"js")
+    if "/*KF*/" in js: js=js.replace("/*KF*/",open(os.path.join(HERE,"kf.js"),encoding="utf-8").read())
+    out+='<script>\n'+js+'\n</script>\n<script src="assets/ba.js"></script>\n</body>\n</html>\n'
     return out,M
 def hub(metas):
     e=html.escape

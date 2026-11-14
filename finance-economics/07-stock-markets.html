@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<!--
+TOOL:    finance-economics/07-stock-markets.html — Finance & Economics Topic 07: Stock Markets (three levels)
+FAMILY:  finance-economics
+VERSION: 1.0.0
+DATE:    2026-11-14
+CHAT:    Finance & Economics series — three levels (school, working, expert); Topic 07 Stock Markets
+CHANGES: 1.0.0 - seventh topic: shares, exchanges, indices, news-driven price animation, ways to invest,
+                 SIP calculator, drivers, the 2026 market story, F&O and other traps, history; Gordon/CAPM
+                 valuation and diversification calculators, EMH/behavioural, microstructure; quiz per level
+STATUS:  working
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Markets — Finance &amp; Economics in Three Levels — K Vijay Anand</title>
+<meta name="description" content="Stock markets explained at three levels — for school students, for working people and as a review for experts: shares, Sensex and Nifty, SIPs, risks and F&amp;O losses, valuation, efficiency and diversification.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* Colour-blind-safe palette: blue / orange / purple / gold — no red-vs-green coding */
+  :root{--bg:#f4f2ed;--bg2:#e9e5dc;--card:#fffdf8;--ink:#1d1b18;--soft:#4f4940;--faint:#857c6f;--rule:#d6cdbd;
+        --acc:#1d5fa6;--l1:#d9730d;--l2:#1d5fa6;--l3:#6a3fa0;--gold:#a87908;--hi:#fff1d6}
+  :root[data-theme="dark"]{--bg:#121316;--bg2:#1a1c21;--card:#1f2228;--ink:#ece9e2;--soft:#c3bdb2;--faint:#8c8578;--rule:#33363d;
+        --acc:#6aa8ee;--l1:#f39a3d;--l2:#6aa8ee;--l3:#b28ae6;--gold:#e5b33c;--hi:#3a2f17}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.65}
+  a{color:var(--acc)}
+  .toolbar{position:fixed;top:10px;right:12px;z-index:30;display:flex;gap:8px;font-size:13px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button,.toolbar a{background:var(--card);color:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;text-decoration:none}
+  header{padding:70px 4vw 18px;max-width:1600px;margin:0 auto}
+  .series{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-family:"Playfair Display",serif;font-weight:800;font-size:clamp(46px,7vw,84px);margin:6px 0 4px;line-height:1}
+  .tag{color:var(--soft);max-width:70ch;margin:0}
+  /* level switch */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 0}
+  .levels button{text-align:left;background:var(--card);border:2px solid var(--rule);border-radius:12px;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink)}
+  .levels button b{display:block;font-size:18px}
+  .levels button small{color:var(--faint)}
+  .levels button .k{float:right;font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:0 6px;color:var(--faint)}
+  .levels button[data-l="school"].on{border-color:var(--l1);background:color-mix(in srgb,var(--l1) 10%,var(--card))}
+  .levels button[data-l="working"].on{border-color:var(--l2);background:color-mix(in srgb,var(--l2) 10%,var(--card))}
+  .levels button[data-l="expert"].on{border-color:var(--l3);background:color-mix(in srgb,var(--l3) 10%,var(--card))}
+  /* layout */
+  .wrap{max-width:1600px;margin:0 auto;padding:0 4vw 40px;display:grid;grid-template-columns:250px 1fr;gap:34px}
+  body.nosb .wrap{grid-template-columns:1fr}
+  body.nosb aside{display:none}
+  aside{position:sticky;top:60px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;font-size:14.5px;padding-top:20px}
+  aside .h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  aside a{display:block;padding:5px 10px;border-left:3px solid var(--rule);color:var(--soft);text-decoration:none}
+  aside a:hover{border-left-color:var(--lc);color:var(--ink)}
+  aside .keys{margin-top:18px;color:var(--faint);font-size:12.5px;line-height:1.9}
+  kbd{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--card)}
+  main{min-width:0}
+  .panel{display:none}
+  .panel.on{display:block}
+  #p-school{--lc:var(--l1)} #p-working{--lc:var(--l2)} #p-expert{--lc:var(--l3)}
+  body[data-level="school"]{--lc:var(--l1)} body[data-level="working"]{--lc:var(--l2)} body[data-level="expert"]{--lc:var(--l3)}
+  .lvhead{border-left:6px solid var(--lc);padding:4px 0 4px 16px;margin:24px 0 10px}
+  .lvhead .who{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--lc);font-weight:700}
+  .lvhead p{margin:4px 0 0;color:var(--soft)}
+  section{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:22px 28px;margin:18px 0}
+  h2{font-family:"Playfair Display",serif;font-size:30px;margin:0 0 10px;line-height:1.2}
+  h2 .n{color:var(--lc);margin-right:8px}
+  h3{font-size:18px;margin:20px 0 6px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .box{border:1px solid var(--rule);border-radius:10px;padding:14px 16px;background:var(--bg)}
+  .box b.t{display:block;color:var(--lc);margin-bottom:4px}
+  .def{font-size:20px;border-left:5px solid var(--lc);background:color-mix(in srgb,var(--lc) 8%,transparent);padding:12px 18px;border-radius:0 10px 10px 0;margin:8px 0 14px}
+  .note{background:var(--hi);border-radius:8px;padding:10px 14px;font-size:15.5px}
+  .eq{font-family:"JetBrains Mono",monospace;background:var(--bg2);border-radius:8px;padding:10px 14px;overflow-x:auto;font-size:15px;white-space:pre}
+  table{border-collapse:collapse;width:100%;font-size:15.5px;margin:8px 0}
+  th,td{border-bottom:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:10px}
+  .stat{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--bg)}
+  .stat .v{font-size:28px;white-space:nowrap;font-weight:700;color:var(--acc);line-height:1.1}
+  .stat .l{font-size:13.5px;color:var(--soft)}
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;margin:10px 0}
+  .ctl label{font-size:13.5px;color:var(--soft);display:flex;flex-direction:column;gap:3px}
+  .ctl input[type=number]{width:120px;font:inherit;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)}
+  .ctl input[type=range]{width:200px}
+  .btn{background:var(--lc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--lc);border:1px solid var(--lc)}
+  .out{font-size:18px;margin:8px 0}
+  .out b{color:var(--lc)}
+  svg text{fill:var(--soft);font-family:Inter,sans-serif}
+  /* basket animation */
+  .stage{border:1px dashed var(--rule);border-radius:10px;padding:14px;background:var(--bg);min-height:170px}
+  .stage .yr{font-size:26px;font-weight:700}
+  .stage .yr span{color:var(--l1)}
+  .samosas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:44px}
+  .sam{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:30px solid var(--l1);transition:opacity .3s}
+  .sam.gone{opacity:.15}
+  /* quiz */
+  .q{border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:10px 0;background:var(--bg)}
+  .q p{margin:0 0 8px;font-weight:600}
+  .q button{display:block;width:100%;text-align:left;margin:5px 0;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;font:inherit;color:var(--ink);cursor:pointer}
+  .q button.right{border:2px solid var(--l2);background:color-mix(in srgb,var(--l2) 14%,var(--card))}
+  .q button.right::after{content:"  ✔ correct";font-weight:700;color:var(--l2)}
+  .q button.wrong{border:2px dashed var(--l1)}
+  .q button.wrong::after{content:"  ✘ not this one";font-weight:700;color:var(--l1)}
+  .q .why{display:none;font-size:15px;color:var(--soft);margin-top:6px}
+  .q.done .why{display:block}
+  .score{font-weight:700;color:var(--lc)}
+  footer{max-width:1600px;margin:0 auto;padding:20px 4vw 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--faint)}
+  footer a{color:var(--soft)}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}aside{display:none}.levels{grid-template-columns:1fr}section{padding:18px}}
+  @media print{.toolbar,aside,.levels{display:none}.panel{display:block!important}.wrap{display:block}}
+</style>
+</head>
+<body data-level="school">
+<div class="toolbar">
+  <a href="./">← Series</a>
+  <button id="sbBtn" title="Show / hide contents (M)">☰ Contents</button>
+  <button id="themeBtn" title="Light / dark (T)">◐ Theme</button>
+  <button id="fsBtn" title="Full screen (F)">⤢ Full screen</button>
+</div>
+
+<header>
+  <div class="series">Finance &amp; Economics · Topic 07</div>
+  <h1>Stock Markets</h1>
+  <p class="tag">What a share is, why prices go up and down, how Sensex and Nifty work, how ordinary people invest through SIPs, the traps that cost traders lakhs, and what the theory says about whether markets can be beaten. Pick your level.</p>
+  <div class="levels" role="tablist">
+    <button data-l="school" class="on"><span class="k">1</span><b>🎒 School</b><small>Owning a slice of a company</small></button>
+    <button data-l="working"><span class="k">2</span><b>💼 Working people</b><small>Investing, SIPs, risks, the 2026 market</small></button>
+    <button data-l="expert"><span class="k">3</span><b>🎓 Experts — review</b><small>Valuation, efficiency, risk, microstructure</small></button>
+  </div>
+</header>
+
+<div class="wrap">
+<aside id="toc"></aside>
+<main>
+
+<section id="snapshot" style="border-top:4px solid var(--gold)">
+  <h2>Where things stand — November 2026</h2>
+  <div class="snap">
+    <div class="stat"><div class="v">81,879 / 25,255</div><div class="l">Sensex / Nifty 50 at close on 11 Nov 2026, their highest since 27 Feb 2026, after a sharp fall during the West Asia conflict</div></div>
+    <div class="stat"><div class="v">₹32,160 cr</div><div class="l">Monthly SIP inflow into mutual funds in October 2026, just below September's record of ₹32,490 crore. More than 10 crore SIP accounts are contributing.</div></div>
+    <div class="stat"><div class="v">≈ ₹1.9 lakh cr</div><div class="l">Net selling of Indian equities by foreign portfolio investors in 2026 (heaviest in March), which cut their ownership to about 15% of market value</div></div>
+    <div class="stat"><div class="v">91%</div><div class="l">Share of individual F&amp;O traders who lost money in FY25 (SEBI study). Combined net losses were about ₹1.06 lakh crore.</div></div>
+    <div class="stat"><div class="v">0.5%</div><div class="l">Share of F&amp;O traders who stayed profitable in every one of five years (SEBI study, August 2026)</div></div>
+  </div>
+  <p class="note" style="margin-top:12px">This is a dated snapshot. Markets move every day, and nothing on this page is a recommendation to buy or sell anything. The ideas below don't change; these numbers will.</p>
+</section>
+
+<!-- ========================= LEVEL 1 : SCHOOL ====================== -->
+<div class="panel on" id="p-school">
+  <div class="lvhead"><div class="who">Level 1 · For school students</div><p>A share is a tiny piece of a company. The stock market is where those pieces are bought and sold.</p></div>
+
+  <section id="s1">
+    <h2><span class="n">1</span>What is a share?</h2>
+    <div class="def">A <b>share</b> (or stock) is a small piece of ownership in a company. If you own a share, you own a tiny part of that company, including a tiny part of its profits.</div>
+    <p>Imagine your friend Meena runs a lemonade stand and needs ₹1,000 to buy a bigger cooler. She splits the business into 10 equal pieces and sells each for ₹100. If you buy one piece, you own <b>1/10th</b> of the stand. When the stand earns profit, you get your share. If the stand becomes famous, others may want to buy your piece for more than ₹100!</p>
+    <div class="cols">
+      <div class="box"><b class="t">Company gets money</b>To grow: new factories, shops, research</div>
+      <div class="box"><b class="t">You get ownership</b>A share of profits (called a <b>dividend</b>) and a share of the company's growth</div>
+      <div class="box"><b class="t">But no promise</b>If the company does badly, your piece may be worth less. A share is not a fixed deposit.</div>
+    </div>
+  </section>
+
+  <section id="s2">
+    <h2><span class="n">2</span>Watch it happen: news moves the price</h2>
+    <p>Meena's Lemonade Ltd. starts at <b>₹100</b> a share. Each step brings some news. Watch how buyers and sellers push the price up or down. Press Play, or press S for one piece of news at a time.</p>
+    <div class="ctl">
+      <button class="btn" id="anPlay">▶ Play (P)</button>
+      <button class="btn ghost" id="anStep">Next news (S)</button>
+      <button class="btn ghost" id="anPause">⏸ Pause (X)</button>
+      <button class="btn ghost" id="anReset">↺ Reset</button>
+    </div>
+    <div class="stage">
+      <div class="yr">Share price <span id="anPrice">₹100</span></div>
+      <svg id="anChart" viewBox="0 0 900 250" style="width:100%;height:auto;margin-top:6px"></svg>
+      <p id="anMsg" style="margin:6px 0 0;color:var(--soft);font-size:17px">Press Play, or press S to hear the first piece of news.</p>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="n">3</span>Where shares are traded</h2>
+    <ul>
+      <li>A <b>stock exchange</b> is a marketplace for shares. Today it runs entirely on computers: buyers and sellers place orders, and the exchange matches them in fractions of a second.</li>
+      <li>India's two big exchanges are the <b>BSE</b> (Bombay Stock Exchange, started in 1875, one of the oldest in Asia) and the <b>NSE</b> (National Stock Exchange, 1992).</li>
+      <li>When a company sells shares to the public for the first time, it is called an <b>IPO</b> (Initial Public Offering). After that, people trade those shares among themselves on the exchange.</li>
+      <li><b>SEBI</b> (Securities and Exchange Board of India) is the referee. It makes the rules and punishes cheating.</li>
+    </ul>
+  </section>
+
+  <section id="s4">
+    <h2><span class="n">4</span>Sensex and Nifty: the market's thermometer</h2>
+    <p>Thousands of companies are listed, so how do we know if "the market" went up today? We use an <b>index</b>: an average of the prices of big, important companies.</p>
+    <div class="cols">
+      <div class="box"><b class="t">Sensex</b>Tracks 30 large companies on the BSE</div>
+      <div class="box"><b class="t">Nifty 50</b>Tracks 50 large companies on the NSE</div>
+      <div class="box"><b class="t">Reading the news</b>"Sensex up 773 points" means these big companies' prices rose on average that day. On 11 November 2026, the Sensex closed at 81,879.</div>
+    </div>
+  </section>
+
+  <section id="s5">
+    <h2><span class="n">5</span>Risk: why prices can fall</h2>
+    <ul>
+      <li>Prices go <b>down</b> as well as up, sometimes a lot. In 2026, Indian markets fell sharply when a war pushed oil prices up, then recovered later in the year.</li>
+      <li><b>Don't put all your eggs in one basket:</b> owning many companies (diversification) means one company's bad news hurts less.</li>
+      <li><b>Time helps:</b> over many years, good companies tend to grow, but over a few months anything can happen. Money you need soon should not be in shares.</li>
+      <li><b>Beware "get rich quick":</b> anyone promising sure profits is either mistaken or cheating.</li>
+    </ul>
+  </section>
+
+  <section id="s6">
+    <h2><span class="n">6</span>Words to remember</h2>
+    <table>
+      <tr><th>Word</th><th>Meaning</th></tr>
+      <tr><td>Share / stock</td><td>A small piece of ownership in a company</td></tr>
+      <tr><td>Shareholder</td><td>A person who owns shares</td></tr>
+      <tr><td>Dividend</td><td>Part of the profit paid out to shareholders</td></tr>
+      <tr><td>Stock exchange</td><td>The marketplace where shares are bought and sold (BSE, NSE)</td></tr>
+      <tr><td>IPO</td><td>A company's first sale of shares to the public</td></tr>
+      <tr><td>Index</td><td>A number tracking a group of shares (Sensex, Nifty)</td></tr>
+      <tr><td>Bull / bear market</td><td>A period of rising / falling prices</td></tr>
+    </table>
+  </section>
+
+  <section id="s7">
+    <h2><span class="n">7</span>Check yourself</h2>
+    <div class="quiz" data-quiz="school"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 2 : WORKING ===================== -->
+<div class="panel" id="p-working">
+  <div class="lvhead"><div class="who">Level 2 · For working people</div><p>How the market is organised, the ways to invest, what drives prices, the 2026 story, the real risks, and how markets connect to the country and the world. This is educational only, not investment advice.</p></div>
+
+  <section id="w1">
+    <h2><span class="n">1</span>How the market is organised</h2>
+    <table>
+      <tr><th>Piece</th><th>Role</th></tr>
+      <tr><td>Primary market</td><td>Companies raise new money through IPOs, follow-on offers and rights issues</td></tr>
+      <tr><td>Secondary market</td><td>Investors trade existing shares on the BSE and NSE. The company gets no new money, but a liquid market makes its shares valuable.</td></tr>
+      <tr><td>SEBI</td><td>The regulator: listing rules, disclosure, insider-trading and manipulation cases, investor protection</td></tr>
+      <tr><td>Depositories (NSDL, CDSL)</td><td>Hold your shares electronically in a <b>demat</b> account</td></tr>
+      <tr><td>Brokers</td><td>Route your orders to the exchange. Discount brokers charge low fees; full-service brokers add research.</td></tr>
+      <tr><td>Clearing corporations</td><td>Guarantee settlement. India moved to <b>T+1</b> settlement in 2023: shares and money change hands the next working day.</td></tr>
+    </table>
+  </section>
+
+  <section id="w2">
+    <h2><span class="n">2</span>Ways to invest</h2>
+    <div class="cols">
+      <div class="box"><b class="t">Direct shares</b>You pick companies yourself. This needs time, knowledge and discipline, and concentration risk is high.</div>
+      <div class="box"><b class="t">Mutual funds</b>A professional manager pools money from many investors. Diversified, regulated, with costs shown as the <b>expense ratio</b>.</div>
+      <div class="box"><b class="t">Index funds and ETFs</b>Simply copy an index such as the Nifty 50. Very low cost; you get the market's return, not more and not less.</div>
+      <div class="box"><b class="t">SIP</b>A Systematic Investment Plan invests a fixed amount every month. It builds discipline and averages your buying price. Indians put about ₹32,000 crore a month into SIPs in 2026.</div>
+    </div>
+    <h3>Calculator: SIP growth under different return assumptions</h3>
+    <div class="ctl">
+      <label>Monthly SIP (₹)<input type="number" id="spA" value="10000" step="500"></label>
+      <label>Years<input type="number" id="spY" value="20" min="1" max="40"></label>
+      <label>Annual step-up %<input type="number" id="spU" value="5" step="1"></label>
+      <label>Assumed return % a year<input type="number" id="spR" value="11" step="0.5"></label>
+    </div>
+    <div class="out" id="spOut"></div>
+    <svg id="spChart" viewBox="0 0 900 270" style="width:100%;max-width:1000px;height:auto"></svg>
+    <p class="note">Returns are assumptions, not forecasts. Equity returns arrive unevenly, with years of losses. Past index returns do not guarantee future ones. Remember inflation (Topic 01) and taxes (Topic 06).</p>
+  </section>
+
+  <section id="w3">
+    <h2><span class="n">3</span>What moves share prices</h2>
+    <ul>
+      <li><b>Earnings:</b> over the long run, prices follow company profits. A share's <b>P/E ratio</b> (price ÷ earnings per share) shows how much investors pay for each rupee of profit.</li>
+      <li><b>Interest rates:</b> higher rates make bonds and FDs more attractive and future profits less valuable today, so rising rates usually weigh on shares (Topic 02).</li>
+      <li><b>Money flows:</b> foreign investors (FPIs) versus domestic institutions (mutual funds, insurers, the EPFO). In 2026, steady domestic SIP money absorbed much of the record foreign selling.</li>
+      <li><b>The rupee and oil:</b> a weak rupee and costly oil hurt importers and foreign investors' dollar returns (Topic 05).</li>
+      <li><b>Sentiment:</b> fear and greed can push prices far from fair value in the short run.</li>
+    </ul>
+  </section>
+
+  <section id="w4">
+    <h2><span class="n">4</span>The 2026 story</h2>
+    <ol>
+      <li><b>Early 2026:</b> the Nifty traded near 25,000–26,000, but foreign investors were already selling after heavy outflows in 2025.</li>
+      <li><b>The West Asia shock:</b> oil prices spiked, the rupee slid towards ₹97 per dollar, and FPIs sold a record amount in March (about ₹1.18 lakh crore). The Sensex fell to the 70,000s.</li>
+      <li><b>The domestic cushion:</b> SIP inflows kept rising to records above ₹32,000 crore a month. Domestic institutions bought what foreigners sold, and FPI ownership fell to about 15%, a multi-year low.</li>
+      <li><b>Autumn recovery:</b> easing crude prices, strong GDP growth (Topic 03) and some foreign buying lifted the Sensex to about 81,900 by mid-November, its highest since February.</li>
+    </ol>
+  </section>
+
+  <section id="w5">
+    <h2><span class="n">5</span>The real risks, and the traps</h2>
+    <div class="cols">
+      <div class="box"><b class="t">F&amp;O trading</b>Futures and options are leveraged bets. SEBI found that <b>91%</b> of individual traders lost money in FY25, about ₹1.06 lakh crore in total. Its 2026 study found that experience did not help: only about 1 in 200 stayed profitable in every one of five years.</div>
+      <div class="box"><b class="t">Tips and "finfluencers"</b>Telegram and WhatsApp stock tips, pump-and-dump schemes and fake trading apps cost investors heavily. Check that any adviser is <b>SEBI-registered</b>.</div>
+      <div class="box"><b class="t">IPO hype</b>Oversubscription does not mean value. Many popular IPOs trade below their offer price a year later.</div>
+      <div class="box"><b class="t">Behaviour</b>Selling in panic during falls, chasing last year's best fund, and checking prices daily all hurt returns more than market crashes do.</div>
+    </div>
+  </section>
+
+  <section id="w6">
+    <h2><span class="n">6</span>Stock markets and the country</h2>
+    <ul>
+      <li><b>Funding growth:</b> markets channel savings into companies building factories, telecom networks and new technology, alongside bank credit (Topic 04).</li>
+      <li><b>Household savings shift:</b> Indian households are moving from gold, property and FDs towards mutual funds and shares. This deepens the market but raises the stakes of investor education.</li>
+      <li><b>Wealth effect:</b> rising markets make shareholders feel richer and spend more; crashes do the reverse.</li>
+      <li><b>Market infrastructure:</b> SEBI cleared the long-awaited NSE IPO in 2026, which will let investors own a stake in the exchange itself.</li>
+    </ul>
+  </section>
+
+  <section id="w7">
+    <h2><span class="n">7</span>The global picture and history</h2>
+    <ul>
+      <li><b>Famous crashes:</b> 1929 (the Great Depression), 1987 (Black Monday, −22% in a day in the US), 2000 (the dot-com bust), 2008 (the global financial crisis), March 2020 (COVID). Markets recovered from each, sometimes only after many years.</li>
+      <li><b>India's own episodes:</b> the 1992 Harshad Mehta scam (which led to SEBI getting statutory powers and the NSE's electronic trading), the 2008 fall of about 50% or more, and the 2020 crash and recovery.</li>
+      <li><b>Global links:</b> US markets, driven in 2025–26 by the AI boom, set the global mood. When US yields rise or tech shares fall, emerging markets such as India often see foreign selling.</li>
+    </ul>
+  </section>
+
+  <section id="w8">
+    <h2><span class="n">8</span>Sensible habits</h2>
+    <ul>
+      <li>Invest in equities only for goals five or more years away. Keep an emergency fund and near-term money in safer options.</li>
+      <li>Prefer diversified, low-cost funds; check the expense ratio and pick direct plans where suitable.</li>
+      <li>Continue SIPs through downturns; that is when they buy more units.</li>
+      <li>Rebalance once a year to your chosen mix of equity and debt.</li>
+      <li>Avoid leverage, F&amp;O speculation and unregistered advice.</li>
+    </ul>
+    <p class="note">Educational content only, not investment advice. Mutual fund investments are subject to market risks; read all scheme-related documents carefully.</p>
+  </section>
+
+  <section id="w9">
+    <h2><span class="n">9</span>Check yourself</h2>
+    <div class="quiz" data-quiz="working"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 3 : EXPERT ====================== -->
+<div class="panel" id="p-expert">
+  <div class="lvhead"><div class="who">Level 3 · Review for experts</div><p>Valuation, the efficient-market debate, risk and diversification, factor models, microstructure, India's market structure and the macro-finance links.</p></div>
+
+  <section id="e1">
+    <h2><span class="n">1</span>Valuation</h2>
+    <div class="eq">Gordon growth:   P₀ = D₁ / (r − g)       →   P/E = payout × (1 + g) / (r − g)
+CAPM cost of equity:   r = r_f + β · ERP              Earnings yield ≈ r − g (when growth earns its cost of capital)</div>
+    <div class="ctl">
+      <label>Risk-free rate %<input type="number" id="ggF" value="6.5" step="0.1"></label>
+      <label>Equity risk premium %<input type="number" id="ggE" value="5" step="0.1"></label>
+      <label>Beta<input type="number" id="ggB" value="1.0" step="0.05"></label>
+      <label>Long-run nominal growth g %<input type="number" id="ggG" value="9" step="0.1"></label>
+      <label>Payout ratio %<input type="number" id="ggP" value="40" step="1"></label>
+      <label>Observed P/E<input type="number" id="ggO" value="22" step="0.5"></label>
+    </div>
+    <div class="out" id="ggOut"></div>
+    <p class="note">Valuation is very sensitive to (r − g): a 1-point change can move the fair P/E by 20–40% when the spread is small. Use the calculator to see why the "right" multiple for India is so contested.</p>
+  </section>
+
+  <section id="e2">
+    <h2><span class="n">2</span>Market efficiency and behavioural finance</h2>
+    <ul>
+      <li><b>EMH</b> (Fama, 1970): weak form (past prices are useless for prediction), semi-strong (public information is priced in), strong (even private information is). Grossman–Stiglitz (1980): perfectly efficient markets are impossible, because someone must be paid to gather information.</li>
+      <li><b>Evidence:</b> most active funds underperform their benchmark after costs over long periods (SPIVA India shows the same pattern for large caps). Yet anomalies persist: momentum, value, low volatility and post-earnings drift.</li>
+      <li><b>Behavioural finance:</b> prospect theory (Kahneman–Tversky), overconfidence, the disposition effect, herding, limits to arbitrage (Shleifer–Vishny) and excess volatility (Shiller, 1981). The retail F&amp;O losses documented by SEBI are a textbook case of overconfidence plus lottery preference.</li>
+    </ul>
+  </section>
+
+  <section id="e3">
+    <h2><span class="n">3</span>Risk, diversification and factors</h2>
+    <div class="eq">Equal-weight portfolio of n stocks:   σ_p² = σ²/n + (1 − 1/n)·ρ·σ²        →  as n→∞, σ_p → σ·√ρ  (systematic risk)</div>
+    <div class="ctl">
+      <label>Single-stock volatility σ %<input type="number" id="dvS" value="35" step="1"></label>
+      <label>Average pairwise correlation ρ<input type="number" id="dvR" value="0.30" step="0.05"></label>
+      <label>Number of stocks n<input type="number" id="dvN" value="20" min="1" step="1"></label>
+    </div>
+    <div class="out" id="dvOut"></div>
+    <svg id="dvChart" viewBox="0 0 900 240" style="width:100%;max-width:1000px;height:auto"></svg>
+    <ul>
+      <li><b>CAPM</b> (Sharpe, Lintner, 1964–65): only systematic (β) risk is priced. Empirically the security market line is too flat, the "low-beta anomaly".</li>
+      <li><b>Factor models:</b> Fama–French three and five factors (market, size, value, profitability, investment), plus momentum (Carhart). Factor premia exist in India too but are time-varying and crowded.</li>
+      <li><b>Tail risk:</b> returns are fat-tailed and correlations rise in crises, just when diversification is needed most.</li>
+    </ul>
+  </section>
+
+  <section id="e4">
+    <h2><span class="n">4</span>Microstructure and regulation</h2>
+    <ul>
+      <li><b>Continuous double auction</b> with a limit-order book; price-time priority; pre-open call auction; index-based market-wide circuit breakers (10/15/20%) and stock-level price bands.</li>
+      <li><b>Settlement:</b> India's T+1 (fully adopted in 2023) and optional T+0 make it one of the fastest-settling major markets. Margin rules and peak-margin reporting curbed intraday leverage.</li>
+      <li><b>Derivatives:</b> Indian index options became the world's largest by contract volume. SEBI's late-2024 measures (bigger contract sizes, one weekly expiry per exchange, upfront premium collection, intraday position monitoring) and studies in 2025–26 show fewer traders but persistent losses.</li>
+      <li><b>Algorithmic and high-frequency trading:</b> co-location, order-to-trade ratios and the 2025 Jane Street order (alleged index manipulation around expiry) highlight surveillance challenges.</li>
+    </ul>
+  </section>
+
+  <section id="e5">
+    <h2><span class="n">5</span>India's market structure in 2026</h2>
+    <ul>
+      <li><b>The domestic flow regime:</b> SIP inflows of more than ₹32,000 crore a month plus EPFO and insurance money create a steady domestic bid. Domestic institutions now rival or exceed foreign investors in ownership; FPI ownership is near 15%, a multi-year low after record selling in 2026.</li>
+      <li><b>Valuation premium:</b> India trades at a premium P/E to emerging-market peers, justified by its higher expected earnings growth and return on equity. Its persistence depends on the cost of capital (rates, the rupee) and earnings delivery.</li>
+      <li><b>Primary-market depth:</b> a strong IPO pipeline including large new-economy listings and the NSE's own IPO, with SME-IPO excesses prompting tighter SEBI rules.</li>
+      <li><b>Household balance sheets:</b> the shift of financial savings towards equity improves capital allocation but concentrates market risk on households, many of them first-time investors.</li>
+    </ul>
+  </section>
+
+  <section id="e6">
+    <h2><span class="n">6</span>Macro-finance links</h2>
+    <ul>
+      <li><b>Discount-rate channel:</b> long-duration equity is sensitive to the real rate and the term premium. A US 10-year yield near 5% (Topic 02) compresses global multiples, particularly for growth stocks.</li>
+      <li><b>Tobin's q and investment:</b> high market valuations relative to replacement cost encourage capital spending and equity issuance.</li>
+      <li><b>Wealth effect and financial conditions:</b> equity prices feed into financial-conditions indices that central banks monitor.</li>
+      <li><b>Bubbles and crashes:</b> Minsky's financial-instability hypothesis, rational bubbles, and Shiller's CAPE as a long-horizon (not timing) signal.</li>
+    </ul>
+  </section>
+
+  <section id="e7">
+    <h2><span class="n">7</span>Review checklist: open questions</h2>
+    <ol>
+      <li>Is India's structural domestic SIP bid making the market less sensitive to foreign flows, and does it compress the equity risk premium?</li>
+      <li>What is a defensible long-run (r − g) for Indian equities, given the rupee's depreciation trend?</li>
+      <li>Have SEBI's F&amp;O measures reduced household losses enough, or are suitability tests (as in some markets) needed?</li>
+      <li>How much active management can India's market support before it becomes efficient, as the US large-cap market has?</li>
+      <li>Is the concentration of index weight in a few stocks, and the rise of passive funds, changing price discovery?</li>
+      <li>How should household equity risk be weighed in financial-stability assessments?</li>
+    </ol>
+  </section>
+
+  <section id="e8">
+    <h2><span class="n">8</span>Check yourself</h2>
+    <div class="quiz" data-quiz="expert"></div>
+  </section>
+</div>
+
+<section id="sources">
+  <h2>Sources and further reading</h2>
+  <ul>
+    <li>Market levels: <a href="https://www.newkerala.com/news/a/sensex-climbs-773-points-nifty-tops-25250-as-862.htm">NewKerala / IANS (11 Nov 2026)</a>, <a href="https://www.jmfinancialservices.in/market-news-and-insights/1748104">JM Financial</a>, <a href="https://hdfcsky.com/news/market-close-report-today-november-9-2026-nifty-sensex-post-modest-gains-as-diwali-party-pauses-for-breath">HDFC Sky</a>.</li>
+    <li>AMFI data: <a href="https://www.kotakneo.com/news/mutual-funds/equity-mutual-fund-inflows-fall-14-percent-october-2026-sip-contributions/">Kotak Neo (October 2026)</a>, <a href="https://www.kotakneo.com/news/mutual-funds/sip-inflows-hit-record-32490-crore-september/">Kotak Neo (September 2026 record)</a>.</li>
+    <li>FPI flows: <a href="https://www.kotakneo.com/news/market-news/fpi-outflows-1-9-lakh-crore-2026-ai-rally-india-equities/">Kotak Neo</a>; ownership near 15%: <a href="https://durslt.du.ac.in/first-dry/FPIs-Offload-Over-219-Lakh-Crore-in-Indian-Equities-in-2026-Stirring-Debate-on-Capital-Flow-Cycles-12-7088">report (May 2026)</a>; NSE IPO NOC: <a href="https://www.newsonair.gov.in/sebi-grants-noc-for-long-awaited-ipo-of-national-stock-exchange/">News On AIR</a>.</li>
+    <li>SEBI F&amp;O studies: <a href="https://www.business-standard.com/amp/markets/news/net-losses-of-traders-in-fo-widens-in-fy25-sebi-study-125070701221_1.html">FY25 study (Business Standard)</a>; <a href="https://www.outlookmoney.com/invest/sebi-futures-options-study-retail-traders-trading-losses-experience">FY25–26 behaviour study (Outlook Money)</a>.</li>
+    <li>Fama, E. (1970), "Efficient Capital Markets", <i>Journal of Finance</i>; Shiller, R. (1981), <i>AER</i>; Grossman, S. and Stiglitz, J. (1980), <i>AER</i>; Fama, E. and French, K. (1993, 2015).</li>
+    <li>Earlier topics: <a href="01-inflation.html">Inflation</a> · <a href="02-interest-rates.html">Interest Rates</a> · <a href="03-gdp.html">GDP</a> · <a href="04-money-banking.html">Money &amp; Banking</a> · <a href="05-exchange-rates.html">Exchange Rates</a> · <a href="06-taxes.html">Taxes</a>.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<footer>
+  Finance &amp; Economics in Three Levels · Topic 07 · K Vijay Anand · <a href="06-taxes.html">← Topic 06 Taxes</a> · <a href="./">All topics</a> · <a href="/">Home</a><br>
+  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.
+  Educational content, not investment advice. Figures dated November 2026.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var root=document.documentElement, body=document.body;
+  var $=function(id){return document.getElementById(id);};
+  var inr=function(x,d){return "₹"+Number(x).toLocaleString("en-IN",{minimumFractionDigits:d||0,maximumFractionDigits:d||0});};
+  var cssv=function(n){return getComputedStyle(root).getPropertyValue(n).trim();};
+
+  try{var t=localStorage.getItem("fe-theme");if(t)root.setAttribute("data-theme",t);}catch(e){}
+  function redraw(){anRender();drawSIP();drawDiv();}
+  function toggleTheme(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("fe-theme",n);}catch(e){}redraw();}
+  function toggleFS(){if(!document.fullscreenElement){(root.requestFullscreen||function(){}).call(root);}else{document.exitFullscreen();}}
+  function toggleSB(){body.classList.toggle("nosb");}
+  $("themeBtn").onclick=toggleTheme; $("fsBtn").onclick=toggleFS; $("sbBtn").onclick=toggleSB;
+
+  var LV=["school","working","expert"];
+  function setLevel(l,noHash){
+    if(LV.indexOf(l)<0)l="school";
+    body.setAttribute("data-level",l);
+    LV.forEach(function(x){$("p-"+x).classList.toggle("on",x===l);});
+    document.querySelectorAll(".levels button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-l")===l);});
+    buildTOC(l);
+    if(!noHash)history.replaceState(null,"","#"+l);
+    redraw();
+  }
+  document.querySelectorAll(".levels button").forEach(function(b){b.onclick=function(){setLevel(b.getAttribute("data-l"));};});
+  function buildTOC(l){
+    var names={school:"School",working:"Working people",expert:"Experts"};
+    var h='<div class="h">Contents · '+names[l]+'</div><a href="#snapshot">Snapshot · Nov 2026</a>';
+    $("p-"+l).querySelectorAll("section").forEach(function(s){
+      var t=s.querySelector("h2").textContent; h+='<a href="#'+s.id+'">'+t.replace(/^(\d+)/,"$1 · ")+'</a>';
+    });
+    h+='<a href="#sources">Sources</a>';
+    h+='<div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> level<br><kbd>M</kbd> hide contents<br><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause<br><kbd>T</kbd> theme · <kbd>F</kbd> full screen</div>';
+    $("toc").innerHTML=h;
+  }
+
+  /* ---------- Level 1: news-driven price animation ---------- */
+  var EV=[
+    ["Hot summer! Lemonade sales double.",+18],
+    ["A rumour says the lemons are bad. It's false, but people panic and sell.",-22],
+    ["The rumour is cleared. Buyers return.",+14],
+    ["Meena opens a second stand near the school.",+20],
+    ["A long rainy season: fewer customers.",-15],
+    ["Profits for the year are good. Meena pays a ₹5 dividend per share.",+10],
+    ["A big juice company starts selling nearby.",-12],
+    ["Meena launches mango lemonade, a big hit!",+25],
+    ["Everyone is excited; some buy just because the price is rising.",+15],
+    ["The excitement cools; the price settles back towards what the business earns.",-14]
+  ];
+  var anI=0, anTimer=null, P=[100];
+  (function(){for(var i=0;i<EV.length;i++)P.push(P[i]*(1+EV[i][1]/100));})();
+  function anRender(){
+    var W=900,H=250,L=60,R=40,T=20,B=34, svg="", c1=cssv("--l2"), c2=cssv("--l1"), ru=cssv("--rule"), ink=cssv("--ink");
+    var ymax=Math.ceil(Math.max.apply(null,P)/50)*50, ymin=50, n=EV.length;
+    var X=function(i){return L+(W-L-R)*i/n;}, Y=function(v){return T+(H-T-B)*(1-(v-ymin)/(ymax-ymin));};
+    for(var g=ymin;g<=ymax;g+=50)svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(g)+'" y2="'+Y(g)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(Y(g)+4)+'" font-size="12" text-anchor="end">₹'+g+'</text>';
+    svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(100)+'" y2="'+Y(100)+'" stroke="'+c2+'" stroke-dasharray="6 5" stroke-width="2"/><text x="'+(W-R)+'" y="'+(Y(100)-5)+'" font-size="12" text-anchor="end" style="fill:'+c2+'">bought at ₹100</text>';
+    var p="";for(var i=0;i<=anI;i++)p+=(i?"L":"M")+X(i)+","+Y(P[i]);
+    svg+='<path d="'+p+'" fill="none" stroke="'+c1+'" stroke-width="4"/>';
+    for(i=0;i<=anI;i++){svg+='<circle cx="'+X(i)+'" cy="'+Y(P[i])+'" r="6" fill="'+c1+'"/>';if(i>0)svg+='<text x="'+X(i)+'" y="'+(H-B+18)+'" font-size="12" text-anchor="middle">news '+i+'</text>';}
+    $("anChart").innerHTML=svg;
+    $("anPrice").textContent="₹"+P[anI].toFixed(0);
+    var m;
+    if(anI===0)m="Press Play, or press S to hear the first piece of news.";
+    else{var e=EV[anI-1];m="News "+anI+": "+e[0]+" Price "+(e[1]>0?"up ":"down ")+Math.abs(e[1])+"%.";
+      if(anI===EV.length)m+=" Overall the share went from ₹100 to ₹"+P[anI].toFixed(0)+" because the business grew, but the path was bumpy. Someone who panicked and sold after news 2 lost money.";}
+    $("anMsg").textContent=m;
+  }
+  function anStep(){ if(anI<EV.length){anI++;anRender();} else anPause(); }
+  function anPlay(){ if(anTimer)return; if(anI>=EV.length)anI=0; anTimer=setInterval(anStep,1600); }
+  function anPause(){ clearInterval(anTimer); anTimer=null; }
+  $("anPlay").onclick=anPlay; $("anStep").onclick=function(){anPause();anStep();}; $("anPause").onclick=anPause;
+  $("anReset").onclick=function(){anPause();anI=0;anRender();};
+
+  /* ---------- Level 2: SIP ---------- */
+  function sipPath(A,Y,u,r){var m=Math.pow(1+r,1/12)-1, v=0, inv=0, a=A, out=[[0,0]];for(var y=0;y<Y;y++){for(var k=0;k<12;k++){v=(v+a)*(1+m);inv+=a;}out.push([inv,v]);a*=1+u;}return out;}
+  function drawSIP(){
+    var A=+$("spA").value||0, Y=Math.max(1,Math.min(40,Math.round(+$("spY").value||1))), u=(+$("spU").value||0)/100, r=(+$("spR").value||0)/100;
+    var main=sipPath(A,Y,u,r), fd=sipPath(A,Y,u,0.07), lo=sipPath(A,Y,u,Math.max(0,r-0.03)), last=main[Y];
+    $("spOut").innerHTML="You invest <b>"+inr(last[0])+"</b>. At "+(r*100).toFixed(1)+"% a year it grows to about <b>"+inr(last[1])+"</b> (gain "+inr(last[1]-last[0])+"). "+
+      "At "+(Math.max(0,r-0.03)*100).toFixed(1)+"%: "+inr(lo[Y][1])+". At an FD-like 7%: "+inr(fd[Y][1])+".";
+    var W=900,H=270,L=80,Rm=20,T=34,B=34, svg="", c1=cssv("--l2"), c2=cssv("--l1"), c3=cssv("--l3"), ru=cssv("--rule"), ink=cssv("--faint");
+    var ymax=Math.max(last[1],fd[Y][1])*1.05, X=function(i){return L+(W-L-Rm)*i/Y;}, Yv=function(v){return T+(H-T-B)*(1-v/ymax);};
+    for(var q=0;q<=4;q++){var gv=ymax*q/4;svg+='<line x1="'+L+'" x2="'+(W-Rm)+'" y1="'+Yv(gv)+'" y2="'+Yv(gv)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(Yv(gv)+4)+'" font-size="12" text-anchor="end">'+inr(gv/100000,0)+' L</text>';}
+    var path=function(arr,idx){var s="";for(var i=0;i<=Y;i++)s+=(i?"L":"M")+X(i)+","+Yv(arr[i][idx]);return s;};
+    svg+='<path d="'+path(main,0)+'" fill="none" stroke="'+ink+'" stroke-width="2.5" stroke-dasharray="2 4"/>';
+    svg+='<path d="'+path(fd,1)+'" fill="none" stroke="'+c3+'" stroke-width="3" stroke-dasharray="10 5"/>';
+    svg+='<path d="'+path(lo,1)+'" fill="none" stroke="'+c2+'" stroke-width="3" stroke-dasharray="5 4"/>';
+    svg+='<path d="'+path(main,1)+'" fill="none" stroke="'+c1+'" stroke-width="4"/>';
+    var step=Math.max(1,Math.round(Y/8));for(var i=0;i<=Y;i+=step)svg+='<text x="'+X(i)+'" y="'+(H-B+18)+'" font-size="12" text-anchor="middle">'+i+' y</text>';
+    var lg=[[c1,"",4,"your assumed return (solid)"],[c2,"5 4",3,"3 points lower (short dash)"],[c3,"10 5",3,"7% FD-like (long dash)"],[ink,"2 4",2.5,"amount invested (dotted)"]];
+    var LX=[0,225,445,640];lg.forEach(function(e,k){var x=L+LX[k];svg+='<line x1="'+x+'" x2="'+(x+30)+'" y1="14" y2="14" stroke="'+e[0]+'" stroke-width="'+e[2]+'"'+(e[1]?' stroke-dasharray="'+e[1]+'"':'')+'/><text x="'+(x+36)+'" y="19" font-size="12.5" style="fill:'+e[0]+';font-weight:600">'+e[3]+'</text>';});
+    $("spChart").innerHTML=svg;
+  }
+  ["spA","spY","spU","spR"].forEach(function(id){$(id).oninput=drawSIP;});
+
+  /* ---------- Level 3: Gordon / CAPM ---------- */
+  function gg(){
+    var g=function(id){return (+$(id).value||0)/100;};
+    var rf=g("ggF"), erp=g("ggE"), b=+$("ggB").value||0, gr=g("ggG"), po=g("ggP"), obs=+$("ggO").value||0;
+    var r=rf+b*erp, txt="Cost of equity r = <b>"+(r*100).toFixed(2)+"%</b>. ";
+    if(r<=gr)txt+="r ≤ g, so the Gordon model breaks down. Long-run growth cannot exceed the discount rate.";
+    else{var pe=po*(1+gr)/(r-gr);txt+="Fair P/E = <b>"+pe.toFixed(1)+"</b>. ";
+      var lo=gr, hi=r+0.5; for(var k=0;k<60;k++){var mid=(lo+hi)/2; if(po*(1+gr)/(mid-gr)>obs)lo=mid; else hi=mid;}
+      txt+="An observed P/E of "+obs+" implies a cost of equity of ≈ <b>"+(hi*100).toFixed(2)+"%</b>, i.e. an implied ERP of ≈ <b>"+((hi-rf)/(b||1)*100).toFixed(2)+"%</b> (with β = "+b+").";}
+    $("ggOut").innerHTML=txt;
+  }
+  ["ggF","ggE","ggB","ggG","ggP","ggO"].forEach(function(id){$(id).oninput=gg;}); gg();
+
+  /* ---------- Level 3: diversification ---------- */
+  function pv(s,r,n){return Math.sqrt(s*s/n+(1-1/n)*r*s*s);}
+  function drawDiv(){
+    var s=(+$("dvS").value||0)/100, r=+$("dvR").value||0, n=Math.max(1,Math.round(+$("dvN").value||1));
+    var p=pv(s,r,n), floor=s*Math.sqrt(Math.max(r,0));
+    $("dvOut").innerHTML="Portfolio volatility with "+n+" stocks ≈ <b>"+(p*100).toFixed(1)+"%</b> (vs "+(s*100).toFixed(0)+"% for one stock). The undiversifiable floor σ·√ρ = <b>"+(floor*100).toFixed(1)+"%</b>. Going from 20 to 50 stocks only cuts it to "+(pv(s,r,50)*100).toFixed(1)+"%.";
+    var W=900,H=240,L=60,Rm=20,T=20,B=34, svg="", c1=cssv("--l2"), c2=cssv("--l1"), ru=cssv("--rule");
+    var N=60, ymax=s*1.05, X=function(i){return L+(W-L-Rm)*(i-1)/(N-1);}, Y=function(v){return T+(H-T-B)*(1-v/ymax);};
+    for(var q=0;q<=4;q++){var gv=ymax*q/4;svg+='<line x1="'+L+'" x2="'+(W-Rm)+'" y1="'+Y(gv)+'" y2="'+Y(gv)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(Y(gv)+4)+'" font-size="12" text-anchor="end">'+(gv*100).toFixed(0)+'%</text>';}
+    var d="";for(var i=1;i<=N;i++)d+=(i>1?"L":"M")+X(i)+","+Y(pv(s,r,i));
+    svg+='<path d="'+d+'" fill="none" stroke="'+c1+'" stroke-width="3.5"/>';
+    svg+='<line x1="'+L+'" x2="'+(W-Rm)+'" y1="'+Y(floor)+'" y2="'+Y(floor)+'" stroke="'+c2+'" stroke-width="2.5" stroke-dasharray="7 5"/><text x="'+(W-Rm)+'" y="'+(Y(floor)-6)+'" font-size="13" text-anchor="end" style="fill:'+c2+';font-weight:600">systematic floor σ√ρ (dashed)</text>';
+    if(n<=N)svg+='<circle cx="'+X(n)+'" cy="'+Y(p)+'" r="7" fill="'+c1+'"/>';
+    [1,10,20,30,40,50,60].forEach(function(v){svg+='<text x="'+X(v)+'" y="'+(H-B+18)+'" font-size="12" text-anchor="middle">'+v+'</text>';});
+    svg+='<text x="'+((W+L)/2)+'" y="'+(H-2)+'" font-size="12" text-anchor="middle">number of stocks</text>';
+    $("dvChart").innerHTML=svg;
+  }
+  ["dvS","dvR","dvN"].forEach(function(id){$(id).oninput=drawDiv;});
+
+  /* ---------- quizzes ---------- */
+  var Q={
+    school:[
+      ["Owning a share means…",["You lent money to a company","You own a small part of the company","You work for the company","You get a fixed interest"],1,"A share is a piece of ownership, with a claim on profits and growth."],
+      ["A dividend is…",["A tax on shares","Part of the profit paid to shareholders","A loan","The price of a share"],1,"Companies may share their profits with owners as dividends."],
+      ["What does the Sensex track?",["Rainfall","Prices of 30 big companies on the BSE","Petrol prices","Gold prices"],1,"Sensex is an index of 30 large BSE-listed companies."],
+      ["Who is the referee of India's stock markets?",["RBI","SEBI","ISRO","BCCI"],1,"SEBI regulates securities markets and protects investors."],
+      ["Why own shares of many companies instead of one?",["It's illegal to own one","To reduce risk: one company's bad news hurts less","Prices are lower","To avoid tax"],1,"This is diversification: don't put all your eggs in one basket."]
+    ],
+    working:[
+      ["India's equity settlement cycle is…",["T+3","T+2","T+1 (with optional T+0)","Monthly"],2,"India completed its move to T+1 in 2023, one of the fastest cycles among major markets."],
+      ["In SEBI's FY25 study, what share of individual F&O traders lost money?",["21%","51%","71%","91%"],3,"About 91%, with total net losses of about ₹1.06 lakh crore."],
+      ["A share price of ₹500 and EPS of ₹25 means a P/E of…",["5","20","25","500"],1,"P/E = 500 / 25 = 20."],
+      ["In 2026, what largely offset record foreign selling of Indian shares?",["RBI buying shares","Domestic SIP and institutional inflows","Gold imports","Tax cuts"],1,"Monthly SIPs of more than ₹32,000 crore gave domestic institutions steady money to buy."],
+      ["Rising interest rates usually…",["Help share prices","Weigh on share prices","Have no effect","Only affect gold"],1,"Higher rates make safe assets more attractive and lower the present value of future profits."]
+    ],
+    expert:[
+      ["With payout 40%, g = 9% and r = 11.5%, the Gordon-implied P/E is about…",["11","17.4","22","40"],1,"0.4 × 1.09 / (0.115 − 0.09) = 0.436 / 0.025 ≈ 17.4."],
+      ["Grossman–Stiglitz argue that perfectly efficient markets are…",["Guaranteed","Impossible, because information is costly","Strong-form efficient","Only possible in India"],1,"If prices reflected all information, no one would be paid to gather it."],
+      ["With σ = 35% and ρ = 0.3, the diversification floor σ√ρ is about…",["10.5%","19.2%","24.5%","35%"],1,"35% × √0.3 ≈ 19.2%: systematic risk cannot be diversified away."],
+      ["The 'low-beta anomaly' says…",["High-beta stocks earn too much","The security market line is flatter than CAPM predicts","Beta is always 1","Small stocks are riskless"],1,"Low-beta stocks have earned more, and high-beta stocks less, than CAPM implies."],
+      ["Shiller's CAPE is most useful as a…",["Daily timing signal","Long-horizon return indicator","Measure of liquidity","Credit rating"],1,"High CAPE predicts lower long-run returns but is poor for short-term timing."]
+    ]
+  };
+  document.querySelectorAll(".quiz").forEach(function(box){
+    var set=Q[box.getAttribute("data-quiz")], score=0, done=0, h="";
+    set.forEach(function(q,qi){
+      h+='<div class="q" data-i="'+qi+'"><p>'+(qi+1)+'. '+q[0]+'</p>';
+      q[1].forEach(function(o,oi){h+='<button data-o="'+oi+'">'+o+'</button>';});
+      h+='<div class="why">'+q[3]+'</div></div>';
+    });
+    h+='<p class="score"></p>'; box.innerHTML=h;
+    box.querySelectorAll(".q").forEach(function(qd){
+      var q=set[+qd.getAttribute("data-i")];
+      qd.querySelectorAll("button").forEach(function(b){
+        b.onclick=function(){
+          if(qd.classList.contains("done"))return;
+          var o=+b.getAttribute("data-o"); qd.classList.add("done"); done++;
+          if(o===q[2])score++; else b.classList.add("wrong");
+          qd.querySelectorAll("button")[q[2]].classList.add("right");
+          box.querySelector(".score").textContent="Score: "+score+" / "+done+(done===set.length?(score===set.length?" — perfect!":" — review the explanations above."):"");
+        };
+      });
+    });
+  });
+
+  document.addEventListener("keydown",function(e){
+    if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
+    var k=e.key.toLowerCase();
+    if(k==="1")setLevel("school"); else if(k==="2")setLevel("working"); else if(k==="3")setLevel("expert");
+    else if(k==="m")toggleSB(); else if(k==="t")toggleTheme(); else if(k==="f")toggleFS();
+    else if(body.getAttribute("data-level")==="school"){
+      if(k==="p"){anPlay();} else if(k==="s"){anPause();anStep();} else if(k==="x"){anPause();}
+    }
+  });
+
+  setLevel((location.hash||"#school").slice(1),true);
+  window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(LV.indexOf(h)>=0)setLevel(h,true);});
+})();
+</script>
+</body>
+</html>

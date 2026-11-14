@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<!--
+TOOL:    finance-economics/01-inflation.html — Finance & Economics Topic 01: Inflation (three levels)
+FAMILY:  finance-economics
+VERSION: 1.0.0
+DATE:    2026-11-14
+CHAT:    Finance & Economics series — three levels (school, working, expert); Topic 01 Inflation
+CHANGES: 1.0.0 - first topic: definition, measurement, causes, effects on individuals / country / world,
+                 control, Nov 2026 snapshot; basket animation, purchasing-power, real-return and Taylor-rule
+                 calculators; a quiz per level
+STATUS:  working
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inflation — Finance &amp; Economics in Three Levels — K Vijay Anand</title>
+<meta name="description" content="Inflation explained at three levels — for school students, for working people and as a review for experts: definition, measurement, causes, effects on you, India and the world, and how it is controlled.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* Colour-blind-safe palette: blue / orange / purple / gold — no red-vs-green coding */
+  :root{--bg:#f4f2ed;--bg2:#e9e5dc;--card:#fffdf8;--ink:#1d1b18;--soft:#4f4940;--faint:#857c6f;--rule:#d6cdbd;
+        --acc:#1d5fa6;--l1:#d9730d;--l2:#1d5fa6;--l3:#6a3fa0;--gold:#a87908;--hi:#fff1d6}
+  :root[data-theme="dark"]{--bg:#121316;--bg2:#1a1c21;--card:#1f2228;--ink:#ece9e2;--soft:#c3bdb2;--faint:#8c8578;--rule:#33363d;
+        --acc:#6aa8ee;--l1:#f39a3d;--l2:#6aa8ee;--l3:#b28ae6;--gold:#e5b33c;--hi:#3a2f17}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.65}
+  a{color:var(--acc)}
+  .toolbar{position:fixed;top:10px;right:12px;z-index:30;display:flex;gap:8px;font-size:13px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button,.toolbar a{background:var(--card);color:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;text-decoration:none}
+  header{padding:70px 4vw 18px;max-width:1600px;margin:0 auto}
+  .series{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-family:"Playfair Display",serif;font-weight:800;font-size:clamp(46px,7vw,84px);margin:6px 0 4px;line-height:1}
+  .tag{color:var(--soft);max-width:70ch;margin:0}
+  /* level switch */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 0}
+  .levels button{text-align:left;background:var(--card);border:2px solid var(--rule);border-radius:12px;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink)}
+  .levels button b{display:block;font-size:18px}
+  .levels button small{color:var(--faint)}
+  .levels button .k{float:right;font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:0 6px;color:var(--faint)}
+  .levels button[data-l="school"].on{border-color:var(--l1);background:color-mix(in srgb,var(--l1) 10%,var(--card))}
+  .levels button[data-l="working"].on{border-color:var(--l2);background:color-mix(in srgb,var(--l2) 10%,var(--card))}
+  .levels button[data-l="expert"].on{border-color:var(--l3);background:color-mix(in srgb,var(--l3) 10%,var(--card))}
+  /* layout */
+  .wrap{max-width:1600px;margin:0 auto;padding:0 4vw 40px;display:grid;grid-template-columns:250px 1fr;gap:34px}
+  body.nosb .wrap{grid-template-columns:1fr}
+  body.nosb aside{display:none}
+  aside{position:sticky;top:60px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;font-size:14.5px;padding-top:20px}
+  aside .h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  aside a{display:block;padding:5px 10px;border-left:3px solid var(--rule);color:var(--soft);text-decoration:none}
+  aside a:hover{border-left-color:var(--lc);color:var(--ink)}
+  aside .keys{margin-top:18px;color:var(--faint);font-size:12.5px;line-height:1.9}
+  kbd{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--card)}
+  main{min-width:0}
+  .panel{display:none}
+  .panel.on{display:block}
+  #p-school{--lc:var(--l1)} #p-working{--lc:var(--l2)} #p-expert{--lc:var(--l3)}
+  body[data-level="school"]{--lc:var(--l1)} body[data-level="working"]{--lc:var(--l2)} body[data-level="expert"]{--lc:var(--l3)}
+  .lvhead{border-left:6px solid var(--lc);padding:4px 0 4px 16px;margin:24px 0 10px}
+  .lvhead .who{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--lc);font-weight:700}
+  .lvhead p{margin:4px 0 0;color:var(--soft)}
+  section{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:22px 28px;margin:18px 0}
+  h2{font-family:"Playfair Display",serif;font-size:30px;margin:0 0 10px;line-height:1.2}
+  h2 .n{color:var(--lc);margin-right:8px}
+  h3{font-size:18px;margin:20px 0 6px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .box{border:1px solid var(--rule);border-radius:10px;padding:14px 16px;background:var(--bg)}
+  .box b.t{display:block;color:var(--lc);margin-bottom:4px}
+  .def{font-size:20px;border-left:5px solid var(--lc);background:color-mix(in srgb,var(--lc) 8%,transparent);padding:12px 18px;border-radius:0 10px 10px 0;margin:8px 0 14px}
+  .note{background:var(--hi);border-radius:8px;padding:10px 14px;font-size:15.5px}
+  .eq{font-family:"JetBrains Mono",monospace;background:var(--bg2);border-radius:8px;padding:10px 14px;overflow-x:auto;font-size:15px;white-space:pre}
+  table{border-collapse:collapse;width:100%;font-size:15.5px;margin:8px 0}
+  th,td{border-bottom:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:10px}
+  .stat{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--bg)}
+  .stat .v{font-size:28px;white-space:nowrap;font-weight:700;color:var(--acc);line-height:1.1}
+  .stat .l{font-size:13.5px;color:var(--soft)}
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;margin:10px 0}
+  .ctl label{font-size:13.5px;color:var(--soft);display:flex;flex-direction:column;gap:3px}
+  .ctl input[type=number]{width:120px;font:inherit;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)}
+  .ctl input[type=range]{width:200px}
+  .btn{background:var(--lc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--lc);border:1px solid var(--lc)}
+  .out{font-size:18px;margin:8px 0}
+  .out b{color:var(--lc)}
+  svg text{fill:var(--soft);font-family:Inter,sans-serif}
+  /* basket animation */
+  .stage{border:1px dashed var(--rule);border-radius:10px;padding:14px;background:var(--bg);min-height:170px}
+  .stage .yr{font-size:26px;font-weight:700}
+  .stage .yr span{color:var(--l1)}
+  .samosas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:44px}
+  .sam{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:30px solid var(--l1);transition:opacity .3s}
+  .sam.gone{opacity:.15}
+  /* quiz */
+  .q{border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:10px 0;background:var(--bg)}
+  .q p{margin:0 0 8px;font-weight:600}
+  .q button{display:block;width:100%;text-align:left;margin:5px 0;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;font:inherit;color:var(--ink);cursor:pointer}
+  .q button.right{border:2px solid var(--l2);background:color-mix(in srgb,var(--l2) 14%,var(--card))}
+  .q button.right::after{content:"  ✔ correct";font-weight:700;color:var(--l2)}
+  .q button.wrong{border:2px dashed var(--l1)}
+  .q button.wrong::after{content:"  ✘ not this one";font-weight:700;color:var(--l1)}
+  .q .why{display:none;font-size:15px;color:var(--soft);margin-top:6px}
+  .q.done .why{display:block}
+  .score{font-weight:700;color:var(--lc)}
+  footer{max-width:1600px;margin:0 auto;padding:20px 4vw 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--faint)}
+  footer a{color:var(--soft)}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}aside{display:none}.levels{grid-template-columns:1fr}section{padding:18px}}
+  @media print{.toolbar,aside,.levels{display:none}.panel{display:block!important}.wrap{display:block}}
+</style>
+</head>
+<body data-level="school">
+<div class="toolbar">
+  <a href="./">← Series</a>
+  <button id="sbBtn" title="Show / hide contents (M)">☰ Contents</button>
+  <button id="themeBtn" title="Light / dark (T)">◐ Theme</button>
+  <button id="fsBtn" title="Full screen (F)">⤢ Full screen</button>
+</div>
+
+<header>
+  <div class="series">Finance &amp; Economics · Topic 01</div>
+  <h1>Inflation</h1>
+  <p class="tag">Why the same ₹100 buys less every year — what inflation is, how it is measured, what it does to you, to India and to the world, and how it is kept in check. Pick your level.</p>
+  <div class="levels" role="tablist">
+    <button data-l="school" class="on"><span class="k">1</span><b>🎒 School</b><small>Simple words, stories and a moving picture</small></button>
+    <button data-l="working"><span class="k">2</span><b>💼 Working people</b><small>Salary, savings, loans, the country and the world</small></button>
+    <button data-l="expert"><span class="k">3</span><b>🎓 Experts — review</b><small>Theory, measurement, policy rules and open debates</small></button>
+  </div>
+</header>
+
+<div class="wrap">
+<aside id="toc"></aside>
+<main>
+
+<!-- ================= SNAPSHOT (all levels) ================= -->
+<section id="snapshot" style="border-top:4px solid var(--gold)">
+  <h2>Where things stand — November 2026</h2>
+  <div class="snap">
+    <div class="stat"><div class="v">6.09%</div><div class="l">India retail (CPI) inflation, October 2026 — up from 5.54% in September; first time above 6% in the new CPI series (base 2024 = 100)</div></div>
+    <div class="stat"><div class="v">8.94%</div><div class="l">India food inflation, October 2026 — onion prices up more than 100% over a year</div></div>
+    <div class="stat"><div class="v">6.63% / 5.41%</div><div class="l">Rural / urban inflation, October 2026 — villages feel it more because food is a bigger share of spending</div></div>
+    <div class="stat"><div class="v">4% ± 2%</div><div class="l">RBI's target: 4%, with 2% to 6% as the tolerance band</div></div>
+    <div class="stat"><div class="v">4.7%</div><div class="l">World inflation forecast for 2026 (IMF, Oct 2026), up from 4.1% in 2025 — advanced economies about 3.1%, emerging economies about 5.7%</div></div>
+  </div>
+  <p class="note" style="margin-top:12px">These figures are a dated snapshot (provisional CPI released 12 Nov 2026). The IMF links the 2026 rise mainly to the energy-price shock from the war in the Middle East. The concepts below do not date; the numbers here will.</p>
+</section>
+
+<!-- ================================================================= -->
+<!-- ========================= LEVEL 1 : SCHOOL ====================== -->
+<!-- ================================================================= -->
+<div class="panel on" id="p-school">
+  <div class="lvhead"><div class="who">Level 1 · For school students</div><p>No jargon. If you can buy a samosa, you can understand inflation.</p></div>
+
+  <section id="s1">
+    <h2><span class="n">1</span>What is inflation?</h2>
+    <div class="def"><b>Inflation</b> means prices of most things slowly go up over time. So the same money buys <b>less</b> than before.</div>
+    <p>Ask your grandparents what a cinema ticket or a cup of tea cost when they were young. They will tell you a few rupees — or even a few paise! Today the same things cost many times more. The tea is the same tea. What changed is the <b>value of the rupee</b>: each rupee buys a little less every year.</p>
+    <div class="cols">
+      <div class="box"><b class="t">A simple example</b>Last year a samosa cost ₹10. This year it costs ₹11. The samosa went up by ₹1 out of ₹10 — that is <b>10% inflation</b> for samosas.</div>
+      <div class="box"><b class="t">It is about "most things"</b>If only mangoes become costly, that is just mangoes. Inflation is when the <b>general level</b> of prices — food, clothes, bus fare, school fees — goes up together.</div>
+      <div class="box"><b class="t">The opposite</b>When prices of most things <b>fall</b> for a long time, it is called <b>deflation</b>. It sounds nice, but it can make businesses shut and people lose jobs.</div>
+    </div>
+  </section>
+
+  <section id="s2">
+    <h2><span class="n">2</span>Watch it happen — the shrinking samosa plate</h2>
+    <p>You have <b>₹100</b>. A samosa costs <b>₹10</b> today. Every year prices rise by the rate you choose. Watch how many samosas your ₹100 can buy as the years go by.</p>
+    <div class="ctl">
+      <label>Inflation per year: <b id="anRateL">6%</b><input type="range" id="anRate" min="1" max="20" value="6"></label>
+      <button class="btn" id="anPlay">▶ Play (P)</button>
+      <button class="btn ghost" id="anStep">Next year (S)</button>
+      <button class="btn ghost" id="anPause">⏸ Pause (X)</button>
+      <button class="btn ghost" id="anReset">↺ Reset</button>
+    </div>
+    <div class="stage">
+      <div class="yr">Year <span id="anYear">0</span> · samosa costs <span id="anPrice">₹10.00</span> · ₹100 buys <span id="anCount">10</span></div>
+      <div class="samosas" id="anPlate"></div>
+      <p id="anMsg" style="margin:8px 0 0;color:var(--soft)">Press Play, or press S to move one year at a time.</p>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="n">3</span>Why do prices go up?</h2>
+    <div class="cols">
+      <div class="box"><b class="t">🛒 Too many buyers, too few things</b>Imagine 50 children want ice cream, but the shop has only 20. The shopkeeper can raise the price. When a whole country has more money to spend than there are goods, prices rise. Economists call this <b>demand-pull</b> inflation.</div>
+      <div class="box"><b class="t">⛽ Making things costs more</b>If petrol, diesel or electricity become costly, lorries charge more to carry vegetables, and factories pay more to run machines. They pass this on to us. This is <b>cost-push</b> inflation.</div>
+      <div class="box"><b class="t">🌧️ Nature and bad luck</b>Too little rain, or floods, can spoil crops. Fewer onions in the market → onion prices jump. In October 2026, onion prices in India were more than double what they were a year earlier.</div>
+      <div class="box"><b class="t">🖨️ Printing too much money</b>If a government simply prints lots of new notes, there is more money but the same amount of goods — so each note is worth less. This is why money printing is controlled very carefully.</div>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="n">4</span>Who feels it?</h2>
+    <div class="cols">
+      <div class="box"><b class="t">👨‍👩‍👧 Your family</b>Parents' salaries may go up once a year, but prices go up all year. If prices rise faster than the salary, the family has to cut back.</div>
+      <div class="box"><b class="t">👵 Grandparents on pension</b>Someone getting a fixed amount every month finds it buys less each year — unless the pension also rises with prices.</div>
+      <div class="box"><b class="t">🐷 Your piggy bank</b>₹500 kept in a piggy bank for five years is still ₹500 — but it buys fewer things. Money kept in a bank earns interest, which helps it keep up.</div>
+      <div class="box"><b class="t">🇮🇳 The whole country</b>Poor families spend most of their money on food, so when food prices jump, they are hit the hardest. That is why villages felt more inflation than cities in October 2026.</div>
+    </div>
+  </section>
+
+  <section id="s5">
+    <h2><span class="n">5</span>Is all inflation bad?</h2>
+    <p><b>A little is normal and healthy.</b> When prices rise slowly — say 2 to 4 percent a year — businesses are happy to produce more, and people plan without worry. India's Reserve Bank aims for about <b>4%</b>.</p>
+    <p><b>Too much is very harmful.</b> When prices rise very fast, it is called <b>hyperinflation</b>:</p>
+    <ul>
+      <li><b>Germany, 1923</b> — prices doubled every few days. People carried money in wheelbarrows, and children used bundles of notes as building blocks.</li>
+      <li><b>Zimbabwe, 2008–09</b> — the country printed a <b>100-trillion-dollar</b> note, and even that could not buy much.</li>
+    </ul>
+    <p><b>Falling prices are not great either.</b> If everyone expects things to be cheaper next month, they stop buying today; shops sell less, factories cut jobs. So the goal is <b>low and steady</b>, not zero.</p>
+  </section>
+
+  <section id="s6">
+    <h2><span class="n">6</span>Who keeps it in check?</h2>
+    <p>In India, the <b>Reserve Bank of India (RBI)</b> is like a referee for prices. Its job is to keep inflation near 4% (anywhere from 2% to 6% is allowed).</p>
+    <div class="cols">
+      <div class="box"><b class="t">Prices rising too fast?</b>RBI raises the interest rate. Loans become costlier, people and companies borrow and spend a little less, and prices cool down.</div>
+      <div class="box"><b class="t">Prices too slow, jobs scarce?</b>RBI lowers the interest rate. Loans get cheaper, people buy more, factories get busier.</div>
+      <div class="box"><b class="t">The government helps too</b>It can release stored rice and wheat, allow imports of onions or pulses, or cut taxes on fuel to bring prices down.</div>
+    </div>
+  </section>
+
+  <section id="s7">
+    <h2><span class="n">7</span>Words to remember</h2>
+    <table>
+      <tr><th>Word</th><th>Meaning</th></tr>
+      <tr><td>Inflation</td><td>Prices of most things rising over time</td></tr>
+      <tr><td>Deflation</td><td>Prices of most things falling over time</td></tr>
+      <tr><td>Hyperinflation</td><td>Prices rising extremely fast — out of control</td></tr>
+      <tr><td>Purchasing power</td><td>How much your money can buy</td></tr>
+      <tr><td>CPI</td><td>Consumer Price Index — a "price thermometer" that tracks the cost of a family's shopping basket</td></tr>
+      <tr><td>RBI</td><td>Reserve Bank of India — India's central bank, which controls interest rates and prints our currency notes</td></tr>
+      <tr><td>Interest rate</td><td>The extra money paid for borrowing, or earned for saving</td></tr>
+    </table>
+  </section>
+
+  <section id="s8">
+    <h2><span class="n">8</span>Check yourself</h2>
+    <div class="quiz" data-quiz="school"></div>
+  </section>
+</div>
+
+<!-- ================================================================= -->
+<!-- ========================= LEVEL 2 : WORKING ===================== -->
+<!-- ================================================================= -->
+<div class="panel" id="p-working">
+  <div class="lvhead"><div class="who">Level 2 · For working people</div><p>What inflation does to your salary, savings, loans and long-term goals — and why the country and the world move with it. Educational, not financial advice.</p></div>
+
+  <section id="w1">
+    <h2><span class="n">1</span>Definition, and how India measures it</h2>
+    <div class="def"><b>Inflation</b> is the sustained rise in the general price level, measured as the percentage change in a price index — usually <b>year-on-year</b> (this month versus the same month last year).</div>
+    <table>
+      <tr><th>Measure</th><th>Who publishes</th><th>What it tracks</th><th>Why it matters to you</th></tr>
+      <tr><td><b>CPI (Combined)</b> — "retail" or "headline" inflation</td><td>National Statistics Office (MoSPI)</td><td>Prices of a household basket in rural and urban India; new series with base 2024 = 100; food is nearly 40% of the basket</td><td>The number RBI targets; the one in the news every 12th of the month</td></tr>
+      <tr><td><b>CPI-IW</b> (Industrial Workers)</td><td>Labour Bureau</td><td>Basket of industrial-worker families</td><td>Drives <b>Dearness Allowance (DA)</b> for central government employees and pensioners</td></tr>
+      <tr><td><b>WPI</b> — wholesale inflation</td><td>Office of the Economic Adviser (DPIIT)</td><td>Prices at the wholesale / factory-gate level; no services</td><td>An early signal for business costs that reach shop shelves later</td></tr>
+      <tr><td><b>Core inflation</b></td><td>Derived (analysts, RBI)</td><td>CPI without food and fuel</td><td>Shows the underlying trend, minus weather and oil shocks</td></tr>
+    </table>
+    <h3>Two traps when reading the headline number</h3>
+    <ul>
+      <li><b>Base effect.</b> Year-on-year inflation compares with last year. If prices were unusually low a year ago, this year's figure looks high even if prices barely moved this month. October 2026's 6.09% partly reflects very low prices in October 2025 (when inflation was a record low after GST cuts).</li>
+      <li><b>Falling inflation ≠ falling prices.</b> If inflation drops from 6% to 4%, prices are still rising — just more slowly. Prices do not come back down unless there is deflation.</li>
+    </ul>
+  </section>
+
+  <section id="w2">
+    <h2><span class="n">2</span>Your salary in real terms</h2>
+    <p>What matters is not your salary but what it <b>buys</b>. If your pay rises 8% and inflation is 6%, your <b>real</b> pay rose about 2%. If you got a 5% hike in a 6% year, you took a pay cut in real terms without anyone saying so.</p>
+    <div class="eq">Real growth  ≈  Nominal growth  −  Inflation        (exact: (1+n)/(1+π) − 1)</div>
+    <ul>
+      <li><b>Government employees and pensioners</b> get <b>DA</b>, revised twice a year from CPI-IW, which protects much of their basic pay from inflation.</li>
+      <li><b>Private-sector employees</b> depend on the annual increment. Negotiating it is, in effect, negotiating against inflation.</li>
+      <li><b>Self-employed and small businesses</b> must raise their own prices — often with a delay, so their margins get squeezed first.</li>
+    </ul>
+    <h3>Calculator — what will things cost, and what will your money be worth?</h3>
+    <div class="ctl">
+      <label>Amount (₹)<input type="number" id="ppAmt" value="100000" min="1"></label>
+      <label>Inflation % per year<input type="number" id="ppRate" value="6" step="0.1"></label>
+      <label>Years<input type="number" id="ppYrs" value="20" min="1" max="60"></label>
+    </div>
+    <div class="out" id="ppOut"></div>
+    <svg id="ppChart" viewBox="0 0 900 280" style="width:100%;max-width:1000px;height:auto"></svg>
+  </section>
+
+  <section id="w3">
+    <h2><span class="n">3</span>Savings and investments — the real return</h2>
+    <p>A fixed deposit at 7% sounds safe. But after tax and inflation, the money may actually be <b>losing</b> buying power. The test for any saving is: <i>does it beat inflation after tax?</i></p>
+    <div class="ctl">
+      <label>Interest / return % (before tax)<input type="number" id="rrNom" value="7" step="0.1"></label>
+      <label>Your tax rate on it %<input type="number" id="rrTax" value="30" step="1"></label>
+      <label>Inflation %<input type="number" id="rrInf" value="6" step="0.1"></label>
+    </div>
+    <div class="out" id="rrOut"></div>
+    <div class="cols">
+      <div class="box"><b class="t">Cash and savings accounts</b>Usually earn less than inflation. Good for emergencies and spending money, poor for long-term wealth.</div>
+      <div class="box"><b class="t">Fixed-income (FD, bonds, small savings)</b>Fixed in rupees. Real return depends on the rate you locked in versus the inflation that actually happens. Unexpected inflation hurts.</div>
+      <div class="box"><b class="t">Real assets and equity</b>Shares, property and gold have historically tended to keep up with inflation over long periods — but with ups and downs along the way, and no guarantee.</div>
+      <div class="box"><b class="t">Inflation-linked options</b>Some instruments pay a return linked to inflation; pensions with DA work the same way. Ask a qualified adviser what fits you.</div>
+    </div>
+  </section>
+
+  <section id="w4">
+    <h2><span class="n">4</span>Loans and EMIs</h2>
+    <div class="cols">
+      <div class="box"><b class="t">Inflation helps borrowers — on paper</b>A fixed EMI of ₹30,000 feels lighter after ten years of pay rises, because inflation shrinks the real value of what you owe.</div>
+      <div class="box"><b class="t">…until interest rates rise</b>When inflation is high, RBI raises its <b>repo rate</b>. Most new floating-rate home loans in India are linked to an external benchmark (usually repo), so your rate rises — the bank either raises the EMI or lengthens the tenure.</div>
+      <div class="box"><b class="t">Lenders and savers lose</b>Unexpected inflation quietly moves wealth from people who lent at a fixed rate (depositors, bond holders) to people who borrowed at one.</div>
+    </div>
+  </section>
+
+  <section id="w5">
+    <h2><span class="n">5</span>Long goals: children's education, retirement</h2>
+    <p><b>Rule of 70:</b> divide 70 by the inflation rate to get the number of years in which prices double. At 6%, prices double in about <b>12 years</b>; at 10%, in about 7.</p>
+    <ul>
+      <li>Education and healthcare costs in India have often risen faster than headline CPI, so plan with a higher rate for these goals.</li>
+      <li>Retirement can last 25–30 years. At 6% inflation, the monthly expense you need at 60 is roughly a <b>third</b> of what you will need at 80. A retirement plan without an inflation adjustment is incomplete.</li>
+    </ul>
+  </section>
+
+  <section id="w6">
+    <h2><span class="n">6</span>What inflation does to the country</h2>
+    <div class="cols">
+      <div class="box"><b class="t">The poor pay most</b>Food and fuel take a bigger share of a poor family's budget, and they have little savings in assets that rise with prices. Inflation works like a tax that falls hardest on those least able to pay — the "inflation tax".</div>
+      <div class="box"><b class="t">Interest rates and growth</b>To fight inflation RBI raises rates, which slows borrowing, housing, car sales and business investment. Controlling prices can cost some growth and jobs in the short run.</div>
+      <div class="box"><b class="t">Government budget</b>Inflation raises tax collections in rupees, but also raises the cost of food and fertiliser subsidies, salaries and DA. Moderate inflation also shrinks the real burden of past government debt.</div>
+      <div class="box"><b class="t">The rupee and imports</b>India imports more than 85% of its crude oil. Costlier oil or a weaker rupee feeds straight into fuel, transport and then everything else — "imported inflation".</div>
+      <div class="box"><b class="t">Exports and competitiveness</b>If India's prices rise faster than its trading partners', its goods become less competitive unless the rupee weakens to compensate.</div>
+      <div class="box"><b class="t">Trust and planning</b>Stable prices let farmers, firms and families plan. Persistent high inflation leads people to buy gold and property instead of investing in productive businesses.</div>
+    </div>
+  </section>
+
+  <section id="w7">
+    <h2><span class="n">7</span>The global picture</h2>
+    <ul>
+      <li><b>Shared shocks.</b> Oil, gas, food grains and fertiliser are priced globally. A war, a pandemic or a shipping blockage raises prices everywhere at once. The IMF expects world inflation to rise from 4.1% in 2025 to 4.7% in 2026 because of the energy shock from the war in the Middle East.</li>
+      <li><b>2021–23, the big surge.</b> After COVID, reopening demand met broken supply chains, and then the Russia–Ukraine war spiked energy and food prices. US inflation peaked at 9.1% (June 2022), the UK's at 11.1% (October 2022) — the highest in about 40 years.</li>
+      <li><b>The US Federal Reserve matters to India.</b> When the Fed raises rates to fight US inflation, money flows out of emerging markets to the US, the dollar strengthens, the rupee weakens, and India's import bill rises.</li>
+      <li><b>Uneven pain.</b> Emerging economies usually face higher inflation than advanced ones (IMF: about 5.7% versus 3.1% for 2026), and poorer importing countries face food insecurity when grain prices spike.</li>
+    </ul>
+  </section>
+
+  <section id="w8">
+    <h2><span class="n">8</span>Sensible habits in an inflationary world</h2>
+    <ul>
+      <li>Think in <b>real</b> terms: compare every raise, rent hike and return against inflation.</li>
+      <li>Keep an emergency fund in cash, but avoid leaving long-term money idle.</li>
+      <li>Plan big goals using a realistic inflation rate (and a higher one for education and health).</li>
+      <li>When rates are rising, check whether a floating-rate loan is lengthening its tenure quietly.</li>
+      <li>Spread savings across different kinds of assets rather than betting on one.</li>
+    </ul>
+    <p class="note">This page explains concepts. It is not investment or tax advice — for decisions about your own money, consult a SEBI-registered adviser.</p>
+  </section>
+
+  <section id="w9">
+    <h2><span class="n">9</span>Check yourself</h2>
+    <div class="quiz" data-quiz="working"></div>
+  </section>
+</div>
+
+<!-- ================================================================= -->
+<!-- ========================= LEVEL 3 : EXPERT ====================== -->
+<!-- ================================================================= -->
+<div class="panel" id="p-expert">
+  <div class="lvhead"><div class="who">Level 3 · Review for experts</div><p>A compact refresher: measurement, theory, welfare costs, policy frameworks, India-specific issues and the global transmission of inflation.</p></div>
+
+  <section id="e1">
+    <h2><span class="n">1</span>Definition and measurement</h2>
+    <div class="def">Inflation is a <b>sustained increase in the aggregate price level</b>, equivalently a sustained fall in the purchasing power of money: π<sub>t</sub> = (P<sub>t</sub> − P<sub>t−12</sub>) / P<sub>t−12</sub> for monthly year-on-year data. A one-off level shift (e.g., a tax change) is not inflation in this strict sense, though it shows up in twelve months of y-o-y prints.</div>
+    <h3>Index construction</h3>
+    <div class="eq">Laspeyres:  P_L = Σ p_t·q_0 / Σ p_0·q_0     (fixed base-period basket → upward substitution bias)
+Paasche:    P_P = Σ p_t·q_t / Σ p_0·q_t     (current basket → downward bias)
+Fisher:     P_F = √(P_L · P_P)              (superlative; approximates a true cost-of-living index)</div>
+    <table>
+      <tr><th>Measure</th><th>Scope</th><th>Notes</th></tr>
+      <tr><td>CPI (India, base 2024 = 100)</td><td>Household consumption, rural + urban</td><td>Weights from HCES 2023–24; food weight now nearly 40% (down from about 46% in the 2012 series); prices also collected from online platforms</td></tr>
+      <tr><td>GDP deflator</td><td>All domestically produced goods and services</td><td>Implicit, not fixed-basket; excludes imports, includes investment goods</td></tr>
+      <tr><td>WPI</td><td>Wholesale goods</td><td>No services; heavy weight on fuel and manufactured inputs; diverges from CPI when commodity prices swing</td></tr>
+      <tr><td>US PCE vs CPI</td><td>Fed targets PCE</td><td>PCE is chain-weighted and broader in scope; typically runs below CPI</td></tr>
+    </table>
+    <h3>Measurement biases</h3>
+    <p>Substitution (item and outlet), quality change, new goods and new outlets all tend to make fixed-basket indices overstate cost-of-living inflation. The 1996 US Boskin Commission put the total upward bias at about 1.1 percentage points a year — one reason central banks target a positive rate rather than zero. Hedonic adjustment, chain-linking and scanner data have narrowed but not closed the gap.</p>
+  </section>
+
+  <section id="e2">
+    <h2><span class="n">2</span>Theories — what drives the price level</h2>
+    <h3>Quantity theory (long run)</h3>
+    <div class="eq">M·V = P·Y   →   π ≈ g_M + g_V − g_Y</div>
+    <p>Over long horizons and across countries, money growth and inflation move together ("always and everywhere a monetary phenomenon" — Friedman). In the short run velocity is unstable, which is why money-growth targeting was largely abandoned by the 1990s.</p>
+    <h3>Phillips curve and expectations</h3>
+    <div class="eq">Expectations-augmented:   π_t = π^e_t − β(u_t − u*) + ν_t
+New Keynesian (NKPC):     π_t = β·E_t[π_{t+1}] + κ·x_t + ε_t     (x = output gap / real marginal cost)</div>
+    <p>Friedman and Phelps (1967–68) argued no lasting trade-off exists between inflation and unemployment; the 1970s stagflation proved it. Expectations are the key state variable — hence the stress on <b>anchoring</b>. The post-1990s flattening of the curve (small κ) made the 2021–22 surge harder to forecast; evidence suggests the curve is non-linear and steepens when labour markets are very tight.</p>
+    <h3>Demand-pull, cost-push and second-round effects</h3>
+    <p>Supply shocks (oil, food, exchange rate) shift the relative price of a subset of goods. They become persistent inflation only if they feed into wages and expectations — the <b>second-round effects</b> that policy aims to stop. The standard advice is to "look through" first-round supply shocks, provided expectations remain anchored. That condition is the hard part.</p>
+    <h3>Fiscal theory of the price level</h3>
+    <div class="eq">B_{t−1} / P_t  =  E_t Σ (discounted real primary surpluses)</div>
+    <p>If fiscal surpluses do not adjust to back government debt, the price level adjusts instead. This framework (Leeper, Sims, Woodford, Cochrane) gives a fiscal reading of the 2021 surge, after large transfers financed by debt.</p>
+  </section>
+
+  <section id="e3">
+    <h2><span class="n">3</span>Welfare costs of inflation</h2>
+    <table>
+      <tr><th>Anticipated inflation</th><th>Unanticipated inflation</th></tr>
+      <tr><td>
+        <ul>
+          <li><b>Shoe-leather costs</b> — economising on money balances (Bailey's deadweight triangle under the money-demand curve)</li>
+          <li><b>Menu costs</b> — price changes are costly, so prices are staggered</li>
+          <li><b>Relative-price dispersion</b> — staggered pricing misallocates resources (the core welfare cost in New Keynesian models)</li>
+          <li><b>Tax distortions</b> — nominal capital gains and interest taxed; unindexed slabs create "bracket creep"</li>
+        </ul>
+      </td><td>
+        <ul>
+          <li><b>Redistribution</b> from nominal creditors to debtors, from fixed-income earners to asset holders</li>
+          <li><b>Uncertainty</b> — higher inflation tends to be more variable, which raises risk premia and shortens contract horizons</li>
+          <li><b>Inflation tax / seigniorage</b> on money holders, regressive because the poor hold more cash</li>
+          <li><b>Hyperinflation</b> (Cagan: above 50% per month) — the money stops working as a unit of account</li>
+        </ul>
+      </td></tr>
+    </table>
+    <p>Why not target zero? The zero lower bound on nominal rates (room to cut in recessions), downward nominal wage rigidity (the "grease" argument) and the measurement bias above. Together these underpin the common 2% target in advanced economies; emerging markets typically choose higher targets to allow for catch-up growth and Balassa–Samuelson effects.</p>
+  </section>
+
+  <section id="e4">
+    <h2><span class="n">4</span>Policy frameworks and rules</h2>
+    <h3>India's flexible inflation targeting (FIT)</h3>
+    <ul>
+      <li>The RBI Act was amended in 2016. The target, set by the government in consultation with RBI, is <b>4% CPI-Combined inflation with a 2–6% tolerance band</b>, decided by a six-member <b>Monetary Policy Committee</b> (three from RBI, three external members; the Governor has a casting vote).</li>
+      <li><b>Failure</b> is defined as average inflation outside the band for three consecutive quarters. RBI must then explain to the government in writing why, what it will do, and when it expects to return to target. This first happened in 2022.</li>
+      <li>October 2026's 6.09% is the first print above 6% in the new CPI series. One month alone does not trigger the failure clause, but it raises the stakes for the December 2026 MPC meeting.</li>
+    </ul>
+    <h3>Taylor rule — illustrative calculator</h3>
+    <div class="eq">i = r* + π + a_π(π − π*) + a_y·(output gap)        (Taylor 1993: a_π = a_y = 0.5)</div>
+    <div class="ctl">
+      <label>Neutral real rate r* %<input type="number" id="trR" value="1.5" step="0.1"></label>
+      <label>Inflation π %<input type="number" id="trPi" value="6.09" step="0.01"></label>
+      <label>Target π* %<input type="number" id="trT" value="4" step="0.1"></label>
+      <label>Output gap %<input type="number" id="trGap" value="0" step="0.1"></label>
+      <label><span>a<sub>π</sub> (inflation weight)</span><input type="number" id="trA" value="0.5" step="0.1"></label>
+      <label><span>a<sub>y</sub> (output weight)</span><input type="number" id="trB" value="0.5" step="0.1"></label>
+    </div>
+    <div class="out" id="trOut"></div>
+    <p class="note">Illustrative only: r* and the output gap are unobservable and highly uncertain for India, and RBI does not follow a mechanical rule. Use it to see the <b>Taylor principle</b> at work: the nominal rate must move more than one-for-one with inflation (1 + a<sub>π</sub> &gt; 1) so the real rate rises when inflation rises.</p>
+    <h3>Transmission and credibility</h3>
+    <ul>
+      <li>Channels: interest rate, credit, exchange rate, asset prices and expectations. Lags are long and variable — several quarters before the full effect on inflation shows up.</li>
+      <li>Transmission improved after new floating-rate loans were linked to external benchmarks (from October 2019), but deposit-rate pass-through remains slower.</li>
+      <li>Credibility lowers the sacrifice ratio: anchored expectations let a central bank disinflate with less output loss.</li>
+    </ul>
+  </section>
+
+  <section id="e5">
+    <h2><span class="n">5</span>India-specific issues</h2>
+    <ul>
+      <li><b>Food dominance.</b> High food weight and weather-driven vegetable cycles (the TOP volatility of tomato, onion and potato) make headline CPI volatile. The 2023–24 Economic Survey suggested exploring a target that excludes food; the counter-argument is that food inflation feeds household expectations and wages, so ignoring it risks de-anchoring. The 2024-base series, with a lower food weight, changes this debate.</li>
+      <li><b>Rural–urban gap.</b> In October 2026, rural inflation was 6.63% and urban 5.41%. Food's larger share of the rural basket drives the gap.</li>
+      <li><b>Administered prices.</b> Fuel taxes, MSP, electricity tariffs and the public distribution system blur the line between monetary and fiscal control of the price level.</li>
+      <li><b>Imported inflation.</b> Crude oil, edible oils and fertiliser, plus rupee depreciation. The exchange-rate pass-through to CPI is modest but meaningful in fuel-heavy shocks.</li>
+      <li><b>Fiscal–monetary interaction.</b> Combined general-government debt is high; the FIT framework is partly a commitment against fiscal dominance.</li>
+      <li><b>Base effects.</b> The October 2025 trough (0.25%, after GST rationalisation) mechanically inflates late-2026 year-on-year prints, so month-on-month seasonally adjusted momentum is the better guide.</li>
+    </ul>
+  </section>
+
+  <section id="e6">
+    <h2><span class="n">6</span>Global transmission</h2>
+    <ul>
+      <li><b>Common factor.</b> A large share of national inflation variance is explained by a global factor (commodities, the dollar, global slack). Globalisation reduced the sensitivity of domestic inflation to domestic slack.</li>
+      <li><b>The dollar cycle.</b> Fed tightening → stronger dollar → capital outflows from emerging markets → depreciation → imported inflation, often forcing emerging-market central banks to tighten during a slowdown.</li>
+      <li><b>2021–23.</b> The "transitory" call failed because supply shocks met strong fiscal-backed demand and very tight labour markets. The Fed, ECB and BoE all hiked late but hard; disinflation came with less unemployment than the sacrifice-ratio literature predicted (a "soft-landing" debate still open).</li>
+      <li><b>2026.</b> The IMF's October 2026 WEO projects global inflation of 4.7% in 2026, easing to 4.1% in 2027. It describes the global disinflation as paused by the war-driven energy supply shock, with emerging economies (about 5.7%) above advanced ones (about 3.1%).</li>
+      <li><b>Structural forces to watch.</b> Geoeconomic fragmentation and reshoring (cost-raising), the energy transition and climate shocks ("climateflation" and "greenflation"), ageing workforces, and AI-driven productivity (potentially disinflationary).</li>
+    </ul>
+  </section>
+
+  <section id="e7">
+    <h2><span class="n">7</span>Review checklist — open questions</h2>
+    <ol>
+      <li>Should emerging markets with high food weights target headline or core inflation — and does the new CPI basket change the answer for India?</li>
+      <li>How flat is the Phillips curve, and is it non-linear? What does that imply for the cost of the "last mile" of disinflation?</li>
+      <li>How large and how stable is r* after the pandemic, and does it differ for India versus advanced economies?</li>
+      <li>When does a supply shock become a demand problem? What are the best real-time measures of de-anchoring (surveys, breakevens, wage settlements)?</li>
+      <li>How much of the 2021–22 surge was fiscal (FTPL) and how much was supply-driven?</li>
+      <li>Should central banks respond to climate-related price shocks, or look through them?</li>
+    </ol>
+  </section>
+
+  <section id="e8">
+    <h2><span class="n">8</span>Check yourself</h2>
+    <div class="quiz" data-quiz="expert"></div>
+  </section>
+</div>
+
+<section id="sources">
+  <h2>Sources and further reading</h2>
+  <ul>
+    <li>MoSPI / NSO, CPI press release for October 2026 (provisional, 12 Nov 2026) — as reported by <a href="https://ddnews.gov.in/en/retail-inflation-rises-to-6-09-percent-in-october-food-inflation-at-8-94-percent-goverment-data/">DD News</a> and <a href="https://www.indexbox.io/blog/indias-retail-inflation-at-609-in-october-2026-as-food-prices-stay-elevated/">IndexBox</a>. Data portal: <a href="https://www.mospi.gov.in/">mospi.gov.in</a>.</li>
+    <li>IMF, <a href="https://www.imf.org/en/publications/weo/issues/2026/10/13/world-economic-outlook-october-2026">World Economic Outlook, October 2026: Resilience Under Strain, Urgent Choices</a>; inflation figures summarised by <a href="https://www.australianindustrygroup.com.au/resourcecentre/research-economics/economics-intelligence/2026/global-forecasts-october-2026/">Ai Group</a>.</li>
+    <li>Reserve Bank of India — <a href="https://www.rbi.org.in/">Monetary Policy Framework and MPC statements</a>.</li>
+    <li>Friedman, M. (1968), "The Role of Monetary Policy", <i>American Economic Review</i>; Phelps, E. (1967), <i>Economica</i>.</li>
+    <li>Taylor, J. B. (1993), "Discretion versus policy rules in practice", <i>Carnegie-Rochester Conference Series on Public Policy</i>.</li>
+    <li>Boskin Commission (1996), <i>Toward a More Accurate Measure of the Cost of Living</i>, US Senate Finance Committee.</li>
+    <li>Cagan, P. (1956), "The Monetary Dynamics of Hyperinflation"; Cochrane, J. (2023), <i>The Fiscal Theory of the Price Level</i>.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<footer>
+  Finance &amp; Economics in Three Levels · Topic 01 · K Vijay Anand · <a href="./">All topics</a> · <a href="/">Home</a><br>
+  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.
+  Educational content, not financial advice. Figures dated November 2026.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var root=document.documentElement, body=document.body;
+  var $=function(id){return document.getElementById(id);};
+  var inr=function(x,d){return "₹"+Number(x).toLocaleString("en-IN",{minimumFractionDigits:d||0,maximumFractionDigits:d||0});};
+
+  /* ---------- theme / fullscreen / sidebar ---------- */
+  try{var t=localStorage.getItem("fe-theme");if(t)root.setAttribute("data-theme",t);}catch(e){}
+  function toggleTheme(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("fe-theme",n);}catch(e){}drawPP();}
+  function toggleFS(){if(!document.fullscreenElement){(root.requestFullscreen||function(){}).call(root);}else{document.exitFullscreen();}}
+  function toggleSB(){body.classList.toggle("nosb");}
+  $("themeBtn").onclick=toggleTheme; $("fsBtn").onclick=toggleFS; $("sbBtn").onclick=toggleSB;
+
+  /* ---------- levels ---------- */
+  var LV=["school","working","expert"];
+  function setLevel(l,noHash){
+    if(LV.indexOf(l)<0)l="school";
+    body.setAttribute("data-level",l);
+    LV.forEach(function(x){$("p-"+x).classList.toggle("on",x===l);});
+    document.querySelectorAll(".levels button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-l")===l);});
+    buildTOC(l);
+    if(!noHash)history.replaceState(null,"","#"+l);
+    if(l==="working")drawPP();
+  }
+  document.querySelectorAll(".levels button").forEach(function(b){b.onclick=function(){setLevel(b.getAttribute("data-l"));};});
+  function buildTOC(l){
+    var names={school:"School",working:"Working people",expert:"Experts"};
+    var h='<div class="h">Contents · '+names[l]+'</div><a href="#snapshot">Snapshot · Nov 2026</a>';
+    $("p-"+l).querySelectorAll("section").forEach(function(s){
+      var t=s.querySelector("h2").textContent; h+='<a href="#'+s.id+'">'+t.replace(/^(\d+)/,"$1 · ")+'</a>';
+    });
+    h+='<a href="#sources">Sources</a>';
+    h+='<div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> level<br><kbd>M</kbd> hide contents<br><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause<br><kbd>T</kbd> theme · <kbd>F</kbd> full screen</div>';
+    $("toc").innerHTML=h;
+  }
+
+  /* ---------- Level 1: samosa animation ---------- */
+  var anY=0, anTimer=null, BASE=10, MAXY=30;
+  function anRate(){return +$("anRate").value/100;}
+  function anRender(){
+    var p=BASE*Math.pow(1+anRate(),anY), n=Math.floor(100/p+1e-9);
+    $("anYear").textContent=anY; $("anPrice").textContent=inr(p,2); $("anCount").textContent=n;
+    var h=""; for(var i=0;i<10;i++)h+='<div class="sam'+(i<n?"":" gone")+'"></div>'; $("anPlate").innerHTML=h;
+    var dbl=Math.log(2)/Math.log(1+anRate());
+    $("anMsg").textContent = anY===0 ? "Press Play, or press S to move one year at a time."
+      : (n===0 ? "₹100 can no longer buy even one samosa! " : "")+"At "+$("anRate").value+"% a year, prices double about every "+dbl.toFixed(1)+" years.";
+  }
+  function anStep(){ if(anY<MAXY){anY++;anRender();} else anPause(); }
+  function anPlay(){ if(anTimer)return; if(anY>=MAXY){anY=0;} anTimer=setInterval(anStep,700); }
+  function anPause(){ clearInterval(anTimer); anTimer=null; }
+  $("anPlay").onclick=anPlay; $("anStep").onclick=function(){anPause();anStep();}; $("anPause").onclick=anPause;
+  $("anReset").onclick=function(){anPause();anY=0;anRender();};
+  $("anRate").oninput=function(){$("anRateL").textContent=this.value+"%";anRender();};
+  anRender();
+
+  /* ---------- Level 2: purchasing power ---------- */
+  function cssv(n){return getComputedStyle(root).getPropertyValue(n).trim();}
+  function drawPP(){
+    var A=+$("ppAmt").value||0, r=(+$("ppRate").value||0)/100, Y=Math.max(1,Math.min(60,Math.round(+$("ppYrs").value||1)));
+    var fut=A*Math.pow(1+r,Y), val=A/Math.pow(1+r,Y);
+    $("ppOut").innerHTML="Something costing <b>"+inr(A)+"</b> today will cost about <b>"+inr(fut)+"</b> in "+Y+" years. "+
+      "Kept as cash, "+inr(A)+" will buy only what <b>"+inr(val)+"</b> buys today — a loss of <b>"+(100*(1-val/A)).toFixed(0)+"%</b> in purchasing power.";
+    var W=900,H=280,L=70,R=20,T=20,B=40, svg="", c1=cssv("--l2"), c2=cssv("--l1"), ru=cssv("--rule");
+    var ymax=fut*1.05, x=function(i){return L+(W-L-R)*i/Y;}, y=function(v){return T+(H-T-B)*(1-v/ymax);};
+    for(var g=0;g<=4;g++){var gv=ymax*g/4;svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(gv)+'" y2="'+y(gv)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(y(gv)+4)+'" font-size="12" text-anchor="end">'+inr(gv)+'</text>';}
+    var step=Math.max(1,Math.round(Y/10));
+    for(var i=0;i<=Y;i+=step)svg+='<text x="'+x(i)+'" y="'+(H-B+18)+'" font-size="12" text-anchor="middle">'+i+'</text>';
+    svg+='<text x="'+((W+L)/2)+'" y="'+(H-4)+'" font-size="12" text-anchor="middle">years from now</text>';
+    var p1="",p2="";for(i=0;i<=Y;i++){p1+=(i?"L":"M")+x(i)+","+y(A*Math.pow(1+r,i));p2+=(i?"L":"M")+x(i)+","+y(A/Math.pow(1+r,i));}
+    svg+='<path d="'+p1+'" fill="none" stroke="'+c1+'" stroke-width="3.5"/>';
+    svg+='<path d="'+p2+'" fill="none" stroke="'+c2+'" stroke-width="3.5" stroke-dasharray="9 6"/>';
+    svg+='<line x1="'+(L+16)+'" x2="'+(L+56)+'" y1="'+(T+10)+'" y2="'+(T+10)+'" stroke="'+c1+'" stroke-width="3.5"/><text x="'+(L+64)+'" y="'+(T+15)+'" font-size="14" style="fill:'+c1+';font-weight:600">cost of the same things</text>';
+    svg+='<line x1="'+(L+16)+'" x2="'+(L+56)+'" y1="'+(T+34)+'" y2="'+(T+34)+'" stroke="'+c2+'" stroke-width="3.5" stroke-dasharray="9 6"/><text x="'+(L+64)+'" y="'+(T+39)+'" font-size="14" style="fill:'+c2+';font-weight:600">what your cash is worth</text>';
+    $("ppChart").innerHTML=svg;
+  }
+  ["ppAmt","ppRate","ppYrs"].forEach(function(id){$(id).oninput=drawPP;});
+
+  /* ---------- Level 2: real return ---------- */
+  function realRet(){
+    var n=(+$("rrNom").value||0)/100, tx=(+$("rrTax").value||0)/100, pi=(+$("rrInf").value||0)/100;
+    var post=n*(1-tx), real=(1+post)/(1+pi)-1;
+    $("rrOut").innerHTML="After tax you earn <b>"+(post*100).toFixed(2)+"%</b>. After inflation, your real return is <b>"+(real*100).toFixed(2)+"%</b> a year — "+
+      (real<0?"your money is <b>losing</b> purchasing power.":"your money is <b>growing</b> in real terms.");
+  }
+  ["rrNom","rrTax","rrInf"].forEach(function(id){$(id).oninput=realRet;}); realRet();
+
+  /* ---------- Level 3: Taylor rule ---------- */
+  function taylor(){
+    var g=function(id){return +$(id).value||0;};
+    var r=g("trR"),pi=g("trPi"),pt=g("trT"),gap=g("trGap"),a=g("trA"),b=g("trB");
+    var i=r+pi+a*(pi-pt)+b*gap;
+    $("trOut").innerHTML="Rule-implied nominal policy rate: <b>"+i.toFixed(2)+"%</b> · implied real rate <b>"+(i-pi).toFixed(2)+"%</b> · inflation response 1 + a<sub>π</sub> = <b>"+(1+a).toFixed(2)+"</b>"+(1+a>1?" (satisfies the Taylor principle)":" (violates the Taylor principle — indeterminacy risk)");
+  }
+  ["trR","trPi","trT","trGap","trA","trB"].forEach(function(id){$(id).oninput=taylor;}); taylor();
+
+  /* ---------- quizzes ---------- */
+  var Q={
+    school:[
+      ["Inflation means…",["Prices of most things going up over time","Only mango prices going up","Shops closing early","Money growing on trees"],0,"Inflation is a rise in the general level of prices, not just one item."],
+      ["A pencil cost ₹5 last year and ₹6 this year. By what percent did its price rise?",["1%","10%","20%","50%"],2,"It rose ₹1 on ₹5. 1 ÷ 5 = 0.2, which is 20%."],
+      ["Who looks after inflation in India?",["The cricket board","The Reserve Bank of India","The post office","The weather office"],1,"The RBI uses interest rates to keep inflation near 4%."],
+      ["What does RBI usually do when prices rise too fast?",["Lowers interest rates","Raises interest rates","Prints more money","Closes banks"],1,"Higher interest rates make borrowing costlier, so spending and prices cool down."],
+      ["Very fast, out-of-control inflation is called…",["Deflation","Hyperinflation","Taxation","Celebration"],1,"Germany in 1923 and Zimbabwe in 2008 are famous cases of hyperinflation."]
+    ],
+    working:[
+      ["Your salary rises 5% while inflation is 6%. In real terms your pay…",["Rose about 11%","Rose about 1%","Fell about 1%","Is unchanged"],2,"Real growth ≈ 5% − 6% = −1%."],
+      ["Which index drives Dearness Allowance for central government staff?",["WPI","CPI-IW","GDP deflator","Sensex"],1,"DA is revised twice a year using the Labour Bureau's CPI for Industrial Workers."],
+      ["An FD pays 7%, you pay 30% tax on it, and inflation is 6%. The real return is about…",["+7%","+1%","−1%","−6%"],2,"Post-tax 4.9%; (1.049/1.06) − 1 ≈ −1.0%."],
+      ["By the rule of 70, at 7% inflation prices double in about…",["5 years","10 years","20 years","70 years"],1,"70 ÷ 7 = 10 years."],
+      ["Inflation falls from 6% to 4%. This means prices are…",["Falling","Still rising, but more slowly","Back to last year's level","Frozen"],1,"Lower inflation means slower price rises, not lower prices."]
+    ],
+    expert:[
+      ["A fixed-base Laspeyres CPI tends to…",["Understate the cost of living, due to substitution","Overstate the cost of living, due to substitution","Be unbiased","Exclude food"],1,"With a fixed basket, consumers' switch to relatively cheaper goods is ignored, so the index overstates cost-of-living increases."],
+      ["The Taylor principle requires the policy rate to respond to inflation with a coefficient…",["Below 0","Between 0 and 1","Above 1","Exactly 0.5"],2,"The nominal rate must move more than one-for-one, so the real rate rises with inflation."],
+      ["Under India's FIT framework, a 'failure' is defined as…",["One month above 6%","Average inflation outside 2–6% for three consecutive quarters","Inflation above 4% for a year","Any negative print"],1,"After a failure, RBI must report reasons and remedial actions to the government."],
+      ["In the NKPC π_t = βE_t[π_{t+1}] + κx_t, a flatter curve means…",["A larger κ","A smaller κ","β above 1","No role for expectations"],1,"A small κ means inflation responds weakly to slack, raising the output cost of disinflation."],
+      ["Cagan's threshold for hyperinflation is monthly inflation above…",["5%","10%","50%","100%"],2,"Cagan (1956) defined hyperinflation as more than 50% per month."]
+    ]
+  };
+  document.querySelectorAll(".quiz").forEach(function(box){
+    var set=Q[box.getAttribute("data-quiz")], score=0, done=0, h="";
+    set.forEach(function(q,qi){
+      h+='<div class="q" data-i="'+qi+'"><p>'+(qi+1)+'. '+q[0]+'</p>';
+      q[1].forEach(function(o,oi){h+='<button data-o="'+oi+'">'+o+'</button>';});
+      h+='<div class="why">'+q[3]+'</div></div>';
+    });
+    h+='<p class="score"></p>'; box.innerHTML=h;
+    box.querySelectorAll(".q").forEach(function(qd){
+      var q=set[+qd.getAttribute("data-i")];
+      qd.querySelectorAll("button").forEach(function(b){
+        b.onclick=function(){
+          if(qd.classList.contains("done"))return;
+          var o=+b.getAttribute("data-o"); qd.classList.add("done"); done++;
+          if(o===q[2])score++; else b.classList.add("wrong");
+          qd.querySelectorAll("button")[q[2]].classList.add("right");
+          box.querySelector(".score").textContent="Score: "+score+" / "+done+(done===set.length?(score===set.length?" — perfect!":" — review the explanations above."):"");
+        };
+      });
+    });
+  });
+
+  /* ---------- keyboard ---------- */
+  document.addEventListener("keydown",function(e){
+    if(e.target.tagName==="INPUT"||e.ctrlKey||e.metaKey||e.altKey)return;
+    var k=e.key.toLowerCase();
+    if(k==="1")setLevel("school"); else if(k==="2")setLevel("working"); else if(k==="3")setLevel("expert");
+    else if(k==="m")toggleSB(); else if(k==="t")toggleTheme(); else if(k==="f")toggleFS();
+    else if(body.getAttribute("data-level")==="school"){
+      if(k==="p"){anPlay();} else if(k==="s"){anPause();anStep();} else if(k==="x"){anPause();}
+    }
+  });
+
+  setLevel((location.hash||"#school").slice(1),true);
+  window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(LV.indexOf(h)>=0)setLevel(h,true);});
+})();
+</script>
+</body>
+</html>

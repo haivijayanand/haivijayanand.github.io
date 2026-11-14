@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<!--
+TOOL:    finance-economics/14-insurance-risk.html — Finance & Economics Topic 14: Insurance & Risk (three levels)
+FAMILY:  finance-economics
+VERSION: 1.0.0
+DATE:    2026-11-14
+CHAT:    Finance & Economics series — second set of ten topics; Topic 14 Insurance & Risk
+CHANGES: 1.0.0 - fourteenth topic: 100-families shared-pot animation (pooling, claims, bad year,
+                 large pools); protection checklist, needs-based life-cover calculator, term vs endowment,
+                 health-policy checks, 2025-26 changes (0% GST, 100% FDI, mis-selling); expected-utility
+                 calculator with chart, LLN, adverse selection/moral hazard, solvency, cat risk; quizzes
+STATUS:  working
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Insurance &amp; Risk — Finance &amp; Economics in Three Levels — K Vijay Anand</title>
+<meta name="description" content="Insurance and risk explained at three levels — for school students, for working people and as a review for experts: pooling, term vs endowment, how much life cover, health insurance checks, zero GST and 100% FDI, expected utility, adverse selection, solvency.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* Colour-blind-safe palette: blue / orange / purple / gold — no red-vs-green coding */
+  :root{--bg:#f4f2ed;--bg2:#e9e5dc;--card:#fffdf8;--ink:#1d1b18;--soft:#4f4940;--faint:#857c6f;--rule:#d6cdbd;
+        --acc:#1d5fa6;--l1:#d9730d;--l2:#1d5fa6;--l3:#6a3fa0;--gold:#a87908;--hi:#fff1d6}
+  :root[data-theme="dark"]{--bg:#121316;--bg2:#1a1c21;--card:#1f2228;--ink:#ece9e2;--soft:#c3bdb2;--faint:#8c8578;--rule:#33363d;
+        --acc:#6aa8ee;--l1:#f39a3d;--l2:#6aa8ee;--l3:#b28ae6;--gold:#e5b33c;--hi:#3a2f17}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.65}
+  a{color:var(--acc)}
+  .toolbar{position:fixed;top:10px;right:12px;z-index:30;display:flex;gap:8px;font-size:13px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button,.toolbar a{background:var(--card);color:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;text-decoration:none}
+  header{padding:70px 4vw 18px;max-width:1600px;margin:0 auto}
+  .series{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-family:"Playfair Display",serif;font-weight:800;font-size:clamp(46px,7vw,84px);margin:6px 0 4px;line-height:1}
+  .tag{color:var(--soft);max-width:70ch;margin:0}
+  /* level switch */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 0}
+  .levels button{text-align:left;background:var(--card);border:2px solid var(--rule);border-radius:12px;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink)}
+  .levels button b{display:block;font-size:18px}
+  .levels button small{color:var(--faint)}
+  .levels button .k{float:right;font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:0 6px;color:var(--faint)}
+  .levels button[data-l="school"].on{border-color:var(--l1);background:color-mix(in srgb,var(--l1) 10%,var(--card))}
+  .levels button[data-l="working"].on{border-color:var(--l2);background:color-mix(in srgb,var(--l2) 10%,var(--card))}
+  .levels button[data-l="expert"].on{border-color:var(--l3);background:color-mix(in srgb,var(--l3) 10%,var(--card))}
+  /* layout */
+  .wrap{max-width:1600px;margin:0 auto;padding:0 4vw 40px;display:grid;grid-template-columns:250px 1fr;gap:34px}
+  body.nosb .wrap{grid-template-columns:1fr}
+  body.nosb aside{display:none}
+  aside{position:sticky;top:60px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;font-size:14.5px;padding-top:20px}
+  aside .h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  aside a{display:block;padding:5px 10px;border-left:3px solid var(--rule);color:var(--soft);text-decoration:none}
+  aside a:hover{border-left-color:var(--lc);color:var(--ink)}
+  aside .keys{margin-top:18px;color:var(--faint);font-size:12.5px;line-height:1.9}
+  kbd{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--card)}
+  main{min-width:0}
+  .panel{display:none}
+  .panel.on{display:block}
+  #p-school{--lc:var(--l1)} #p-working{--lc:var(--l2)} #p-expert{--lc:var(--l3)}
+  body[data-level="school"]{--lc:var(--l1)} body[data-level="working"]{--lc:var(--l2)} body[data-level="expert"]{--lc:var(--l3)}
+  .lvhead{border-left:6px solid var(--lc);padding:4px 0 4px 16px;margin:24px 0 10px}
+  .lvhead .who{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--lc);font-weight:700}
+  .lvhead p{margin:4px 0 0;color:var(--soft)}
+  section{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:22px 28px;margin:18px 0}
+  h2{font-family:"Playfair Display",serif;font-size:30px;margin:0 0 10px;line-height:1.2}
+  h2 .n{color:var(--lc);margin-right:8px}
+  h3{font-size:18px;margin:20px 0 6px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .box{border:1px solid var(--rule);border-radius:10px;padding:14px 16px;background:var(--bg)}
+  .box b.t{display:block;color:var(--lc);margin-bottom:4px}
+  .def{font-size:20px;border-left:5px solid var(--lc);background:color-mix(in srgb,var(--lc) 8%,transparent);padding:12px 18px;border-radius:0 10px 10px 0;margin:8px 0 14px}
+  .note{background:var(--hi);border-radius:8px;padding:10px 14px;font-size:15.5px}
+  .eq{font-family:"JetBrains Mono",monospace;background:var(--bg2);border-radius:8px;padding:10px 14px;overflow-x:auto;font-size:15px;white-space:pre}
+  table{border-collapse:collapse;width:100%;font-size:15.5px;margin:8px 0}
+  th,td{border-bottom:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:10px}
+  .stat{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--bg)}
+  .stat .v{font-size:28px;white-space:nowrap;font-weight:700;color:var(--acc);line-height:1.1}
+  .stat .l{font-size:13.5px;color:var(--soft)}
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;margin:10px 0}
+  .ctl label{font-size:13.5px;color:var(--soft);display:flex;flex-direction:column;gap:3px}
+  .ctl input[type=number]{width:120px;font:inherit;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)}
+  .ctl input[type=range]{width:200px}
+  .btn{background:var(--lc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--lc);border:1px solid var(--lc)}
+  .out{font-size:18px;margin:8px 0}
+  .out b{color:var(--lc)}
+  svg text{fill:var(--soft);font-family:Inter,sans-serif}
+  /* basket animation */
+  .stage{border:1px dashed var(--rule);border-radius:10px;padding:14px;background:var(--bg);min-height:170px}
+  .stage .yr{font-size:26px;font-weight:700}
+  .stage .yr span{color:var(--l1)}
+  .samosas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:44px}
+  .sam{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:30px solid var(--l1);transition:opacity .3s}
+  .sam.gone{opacity:.15}
+  /* quiz */
+  .q{border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:10px 0;background:var(--bg)}
+  .q p{margin:0 0 8px;font-weight:600}
+  .q button{display:block;width:100%;text-align:left;margin:5px 0;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;font:inherit;color:var(--ink);cursor:pointer}
+  .q button.right{border:2px solid var(--l2);background:color-mix(in srgb,var(--l2) 14%,var(--card))}
+  .q button.right::after{content:"  ✔ correct";font-weight:700;color:var(--l2)}
+  .q button.wrong{border:2px dashed var(--l1)}
+  .q button.wrong::after{content:"  ✘ not this one";font-weight:700;color:var(--l1)}
+  .q .why{display:none;font-size:15px;color:var(--soft);margin-top:6px}
+  .q.done .why{display:block}
+  .score{font-weight:700;color:var(--lc)}
+  footer{max-width:1600px;margin:0 auto;padding:20px 4vw 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--faint)}
+  footer a{color:var(--soft)}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}aside{display:none}.levels{grid-template-columns:1fr}section{padding:18px}}
+  @media print{.toolbar,aside,.levels{display:none}.panel{display:block!important}.wrap{display:block}}
+</style>
+</head>
+<body data-level="school">
+<div class="toolbar">
+  <a href="./">← Series</a>
+  <button id="sbBtn" title="Show / hide contents (M)">☰ Contents</button>
+  <button id="themeBtn" title="Light / dark (T)">◐ Theme</button>
+  <button id="fsBtn" title="Full screen (F)">⤢ Full screen</button>
+</div>
+
+<header>
+  <div class="series">Finance &amp; Economics · Topic 14</div>
+  <h1>Insurance &amp; Risk</h1>
+  <p class="tag">How many people sharing a small cost protects each of them from a big loss. Covers how much life and health cover a family needs, why term insurance usually beats "insurance plus savings" plans, what changed in Indian insurance in 2025–26, and the economics of risk. Pick your level.</p>
+  <div class="levels" role="tablist">
+    <button data-l="school" class="on"><span class="k">1</span><b>🎒 School</b><small>100 families and a shared pot</small></button>
+    <button data-l="working"><span class="k">2</span><b>💼 Working people</b><small>Term, health, how much cover, claims</small></button>
+    <button data-l="expert"><span class="k">3</span><b>🎓 Experts — review</b><small>Utility, adverse selection, solvency</small></button>
+  </div>
+</header>
+
+<div class="wrap">
+<aside id="toc"></aside>
+<main>
+
+<section id="snapshot" style="border-top:4px solid var(--gold)">
+  <h2>Where things stand — November 2026</h2>
+  <div class="snap">
+    <div class="stat"><div class="v">3.7%</div><div class="l">India's insurance premiums as a share of GDP in FY25 (life 2.7%, non-life 1.0%), against a global average of about 7%. Life penetration has fallen for three years in a row.</div></div>
+    <div class="stat"><div class="v">0% GST</div><div class="l">On individual life and health insurance premiums since 22 September 2025, down from 18%</div></div>
+    <div class="stat"><div class="v">100% FDI</div><div class="l">Foreign investors may now own all of an Indian insurer (Sabka Bima Sabki Raksha Act, in force from 5 February 2026), up from 74%</div></div>
+    <div class="stat"><div class="v">Mis-selling</div><div class="l">Flagged by IRDAI as a "significant concern" in its FY25 annual report, a leading cause of complaints and early policy exits</div></div>
+    <div class="stat"><div class="v">₹5 lakh</div><div class="l">Free hospital cover per family per year under Ayushman Bharat PM-JAY, extended to everyone aged 70+ since 2024</div></div>
+  </div>
+  <p class="note" style="margin-top:12px">FY26 insurance data covers only about six months of the GST exemption, so its effect on demand is not yet clear. Premium figures change every year; the principles below don't.</p>
+</section>
+
+<!-- ========================= LEVEL 1 : SCHOOL ====================== -->
+<div class="panel on" id="p-school">
+  <div class="lvhead"><div class="who">Level 1 · For school students</div><p>Bad things happen to someone, but we don't know to whom. Insurance means everyone shares the cost, so no one is ruined.</p></div>
+
+  <section id="s1">
+    <h2><span class="n">1</span>What is risk?</h2>
+    <div class="def"><b>Risk</b> is the chance that something bad happens: falling ill, an accident, a fire, a flood, or a family's earner dying early.</div>
+    <p>Most of these are <b>rare but very costly</b>. A hospital stay can cost more than a family earns in a year. You cannot know in advance whether it will happen to you, but you can know roughly how often it happens to people like you.</p>
+  </section>
+
+  <section id="s2">
+    <h2><span class="n">2</span>Watch it happen: the shared pot</h2>
+    <p>100 families live in a town. Each year, about 1 family in 100 has a ₹1 lakh hospital bill. Press Play, or press S for each step.</p>
+    <div class="ctl">
+      <button class="btn" id="anPlay">▶ Play (P)</button>
+      <button class="btn ghost" id="anStep">Next step (S)</button>
+      <button class="btn ghost" id="anPause">⏸ Pause (X)</button>
+      <button class="btn ghost" id="anReset">↺ Reset</button>
+    </div>
+    <div class="stage">
+      <div class="yr" id="anTitle">100 families</div>
+      <svg id="anChart" viewBox="0 0 900 290" style="width:100%;height:auto;margin-top:6px"></svg>
+      <p id="anMsg" style="margin:6px 0 0;color:var(--soft);font-size:17px">Press Play, or press S to begin.</p>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="n">3</span>Words of insurance</h2>
+    <table>
+      <tr><th>Word</th><th>Meaning</th></tr>
+      <tr><td>Premium</td><td>The small amount you pay every year into the pot</td></tr>
+      <tr><td>Claim</td><td>Asking the insurance company to pay when the bad thing happens</td></tr>
+      <tr><td>Sum insured / cover</td><td>The most the insurer will pay</td></tr>
+      <tr><td>Policy</td><td>The written agreement between you and the insurer</td></tr>
+      <tr><td>Insurer</td><td>The company that collects premiums and pays claims</td></tr>
+      <tr><td>Exclusion</td><td>Things the policy does not cover; always read these</td></tr>
+    </table>
+  </section>
+
+  <section id="s4">
+    <h2><span class="n">4</span>Kinds of insurance</h2>
+    <div class="cols">
+      <div class="box"><b class="t">🏥 Health</b>Pays hospital bills. The government's Ayushman Bharat gives free cover to poorer families and all people aged 70 or more.</div>
+      <div class="box"><b class="t">👪 Life</b>If the earning parent dies, the family gets money to keep living and studying.</div>
+      <div class="box"><b class="t">🛵 Motor</b>Required by law for every vehicle, to pay for damage to other people.</div>
+      <div class="box"><b class="t">🌾 Crop and home</b>Protects farmers from bad weather, and homes from fire and floods.</div>
+    </div>
+  </section>
+
+  <section id="s5">
+    <h2><span class="n">5</span>Why doesn't everyone just save instead?</h2>
+    <p>Saving works for small, expected costs, like a new school bag. But a ₹1 lakh bill might come <b>next month</b>, before you have saved enough. Insurance protects you from day one. Saving and insurance work best <b>together</b>: save for planned things, insure against rare, big shocks.</p>
+  </section>
+
+  <section id="s6">
+    <h2><span class="n">6</span>Check yourself</h2>
+    <div class="quiz" data-quiz="school"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 2 : WORKING ===================== -->
+<div class="panel" id="p-working">
+  <div class="lvhead"><div class="who">Level 2 · For working people</div><p>Which policies a family actually needs, how much cover, the 2025–26 changes, and how to avoid the common traps. This is educational only, not insurance or financial advice. Read your policy's terms.</p></div>
+
+  <section id="w1">
+    <h2><span class="n">1</span>The protection checklist</h2>
+    <table>
+      <tr><th>Need</th><th>Product</th><th>Rule of thumb</th></tr>
+      <tr><td>Family loses your income</td><td>Pure <b>term life</b> insurance</td><td>Cover to replace income until dependants are independent, plus loans and goals (see calculator)</td></tr>
+      <tr><td>Hospital bills</td><td>Family floater <b>health</b> policy + top-up / super top-up</td><td>A base cover suited to your city, plus a cheap high-deductible top-up for large bills</td></tr>
+      <tr><td>Accident or disability</td><td>Personal accident cover</td><td>Often several times annual income; PMSBY gives ₹2 lakh for ₹20 a year</td></tr>
+      <tr><td>Vehicle</td><td>Motor (third-party compulsory; own-damage optional)</td><td>Compare renewal quotes; check no-claim bonus</td></tr>
+      <tr><td>Home and contents</td><td>Home / fire insurance</td><td>Cheap relative to the value protected; important in flood-prone areas</td></tr>
+    </table>
+    <p>Government schemes: <b>PMJJBY</b> gives ₹2 lakh life cover for ₹436 a year (ages 18–50), <b>PMSBY</b> gives ₹2 lakh accident cover for ₹20 a year, and <b>Ayushman Bharat PM-JAY</b> gives ₹5 lakh hospital cover to eligible families and everyone aged 70+.</p>
+  </section>
+
+  <section id="w2">
+    <h2><span class="n">2</span>Calculator: how much life cover?</h2>
+    <div class="ctl">
+      <label>Family's yearly expenses without you (₹)<input type="number" id="lcE" value="600000" step="25000"></label>
+      <label>Years of support needed<input type="number" id="lcY" value="20" step="1"></label>
+      <label>Expense inflation %<input type="number" id="lcI" value="6" step="0.5"></label>
+      <label>Return on payout %<input type="number" id="lcR" value="7.5" step="0.5"></label>
+      <label>Loans outstanding (₹)<input type="number" id="lcL" value="2500000" step="100000"></label>
+      <label>Goals: education, marriage (₹)<input type="number" id="lcG" value="2000000" step="100000"></label>
+      <label>Existing savings + cover (₹)<input type="number" id="lcS" value="1500000" step="100000"></label>
+    </div>
+    <div class="out" id="lcOut"></div>
+    <svg id="lcChart" viewBox="0 0 900 110" style="width:100%;height:auto;margin-top:8px"></svg>
+    <p class="note">Needs-based method: the present value of rising expenses (a growing annuity), plus debts and goals, minus what you already have. A "10–15 times annual income" rule of thumb is a rough cross-check. Review it when your income, family or loans change.</p>
+  </section>
+
+  <section id="w3">
+    <h2><span class="n">3</span>Term vs "insurance + savings" plans</h2>
+    <div class="cols">
+      <div class="box"><b class="t">Term insurance</b>Pays only on death during the term. There is no maturity payout, so premiums are low: a healthy 30-year-old can get ₹1 crore of cover for roughly ₹10,000–15,000 a year (varies by insurer and health).</div>
+      <div class="box"><b class="t">Endowment / money-back</b>Mixes cover with savings. Cover is usually small (about 10 times the premium) and returns have typically been low, around 4–6% a year. High early surrender penalties.</div>
+      <div class="box"><b class="t">ULIPs</b>Cover plus market investment. Charges and lock-ins apply; compare against term plus a mutual fund (Topic 07).</div>
+    </div>
+    <p>The common advice is <b>"buy term, invest the rest"</b>: keep protection and investment separate, so each does its job. IRDAI's own report links mis-selling of complex products to complaints and early exits. Before buying, ask for the policy's <b>internal rate of return</b>, the surrender value table, and the exclusions.</p>
+  </section>
+
+  <section id="w4">
+    <h2><span class="n">4</span>Health insurance: what to check</h2>
+    <ul>
+      <li><b>Sum insured</b> suited to your city's hospital costs; medical costs have risen faster than general inflation, so review every few years.</li>
+      <li><b>Room-rent limits and co-payment</b>: a room cap can cut your whole claim proportionately.</li>
+      <li><b>Waiting periods</b> for pre-existing diseases (now capped at 3 years) and specific illnesses. After <b>5 years</b> of continuous cover (the moratorium), a claim cannot be refused for non-disclosure except in proven fraud.</li>
+      <li><b>Network hospitals</b> for cashless treatment, and the insurer's claim record.</li>
+      <li><b>Employer cover is not enough on its own</b>: it ends when you leave the job. Keep a personal policy too.</li>
+      <li><b>Disclose honestly</b>: hiding a condition is the most common reason for claim disputes.</li>
+    </ul>
+  </section>
+
+  <section id="w5">
+    <h2><span class="n">5</span>What changed in 2025–26</h2>
+    <table>
+      <tr><th>Change</th><th>What it means for you</th></tr>
+      <tr><td>Zero GST on individual life and health premiums (22 September 2025)</td><td>An 18% saving on the tax, though insurers lost input tax credits and some raised base premiums slightly. Group and motor policies still carry GST.</td></tr>
+      <tr><td>Sabka Bima Sabki Raksha Act, 2025 (in force 5 February 2026)</td><td>100% foreign ownership, one-time registration for agents and brokers, stronger IRDAI powers. Aims at more competition and the "Insurance for All by 2047" goal.</td></tr>
+      <tr><td>IRDAI action on mis-selling and costs</td><td>Insurers asked to find root causes. A September 2026 consultation proposes lower expense limits for life insurers.</td></tr>
+      <tr><td>Bima Sugam</td><td>A planned single online marketplace to buy, compare and claim policies</td></tr>
+    </table>
+  </section>
+
+  <section id="w6">
+    <h2><span class="n">6</span>Insurance and the country</h2>
+    <ul>
+      <li><b>Protection gap:</b> most Indian families are under-insured for life and health. Health spending from people's own pockets pushes many families into poverty each year (Topic 13).</li>
+      <li><b>Long-term savings:</b> insurers (LIC is the largest) are big buyers of government bonds and infrastructure debt (Topic 08).</li>
+      <li><b>Climate risk:</b> floods, cyclones and heatwaves raise crop and property losses. Parametric insurance, which pays automatically when rainfall or temperature crosses a trigger, is being tried in several states.</li>
+    </ul>
+  </section>
+
+  <section id="w7">
+    <h2><span class="n">7</span>Check yourself</h2>
+    <div class="quiz" data-quiz="working"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 3 : EXPERT ====================== -->
+<div class="panel" id="p-expert">
+  <div class="lvhead"><div class="who">Level 3 · Review for experts</div><p>Expected utility and the demand for insurance, pooling and the law of large numbers, asymmetric information, pricing and solvency, catastrophe risk, and India's protection gap.</p></div>
+
+  <section id="e1">
+    <h2><span class="n">1</span>Why risk-averse people buy insurance: calculator</h2>
+    <div class="eq">EU = (1−p)·u(W) + p·u(W−L)        CE = u⁻¹(EU)        max premium π* = W − CE        risk premium = π* − pL
+CRRA:  u(w) = w^(1−γ)/(1−γ)  (γ ≠ 1),   u(w) = ln w  (γ = 1)</div>
+    <div class="ctl">
+      <label>Wealth W (₹ lakh)<input type="number" id="euW" value="10" step="0.5"></label>
+      <label>Loss L (₹ lakh)<input type="number" id="euL" value="5" step="0.5"></label>
+      <label>Probability p %<input type="number" id="euP" value="2" step="0.5"></label>
+      <label>Risk aversion γ<input type="number" id="euG" value="2" step="0.5"></label>
+    </div>
+    <div class="out" id="euOut"></div>
+    <svg id="euChart" viewBox="0 0 900 420" style="width:100%;height:auto;margin-top:8px"></svg>
+    <p class="note">Because utility is concave, the chord between the two outcomes lies below the curve. The gap between expected wealth and the certainty equivalent is what a risk-averse person will pay above the fair premium. That margin funds insurers' expenses and profit (the loading).</p>
+  </section>
+
+  <section id="e2">
+    <h2><span class="n">2</span>Pooling and the law of large numbers</h2>
+    <div class="eq">Per-member loss with n independent risks:  mean = pL,   s.d. = L·√(p(1−p)/n)  → 0 as n → ∞</div>
+    <ul>
+      <li>Pooling diversifies <b>idiosyncratic</b> risk only. Correlated risks (pandemics, floods, crop failure across a region) do not average away, which is why reinsurance, catastrophe bonds and government backstops exist.</li>
+      <li>With p = 1% and L = ₹1 lakh, the standard deviation of per-member cost falls from about ₹9,950 (n = 1) to ₹995 (n = 100) and ₹99 (n = 10,000).</li>
+    </ul>
+  </section>
+
+  <section id="e3">
+    <h2><span class="n">3</span>Asymmetric information</h2>
+    <ul>
+      <li><b>Adverse selection</b> (Akerlof, 1970; Rothschild–Stiglitz, 1976): when insurers cannot tell risk types apart, high-risk buyers are over-represented, pushing prices up and low-risk buyers out (a "death spiral"). Remedies include underwriting, waiting periods, group and mandatory cover, and risk-separating menus (deductible choice).</li>
+      <li><b>Moral hazard</b> (Arrow, 1963; Pauly, 1968): cover changes behaviour, both ex ante (less care) and ex post (more use of care). Remedies are co-payments, deductibles, room-rent limits and no-claim bonuses. India's room-rent proportionate deductions are a blunt version.</li>
+      <li>Supplier-induced demand in hospitals and fraud add a third layer, addressed through package rates (PM-JAY), claims analytics and IRDAI's 2025 fraud-monitoring framework.</li>
+    </ul>
+  </section>
+
+  <section id="e4">
+    <h2><span class="n">4</span>Pricing, profitability and solvency</h2>
+    <div class="eq">Combined ratio = (claims incurred + expenses + commission) / net earned premium        &lt; 100% → underwriting profit
+Solvency ratio = available solvency margin / required solvency margin        IRDAI minimum: 150%</div>
+    <ul>
+      <li>Non-life insurers often run combined ratios above 100% and earn from investment income on float. Health is the largest non-life line in India.</li>
+      <li>Life insurance pricing discounts mortality and expense cash flows. Participating products share surplus through bonuses, and the opacity of their returns is a recurring consumer-protection concern.</li>
+      <li>IRDAI is moving towards <b>risk-based capital</b> and Ind AS 117 / IFRS 17-style reporting, which will change how capital and profits are measured.</li>
+    </ul>
+  </section>
+
+  <section id="e5">
+    <h2><span class="n">5</span>Catastrophe risk and the protection gap</h2>
+    <ul>
+      <li>India's natural-catastrophe losses are mostly uninsured. Reinsurance capacity (GIC Re and foreign branches) and parametric covers (for example, state and municipal heat and rainfall triggers) are expanding.</li>
+      <li>Crop insurance (PMFBY) shows the trade-offs: high subsidy, delays in yield estimation and claim payment, and state opt-outs. It is moving towards technology-based yield estimation.</li>
+      <li>Behavioural frictions (present bias, probability neglect, distrust after claim rejections) keep take-up low even at fair prices. Default enrolment and bundling (with loans, accounts and employment) raise coverage.</li>
+    </ul>
+  </section>
+
+  <section id="e6">
+    <h2><span class="n">6</span>Review checklist: open questions</h2>
+    <ol>
+      <li>Will zero GST and 100% FDI raise penetration, or mainly change ownership and pricing at the top end?</li>
+      <li>How should India regulate commission-driven mis-selling: expense caps, disclosure of returns, or fee-based advice?</li>
+      <li>Should a basic health cover be mandatory for the "missing middle" between PM-JAY and employer cover?</li>
+      <li>What is the right public role in catastrophe and climate risk: pools, parametric covers, or reinsurer of last resort?</li>
+      <li>How will risk-based capital affect product design and LIC's dominance?</li>
+    </ol>
+  </section>
+
+  <section id="e7">
+    <h2><span class="n">7</span>Check yourself</h2>
+    <div class="quiz" data-quiz="expert"></div>
+  </section>
+</div>
+
+<section id="sources">
+  <h2>Sources and further reading</h2>
+  <ul>
+    <li>IRDAI Annual Report 2024-25: <a href="https://www.business-standard.com/amp/finance/insurance/mis-selling-indian-insurance-sector-significant-concern-irdai-125123001092_1.html">Business Standard</a>, <a href="https://www.outlookmoney.com/personal-finance/irdai-flags-mis-selling-tells-insurers-to-look-inward-as-profits-climb">Outlook Money</a>; <a href="https://indiamacroindicators.co.in/resources/blogs/india-insurance-reforms-2026">India Macro Indicators: insurance reforms 2026</a>.</li>
+    <li>Sabka Bima Sabki Raksha Act, 2025 and 100% FDI: <a href="https://india-briefing.com/news/india-insurance-100-percent-foreign-investment-42439.html">India Briefing</a>, <a href="https://www.angelone.in/news/market-updates/india-opens-insurance-sector-to-100-fdi-via-automatic-route">Angel One</a>.</li>
+    <li>GST exemption from 22 September 2025: <a href="https://www.zurichkotak.com/knowledge-center/health-insurance/what-you-need-to-know-about-gst-on-health-insurance-and-renewal">Zurich Kotak</a>, <a href="https://www.business-standard.com/companies/news/niva-bupa-impact-itc-loss-offset-sales-commission-2025-125110401459_1.html">Business Standard (ITC impact)</a>.</li>
+    <li>Arrow (1963), <i>AER</i>; Akerlof (1970), <i>QJE</i>; Rothschild and Stiglitz (1976), <i>QJE</i>; Pauly (1968), <i>AER</i>; Kunreuther and Pauly on catastrophe insurance demand.</li>
+    <li>Earlier topics: <a href="07-stock-markets.html">Stock Markets</a> · <a href="09-compounding.html">Compounding</a> · <a href="13-inequality-poverty.html">Inequality &amp; Poverty</a>.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<footer>
+  Finance &amp; Economics in Three Levels · Topic 14 · K Vijay Anand · <a href="13-inequality-poverty.html">← Topic 13 Inequality &amp; Poverty</a> · <a href="./">All topics</a> · <a href="/">Home</a><br>
+  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.
+  Educational content. Figures dated November 2026.
+</footer>
+<script>
+(function(){
+  "use strict";
+  var root=document.documentElement, body=document.body;
+  var $=function(id){return document.getElementById(id);};
+  var cssv=function(n){return getComputedStyle(root).getPropertyValue(n).trim();};
+
+  try{var t=localStorage.getItem("fe-theme");if(t)root.setAttribute("data-theme",t);}catch(e){}
+  function redraw(){anRender();lc();eu();}
+  function toggleTheme(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("fe-theme",n);}catch(e){}redraw();}
+  function toggleFS(){if(!document.fullscreenElement){(root.requestFullscreen||function(){}).call(root);}else{document.exitFullscreen();}}
+  function toggleSB(){body.classList.toggle("nosb");}
+  $("themeBtn").onclick=toggleTheme; $("fsBtn").onclick=toggleFS; $("sbBtn").onclick=toggleSB;
+
+  var LV=["school","working","expert"];
+  function setLevel(l,noHash){
+    if(LV.indexOf(l)<0)l="school";
+    body.setAttribute("data-level",l);
+    LV.forEach(function(x){$("p-"+x).classList.toggle("on",x===l);});
+    document.querySelectorAll(".levels button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-l")===l);});
+    buildTOC(l);
+    if(!noHash)history.replaceState(null,"","#"+l);
+    redraw();
+  }
+  document.querySelectorAll(".levels button").forEach(function(b){b.onclick=function(){setLevel(b.getAttribute("data-l"));};});
+  function buildTOC(l){
+    var names={school:"School",working:"Working people",expert:"Experts"};
+    var h='<div class="h">Contents · '+names[l]+'</div><a href="#snapshot">Snapshot · Nov 2026</a>';
+    $("p-"+l).querySelectorAll("section").forEach(function(s){
+      var t=s.querySelector("h2").textContent; h+='<a href="#'+s.id+'">'+t.replace(/^(\d+)/,"$1 · ")+'</a>';
+    });
+    h+='<a href="#sources">Sources</a>';
+    h+='<div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> level<br><kbd>M</kbd> hide contents<br><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause<br><kbd>T</kbd> theme · <kbd>F</kbd> full screen</div>';
+    $("toc").innerHTML=h;
+  }
+  function rep(v,n){var a=[];for(var i=0;i<n;i++)a.push(v);return a;}
+
+    /* ---------- Level 1: shared pot ---------- */
+  var ST=[
+    {t:"100 families",hit:[],paid:false,pot:0,out:0,m:"Each circle is a family. Every year about 1 family in 100 gets a ₹1 lakh hospital bill. Nobody knows which one. Press S."},
+    {t:"Step 1 · Without insurance",hit:[37],paid:false,pot:0,out:0,m:"This year family no. 38 falls ill (marked !). It must find ₹1 lakh alone: it may sell land or borrow at high interest. The other 99 pay nothing."},
+    {t:"Step 2 · With insurance: everyone pays a little",hit:[],paid:true,pot:120000,out:0,m:"Each family pays ₹1,200 a year (the premium) into a shared pot run by an insurer. The pot has ₹1,20,000."},
+    {t:"Step 3 · The bad thing happens",hit:[37],paid:true,pot:120000,out:100000,m:"Family no. 38 claims. The pot pays its ₹1 lakh bill. The remaining ₹20,000 covers the insurer's staff, costs and profit. Every family lost only ₹1,200, and nobody was ruined."},
+    {t:"Step 4 · An unlucky year",hit:[37,81],paid:true,pot:120000,out:200000,m:"Some years 2 families fall ill and the pot is short by ₹80,000. Insurers keep savings (reserves) from good years, and themselves buy insurance (reinsurance), to pay in bad years."},
+    {t:"Step 5 · Bigger pools are steadier",hit:[37],paid:true,pot:120000,out:100000,m:"With 10,000 families, almost every year about 100 fall ill, close to the average. Big pools make costs predictable. That is why insurance works: the more people share, the steadier it gets."}
+  ];
+  var anI=0, anTimer=null;
+  function anRender(){
+    var s=ST[anI], ink=cssv("--ink"), fa=cssv("--faint"), ru=cssv("--rule"), c1=cssv("--l1"), c2=cssv("--l2"), svg="";
+    for(var i=0;i<100;i++){var r=Math.floor(i/10), c=i%10, x=40+c*44, y=30+r*25, hit=s.hit.indexOf(i)>=0;
+      svg+='<circle cx="'+x+'" cy="'+y+'" r="10" fill="'+(hit?c1:(s.paid?c2:"none"))+'" fill-opacity="'+(hit?1:(s.paid?0.55:0))+'" stroke="'+(hit?c1:ink)+'" stroke-width="'+(hit?2.5:1.2)+'"/>';
+      if(hit)svg+='<text x="'+x+'" y="'+(y+5)+'" font-size="14" text-anchor="middle" style="fill:#fff;font-weight:800">!</text>';}
+    svg+='<text x="238" y="282" font-size="14" text-anchor="middle" style="fill:'+ink+'">'+(s.paid?"blue = paid ₹1,200 premium · ":"")+'! = family with a ₹1 lakh bill</text>';
+    var bx=600, bw=90, top=40, base=250, mx=200000, Y=function(v){return base-(base-top)*v/mx;};
+    for(var g=0;g<=200000;g+=50000){svg+='<line x1="'+(bx-10)+'" x2="'+(bx+bw+170)+'" y1="'+Y(g)+'" y2="'+Y(g)+'" stroke="'+ru+'"/><text x="'+(bx-14)+'" y="'+(Y(g)+4)+'" font-size="12" text-anchor="end">₹'+(g/1000)+'k</text>';}
+    if(s.pot){svg+='<rect x="'+bx+'" y="'+Y(s.pot)+'" width="'+bw+'" height="'+(base-Y(s.pot))+'" fill="'+c2+'" fill-opacity=".8"/><text x="'+(bx+bw/2)+'" y="'+(Y(s.pot)-6)+'" font-size="14" text-anchor="middle" style="fill:'+ink+';font-weight:700">pot ₹1.2 lakh</text>';}
+    if(s.out){svg+='<rect x="'+(bx+bw+40)+'" y="'+Y(s.out)+'" width="'+bw+'" height="'+(base-Y(s.out))+'" fill="'+c1+'" fill-opacity=".85" stroke="'+c1+'" stroke-dasharray="'+(s.paid?"0":"5 4")+'"/><text x="'+(bx+bw*1.5+40)+'" y="'+(Y(s.out)-6)+'" font-size="14" text-anchor="middle" style="fill:'+ink+';font-weight:700">claims ₹'+(s.out/100000)+' lakh</text>';}
+    if(!s.paid&&s.hit.length){svg+='<text x="'+(bx+60)+'" y="140" font-size="16" text-anchor="middle" style="fill:'+ink+';font-weight:700">no pot:</text><text x="'+(bx+60)+'" y="164" font-size="16" text-anchor="middle" style="fill:'+ink+'">one family pays ₹1,00,000</text>';}
+    if(!s.paid&&!s.hit.length){svg+='<text x="'+(bx+110)+'" y="150" font-size="16" text-anchor="middle" style="fill:'+fa+'">(no shared pot yet)</text>';}
+    $("anChart").innerHTML=svg; $("anTitle").textContent=s.t; $("anMsg").textContent=s.m;
+  }
+  function anStep(){ if(anI<ST.length-1){anI++;anRender();} else anPause(); }
+  function anPlay(){ if(anTimer)return; if(anI>=ST.length-1)anI=0; anRender(); anTimer=setInterval(anStep,4000); }
+  function anPause(){ clearInterval(anTimer); anTimer=null; }
+  $("anPlay").onclick=anPlay; $("anStep").onclick=function(){anPause();anStep();}; $("anPause").onclick=anPause;
+  $("anReset").onclick=function(){anPause();anI=0;anRender();};
+
+  /* ---------- Level 2: life cover ---------- */
+  var cr=function(v){return Math.abs(v)>=1e7?"₹"+(v/1e7).toFixed(2)+" crore":"₹"+(v/1e5).toFixed(1)+" lakh";};
+  function lc(){
+    var g=function(id){return +$(id).value||0;};
+    var E=g("lcE"),Yr=Math.max(0,Math.round(g("lcY"))),i=g("lcI")/100,r=g("lcR")/100,Lo=g("lcL"),G=g("lcG"),S=g("lcS");
+    var q=(1+i)/(1+r), f=0; for(var t=0;t<Yr;t++)f+=Math.pow(q,t);
+    var PV=E*f, need=PV+Lo+G, cover=Math.max(0,need-S);
+    $("lcOut").innerHTML="Present value of "+Yr+" years of expenses rising "+(i*100).toFixed(1)+"% a year: <b>"+cr(PV)+"</b> ("+f.toFixed(1)+" years' worth today). Total need "+cr(need)+" − existing "+cr(S)+" = <b>term cover needed ≈ "+cr(cover)+"</b>, about "+(cover/E).toFixed(1)+"× the family's yearly expenses.";
+    var W=900,L=150,R=20, mx=Math.max(need,S)*1.02||1, X=function(v){return L+(W-L-R)*v/mx;}, ink=cssv("--ink"), c1=cssv("--l1"), c2=cssv("--l2"), c3=cssv("--l3"), fa=cssv("--faint"), svg="";
+    var segs=[[PV,c2,"expenses"],[Lo,c3,"loans"],[G,c1,"goals"]], x0=X(0);
+    svg+='<text x="'+(L-10)+'" y="34" font-size="14" text-anchor="end" style="fill:'+ink+';font-weight:600">Needs</text>';
+    segs.forEach(function(sg){var w=X(sg[0])-X(0); if(w>0){svg+='<rect x="'+x0+'" y="16" width="'+w+'" height="26" fill="'+sg[1]+'" stroke="'+cssv("--card")+'"/>'; if(w>70)svg+='<text x="'+(x0+w/2)+'" y="34" font-size="13" text-anchor="middle" style="fill:#fff;font-weight:600">'+sg[2]+'</text>';} x0+=w;});
+    svg+='<text x="'+(L-10)+'" y="78" font-size="14" text-anchor="end" style="fill:'+ink+';font-weight:600">Have</text>';
+    svg+='<rect x="'+X(0)+'" y="60" width="'+(X(S)-X(0))+'" height="26" fill="'+fa+'" fill-opacity=".6"/>';
+    svg+='<rect x="'+X(S)+'" y="60" width="'+Math.max(0,X(need)-X(S))+'" height="26" fill="none" stroke="'+ink+'" stroke-width="2" stroke-dasharray="6 4"/>';
+    if(X(need)-X(S)>120)svg+='<text x="'+((X(S)+X(need))/2)+'" y="78" font-size="13" text-anchor="middle" style="fill:'+ink+';font-weight:700">gap = cover to buy</text>';
+    $("lcChart").innerHTML=svg;
+  }
+  ["lcE","lcY","lcI","lcR","lcL","lcG","lcS"].forEach(function(id){$(id).oninput=lc;}); lc();
+
+  /* ---------- Level 3: expected utility ---------- */
+  function eu(){
+    var g=function(id){return +$(id).value||0;};
+    var W=g("euW"),Ls=Math.min(g("euL"),W*0.99),p=Math.min(Math.max(g("euP")/100,0),1),G=Math.max(0,g("euG"));
+    if(W<=0){return;}
+    var u=function(w){return Math.abs(G-1)<1e-9?Math.log(w):Math.pow(w,1-G)/(1-G);};
+    var ui=function(v){return Math.abs(G-1)<1e-9?Math.exp(v):Math.pow(v*(1-G),1/(1-G));};
+    var Wl=W-Ls, EU=(1-p)*u(W)+p*u(Wl), CE=G===0?(W-p*Ls):ui(EU), Ew=W-p*Ls, pmax=W-CE, fair=p*Ls;
+    var lk=function(v){return "₹"+Math.round(v*1e5).toLocaleString("en-IN");};
+    $("euOut").innerHTML="Fair premium pL = <b>"+lk(fair)+"</b>. Certainty equivalent = "+lk(CE)+", so the most this person would pay is <b>"+lk(pmax)+"</b>, which is "+(fair>0?(pmax/fair).toFixed(2)+"× the fair premium":"n/a")+". Risk premium = "+lk(pmax-fair)+(G===0?" (zero: a risk-neutral person won't pay more than fair).":".");
+    var ink=cssv("--ink"), ru=cssv("--rule"), c1=cssv("--l1"), c2=cssv("--l2"), c3=cssv("--l3"), svg="";
+    var T=24, Bm=330;
+    function panel(x0,x1,lo,hi,title,ticks){
+      var ul=u(lo), uh=u(hi), chU=function(w){return u(Wl)+(u(W)-u(Wl))*(w-Wl)/Ls;};
+      var vmin=Math.min(ul,chU(lo)), vmax=Math.max(uh,chU(hi));
+      var X=function(w){return x0+(x1-x0)*(w-lo)/(hi-lo);}, Y=function(v){return T+(Bm-T)*(1-(v-vmin)/(vmax-vmin));};
+      var o='<rect x="'+x0+'" y="'+T+'" width="'+(x1-x0)+'" height="'+(Bm-T)+'" fill="none" stroke="'+ru+'"/>';
+      o+='<text x="'+((x0+x1)/2)+'" y="'+(T-8)+'" font-size="13" text-anchor="middle" style="fill:'+ink+';font-weight:600">'+title+'</text>';
+      var pts=""; for(var k=0;k<=120;k++){var w=lo+(hi-lo)*k/120; pts+=X(w)+","+Y(u(w))+" ";}
+      o+='<polyline points="'+pts+'" fill="none" stroke="'+c2+'" stroke-width="3"/>';
+      var a1=Math.max(lo,Wl), a2=Math.min(hi,W);
+      o+='<line x1="'+X(a1)+'" y1="'+Y(chU(a1))+'" x2="'+X(a2)+'" y2="'+Y(chU(a2))+'" stroke="'+c3+'" stroke-width="2.5" stroke-dasharray="7 5"/>';
+      o+='<line x1="'+X(CE)+'" y1="'+Y(EU)+'" x2="'+X(Ew)+'" y2="'+Y(EU)+'" stroke="'+c1+'" stroke-width="5"/>';
+      o+='<circle cx="'+X(Ew)+'" cy="'+Y(EU)+'" r="5" fill="'+c3+'"/><circle cx="'+X(CE)+'" cy="'+Y(EU)+'" r="5" fill="'+c1+'"/>';
+      ticks.forEach(function(tk){ if(tk[0]>=lo&&tk[0]<=hi){o+='<line x1="'+X(tk[0])+'" x2="'+X(tk[0])+'" y1="'+Bm+'" y2="'+(Bm+6)+'" stroke="'+ink+'"/><text x="'+(X(tk[0])+(tk[2]||0))+'" y="'+(Bm+20)+'" font-size="12" text-anchor="middle" style="fill:'+ink+'">'+tk[1]+'</text>';}});
+      return o;
+    }
+    var d=Math.max(W-CE,1e-6);
+    svg+=panel(60,500,Wl-Ls*0.03,W+Ls*0.03,"Whole gamble: W−L to W",[[Wl,"W−L"],[W,"W"]]);
+    svg+=panel(560,880,CE-d*0.8,W+d*0.15,"Zoom near W",[[CE,"CE",-12],[Ew,"E[w]",14],[W,"W"]]);
+    svg+='<text x="470" y="'+(Bm+42)+'" font-size="13" text-anchor="middle">wealth w (₹ lakh) → · vertical axis: utility u(w)</text>';
+    var ly=402, items=[[c2,"0","solid curve: utility",3],[c3,"7 5","dashed chord: expected utility of the gamble",2.5],[c1,"0","thick bar: risk premium (E[w] − CE)",5]], lx=60;
+    items.forEach(function(it){svg+='<line x1="'+lx+'" x2="'+(lx+34)+'" y1="'+ly+'" y2="'+ly+'" stroke="'+it[0]+'" stroke-width="'+it[3]+'" stroke-dasharray="'+it[1]+'"/><text x="'+(lx+42)+'" y="'+(ly+5)+'" font-size="13" style="fill:'+ink+'">'+it[2]+'</text>'; lx+=it[2].length*6.6+70;});
+    $("euChart").innerHTML=svg;
+  }
+  ["euW","euL","euP","euG"].forEach(function(id){$(id).oninput=eu;}); eu();
+
+  /* ---------- quizzes ---------- */
+  var Q={
+    school:[
+      ["The amount you pay every year for insurance is called the…",["Claim","Premium","Bonus","Exclusion"],1,"You pay premiums; you make a claim when something goes wrong."],
+      ["Why does insurance work?",["The insurer is very rich","Many people share the cost of the few who are unlucky","Bad things never happen","The government pays everything"],1,"Pooling: everyone pays a little, the unlucky few get a lot."],
+      ["Which insurance is compulsory for every vehicle in India?",["Life","Third-party motor","Crop","Travel"],1,"Third-party motor cover is required by law."],
+      ["Why are bigger insurance pools steadier?",["They charge more","The number of claims stays close to the average","They have no claims","They are older"],1,"With many members, unusual years even out."],
+      ["Saving vs insurance: which statement is right?",["Save for planned costs, insure for rare big shocks","Never save","Never insure","They are the same"],0,"They work best together."]
+    ],
+    working:[
+      ["Which product gives the most life cover per rupee of premium?",["Endowment","Money-back","Pure term insurance","ULIP"],2,"Term has no savings part, so premiums buy pure protection."],
+      ["Since 22 September 2025, GST on individual health insurance premiums is…",["18%","12%","5%","0%"],3,"Individual life and health premiums are now GST-exempt."],
+      ["After how many years of continuous health cover can a claim not be denied for non-disclosure (except fraud)?",["1","3","5","10"],2,"The moratorium period is 5 years."],
+      ["Why keep a personal health policy even with employer cover?",["Employer cover ends when you leave the job","It is mandatory","It doubles your salary","No reason"],0,"Job changes, retirement or layoffs end group cover."],
+      ["With these defaults, the needs-based life cover is about…",["₹50 lakh","₹1.35 crore","₹5 crore","₹6 lakh"],1,"Expenses PV ≈ ₹1.05 crore + ₹25 lakh loans + ₹20 lakh goals − ₹15 lakh existing."]
+    ],
+    expert:[
+      ["A risk-averse person pays more than the fair premium because…",["Utility is convex","Utility is concave, so the certainty equivalent is below expected wealth","Insurers are monopolies","Losses are certain"],1,"Jensen's inequality on a concave u."],
+      ["Adverse selection arises from…",["Hidden actions after buying","Hidden information about risk type before buying","Too many insurers","Reinsurance"],1,"Moral hazard is the hidden-action problem."],
+      ["Co-payments mainly address…",["Adverse selection","Moral hazard","Catastrophe risk","Solvency"],1,"Sharing costs reduces over-use of care."],
+      ["Pooling fails to diversify which risk?",["Independent illnesses","Correlated risks such as floods or pandemics","Car accidents","Individual deaths"],1,"Correlated losses do not average away; reinsurance and backstops are needed."],
+      ["IRDAI's minimum required solvency ratio is…",["100%","120%","150%","200%"],2,"Insurers must hold 1.5× the required solvency margin."]
+    ]
+  };
+  document.querySelectorAll(".quiz").forEach(function(box){
+    var set=Q[box.getAttribute("data-quiz")], score=0, done=0, h="";
+    set.forEach(function(q,qi){
+      h+='<div class="q" data-i="'+qi+'"><p>'+(qi+1)+'. '+q[0]+'</p>';
+      q[1].forEach(function(o,oi){h+='<button data-o="'+oi+'">'+o+'</button>';});
+      h+='<div class="why">'+q[3]+'</div></div>';
+    });
+    h+='<p class="score"></p>'; box.innerHTML=h;
+    box.querySelectorAll(".q").forEach(function(qd){
+      var q=set[+qd.getAttribute("data-i")];
+      qd.querySelectorAll("button").forEach(function(b){
+        b.onclick=function(){
+          if(qd.classList.contains("done"))return;
+          var o=+b.getAttribute("data-o"); qd.classList.add("done"); done++;
+          if(o===q[2])score++; else b.classList.add("wrong");
+          qd.querySelectorAll("button")[q[2]].classList.add("right");
+          box.querySelector(".score").textContent="Score: "+score+" / "+done+(done===set.length?(score===set.length?" — perfect!":" — review the explanations above."):"");
+        };
+      });
+    });
+  });
+
+  document.addEventListener("keydown",function(e){
+    if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
+    var k=e.key.toLowerCase();
+    if(k==="1")setLevel("school"); else if(k==="2")setLevel("working"); else if(k==="3")setLevel("expert");
+    else if(k==="m")toggleSB(); else if(k==="t")toggleTheme(); else if(k==="f")toggleFS();
+    else if(body.getAttribute("data-level")==="school"){
+      if(k==="p"){anPlay();} else if(k==="s"){anPause();anStep();} else if(k==="x"){anPause();}
+    }
+  });
+
+  setLevel((location.hash||"#school").slice(1),true);
+  window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(LV.indexOf(h)>=0)setLevel(h,true);});
+})();
+</script>
+</body>
+</html>

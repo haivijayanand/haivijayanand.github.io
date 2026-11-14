@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<!--
+TOOL:    finance-economics/05-exchange-rates.html — Finance & Economics Topic 05: Exchange Rates (three levels)
+FAMILY:  finance-economics
+VERSION: 1.0.0
+DATE:    2026-11-14
+CHAT:    Finance & Economics series — three levels (school, working, expert); Topic 05 Exchange Rates
+CHANGES: 1.0.0 - fifth topic: definition, $10 toy/mango animation, BoP drivers (Q1 FY27), the rupee's 2026
+                 story, education-cost and parity (CIP/PPP) calculators, hedging, REER, history, models,
+                 intervention and reserve adequacy; Nov 2026 snapshot; quiz per level
+STATUS:  working
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exchange Rates — Finance &amp; Economics in Three Levels — K Vijay Anand</title>
+<meta name="description" content="Exchange rates explained at three levels — for school students, for working people and as a review for experts: what moves the rupee, who gains and loses, the 2026 rupee story, RBI intervention, parity conditions and models.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* Colour-blind-safe palette: blue / orange / purple / gold — no red-vs-green coding */
+  :root{--bg:#f4f2ed;--bg2:#e9e5dc;--card:#fffdf8;--ink:#1d1b18;--soft:#4f4940;--faint:#857c6f;--rule:#d6cdbd;
+        --acc:#1d5fa6;--l1:#d9730d;--l2:#1d5fa6;--l3:#6a3fa0;--gold:#a87908;--hi:#fff1d6}
+  :root[data-theme="dark"]{--bg:#121316;--bg2:#1a1c21;--card:#1f2228;--ink:#ece9e2;--soft:#c3bdb2;--faint:#8c8578;--rule:#33363d;
+        --acc:#6aa8ee;--l1:#f39a3d;--l2:#6aa8ee;--l3:#b28ae6;--gold:#e5b33c;--hi:#3a2f17}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.65}
+  a{color:var(--acc)}
+  .toolbar{position:fixed;top:10px;right:12px;z-index:30;display:flex;gap:8px;font-size:13px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button,.toolbar a{background:var(--card);color:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;text-decoration:none}
+  header{padding:70px 4vw 18px;max-width:1600px;margin:0 auto}
+  .series{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-family:"Playfair Display",serif;font-weight:800;font-size:clamp(46px,7vw,84px);margin:6px 0 4px;line-height:1}
+  .tag{color:var(--soft);max-width:70ch;margin:0}
+  /* level switch */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 0}
+  .levels button{text-align:left;background:var(--card);border:2px solid var(--rule);border-radius:12px;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink)}
+  .levels button b{display:block;font-size:18px}
+  .levels button small{color:var(--faint)}
+  .levels button .k{float:right;font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:0 6px;color:var(--faint)}
+  .levels button[data-l="school"].on{border-color:var(--l1);background:color-mix(in srgb,var(--l1) 10%,var(--card))}
+  .levels button[data-l="working"].on{border-color:var(--l2);background:color-mix(in srgb,var(--l2) 10%,var(--card))}
+  .levels button[data-l="expert"].on{border-color:var(--l3);background:color-mix(in srgb,var(--l3) 10%,var(--card))}
+  /* layout */
+  .wrap{max-width:1600px;margin:0 auto;padding:0 4vw 40px;display:grid;grid-template-columns:250px 1fr;gap:34px}
+  body.nosb .wrap{grid-template-columns:1fr}
+  body.nosb aside{display:none}
+  aside{position:sticky;top:60px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;font-size:14.5px;padding-top:20px}
+  aside .h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  aside a{display:block;padding:5px 10px;border-left:3px solid var(--rule);color:var(--soft);text-decoration:none}
+  aside a:hover{border-left-color:var(--lc);color:var(--ink)}
+  aside .keys{margin-top:18px;color:var(--faint);font-size:12.5px;line-height:1.9}
+  kbd{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--card)}
+  main{min-width:0}
+  .panel{display:none}
+  .panel.on{display:block}
+  #p-school{--lc:var(--l1)} #p-working{--lc:var(--l2)} #p-expert{--lc:var(--l3)}
+  body[data-level="school"]{--lc:var(--l1)} body[data-level="working"]{--lc:var(--l2)} body[data-level="expert"]{--lc:var(--l3)}
+  .lvhead{border-left:6px solid var(--lc);padding:4px 0 4px 16px;margin:24px 0 10px}
+  .lvhead .who{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--lc);font-weight:700}
+  .lvhead p{margin:4px 0 0;color:var(--soft)}
+  section{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:22px 28px;margin:18px 0}
+  h2{font-family:"Playfair Display",serif;font-size:30px;margin:0 0 10px;line-height:1.2}
+  h2 .n{color:var(--lc);margin-right:8px}
+  h3{font-size:18px;margin:20px 0 6px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .box{border:1px solid var(--rule);border-radius:10px;padding:14px 16px;background:var(--bg)}
+  .box b.t{display:block;color:var(--lc);margin-bottom:4px}
+  .def{font-size:20px;border-left:5px solid var(--lc);background:color-mix(in srgb,var(--lc) 8%,transparent);padding:12px 18px;border-radius:0 10px 10px 0;margin:8px 0 14px}
+  .note{background:var(--hi);border-radius:8px;padding:10px 14px;font-size:15.5px}
+  .eq{font-family:"JetBrains Mono",monospace;background:var(--bg2);border-radius:8px;padding:10px 14px;overflow-x:auto;font-size:15px;white-space:pre}
+  table{border-collapse:collapse;width:100%;font-size:15.5px;margin:8px 0}
+  th,td{border-bottom:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:10px}
+  .stat{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--bg)}
+  .stat .v{font-size:28px;white-space:nowrap;font-weight:700;color:var(--acc);line-height:1.1}
+  .stat .l{font-size:13.5px;color:var(--soft)}
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;margin:10px 0}
+  .ctl label{font-size:13.5px;color:var(--soft);display:flex;flex-direction:column;gap:3px}
+  .ctl input[type=number]{width:120px;font:inherit;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)}
+  .ctl input[type=range]{width:200px}
+  .btn{background:var(--lc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--lc);border:1px solid var(--lc)}
+  .out{font-size:18px;margin:8px 0}
+  .out b{color:var(--lc)}
+  svg text{fill:var(--soft);font-family:Inter,sans-serif}
+  /* basket animation */
+  .stage{border:1px dashed var(--rule);border-radius:10px;padding:14px;background:var(--bg);min-height:170px}
+  .stage .yr{font-size:26px;font-weight:700}
+  .stage .yr span{color:var(--l1)}
+  .samosas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:44px}
+  .sam{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:30px solid var(--l1);transition:opacity .3s}
+  .sam.gone{opacity:.15}
+  /* quiz */
+  .q{border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:10px 0;background:var(--bg)}
+  .q p{margin:0 0 8px;font-weight:600}
+  .q button{display:block;width:100%;text-align:left;margin:5px 0;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;font:inherit;color:var(--ink);cursor:pointer}
+  .q button.right{border:2px solid var(--l2);background:color-mix(in srgb,var(--l2) 14%,var(--card))}
+  .q button.right::after{content:"  ✔ correct";font-weight:700;color:var(--l2)}
+  .q button.wrong{border:2px dashed var(--l1)}
+  .q button.wrong::after{content:"  ✘ not this one";font-weight:700;color:var(--l1)}
+  .q .why{display:none;font-size:15px;color:var(--soft);margin-top:6px}
+  .q.done .why{display:block}
+  .score{font-weight:700;color:var(--lc)}
+  footer{max-width:1600px;margin:0 auto;padding:20px 4vw 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--faint)}
+  footer a{color:var(--soft)}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}aside{display:none}.levels{grid-template-columns:1fr}section{padding:18px}}
+  @media print{.toolbar,aside,.levels{display:none}.panel{display:block!important}.wrap{display:block}}
+</style>
+</head>
+<body data-level="school">
+<div class="toolbar">
+  <a href="./">← Series</a>
+  <button id="sbBtn" title="Show / hide contents (M)">☰ Contents</button>
+  <button id="themeBtn" title="Light / dark (T)">◐ Theme</button>
+  <button id="fsBtn" title="Full screen (F)">⤢ Full screen</button>
+</div>
+
+<header>
+  <div class="series">Finance &amp; Economics · Topic 05</div>
+  <h1>Exchange Rates</h1>
+  <p class="tag">The price of the rupee in dollars: what moves it, who gains and who loses when it falls, how the RBI manages it, and why a war far away changed the cost of your petrol, phone and foreign education in 2026. Pick your level.</p>
+  <div class="levels" role="tablist">
+    <button data-l="school" class="on"><span class="k">1</span><b>🎒 School</b><small>Why a $10 toy costs more rupees this year</small></button>
+    <button data-l="working"><span class="k">2</span><b>💼 Working people</b><small>The rupee in 2026, your costs, the country, the world</small></button>
+    <button data-l="expert"><span class="k">3</span><b>🎓 Experts — review</b><small>Parity, balance of payments, models, intervention</small></button>
+  </div>
+</header>
+
+<div class="wrap">
+<aside id="toc"></aside>
+<main>
+
+<section id="snapshot" style="border-top:4px solid var(--gold)">
+  <h2>Where things stand — November 2026</h2>
+  <div class="snap">
+    <div class="stat"><div class="v">≈ ₹93.7</div><div class="l">Rupee per US dollar (close, 11 Nov 2026), recovering on lower crude prices and foreign inflows</div></div>
+    <div class="stat"><div class="v">₹96.97</div><div class="l">Record low, May 2026, during the West Asia conflict and the oil-price spike. The rupee was Asia's worst-performing currency for much of 2026.</div></div>
+    <div class="stat"><div class="v">−4.3%</div><div class="l">Rupee's fall against the dollar in calendar 2026, as of early November</div></div>
+    <div class="stat"><div class="v">≈ $734 bn</div><div class="l">India's forex reserves (October 2026), down from a peak of about $785 bn after RBI intervention. They cover about 11 months of imports.</div></div>
+    <div class="stat"><div class="v">0.5% of GDP</div><div class="l">Current account deficit, Q1 FY27 ($4.2 bn). Services exports and record remittances offset a much larger goods trade deficit.</div></div>
+  </div>
+  <p class="note" style="margin-top:12px">This is a dated snapshot. Exchange rates change every second the market is open. The ideas below don't change; these numbers will.</p>
+</section>
+
+<!-- ========================= LEVEL 1 : SCHOOL ====================== -->
+<div class="panel on" id="p-school">
+  <div class="lvhead"><div class="who">Level 1 · For school students</div><p>Every country has its own money. The exchange rate is how we swap one for another.</p></div>
+
+  <section id="s1">
+    <h2><span class="n">1</span>What is an exchange rate?</h2>
+    <div class="def">An <b>exchange rate</b> is the price of one country's money in another country's money. For example, <b>1 US dollar = ₹93.70</b> means you need ₹93.70 to buy one dollar.</div>
+    <p>India uses the rupee (₹), the USA the dollar ($), Europe the euro (€), Japan the yen (¥) and the UK the pound (£). When an Indian company buys oil from abroad, or a student goes to study in the USA, rupees must first be changed into dollars. The exchange rate decides how many rupees that takes.</p>
+    <div class="cols">
+      <div class="box"><b class="t">Rupee gets weaker (depreciates)</b>₹90 per $ becomes ₹95 per $. You need <b>more</b> rupees for each dollar.</div>
+      <div class="box"><b class="t">Rupee gets stronger (appreciates)</b>₹95 per $ becomes ₹90 per $. You need <b>fewer</b> rupees for each dollar.</div>
+      <div class="box"><b class="t">Careful with the words!</b>A <i>bigger</i> number (₹95 per dollar) means a <i>weaker</i> rupee.</div>
+    </div>
+  </section>
+
+  <section id="s2">
+    <h2><span class="n">2</span>Watch it happen: the $10 toy and the $10 mango box</h2>
+    <p>A toy in America costs <b>$10</b>, and an Indian farmer sells a box of mangoes abroad for <b>$10</b>. The dollar prices never change. Press Play and watch what happens in rupees as the exchange rate moves.</p>
+    <div class="ctl">
+      <button class="btn" id="anPlay">▶ Play (P)</button>
+      <button class="btn ghost" id="anStep">Next step (S)</button>
+      <button class="btn ghost" id="anPause">⏸ Pause (X)</button>
+      <button class="btn ghost" id="anReset">↺ Reset</button>
+    </div>
+    <div class="stage">
+      <div class="yr"><span id="anWhen">Nov 2024</span> · $1 = <b id="anRate" style="color:var(--l1)">₹84.4</b></div>
+      <svg id="anChart" viewBox="0 0 900 230" style="width:100%;height:auto;margin-top:6px"></svg>
+      <p id="anMsg" style="margin:6px 0 0;color:var(--soft)">Press Play, or press S to move one step at a time.</p>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="n">3</span>Why does the rate move?</h2>
+    <p>Like the price of tomatoes, the price of a dollar depends on how many people want dollars (demand) and how many dollars are coming in (supply).</p>
+    <div class="cols">
+      <div class="box"><b class="t">⬆ Indians need dollars to…</b>buy oil, gold, electronics and machines from abroad; pay college fees overseas; travel abroad. Foreign investors also take dollars out when they sell Indian shares.</div>
+      <div class="box"><b class="t">⬇ Dollars come into India when…</b>we sell software, medicines and goods abroad; Indians working abroad send money home; foreign companies build factories here.</div>
+      <div class="box"><b class="t">🌍 2026 example</b>A war in West Asia pushed oil prices up. India buys most of its oil from abroad, so it needed many more dollars, and the rupee fell to a record low of ₹96.97 per dollar in May.</div>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="n">4</span>A weaker rupee: who gains, who loses?</h2>
+    <div class="cols">
+      <div class="box"><b class="t">😟 Losers</b>Families paying more for petrol, phones and gold; students studying abroad; companies that import raw materials; tourists going abroad.</div>
+      <div class="box"><b class="t">😊 Winners</b>Exporters (software firms, textile and mango exporters) who earn more rupees per dollar; families whose relatives send money from abroad; foreign tourists visiting India.</div>
+      <div class="box"><b class="t">⚖️ Neither good nor bad</b>A weaker rupee is not a "score" for the country. Too fast a fall causes inflation, but an overly strong rupee hurts exporters and jobs.</div>
+    </div>
+  </section>
+
+  <section id="s5">
+    <h2><span class="n">5</span>How the RBI steadies the rupee</h2>
+    <p>The RBI keeps a big savings pot of dollars, gold and other currencies called <b>foreign exchange reserves</b>, worth more than $700 billion. Think of it as a water tank: when there's a shortage of dollars, the RBI sells some to stop the rupee from falling too fast; when dollars flood in, it buys and refills the tank.</p>
+    <p class="note">The RBI does not fix the rupee at one number. It tries to stop wild jumps, so that families and businesses can plan.</p>
+  </section>
+
+  <section id="s6">
+    <h2><span class="n">6</span>Words to remember</h2>
+    <table>
+      <tr><th>Word</th><th>Meaning</th></tr>
+      <tr><td>Currency</td><td>A country's money: rupee, dollar, euro, yen</td></tr>
+      <tr><td>Exchange rate</td><td>The price of one currency in another</td></tr>
+      <tr><td>Depreciation</td><td>A currency becoming weaker (buys less foreign money)</td></tr>
+      <tr><td>Appreciation</td><td>A currency becoming stronger</td></tr>
+      <tr><td>Import / export</td><td>Buying from / selling to other countries</td></tr>
+      <tr><td>Remittance</td><td>Money sent home by people working abroad</td></tr>
+      <tr><td>Forex reserves</td><td>The RBI's store of foreign currencies and gold</td></tr>
+    </table>
+  </section>
+
+  <section id="s7">
+    <h2><span class="n">7</span>Check yourself</h2>
+    <div class="quiz" data-quiz="school"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 2 : WORKING ===================== -->
+<div class="panel" id="p-working">
+  <div class="lvhead"><div class="who">Level 2 · For working people</div><p>How the rupee is quoted and what moves it, the 2026 story, what it means for your expenses, savings and business, and how it ripples through the country and the world. This is education, not financial advice.</p></div>
+
+  <section id="w1">
+    <h2><span class="n">1</span>Reading exchange rates</h2>
+    <ul>
+      <li><b>Quotes.</b> USD/INR 93.70 means ₹93.70 per dollar. Banks quote a <b>buy</b> (bid) and a <b>sell</b> (ask) price. The gap, plus any charges, is their margin; at airport counters and on some cards it can be 2–5%.</li>
+      <li><b>Spot vs forward.</b> Spot is for delivery in two days. A forward locks in a rate for a future date; the forward premium mainly reflects the interest-rate gap between India and the US.</li>
+      <li><b>The percentage trap.</b> If the rupee goes from 90 to 95 per dollar, the dollar has gained 5.6% (5/90), but the rupee has lost 5.3% (5/95) in dollar terms. Check which way a headline measures it.</li>
+      <li><b>The regime.</b> India has a <b>managed float</b>: the market sets the rate, and the RBI intervenes to smooth volatility, not to defend a fixed level.</li>
+    </ul>
+  </section>
+
+  <section id="w2">
+    <h2><span class="n">2</span>What moves the rupee: the balance of payments</h2>
+    <table>
+      <tr><th>Item (Q1 FY27, Apr–Jun 2026)</th><th>Amount</th><th>Effect on the rupee</th></tr>
+      <tr><td>Merchandise trade deficit</td><td>$86.1 bn (exports $132 bn, imports $218 bn; oil deficit $37.6 bn)</td><td>Strong dollar demand: weakens the rupee</td></tr>
+      <tr><td>Net services exports (IT, business services)</td><td>+$51.6 bn</td><td>Dollar supply: supports the rupee</td></tr>
+      <tr><td>Remittances (personal transfers)</td><td>+$42.9 bn, up from $33.2 bn</td><td>Dollar supply: supports the rupee</td></tr>
+      <tr><td><b>Current account deficit</b></td><td><b>$4.2 bn (0.5% of GDP)</b></td><td>Small, so it needs only modest financing</td></tr>
+      <tr><td>Net FDI</td><td>+$6.1 bn</td><td>Stable, long-term inflow</td></tr>
+      <tr><td>Net foreign portfolio investment (FPI)</td><td>−$9.6 bn (outflow)</td><td>Fast-moving money leaving: pressure on the rupee</td></tr>
+      <tr><td>Change in reserves (BoP basis)</td><td>−$8.1 bn</td><td>The RBI sold dollars to cover the gap</td></tr>
+    </table>
+    <p>Beyond the balance of payments, the rupee also responds to the <b>dollar index</b> (the dollar's strength against all major currencies), <b>oil prices</b>, the <b>India–US interest-rate gap</b> (Topic 02) and global risk appetite.</p>
+  </section>
+
+  <section id="w3">
+    <h2><span class="n">3</span>The rupee's 2026 story</h2>
+    <ol>
+      <li><b>Early 2026:</b> the rupee was already weak, near ₹90, after a strong dollar and foreign outflows in 2025.</li>
+      <li><b>The West Asia conflict</b> sent crude prices and shipping risk soaring. India's oil import bill jumped and foreign investors sold Indian shares. The rupee hit a record <b>₹96.97 in May</b> and was near that level again in early October.</li>
+      <li><b>Defences:</b> the RBI sold dollars (reserves fell about $50 bn from their peak), the government raised import duty on gold and silver to 15% to cut demand for dollars, steps were taken to attract dollar deposits, and the repo rate was raised in October (Topic 02).</li>
+      <li><b>November:</b> softer crude and renewed foreign buying of Indian equities lifted the rupee to about ₹93.7. It is still down about 4% for the year.</li>
+    </ol>
+  </section>
+
+  <section id="w4">
+    <h2><span class="n">4</span>What it means for you</h2>
+    <div class="cols">
+      <div class="box"><b class="t">Fuel, gadgets and gold</b>Petrol, LPG, phones, laptops and gold all have dollar prices. A 5% weaker rupee raises their rupee cost unless taxes or margins absorb it.</div>
+      <div class="box"><b class="t">Foreign education and travel</b>Fees are fixed in dollars, euros or pounds, so a falling rupee raises the rupee cost every year. Plan with a depreciation assumption; see the calculator below.</div>
+      <div class="box"><b class="t">NRI families</b>The same remittance buys more at home when the rupee is weak, which is one reason remittances hit records in 2026.</div>
+      <div class="box"><b class="t">Your salary</b>IT, pharma and export-sector earnings tend to benefit from a weaker rupee; import-dependent sectors such as airlines and oil marketing companies get squeezed.</div>
+      <div class="box"><b class="t">Investing abroad</b>Overseas investments gain in rupee terms when the rupee falls. Residents can remit up to $250,000 a year under the Liberalised Remittance Scheme, subject to tax collected at source and other rules.</div>
+    </div>
+    <h3>Calculator: foreign education cost in rupees</h3>
+    <div class="ctl">
+      <label>Annual cost (foreign currency)<input type="number" id="edC" value="50000" step="1000"></label>
+      <label>Years of study<input type="number" id="edY" value="4" min="1" max="10"></label>
+      <label>Start in (years from now)<input type="number" id="edS" value="2" min="0" max="15"></label>
+      <label>Rate today (₹ per unit)<input type="number" id="edR" value="93.7" step="0.1"></label>
+      <label>Rupee depreciation % per year<input type="number" id="edD" value="3" step="0.1"></label>
+      <label>Fee inflation abroad % per year<input type="number" id="edI" value="3" step="0.1"></label>
+    </div>
+    <div class="out" id="edOut"></div>
+    <svg id="edChart" viewBox="0 0 900 240" style="width:100%;max-width:1000px;height:auto"></svg>
+  </section>
+
+  <section id="w5">
+    <h2><span class="n">5</span>For businesses: currency risk and hedging</h2>
+    <ul>
+      <li><b>Importers</b> lose when the rupee falls between order and payment. <b>Exporters</b> lose when it rises before they convert their receipts.</li>
+      <li><b>Forward contracts</b> lock in a rate today for a future payment. <b>Options</b> protect against a bad move while keeping the upside, for a premium.</li>
+      <li><b>Natural hedges</b>, such as matching dollar costs with dollar revenues, reduce the need for financial hedges.</li>
+      <li><b>Foreign-currency loans</b> (ECBs) look cheap because of lower interest rates abroad, but an unhedged loan can become far more expensive if the rupee falls. The interest saving is roughly the forward premium you would otherwise pay.</li>
+    </ul>
+  </section>
+
+  <section id="w6">
+    <h2><span class="n">6</span>What the exchange rate does to the country</h2>
+    <div class="cols">
+      <div class="box"><b class="t">Inflation</b>A weaker rupee raises import prices, especially fuel, which feeds into CPI (Topic 01). This "imported inflation" is a key reason the RBI cares about the rupee.</div>
+      <div class="box"><b class="t">Competitiveness</b>The <b>real effective exchange rate (REER)</b> adjusts for inflation differences across trading partners. If Indian inflation is higher, a stable nominal rupee actually means a stronger real rupee, which hurts exports.</div>
+      <div class="box"><b class="t">Debt and companies</b>Firms and the government pay more rupees to service foreign-currency debt when the rupee falls. India's external debt is modest relative to GDP, but some firms are exposed.</div>
+      <div class="box"><b class="t">Policy trade-offs</b>Defending the rupee costs reserves and can require higher interest rates, which slows growth. Letting it fall raises inflation. Every central bank balances these.</div>
+    </div>
+  </section>
+
+  <section id="w7">
+    <h2><span class="n">7</span>The global picture and history</h2>
+    <ul>
+      <li><b>1991, India's crisis:</b> reserves fell to roughly three weeks of imports. India pledged gold abroad, devalued the rupee and began the liberalisation that shaped today's economy. Today's roughly 11 months of import cover is the lesson learned.</li>
+      <li><b>1997, Asian crisis:</b> fixed exchange rates, short-term dollar debt and sudden capital flight broke the currencies of Thailand, Indonesia and Korea.</li>
+      <li><b>2013, the "taper tantrum":</b> a hint of reduced Fed bond-buying sent the rupee to a then-record low near ₹68.8 per dollar. India was one of the "fragile five".</li>
+      <li><b>The dollar's dominance:</b> most trade invoicing, debt and reserves are in dollars, so US rates and the dollar's strength (Topic 02) ripple everywhere. India is promoting rupee invoicing and settlement with selected partners.</li>
+    </ul>
+  </section>
+
+  <section id="w8">
+    <h2><span class="n">8</span>Sensible habits</h2>
+    <ul>
+      <li>For goals in foreign currency (education, travel, overseas property), plan with a depreciation assumption and start converting gradually rather than all at once.</li>
+      <li>Compare the total cost (rate plus fees) of forex cards, bank transfers and airport counters.</li>
+      <li>Don't speculate on currencies through unregulated apps; forex trading in India is allowed only on recognised exchanges in permitted pairs.</li>
+      <li>If you run a business with foreign-currency exposure, have a written hedging policy.</li>
+    </ul>
+    <p class="note">This page explains concepts. It is not investment or tax advice.</p>
+  </section>
+
+  <section id="w9">
+    <h2><span class="n">9</span>Check yourself</h2>
+    <div class="quiz" data-quiz="working"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 3 : EXPERT ====================== -->
+<div class="panel" id="p-expert">
+  <div class="lvhead"><div class="who">Level 3 · Review for experts</div><p>Regimes, parity conditions, balance-of-payments accounting, exchange-rate models, intervention and reserve adequacy, pass-through and the international monetary system.</p></div>
+
+  <section id="e1">
+    <h2><span class="n">1</span>Regimes and the trilemma</h2>
+    <ul>
+      <li>A spectrum from hard pegs (currency board, dollarisation) through conventional pegs and crawls to managed and free floats. IMF de facto classifications often differ from de jure ones. India's is officially market-determined, but the IMF has at times classified its de facto arrangement as "stabilized" because of heavy smoothing.</li>
+      <li>The <b>trilemma</b>: a country can have at most two of a fixed exchange rate, free capital mobility and independent monetary policy. India runs a partially open capital account, inflation targeting and a managed float, so intervention is the pressure valve (see Rey's "dilemma" in Topic 02).</li>
+    </ul>
+  </section>
+
+  <section id="e2">
+    <h2><span class="n">2</span>Parity conditions</h2>
+    <div class="eq">Absolute PPP:   S = P / P*           Relative PPP:   %ΔS ≈ π − π*
+Covered IP:     F = S · (1 + i·τ) / (1 + i*·τ)           Uncovered IP:   E[%ΔS] ≈ i − i*  (+ risk premium)
+Real exchange rate:   q = S·P* / P      (a rise means a real depreciation of the home currency)</div>
+    <div class="ctl">
+      <label>Spot ₹/$<input type="number" id="pcS" value="93.7" step="0.01"></label>
+      <label>INR interest %<input type="number" id="pcI" value="6.0" step="0.05"></label>
+      <label>USD interest %<input type="number" id="pcU" value="3.9" step="0.05"></label>
+      <label>India inflation %<input type="number" id="pcP" value="5.0" step="0.1"></label>
+      <label>US inflation %<input type="number" id="pcQ" value="3.0" step="0.1"></label>
+      <label>Tenor (years)<input type="number" id="pcT" value="1" step="0.25"></label>
+    </div>
+    <div class="out" id="pcOut"></div>
+    <ul>
+      <li><b>PPP</b> holds poorly in the short run. Half-lives of real-rate deviations of 3–5 years make up the "PPP puzzle". The Balassa–Samuelson effect (fast productivity growth in tradables) pushes fast-growing economies' price levels and real exchange rates up over time.</li>
+      <li><b>CIP</b> held almost exactly before 2008. Persistent deviations since then (cross-currency basis) reflect balance-sheet costs and dollar-funding scarcity.</li>
+      <li><b>UIP</b> fails empirically: the forward-premium puzzle, where high-yield currencies tend to appreciate rather than depreciate, underpins carry trades and their crash risk.</li>
+    </ul>
+  </section>
+
+  <section id="e3">
+    <h2><span class="n">3</span>Balance of payments: the accounting</h2>
+    <div class="eq">CA + KA + FA(excl. reserves) − ΔReserves + errors = 0     (BPM6 sign conventions vary by presentation)
+CA = (S − I) = (S_p − I_p) + (T − G)                  →   "twin deficits" when fiscal and external gaps co-move</div>
+    <ul>
+      <li>India's structural pattern is a large goods deficit (energy, gold, electronics), a large services surplus (IT, global capability centres), large remittances, and a moderate current account deficit (about 1–2% of GDP over the cycle; 0.5% in Q1 FY27).</li>
+      <li><b>Quality of financing:</b> FDI and long-term debt are stable. FPI and short-term debt are flighty. Q1 FY27 shows the swing: FDI +$6.1 bn against FPI −$9.6 bn.</li>
+      <li>Watch the valuation effects. Reported reserve changes mix BoP flows with revaluation of gold and non-dollar assets. The BoP-basis change (−$8.1 bn in Q1) isolates the flows.</li>
+    </ul>
+  </section>
+
+  <section id="e4">
+    <h2><span class="n">4</span>Models of the exchange rate</h2>
+    <table>
+      <tr><th>Model</th><th>Key mechanism</th></tr>
+      <tr><td>Mundell–Fleming</td><td>IS-LM-BP. Under floating rates and capital mobility, monetary policy is powerful and fiscal policy is crowded out through appreciation.</td></tr>
+      <tr><td>Monetary (flexible-price)</td><td>S is determined by relative money supplies and money demands; consistent with PPP</td></tr>
+      <tr><td>Dornbusch overshooting (1976)</td><td>Sticky goods prices with UIP: a monetary expansion makes S jump past its long-run level, then appreciate back</td></tr>
+      <tr><td>Portfolio balance</td><td>Imperfect substitutability; supply of domestic vs foreign bonds and risk premia. Provides the theoretical channel for sterilised intervention.</td></tr>
+      <tr><td>Empirical reality</td><td>Meese–Rogoff (1983): structural models fail to beat a random walk out of sample at short horizons. Order flow and dollar-factor models do better.</td></tr>
+    </table>
+  </section>
+
+  <section id="e5">
+    <h2><span class="n">5</span>Intervention and reserve adequacy</h2>
+    <ul>
+      <li><b>Sterilised intervention</b>: selling dollars drains rupee liquidity, which the RBI offsets with operations such as open market purchases. It works through the signalling and portfolio-balance channels. Unsterilised intervention also tightens domestic liquidity, which in 2026 reinforced the rate hike.</li>
+      <li><b>Tools:</b> spot and forward intervention, non-deliverable forward (NDF) market operations, buy-sell swaps, and measures to attract inflows (incentives for NRI deposits, relaxed limits on foreign investment in debt).</li>
+      <li><b>Adequacy metrics:</b> import cover (about 11 months), the Greenspan–Guidotti rule (reserves of at least short-term external debt by residual maturity) and the IMF's composite ARA metric. India sits comfortably above the thresholds, but 2026 showed how fast $50 bn can go.</li>
+      <li><b>The cost of carrying reserves</b>: the gap between domestic and reserve-currency yields, which India pays as insurance against sudden stops.</li>
+    </ul>
+  </section>
+
+  <section id="e6">
+    <h2><span class="n">6</span>Pass-through, competitiveness and invoicing</h2>
+    <ul>
+      <li>Exchange-rate pass-through to CPI in India is estimated at roughly 5–15% over a year: higher for fuel and gold, lower for food and services. It is asymmetric and larger when the depreciation is big and persistent.</li>
+      <li><b>REER</b> (the RBI's 40-currency trade-weighted index) deflates the nominal rate by relative CPI. Persistent inflation differentials can cause real appreciation even during nominal depreciation.</li>
+      <li><b>The dominant-currency paradigm</b> (Gopinath et al.): because trade is invoiced in dollars, export prices are sticky in dollars. A rupee depreciation lowers imports quickly but raises exports only slowly, and the dollar's strength matters more than bilateral rates.</li>
+    </ul>
+  </section>
+
+  <section id="e7">
+    <h2><span class="n">7</span>The international monetary system</h2>
+    <ul>
+      <li><b>Bretton Woods (1944–1971)</b>: dollar–gold convertibility. The <b>Triffin dilemma</b> (the world's need for dollars versus confidence in their gold backing) ended it when Nixon closed the gold window in 1971.</li>
+      <li><b>The Plaza (1985) and Louvre (1987) accords</b> were coordinated interventions on the dollar, a model rarely repeated since.</li>
+      <li><b>Dollar dominance</b> persists in invoicing, debt, reserves (about 57–58%) and FX turnover (the dollar is on one side of close to 90% of trades, per the BIS triennial survey). "De-dollarisation" is gradual at most.</li>
+      <li><b>Rupee internationalisation:</b> special rupee vostro accounts, local-currency settlement agreements and UPI cross-border links. Full capital-account convertibility remains a long-term, sequenced goal.</li>
+    </ul>
+  </section>
+
+  <section id="e8">
+    <h2><span class="n">8</span>Review checklist: open questions</h2>
+    <ol>
+      <li>How much smoothing is optimal for an inflation-targeting emerging market? Does heavy intervention blunt the shock-absorber role of the exchange rate?</li>
+      <li>Should the RBI target or monitor the REER explicitly to protect export competitiveness?</li>
+      <li>Is $700 bn+ of reserves too much insurance given its carrying cost, or too little given 2026's drawdown speed?</li>
+      <li>What does the dominant-currency paradigm imply for the gains from a weaker rupee?</li>
+      <li>How fast should India move towards capital-account convertibility and rupee internationalisation?</li>
+      <li>How should the RBI respond when a currency shock and a supply-side inflation shock come together, as in 2026?</li>
+    </ol>
+  </section>
+
+  <section id="e9">
+    <h2><span class="n">9</span>Check yourself</h2>
+    <div class="quiz" data-quiz="expert"></div>
+  </section>
+</div>
+
+<section id="sources">
+  <h2>Sources and further reading</h2>
+  <ul>
+    <li>Rupee levels: PTI via <a href="https://telanganatoday.com/rupee-rises-to-93-70-against-us-dollar-as-domestic-markets-strengthen">Telangana Today (11 Nov 2026)</a>, <a href="https://www.newkerala.com/news/a/rupee-logs-biggest-single-day-gain-since-oct-12-576.htm">NewKerala (6 Nov 2026)</a>; record low and reserves: <a href="https://www.businesstoday.in/latest/economy/story/rupee-near-record-low-why-rbis-multiple-defences-are-losing-effectiveness-560381-2026-10-08">Business Today / Bloomberg (8 Oct 2026)</a>; gold duty: <a href="https://www.deccanherald.com/business/markets/rupee-falls-20-paise-to-all-time-low-of-9586-against-us-dollar-in-early-trade-4002340">Deccan Herald</a>.</li>
+    <li>Balance of payments, Q1 FY27: RBI release of 1 Sep 2026, via <a href="https://www.jmfinancialservices.in/market-news-and-insights/1728786">JM Financial</a>, <a href="https://blog.shoonya.com/?p=18557">Shoonya</a> and <a href="https://www.icra.in/Research/ViewResearchReport/7098">ICRA</a>.</li>
+    <li>Dornbusch, R. (1976), "Expectations and Exchange Rate Dynamics", <i>JPE</i>; Meese, R. and Rogoff, K. (1983), <i>Journal of International Economics</i>.</li>
+    <li>Gopinath, G. et al. (2020), "Dominant Currency Paradigm", <i>American Economic Review</i>.</li>
+    <li>IMF, <i>Annual Report on Exchange Arrangements and Exchange Restrictions</i>; IMF, <i>Assessing Reserve Adequacy</i>; BIS, <i>Triennial Central Bank Survey</i>.</li>
+    <li>Earlier topics: <a href="01-inflation.html">Inflation</a> · <a href="02-interest-rates.html">Interest Rates</a> · <a href="03-gdp.html">GDP</a> · <a href="04-money-banking.html">Money &amp; Banking</a>.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<footer>
+  Finance &amp; Economics in Three Levels · Topic 05 · K Vijay Anand · <a href="04-money-banking.html">← Topic 04 Money &amp; Banking</a> · <a href="./">All topics</a> · <a href="/">Home</a><br>
+  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.
+  Educational content, not financial advice. Figures dated November 2026.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var root=document.documentElement, body=document.body;
+  var $=function(id){return document.getElementById(id);};
+  var inr=function(x,d){return "₹"+Number(x).toLocaleString("en-IN",{minimumFractionDigits:d||0,maximumFractionDigits:d||0});};
+  var cssv=function(n){return getComputedStyle(root).getPropertyValue(n).trim();};
+
+  try{var t=localStorage.getItem("fe-theme");if(t)root.setAttribute("data-theme",t);}catch(e){}
+  function redraw(){anRender();drawEd();}
+  function toggleTheme(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("fe-theme",n);}catch(e){}redraw();}
+  function toggleFS(){if(!document.fullscreenElement){(root.requestFullscreen||function(){}).call(root);}else{document.exitFullscreen();}}
+  function toggleSB(){body.classList.toggle("nosb");}
+  $("themeBtn").onclick=toggleTheme; $("fsBtn").onclick=toggleFS; $("sbBtn").onclick=toggleSB;
+
+  var LV=["school","working","expert"];
+  function setLevel(l,noHash){
+    if(LV.indexOf(l)<0)l="school";
+    body.setAttribute("data-level",l);
+    LV.forEach(function(x){$("p-"+x).classList.toggle("on",x===l);});
+    document.querySelectorAll(".levels button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-l")===l);});
+    buildTOC(l);
+    if(!noHash)history.replaceState(null,"","#"+l);
+    redraw();
+  }
+  document.querySelectorAll(".levels button").forEach(function(b){b.onclick=function(){setLevel(b.getAttribute("data-l"));};});
+  function buildTOC(l){
+    var names={school:"School",working:"Working people",expert:"Experts"};
+    var h='<div class="h">Contents · '+names[l]+'</div><a href="#snapshot">Snapshot · Nov 2026</a>';
+    $("p-"+l).querySelectorAll("section").forEach(function(s){
+      var t=s.querySelector("h2").textContent; h+='<a href="#'+s.id+'">'+t.replace(/^(\d+)/,"$1 · ")+'</a>';
+    });
+    h+='<a href="#sources">Sources</a>';
+    h+='<div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> level<br><kbd>M</kbd> hide contents<br><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause<br><kbd>T</kbd> theme · <kbd>F</kbd> full screen</div>';
+    $("toc").innerHTML=h;
+  }
+
+  /* ---------- Level 1: $10 toy / mango box animation (approximate market rates) ---------- */
+  var ST=[["Nov 2024",84.4,"About two years ago."],["Nov 2025",88.7,"The rupee weakened as the dollar stayed strong."],["May 2026",96.97,"Record low during the West Asia oil shock."],["Nov 2026",93.7,"The rupee recovered a little as oil prices eased."]];
+  var anI=0, anTimer=null;
+  function anRender(){
+    var W=900,H=230,L=60,R=20,T=52,B=40, svg="", c1=cssv("--l1"), c2=cssv("--l2"), ru=cssv("--rule"), ink=cssv("--ink");
+    var ymax=1000, y=function(v){return T+(H-T-B)*(1-v/ymax);}, gw=(W-L-R)/ST.length;
+    for(var g=0;g<=4;g++){var gv=ymax*g/4;svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(gv)+'" y2="'+y(gv)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(y(gv)+4)+'" font-size="12" text-anchor="end">'+inr(gv)+'</text>';}
+    for(var i=0;i<=anI;i++){
+      var v=10*ST[i][1], x=L+i*gw;
+      svg+='<rect x="'+(x+gw*0.12)+'" y="'+y(v)+'" width="'+(gw*0.34)+'" height="'+(y(0)-y(v))+'" fill="'+c1+'"/>';
+      svg+='<rect x="'+(x+gw*0.54)+'" y="'+y(v)+'" width="'+(gw*0.34)+'" height="'+(y(0)-y(v))+'" fill="'+c2+'" fill-opacity=".7" stroke="'+c2+'" stroke-dasharray="4 3"/>';
+      svg+='<text x="'+(x+gw/2)+'" y="'+(y(v)-6)+'" font-size="14" text-anchor="middle" style="fill:'+ink+';font-weight:700">'+inr(v)+'</text>';
+      svg+='<text x="'+(x+gw/2)+'" y="'+(H-20)+'" font-size="13" text-anchor="middle">'+ST[i][0]+'</text>';
+    }
+    svg+='<rect x="'+L+'" y="6" width="14" height="14" fill="'+c1+'"/><text x="'+(L+20)+'" y="18" font-size="14" style="fill:'+c1+';font-weight:600">$10 toy: what an Indian buyer pays (left)</text>';
+    svg+='<rect x="'+(L+380)+'" y="6" width="14" height="14" fill="'+c2+'" fill-opacity=".7"/><text x="'+(L+400)+'" y="18" font-size="14" style="fill:'+c2+';font-weight:600">$10 mango box: what the Indian farmer earns (right)</text>';
+    $("anChart").innerHTML=svg;
+    $("anWhen").textContent=ST[anI][0]; $("anRate").textContent="₹"+ST[anI][1];
+    var m=ST[anI][2]+" ";
+    if(anI===0)m+="The toy costs "+inr(10*ST[0][1])+" and the mango box earns the same. Press S to move forward.";
+    else{var d=10*(ST[anI][1]-ST[0][1]);m+="Compared with Nov 2024, the toy now costs "+inr(Math.abs(d))+(d>0?" more":" less")+", and the farmer earns "+inr(Math.abs(d))+(d>0?" more":" less")+" for the same box. A weak rupee hurts buyers of foreign goods and helps sellers abroad.";}
+    $("anMsg").textContent=m;
+  }
+  function anStep(){ if(anI<ST.length-1){anI++;anRender();} else anPause(); }
+  function anPlay(){ if(anTimer)return; if(anI>=ST.length-1)anI=0; anRender(); anTimer=setInterval(anStep,1500); }
+  function anPause(){ clearInterval(anTimer); anTimer=null; }
+  $("anPlay").onclick=anPlay; $("anStep").onclick=function(){anPause();anStep();}; $("anPause").onclick=anPause;
+  $("anReset").onclick=function(){anPause();anI=0;anRender();};
+
+  /* ---------- Level 2: education cost ---------- */
+  function drawEd(){
+    var g=function(id){return +$(id).value||0;};
+    var C=g("edC"), Y=Math.max(1,Math.round(g("edY"))), S=Math.max(0,Math.round(g("edS"))), R=g("edR"), d=g("edD")/100, fi=g("edI")/100;
+    var rows=[], tot=0, flat=C*R*Y;
+    for(var k=0;k<Y;k++){var yr=S+k, fx=R*Math.pow(1+d,yr), fee=C*Math.pow(1+fi,yr), rs=fee*fx; tot+=rs; rows.push([yr,fx,fee,rs]);}
+    $("edOut").innerHTML="At today's rate and fee, the course would cost <b>"+inr(flat)+"</b>. With your assumptions it will cost about <b>"+inr(tot)+"</b>, which is <b>"+inr(tot-flat)+"</b> (+"+(100*(tot/flat-1)).toFixed(0)+"%) more. In the final year the rate is ₹"+rows[Y-1][1].toFixed(2)+".";
+    var W=900,H=240,L=80,Rm=10,T=30,B=34, svg="", c1=cssv("--l2"), c2=cssv("--l1"), ru=cssv("--rule");
+    var ymax=Math.max.apply(null,rows.map(function(r){return r[3];}))*1.1, bw=(W-L-Rm)/Y, yy=function(v){return T+(H-T-B)*(1-v/ymax);};
+    for(var q=0;q<=4;q++){var gv=ymax*q/4;svg+='<line x1="'+L+'" x2="'+(W-Rm)+'" y1="'+yy(gv)+'" y2="'+yy(gv)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(yy(gv)+4)+'" font-size="12" text-anchor="end">'+inr(gv/100000,1)+' L</text>';}
+    rows.forEach(function(r,i){var x=L+i*bw+bw*0.2,w=bw*0.6,base=C*R;
+      svg+='<rect x="'+x+'" y="'+yy(r[3])+'" width="'+w+'" height="'+(yy(0)-yy(r[3]))+'" fill="'+c1+'"/>';
+      svg+='<line x1="'+(x-6)+'" x2="'+(x+w+6)+'" y1="'+yy(base)+'" y2="'+yy(base)+'" stroke="'+c2+'" stroke-width="3" stroke-dasharray="6 4"/>';
+      svg+='<text x="'+(x+w/2)+'" y="'+(H-B+18)+'" font-size="12" text-anchor="middle">year +'+r[0]+'</text>';});
+    svg+='<rect x="'+L+'" y="6" width="14" height="14" fill="'+c1+'"/><text x="'+(L+20)+'" y="18" font-size="14" style="fill:'+c1+';font-weight:600">projected rupee cost (bars)</text>';
+    svg+='<line x1="'+(L+250)+'" x2="'+(L+280)+'" y1="13" y2="13" stroke="'+c2+'" stroke-width="3" stroke-dasharray="6 4"/><text x="'+(L+286)+'" y="18" font-size="14" style="fill:'+c2+';font-weight:600">cost at today\'s rate and fee (dashed)</text>';
+    $("edChart").innerHTML=svg;
+  }
+  ["edC","edY","edS","edR","edD","edI"].forEach(function(id){$(id).oninput=drawEd;});
+
+  /* ---------- Level 3: parity calculator ---------- */
+  function parity(){
+    var g=function(id){return +$(id).value||0;};
+    var S=g("pcS"), i=g("pcI")/100, u=g("pcU")/100, p=g("pcP")/100, q=g("pcQ")/100, T=g("pcT")||1;
+    var F=S*(1+i*T)/(1+u*T), prem=(F/S-1)/T, ppp=S*Math.pow((1+p)/(1+q),T);
+    $("pcOut").innerHTML="CIP forward (simple interest): <b>₹"+F.toFixed(3)+"</b> · annualised forward premium <b>"+(prem*100).toFixed(2)+"%</b><br>"+
+      "Relative-PPP-implied rate after "+T+" y: <b>₹"+ppp.toFixed(3)+"</b> (implied depreciation "+((Math.pow((1+p)/(1+q),1)-1)*100).toFixed(2)+"% a year). "+
+      "UIP would predict an expected spot equal to the forward; the forward-premium puzzle says the realised spot has tended to fall short of it.";
+  }
+  ["pcS","pcI","pcU","pcP","pcQ","pcT"].forEach(function(id){$(id).oninput=parity;}); parity();
+
+  /* ---------- quizzes ---------- */
+  var Q={
+    school:[
+      ["If $1 = ₹93.70, how many rupees do you need for $10?",["₹93.70","₹937","₹9,370","₹10"],1,"10 × 93.70 = ₹937."],
+      ["The rate moves from ₹90 to ₹95 per dollar. The rupee has…",["Become stronger","Become weaker","Stayed the same","Turned into dollars"],1,"You now need more rupees for each dollar, so the rupee is weaker (it has depreciated)."],
+      ["Who gains when the rupee becomes weaker?",["A student studying in the USA","An Indian company selling software abroad","A family buying imported phones","Someone travelling to Europe"],1,"Exporters earn dollars, and each dollar now converts into more rupees."],
+      ["Which of these brings dollars INTO India?",["Buying oil from abroad","Indians working abroad sending money home","Paying fees at a US college","Holidays in Dubai"],1,"Remittances add dollars; India received a record $42.9 billion in just April–June 2026."],
+      ["The RBI's 'forex reserves' are…",["Rupee notes in banks","Its store of foreign currencies and gold","Petrol in storage tanks","Money in the stock market"],1,"The RBI uses its reserves to steady the rupee when dollars are scarce."]
+    ],
+    working:[
+      ["The rupee moves from 90 to 95 per dollar. The rupee's loss in dollar terms is about…",["5.6%","5.3%","5.0%","10%"],1,"1/95 vs 1/90: (90/95 − 1) ≈ −5.3%. The dollar's gain is 5.6%."],
+      ["In Q1 FY27, which was the largest source of dollar supply offsetting the goods trade deficit?",["FPI inflows","Net services exports","Gold sales","Tourism only"],1,"Net services were +$51.6 bn, followed by remittances of +$42.9 bn."],
+      ["India's 2026 hike in gold and silver import duty to 15% aimed mainly to…",["Raise gold prices","Reduce dollar demand and protect reserves","Help jewellers","Fight deflation"],1,"Lower gold imports mean fewer dollars needed."],
+      ["An unhedged foreign-currency loan at a lower interest rate becomes costlier if…",["The rupee appreciates","The rupee depreciates","US rates fall","Exports rise"],1,"Repayments in dollars need more rupees when the rupee weakens."],
+      ["REER adjusts the exchange rate for…",["Interest rates","Relative inflation across trading partners","Stock prices","Population"],1,"The real effective exchange rate is a trade-weighted, inflation-adjusted measure of competitiveness."]
+    ],
+    expert:[
+      ["With spot 93.7, i_INR 6% and i_USD 3.9%, the 1-year CIP forward is about…",["91.8","93.7","95.6","99.3"],2,"93.7 × 1.06 / 1.039 ≈ 95.6."],
+      ["Dornbusch overshooting relies on…",["Flexible prices and no capital mobility","Sticky goods prices plus UIP","Fixed exchange rates","PPP holding instantly"],1,"Asset markets adjust instantly while goods prices lag, so the exchange rate jumps past its long-run level."],
+      ["Meese and Rogoff (1983) found that…",["PPP holds monthly","Structural models don't beat a random walk out of sample","UIP holds perfectly","Reserves cause depreciation"],1,"A famous negative result for exchange-rate forecasting."],
+      ["The Greenspan–Guidotti rule compares reserves with…",["Three months of imports","Short-term external debt by residual maturity","Broad money","GDP"],1,"Reserves should at least cover external debt falling due within a year."],
+      ["Under the dominant-currency paradigm, a rupee depreciation mainly…",["Raises export volumes quickly","Compresses import volumes, with sluggish export gains","Has no effect","Lowers inflation"],1,"Dollar-invoiced export prices are sticky, so the expenditure-switching gain comes mostly through imports."]
+    ]
+  };
+  document.querySelectorAll(".quiz").forEach(function(box){
+    var set=Q[box.getAttribute("data-quiz")], score=0, done=0, h="";
+    set.forEach(function(q,qi){
+      h+='<div class="q" data-i="'+qi+'"><p>'+(qi+1)+'. '+q[0]+'</p>';
+      q[1].forEach(function(o,oi){h+='<button data-o="'+oi+'">'+o+'</button>';});
+      h+='<div class="why">'+q[3]+'</div></div>';
+    });
+    h+='<p class="score"></p>'; box.innerHTML=h;
+    box.querySelectorAll(".q").forEach(function(qd){
+      var q=set[+qd.getAttribute("data-i")];
+      qd.querySelectorAll("button").forEach(function(b){
+        b.onclick=function(){
+          if(qd.classList.contains("done"))return;
+          var o=+b.getAttribute("data-o"); qd.classList.add("done"); done++;
+          if(o===q[2])score++; else b.classList.add("wrong");
+          qd.querySelectorAll("button")[q[2]].classList.add("right");
+          box.querySelector(".score").textContent="Score: "+score+" / "+done+(done===set.length?(score===set.length?" — perfect!":" — review the explanations above."):"");
+        };
+      });
+    });
+  });
+
+  document.addEventListener("keydown",function(e){
+    if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
+    var k=e.key.toLowerCase();
+    if(k==="1")setLevel("school"); else if(k==="2")setLevel("working"); else if(k==="3")setLevel("expert");
+    else if(k==="m")toggleSB(); else if(k==="t")toggleTheme(); else if(k==="f")toggleFS();
+    else if(body.getAttribute("data-level")==="school"){
+      if(k==="p"){anPlay();} else if(k==="s"){anPause();anStep();} else if(k==="x"){anPause();}
+    }
+  });
+
+  setLevel((location.hash||"#school").slice(1),true);
+  window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(LV.indexOf(h)>=0)setLevel(h,true);});
+})();
+</script>
+</body>
+</html>

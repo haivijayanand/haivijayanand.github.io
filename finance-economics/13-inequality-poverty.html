@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<!--
+TOOL:    finance-economics/13-inequality-poverty.html — Finance & Economics Topic 13: Inequality & Poverty (three levels)
+FAMILY:  finance-economics
+VERSION: 1.0.0
+DATE:    2026-11-14
+CHAT:    Finance & Economics series — second set of ten topics; Topic 13 Inequality & Poverty
+CHANGES: 1.0.0 - thirteenth topic: 100-coins/10-people animation (equal, income, wealth, growth,
+                 tax-and-transfer), poverty vs inequality; World Bank Oct 2026 brief, WIR 2026, HCES
+                 2023-24; household position calculator vs PPP poverty lines; Lorenz/Gini calculator,
+                 FGT, survey-vs-national-accounts gap, Kuznets/Piketty, mobility, policy; quiz per level
+STATUS:  working
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inequality &amp; Poverty — Finance &amp; Economics in Three Levels — K Vijay Anand</title>
+<meta name="description" content="Inequality and poverty explained at three levels — for school students, for working people and as a review for experts: poverty lines, India's 2026 poverty and inequality data, consumption vs income vs wealth, Lorenz curve and Gini, FGT, policy.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* Colour-blind-safe palette: blue / orange / purple / gold — no red-vs-green coding */
+  :root{--bg:#f4f2ed;--bg2:#e9e5dc;--card:#fffdf8;--ink:#1d1b18;--soft:#4f4940;--faint:#857c6f;--rule:#d6cdbd;
+        --acc:#1d5fa6;--l1:#d9730d;--l2:#1d5fa6;--l3:#6a3fa0;--gold:#a87908;--hi:#fff1d6}
+  :root[data-theme="dark"]{--bg:#121316;--bg2:#1a1c21;--card:#1f2228;--ink:#ece9e2;--soft:#c3bdb2;--faint:#8c8578;--rule:#33363d;
+        --acc:#6aa8ee;--l1:#f39a3d;--l2:#6aa8ee;--l3:#b28ae6;--gold:#e5b33c;--hi:#3a2f17}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.65}
+  a{color:var(--acc)}
+  .toolbar{position:fixed;top:10px;right:12px;z-index:30;display:flex;gap:8px;font-size:13px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button,.toolbar a{background:var(--card);color:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;text-decoration:none}
+  header{padding:70px 4vw 18px;max-width:1600px;margin:0 auto}
+  .series{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-family:"Playfair Display",serif;font-weight:800;font-size:clamp(46px,7vw,84px);margin:6px 0 4px;line-height:1}
+  .tag{color:var(--soft);max-width:70ch;margin:0}
+  /* level switch */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 0}
+  .levels button{text-align:left;background:var(--card);border:2px solid var(--rule);border-radius:12px;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink)}
+  .levels button b{display:block;font-size:18px}
+  .levels button small{color:var(--faint)}
+  .levels button .k{float:right;font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:0 6px;color:var(--faint)}
+  .levels button[data-l="school"].on{border-color:var(--l1);background:color-mix(in srgb,var(--l1) 10%,var(--card))}
+  .levels button[data-l="working"].on{border-color:var(--l2);background:color-mix(in srgb,var(--l2) 10%,var(--card))}
+  .levels button[data-l="expert"].on{border-color:var(--l3);background:color-mix(in srgb,var(--l3) 10%,var(--card))}
+  /* layout */
+  .wrap{max-width:1600px;margin:0 auto;padding:0 4vw 40px;display:grid;grid-template-columns:250px 1fr;gap:34px}
+  body.nosb .wrap{grid-template-columns:1fr}
+  body.nosb aside{display:none}
+  aside{position:sticky;top:60px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;font-size:14.5px;padding-top:20px}
+  aside .h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  aside a{display:block;padding:5px 10px;border-left:3px solid var(--rule);color:var(--soft);text-decoration:none}
+  aside a:hover{border-left-color:var(--lc);color:var(--ink)}
+  aside .keys{margin-top:18px;color:var(--faint);font-size:12.5px;line-height:1.9}
+  kbd{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--card)}
+  main{min-width:0}
+  .panel{display:none}
+  .panel.on{display:block}
+  #p-school{--lc:var(--l1)} #p-working{--lc:var(--l2)} #p-expert{--lc:var(--l3)}
+  body[data-level="school"]{--lc:var(--l1)} body[data-level="working"]{--lc:var(--l2)} body[data-level="expert"]{--lc:var(--l3)}
+  .lvhead{border-left:6px solid var(--lc);padding:4px 0 4px 16px;margin:24px 0 10px}
+  .lvhead .who{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--lc);font-weight:700}
+  .lvhead p{margin:4px 0 0;color:var(--soft)}
+  section{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:22px 28px;margin:18px 0}
+  h2{font-family:"Playfair Display",serif;font-size:30px;margin:0 0 10px;line-height:1.2}
+  h2 .n{color:var(--lc);margin-right:8px}
+  h3{font-size:18px;margin:20px 0 6px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .box{border:1px solid var(--rule);border-radius:10px;padding:14px 16px;background:var(--bg)}
+  .box b.t{display:block;color:var(--lc);margin-bottom:4px}
+  .def{font-size:20px;border-left:5px solid var(--lc);background:color-mix(in srgb,var(--lc) 8%,transparent);padding:12px 18px;border-radius:0 10px 10px 0;margin:8px 0 14px}
+  .note{background:var(--hi);border-radius:8px;padding:10px 14px;font-size:15.5px}
+  .eq{font-family:"JetBrains Mono",monospace;background:var(--bg2);border-radius:8px;padding:10px 14px;overflow-x:auto;font-size:15px;white-space:pre}
+  table{border-collapse:collapse;width:100%;font-size:15.5px;margin:8px 0}
+  th,td{border-bottom:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:10px}
+  .stat{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--bg)}
+  .stat .v{font-size:28px;white-space:nowrap;font-weight:700;color:var(--acc);line-height:1.1}
+  .stat .l{font-size:13.5px;color:var(--soft)}
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;margin:10px 0}
+  .ctl label{font-size:13.5px;color:var(--soft);display:flex;flex-direction:column;gap:3px}
+  .ctl input[type=number]{width:120px;font:inherit;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)}
+  .ctl input[type=range]{width:200px}
+  .btn{background:var(--lc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--lc);border:1px solid var(--lc)}
+  .out{font-size:18px;margin:8px 0}
+  .out b{color:var(--lc)}
+  svg text{fill:var(--soft);font-family:Inter,sans-serif}
+  /* basket animation */
+  .stage{border:1px dashed var(--rule);border-radius:10px;padding:14px;background:var(--bg);min-height:170px}
+  .stage .yr{font-size:26px;font-weight:700}
+  .stage .yr span{color:var(--l1)}
+  .samosas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:44px}
+  .sam{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:30px solid var(--l1);transition:opacity .3s}
+  .sam.gone{opacity:.15}
+  /* quiz */
+  .q{border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:10px 0;background:var(--bg)}
+  .q p{margin:0 0 8px;font-weight:600}
+  .q button{display:block;width:100%;text-align:left;margin:5px 0;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;font:inherit;color:var(--ink);cursor:pointer}
+  .q button.right{border:2px solid var(--l2);background:color-mix(in srgb,var(--l2) 14%,var(--card))}
+  .q button.right::after{content:"  ✔ correct";font-weight:700;color:var(--l2)}
+  .q button.wrong{border:2px dashed var(--l1)}
+  .q button.wrong::after{content:"  ✘ not this one";font-weight:700;color:var(--l1)}
+  .q .why{display:none;font-size:15px;color:var(--soft);margin-top:6px}
+  .q.done .why{display:block}
+  .score{font-weight:700;color:var(--lc)}
+  footer{max-width:1600px;margin:0 auto;padding:20px 4vw 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--faint)}
+  footer a{color:var(--soft)}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}aside{display:none}.levels{grid-template-columns:1fr}section{padding:18px}}
+  @media print{.toolbar,aside,.levels{display:none}.panel{display:block!important}.wrap{display:block}}
+</style>
+</head>
+<body data-level="school">
+<div class="toolbar">
+  <a href="./">← Series</a>
+  <button id="sbBtn" title="Show / hide contents (M)">☰ Contents</button>
+  <button id="themeBtn" title="Light / dark (T)">◐ Theme</button>
+  <button id="fsBtn" title="Full screen (F)">⤢ Full screen</button>
+</div>
+
+<header>
+  <div class="series">Finance &amp; Economics · Topic 13</div>
+  <h1>Inequality &amp; Poverty</h1>
+  <p class="tag">How a country can cut poverty fast while the gap between rich and poor stays wide. Covers how poverty and inequality are measured, why the numbers disagree, where India stands in 2026, and what policy can do. Pick your level.</p>
+  <div class="levels" role="tablist">
+    <button data-l="school" class="on"><span class="k">1</span><b>🎒 School</b><small>Sharing 100 coins among 10 people</small></button>
+    <button data-l="working"><span class="k">2</span><b>💼 Working people</b><small>Poverty lines, where you stand, welfare</small></button>
+    <button data-l="expert"><span class="k">3</span><b>🎓 Experts — review</b><small>Lorenz, Gini, FGT, data debates, policy</small></button>
+  </div>
+</header>
+
+<div class="wrap">
+<aside id="toc"></aside>
+<main>
+
+<section id="snapshot" style="border-top:4px solid var(--gold)">
+  <h2>Where things stand — November 2026</h2>
+  <div class="snap">
+    <div class="stat"><div class="v">2.6%</div><div class="l">Indians below the World Bank's extreme-poverty line ($3 a day) in 2023, down from 27.1% in 2011</div></div>
+    <div class="stat"><div class="v">16.1%</div><div class="l">Below the higher $4.20-a-day line in 2023 (57.7% in 2011): about 19% rural, 9% urban. The World Bank projects 14.2% in 2026.</div></div>
+    <div class="stat"><div class="v">58% / 15%</div><div class="l">Share of national income going to the top 10% and to the bottom 50% (World Inequality Report 2026)</div></div>
+    <div class="stat"><div class="v">40%</div><div class="l">Share of India's wealth held by the richest 1%; the top 10% hold about 65%</div></div>
+    <div class="stat"><div class="v">0.237 / 0.284</div><div class="l">Consumption Gini, rural / urban, 2023-24 (government survey), lower than in 2022-23</div></div>
+  </div>
+  <p class="note" style="margin-top:12px">These figures look contradictory: poverty fell sharply and survey inequality is low, yet income and wealth are highly concentrated. They measure different things, as the levels below explain. Poverty figures are from the World Bank's India Poverty and Equity Brief (October 2026).</p>
+</section>
+
+<!-- ========================= LEVEL 1 : SCHOOL ====================== -->
+<div class="panel on" id="p-school">
+  <div class="lvhead"><div class="who">Level 1 · For school students</div><p>Poverty is about having too little. Inequality is about how unevenly things are shared. They are related, but they are not the same.</p></div>
+
+  <section id="s1">
+    <h2><span class="n">1</span>What is poverty?</h2>
+    <div class="def"><b>Poverty</b> means not having enough money or resources for basic needs: enough food, a safe home, clean water, schooling and health care.</div>
+    <p>To count the poor, governments draw a <b>poverty line</b>: a minimum amount a person needs each day. Anyone spending less than that is counted as poor. The World Bank's line for extreme poverty is <b>$3 a day</b> (adjusted for what money buys in each country), which is about ₹80 a day in India today.</p>
+  </section>
+
+  <section id="s2">
+    <h2><span class="n">2</span>What is inequality?</h2>
+    <div class="def"><b>Inequality</b> means some people have much more than others. It is about the <b>gap</b>, not about how much the poorest have.</div>
+    <p>A country can have <b>less poverty and more inequality at the same time</b>: if everyone gets richer but the rich get richer much faster, fewer people are poor, yet the gap grows. The animation below shows this.</p>
+  </section>
+
+  <section id="s3">
+    <h2><span class="n">3</span>Watch it happen: 100 coins, 10 people</h2>
+    <p>Imagine India's income is 100 coins and India has 10 people. How are the coins shared? Press Play, or press S for each step.</p>
+    <div class="ctl">
+      <button class="btn" id="anPlay">▶ Play (P)</button>
+      <button class="btn ghost" id="anStep">Next step (S)</button>
+      <button class="btn ghost" id="anPause">⏸ Pause (X)</button>
+      <button class="btn ghost" id="anReset">↺ Reset</button>
+    </div>
+    <div class="stage">
+      <div class="yr" id="anTitle">100 coins, 10 people</div>
+      <svg id="anChart" viewBox="0 0 900 270" style="width:100%;height:auto;margin-top:6px"></svg>
+      <p id="anMsg" style="margin:6px 0 0;color:var(--soft);font-size:17px">Press Play, or press S to begin.</p>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="n">4</span>Why are some people poor?</h2>
+    <div class="cols">
+      <div class="box"><b class="t">📚 Education and skills</b>Better-educated people usually get better-paid jobs.</div>
+      <div class="box"><b class="t">🌾 Kind of work</b>Many families depend on small farms or daily-wage work, which pays little and is uncertain.</div>
+      <div class="box"><b class="t">🏥 Health shocks</b>One illness can push a family into debt and poverty.</div>
+      <div class="box"><b class="t">🗺️ Where you are born</b>Children born in poorer states, villages, or disadvantaged communities often have fewer chances.</div>
+    </div>
+  </section>
+
+  <section id="s5">
+    <h2><span class="n">5</span>How does a country help?</h2>
+    <ul>
+      <li><b>Free or cheap food grain</b> for about 80 crore people through ration shops.</li>
+      <li><b>Free schools and midday meals</b>, so children study and eat well.</li>
+      <li><b>Health insurance</b> for poor families, so one illness does not ruin them.</li>
+      <li><b>Jobs schemes</b> that give rural workers paid work, and money sent straight to bank accounts.</li>
+      <li><b>Taxes</b>: richer people pay a higher share of income as tax, which pays for these things.</li>
+    </ul>
+  </section>
+
+  <section id="s6">
+    <h2><span class="n">6</span>Words to remember</h2>
+    <table>
+      <tr><th>Word</th><th>Meaning</th></tr>
+      <tr><td>Poverty line</td><td>The minimum spending a person needs each day; below it you are counted as poor</td></tr>
+      <tr><td>Income</td><td>Money you earn in a period (salary, profit, rent)</td></tr>
+      <tr><td>Wealth</td><td>What you own (land, house, gold, savings, shares) minus what you owe</td></tr>
+      <tr><td>Inequality</td><td>How unevenly income or wealth is shared</td></tr>
+      <tr><td>Gini coefficient</td><td>A number from 0 (everyone equal) to 1 (one person has everything)</td></tr>
+      <tr><td>Welfare scheme</td><td>Government help such as free food, health cover or jobs</td></tr>
+    </table>
+  </section>
+
+  <section id="s7">
+    <h2><span class="n">7</span>Check yourself</h2>
+    <div class="quiz" data-quiz="school"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 2 : WORKING ===================== -->
+<div class="panel" id="p-working">
+  <div class="lvhead"><div class="who">Level 2 · For working people</div><p>Which poverty line is meant, where your household stands, why inequality figures disagree, and what the welfare system does. This is educational only.</p></div>
+
+  <section id="w1">
+    <h2><span class="n">1</span>Which poverty line?</h2>
+    <table>
+      <tr><th>Line (per person per day, 2021 PPP)</th><th>Meant for</th><th>India 2011</th><th>India 2023</th></tr>
+      <tr><td>$3.00 (extreme poverty)</td><td>Poorest countries</td><td>27.1%</td><td>2.6%</td></tr>
+      <tr><td>$4.20</td><td>Lower-middle-income countries such as India</td><td>57.7%</td><td>16.1%</td></tr>
+      <tr><td>$8.30</td><td>Upper-middle-income countries</td><td colspan="2">Most Indians are still below this line</td></tr>
+    </table>
+    <p>The World Bank says about 49.6 crore Indians crossed the $4.20 line between 2011 and 2023, one of the fastest declines anywhere, helped by more jobs (especially for rural women) and larger social transfers. India has had no official national poverty line since the Tendulkar (2011-12) and Rangarajan (2014) estimates; the government also cites NITI Aayog's <b>multidimensional poverty index</b> (health, education, living standards). The World Bank's own multidimensional measure was 15.5% in 2022-23.</p>
+    <p class="note">PPP (purchasing power parity) converts dollars using what money buys locally, not the market exchange rate. One "PPP dollar" buys in India what one dollar buys in the US, which is about ₹20–21 at 2021 prices, far less than the ₹74 market rate of 2021.</p>
+  </section>
+
+  <section id="w2">
+    <h2><span class="n">2</span>Calculator: where does your household stand?</h2>
+    <div class="ctl">
+      <label>Household spending per month (₹)<input type="number" id="hsS" value="25000" step="500"></label>
+      <label>Members<input type="number" id="hsN" value="4" step="1" min="1"></label>
+      <label>Area<select id="hsA"><option value="r">Rural</option><option value="u" selected>Urban</option></select></label>
+      <label>₹ per PPP$ (2021)<input type="number" id="hsP" value="21" step="0.5"></label>
+      <label>Price rise 2021→2026 (×)<input type="number" id="hsC" value="1.27" step="0.01"></label>
+    </div>
+    <div class="out" id="hsOut"></div>
+    <svg id="hsChart" viewBox="0 0 900 150" style="width:100%;height:auto;margin-top:8px"></svg>
+    <p class="note">This is a rough guide. Survey averages (HCES 2023-24) are at 2023-24 prices and exclude the value of free items from welfare schemes. Poverty lines are converted with the two factors you can edit. Spending, not income, is what surveys and poverty lines measure.</p>
+  </section>
+
+  <section id="w3">
+    <h2><span class="n">3</span>Why the inequality numbers disagree</h2>
+    <div class="cols">
+      <div class="box"><b class="t">Consumption surveys (HCES)</b>Ask households what they spend. Gini 0.237 rural, 0.284 urban in 2023-24. The rich spend a small part of income and rarely answer surveys, so this shows <b>low</b> inequality.</div>
+      <div class="box"><b class="t">World Bank (from surveys)</b>Consumption Gini about 23–26, which places India among the more "equal" countries on this measure.</div>
+      <div class="box"><b class="t">Income (World Inequality Lab)</b>Combines tax records, national accounts and surveys. The top 10% get about 58% of income; the top 1% about 22.6%, the highest since Independence.</div>
+      <div class="box"><b class="t">Wealth</b>Most unequal of all: the top 1% own about 40%, the top 10% about 65%. Land, housing, gold and shares are concentrated.</div>
+    </div>
+    <p>So "inequality is low" and "inequality is among the world's highest" can both be quoted from respectable sources. Always ask: <b>consumption, income or wealth? Survey or tax data?</b></p>
+  </section>
+
+  <section id="w4">
+    <h2><span class="n">4</span>The many faces of inequality in India</h2>
+    <ul>
+      <li><b>Rural vs urban:</b> average urban spending per person was about 70% higher than rural in 2023-24, down from 84% in 2011-12.</li>
+      <li><b>Between states:</b> poverty and spending differ several-fold between richer southern and western states and poorer eastern and central ones.</li>
+      <li><b>Gender:</b> women earn only about 18% of India's labour income (World Inequality Report 2026), mainly because far fewer women are in paid work.</li>
+      <li><b>Social groups:</b> Scheduled Tribe and Scheduled Caste households still have lower average spending, though the gaps have narrowed.</li>
+      <li><b>Opportunity:</b> a child's schooling, health and job prospects still depend heavily on the parents' income and location.</li>
+    </ul>
+  </section>
+
+  <section id="w5">
+    <h2><span class="n">5</span>What the welfare system does</h2>
+    <table>
+      <tr><th>Scheme</th><th>What it does</th></tr>
+      <tr><td>PM Garib Kalyan Anna Yojana</td><td>Free food grain for about 80 crore people</td></tr>
+      <tr><td>Rural employment guarantee</td><td>Paid public work for rural households on demand</td></tr>
+      <tr><td>PM-KISAN</td><td>₹6,000 a year to farmer families</td></tr>
+      <tr><td>Ayushman Bharat PM-JAY</td><td>Hospital cover up to ₹5 lakh per family per year</td></tr>
+      <tr><td>Housing, toilets, water, gas, electricity</td><td>Basic services that reduce non-income poverty</td></tr>
+      <tr><td>Direct Benefit Transfer (Aadhaar + bank accounts)</td><td>Money paid straight to beneficiaries, reducing leakage</td></tr>
+    </table>
+    <p>Taxes also redistribute: income tax is progressive (Topic 06), but GST falls on everyone's spending, and India collects relatively little from wealth, property or inheritance.</p>
+  </section>
+
+  <section id="w6">
+    <h2><span class="n">6</span>Why it matters to you</h2>
+    <ul>
+      <li><b>Falling into poverty is often one shock away:</b> a hospital bill, job loss or crop failure. Health insurance and an emergency fund are the best protection (Topic 14 will cover insurance).</li>
+      <li><b>Markets follow spending:</b> companies selling to the top 10% (premium cars, flats) and to the mass market (biscuits, two-wheelers) can see very different demand. This is sometimes called a "K-shaped" pattern.</li>
+      <li><b>Escaping poverty is not the same as being secure:</b> many households just above $4.20 a day are vulnerable to falling back.</li>
+    </ul>
+  </section>
+
+  <section id="w7">
+    <h2><span class="n">7</span>Check yourself</h2>
+    <div class="quiz" data-quiz="working"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 3 : EXPERT ====================== -->
+<div class="panel" id="p-expert">
+  <div class="lvhead"><div class="who">Level 3 · Review for experts</div><p>Measurement (Lorenz, Gini, Palma, FGT), the survey–national-accounts gap, theories of inequality, mobility, and the policy debates.</p></div>
+
+  <section id="e1">
+    <h2><span class="n">1</span>Measuring poverty: FGT and beyond</h2>
+    <div class="eq">FGT:  P_α = (1/N) · Σ_{y_i &lt; z} ((z − y_i)/z)^α
+α = 0 headcount ratio · α = 1 poverty gap (depth) · α = 2 squared gap (severity, weights the poorest most)</div>
+    <ul>
+      <li>The headcount ratio violates the monotonicity axiom (Sen, 1976): making a poor person poorer does not raise it. Policy targeted on headcount favours those just below the line.</li>
+      <li>The World Bank moved to 2021 PPPs in 2025, raising the extreme line from $2.15 to $3.00. India's 2022-23 HCES also changed survey method (multiple visits, modified mixed recall period), which lowers measured poverty against 2011-12. Comparisons across the break need care.</li>
+      <li><b>Multidimensional poverty</b> (Alkire–Foster): deprivation counts across indicators with a cut-off k. It is sensitive to indicator choice and weights, but captures services that consumption misses.</li>
+    </ul>
+  </section>
+
+  <section id="e2">
+    <h2><span class="n">2</span>Lorenz curve and Gini: calculator</h2>
+    <div class="eq">G = 1 − Σ_k (X_k − X_{k−1})·(Y_k + Y_{k−1})
+Trapezoid rule on the Lorenz curve. G = 2 × area between the line of equality and the Lorenz curve.</div>
+    <div class="ctl">
+      <label>Poorest 20% share %<input type="number" id="lzA" value="8" step="0.5"></label>
+      <label>2nd 20%<input type="number" id="lzB" value="12" step="0.5"></label>
+      <label>Middle 20%<input type="number" id="lzC" value="16" step="0.5"></label>
+      <label>4th 20%<input type="number" id="lzD" value="22" step="0.5"></label>
+      <label>Richest 20%<input type="number" id="lzE" value="42" step="0.5"></label>
+    </div>
+    <div class="out" id="lzOut"></div>
+    <svg id="lzChart" viewBox="0 0 900 400" style="width:100%;height:auto;margin-top:8px"></svg>
+    <p class="note">The defaults are illustrative. A Gini from five quintiles <b>understates</b> the true Gini because it assumes equality within each quintile. Try the WIL-style income split by setting the richest 20% far higher.</p>
+  </section>
+
+  <section id="e3">
+    <h2><span class="n">3</span>The survey–national-accounts gap</h2>
+    <ul>
+      <li>Survey consumption in India covers a shrinking fraction of national-accounts private consumption. Missing top incomes (non-response, under-reporting) and the consumption–income gap both bias survey inequality downward.</li>
+      <li>WIL (Chancel and Piketty, 2019, updated in WIR 2026) splice surveys with income-tax tabulations and allocate unreported national income, often with Pareto top tails. The result is a top-10% income share of about 58%. Critics (e.g. Bhalla and others) argue the assumptions, given sparse Indian tax data, overstate concentration.</li>
+      <li>The two views are reconcilable: low consumption inequality at the bottom and middle, combined with very high income and wealth concentration at the top. The Palma ratio (top 10% / bottom 40%) is more sensitive to the tails than the Gini.</li>
+    </ul>
+  </section>
+
+  <section id="e4">
+    <h2><span class="n">4</span>Theories: growth, structure and capital</h2>
+    <ul>
+      <li><b>Kuznets (1955):</b> an inverted U, where inequality rises as labour moves from agriculture to industry, then falls. The evidence is weak, and India's slow structural transformation (many workers still in agriculture, Topic 11) complicates the story.</li>
+      <li><b>Growth elasticity of poverty:</b> growth reduces poverty faster where initial inequality is low and growth is labour-intensive (Ravallion; Datt and Ravallion on Indian states).</li>
+      <li><b>Piketty:</b> when r &gt; g, inherited wealth grows faster than income, so wealth concentrates. India's post-1991 rise in top shares fits capital-intensive, skill-biased growth plus asset-price gains.</li>
+      <li><b>Skill-biased technical change</b> and returns to education widen wage gaps; credit and land constraints keep the poor from investing (poverty traps, Banerjee–Duflo).</li>
+    </ul>
+  </section>
+
+  <section id="e5">
+    <h2><span class="n">5</span>Mobility and opportunity</h2>
+    <ul>
+      <li>The "Great Gatsby curve" (Corak; Krueger): more unequal countries tend to have lower intergenerational mobility. Indian studies (Asher, Novosad and Rafkind) find low educational mobility, especially for SC/ST groups and in poorer regions, with gains for SCs and stagnation for Muslims.</li>
+      <li>Inequality of opportunity (Roemer) separates "circumstances" (caste, gender, birthplace, parents) from "effort". A large share of Indian consumption inequality is explained by circumstances.</li>
+    </ul>
+  </section>
+
+  <section id="e6">
+    <h2><span class="n">6</span>Policy toolkit and debates</h2>
+    <ul>
+      <li><b>Transfers:</b> India's in-kind food subsidy and DBT reduce poverty at the bottom; targeting errors and exclusion persist. UBI proposals (Economic Survey 2016-17) versus targeted schemes.</li>
+      <li><b>Taxation:</b> India's tax-to-GDP ratio is modest and relies heavily on indirect taxes. WIR proposes a wealth tax on the very rich; critics cite capital flight, valuation problems, and India's own abolition of its wealth tax in 2015.</li>
+      <li><b>Pre-distribution:</b> education quality, health, female labour-force participation, land and credit access, labour-intensive manufacturing (Topics 11 and 12).</li>
+      <li><b>Measurement:</b> a new HCES and a regular income survey, plus publishing tax tabulations, would narrow the gap between camps.</li>
+    </ul>
+  </section>
+
+  <section id="e7">
+    <h2><span class="n">7</span>Review checklist: open questions</h2>
+    <ol>
+      <li>How much of the post-2011 poverty decline is real, and how much reflects the HCES method change?</li>
+      <li>Which inequality measure should guide Indian policy: consumption Gini, income top shares, or wealth?</li>
+      <li>Is a wealth or inheritance tax feasible and desirable in India?</li>
+      <li>Should India adopt a new official poverty line, and at what level (for example $4.20 PPP)?</li>
+      <li>How large is the vulnerable group just above the line, and what insurance does it need?</li>
+      <li>Can growth become more labour-intensive enough to lift the bottom 50% share?</li>
+    </ol>
+  </section>
+
+  <section id="e8">
+    <h2><span class="n">8</span>Check yourself</h2>
+    <div class="quiz" data-quiz="expert"></div>
+  </section>
+</div>
+
+<section id="sources">
+  <h2>Sources and further reading</h2>
+  <ul>
+    <li>World Bank, <i>India Poverty and Equity Brief</i>, October 2026: reported by <a href="https://www.freepressjournal.in/business/india-may-see-poverty-drop-to-121-by-2028-heres-what-the-world-bank-report-reveals">Free Press Journal</a>, <a href="https://swarajyamag.com/economy/nearly-50-crore-indians-escape-poverty-in-one-of-worlds-fastest-declines-world-bank">Swarajya</a>, <a href="https://aljazeera.com/news/2026/11/3/how-india-pulled-500-million-people-out-of-poverty-as-inequality-deepens">Al Jazeera</a>; <a href="https://www.policyedge.in/p/indias-extreme-poverty-at-2-but-114-billion-remain-below-a-higher-poverty-line-world-bank">The Policy Edge</a> on the <i>Poverty, Prosperity and Planet Report 2026</i>.</li>
+    <li>World Inequality Lab, <i>World Inequality Report 2026</i> (December 2025): <a href="https://amp.scroll.in/latest/1089182/scroll_in">Scroll</a>, <a href="https://www.gktoday.in/world-inequality-report-2026-flags-sharp-rise-in-indias-wealth-gap">GK Today</a>.</li>
+    <li>MoSPI, <a href="https://mospi.gov.in/sites/default/files/press_release/HCES_Report202324_Press_Note_30012025.pdf">HCES 2023-24 press note</a>; <a href="https://www.tribuneindia.com/news/business/household-consumption-expenditure-survey-2023-24-rural-urban-gap-shrinks-household-expenditure-increases">Tribune</a> on the Gini decline.</li>
+    <li>Foster, Greer and Thorbecke (1984), <i>Econometrica</i>; Sen (1976), <i>Econometrica</i>; Alkire and Foster (2011), <i>J. Public Econ.</i>; Kuznets (1955), <i>AER</i>.</li>
+    <li>Chancel and Piketty (2019), <i>Review of Income and Wealth</i>; Piketty (2014), <i>Capital in the Twenty-First Century</i>; Asher, Novosad and Rafkind (2024), <i>AEJ: Applied</i>; Datt and Ravallion (2002), <i>JEP</i>.</li>
+    <li>Earlier topics: <a href="06-taxes.html">Taxes</a> · <a href="08-budgets-deficits.html">Budgets &amp; Deficits</a> · <a href="11-jobs-unemployment.html">Jobs &amp; Unemployment</a> · <a href="12-trade-tariffs.html">Trade &amp; Tariffs</a>.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<footer>
+  Finance &amp; Economics in Three Levels · Topic 13 · K Vijay Anand · <a href="12-trade-tariffs.html">← Topic 12 Trade &amp; Tariffs</a> · <a href="./">All topics</a> · <a href="/">Home</a><br>
+  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.
+  Educational content. Figures dated November 2026.
+</footer>
+<script>
+(function(){
+  "use strict";
+  var root=document.documentElement, body=document.body;
+  var $=function(id){return document.getElementById(id);};
+  var cssv=function(n){return getComputedStyle(root).getPropertyValue(n).trim();};
+
+  try{var t=localStorage.getItem("fe-theme");if(t)root.setAttribute("data-theme",t);}catch(e){}
+  function redraw(){anRender();hs();lz();}
+  function toggleTheme(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("fe-theme",n);}catch(e){}redraw();}
+  function toggleFS(){if(!document.fullscreenElement){(root.requestFullscreen||function(){}).call(root);}else{document.exitFullscreen();}}
+  function toggleSB(){body.classList.toggle("nosb");}
+  $("themeBtn").onclick=toggleTheme; $("fsBtn").onclick=toggleFS; $("sbBtn").onclick=toggleSB;
+
+  var LV=["school","working","expert"];
+  function setLevel(l,noHash){
+    if(LV.indexOf(l)<0)l="school";
+    body.setAttribute("data-level",l);
+    LV.forEach(function(x){$("p-"+x).classList.toggle("on",x===l);});
+    document.querySelectorAll(".levels button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-l")===l);});
+    buildTOC(l);
+    if(!noHash)history.replaceState(null,"","#"+l);
+    redraw();
+  }
+  document.querySelectorAll(".levels button").forEach(function(b){b.onclick=function(){setLevel(b.getAttribute("data-l"));};});
+  function buildTOC(l){
+    var names={school:"School",working:"Working people",expert:"Experts"};
+    var h='<div class="h">Contents · '+names[l]+'</div><a href="#snapshot">Snapshot · Nov 2026</a>';
+    $("p-"+l).querySelectorAll("section").forEach(function(s){
+      var t=s.querySelector("h2").textContent; h+='<a href="#'+s.id+'">'+t.replace(/^(\d+)/,"$1 · ")+'</a>';
+    });
+    h+='<a href="#sources">Sources</a>';
+    h+='<div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> level<br><kbd>M</kbd> hide contents<br><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause<br><kbd>T</kbd> theme · <kbd>F</kbd> full screen</div>';
+    $("toc").innerHTML=h;
+  }
+  function rep(v,n){var a=[];for(var i=0;i<n;i++)a.push(v);return a;}
+
+  /* ---------- Level 1: 100 coins ---------- */
+  var ST=[
+    {t:"100 coins, 10 people",d:null,line:false,m:"Line the 10 people up from poorest (left) to richest (right). Press S to share the coins."},
+    {t:"Step 1 · Perfectly equal",d:rep(10,10),line:false,m:"If everyone got the same, each person would get 10 coins. No country is like this, and it is not the goal either: effort and skills differ."},
+    {t:"Step 2 · How India's income is really shared",d:rep(3,5).concat(rep(6.75,4)).concat([58]),line:true,m:"The poorest 5 get 15 coins between them (3 each). The middle 4 get 27. The richest 1 gets 58! (World Inequality Report 2026.) The dashed line is a poverty line of 4 coins: 5 people are below it."},
+    {t:"Step 3 · Wealth (what people own) is even less equal",d:rep(1.2,5).concat(rep(7.25,4)).concat([65]),line:false,m:"Counting land, houses, gold and savings, the richest 1 in 10 owns about 65 of 100 coins, and the poorest 5 together own only about 6."},
+    {t:"Step 4 · Ten years later: a bigger pie",d:rep(5,5).concat(rep(9,4)).concat([89]),line:true,m:"The economy has grown to 150 coins. Everyone has more, so nobody is below the 4-coin poverty line now: poverty fell! But the richest person gained 31 coins and each poor person only 2. The gap grew. Less poverty AND more inequality."},
+    {t:"Step 5 · Taxes and help",d:rep(8,5).concat(rep(9,4)).concat([74]),line:true,m:"The richest pays 15 coins in tax, which buys free food, schools and hospitals worth 3 coins for each of the poorest 5. Still unequal, but everyone can live decently."}
+  ];
+  var anI=0, anTimer=null;
+  function anRender(){
+    var s=ST[anI], W=900,H=270,L=50,R=20,T=40,B=50, svg="", ru=cssv("--rule"), ink=cssv("--ink"), fa=cssv("--faint");
+    var cols=[cssv("--l2"),cssv("--l3"),cssv("--l1")], names=["poorest 5","middle 4","richest 1"];
+    var ymax=90, Y=function(v){return T+(H-T-B)*(1-v/ymax);};
+    for(var g=0;g<=90;g+=15){svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(g)+'" y2="'+Y(g)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(Y(g)+4)+'" font-size="12" text-anchor="end">'+g+'</text>';}
+    var bw=58, gap=(W-L-R-10*bw)/11;
+    if(s.d){var tot=0;s.d.forEach(function(v,i){tot+=v;var grp=i<5?0:(i<9?1:2), x=L+gap+i*(bw+gap);
+      svg+='<rect x="'+x+'" y="'+Y(v)+'" width="'+bw+'" height="'+Math.max(1,Y(0)-Y(v))+'" fill="'+cols[grp]+'"/>';
+      svg+='<text x="'+(x+bw/2)+'" y="'+(Y(v)-5)+'" font-size="14" text-anchor="middle" style="fill:'+ink+';font-weight:700">'+(+v.toFixed(2))+'</text>';});
+      [[0,5],[5,9],[9,10]].forEach(function(r,gi){var x1=L+gap+r[0]*(bw+gap), x2=L+gap+(r[1]-1)*(bw+gap)+bw;
+        svg+='<line x1="'+x1+'" x2="'+x2+'" y1="'+(H-B+10)+'" y2="'+(H-B+10)+'" stroke="'+cols[gi]+'" stroke-width="4"/>';
+        svg+='<text x="'+((x1+x2)/2)+'" y="'+(H-B+30)+'" font-size="14" text-anchor="middle" style="fill:'+ink+';font-weight:600">'+names[gi]+'</text>';});
+      svg+='<text x="'+(W/2)+'" y="22" font-size="14" text-anchor="middle" style="fill:'+ink+';font-weight:600">total: '+Math.round(tot)+' coins</text>';
+      if(s.line){svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(4)+'" y2="'+Y(4)+'" stroke="'+ink+'" stroke-width="2" stroke-dasharray="7 5"/><text x="'+(L+4)+'" y="22" font-size="14" style="fill:'+ink+'">- - - poverty line: 4 coins</text>';}
+    } else svg+='<text x="'+(W/2)+'" y="'+(H/2)+'" font-size="18" text-anchor="middle" style="fill:'+fa+'">10 people · 100 coins</text>';
+    $("anChart").innerHTML=svg; $("anTitle").textContent=s.t; $("anMsg").textContent=s.m;
+  }
+  function anStep(){ if(anI<ST.length-1){anI++;anRender();} else anPause(); }
+  function anPlay(){ if(anTimer)return; if(anI>=ST.length-1)anI=0; anRender(); anTimer=setInterval(anStep,4000); }
+  function anPause(){ clearInterval(anTimer); anTimer=null; }
+  $("anPlay").onclick=anPlay; $("anStep").onclick=function(){anPause();anStep();}; $("anPause").onclick=anPause;
+  $("anReset").onclick=function(){anPause();anI=0;anRender();};
+
+  /* ---------- Level 2: household position ---------- */
+  var inr=function(v){return "₹"+Math.round(v).toLocaleString("en-IN");};
+  function hs(){
+    var g=function(id){return +$(id).value||0;};
+    var S=g("hsS"), N=Math.max(1,g("hsN")), P=g("hsP"), C=g("hsC"), u=$("hsA").value==="u";
+    var m=S/N, k=P*C*365/12;
+    var L3=3*k, L4=4.2*k, L8=8.3*k, avg=u?6996:4122, top=u?20310:10137;
+    var where=m<L3?"below the $3 extreme-poverty line":(m<L4?"between the $3 and $4.20 lines (poor by India's income-group standard)":(m<L8?"above $4.20 but below the $8.30 upper-middle-income line, where most Indians are":"above the $8.30 line"));
+    $("hsOut").innerHTML="Spending per person: <b>"+inr(m)+"</b> a month ("+inr(m*12/365)+" a day). Poverty lines in today's rupees per person per month: $3 ≈ "+inr(L3)+", $4.20 ≈ "+inr(L4)+", $8.30 ≈ "+inr(L8)+". You are <b>"+where+"</b>. Your spending is <b>"+(m/avg).toFixed(1)+"×</b> the "+(u?"urban":"rural")+" average of "+inr(avg)+" (2023-24); the top 5% "+(u?"urban":"rural")+" average was "+inr(top)+".";
+    var W=900,H=150,L=20,R=30, mx=Math.max(m,top,L8)*1.08, X=function(v){return L+(W-L-R)*Math.min(v,mx)/mx;};
+    var ink=cssv("--ink"), ru=cssv("--rule"), c1=cssv("--l1"), c2=cssv("--l2"), svg='<line x1="'+L+'" x2="'+(W-R)+'" y1="75" y2="75" stroke="'+ru+'" stroke-width="3"/>';
+    [[L3,"$3"],[L4,"$4.20"],[L8,"$8.30"]].forEach(function(p,i){svg+='<line x1="'+X(p[0])+'" x2="'+X(p[0])+'" y1="40" y2="75" stroke="'+ink+'" stroke-dasharray="5 4"/><text x="'+X(p[0])+'" y="'+(32-(i===1?14:0))+'" font-size="13" text-anchor="middle" style="fill:'+ink+'">'+p[1]+' line</text>';});
+    [[avg,"avg"],[top,"top 5%"]].forEach(function(p){svg+='<line x1="'+X(p[0])+'" x2="'+X(p[0])+'" y1="75" y2="105" stroke="'+c2+'" stroke-width="2"/><text x="'+X(p[0])+'" y="122" font-size="13" text-anchor="middle" style="fill:'+c2+';font-weight:600">'+(u?"urban ":"rural ")+p[1]+'</text>';});
+    svg+='<circle cx="'+X(m)+'" cy="75" r="9" fill="'+c1+'"/><text x="'+X(m)+'" y="145" font-size="14" text-anchor="middle" style="fill:'+c1+';font-weight:700">▲ you '+inr(m)+'</text>';
+    $("hsChart").innerHTML=svg;
+  }
+  ["hsS","hsN","hsA","hsP","hsC"].forEach(function(id){$(id).oninput=hs;$(id).onchange=hs;}); hs();
+
+  /* ---------- Level 3: Lorenz / Gini ---------- */
+  function lz(){
+    var s=["lzA","lzB","lzC","lzD","lzE"].map(function(id){return Math.max(0,+$(id).value||0);});
+    var tot=s.reduce(function(a,b){return a+b;},0); if(tot<=0)return;
+    var sh=s.map(function(v){return v/tot;}), cum=[0]; sh.forEach(function(v){cum.push(cum[cum.length-1]+v);});
+    var area=0; for(var k=1;k<=5;k++)area+=0.2*(cum[k]+cum[k-1]); var G=1-area;
+    var sorted=sh.every(function(v,i){return i===0||v>=sh[i-1];});
+    $("lzOut").innerHTML=(Math.abs(tot-100)>0.01?"Shares sum to "+tot.toFixed(1)+"%, so they were rescaled to 100%. ":"")+"Gini ≈ <b>"+G.toFixed(3)+"</b> (quintile approximation, a lower bound). Richest-20% / poorest-20% ratio = <b>"+(sh[4]/sh[0]).toFixed(1)+"×</b>. Bottom 40% share = "+((sh[0]+sh[1])*100).toFixed(1)+"%."+(sorted?"":" <b>Note:</b> the shares should rise from poorest to richest.");
+    var W=900,H=400,ox=80,oy=360,sz=320, X=function(v){return ox+sz*v;}, Y=function(v){return oy-sz*v;};
+    var ink=cssv("--ink"), ru=cssv("--rule"), c1=cssv("--l1"), c2=cssv("--l2"), svg="";
+    for(var q=0;q<=5;q++){var v=q/5;svg+='<line x1="'+X(v)+'" x2="'+X(v)+'" y1="'+Y(0)+'" y2="'+Y(1)+'" stroke="'+ru+'"/><line x1="'+X(0)+'" x2="'+X(1)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="'+ru+'"/><text x="'+X(v)+'" y="'+(oy+18)+'" font-size="12" text-anchor="middle">'+(q*20)+'%</text><text x="'+(ox-8)+'" y="'+(Y(v)+4)+'" font-size="12" text-anchor="end">'+(q*20)+'%</text>';}
+    var pts=cum.map(function(c,i){return X(i/5)+","+Y(c);}).join(" ");
+    svg+='<polygon points="'+X(0)+','+Y(0)+' '+X(1)+','+Y(1)+' '+cum.slice().reverse().map(function(c,i){return X((5-i)/5)+","+Y(c);}).join(" ")+'" fill="'+c1+'" fill-opacity=".18"/>';
+    svg+='<line x1="'+X(0)+'" y1="'+Y(0)+'" x2="'+X(1)+'" y2="'+Y(1)+'" stroke="'+c2+'" stroke-width="2.5" stroke-dasharray="8 6"/>';
+    svg+='<polyline points="'+pts+'" fill="none" stroke="'+c1+'" stroke-width="3.5"/>';
+    cum.forEach(function(c,i){svg+='<circle cx="'+X(i/5)+'" cy="'+Y(c)+'" r="5" fill="'+c1+'"/>';});
+    svg+='<text x="'+(X(0.5))+'" y="'+(oy+36)+'" font-size="13" text-anchor="middle">cumulative share of people (poorest first)</text>';
+    svg+='<text transform="translate(22,'+Y(0.5)+') rotate(-90)" font-size="13" text-anchor="middle">cumulative share of income</text>';
+    var lx=X(1)+60;
+    svg+='<line x1="'+lx+'" x2="'+(lx+40)+'" y1="60" y2="60" stroke="'+c2+'" stroke-width="2.5" stroke-dasharray="8 6"/><text x="'+(lx+50)+'" y="65" font-size="14" style="fill:'+ink+'">dashed: line of perfect equality</text>';
+    svg+='<line x1="'+lx+'" x2="'+(lx+40)+'" y1="95" y2="95" stroke="'+c1+'" stroke-width="3.5"/><text x="'+(lx+50)+'" y="100" font-size="14" style="fill:'+ink+'">solid: Lorenz curve</text>';
+    svg+='<rect x="'+lx+'" y="118" width="40" height="16" fill="'+c1+'" fill-opacity=".18"/><text x="'+(lx+50)+'" y="131" font-size="14" style="fill:'+ink+'">shaded area × 2 = Gini</text>';
+    svg+='<text x="'+lx+'" y="190" font-size="22" style="fill:'+ink+';font-weight:700">Gini ≈ '+G.toFixed(3)+'</text>';
+    $("lzChart").innerHTML=svg;
+  }
+  ["lzA","lzB","lzC","lzD","lzE"].forEach(function(id){$(id).oninput=lz;}); lz();
+
+  /* ---------- quizzes ---------- */
+  var Q={
+    school:[
+      ["Poverty means…",["Having less than your neighbour","Not having enough for basic needs","Paying tax","Living in a village"],1,"Poverty is about too little for basic needs; inequality is about the gap."],
+      ["Can poverty fall while inequality rises?",["No, never","Yes, if everyone gets richer but the rich gain much more","Only in rich countries","Only if prices fall"],1,"Step 4 of the animation shows exactly this."],
+      ["In India, the richest 10% get about what share of national income?",["10%","25%","58%","90%"],2,"World Inequality Report 2026: about 58%; the poorest half get about 15%."],
+      ["A Gini coefficient of 0 means…",["Everyone is equal","One person has everything","Everyone is poor","No data"],0,"0 is perfect equality; 1 is one person owning everything."],
+      ["Which is WEALTH, not income?",["Monthly salary","A house you own","Shop profit this month","Interest received this year"],1,"Wealth is what you own; income is what you earn in a period."]
+    ],
+    working:[
+      ["India's extreme poverty ($3/day) in 2023, per the World Bank, was about…",["2.6%","16.1%","27.1%","58%"],0,"Down from 27.1% in 2011. At the $4.20 line, it was 16.1%."],
+      ["Why do consumption surveys show lower inequality than WIL income data?",["Surveys are fake","The rich rarely respond and spend a small share of income","WIL counts only the poor","Surveys exclude cities"],1,"Measuring consumption, plus missing top incomes, compresses inequality."],
+      ["The 'PPP dollar' used for poverty lines converts at about…",["₹88 per $","₹20–21 per $ (2021 prices)","₹1 per $","₹200 per $"],1,"PPP reflects local prices, far below the market exchange rate."],
+      ["Women's share of India's labour income (WIR 2026) is about…",["50%","34%","18%","5%"],2,"Low female participation in paid work drives this gap."],
+      ["Which scheme gives free food grain to about 80 crore people?",["PM-KISAN","PM Garib Kalyan Anna Yojana","Ayushman Bharat","DBT"],1,"PMGKAY is the free-grain scheme under the National Food Security Act."]
+    ],
+    expert:[
+      ["The FGT measure with α = 2 captures…",["Headcount","Depth (poverty gap)","Severity, weighting the poorest more","Inequality among the rich"],2,"Squared gaps put more weight on the poorest."],
+      ["Why does the headcount ratio violate monotonicity?",["It rises with growth","Making a poor person poorer does not change it","It double-counts","It ignores the rich"],1,"Sen (1976): the headcount ignores depth."],
+      ["Quintile shares 8, 12, 16, 22, 42% give a Gini of about…",["0.18","0.31","0.45","0.60"],1,"1 − 0.2·(0.08+0.28+0.56+0.94+1.58) = 1 − 0.688 = 0.312, a lower bound."],
+      ["The Palma ratio is…",["Top 10% share / bottom 40% share","Top 1% / bottom 50%","Mean / median","Gini × 100"],0,"It focuses on the tails, where most change happens."],
+      ["Piketty's r &gt; g argument implies…",["Wages rise faster than profits","Inherited wealth tends to concentrate","Inequality always falls with growth","Poverty must rise"],1,"Returns on capital outpacing growth concentrates wealth over time."]
+    ]
+  };
+  document.querySelectorAll(".quiz").forEach(function(box){
+    var set=Q[box.getAttribute("data-quiz")], score=0, done=0, h="";
+    set.forEach(function(q,qi){
+      h+='<div class="q" data-i="'+qi+'"><p>'+(qi+1)+'. '+q[0]+'</p>';
+      q[1].forEach(function(o,oi){h+='<button data-o="'+oi+'">'+o+'</button>';});
+      h+='<div class="why">'+q[3]+'</div></div>';
+    });
+    h+='<p class="score"></p>'; box.innerHTML=h;
+    box.querySelectorAll(".q").forEach(function(qd){
+      var q=set[+qd.getAttribute("data-i")];
+      qd.querySelectorAll("button").forEach(function(b){
+        b.onclick=function(){
+          if(qd.classList.contains("done"))return;
+          var o=+b.getAttribute("data-o"); qd.classList.add("done"); done++;
+          if(o===q[2])score++; else b.classList.add("wrong");
+          qd.querySelectorAll("button")[q[2]].classList.add("right");
+          box.querySelector(".score").textContent="Score: "+score+" / "+done+(done===set.length?(score===set.length?" — perfect!":" — review the explanations above."):"");
+        };
+      });
+    });
+  });
+
+  document.addEventListener("keydown",function(e){
+    if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
+    var k=e.key.toLowerCase();
+    if(k==="1")setLevel("school"); else if(k==="2")setLevel("working"); else if(k==="3")setLevel("expert");
+    else if(k==="m")toggleSB(); else if(k==="t")toggleTheme(); else if(k==="f")toggleFS();
+    else if(body.getAttribute("data-level")==="school"){
+      if(k==="p"){anPlay();} else if(k==="s"){anPause();anStep();} else if(k==="x"){anPause();}
+    }
+  });
+
+  setLevel((location.hash||"#school").slice(1),true);
+  window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(LV.indexOf(h)>=0)setLevel(h,true);});
+})();
+</script>
+</body>
+</html>

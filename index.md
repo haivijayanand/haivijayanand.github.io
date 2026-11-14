@@ -1,7 +1,7 @@
 ---
-# TOOL: index.md | FAMILY: SITE | VERSION: 2.7.8 | DATE: 2026-11-14
+# TOOL: index.md | FAMILY: SITE | VERSION: 2.7.9 | DATE: 2026-11-14
 # CHAT: Offline HTML inventory and online links
-# CHANGES: 2.7.8 - Finance & Economics card lists Compounding; 2.7.7 - Finance & Economics card lists Budgets & Deficits; 2.7.6 - Finance & Economics card lists Stock Markets; 2.7.5 - Finance & Economics card lists Taxes; 2.7.4 - Finance & Economics card lists Exchange Rates; 2.7.3 - Finance & Economics card lists Money & Banking; 2.7.2 - Finance & Economics card lists GDP; 2.7.1 - Finance & Economics card lists Interest Rates; 2.7.0 - Finance & Economics card added; 2.6.0 - Movie & TV Review card added; 2.5.0 - Class VIII Study Explorers card added; Tools card no longer lists the Class 8 pages; 2.4.0 - Law Study Explorers card added; 2.3.0 - Technical Papers card added; 2.2.0 - Life Books card added; 2.1.0 - Zen Series card added; 2.0.0 - home page is now a short guide to the four sections (Speaks, Tools, Book Review, Engineering Articles); article list moved to /engineering/
+# CHANGES: 2.7.9 - Finance & Economics card lists Supply, Demand & Prices; 2.7.8 - Finance & Economics card lists Compounding; 2.7.7 - Finance & Economics card lists Budgets & Deficits; 2.7.6 - Finance & Economics card lists Stock Markets; 2.7.5 - Finance & Economics card lists Taxes; 2.7.4 - Finance & Economics card lists Exchange Rates; 2.7.3 - Finance & Economics card lists Money & Banking; 2.7.2 - Finance & Economics card lists GDP; 2.7.1 - Finance & Economics card lists Interest Rates; 2.7.0 - Finance & Economics card added; 2.6.0 - Movie & TV Review card added; 2.5.0 - Class VIII Study Explorers card added; Tools card no longer lists the Class 8 pages; 2.4.0 - Law Study Explorers card added; 2.3.0 - Technical Papers card added; 2.2.0 - Life Books card added; 2.1.0 - Zen Series card added; 2.0.0 - home page is now a short guide to the four sections (Speaks, Tools, Book Review, Engineering Articles); article list moved to /engineering/
 layout: default
 title: Home
 ---
@@ -73,7 +73,7 @@ interactive engineering and learning tools, daily book reviews on management and
   </a>
   <a class="hm-card" href="/finance-economics/" style="--c:#1d5fa6">
     <b>Finance &amp; Economics →</b>
-    <span>One idea, three levels: each topic explained for school students, for working people, and as a review for experts, with calculators and quizzes. Nine topics: inflation, interest rates, GDP, money and banking, exchange rates, taxes, stock markets, budgets and deficits, and compounding.</span>
+    <span>One idea, three levels: each topic explained for school students, for working people, and as a review for experts, with calculators and quizzes. Topics include inflation, interest rates, GDP, money and banking, exchange rates, taxes, stock markets, budgets, compounding, and supply and demand, with more on the way.</span>
     <small>School · Working · Expert</small>
   </a>
 </div>

@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<!--
+TOOL:    finance-economics/10-supply-demand.html — Finance & Economics Topic 10: Supply, Demand & Prices (three levels)
+FAMILY:  finance-economics
+VERSION: 1.0.0
+DATE:    2026-11-14
+CHAT:    Finance & Economics series — second set of ten topics; Topic 10 Supply, Demand & Prices
+CHANGES: 1.0.0 - tenth topic: markets, onion-market supply/demand animation, shifts vs movements,
+                 elasticity and farmer's-paradox calculator, the 2026 onion story, MSP 2027-28,
+                 price controls, competition; linear-market control/DWL calculator, cobweb, storage,
+                 market power, information, Indian price policy; Nov 2026 snapshot; quiz per level
+STATUS:  working
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supply, Demand &amp; Prices — Finance &amp; Economics in Three Levels — K Vijay Anand</title>
+<meta name="description" content="Supply, demand and prices explained at three levels — for school students, for working people and as a review for experts: markets, onion prices, elasticity, MSP, price controls and market power.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* Colour-blind-safe palette: blue / orange / purple / gold — no red-vs-green coding */
+  :root{--bg:#f4f2ed;--bg2:#e9e5dc;--card:#fffdf8;--ink:#1d1b18;--soft:#4f4940;--faint:#857c6f;--rule:#d6cdbd;
+        --acc:#1d5fa6;--l1:#d9730d;--l2:#1d5fa6;--l3:#6a3fa0;--gold:#a87908;--hi:#fff1d6}
+  :root[data-theme="dark"]{--bg:#121316;--bg2:#1a1c21;--card:#1f2228;--ink:#ece9e2;--soft:#c3bdb2;--faint:#8c8578;--rule:#33363d;
+        --acc:#6aa8ee;--l1:#f39a3d;--l2:#6aa8ee;--l3:#b28ae6;--gold:#e5b33c;--hi:#3a2f17}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.65}
+  a{color:var(--acc)}
+  .toolbar{position:fixed;top:10px;right:12px;z-index:30;display:flex;gap:8px;font-size:13px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button,.toolbar a{background:var(--card);color:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;text-decoration:none}
+  header{padding:70px 4vw 18px;max-width:1600px;margin:0 auto}
+  .series{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-family:"Playfair Display",serif;font-weight:800;font-size:clamp(46px,7vw,84px);margin:6px 0 4px;line-height:1}
+  .tag{color:var(--soft);max-width:70ch;margin:0}
+  /* level switch */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 0}
+  .levels button{text-align:left;background:var(--card);border:2px solid var(--rule);border-radius:12px;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink)}
+  .levels button b{display:block;font-size:18px}
+  .levels button small{color:var(--faint)}
+  .levels button .k{float:right;font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:0 6px;color:var(--faint)}
+  .levels button[data-l="school"].on{border-color:var(--l1);background:color-mix(in srgb,var(--l1) 10%,var(--card))}
+  .levels button[data-l="working"].on{border-color:var(--l2);background:color-mix(in srgb,var(--l2) 10%,var(--card))}
+  .levels button[data-l="expert"].on{border-color:var(--l3);background:color-mix(in srgb,var(--l3) 10%,var(--card))}
+  /* layout */
+  .wrap{max-width:1600px;margin:0 auto;padding:0 4vw 40px;display:grid;grid-template-columns:250px 1fr;gap:34px}
+  body.nosb .wrap{grid-template-columns:1fr}
+  body.nosb aside{display:none}
+  aside{position:sticky;top:60px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;font-size:14.5px;padding-top:20px}
+  aside .h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  aside a{display:block;padding:5px 10px;border-left:3px solid var(--rule);color:var(--soft);text-decoration:none}
+  aside a:hover{border-left-color:var(--lc);color:var(--ink)}
+  aside .keys{margin-top:18px;color:var(--faint);font-size:12.5px;line-height:1.9}
+  kbd{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--card)}
+  main{min-width:0}
+  .panel{display:none}
+  .panel.on{display:block}
+  #p-school{--lc:var(--l1)} #p-working{--lc:var(--l2)} #p-expert{--lc:var(--l3)}
+  body[data-level="school"]{--lc:var(--l1)} body[data-level="working"]{--lc:var(--l2)} body[data-level="expert"]{--lc:var(--l3)}
+  .lvhead{border-left:6px solid var(--lc);padding:4px 0 4px 16px;margin:24px 0 10px}
+  .lvhead .who{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--lc);font-weight:700}
+  .lvhead p{margin:4px 0 0;color:var(--soft)}
+  section{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:22px 28px;margin:18px 0}
+  h2{font-family:"Playfair Display",serif;font-size:30px;margin:0 0 10px;line-height:1.2}
+  h2 .n{color:var(--lc);margin-right:8px}
+  h3{font-size:18px;margin:20px 0 6px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .box{border:1px solid var(--rule);border-radius:10px;padding:14px 16px;background:var(--bg)}
+  .box b.t{display:block;color:var(--lc);margin-bottom:4px}
+  .def{font-size:20px;border-left:5px solid var(--lc);background:color-mix(in srgb,var(--lc) 8%,transparent);padding:12px 18px;border-radius:0 10px 10px 0;margin:8px 0 14px}
+  .note{background:var(--hi);border-radius:8px;padding:10px 14px;font-size:15.5px}
+  .eq{font-family:"JetBrains Mono",monospace;background:var(--bg2);border-radius:8px;padding:10px 14px;overflow-x:auto;font-size:15px;white-space:pre}
+  table{border-collapse:collapse;width:100%;font-size:15.5px;margin:8px 0}
+  th,td{border-bottom:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:10px}
+  .stat{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--bg)}
+  .stat .v{font-size:28px;white-space:nowrap;font-weight:700;color:var(--acc);line-height:1.1}
+  .stat .l{font-size:13.5px;color:var(--soft)}
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;margin:10px 0}
+  .ctl label{font-size:13.5px;color:var(--soft);display:flex;flex-direction:column;gap:3px}
+  .ctl input[type=number]{width:120px;font:inherit;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)}
+  .ctl input[type=range]{width:200px}
+  .btn{background:var(--lc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--lc);border:1px solid var(--lc)}
+  .out{font-size:18px;margin:8px 0}
+  .out b{color:var(--lc)}
+  svg text{fill:var(--soft);font-family:Inter,sans-serif}
+  /* basket animation */
+  .stage{border:1px dashed var(--rule);border-radius:10px;padding:14px;background:var(--bg);min-height:170px}
+  .stage .yr{font-size:26px;font-weight:700}
+  .stage .yr span{color:var(--l1)}
+  .samosas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:44px}
+  .sam{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:30px solid var(--l1);transition:opacity .3s}
+  .sam.gone{opacity:.15}
+  /* quiz */
+  .q{border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:10px 0;background:var(--bg)}
+  .q p{margin:0 0 8px;font-weight:600}
+  .q button{display:block;width:100%;text-align:left;margin:5px 0;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;font:inherit;color:var(--ink);cursor:pointer}
+  .q button.right{border:2px solid var(--l2);background:color-mix(in srgb,var(--l2) 14%,var(--card))}
+  .q button.right::after{content:"  ✔ correct";font-weight:700;color:var(--l2)}
+  .q button.wrong{border:2px dashed var(--l1)}
+  .q button.wrong::after{content:"  ✘ not this one";font-weight:700;color:var(--l1)}
+  .q .why{display:none;font-size:15px;color:var(--soft);margin-top:6px}
+  .q.done .why{display:block}
+  .score{font-weight:700;color:var(--lc)}
+  footer{max-width:1600px;margin:0 auto;padding:20px 4vw 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--faint)}
+  footer a{color:var(--soft)}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}aside{display:none}.levels{grid-template-columns:1fr}section{padding:18px}}
+  @media print{.toolbar,aside,.levels{display:none}.panel{display:block!important}.wrap{display:block}}
+</style>
+</head>
+<body data-level="school">
+<div class="toolbar">
+  <a href="./">← Series</a>
+  <button id="sbBtn" title="Show / hide contents (M)">☰ Contents</button>
+  <button id="themeBtn" title="Light / dark (T)">◐ Theme</button>
+  <button id="fsBtn" title="Full screen (F)">⤢ Full screen</button>
+</div>
+
+<header>
+  <div class="series">Finance &amp; Economics · Topic 10</div>
+  <h1>Supply, Demand &amp; Prices</h1>
+  <p class="tag">Why onions cost ₹20 one month and ₹70 the next, how a market finds its price, why a bumper harvest can make farmers poorer, what MSP and price controls really do, and how economists measure it all. Pick your level.</p>
+  <div class="levels" role="tablist">
+    <button data-l="school" class="on"><span class="k">1</span><b>🎒 School</b><small>The onion market and how prices are set</small></button>
+    <button data-l="working"><span class="k">2</span><b>💼 Working people</b><small>Elasticity, MSP, price controls, competition</small></button>
+    <button data-l="expert"><span class="k">3</span><b>🎓 Experts — review</b><small>Welfare, cobwebs, market power, policy</small></button>
+  </div>
+</header>
+
+<div class="wrap">
+<aside id="toc"></aside>
+<main>
+
+<section id="snapshot" style="border-top:4px solid var(--gold)">
+  <h2>Where things stand — November 2026</h2>
+  <div class="snap">
+    <div class="stat"><div class="v">+116%</div><div class="l">Year-on-year rise in onion prices in October 2026's CPI, the steepest of any key item. Overall food inflation was 8.94%.</div></div>
+    <div class="stat"><div class="v">₹60+ → ₹35</div><div class="l">Retail onions crossed ₹60/kg in August 2026 after weather damage. Buffer-stock onions were sold at ₹35/kg, and "Kanda Express" trains moved supplies to cities.</div></div>
+    <div class="stat"><div class="v">₹2,610</div><div class="l">Wheat MSP per quintal for 2027-28, up just ₹25. The government's cost estimate is ₹1,264, giving a 106% margin.</div></div>
+    <div class="stat"><div class="v">+₹390 / +₹675</div><div class="l">MSP increases per quintal for lentil and safflower: bigger rises for pulses and oilseeds to shift farmers' crop choices</div></div>
+    <div class="stat"><div class="v">₹90,962 cr</div><div class="l">Estimated payout for buying 324 lakh tonnes of rabi crops at MSP in 2027-28</div></div>
+  </div>
+  <p class="note" style="margin-top:12px">This is a dated snapshot. Food prices change with every harvest and monsoon. The ideas below don't change; these numbers will.</p>
+</section>
+
+<!-- ========================= LEVEL 1 : SCHOOL ====================== -->
+<div class="panel on" id="p-school">
+  <div class="lvhead"><div class="who">Level 1 · For school students</div><p>A price is like a message. It tells sellers what to grow and buyers how much to buy.</p></div>
+
+  <section id="s1">
+    <h2><span class="n">1</span>What is a market?</h2>
+    <div class="def">A <b>market</b> is any place, real or online, where <b>buyers</b> and <b>sellers</b> meet to exchange things. The <b>price</b> is decided by both together.</div>
+    <p>Think of the vegetable mandi near your home: farmers and traders bring onions, tomatoes and potatoes; families come to buy. Nobody "sets" the price alone. If there are too many onions, sellers lower the price to sell them; if onions run short, buyers compete and the price climbs.</p>
+  </section>
+
+  <section id="s2">
+    <h2><span class="n">2</span>Demand and supply in simple words</h2>
+    <div class="cols">
+      <div class="box"><b class="t">📉 Demand: what buyers want</b>When onions are <b>cheap</b>, families buy more (extra onion pakodas!). When they are <b>costly</b>, families buy fewer and use them carefully. Lower price → more bought.</div>
+      <div class="box"><b class="t">📈 Supply: what sellers offer</b>When onion prices are <b>high</b>, farmers and traders bring more to market (some take onions out of storage). When prices are <b>low</b>, they bring less. Higher price → more offered.</div>
+      <div class="box"><b class="t">🤝 Equilibrium: where they meet</b>At one special price, the amount buyers want equals the amount sellers bring. That is the <b>market price</b>.</div>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="n">3</span>Watch it happen: the onion market through a year</h2>
+    <p>The <b>blue line</b> is demand and the <b>orange dashed line</b> is supply. Where they cross is the price. Press Play, or press S to see what each event does.</p>
+    <div class="ctl">
+      <button class="btn" id="anPlay">▶ Play (P)</button>
+      <button class="btn ghost" id="anStep">Next event (S)</button>
+      <button class="btn ghost" id="anPause">⏸ Pause (X)</button>
+      <button class="btn ghost" id="anReset">↺ Reset</button>
+    </div>
+    <div class="stage">
+      <div class="yr"><span id="anWhen">Normal times</span> · price <b id="anP" style="color:var(--l3)">₹25/kg</b></div>
+      <svg id="anChart" viewBox="0 0 900 300" style="width:100%;height:auto;margin-top:6px"></svg>
+      <p id="anMsg" style="margin:6px 0 0;color:var(--soft);font-size:17px">Press Play, or press S to see the first event.</p>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="n">4</span>Why do some prices jump so much?</h2>
+    <ul>
+      <li><b>Onions and tomatoes</b> spoil quickly and depend on the weather. One bad rain can cut supply, and people still need them for cooking, so prices jump a lot.</li>
+      <li><b>Salt</b> is cheap to store and always available, and nobody eats more salt just because it is cheaper, so its price barely moves.</li>
+      <li><b>Festivals</b> raise demand for sweets, clothes and flowers, so their prices rise around Diwali and Pongal.</li>
+      <li><b>Cheaper mobile data</b> made Indians use far more of it: lower price, more demand.</li>
+    </ul>
+  </section>
+
+  <section id="s5">
+    <h2><span class="n">5</span>When the government steps in</h2>
+    <div class="cols">
+      <div class="box"><b class="t">🌾 MSP (Minimum Support Price)</b>The government promises to buy crops like wheat and rice at a fixed minimum price, so farmers are not ruined if market prices crash. For 2027-28, wheat's MSP is ₹2,610 per quintal (100 kg).</div>
+      <div class="box"><b class="t">🏪 Ration shops</b>Families with ration cards get rice and wheat free or very cheap from fair-price shops.</div>
+      <div class="box"><b class="t">🧅 Buffer stocks</b>The government stores onions and pulses when they are cheap and sells them when prices shoot up, as it did in 2026 at ₹35/kg.</div>
+      <div class="box"><b class="t">🚫 Export limits</b>When prices at home rise too high, the government may stop or tax exports so more stays in India, but this hurts farmers who earn from selling abroad.</div>
+    </div>
+  </section>
+
+  <section id="s6">
+    <h2><span class="n">6</span>Words to remember</h2>
+    <table>
+      <tr><th>Word</th><th>Meaning</th></tr>
+      <tr><td>Market</td><td>Where buyers and sellers meet</td></tr>
+      <tr><td>Demand</td><td>How much buyers want at each price</td></tr>
+      <tr><td>Supply</td><td>How much sellers offer at each price</td></tr>
+      <tr><td>Equilibrium price</td><td>The price where demand equals supply</td></tr>
+      <tr><td>Shortage</td><td>Buyers want more than is available</td></tr>
+      <tr><td>Surplus</td><td>More is available than buyers want</td></tr>
+      <tr><td>MSP</td><td>Minimum Support Price: the government's guaranteed price for certain crops</td></tr>
+    </table>
+  </section>
+
+  <section id="s7">
+    <h2><span class="n">7</span>Check yourself</h2>
+    <div class="quiz" data-quiz="school"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 2 : WORKING ===================== -->
+<div class="panel" id="p-working">
+  <div class="lvhead"><div class="who">Level 2 · For working people</div><p>Reading price changes in your daily life and work: shifts versus movements, elasticity, the 2026 onion story, MSP, price controls, and competition.</p></div>
+
+  <section id="w1">
+    <h2><span class="n">1</span>Shifts vs movements</h2>
+    <ul>
+      <li><b>A movement along a curve</b> is caused by the item's own price: onions get cheaper, so you buy more.</li>
+      <li><b>A shift of demand</b> comes from income, tastes, prices of related goods and expectations. Higher salaries raise demand for cars; costlier petrol raises demand for EVs (substitutes) and cuts demand for big cars (complements of fuel).</li>
+      <li><b>A shift of supply</b> comes from weather, input costs (diesel, fertiliser, wages), technology, taxes and the number of sellers. A drought shifts supply left; a new cold-storage chain shifts it right.</li>
+      <li><b>Expectations matter</b>: if traders expect higher onion prices next month, they hold stock today, which tightens supply now. That is why stock limits exist.</li>
+    </ul>
+  </section>
+
+  <section id="w2">
+    <h2><span class="n">2</span>Elasticity: how strongly people react</h2>
+    <div class="eq">Price elasticity of demand  =  % change in quantity demanded  ÷  % change in price</div>
+    <table>
+      <tr><th>Inelastic (|e| &lt; 1)</th><th>Elastic (|e| &gt; 1)</th></tr>
+      <tr><td>Salt, medicines, petrol in the short run, staple cereals, onions in cooking</td><td>Restaurant meals, holidays, a particular brand of biscuit, OTT subscriptions</td></tr>
+      <tr><td>Price rises raise sellers' total revenue</td><td>Price rises cut sellers' total revenue</td></tr>
+    </table>
+    <h3>Calculator: the farmer's paradox (a bumper crop can mean a lower income)</h3>
+    <div class="ctl">
+      <label>Change in harvest %<input type="number" id="fpQ" value="20" step="1"></label>
+      <label>Price elasticity of demand |e|<input type="number" id="fpE" value="0.4" step="0.05"></label>
+      <label>Normal price (₹/kg)<input type="number" id="fpP" value="25" step="1"></label>
+    </div>
+    <div class="out" id="fpOut"></div>
+    <p class="note">Because food demand is inelastic, a 20% bigger onion crop can push prices down by far more than 20%, cutting farmers' total income. This is why onion farmers in Nashik sometimes dump crops in good years, and why storage and exports matter.</p>
+  </section>
+
+  <section id="w3">
+    <h2><span class="n">3</span>The 2026 onion story</h2>
+    <ol>
+      <li><b>Summer:</b> the rabi onion crop was stored. The government bought about 1.2 lakh tonnes for its buffer, after raising its procurement price five times to attract sellers.</li>
+      <li><b>Monsoon:</b> heavy, uneven rain damaged crops and spoiled stored onions just as stocks were running down. Supply shifted sharply left.</li>
+      <li><b>August–October:</b> retail prices crossed ₹60/kg. The government released buffer stocks, sold onions at ₹35/kg in cities and ran "Kanda Express" trains, but wholesale prices at Lasalgaon kept rising for a while.</li>
+      <li><b>The CPI effect:</b> onion inflation of 116% year-on-year in October helped push food inflation to 8.94% and headline CPI above the RBI's 6% limit (Topic 01).</li>
+      <li><b>Late October onwards:</b> fresh kharif arrivals began to ease prices. Supply shifted right again.</li>
+    </ol>
+  </section>
+
+  <section id="w4">
+    <h2><span class="n">4</span>MSP: how it works, and the debate</h2>
+    <ul>
+      <li>The CACP recommends MSPs for 22 mandated crops (plus a fair price for sugarcane). Since 2018-19, MSP is set at least 1.5 times the all-India weighted average cost of production.</li>
+      <li><b>2027-28 rabi MSPs:</b> wheat ₹2,610 (+₹25), barley ₹2,286 (+₹136), gram ₹5,958 (+₹83), lentil +₹390, mustard +₹413, safflower +₹675. Larger increases for pulses and oilseeds aim to reduce India's import dependence.</li>
+      <li><b>MSP only matters where there is procurement:</b> wheat and rice are bought on a large scale (mainly in Punjab, Haryana and Madhya Pradesh). Most other crops are sold below MSP in many markets.</li>
+      <li><b>The debate:</b> supporters say MSP is income security and protection against price crashes. Critics point to overflowing FCI godowns, a bias towards water-intensive rice and wheat, and a fiscal cost. Proposals include a legal guarantee for MSP, price-deficiency payments, and income support such as PM-KISAN.</li>
+    </ul>
+  </section>
+
+  <section id="w5">
+    <h2><span class="n">5</span>Price controls: ceilings and floors</h2>
+    <div class="cols">
+      <div class="box"><b class="t">Price ceiling (maximum price)</b>Set below the market price, it creates a <b>shortage</b>: queues, black markets and lower quality. Examples: rent control (old Mumbai tenancies), drug price caps (NPPA), past caps on LPG and kerosene.</div>
+      <div class="box"><b class="t">Price floor (minimum price)</b>Set above the market price, it creates a <b>surplus</b> that someone must buy or store. Examples: MSP with procurement (FCI stocks), minimum wages.</div>
+      <div class="box"><b class="t">Better tools?</b>Targeted cash transfers, buffer stocks, better storage and transport, and open trade usually stabilise prices with fewer side effects than fixed price caps.</div>
+    </div>
+  </section>
+
+  <section id="w6">
+    <h2><span class="n">6</span>When a few sellers set prices</h2>
+    <ul>
+      <li><b>Perfect competition</b> (many small sellers, like a vegetable mandi) has prices close to cost.</li>
+      <li><b>Monopoly or oligopoly</b> (few sellers: telecom, cement, airlines on some routes) lets firms charge above cost. Tariff hikes by a few telecom companies within weeks of each other are a classic oligopoly pattern.</li>
+      <li><b>The Competition Commission of India (CCI)</b> fights cartels and abuse of dominance. It has fined cement, tyre and tech companies.</li>
+      <li><b>Dynamic pricing</b> (cab surge fares, flight and hotel prices, quick-commerce delivery fees) adjusts prices minute by minute to demand. It is efficient in principle but raises fairness and transparency concerns, and is now subject to government guidelines for ride-hailing.</li>
+    </ul>
+  </section>
+
+  <section id="w7">
+    <h2><span class="n">7</span>The global picture</h2>
+    <ul>
+      <li><b>Global food prices</b> are set by supply and demand across countries. India's own export bans (wheat in 2022, rice and onions in 2023–24) moved world prices, a reminder of India's weight in the market.</li>
+      <li><b>Oil:</b> the 2026 West Asia conflict was a textbook supply shock: a small cut in supply against inelastic demand meant a big price jump (Topics 01 and 05).</li>
+      <li><b>Cobweb cycles</b> in onions, pork and coffee are global: high prices one year lead to over-planting, then a glut and low prices the next.</li>
+    </ul>
+  </section>
+
+  <section id="w8">
+    <h2><span class="n">8</span>Check yourself</h2>
+    <div class="quiz" data-quiz="working"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 3 : EXPERT ====================== -->
+<div class="panel" id="p-expert">
+  <div class="lvhead"><div class="who">Level 3 · Review for experts</div><p>Equilibrium and welfare, elasticity measures, controls and deadweight loss, agricultural price dynamics, market power, information problems and Indian price policy.</p></div>
+
+  <section id="e1">
+    <h2><span class="n">1</span>Equilibrium and welfare</h2>
+    <div class="eq">Linear model:   Q_d = a − b·P      Q_s = c + d·P      →   P* = (a − c)/(b + d),   Q* = a − b·P*
+Consumer surplus = area under demand above price;  producer surplus = area above supply below price</div>
+    <ul>
+      <li>The first welfare theorem: competitive equilibrium is Pareto-efficient, given no externalities, complete information and no market power. Most of applied microeconomics studies where these conditions fail.</li>
+      <li>Marshallian surplus is an approximation to compensating or equivalent variation. It is accurate when income effects are small, which is less true for staples that take a large budget share among the poor.</li>
+    </ul>
+    <h3>Calculator: equilibrium, a ceiling or floor, and deadweight loss</h3>
+    <div class="ctl">
+      <label>Demand intercept a<input type="number" id="lmA" value="120" step="1"></label>
+      <label>Demand slope b<input type="number" id="lmB" value="2" step="0.1"></label>
+      <label>Supply intercept c<input type="number" id="lmC" value="0" step="1"></label>
+      <label>Supply slope d<input type="number" id="lmD" value="2" step="0.1"></label>
+      <label>Control<select id="lmT" style="font:inherit;padding:6px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)"><option value="none">none</option><option value="ceil" selected>price ceiling</option><option value="floor">price floor</option></select></label>
+      <label>Controlled price<input type="number" id="lmP" value="20" step="1"></label>
+    </div>
+    <div class="out" id="lmOut"></div>
+    <svg id="lmChart" viewBox="0 0 900 300" style="width:100%;max-width:1000px;height:auto"></svg>
+  </section>
+
+  <section id="e2">
+    <h2><span class="n">2</span>Elasticities</h2>
+    <div class="eq">Own-price ε = (∂Q/∂P)(P/Q)       Income η = (∂Q/∂Y)(Y/Q)       Cross ε_xy = (∂Q_x/∂P_y)(P_y/Q_x)
+Revenue: dR/dP = Q(1 + ε)  → revenue rises with price iff |ε| &lt; 1</div>
+    <ul>
+      <li><b>Engel's law:</b> the food share falls as income rises (η &lt; 1 for food). India's food weight in CPI has fallen from about 46% in the 2012 series to nearly 40% in the 2024 series (Topic 01).</li>
+      <li><b>Short-run vs long-run:</b> demand and supply are more elastic over time (Le Chatelier). Fuel demand barely responds in a month but shifts with vehicle choices over years.</li>
+      <li><b>Estimation:</b> naive OLS of quantity on price mixes supply and demand. You need instruments that shift one curve only, such as rainfall for agricultural supply.</li>
+    </ul>
+  </section>
+
+  <section id="e3">
+    <h2><span class="n">3</span>Agricultural price dynamics</h2>
+    <ul>
+      <li><b>The cobweb model</b> (Kaldor, Ezekiel 1938): planting decisions respond to last season's price, Q_s,t = c + d·P_{t−1}. Prices converge if d/b &lt; 1 and diverge otherwise. Onion acreage cycles in India fit this pattern partially.</li>
+      <li><b>Storage arbitrage</b> (Deaton–Laroque, 1992): competitive storage truncates price falls, making price distributions skewed with occasional spikes when stocks run out. This explains why the late-monsoon onion squeeze recurs before the kharif crop arrives.</li>
+      <li><b>Perishability and thin markets:</b> high post-harvest losses, limited cold storage and fragmented APMC mandis widen the farm-to-retail price spread. Farmers often get only a third or so of the consumer rupee for perishables, according to RBI studies.</li>
+      <li><b>Rational expectations</b> (Muth, 1961) were originally formulated to critique cobweb models: if farmers anticipate cycles, the cycles dampen.</li>
+    </ul>
+  </section>
+
+  <section id="e4">
+    <h2><span class="n">4</span>Market power</h2>
+    <div class="eq">Monopoly markup (Lerner):   (P − MC)/P = 1/|ε|          Cournot with n firms:  (P − MC)/P = HHI / |ε|  (HHI as a share, 0–1)</div>
+    <ul>
+      <li><b>Monopoly deadweight loss</b> is the Harberger triangle (Topic 06); rent-seeking costs (Tullock, Posner) may exceed it.</li>
+      <li><b>Oligopoly models:</b> Cournot (quantities), Bertrand (prices, which gives the competitive result with homogeneous goods), and tacit collusion in repeated games. These are used in CCI cartel cases (cement, tyres) and in merger review.</li>
+      <li><b>Platforms:</b> two-sided markets, network effects and algorithmic pricing raise new questions about collusion and self-preferencing. The Digital Competition Bill debate concerns exactly these.</li>
+    </ul>
+  </section>
+
+  <section id="e5">
+    <h2><span class="n">5</span>Information, frictions and pricing in practice</h2>
+    <ul>
+      <li><b>Akerlof's lemons (1970):</b> asymmetric information can unravel markets such as used cars, insurance (a later topic) and credit. Warranties, certification and reputation are the remedies.</li>
+      <li><b>Search costs</b> sustain price dispersion even for identical goods (Stigler, Diamond paradox). Digital price comparison lowers dispersion but enables personalised pricing.</li>
+      <li><b>Sticky prices:</b> menu costs and fairness norms (Kahneman, Knetsch and Thaler) explain why sellers hesitate to raise prices in shortages, rationing through queues or "out of stock" instead.</li>
+      <li><b>Dynamic pricing</b> improves allocation when supply is fixed (seats, cabs) but faces fairness backlash. Regulators now cap surge multiples for ride-hailing.</li>
+    </ul>
+  </section>
+
+  <section id="e6">
+    <h2><span class="n">6</span>Indian price policy</h2>
+    <ul>
+      <li><b>MSP and procurement:</b> open-ended procurement of wheat and rice creates a floor. Its effects include stock accumulation above buffer norms, fiscal cost through the food subsidy (Topic 08), crop-mix distortion towards water-intensive crops in north-west India, and price-depressing stock sales (OMSS).</li>
+      <li><b>Price Stabilisation Fund:</b> onion and pulse buffers aim to smooth prices but suffer from procurement timing and losses in storage. In 2026, the Central Warehousing Corporation was brought in as the storage agency.</li>
+      <li><b>Trade tools:</b> export bans, minimum export prices and duties stabilise domestic prices at the cost of farmers' incomes and India's reliability as a trading partner. Import-duty cuts on edible oils and pulses are the mirror image.</li>
+      <li><b>Essential Commodities Act stock limits</b> target hoarding but can deter the private storage that smooths prices over time.</li>
+    </ul>
+  </section>
+
+  <section id="e7">
+    <h2><span class="n">7</span>Review checklist: open questions</h2>
+    <ol>
+      <li>Should MSP become a legal entitlement, a price-deficiency payment, or be replaced by income support?</li>
+      <li>How much of food-price volatility is due to supply shocks, and how much to policy-induced uncertainty (sudden bans)?</li>
+      <li>Can private storage and futures markets for onions (currently restricted) do better than public buffers?</li>
+      <li>What is the right competition-policy response to algorithmic and dynamic pricing?</li>
+      <li>With climate change making weather shocks more frequent, how should India's food-price stabilisation framework adapt?</li>
+      <li>How should the RBI treat food-price spikes: look through them, or respond to protect expectations (Topic 01)?</li>
+    </ol>
+  </section>
+
+  <section id="e8">
+    <h2><span class="n">8</span>Check yourself</h2>
+    <div class="quiz" data-quiz="expert"></div>
+  </section>
+</div>
+
+<section id="sources">
+  <h2>Sources and further reading</h2>
+  <ul>
+    <li>MSP 2027-28: <a href="https://agrospectrumindia.com/news/8/34906/cabinet-approves-msp-for-rabi-crops-for-marketing-season-2027-28.html">CCEA release via AgroSpectrum</a>, <a href="https://www.dtnext.in/news/business/centre-raises-wheat-msp-by-rs-25-to-rs-2610quintal-pulses-oilseeds-get-bigger-hike-for-2027-28">DT Next / PTI</a>, <a href="https://www.thehansindia.com/news/national/procurement-of-6-rabi-crops-surges-msp-payments-rise-to-rs-836-lakh-crore-1137046">The Hans India</a>.</li>
+    <li>Onions in 2026: <a href="https://www.freepressjournal.in/business/why-have-onion-prices-crossed-60-per-kg-heres-what-is-driving-the-sudden-surge">Free Press Journal (August)</a>, <a href="https://www.freepressjournal.in/pune/nashik-onion-prices-rise-again-at-lasalgaon-despite-government-intervention">FPJ (Lasalgaon, September)</a>, <a href="https://www.businesstoday.in/latest/economy/story/govt-starts-buffer-onion-releases-as-festive-demand-nears-551618-2026-08-26">Business Today (buffer releases)</a>, <a href="https://www.outlookbusiness.com/news/govt-hikes-onion-procurement-price-by-13-pc-to-2125quintal-5th-revision-this-season">Outlook Business (procurement price)</a>; October CPI onion inflation: <a href="https://www.indexbox.io/blog/indias-retail-inflation-at-609-in-october-2026-as-food-prices-stay-elevated/">IndexBox</a>.</li>
+    <li>Ezekiel, M. (1938), "The Cobweb Theorem", <i>QJE</i>; Muth, J. (1961), "Rational Expectations and the Theory of Price Movements", <i>Econometrica</i>; Deaton, A. and Laroque, G. (1992), "On the Behaviour of Commodity Prices", <i>Review of Economic Studies</i>.</li>
+    <li>Akerlof, G. (1970), "The Market for 'Lemons'", <i>QJE</i>; Kahneman, Knetsch and Thaler (1986), "Fairness as a Constraint on Profit Seeking", <i>AER</i>.</li>
+    <li>Commission for Agricultural Costs and Prices (CACP), price policy reports.</li>
+    <li>Earlier topics: <a href="01-inflation.html">Inflation</a> · <a href="06-taxes.html">Taxes</a> · <a href="08-budgets-deficits.html">Budgets &amp; Deficits</a> · <a href="09-compounding.html">Compounding</a>.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<footer>
+  Finance &amp; Economics in Three Levels · Topic 10 · K Vijay Anand · <a href="09-compounding.html">← Topic 09 Compounding</a> · <a href="./">All topics</a> · <a href="/">Home</a><br>
+  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.
+  Educational content. Figures dated November 2026.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var root=document.documentElement, body=document.body;
+  var $=function(id){return document.getElementById(id);};
+  var cssv=function(n){return getComputedStyle(root).getPropertyValue(n).trim();};
+
+  try{var t=localStorage.getItem("fe-theme");if(t)root.setAttribute("data-theme",t);}catch(e){}
+  function redraw(){anRender();drawLM();}
+  function toggleTheme(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("fe-theme",n);}catch(e){}redraw();}
+  function toggleFS(){if(!document.fullscreenElement){(root.requestFullscreen||function(){}).call(root);}else{document.exitFullscreen();}}
+  function toggleSB(){body.classList.toggle("nosb");}
+  $("themeBtn").onclick=toggleTheme; $("fsBtn").onclick=toggleFS; $("sbBtn").onclick=toggleSB;
+
+  var LV=["school","working","expert"];
+  function setLevel(l,noHash){
+    if(LV.indexOf(l)<0)l="school";
+    body.setAttribute("data-level",l);
+    LV.forEach(function(x){$("p-"+x).classList.toggle("on",x===l);});
+    document.querySelectorAll(".levels button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-l")===l);});
+    buildTOC(l);
+    if(!noHash)history.replaceState(null,"","#"+l);
+    redraw();
+  }
+  document.querySelectorAll(".levels button").forEach(function(b){b.onclick=function(){setLevel(b.getAttribute("data-l"));};});
+  function buildTOC(l){
+    var names={school:"School",working:"Working people",expert:"Experts"};
+    var h='<div class="h">Contents · '+names[l]+'</div><a href="#snapshot">Snapshot · Nov 2026</a>';
+    $("p-"+l).querySelectorAll("section").forEach(function(s){
+      var t=s.querySelector("h2").textContent; h+='<a href="#'+s.id+'">'+t.replace(/^(\d+)/,"$1 · ")+'</a>';
+    });
+    h+='<a href="#sources">Sources</a>';
+    h+='<div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> level<br><kbd>M</kbd> hide contents<br><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause<br><kbd>T</kbd> theme · <kbd>F</kbd> full screen</div>';
+    $("toc").innerHTML=h;
+  }
+
+  /* ---------- Level 1: onion market animation ----------
+     Demand: Q = A - 2P (tonnes, illustrative).  Supply: Q = S + 2P.  Equilibrium P = (A - S)/4 */
+  var EV=[
+    ["Normal times",100,0,"Plenty of onions from the stored summer crop. Price settles at ₹25/kg."],
+    ["Heavy rain damages crops",100,-60,"Supply falls: the supply line shifts left. At the old price buyers want more than is available, so the price jumps."],
+    ["Festival season",120,-60,"Festivals push demand up as well: the demand line shifts right. The price rises further."],
+    ["Government releases buffer stock",120,-20,"Onions from the government's store reach the market. Supply moves back right and the price eases."],
+    ["New harvest arrives",110,20,"The fresh kharif crop floods in. Supply shifts far right and the price falls back."],
+    ["Bumper crop next year",100,60,"Too many onions! The price crashes, which is good for buyers but bad for farmers' income."]
+  ];
+  var anI=0, anTimer=null;
+  function anRender(){
+    var e=EV[anI], A=e[1], S=e[2], P=(A-S)/4, Q=A-2*P;
+    var W=900,H=300,L=70,R=30,T=20,B=40, svg="", cD=cssv("--l2"), cS=cssv("--l1"), cE=cssv("--l3"), ru=cssv("--rule"), fa=cssv("--faint");
+    var qmax=200, pmax=60, X=function(q){return L+(W-L-R)*q/qmax;}, Y=function(p){return T+(H-T-B)*(1-p/pmax);};
+    for(var g=0;g<=pmax;g+=10){svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(g)+'" y2="'+Y(g)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(Y(g)+4)+'" font-size="12" text-anchor="end">₹'+g+'</text>';}
+    svg+='<text x="'+((W+L)/2)+'" y="'+(H-6)+'" font-size="13" text-anchor="middle">quantity of onions →</text><text transform="translate(16,'+((T+H-B)/2)+') rotate(-90)" font-size="13" text-anchor="middle">price per kg →</text>';
+    // previous curves faint
+    if(anI>0){var pe=EV[anI-1];svg+=line(pe[1],-2,fa,"4 4",1.5)+line(pe[2],2,fa,"4 4",1.5);}
+    svg+=line(A,-2,cD,"",4)+line(S,2,cS,"10 6",4);
+    function line(c,s,col,dash,w){var pts=[];for(var p=0;p<=pmax;p+=1){var q=c+s*p;if(q>=0&&q<=qmax)pts.push(X(q)+","+Y(p));}return pts.length?'<polyline points="'+pts.join(" ")+'" fill="none" stroke="'+col+'" stroke-width="'+w+'"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/>':'';}
+    if(P>=0&&P<=pmax){svg+='<line x1="'+L+'" x2="'+X(Q)+'" y1="'+Y(P)+'" y2="'+Y(P)+'" stroke="'+cE+'" stroke-dasharray="3 4"/><circle cx="'+X(Q)+'" cy="'+Y(P)+'" r="8" fill="'+cE+'"/><text x="'+(X(Q)+12)+'" y="'+(Y(P)-10)+'" font-size="15" style="fill:'+cE+';font-weight:700">₹'+P.toFixed(0)+'/kg</text>';}
+    svg+='<line x1="'+(W-300)+'" x2="'+(W-266)+'" y1="'+(T+8)+'" y2="'+(T+8)+'" stroke="'+cD+'" stroke-width="4"/><text x="'+(W-260)+'" y="'+(T+13)+'" font-size="14" style="fill:'+cD+';font-weight:600">demand (solid)</text>';
+    svg+='<line x1="'+(W-300)+'" x2="'+(W-266)+'" y1="'+(T+30)+'" y2="'+(T+30)+'" stroke="'+cS+'" stroke-width="4" stroke-dasharray="10 6"/><text x="'+(W-260)+'" y="'+(T+35)+'" font-size="14" style="fill:'+cS+';font-weight:600">supply (dashed)</text>';
+    if(anI>0)svg+='<text x="'+(W-300)+'" y="'+(T+56)+'" font-size="12" style="fill:'+fa+'">faint lines = before this event</text>';
+    $("anChart").innerHTML=svg;
+    $("anWhen").textContent=e[0]; $("anP").textContent="₹"+P.toFixed(0)+"/kg"; $("anMsg").textContent=e[3];
+  }
+  function anStep(){ if(anI<EV.length-1){anI++;anRender();} else anPause(); }
+  function anPlay(){ if(anTimer)return; if(anI>=EV.length-1)anI=0; anRender(); anTimer=setInterval(anStep,2200); }
+  function anPause(){ clearInterval(anTimer); anTimer=null; }
+  $("anPlay").onclick=anPlay; $("anStep").onclick=function(){anPause();anStep();}; $("anPause").onclick=anPause;
+  $("anReset").onclick=function(){anPause();anI=0;anRender();};
+
+  /* ---------- Level 2: farmer's paradox (constant elasticity) ---------- */
+  function fp(){
+    var dq=(+$("fpQ").value||0)/100, e=Math.max(0.01,+$("fpE").value||0.01), P0=+$("fpP").value||0;
+    var pr=Math.pow(1+dq,-1/e), rev=(1+dq)*pr;
+    $("fpOut").innerHTML="With demand elasticity "+e+", a "+(dq*100).toFixed(0)+"% change in harvest moves the price by <b>"+((pr-1)*100).toFixed(1)+"%</b> (₹"+P0+" → ₹"+(P0*pr).toFixed(1)+"/kg). Farmers' total revenue changes by <b>"+((rev-1)*100).toFixed(1)+"%</b>"+(rev<1&&dq>0?": a bigger crop, but less money.":".");
+  }
+  ["fpQ","fpE","fpP"].forEach(function(id){$(id).oninput=fp;}); fp();
+
+  /* ---------- Level 3: linear market with controls ---------- */
+  function drawLM(){
+    var g=function(id){return +$(id).value||0;};
+    var a=g("lmA"), b=Math.max(0.01,g("lmB")), c=g("lmC"), d=Math.max(0.01,g("lmD")), typ=$("lmT").value, Pc=g("lmP");
+    var Ps=(a-c)/(b+d), Qs=a-b*Ps, Pmax=a/b, txt;
+    var CS0=0.5*(Pmax-Ps)*Qs, Pmin=-c/d, PS0=0.5*(Ps-Math.max(Pmin,0))*Qs+(Pmin<0?0.5*(-Pmin)*0:0);
+    txt="Equilibrium P* = <b>"+Ps.toFixed(2)+"</b>, Q* = <b>"+Qs.toFixed(2)+"</b>. ";
+    var Qd=a-b*Pc, Qsup=c+d*Pc, binding=(typ==="ceil"&&Pc<Ps)||(typ==="floor"&&Pc>Ps), Qt=Qs, dwl=0;
+    if(typ!=="none"){
+      if(!binding)txt+="The "+(typ==="ceil"?"ceiling":"floor")+" is not binding (it is on the wrong side of P*).";
+      else{Qt=Math.min(Qd,Qsup);
+        var Pd_at=(a-Qt)/b, Ps_at=(Qt-c)/d; dwl=0.5*(Pd_at-Ps_at)*(Qs-Qt);
+        txt+=(typ==="ceil"?"Ceiling":"Floor")+" at "+Pc+": demand "+Qd.toFixed(1)+" vs supply "+Qsup.toFixed(1)+" → <b>"+(typ==="ceil"?"shortage ":"surplus ")+Math.abs(Qd-Qsup).toFixed(1)+"</b>. Quantity traded falls to "+Qt.toFixed(1)+". Deadweight loss ≈ <b>"+dwl.toFixed(1)+"</b>"+(typ==="floor"?" (more if the government buys the surplus and stores or wastes it, as with MSP stocks)":" (more if queuing and black markets waste resources)")+".";}
+    }
+    $("lmOut").innerHTML=txt;
+    var W=900,H=300,L=60,R=30,T=20,B=40, svg="", cD=cssv("--l2"), cS=cssv("--l1"), cE=cssv("--l3"), ru=cssv("--rule"), ink=cssv("--ink");
+    var qmax=Math.max(a,Qs*1.6,1), pmax=Math.max(Pmax*1.05,Pc*1.1,1);
+    var X=function(q){return L+(W-L-R)*q/qmax;}, Y=function(p){return T+(H-T-B)*(1-p/pmax);};
+    for(var k=0;k<=4;k++){var pv=pmax*k/4;svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(pv)+'" y2="'+Y(pv)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(Y(pv)+4)+'" font-size="12" text-anchor="end">'+pv.toFixed(0)+'</text>';}
+    svg+='<line x1="'+X(0)+'" y1="'+Y(Pmax)+'" x2="'+X(a)+'" y2="'+Y(0)+'" stroke="'+cD+'" stroke-width="3.5"/>';
+    var p0=Math.max(0,Pmin), p1=pmax; svg+='<line x1="'+X(c+d*p0)+'" y1="'+Y(p0)+'" x2="'+X(Math.min(qmax,c+d*p1))+'" y2="'+Y(Math.min(p1,(qmax-c)/d))+'" stroke="'+cS+'" stroke-width="3.5" stroke-dasharray="10 6"/>';
+    if(typ!=="none"&&binding){
+      var Pd_at2=(a-Qt)/b, Ps_at2=(Qt-c)/d;
+      svg+='<polygon points="'+X(Qt)+','+Y(Pd_at2)+' '+X(Qs)+','+Y(Ps)+' '+X(Qt)+','+Y(Ps_at2)+'" fill="'+cE+'" fill-opacity=".3" stroke="'+cE+'"/>';
+      svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(Pc)+'" y2="'+Y(Pc)+'" stroke="'+ink+'" stroke-width="2" stroke-dasharray="3 4"/><text x="'+(W-R)+'" y="'+(Y(Pc)-6)+'" font-size="13" text-anchor="end" style="fill:'+ink+'">'+(typ==="ceil"?"ceiling":"floor")+' '+Pc+'</text>';
+      svg+='<text x="'+(X(Qs)+10)+'" y="'+(Y(Ps)+20)+'" font-size="13" style="fill:'+cE+';font-weight:600">deadweight loss (shaded)</text>';
+    }
+    svg+='<circle cx="'+X(Qs)+'" cy="'+Y(Ps)+'" r="6" fill="'+cE+'"/>';
+    svg+='<line x1="'+(L+10)+'" x2="'+(L+44)+'" y1="'+(T+6)+'" y2="'+(T+6)+'" stroke="'+cD+'" stroke-width="3.5"/><text x="'+(L+50)+'" y="'+(T+11)+'" font-size="13" style="fill:'+cD+';font-weight:600">demand (solid)</text>';
+    svg+='<line x1="'+(L+180)+'" x2="'+(L+214)+'" y1="'+(T+6)+'" y2="'+(T+6)+'" stroke="'+cS+'" stroke-width="3.5" stroke-dasharray="10 6"/><text x="'+(L+220)+'" y="'+(T+11)+'" font-size="13" style="fill:'+cS+';font-weight:600">supply (dashed)</text>';
+    svg+='<text x="'+((W+L)/2)+'" y="'+(H-6)+'" font-size="12" text-anchor="middle">quantity</text>';
+    $("lmChart").innerHTML=svg;
+  }
+  ["lmA","lmB","lmC","lmD","lmT","lmP"].forEach(function(id){$(id).oninput=drawLM;});
+
+  /* ---------- quizzes ---------- */
+  var Q={
+    school:[
+      ["When onions become cheaper, families usually…",["Buy fewer","Buy more","Stop buying vegetables","Buy only salt"],1,"Lower price → more demanded."],
+      ["Heavy rain destroys part of the onion crop. The price will most likely…",["Fall","Rise","Stay the same","Become zero"],1,"Supply falls while people still need onions, so the price rises."],
+      ["The equilibrium price is where…",["Sellers earn the most","The government decides","Demand equals supply","Prices are lowest"],2,"At that price, what buyers want equals what sellers offer."],
+      ["Why does salt's price hardly change?",["Salt is imported","It stores well, supply is steady and people buy about the same amount","Salt is free","The army makes salt"],1,"Steady supply and steady demand mean a steady price."],
+      ["MSP means…",["Maximum Selling Price","Minimum Support Price the government promises to farmers","Market Sales Profit","Monthly Salary Payment"],1,"A guaranteed floor price for crops like wheat and rice."]
+    ],
+    working:[
+      ["A rise in incomes increases demand for cars. This is a…",["Movement along the demand curve","Shift of the demand curve","Shift of supply","Price ceiling"],1,"Non-price factors such as income shift the whole curve."],
+      ["If demand is inelastic (|e| = 0.4), a 20% bigger harvest lowers the price by about…",["8%","20%","37%","50%"],2,"Constant elasticity: 1.2^(−1/0.4) ≈ 0.63, about −37%, so revenue falls."],
+      ["A price ceiling set below the market price usually causes…",["A surplus","A shortage","No change","Lower demand"],1,"Buyers want more than sellers will supply at the capped price."],
+      ["Wheat MSP for 2027-28 is…",["₹2,275","₹2,425","₹2,610","₹3,000"],2,"Up ₹25 from ₹2,585; the cost estimate is ₹1,264."],
+      ["Which body fights cartels in India?",["RBI","SEBI","Competition Commission of India","NITI Aayog"],2,"The CCI handles cartels, abuse of dominance and mergers."]
+    ],
+    expert:[
+      ["With Q_d = 120 − 2P and Q_s = 2P, equilibrium is…",["P = 20, Q = 80","P = 30, Q = 60","P = 40, Q = 40","P = 60, Q = 0"],1,"120 − 2P = 2P ⇒ P = 30, Q = 60."],
+      ["In the cobweb model, prices converge when…",["Supply is more responsive than demand","|d/b| < 1 (supply less price-responsive than demand)","Always","Never"],1,"Oscillations damp when the supply slope is smaller than the demand slope (in Q-on-P form)."],
+      ["A monopolist facing |ε| = 2 sets a Lerner markup of…",["0","25%","50%","200%"],2,"(P − MC)/P = 1/|ε| = 0.5."],
+      ["Deaton–Laroque storage models predict commodity prices are…",["Normally distributed","Skewed, with occasional spikes when stocks run out","Constant","Falling forever"],1,"Storage truncates low prices; stock-outs cause spikes."],
+      ["To estimate a demand elasticity, a good instrument shifts…",["Demand only","Supply only (such as rainfall for crops)","Both curves","Neither"],1,"A supply shifter traces out the demand curve."]
+    ]
+  };
+  document.querySelectorAll(".quiz").forEach(function(box){
+    var set=Q[box.getAttribute("data-quiz")], score=0, done=0, h="";
+    set.forEach(function(q,qi){
+      h+='<div class="q" data-i="'+qi+'"><p>'+(qi+1)+'. '+q[0]+'</p>';
+      q[1].forEach(function(o,oi){h+='<button data-o="'+oi+'">'+o+'</button>';});
+      h+='<div class="why">'+q[3]+'</div></div>';
+    });
+    h+='<p class="score"></p>'; box.innerHTML=h;
+    box.querySelectorAll(".q").forEach(function(qd){
+      var q=set[+qd.getAttribute("data-i")];
+      qd.querySelectorAll("button").forEach(function(b){
+        b.onclick=function(){
+          if(qd.classList.contains("done"))return;
+          var o=+b.getAttribute("data-o"); qd.classList.add("done"); done++;
+          if(o===q[2])score++; else b.classList.add("wrong");
+          qd.querySelectorAll("button")[q[2]].classList.add("right");
+          box.querySelector(".score").textContent="Score: "+score+" / "+done+(done===set.length?(score===set.length?" — perfect!":" — review the explanations above."):"");
+        };
+      });
+    });
+  });
+
+  document.addEventListener("keydown",function(e){
+    if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
+    var k=e.key.toLowerCase();
+    if(k==="1")setLevel("school"); else if(k==="2")setLevel("working"); else if(k==="3")setLevel("expert");
+    else if(k==="m")toggleSB(); else if(k==="t")toggleTheme(); else if(k==="f")toggleFS();
+    else if(body.getAttribute("data-level")==="school"){
+      if(k==="p"){anPlay();} else if(k==="s"){anPause();anStep();} else if(k==="x"){anPause();}
+    }
+  });
+
+  setLevel((location.hash||"#school").slice(1),true);
+  window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(LV.indexOf(h)>=0)setLevel(h,true);});
+})();
+</script>
+</body>
+</html>

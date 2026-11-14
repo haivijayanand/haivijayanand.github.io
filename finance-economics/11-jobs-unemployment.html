@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<!--
+TOOL:    finance-economics/11-jobs-unemployment.html — Finance & Economics Topic 11: Jobs & Unemployment (three levels)
+FAMILY:  finance-economics
+VERSION: 1.0.0
+DATE:    2026-11-14
+CHAT:    Finance & Economics series — second set of ten topics; Topic 11 Jobs & Unemployment
+CHANGES: 1.0.0 - eleventh topic: who is unemployed, village-of-100 sorting animation, kinds of work,
+                 women and work, PLFS/EPFO measurement, Sep 2026 data, structure, EPF ceiling and labour
+                 codes, jobs-needed calculator, careers; identities, flow-model calculator, DMP, Lewis,
+                 Goldin U, labour regulation, AI; Nov 2026 snapshot; quiz per level
+STATUS:  working
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jobs &amp; Unemployment — Finance &amp; Economics in Three Levels — K Vijay Anand</title>
+<meta name="description" content="Jobs and unemployment explained at three levels — for school students, for working people and as a review for experts: PLFS, participation, women at work, formal jobs, labour codes, search theory and structural change.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* Colour-blind-safe palette: blue / orange / purple / gold — no red-vs-green coding */
+  :root{--bg:#f4f2ed;--bg2:#e9e5dc;--card:#fffdf8;--ink:#1d1b18;--soft:#4f4940;--faint:#857c6f;--rule:#d6cdbd;
+        --acc:#1d5fa6;--l1:#d9730d;--l2:#1d5fa6;--l3:#6a3fa0;--gold:#a87908;--hi:#fff1d6}
+  :root[data-theme="dark"]{--bg:#121316;--bg2:#1a1c21;--card:#1f2228;--ink:#ece9e2;--soft:#c3bdb2;--faint:#8c8578;--rule:#33363d;
+        --acc:#6aa8ee;--l1:#f39a3d;--l2:#6aa8ee;--l3:#b28ae6;--gold:#e5b33c;--hi:#3a2f17}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.65}
+  a{color:var(--acc)}
+  .toolbar{position:fixed;top:10px;right:12px;z-index:30;display:flex;gap:8px;font-size:13px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button,.toolbar a{background:var(--card);color:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;text-decoration:none}
+  header{padding:70px 4vw 18px;max-width:1600px;margin:0 auto}
+  .series{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-family:"Playfair Display",serif;font-weight:800;font-size:clamp(46px,7vw,84px);margin:6px 0 4px;line-height:1}
+  .tag{color:var(--soft);max-width:70ch;margin:0}
+  /* level switch */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 0}
+  .levels button{text-align:left;background:var(--card);border:2px solid var(--rule);border-radius:12px;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink)}
+  .levels button b{display:block;font-size:18px}
+  .levels button small{color:var(--faint)}
+  .levels button .k{float:right;font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:0 6px;color:var(--faint)}
+  .levels button[data-l="school"].on{border-color:var(--l1);background:color-mix(in srgb,var(--l1) 10%,var(--card))}
+  .levels button[data-l="working"].on{border-color:var(--l2);background:color-mix(in srgb,var(--l2) 10%,var(--card))}
+  .levels button[data-l="expert"].on{border-color:var(--l3);background:color-mix(in srgb,var(--l3) 10%,var(--card))}
+  /* layout */
+  .wrap{max-width:1600px;margin:0 auto;padding:0 4vw 40px;display:grid;grid-template-columns:250px 1fr;gap:34px}
+  body.nosb .wrap{grid-template-columns:1fr}
+  body.nosb aside{display:none}
+  aside{position:sticky;top:60px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;font-size:14.5px;padding-top:20px}
+  aside .h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  aside a{display:block;padding:5px 10px;border-left:3px solid var(--rule);color:var(--soft);text-decoration:none}
+  aside a:hover{border-left-color:var(--lc);color:var(--ink)}
+  aside .keys{margin-top:18px;color:var(--faint);font-size:12.5px;line-height:1.9}
+  kbd{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--card)}
+  main{min-width:0}
+  .panel{display:none}
+  .panel.on{display:block}
+  #p-school{--lc:var(--l1)} #p-working{--lc:var(--l2)} #p-expert{--lc:var(--l3)}
+  body[data-level="school"]{--lc:var(--l1)} body[data-level="working"]{--lc:var(--l2)} body[data-level="expert"]{--lc:var(--l3)}
+  .lvhead{border-left:6px solid var(--lc);padding:4px 0 4px 16px;margin:24px 0 10px}
+  .lvhead .who{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--lc);font-weight:700}
+  .lvhead p{margin:4px 0 0;color:var(--soft)}
+  section{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:22px 28px;margin:18px 0}
+  h2{font-family:"Playfair Display",serif;font-size:30px;margin:0 0 10px;line-height:1.2}
+  h2 .n{color:var(--lc);margin-right:8px}
+  h3{font-size:18px;margin:20px 0 6px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .box{border:1px solid var(--rule);border-radius:10px;padding:14px 16px;background:var(--bg)}
+  .box b.t{display:block;color:var(--lc);margin-bottom:4px}
+  .def{font-size:20px;border-left:5px solid var(--lc);background:color-mix(in srgb,var(--lc) 8%,transparent);padding:12px 18px;border-radius:0 10px 10px 0;margin:8px 0 14px}
+  .note{background:var(--hi);border-radius:8px;padding:10px 14px;font-size:15.5px}
+  .eq{font-family:"JetBrains Mono",monospace;background:var(--bg2);border-radius:8px;padding:10px 14px;overflow-x:auto;font-size:15px;white-space:pre}
+  table{border-collapse:collapse;width:100%;font-size:15.5px;margin:8px 0}
+  th,td{border-bottom:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:10px}
+  .stat{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--bg)}
+  .stat .v{font-size:28px;white-space:nowrap;font-weight:700;color:var(--acc);line-height:1.1}
+  .stat .l{font-size:13.5px;color:var(--soft)}
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;margin:10px 0}
+  .ctl label{font-size:13.5px;color:var(--soft);display:flex;flex-direction:column;gap:3px}
+  .ctl input[type=number]{width:120px;font:inherit;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)}
+  .ctl input[type=range]{width:200px}
+  .btn{background:var(--lc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--lc);border:1px solid var(--lc)}
+  .out{font-size:18px;margin:8px 0}
+  .out b{color:var(--lc)}
+  svg text{fill:var(--soft);font-family:Inter,sans-serif}
+  /* basket animation */
+  .stage{border:1px dashed var(--rule);border-radius:10px;padding:14px;background:var(--bg);min-height:170px}
+  .stage .yr{font-size:26px;font-weight:700}
+  .stage .yr span{color:var(--l1)}
+  .samosas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:44px}
+  .sam{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:30px solid var(--l1);transition:opacity .3s}
+  .sam.gone{opacity:.15}
+  /* quiz */
+  .q{border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:10px 0;background:var(--bg)}
+  .q p{margin:0 0 8px;font-weight:600}
+  .q button{display:block;width:100%;text-align:left;margin:5px 0;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;font:inherit;color:var(--ink);cursor:pointer}
+  .q button.right{border:2px solid var(--l2);background:color-mix(in srgb,var(--l2) 14%,var(--card))}
+  .q button.right::after{content:"  ✔ correct";font-weight:700;color:var(--l2)}
+  .q button.wrong{border:2px dashed var(--l1)}
+  .q button.wrong::after{content:"  ✘ not this one";font-weight:700;color:var(--l1)}
+  .q .why{display:none;font-size:15px;color:var(--soft);margin-top:6px}
+  .q.done .why{display:block}
+  .score{font-weight:700;color:var(--lc)}
+  footer{max-width:1600px;margin:0 auto;padding:20px 4vw 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--faint)}
+  footer a{color:var(--soft)}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}aside{display:none}.levels{grid-template-columns:1fr}section{padding:18px}}
+  @media print{.toolbar,aside,.levels{display:none}.panel{display:block!important}.wrap{display:block}}
+</style>
+</head>
+<body data-level="school">
+<div class="toolbar">
+  <a href="./">← Series</a>
+  <button id="sbBtn" title="Show / hide contents (M)">☰ Contents</button>
+  <button id="themeBtn" title="Light / dark (T)">◐ Theme</button>
+  <button id="fsBtn" title="Full screen (F)">⤢ Full screen</button>
+</div>
+
+<header>
+  <div class="series">Finance &amp; Economics · Topic 11</div>
+  <h1>Jobs &amp; Unemployment</h1>
+  <p class="tag">Who counts as working, who counts as unemployed, why only about a third of Indian women are in the labour force, how many jobs India must create each year, and what theory says about why unemployment exists at all. Pick your level.</p>
+  <div class="levels" role="tablist">
+    <button data-l="school" class="on"><span class="k">1</span><b>🎒 School</b><small>A village of 100 people</small></button>
+    <button data-l="working"><span class="k">2</span><b>💼 Working people</b><small>Data, formal jobs, labour codes, careers</small></button>
+    <button data-l="expert"><span class="k">3</span><b>🎓 Experts — review</b><small>Measurement, search, structure, technology</small></button>
+  </div>
+</header>
+
+<div class="wrap">
+<aside id="toc"></aside>
+<main>
+
+<section id="snapshot" style="border-top:4px solid var(--gold)">
+  <h2>Where things stand — November 2026</h2>
+  <div class="snap">
+    <div class="stat"><div class="v">5.0%</div><div class="l">Unemployment rate, ages 15+, in September 2026 (PLFS monthly, current weekly status), down 0.2 points on a year earlier</div></div>
+    <div class="stat"><div class="v">55.5%</div><div class="l">Labour force participation rate (15+): the share of people working or looking for work</div></div>
+    <div class="stat"><div class="v">34.6%</div><div class="l">Women's labour force participation, up from 34.1% a year earlier. Urban women reached 25.9%, the highest since October 2025.</div></div>
+    <div class="stat"><div class="v">9.2% vs 3.9%</div><div class="l">Unemployment among urban women versus rural women, September 2026</div></div>
+    <div class="stat"><div class="v">₹25,000</div><div class="l">New EPF mandatory wage ceiling from 17 September 2026 (up from ₹15,000), widening compulsory PF coverage. The four labour codes are now fully in force.</div></div>
+  </div>
+  <p class="note" style="margin-top:12px">This is a dated snapshot. PLFS now publishes monthly, and EPFO payroll data comes out with a lag. The ideas below don't change; these numbers will.</p>
+</section>
+
+<!-- ========================= LEVEL 1 : SCHOOL ====================== -->
+<div class="panel on" id="p-school">
+  <div class="lvhead"><div class="who">Level 1 · For school students</div><p>Not everyone without a job is "unemployed". Let's see who is who.</p></div>
+
+  <section id="s1">
+    <h2><span class="n">1</span>What is a job, and what is unemployment?</h2>
+    <div class="def">A person is <b>unemployed</b> if they <b>want</b> to work, are <b>able</b> to work and are <b>looking</b> for work, but cannot find any.</div>
+    <p>Your grandmother who has retired is not unemployed: she is not looking for work. Your elder cousin in college is not unemployed either: she is studying. But your neighbour who finished his diploma and has applied to ten companies without success is unemployed.</p>
+  </section>
+
+  <section id="s2">
+    <h2><span class="n">2</span>Watch it happen: a village of 100 grown-ups</h2>
+    <p>Imagine 100 people aged 15 and above, a small copy of India in 2026. Press Play, or press S, and sort them step by step.</p>
+    <div class="ctl">
+      <button class="btn" id="anPlay">▶ Play (P)</button>
+      <button class="btn ghost" id="anStep">Next step (S)</button>
+      <button class="btn ghost" id="anPause">⏸ Pause (X)</button>
+      <button class="btn ghost" id="anReset">↺ Reset</button>
+    </div>
+    <div class="stage" style="display:grid;grid-template-columns:minmax(280px,420px) 1fr;gap:18px;align-items:start">
+      <svg id="anGrid" viewBox="0 0 400 400" style="width:100%;height:auto"></svg>
+      <div>
+        <div class="yr" id="anTitle">100 people aged 15+</div>
+        <div id="anLegend" style="margin:10px 0;font-size:16px;line-height:1.9"></div>
+        <p id="anMsg" style="margin:6px 0 0;color:var(--soft);font-size:17px">Press Play, or press S to start sorting.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="n">3</span>Kinds of work</h2>
+    <div class="cols">
+      <div class="box"><b class="t">🌾 Farming</b>Still employs the largest number of Indians, about 4 in 10 workers, though it produces a much smaller share of GDP (Topic 03).</div>
+      <div class="box"><b class="t">🏭 Industry</b>Factories, construction and mining. Construction gives work to many who leave farming.</div>
+      <div class="box"><b class="t">💻 Services</b>Shops, transport, IT, banks, hospitals, schools and delivery. The fastest-growing area.</div>
+      <div class="box"><b class="t">Ways of working</b><b>Self-employed</b> (a shopkeeper, farmer, tailor), <b>salaried</b> (a monthly pay cheque), <b>casual</b> (paid by the day). In India, more than half of workers are self-employed.</div>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="n">4</span>Why are people unemployed?</h2>
+    <div class="cols">
+      <div class="box"><b class="t">🔍 Searching</b>Just finished college, or moving to a new city: it takes time to find the right job.</div>
+      <div class="box"><b class="t">📅 Season</b>Farm work is busy at sowing and harvest, and quiet in between.</div>
+      <div class="box"><b class="t">🛠️ Skills mismatch</b>Jobs exist, but need skills (welding, coding, nursing) that job seekers don't yet have.</div>
+      <div class="box"><b class="t">📉 Slowdown</b>When the economy slows, companies hire less, and some people lose jobs.</div>
+    </div>
+  </section>
+
+  <section id="s5">
+    <h2><span class="n">5</span>Women and work</h2>
+    <p>In India, only about <b>1 in 3 women</b> aged 15+ is working or looking for work, against about 3 in 4 men. Many women do hours of unpaid work at home, cooking, caring and fetching water, which doesn't count as a "job" in the statistics. Safety, transport, childcare and social norms also matter. When more women can work, families earn more and the whole country grows faster. The number has been rising slowly: 34.6% in September 2026.</p>
+  </section>
+
+  <section id="s6">
+    <h2><span class="n">6</span>Jobs of the future</h2>
+    <ul>
+      <li>Computers and AI are changing many jobs: some tasks disappear, new ones appear, such as data, healthcare, green energy and repair.</li>
+      <li>Skills that last: reading well, maths, communication, teamwork, and learning new things quickly.</li>
+      <li>Hands-on skills (electricians, nurses, technicians) remain in strong demand.</li>
+    </ul>
+  </section>
+
+  <section id="s7">
+    <h2><span class="n">7</span>Words to remember</h2>
+    <table>
+      <tr><th>Word</th><th>Meaning</th></tr>
+      <tr><td>Labour force</td><td>People who are working + people looking for work</td></tr>
+      <tr><td>Unemployed</td><td>Wants work, can work, is looking, but has no job</td></tr>
+      <tr><td>Unemployment rate</td><td>Unemployed ÷ labour force, as a percentage</td></tr>
+      <tr><td>Participation rate</td><td>Labour force ÷ all people aged 15+</td></tr>
+      <tr><td>Self-employed</td><td>Works for oneself: a farmer, shopkeeper or tailor</td></tr>
+      <tr><td>Formal job</td><td>A job with a contract, provident fund and other benefits</td></tr>
+    </table>
+  </section>
+
+  <section id="s8">
+    <h2><span class="n">8</span>Check yourself</h2>
+    <div class="quiz" data-quiz="school"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 2 : WORKING ===================== -->
+<div class="panel" id="p-working">
+  <div class="lvhead"><div class="who">Level 2 · For working people</div><p>How India measures jobs, the structure of employment, formal-job signals, the labour codes, the national jobs challenge, and what it means for your career.</p></div>
+
+  <section id="w1">
+    <h2><span class="n">1</span>How India measures jobs</h2>
+    <table>
+      <tr><th>Source</th><th>What it shows</th><th>Notes</th></tr>
+      <tr><td><b>PLFS</b> (NSO, MoSPI)</td><td>Participation, worker-population ratio and unemployment rate</td><td>Monthly since 2025 (current weekly status), plus quarterly and annual reports. The official benchmark.</td></tr>
+      <tr><td><b>EPFO payroll</b></td><td>Net new members in the Employees' Provident Fund</td><td>A proxy for <b>formal</b> jobs. It mixes in job switches and re-joiners, and changes with coverage rules (such as the new ₹25,000 wage ceiling).</td></tr>
+      <tr><td>ESIC, NPS</td><td>Other formal-sector enrolments</td><td>Partial coverage</td></tr>
+      <tr><td>Private surveys (for example, CMIE)</td><td>High-frequency alternative estimates</td><td>Different definitions, so the numbers differ from PLFS</td></tr>
+    </table>
+    <p class="note">The <b>reference period</b> matters: "current weekly status" asks about the last 7 days; "usual status" looks at the past year. Weekly measures usually show higher unemployment than usual status.</p>
+  </section>
+
+  <section id="w2">
+    <h2><span class="n">2</span>The latest numbers (September 2026, PLFS monthly)</h2>
+    <table>
+      <tr><th>Indicator (15+, current weekly status)</th><th>Value</th></tr>
+      <tr><td>Labour force participation rate</td><td>55.5%</td></tr>
+      <tr><td>Unemployment rate (overall)</td><td>5.0%, down 0.2 points year-on-year</td></tr>
+      <tr><td>Women's participation rate (all India)</td><td>34.6% (34.1% a year earlier)</td></tr>
+      <tr><td>Urban women's participation rate</td><td>25.9%, the highest since October 2025</td></tr>
+      <tr><td>Unemployment: urban women vs rural women</td><td>9.2% vs 3.9%</td></tr>
+    </table>
+    <p>The headline rate is low, but it hides the real issues: <b>underemployment</b> (people working a few hours, or in low-productivity farm work), <b>low participation</b>, especially among women, and high unemployment among <b>educated urban youth</b>, who can afford to wait for a good job.</p>
+  </section>
+
+  <section id="w3">
+    <h2><span class="n">3</span>The structure of Indian employment</h2>
+    <ul>
+      <li><b>Agriculture</b> still employs over 40% of workers, while producing under a fifth of output. Low productivity per worker is the core challenge.</li>
+      <li><b>Self-employment</b> is the largest category, over half of workers. Regular salaried jobs are about a fifth to a quarter; the rest is casual labour.</li>
+      <li><b>Informality:</b> most jobs lack a written contract, paid leave or social security, even within formal enterprises.</li>
+      <li><b>Gig and platform work</b> (delivery, ride-hailing, freelancing) is growing fast. The Code on Social Security recognises gig and platform workers and enables social-security schemes funded partly by aggregators.</li>
+    </ul>
+  </section>
+
+  <section id="w4">
+    <h2><span class="n">4</span>Formal jobs and the new rules</h2>
+    <ul>
+      <li><b>EPFO</b> adds roughly 18–22 lakh net members a month. Many are young first-time workers, and Maharashtra, Karnataka, Tamil Nadu, Gujarat and Haryana dominate.</li>
+      <li><b>The EPF wage ceiling</b> rose from ₹15,000 to ₹25,000 a month from 17 September 2026. More employees now get compulsory PF, and the maximum mandatory employee contribution rises from ₹1,800 to ₹3,000 a month. Your take-home pay may dip, but your retirement savings grow (Topic 09).</li>
+      <li><b>The four labour codes</b> (Wages; Industrial Relations; Social Security; Occupational Safety, Health and Working Conditions) replaced 29 older laws and are now fully operational. Key changes include a uniform definition of wages, a national floor wage, social security for gig workers, fixed-term employment, and higher thresholds for layoff approvals.</li>
+    </ul>
+  </section>
+
+  <section id="w5">
+    <h2><span class="n">5</span>Calculator: how many jobs does India need?</h2>
+    <div class="ctl">
+      <label>Population aged 15+ (crore)<input type="number" id="jnP" value="108" step="1"></label>
+      <label>Its growth % a year<input type="number" id="jnG" value="1.2" step="0.1"></label>
+      <label>Participation rate today %<input type="number" id="jnL0" value="55.5" step="0.1"></label>
+      <label>Target participation % (in N years)<input type="number" id="jnL1" value="60" step="0.5"></label>
+      <label>Target unemployment %<input type="number" id="jnU" value="5" step="0.1"></label>
+      <label>Years N<input type="number" id="jnN" value="10" min="1" max="30"></label>
+    </div>
+    <div class="out" id="jnOut"></div>
+    <p class="note">The inputs are illustrative. The point: the answer is dominated by participation. Bringing more women into work is both the biggest opportunity and the biggest jobs challenge. Moving workers out of farming adds further demand for non-farm jobs on top of this.</p>
+  </section>
+
+  <section id="w6">
+    <h2><span class="n">6</span>What it means for your career</h2>
+    <div class="cols">
+      <div class="box"><b class="t">Real wages</b>A raise below inflation is a pay cut (Topic 01). Track your real wage growth over several years, not one appraisal.</div>
+      <div class="box"><b class="t">Skills compound</b>Skills, like money, compound (Topic 09). Certifications, language and digital skills, and domain depth raise lifetime earnings.</div>
+      <div class="box"><b class="t">Safety nets</b>Keep an emergency fund for job loss (6 months of expenses). Don't withdraw PF when changing jobs; transfer it.</div>
+      <div class="box"><b class="t">Gig income</b>If you freelance or do platform work, plan your own provident fund (PPF/NPS), health insurance and tax (Topic 06).</div>
+    </div>
+  </section>
+
+  <section id="w7">
+    <h2><span class="n">7</span>Jobs and the country, and the world</h2>
+    <ul>
+      <li><b>The demographic dividend:</b> India has the world's largest working-age population. The dividend pays only if there are productive jobs; otherwise it becomes a demographic burden.</li>
+      <li><b>"Jobless growth" worries:</b> fast GDP growth (Topic 03) led by capital-intensive and IT sectors creates fewer jobs per rupee than labour-intensive manufacturing (textiles, footwear, electronics assembly) or construction.</li>
+      <li><b>Policy push:</b> production-linked incentives, the Employment Linked Incentive scheme for first-time formal workers, skilling missions and apprenticeships.</li>
+      <li><b>Global:</b> remittances from Indians working abroad hit records in 2026 (Topic 05). AI is reshaping white-collar work worldwide, including India's IT and back-office services.</li>
+    </ul>
+  </section>
+
+  <section id="w8">
+    <h2><span class="n">8</span>Check yourself</h2>
+    <div class="quiz" data-quiz="working"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 3 : EXPERT ====================== -->
+<div class="panel" id="p-expert">
+  <div class="lvhead"><div class="who">Level 3 · Review for experts</div><p>Measurement identities, search and matching, flow dynamics, India's structural transformation, women's participation, labour regulation, and technology.</p></div>
+
+  <section id="e1">
+    <h2><span class="n">1</span>Measurement</h2>
+    <div class="eq">LFPR = LF / Pop,   WPR = E / Pop,   UR = U / LF = 1 − WPR/LFPR
+Check (Sep 2026, CWS): 1 − 52.7/55.5 ≈ 5.0%</div>
+    <ul>
+      <li><b>Status concepts:</b> usual principal status, plus subsidiary status (365 days), current weekly status (7 days) and current daily status (person-days). Current daily status best captures underemployment in casual and agricultural work.</li>
+      <li><b>The 2025 PLFS redesign</b> (rotational panel, larger sample, rural monthly coverage) enables monthly CWS estimates. It creates breaks with the earlier series, so use the new series for trends after 2025.</li>
+      <li><b>Women's work:</b> the definition of "work" (SNA production boundary versus ILO's 19th ICLS "employment" concept) changes how unpaid production for one's own use is counted. Time-use surveys (2019, 2024) are essential complements.</li>
+    </ul>
+  </section>
+
+  <section id="e2">
+    <h2><span class="n">2</span>Search, matching and flows</h2>
+    <div class="eq">Steady state:  s·(1 − u) = f·u   ⇒   u* = s / (s + f)        (s = separation rate, f = job-finding rate)
+Matching: M = A·U^α·V^(1−α);  tightness θ = V/U;  Beveridge curve: U and V inversely related</div>
+    <div class="ctl">
+      <label>Monthly separation rate s %<input type="number" id="flS" value="1.0" step="0.1"></label>
+      <label>Monthly job-finding rate f %<input type="number" id="flF" value="19" step="0.5"></label>
+      <label>Starting unemployment %<input type="number" id="flU" value="8" step="0.1"></label>
+    </div>
+    <div class="out" id="flOut"></div>
+    <svg id="flChart" viewBox="0 0 900 240" style="width:100%;max-width:1000px;height:auto"></svg>
+    <ul>
+      <li><b>DMP</b> (Diamond–Mortensen–Pissarides): unemployment arises from search frictions even in equilibrium. Policy works through matching efficiency A, vacancy creation and the value of non-work.</li>
+      <li><b>Natural rate, NAIRU and hysteresis:</b> long spells erode skills and attachment, so cyclical unemployment can become structural (Blanchard–Summers).</li>
+      <li>In India, the "wait unemployment" of educated youth queuing for government or formal jobs reflects large wage and security premia on public-sector work, which lowers effective f.</li>
+    </ul>
+  </section>
+
+  <section id="e3">
+    <h2><span class="n">3</span>Structural transformation</h2>
+    <ul>
+      <li><b>The Lewis dual-economy model:</b> surplus farm labour moves to higher-productivity modern sectors. India's movement out of agriculture has been slow and partly reversed (2020–22), with construction and low-end services absorbing the movers rather than manufacturing.</li>
+      <li><b>Premature deindustrialisation</b> (Rodrik, 2016): manufacturing employment shares are peaking at lower levels and lower incomes than in earlier industrialisers. Services-led growth is less labour-absorbing for workers with little schooling.</li>
+      <li><b>Productivity gaps:</b> value added per worker in agriculture is a fraction of that in industry and services. Reallocation alone could add substantially to aggregate productivity (Topic 03, growth accounting).</li>
+      <li><b>Firm size:</b> the "missing middle", where a few large firms coexist with millions of tiny ones, limits formal job creation. Size-dependent regulations historically encouraged staying small.</li>
+    </ul>
+  </section>
+
+  <section id="e4">
+    <h2><span class="n">4</span>Women's labour force participation</h2>
+    <ul>
+      <li><b>Goldin's U-shape:</b> participation falls as household incomes rise from low levels (an income effect and status norms), then rises with education and white-collar jobs. India appears to be near the bottom, with recent increases driven largely by rural self-employment.</li>
+      <li><b>Drivers:</b> norms (purdah, the male-breadwinner ideal), safety and mobility, care burdens, a lack of suitable local jobs, and marriage and migration patterns. Evidence from Indian field experiments (on job information, transport and the framing of norms) shows that participation responds to these constraints.</li>
+      <li><b>Urban paradox:</b> highly educated urban women have high unemployment (9.2% in September 2026). There are jobs, but not ones matching their qualifications, location and safety requirements.</li>
+    </ul>
+  </section>
+
+  <section id="e5">
+    <h2><span class="n">5</span>Labour regulation</h2>
+    <ul>
+      <li><b>The four codes</b> consolidate 29 laws. Industrial Relations raises the threshold for government permission for layoffs, retrenchment and closure from 100 to 300 workers and formalises fixed-term employment. Social Security extends coverage to gig and platform workers, and Wages sets a national floor wage.</li>
+      <li><b>The flexibility vs security debate:</b> evidence on Indian labour-law rigidity (Besley–Burgess, 2004) suggests pro-worker amendments reduced formal manufacturing output and employment. Critics question the coding of state laws and stress that enforcement, not the letter of the law, binds. Contract labour grew as a workaround.</li>
+      <li><b>Minimum wages:</b> in monopsonistic labour markets, moderate minimum wages need not reduce employment (Card–Krueger; Manning). In India the bigger issue is compliance, given high informality.</li>
+    </ul>
+  </section>
+
+  <section id="e6">
+    <h2><span class="n">6</span>Technology and the future of work</h2>
+    <ul>
+      <li><b>Task-based framework</b> (Acemoglu–Autor): technology substitutes for routine tasks and complements non-routine ones, leading to job polarisation in advanced economies.</li>
+      <li><b>Generative AI</b> exposes cognitive, non-routine tasks: writing, coding, customer support. This is relevant to India's IT services, BPO and global-capability-centre employment. The net effect depends on new task creation and on how fast AI is adopted.</li>
+      <li><b>Platformisation</b> reduces search frictions (raising f) but shifts risk to workers. Social-security design for gig workers is a live policy experiment.</li>
+    </ul>
+  </section>
+
+  <section id="e7">
+    <h2><span class="n">7</span>Review checklist: open questions</h2>
+    <ol>
+      <li>Is the recent rise in women's participation a sign of distress-driven self-employment or genuine opportunity?</li>
+      <li>Can services absorb India's farm-labour exit, or is labour-intensive manufacturing indispensable?</li>
+      <li>Will the labour codes' flexibility provisions spur formal hiring, and how will states implement them?</li>
+      <li>How should EPFO's expanded wage ceiling be weighed against lower take-home pay and higher labour costs?</li>
+      <li>How large is AI's displacement risk for India's services-export employment, and what reskilling scale is needed?</li>
+      <li>Which single labour-market indicator best guides monetary and fiscal policy in a largely informal economy?</li>
+    </ol>
+  </section>
+
+  <section id="e8">
+    <h2><span class="n">8</span>Check yourself</h2>
+    <div class="quiz" data-quiz="expert"></div>
+  </section>
+</div>
+
+<section id="sources">
+  <h2>Sources and further reading</h2>
+  <ul>
+    <li>PLFS monthly bulletin, September 2026 (MoSPI): <a href="https://www.mospi.gov.in/uploads/latestReleases/latest_release_1792060004197_6c3ba64d-1853-4b3d-98fb-d750d5ec8a5d_Monthly_Press_note_PLFS_Sep_2026.pdf">press note</a>; summaries by <a href="https://currentaffairs.adda247.com/plfs-september-2026-urban-female-labour-force-participation-reaches-highest-level-since-october-2025/">Adda247</a>, <a href="https://www.policyedge.in/p/urban-womens-labour-participation-rises-in-september-but-unemployment-reaches-92">The Policy Edge</a>, <a href="https://ddindia.co.in/2026/10/urban-workforce-participation-improves-in-september-female-lfpr-reaches-highest-level-since-october-2025/">DD India</a>.</li>
+    <li>EPFO 2026 changes and labour codes: <a href="https://www.impriindia.com/?p=76544">IMPRI (wage ceiling ₹25,000)</a>, <a href="https://businesstoday.in/personal-finance/news/story/epfo-adds-over-19-lakh-members-in-june-rolls-out-easier-online-update-facility-536695-2026-06-13">Business Today (EPFO payroll)</a>, <a href="https://pdicai.org/latestNews.aspx?id=291348">labour codes fully operationalised</a>.</li>
+    <li>Pissarides, C. (2000), <i>Equilibrium Unemployment Theory</i>; Lewis, W. A. (1954), "Economic Development with Unlimited Supplies of Labour".</li>
+    <li>Rodrik, D. (2016), "Premature Deindustrialization", <i>Journal of Economic Growth</i>; Goldin, C. (1995), "The U-Shaped Female Labor Force Function".</li>
+    <li>Besley, T. and Burgess, R. (2004), "Can Labor Regulation Hinder Economic Performance? Evidence from India", <i>QJE</i>; Acemoglu, D. and Autor, D. (2011), "Skills, Tasks and Technologies".</li>
+    <li>Earlier topics: <a href="01-inflation.html">Inflation</a> · <a href="03-gdp.html">GDP</a> · <a href="09-compounding.html">Compounding</a> · <a href="10-supply-demand.html">Supply, Demand &amp; Prices</a>.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<footer>
+  Finance &amp; Economics in Three Levels · Topic 11 · K Vijay Anand · <a href="10-supply-demand.html">← Topic 10 Supply, Demand &amp; Prices</a> · <a href="./">All topics</a> · <a href="/">Home</a><br>
+  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.
+  Educational content. Figures dated November 2026.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var root=document.documentElement, body=document.body;
+  var $=function(id){return document.getElementById(id);};
+  var cssv=function(n){return getComputedStyle(root).getPropertyValue(n).trim();};
+
+  try{var t=localStorage.getItem("fe-theme");if(t)root.setAttribute("data-theme",t);}catch(e){}
+  function redraw(){anRender();drawFL();}
+  function toggleTheme(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("fe-theme",n);}catch(e){}redraw();}
+  function toggleFS(){if(!document.fullscreenElement){(root.requestFullscreen||function(){}).call(root);}else{document.exitFullscreen();}}
+  function toggleSB(){body.classList.toggle("nosb");}
+  $("themeBtn").onclick=toggleTheme; $("fsBtn").onclick=toggleFS; $("sbBtn").onclick=toggleSB;
+
+  var LV=["school","working","expert"];
+  function setLevel(l,noHash){
+    if(LV.indexOf(l)<0)l="school";
+    body.setAttribute("data-level",l);
+    LV.forEach(function(x){$("p-"+x).classList.toggle("on",x===l);});
+    document.querySelectorAll(".levels button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-l")===l);});
+    buildTOC(l);
+    if(!noHash)history.replaceState(null,"","#"+l);
+    redraw();
+  }
+  document.querySelectorAll(".levels button").forEach(function(b){b.onclick=function(){setLevel(b.getAttribute("data-l"));};});
+  function buildTOC(l){
+    var names={school:"School",working:"Working people",expert:"Experts"};
+    var h='<div class="h">Contents · '+names[l]+'</div><a href="#snapshot">Snapshot · Nov 2026</a>';
+    $("p-"+l).querySelectorAll("section").forEach(function(s){
+      var t=s.querySelector("h2").textContent; h+='<a href="#'+s.id+'">'+t.replace(/^(\d+)/,"$1 · ")+'</a>';
+    });
+    h+='<a href="#sources">Sources</a>';
+    h+='<div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> level<br><kbd>M</kbd> hide contents<br><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause<br><kbd>T</kbd> theme · <kbd>F</kbd> full screen</div>';
+    $("toc").innerHTML=h;
+  }
+
+  /* ---------- Level 1: village of 100 (approx. Sep 2026 CWS: LFPR 55.5%, UR 5%) ----------
+     categories: 0 unsorted, 1 not in LF: studying, 2 not in LF: home duties, 3 not in LF: retired/other, 4 employed, 5 unemployed */
+  var NLF_STUDY=9, NLF_HOME=27, NLF_OTHER=9, EMP=52, UNEMP=3; // sums to 100; LF=55, UR=3/55≈5.5%, LFPR 55%
+  var anS=0, anTimer=null, MAXS=4;
+  function cats(step){
+    var arr=[];for(var i=0;i<100;i++)arr.push(0);
+    if(step>=1){for(i=0;i<45;i++)arr[i]=(i<NLF_STUDY?1:(i<NLF_STUDY+NLF_HOME?2:3));for(i=45;i<100;i++)arr[i]=9;}
+    if(step>=2){for(i=45;i<100;i++)arr[i]=(i<45+EMP?4:5);}
+    return arr;
+  }
+  function anRender(){
+    var c={0:cssv("--rule"),1:cssv("--l3"),2:cssv("--gold"),3:cssv("--faint"),4:cssv("--l2"),5:cssv("--l1"),9:cssv("--acc")};
+    var arr=cats(Math.min(anS,2)), svg="";
+    for(var i=0;i<100;i++){var r=Math.floor(i/10),col=i%10,x=20+col*38,y=20+r*38, cat=arr[i];
+      svg+='<circle cx="'+(x+14)+'" cy="'+(y+10)+'" r="7" fill="'+c[cat]+'"/><rect x="'+(x+6)+'" y="'+(y+19)+'" width="16" height="13" rx="5" fill="'+c[cat]+'"/>';
+      if(cat===5)svg+='<text x="'+(x+14)+'" y="'+(y+6)+'" font-size="11" text-anchor="middle" style="fill:'+cssv("--ink")+';font-weight:700">?</text>';
+    }
+    $("anGrid").innerHTML=svg;
+    var L="", title="100 people aged 15+", msg;
+    function sw(col,txt,shape){return '<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:'+col+';vertical-align:middle;margin-right:8px"></span>'+txt+'<br>';}
+    if(anS===0){msg="Press Play, or press S to start sorting.";L=sw(c[0],"Everyone, not yet sorted");}
+    else if(anS===1){title="Who is NOT in the labour force?";L=sw(c[1],NLF_STUDY+" studying")+sw(c[2],NLF_HOME+" doing home duties (mostly women)")+sw(c[3],NLF_OTHER+" retired, ill or not seeking work")+sw(c[9],"55 in the labour force (working or looking)");msg="45 of the 100 are neither working nor looking for work. They are outside the labour force, not unemployed. So the participation rate is 55%.";}
+    else if(anS===2){title="Inside the labour force: working or looking?";L=sw(c[4],EMP+" working (farm, shop, factory, office)")+sw(c[5],UNEMP+" looking for work but without a job (marked ?)")+'<span style="color:var(--faint)">…plus the 45 outside the labour force (purple, gold and grey, as in step 1)</span><br>';msg="Only "+UNEMP+" people are unemployed, but the rate is counted out of the labour force: "+UNEMP+" ÷ 55 ≈ 5%.";}
+    else if(anS===3){title="The two key numbers";L='<b>Participation rate</b> = 55 ÷ 100 = <b>55%</b><br><b>Unemployment rate</b> = 3 ÷ 55 ≈ <b>5%</b><br>';msg="These match India's September 2026 survey closely: 55.5% participation and 5.0% unemployment.";}
+    else {title="The hidden story";L=sw(c[2],"Most of the 27 doing home duties are women")+sw(c[4],"Many of the 52 workers are in farming or casual work");msg="A low unemployment rate doesn't mean everyone has a good job. Many people work only part-time or earn very little, and many women who would like to work are not counted as looking.";}
+    $("anTitle").textContent=title; $("anLegend").innerHTML=L; $("anMsg").textContent=msg;
+  }
+  function anStep(){ if(anS<MAXS){anS++;anRender();} else anPause(); }
+  function anPlay(){ if(anTimer)return; if(anS>=MAXS)anS=0; anTimer=setInterval(anStep,2600); }
+  function anPause(){ clearInterval(anTimer); anTimer=null; }
+  $("anPlay").onclick=anPlay; $("anStep").onclick=function(){anPause();anStep();}; $("anPause").onclick=anPause;
+  $("anReset").onclick=function(){anPause();anS=0;anRender();};
+
+  /* ---------- Level 2: jobs needed ---------- */
+  function jn(){
+    var g=function(id){return +$(id).value||0;};
+    var P=g("jnP")*1e7, gr=g("jnG")/100, L0=g("jnL0")/100, L1=g("jnL1")/100, U=g("jnU")/100, N=Math.max(1,Math.round(g("jnN")));
+    var U0=0.05, E0=P*L0*(1-U0), P1=P*Math.pow(1+gr,N), E1=P1*L1*(1-U), per=(E1-E0)/N;
+    var demo=(P1-P)*L0*(1-U0)/N;
+    $("jnOut").innerHTML="Workers today ≈ <b>"+(E0/1e7).toFixed(1)+" crore</b>. To reach "+(L1*100).toFixed(1)+"% participation at "+(U*100).toFixed(1)+"% unemployment in "+N+" years, India needs ≈ <b>"+(E1/1e7).toFixed(1)+" crore</b> workers, which is about <b>"+(per/1e5).toFixed(0)+" lakh new jobs a year</b>. Of these, population growth alone accounts for ≈ "+(demo/1e5).toFixed(0)+" lakh a year, and higher participation for ≈ "+((per-demo)/1e5).toFixed(0)+" lakh.";
+  }
+  ["jnP","jnG","jnL0","jnL1","jnU","jnN"].forEach(function(id){$(id).oninput=jn;}); jn();
+
+  /* ---------- Level 3: flow model ---------- */
+  function drawFL(){
+    var s=(+$("flS").value||0)/100, f=(+$("flF").value||0)/100, u0=(+$("flU").value||0)/100;
+    var us=(s+f)>0?s/(s+f):0, path=[u0], N=36; for(var k=0;k<N;k++)path.push(path[k]+s*(1-path[k])-f*path[k]);
+    var hl=(s+f)>0?Math.log(2)/(-Math.log(1-s-f)):Infinity;
+    $("flOut").innerHTML="Steady-state unemployment u* = s/(s+f) = <b>"+(us*100).toFixed(2)+"%</b>. The gap to steady state halves every ≈ <b>"+(isFinite(hl)?hl.toFixed(1):"–")+" months</b>. Average spell length ≈ "+(f>0?(1/f).toFixed(1):"–")+" months.";
+    var W=900,H=240,L=60,R=20,T=20,B=34, svg="", c1=cssv("--l2"), c2=cssv("--l1"), ru=cssv("--rule");
+    var ymax=Math.max(u0,us)*1.25+0.005, X=function(k){return L+(W-L-R)*k/N;}, Y=function(v){return T+(H-T-B)*(1-v/ymax);};
+    for(var q=0;q<=4;q++){var gv=ymax*q/4;svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(gv)+'" y2="'+Y(gv)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(Y(gv)+4)+'" font-size="12" text-anchor="end">'+(gv*100).toFixed(1)+'%</text>';}
+    svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(us)+'" y2="'+Y(us)+'" stroke="'+c2+'" stroke-width="2.5" stroke-dasharray="7 5"/><text x="'+(W-R)+'" y="'+(Y(us)-6)+'" font-size="13" text-anchor="end" style="fill:'+c2+';font-weight:600">steady state u* (dashed)</text>';
+    var d="";path.forEach(function(v,k){d+=(k?"L":"M")+X(k)+","+Y(v);});svg+='<path d="'+d+'" fill="none" stroke="'+c1+'" stroke-width="3.5"/>';
+    for(k=0;k<=N;k+=6)svg+='<text x="'+X(k)+'" y="'+(H-B+18)+'" font-size="12" text-anchor="middle">'+k+' m</text>';
+    $("flChart").innerHTML=svg;
+  }
+  ["flS","flF","flU"].forEach(function(id){$(id).oninput=drawFL;});
+
+  /* ---------- quizzes ---------- */
+  var Q={
+    school:[
+      ["Which person is 'unemployed'?",["A retired grandfather","A college student","A young man looking for work but not finding any","A homemaker not seeking a job"],2,"Unemployed means wanting, able to and looking for work, but without a job."],
+      ["In our village of 100, 55 are in the labour force and 3 are unemployed. The unemployment rate is about…",["3%","5%","55%","45%"],1,"3 ÷ 55 ≈ 5.5%, counted out of the labour force, not out of all 100."],
+      ["Which sector employs the most Indians?",["IT","Farming","Banking","Film industry"],1,"Agriculture still employs over 40% of workers."],
+      ["About what share of Indian women aged 15+ are working or looking for work?",["1 in 10","1 in 3","3 in 4","All"],1,"Women's participation was about 34.6% in September 2026."],
+      ["A farm worker with no work between harvests faces…",["Seasonal unemployment","Retirement","Inflation","A promotion"],0,"Farm work is busy at sowing and harvest, and slack in between."]
+    ],
+    working:[
+      ["India's official monthly job survey is…",["Census","PLFS","GST data","SEBI report"],1,"The Periodic Labour Force Survey from NSO/MoSPI, monthly since 2025."],
+      ["EPFO payroll data mainly tracks…",["All jobs","Formal jobs with provident fund","Farm jobs","Government jobs only"],1,"It is a proxy for formal employment and includes re-joiners and switches."],
+      ["From 17 September 2026, the EPF mandatory wage ceiling is…",["₹6,500","₹15,000","₹25,000","₹50,000"],2,"Raised from ₹15,000, which widens compulsory PF coverage."],
+      ["How many old labour laws did the four labour codes consolidate?",["4","12","29","100"],2,"29 central laws were merged into four codes."],
+      ["The unemployment rate among urban women in September 2026 was about…",["3.9%","5.0%","9.2%","25.9%"],2,"9.2%, against 3.9% for rural women."]
+    ],
+    expert:[
+      ["With LFPR 55.5% and WPR 52.7%, UR ≈…",["2.8%","5.0%","47%","55%"],1,"UR = 1 − WPR/LFPR = 1 − 52.7/55.5 ≈ 5.0%."],
+      ["In the flow model, s = 1% and f = 19% a month give u* of…",["1%","5%","19%","20%"],1,"u* = s/(s+f) = 0.01/0.20 = 5%."],
+      ["Goldin's U-shape describes how women's participation…",["Rises steadily with income","Falls then rises with development","Is constant","Falls forever"],1,"An income effect and norms first lower it; education and white-collar jobs later raise it."],
+      ["The Industrial Relations Code raised the layoff-permission threshold to…",["50 workers","100 workers","300 workers","1,000 workers"],2,"From 100 to 300 workers for government permission for layoffs, retrenchment and closure."],
+      ["'Premature deindustrialisation' (Rodrik) means…",["Manufacturing jobs peak at lower income and share levels than before","Factories close because of strikes","Services shrink","Agriculture grows"],0,"Late developers see manufacturing employment peak earlier and lower."]
+    ]
+  };
+  document.querySelectorAll(".quiz").forEach(function(box){
+    var set=Q[box.getAttribute("data-quiz")], score=0, done=0, h="";
+    set.forEach(function(q,qi){
+      h+='<div class="q" data-i="'+qi+'"><p>'+(qi+1)+'. '+q[0]+'</p>';
+      q[1].forEach(function(o,oi){h+='<button data-o="'+oi+'">'+o+'</button>';});
+      h+='<div class="why">'+q[3]+'</div></div>';
+    });
+    h+='<p class="score"></p>'; box.innerHTML=h;
+    box.querySelectorAll(".q").forEach(function(qd){
+      var q=set[+qd.getAttribute("data-i")];
+      qd.querySelectorAll("button").forEach(function(b){
+        b.onclick=function(){
+          if(qd.classList.contains("done"))return;
+          var o=+b.getAttribute("data-o"); qd.classList.add("done"); done++;
+          if(o===q[2])score++; else b.classList.add("wrong");
+          qd.querySelectorAll("button")[q[2]].classList.add("right");
+          box.querySelector(".score").textContent="Score: "+score+" / "+done+(done===set.length?(score===set.length?" — perfect!":" — review the explanations above."):"");
+        };
+      });
+    });
+  });
+
+  document.addEventListener("keydown",function(e){
+    if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
+    var k=e.key.toLowerCase();
+    if(k==="1")setLevel("school"); else if(k==="2")setLevel("working"); else if(k==="3")setLevel("expert");
+    else if(k==="m")toggleSB(); else if(k==="t")toggleTheme(); else if(k==="f")toggleFS();
+    else if(body.getAttribute("data-level")==="school"){
+      if(k==="p"){anPlay();} else if(k==="s"){anPause();anStep();} else if(k==="x"){anPause();}
+    }
+  });
+
+  setLevel((location.hash||"#school").slice(1),true);
+  window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(LV.indexOf(h)>=0)setLevel(h,true);});
+})();
+</script>
+</body>
+</html>

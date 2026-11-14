@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<!--
+TOOL:    finance-economics/02-interest-rates.html — Finance & Economics Topic 02: Interest Rates (three levels)
+FAMILY:  finance-economics
+VERSION: 1.0.0
+DATE:    2026-11-14
+CHAT:    Finance & Economics series — three levels (school, working, expert); Topic 02 Interest Rates
+CHANGES: 1.0.0 - second topic: definition, simple vs compound animation, India rate map, transmission,
+                 EMI/tenure-shock, effective-yield and bond duration/convexity calculators, markets,
+                 country and global effects, Nov 2026 snapshot (repo 5.50%, Fed 3.75-4.00%); quiz per level
+STATUS:  working
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interest Rates — Finance &amp; Economics in Three Levels — K Vijay Anand</title>
+<meta name="description" content="Interest rates explained at three levels — for school students, for working people and as a review for experts: simple and compound interest, repo rate, EMIs, deposits, bonds, transmission, and global spillovers.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* Colour-blind-safe palette: blue / orange / purple / gold — no red-vs-green coding */
+  :root{--bg:#f4f2ed;--bg2:#e9e5dc;--card:#fffdf8;--ink:#1d1b18;--soft:#4f4940;--faint:#857c6f;--rule:#d6cdbd;
+        --acc:#1d5fa6;--l1:#d9730d;--l2:#1d5fa6;--l3:#6a3fa0;--gold:#a87908;--hi:#fff1d6}
+  :root[data-theme="dark"]{--bg:#121316;--bg2:#1a1c21;--card:#1f2228;--ink:#ece9e2;--soft:#c3bdb2;--faint:#8c8578;--rule:#33363d;
+        --acc:#6aa8ee;--l1:#f39a3d;--l2:#6aa8ee;--l3:#b28ae6;--gold:#e5b33c;--hi:#3a2f17}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.65}
+  a{color:var(--acc)}
+  .toolbar{position:fixed;top:10px;right:12px;z-index:30;display:flex;gap:8px;font-size:13px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button,.toolbar a{background:var(--card);color:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;text-decoration:none}
+  header{padding:70px 4vw 18px;max-width:1600px;margin:0 auto}
+  .series{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-family:"Playfair Display",serif;font-weight:800;font-size:clamp(46px,7vw,84px);margin:6px 0 4px;line-height:1}
+  .tag{color:var(--soft);max-width:70ch;margin:0}
+  /* level switch */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 0}
+  .levels button{text-align:left;background:var(--card);border:2px solid var(--rule);border-radius:12px;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink)}
+  .levels button b{display:block;font-size:18px}
+  .levels button small{color:var(--faint)}
+  .levels button .k{float:right;font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:0 6px;color:var(--faint)}
+  .levels button[data-l="school"].on{border-color:var(--l1);background:color-mix(in srgb,var(--l1) 10%,var(--card))}
+  .levels button[data-l="working"].on{border-color:var(--l2);background:color-mix(in srgb,var(--l2) 10%,var(--card))}
+  .levels button[data-l="expert"].on{border-color:var(--l3);background:color-mix(in srgb,var(--l3) 10%,var(--card))}
+  /* layout */
+  .wrap{max-width:1600px;margin:0 auto;padding:0 4vw 40px;display:grid;grid-template-columns:250px 1fr;gap:34px}
+  body.nosb .wrap{grid-template-columns:1fr}
+  body.nosb aside{display:none}
+  aside{position:sticky;top:60px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;font-size:14.5px;padding-top:20px}
+  aside .h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  aside a{display:block;padding:5px 10px;border-left:3px solid var(--rule);color:var(--soft);text-decoration:none}
+  aside a:hover{border-left-color:var(--lc);color:var(--ink)}
+  aside .keys{margin-top:18px;color:var(--faint);font-size:12.5px;line-height:1.9}
+  kbd{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--card)}
+  main{min-width:0}
+  .panel{display:none}
+  .panel.on{display:block}
+  #p-school{--lc:var(--l1)} #p-working{--lc:var(--l2)} #p-expert{--lc:var(--l3)}
+  body[data-level="school"]{--lc:var(--l1)} body[data-level="working"]{--lc:var(--l2)} body[data-level="expert"]{--lc:var(--l3)}
+  .lvhead{border-left:6px solid var(--lc);padding:4px 0 4px 16px;margin:24px 0 10px}
+  .lvhead .who{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--lc);font-weight:700}
+  .lvhead p{margin:4px 0 0;color:var(--soft)}
+  section{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:22px 28px;margin:18px 0}
+  h2{font-family:"Playfair Display",serif;font-size:30px;margin:0 0 10px;line-height:1.2}
+  h2 .n{color:var(--lc);margin-right:8px}
+  h3{font-size:18px;margin:20px 0 6px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .box{border:1px solid var(--rule);border-radius:10px;padding:14px 16px;background:var(--bg)}
+  .box b.t{display:block;color:var(--lc);margin-bottom:4px}
+  .def{font-size:20px;border-left:5px solid var(--lc);background:color-mix(in srgb,var(--lc) 8%,transparent);padding:12px 18px;border-radius:0 10px 10px 0;margin:8px 0 14px}
+  .note{background:var(--hi);border-radius:8px;padding:10px 14px;font-size:15.5px}
+  .eq{font-family:"JetBrains Mono",monospace;background:var(--bg2);border-radius:8px;padding:10px 14px;overflow-x:auto;font-size:15px;white-space:pre}
+  table{border-collapse:collapse;width:100%;font-size:15.5px;margin:8px 0}
+  th,td{border-bottom:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:10px}
+  .stat{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--bg)}
+  .stat .v{font-size:28px;white-space:nowrap;font-weight:700;color:var(--acc);line-height:1.1}
+  .stat .l{font-size:13.5px;color:var(--soft)}
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;margin:10px 0}
+  .ctl label{font-size:13.5px;color:var(--soft);display:flex;flex-direction:column;gap:3px}
+  .ctl input[type=number]{width:120px;font:inherit;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)}
+  .ctl input[type=range]{width:200px}
+  .btn{background:var(--lc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--lc);border:1px solid var(--lc)}
+  .out{font-size:18px;margin:8px 0}
+  .out b{color:var(--lc)}
+  svg text{fill:var(--soft);font-family:Inter,sans-serif}
+  /* basket animation */
+  .stage{border:1px dashed var(--rule);border-radius:10px;padding:14px;background:var(--bg);min-height:170px}
+  .stage .yr{font-size:26px;font-weight:700}
+  .stage .yr span{color:var(--l1)}
+  .samosas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:44px}
+  .sam{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:30px solid var(--l1);transition:opacity .3s}
+  .sam.gone{opacity:.15}
+  /* quiz */
+  .q{border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:10px 0;background:var(--bg)}
+  .q p{margin:0 0 8px;font-weight:600}
+  .q button{display:block;width:100%;text-align:left;margin:5px 0;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;font:inherit;color:var(--ink);cursor:pointer}
+  .q button.right{border:2px solid var(--l2);background:color-mix(in srgb,var(--l2) 14%,var(--card))}
+  .q button.right::after{content:"  ✔ correct";font-weight:700;color:var(--l2)}
+  .q button.wrong{border:2px dashed var(--l1)}
+  .q button.wrong::after{content:"  ✘ not this one";font-weight:700;color:var(--l1)}
+  .q .why{display:none;font-size:15px;color:var(--soft);margin-top:6px}
+  .q.done .why{display:block}
+  .score{font-weight:700;color:var(--lc)}
+  footer{max-width:1600px;margin:0 auto;padding:20px 4vw 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--faint)}
+  footer a{color:var(--soft)}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}aside{display:none}.levels{grid-template-columns:1fr}section{padding:18px}}
+  @media print{.toolbar,aside,.levels{display:none}.panel{display:block!important}.wrap{display:block}}
+</style>
+</head>
+<body data-level="school">
+<div class="toolbar">
+  <a href="./">← Series</a>
+  <button id="sbBtn" title="Show / hide contents (M)">☰ Contents</button>
+  <button id="themeBtn" title="Light / dark (T)">◐ Theme</button>
+  <button id="fsBtn" title="Full screen (F)">⤢ Full screen</button>
+</div>
+
+<header>
+  <div class="series">Finance &amp; Economics · Topic 02</div>
+  <h1>Interest Rates</h1>
+  <p class="tag">The price of money over time: why it exists, who sets it, how one RBI decision reaches your EMI and your fixed deposit, and why rates in Washington move the rupee. Pick your level.</p>
+  <div class="levels" role="tablist">
+    <button data-l="school" class="on"><span class="k">1</span><b>🎒 School</b><small>Rent for money, and the magic of compounding</small></button>
+    <button data-l="working"><span class="k">2</span><b>💼 Working people</b><small>Repo, EMIs, FDs, bonds, the country and the world</small></button>
+    <button data-l="expert"><span class="k">3</span><b>🎓 Experts — review</b><small>Theory, term structure, corridor, transmission</small></button>
+  </div>
+</header>
+
+<div class="wrap">
+<aside id="toc"></aside>
+<main>
+
+<section id="snapshot" style="border-top:4px solid var(--gold)">
+  <h2>Where things stand — November 2026</h2>
+  <div class="snap">
+    <div class="stat"><div class="v">5.50%</div><div class="l">RBI repo rate, raised 0.25 percentage points on 7 Oct 2026, the first hike of this cycle. The stance changed from neutral to "calibrated tightening".</div></div>
+    <div class="stat"><div class="v">5.25 / 5.75%</div><div class="l">The corridor: Standing Deposit Facility (floor) and Marginal Standing Facility and Bank Rate (ceiling)</div></div>
+    <div class="stat"><div class="v">≈ −0.6%</div><div class="l">Real policy rate measured against current inflation: repo 5.50% minus October CPI inflation of 6.09%</div></div>
+    <div class="stat"><div class="v">3.75–4.00%</div><div class="l">US Federal Reserve target range. It was raised in September 2026, the Fed's first hike since 2023, and held in October.</div></div>
+    <div class="stat"><div class="v">7.1% / 8.2%</div><div class="l">PPF / Senior Citizens Savings Scheme rates for Oct–Dec 2026. The Finance Ministry sets these every quarter, separately from the RBI.</div></div>
+  </div>
+  <p class="note" style="margin-top:12px">This is a dated snapshot. The next RBI policy meeting is on 2–4 December 2026. The ideas below don't change; the numbers in this box will.</p>
+</section>
+
+<!-- ========================= LEVEL 1 : SCHOOL ====================== -->
+<div class="panel on" id="p-school">
+  <div class="lvhead"><div class="who">Level 1 · For school students</div><p>If you have ever lent a friend a pencil and asked for it back, you already know half of this.</p></div>
+
+  <section id="s1">
+    <h2><span class="n">1</span>What is interest?</h2>
+    <div class="def"><b>Interest</b> is the extra money you pay for <b>borrowing</b> money, or the extra money you <b>earn</b> for lending or saving it. The <b>interest rate</b> says how much extra, as a percent per year.</div>
+    <p>Think of interest as <b>rent for money</b>. If you rent a bicycle for a day, you pay rent and give the bicycle back. If you borrow ₹1,000 for a year at 10%, you give back the ₹1,000 <b>plus</b> ₹100 rent. That ₹100 is the interest.</p>
+    <div class="cols">
+      <div class="box"><b class="t">When you save</b>You put ₹1,000 in a bank. The bank uses your money to give loans to others and pays you, say, ₹70 a year for it. You are the lender, so you <b>earn</b> interest.</div>
+      <div class="box"><b class="t">When you borrow</b>Your family takes a loan to buy a scooter. They pay back the loan plus interest every month. Now they are the borrower, so they <b>pay</b> interest.</div>
+      <div class="box"><b class="t">Why should anyone pay rent for money?</b>Because ₹100 today is more useful than ₹100 next year. Prices rise (remember Topic 01, inflation), and the lender gives up the chance to use that money now and takes a risk that it may not come back.</div>
+    </div>
+  </section>
+
+  <section id="s2">
+    <h2><span class="n">2</span>Watch it grow: simple vs compound interest</h2>
+    <p>You save <b>₹1,000</b>. With <b>simple</b> interest you earn interest only on the ₹1,000 you put in. With <b>compound</b> interest you also earn interest on the interest you have already earned. Press Play and watch the gap open up.</p>
+    <div class="ctl">
+      <label>Interest per year: <b id="anRateL">10%</b><input type="range" id="anRate" min="2" max="20" value="10"></label>
+      <button class="btn" id="anPlay">▶ Play (P)</button>
+      <button class="btn ghost" id="anStep">Next year (S)</button>
+      <button class="btn ghost" id="anPause">⏸ Pause (X)</button>
+      <button class="btn ghost" id="anReset">↺ Reset</button>
+    </div>
+    <div class="stage">
+      <div class="yr">Year <span id="anYear">0</span> · simple <b id="anSim" style="color:var(--l2)">₹1,000</b> · compound <b id="anCmp" style="color:var(--l1)">₹1,000</b></div>
+      <svg id="anChart" viewBox="0 0 900 260" style="width:100%;height:auto;margin-top:8px"></svg>
+      <p id="anMsg" style="margin:6px 0 0;color:var(--soft)">Press Play, or press S to move one year at a time.</p>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="n">3</span>How does a bank make money?</h2>
+    <p>A bank is a middle-man for money. It <b>pays</b> savers a lower rate and <b>charges</b> borrowers a higher rate. The difference pays staff salaries, rent and the cost of loans that are never repaid, and what is left is the bank's profit.</p>
+    <div class="cols">
+      <div class="box"><b class="t">Saver gets</b>about 6–7% a year on a fixed deposit</div>
+      <div class="box"><b class="t">Borrower pays</b>about 8–10% on a home loan, more on a personal loan, and much more on a credit card</div>
+      <div class="box"><b class="t">The gap</b>is called the <b>spread</b>. It is how the bank earns its living.</div>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="n">4</span>Who decides the interest rate?</h2>
+    <p>Each bank sets its own rates, but they all follow one main rate: the <b>repo rate</b>, which is set by the <b>Reserve Bank of India (RBI)</b>. The repo rate is the interest the RBI charges banks when they borrow from it for a short time.</p>
+    <p>Think of it as the price of a key ingredient. If the cost of milk goes up, every tea stall raises its price. When the RBI raises the repo rate, banks raise the interest they charge on loans, and slowly on deposits too. In October 2026 the RBI raised the repo rate from 5.25% to <b>5.50%</b>.</p>
+  </section>
+
+  <section id="s5">
+    <h2><span class="n">5</span>Why does the RBI move rates up or down?</h2>
+    <div class="cols">
+      <div class="box"><b class="t">⬆ Raise rates — to cool prices</b>When prices rise too fast, the RBI makes borrowing costlier. People buy fewer cars and houses on loan, shops sell a little less, and price rises slow down. This is why the RBI raised rates when inflation was climbing in 2026.</div>
+      <div class="box"><b class="t">⬇ Cut rates — to warm up the economy</b>When business is slow and jobs are few, the RBI makes loans cheaper. Families and factories borrow and spend more, and the economy speeds up.</div>
+      <div class="box"><b class="t">🎚️ Like a regulator on a fan</b>Turning it up or down is easy. The hard part is that the effect takes many months to show, so the RBI has to guess where the economy is heading, not just where it is today.</div>
+    </div>
+  </section>
+
+  <section id="s6">
+    <h2><span class="n">6</span>Interest in your life</h2>
+    <ul>
+      <li><b>Piggy bank vs bank account:</b> money in a piggy bank earns nothing. In a savings account it earns a little interest, and the bank keeps it safe.</li>
+      <li><b>Start early:</b> because of compounding, ₹1,000 saved at age 10 grows much more by age 40 than ₹1,000 saved at age 30. Time is the secret ingredient.</li>
+      <li><b>Borrow carefully:</b> compounding also works against you on debt. An unpaid credit-card bill can grow very fast.</li>
+      <li><b>Education loans:</b> many students borrow for college and repay after they get a job. Interest is the cost of getting the education earlier.</li>
+    </ul>
+  </section>
+
+  <section id="s7">
+    <h2><span class="n">7</span>Words to remember</h2>
+    <table>
+      <tr><th>Word</th><th>Meaning</th></tr>
+      <tr><td>Principal</td><td>The money you first borrow or save</td></tr>
+      <tr><td>Interest</td><td>The extra paid for using someone else's money</td></tr>
+      <tr><td>Interest rate</td><td>Interest as a percent of the principal, per year</td></tr>
+      <tr><td>Simple interest</td><td>Interest only on the principal</td></tr>
+      <tr><td>Compound interest</td><td>Interest on the principal <i>and</i> on past interest</td></tr>
+      <tr><td>Repo rate</td><td>The rate at which the RBI lends to banks for a short time; it guides all other rates</td></tr>
+      <tr><td>EMI</td><td>Equated Monthly Instalment: the fixed amount paid every month to repay a loan with interest</td></tr>
+    </table>
+  </section>
+
+  <section id="s8">
+    <h2><span class="n">8</span>Check yourself</h2>
+    <div class="quiz" data-quiz="school"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 2 : WORKING ===================== -->
+<div class="panel" id="p-working">
+  <div class="lvhead"><div class="who">Level 2 · For working people</div><p>The rates that matter in India, how a policy change reaches your loan and deposit, and what rates do to markets, the country and the world. This is education, not financial advice.</p></div>
+
+  <section id="w1">
+    <h2><span class="n">1</span>The rates that matter in India</h2>
+    <table>
+      <tr><th>Rate</th><th>Set by</th><th>What it is</th><th>Why you should care</th></tr>
+      <tr><td><b>Repo rate</b></td><td>RBI's Monetary Policy Committee, 6 times a year</td><td>Rate at which RBI lends overnight to banks against government securities</td><td>The anchor for almost every other rate, and the direct benchmark for most floating home loans</td></tr>
+      <tr><td><b>SDF / MSF</b></td><td>RBI</td><td>Floor (banks park surplus cash with RBI) and ceiling (emergency borrowing) of the policy corridor</td><td>Keep overnight market rates close to the repo</td></tr>
+      <tr><td><b>EBLR / RLLR</b></td><td>Each bank: repo + a spread</td><td>External-benchmark lending rate; since Oct 2019 new floating retail and MSME loans are linked to an outside benchmark, mostly repo</td><td>Your home-loan rate. It must be reset at least once every three months.</td></tr>
+      <tr><td><b>MCLR</b></td><td>Each bank, from its funding cost</td><td>Internal benchmark used for older loans and many corporate loans</td><td>It moves more slowly than repo, so check which benchmark your loan uses</td></tr>
+      <tr><td><b>FD and savings rates</b></td><td>Each bank</td><td>What banks pay depositors</td><td>They move with repo, but with a lag and only partly</td></tr>
+      <tr><td><b>G-sec yields</b></td><td>The market</td><td>Return on government bonds (for example, the 10-year benchmark)</td><td>Drive the returns of debt mutual funds, bond prices and long-term borrowing costs</td></tr>
+      <tr><td><b>Small savings rates</b></td><td>Finance Ministry, every quarter</td><td>PPF, SCSS, NSC, Sukanya Samriddhi, post office schemes</td><td>Administered rates. They do not change automatically when repo changes.</td></tr>
+    </table>
+    <p class="note">Bank deposits are insured by DICGC for up to ₹5 lakh per depositor per bank, covering principal and interest together.</p>
+  </section>
+
+  <section id="w2">
+    <h2><span class="n">2</span>From RBI's decision to your EMI: transmission</h2>
+    <div class="cols">
+      <div class="box"><b class="t">1 · RBI moves repo</b>The Governor announces the decision; overnight money-market rates move the same day.</div>
+      <div class="box"><b class="t">2 · Bond yields and T-bills react</b>Often before the decision, because markets price in what they expect.</div>
+      <div class="box"><b class="t">3 · Repo-linked loans reset</b>At the next reset date, within three months. The bank raises your EMI, or more often keeps it the same and stretches the tenure.</div>
+      <div class="box"><b class="t">4 · MCLR loans and deposits follow</b>Over several months, as banks' cost of funds changes.</div>
+      <div class="box"><b class="t">5 · The economy responds</b>Borrowing, spending and investment slow or speed up, and the effect on inflation shows up over the following year or so.</div>
+    </div>
+  </section>
+
+  <section id="w3">
+    <h2><span class="n">3</span>Loans: the EMI calculator, and what a rate hike does</h2>
+    <div class="eq">EMI = P · r · (1+r)^n / ((1+r)^n − 1)        r = annual rate ÷ 12,  n = months</div>
+    <div class="ctl">
+      <label>Loan amount (₹)<input type="number" id="emP" value="5000000" min="1000" step="10000"></label>
+      <label>Interest % per year<input type="number" id="emR" value="8.5" step="0.05"></label>
+      <label>Tenure (years)<input type="number" id="emY" value="20" min="1" max="40"></label>
+      <label>Rate change (percentage points)<input type="number" id="emD" value="0.25" step="0.05"></label>
+    </div>
+    <div class="out" id="emOut"></div>
+    <svg id="emChart" viewBox="0 0 900 280" style="width:100%;max-width:1000px;height:auto"></svg>
+    <ul>
+      <li><b>Early EMIs are mostly interest.</b> The chart shows how each year's payments split between interest and principal. Prepaying in the early years saves the most interest.</li>
+      <li><b>When rates rise, banks usually extend the tenure</b> instead of raising the EMI. The calculator shows how many extra months that adds; if the tenure cannot stretch far enough, the EMI has to rise.</li>
+      <li><b>Credit cards</b> often charge around 3–3.75% <i>a month</i>, which works out to well over 40% a year once compounded. Revolving a card balance is the most expensive borrowing most people ever do.</li>
+    </ul>
+  </section>
+
+  <section id="w4">
+    <h2><span class="n">4</span>Savings: getting the interest right</h2>
+    <ul>
+      <li><b>Compounding frequency matters.</b> 7% compounded quarterly gives an effective annual yield of 7.19%. Compare deposits on their <b>effective annual yield</b>, not on the headline rate.</li>
+      <li><b>Real return = nominal − inflation − tax drag.</b> With inflation at 6% (Topic 01), a 7% FD taxed at 30% loses purchasing power.</li>
+      <li><b>Lock-in vs flexibility.</b> When rates are rising, short deposits let you reinvest at higher rates later. When rates are near a peak, locking in a longer tenure keeps the higher rate. A <b>ladder</b> (deposits maturing in different years) spreads this timing risk.</li>
+      <li><b>Small savings schemes</b> (PPF, SCSS) pay administered rates and offer tax benefits, so they can beat bank FDs after tax even at similar headline rates.</li>
+    </ul>
+    <h3>Effective yield calculator</h3>
+    <div class="ctl">
+      <label>Headline rate %<input type="number" id="efR" value="7" step="0.05"></label>
+      <label>Compounded<select id="efF" style="font:inherit;padding:6px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)"><option value="1">yearly</option><option value="2">half-yearly</option><option value="4" selected>quarterly</option><option value="12">monthly</option></select></label>
+      <label>Years<input type="number" id="efY" value="5" min="1" max="40"></label>
+      <label>Deposit (₹)<input type="number" id="efP" value="100000" step="1000"></label>
+    </div>
+    <div class="out" id="efOut"></div>
+  </section>
+
+  <section id="w5">
+    <h2><span class="n">5</span>Rates and markets: bonds, shares, gold and the rupee</h2>
+    <div class="cols">
+      <div class="box"><b class="t">Bonds — the see-saw</b>When interest rates rise, the prices of existing bonds <b>fall</b>, because new bonds pay more. Long-term bonds and long-duration debt funds fall the most. When rates fall, they gain.</div>
+      <div class="box"><b class="t">Shares</b>Higher rates make borrowing costlier for companies and make safe deposits more attractive than risky shares, so markets often weaken when rate hikes are expected. Banks may benefit if lending rates rise faster than deposit rates.</div>
+      <div class="box"><b class="t">Gold</b>Gold pays no interest, so its appeal falls when real interest rates rise and grows when real rates are low or negative.</div>
+      <div class="box"><b class="t">The rupee</b>Higher Indian rates relative to US rates attract foreign investors and support the rupee. When the Fed raises rates, money tends to flow out of India.</div>
+    </div>
+  </section>
+
+  <section id="w6">
+    <h2><span class="n">6</span>What interest rates do to the country</h2>
+    <div class="cols">
+      <div class="box"><b class="t">Inflation control</b>Rates are the RBI's main tool for keeping inflation near 4%. The October 2026 hike responded to inflation that was rising and spreading beyond food.</div>
+      <div class="box"><b class="t">Growth and jobs</b>Higher rates slow housing, vehicles and business investment. The RBI balances this against inflation; it still projects FY 2026–27 growth at about 7.1%.</div>
+      <div class="box"><b class="t">Government borrowing</b>Interest on public debt is one of the largest items in the Union Budget. Higher yields raise the cost of every new government bond.</div>
+      <div class="box"><b class="t">Savers vs borrowers</b>Rising rates help retirees who live on interest income and hurt indebted households and firms. Falling rates do the reverse. Every rate decision redistributes money between groups.</div>
+      <div class="box"><b class="t">Financial stability</b>Rates held too low for too long can inflate asset bubbles. Rates raised too fast can expose weak banks and borrowers.</div>
+    </div>
+  </section>
+
+  <section id="w7">
+    <h2><span class="n">7</span>The global picture</h2>
+    <ul>
+      <li><b>The Fed sets the world's base rate.</b> The dollar dominates trade and finance, so US rates affect borrowing costs everywhere. In September 2026 the Fed raised its target range to 3.75–4.00%, its first hike since 2023, then held in October; two members wanted another hike.</li>
+      <li><b>Long-term US yields are high.</b> The US 10-year Treasury yield was around 5% in late October 2026. That raises mortgage costs in the US and pulls global capital towards dollar assets.</li>
+      <li><b>Spillovers to India.</b> When the gap between Indian and US rates narrows, foreign portfolio money can leave and the rupee weakens. One reason the RBI gave for its hike was to support the rupee and limit outflows.</li>
+      <li><b>History in brief.</b> US rates reached about 20% in 1980–81 under Paul Volcker to break 1970s inflation. After 2008 they sat near zero for years, and Europe and Japan even tried negative rates. In 2022–23, rates rose at the fastest pace in four decades.</li>
+    </ul>
+  </section>
+
+  <section id="w8">
+    <h2><span class="n">8</span>Sensible habits when rates move</h2>
+    <ul>
+      <li>Know your loan's benchmark (repo-linked or MCLR) and its reset date.</li>
+      <li>After a rate hike, check whether your tenure has been quietly extended. Asking the bank to raise the EMI instead can save a lot of interest.</li>
+      <li>Clear credit-card balances first; no investment reliably earns 40% a year.</li>
+      <li>Compare deposits on effective yield after tax, and stagger maturities.</li>
+      <li>Hold debt funds whose duration matches your time horizon.</li>
+    </ul>
+    <p class="note">This page explains concepts. It is not investment, tax or credit advice. For decisions about your own money, consult a SEBI-registered adviser.</p>
+  </section>
+
+  <section id="w9">
+    <h2><span class="n">9</span>Check yourself</h2>
+    <div class="quiz" data-quiz="working"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 3 : EXPERT ====================== -->
+<div class="panel" id="p-expert">
+  <div class="lvhead"><div class="who">Level 3 · Review for experts</div><p>A refresher on rate theory, the term structure, bond mathematics, the operating framework and the international transmission of rates.</p></div>
+
+  <section id="e1">
+    <h2><span class="n">1</span>Definitions and conventions</h2>
+    <div class="eq">Fisher (exact):     (1 + i) = (1 + r)(1 + π^e)      →  i ≈ r + π^e
+Effective annual:   EAR = (1 + i/m)^m − 1           continuous: EAR = e^i − 1
+Discount factor:    d(t) = 1 / (1 + y_t)^t          present value: PV = Σ CF_t · d(t)</div>
+    <ul>
+      <li><b>Ex-ante vs ex-post real rate.</b> The ex-post real repo rate today is about 5.50 − 6.09 ≈ −0.6%. The relevant policy measure is ex-ante: repo minus <i>expected</i> inflation over the next year. If inflation is expected to fall back towards 4–5%, the ex-ante real rate is positive.</li>
+      <li><b>Quoting conventions.</b> Indian G-secs pay half-yearly coupons and are quoted as semi-annual yields; T-bills are quoted on a discount basis; money-market rates use act/365. Mixing conventions is a common source of small but real errors.</li>
+    </ul>
+  </section>
+
+  <section id="e2">
+    <h2><span class="n">2</span>Theories of the interest rate</h2>
+    <table>
+      <tr><th>Theory</th><th>Core idea</th><th>Associated with</th></tr>
+      <tr><td>Time preference / productivity</td><td>Interest reconciles impatience with the productivity of capital. In the Ramsey rule, r = ρ + θg.</td><td>Böhm-Bawerk, Fisher, Ramsey</td></tr>
+      <tr><td>Loanable funds</td><td>The real rate clears saving and investment</td><td>Classical economists, Wicksell</td></tr>
+      <tr><td>Liquidity preference</td><td>The rate is the price of giving up liquidity; it is set in the money market</td><td>Keynes</td></tr>
+      <tr><td>Natural rate (r*)</td><td>The real rate consistent with output at potential and stable inflation. Policy is tight if r &gt; r*.</td><td>Wicksell; Laubach–Williams; Holston–Laubach–Williams</td></tr>
+    </table>
+    <p>Estimates of r* fell steadily from the 1990s to 2020 in advanced economies, reflecting demographics, a global saving glut, lower productivity growth and demand for safe assets. Whether r* has risen since the pandemic, through fiscal deficits, investment in the energy transition and AI capital spending, is a live debate. A US 10-year yield near 5% suggests markets think it has. RBI research has put India's r* in a range of roughly 1–2% in real terms, with wide uncertainty bands.</p>
+  </section>
+
+  <section id="e3">
+    <h2><span class="n">3</span>Term structure and bond mathematics</h2>
+    <div class="eq">Expectations hypothesis + term premium:   y_n ≈ (1/n) Σ E_t[i_{t+k}] + TP_n
+Modified duration:  D_mod = D_mac / (1 + y/m)          ΔP/P ≈ −D_mod·Δy + ½·C·(Δy)²</div>
+    <ul>
+      <li><b>Shape.</b> A normal upward slope reflects a positive term premium. An <b>inverted</b> curve, with short rates above long ones, signals expected rate cuts and has preceded most US recessions. It is a less reliable signal in India, where the curve is shaped heavily by government supply and liquidity.</li>
+      <li><b>Term premium.</b> It turned negative in the QE era and has rebuilt since 2022 as fiscal supply grew and inflation became more uncertain.</li>
+    </ul>
+    <h3>Bond price and rate-shock calculator</h3>
+    <div class="ctl">
+      <label>Face value (₹)<input type="number" id="bdF" value="100" step="1"></label>
+      <label>Coupon % p.a.<input type="number" id="bdC" value="7" step="0.05"></label>
+      <label>Years to maturity<input type="number" id="bdN" value="10" min="1" max="40"></label>
+      <label>Yield % p.a.<input type="number" id="bdY" value="7" step="0.01"></label>
+      <label>Yield shock (bp)<input type="number" id="bdS" value="25" step="5"></label>
+      <label>Coupons / year<select id="bdM" style="font:inherit;padding:6px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)"><option value="1">1</option><option value="2" selected>2 (G-sec)</option></select></label>
+    </div>
+    <div class="out" id="bdOut"></div>
+  </section>
+
+  <section id="e4">
+    <h2><span class="n">4</span>India's operating framework</h2>
+    <ul>
+      <li><b>The corridor.</b> SDF (floor, 5.25%), repo (5.50%) and MSF/Bank Rate (ceiling, 5.75%): a symmetric ±25 bp corridor. The SDF, introduced in 2022, is uncollateralised, which frees the RBI from needing government securities to absorb surplus liquidity.</li>
+      <li><b>Operating target:</b> the Weighted Average Call Rate (WACR). Liquidity is managed with variable-rate repo and reverse-repo auctions, open market operations, FX swaps and changes to the CRR, so that the WACR stays close to the repo.</li>
+      <li><b>Liquidity versus the rate.</b> A large liquidity surplus can push overnight rates towards the SDF, an effective easing even when the repo is unchanged. Liquidity conditions and the stance therefore need to be read together.</li>
+      <li><b>Stance language.</b> "Calibrated tightening" was last used in October 2018, when no further hike actually followed. The 2026 decision on the stance passed 4–2, while the hike itself was unanimous.</li>
+    </ul>
+  </section>
+
+  <section id="e5">
+    <h2><span class="n">5</span>Transmission: where it works and where it leaks</h2>
+    <table>
+      <tr><th>Segment</th><th>Speed and completeness</th><th>Frictions</th></tr>
+      <tr><td>Money market (WACR, CP, CD, T-bills)</td><td>Fast and nearly complete</td><td>Liquidity conditions</td></tr>
+      <tr><td>Repo-linked (EBLR) loans</td><td>Within a quarter; complete on the benchmark</td><td>Banks can reprice the spread over repo at the margin</td></tr>
+      <tr><td>MCLR loans</td><td>Slow and partial</td><td>Based on the average cost of funds, with an annual reset on many loans</td></tr>
+      <tr><td>Term deposits</td><td>Slow; asymmetric</td><td>Fixed-rate stock; competition from small savings schemes, which floor deposit rates</td></tr>
+      <tr><td>Long G-sec yields</td><td>Driven by expectations, term premium and fiscal supply</td><td>Can move against the repo direction</td></tr>
+    </table>
+    <p>The EBLR regime moved much of the burden of transmission onto borrowers' EMIs, which made transmission faster but larger for households. Asymmetric deposit repricing compresses bank margins in easing cycles and widens them in tightening cycles.</p>
+  </section>
+
+  <section id="e6">
+    <h2><span class="n">6</span>Beyond the policy rate</h2>
+    <ul>
+      <li><b>Effective lower bound.</b> Negative rates were used by the ECB (2014–2022), the BoJ (2016–2024), the SNB, Sweden's Riksbank and Denmark. The evidence shows modest stimulus, with side-effects on bank profitability.</li>
+      <li><b>Quantitative easing and tightening</b> work mainly through the term premium and signalling. With large balance sheets, central banks control short rates by paying interest on reserves (the Fed's IORB is 3.90% from 29 October 2026) rather than through scarce reserves.</li>
+      <li><b>Forward guidance</b> moves the expected path, and therefore long yields, without changing the policy rate.</li>
+      <li><b>Macroprudential tools</b> (risk weights, loan-to-value caps) can target credit booms more precisely than the policy rate.</li>
+    </ul>
+  </section>
+
+  <section id="e7">
+    <h2><span class="n">7</span>International dimension</h2>
+    <div class="eq">Uncovered interest parity:   i − i* ≈ E[Δs]  (+ risk premium)
+Covered interest parity:     F/S = (1 + i)/(1 + i*)</div>
+    <ul>
+      <li><b>The trilemma, or a dilemma.</b> With an open capital account, monetary independence requires a flexible exchange rate. The Rey "global financial cycle" view argues that US monetary policy drives global risk appetite regardless of the exchange-rate regime, which reduces the trilemma to a dilemma.</li>
+      <li><b>The 2026 configuration.</b> Fed tightening (3.75–4.00%) with US 10-year yields around 5% narrows the India–US differential. The RBI's October hike partly aimed to cushion portfolio outflows and rupee pressure. Carry-trade flows are sensitive both to this gap and to expected currency volatility.</li>
+      <li><b>Policy divergence and FX reserves.</b> Emerging-market central banks combine rate moves with FX intervention and reserves as a buffer; the IMF's Integrated Policy Framework formalises this mix.</li>
+    </ul>
+  </section>
+
+  <section id="e8">
+    <h2><span class="n">8</span>Review checklist: open questions</h2>
+    <ol>
+      <li>Has r* risen after the pandemic, and is the rise global (through fiscal supply and the term premium) or specific to each economy?</li>
+      <li>Should an inflation-targeting central bank react to a supply-led price rise with an ex-post negative real rate, or look through it?</li>
+      <li>Does the EBLR regime improve welfare, given that it shifts interest-rate risk to households?</li>
+      <li>How large is the "liquidity channel" in India relative to the repo signal?</li>
+      <li>Do small savings rates impede deposit transmission, and should they be formula-linked to G-sec yields more strictly?</li>
+      <li>How should emerging markets respond when the Fed tightens during a domestic supply shock?</li>
+    </ol>
+  </section>
+
+  <section id="e9">
+    <h2><span class="n">9</span>Check yourself</h2>
+    <div class="quiz" data-quiz="expert"></div>
+  </section>
+</div>
+
+<section id="sources">
+  <h2>Sources and further reading</h2>
+  <ul>
+    <li>RBI, <a href="https://rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=63742">Monetary Policy Statement 2026–27: Resolution of the MPC, 5–7 October 2026</a> and <a href="https://rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=63839">Minutes</a>.</li>
+    <li>Coverage of the October 2026 decision: <a href="https://www.psuconnect.in/bank-news/rbi-hikes-repo-rate-by-25-bps-to-5-50-switches-stance-to-calibrated-tightening">PSU Connect</a>, <a href="https://www.moneylife.in/article/imf-lifts-indias-fy27-outlook-to-7-percentage-as-domestic-demand-holds-firm/article/repo-rate-raised-to-550-percentage-by-rbi-amid-challenging-global-uncertainty-inflation/81869.html">Moneylife</a>, <a href="https://www.drishtiias.com/daily-updates/daily-news-analysis/rbi-mpc-raises-repo-rate-to-5-50/print_manually">Drishti IAS</a>, <a href="https://indianpaycalculator.in/govt-news/repo-rate-5-50-percent-october-2026">Indian Pay Calculator</a> (small savings rates).</li>
+    <li>Federal Reserve, <a href="https://federalreserve.gov/newsevents/pressreleases/monetary20261028a.htm">FOMC statement, 28 October 2026</a>; <a href="https://www.securities.io/fomc-holds-federal-funds-target-range-as-two-members-dissent/">implementation note summary</a>; <a href="https://stockanalysis.com/news/fed-holds-rates-steady-oct-2026/">market reaction</a>.</li>
+    <li>Topic 01 of this series: <a href="01-inflation.html">Inflation</a> (October 2026 CPI figures).</li>
+    <li>Fisher, I. (1930), <i>The Theory of Interest</i>; Keynes, J. M. (1936), <i>The General Theory</i>, ch. 13–15; Wicksell, K. (1898), <i>Interest and Prices</i>.</li>
+    <li>Holston, Laubach and Williams (2017), "Measuring the natural rate of interest: international trends and determinants", <i>Journal of International Economics</i>.</li>
+    <li>Rey, H. (2013), "Dilemma not Trilemma: The Global Financial Cycle and Monetary Policy Independence", Jackson Hole.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<footer>
+  Finance &amp; Economics in Three Levels · Topic 02 · K Vijay Anand · <a href="01-inflation.html">← Topic 01 Inflation</a> · <a href="./">All topics</a> · <a href="/">Home</a><br>
+  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.
+  Educational content, not financial advice. Figures dated November 2026.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var root=document.documentElement, body=document.body;
+  var $=function(id){return document.getElementById(id);};
+  var inr=function(x,d){return "₹"+Number(x).toLocaleString("en-IN",{minimumFractionDigits:d||0,maximumFractionDigits:d||0});};
+  var cssv=function(n){return getComputedStyle(root).getPropertyValue(n).trim();};
+
+  /* ---------- theme / fullscreen / sidebar ---------- */
+  try{var t=localStorage.getItem("fe-theme");if(t)root.setAttribute("data-theme",t);}catch(e){}
+  function redraw(){anRender();drawEMI();}
+  function toggleTheme(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("fe-theme",n);}catch(e){}redraw();}
+  function toggleFS(){if(!document.fullscreenElement){(root.requestFullscreen||function(){}).call(root);}else{document.exitFullscreen();}}
+  function toggleSB(){body.classList.toggle("nosb");}
+  $("themeBtn").onclick=toggleTheme; $("fsBtn").onclick=toggleFS; $("sbBtn").onclick=toggleSB;
+
+  /* ---------- levels ---------- */
+  var LV=["school","working","expert"];
+  function setLevel(l,noHash){
+    if(LV.indexOf(l)<0)l="school";
+    body.setAttribute("data-level",l);
+    LV.forEach(function(x){$("p-"+x).classList.toggle("on",x===l);});
+    document.querySelectorAll(".levels button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-l")===l);});
+    buildTOC(l);
+    if(!noHash)history.replaceState(null,"","#"+l);
+    redraw();
+  }
+  document.querySelectorAll(".levels button").forEach(function(b){b.onclick=function(){setLevel(b.getAttribute("data-l"));};});
+  function buildTOC(l){
+    var names={school:"School",working:"Working people",expert:"Experts"};
+    var h='<div class="h">Contents · '+names[l]+'</div><a href="#snapshot">Snapshot · Nov 2026</a>';
+    $("p-"+l).querySelectorAll("section").forEach(function(s){
+      var t=s.querySelector("h2").textContent; h+='<a href="#'+s.id+'">'+t.replace(/^(\d+)/,"$1 · ")+'</a>';
+    });
+    h+='<a href="#sources">Sources</a>';
+    h+='<div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> level<br><kbd>M</kbd> hide contents<br><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause<br><kbd>T</kbd> theme · <kbd>F</kbd> full screen</div>';
+    $("toc").innerHTML=h;
+  }
+
+  /* ---------- Level 1: simple vs compound animation ---------- */
+  var anY=0, anTimer=null, MAXY=25, P0=1000;
+  function anR(){return +$("anRate").value/100;}
+  function anRender(){
+    var r=anR(), W=900,H=260,L=70,R=10,T=14,B=30, svg="";
+    var ymax=P0*Math.pow(1+r,MAXY)*1.05, bw=(W-L-R)/(MAXY+1);
+    var y=function(v){return T+(H-T-B)*(1-v/ymax);};
+    var ru=cssv("--rule"), c1=cssv("--l2"), c2=cssv("--l1");
+    for(var g=0;g<=4;g++){var gv=ymax*g/4;svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(gv)+'" y2="'+y(gv)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(y(gv)+4)+'" font-size="12" text-anchor="end">'+inr(gv)+'</text>';}
+    for(var i=0;i<=anY;i++){
+      var s=P0*(1+r*i), c=P0*Math.pow(1+r,i), x=L+i*bw;
+      svg+='<rect x="'+(x+bw*0.08)+'" y="'+y(c)+'" width="'+(bw*0.4)+'" height="'+(y(0)-y(c))+'" fill="'+c2+'"/>';
+      svg+='<rect x="'+(x+bw*0.5)+'" y="'+y(s)+'" width="'+(bw*0.4)+'" height="'+(y(0)-y(s))+'" fill="'+c1+'" fill-opacity=".75" stroke="'+c1+'" stroke-dasharray="3 2"/>';
+      if(i%5===0)svg+='<text x="'+(x+bw/2)+'" y="'+(H-10)+'" font-size="12" text-anchor="middle">'+i+'</text>';
+    }
+    svg+='<rect x="'+(L+14)+'" y="'+(T+4)+'" width="14" height="14" fill="'+c2+'"/><text x="'+(L+34)+'" y="'+(T+16)+'" font-size="14" style="fill:'+c2+';font-weight:600">compound (left bar)</text>';
+    svg+='<rect x="'+(L+14)+'" y="'+(T+26)+'" width="14" height="14" fill="'+c1+'" fill-opacity=".75"/><text x="'+(L+34)+'" y="'+(T+38)+'" font-size="14" style="fill:'+c1+';font-weight:600">simple (right bar, dotted edge)</text>';
+    $("anChart").innerHTML=svg;
+    var s=P0*(1+r*anY), c=P0*Math.pow(1+r,anY);
+    $("anYear").textContent=anY; $("anSim").textContent=inr(s); $("anCmp").textContent=inr(c);
+    $("anMsg").textContent = anY===0 ? "Press Play, or press S to move one year at a time."
+      : "Compound is ahead by "+inr(c-s)+". At "+$("anRate").value+"%, compound money doubles in about "+(Math.log(2)/Math.log(1+r)).toFixed(1)+" years; simple takes "+(1/r).toFixed(1)+" years.";
+  }
+  function anStep(){ if(anY<MAXY){anY++;anRender();} else anPause(); }
+  function anPlay(){ if(anTimer)return; if(anY>=MAXY)anY=0; anTimer=setInterval(anStep,600); }
+  function anPause(){ clearInterval(anTimer); anTimer=null; }
+  $("anPlay").onclick=anPlay; $("anStep").onclick=function(){anPause();anStep();}; $("anPause").onclick=anPause;
+  $("anReset").onclick=function(){anPause();anY=0;anRender();};
+  $("anRate").oninput=function(){$("anRateL").textContent=this.value+"%";anRender();};
+
+  /* ---------- Level 2: EMI ---------- */
+  function emi(P,ra,n){var r=ra/1200;return r===0?P/n:P*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);}
+  function drawEMI(){
+    var P=+$("emP").value||0, R=+$("emR").value||0, Y=Math.max(1,Math.min(40,Math.round(+$("emY").value||1))), D=+$("emD").value||0, n=Y*12;
+    var E=emi(P,R,n), tot=E*n, E2=emi(P,R+D,n), r2=(R+D)/1200, txt;
+    txt="EMI <b>"+inr(E)+"</b> · total interest <b>"+inr(tot-P)+"</b> ("+(100*(tot-P)/P).toFixed(0)+"% of the loan). ";
+    if(D!==0){
+      txt+="After a "+(D>0?"+":"")+D+" pp change: EMI would become <b>"+inr(E2)+"</b> ("+(E2>E?"+":"")+inr(E2-E)+"/month)";
+      if(D>0){
+        if(E>P*r2){var n2=-Math.log(1-P*r2/E)/Math.log(1+r2);
+          txt+=", <i>or</i>, keeping the same EMI, the tenure stretches by <b>"+Math.ceil(n2-n)+" months</b> and you pay <b>"+inr(E*Math.ceil(n2)-tot)+"</b> more in total.";}
+        else txt+=". The current EMI would no longer cover even the interest, so the tenure cannot be stretched and the EMI must rise.";
+      } else txt+=".";
+    }
+    $("emOut").innerHTML=txt;
+    /* yearly split chart */
+    var bal=P, r=R/1200, yrs=[]; for(var y=0;y<Y;y++){var ip=0,pp=0;for(var m=0;m<12;m++){var it=bal*r, pr=E-it; ip+=it; pp+=pr; bal-=pr;} yrs.push([ip,pp]);}
+    var W=900,H=280,L=70,Rm=10,T=40,B=34, svg="", c1=cssv("--l1"), c2=cssv("--l2"), ru=cssv("--rule");
+    var ymax=E*12*1.05, bw=(W-L-Rm)/Y, yy=function(v){return T+(H-T-B)*(1-v/ymax);};
+    for(var g=0;g<=4;g++){var gv=ymax*g/4;svg+='<line x1="'+L+'" x2="'+(W-Rm)+'" y1="'+yy(gv)+'" y2="'+yy(gv)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(yy(gv)+4)+'" font-size="12" text-anchor="end">'+inr(gv)+'</text>';}
+    yrs.forEach(function(v,i){var x=L+i*bw+bw*0.1, w=bw*0.8;
+      svg+='<rect x="'+x+'" y="'+yy(v[0])+'" width="'+w+'" height="'+(yy(0)-yy(v[0]))+'" fill="'+c1+'"/>';
+      svg+='<rect x="'+x+'" y="'+yy(v[0]+v[1])+'" width="'+w+'" height="'+(yy(v[0])-yy(v[0]+v[1]))+'" fill="'+c2+'" fill-opacity=".55"/>';
+      if(Y<=15||i%Math.ceil(Y/10)===0)svg+='<text x="'+(x+w/2)+'" y="'+(H-B+16)+'" font-size="12" text-anchor="middle">'+(i+1)+'</text>';});
+    svg+='<text x="'+((W+L)/2)+'" y="'+(H-2)+'" font-size="12" text-anchor="middle">loan year</text>';
+    svg+='<rect x="'+L+'" y="8" width="14" height="14" fill="'+c1+'"/><text x="'+(L+20)+'" y="20" font-size="14" style="fill:'+c1+';font-weight:600">interest part (bottom)</text>';
+    svg+='<rect x="'+(L+230)+'" y="8" width="14" height="14" fill="'+c2+'" fill-opacity=".55"/><text x="'+(L+250)+'" y="20" font-size="14" style="fill:'+c2+';font-weight:600">principal part (top)</text>';
+    $("emChart").innerHTML=svg;
+  }
+  ["emP","emR","emY","emD"].forEach(function(id){$(id).oninput=drawEMI;});
+
+  /* ---------- Level 2: effective yield ---------- */
+  function eff(){
+    var r=(+$("efR").value||0)/100, m=+$("efF").value, Y=+$("efY").value||1, P=+$("efP").value||0;
+    var ear=Math.pow(1+r/m,m)-1, fv=P*Math.pow(1+r/m,m*Y);
+    $("efOut").innerHTML="Effective annual yield <b>"+(ear*100).toFixed(3)+"%</b> · "+inr(P)+" grows to <b>"+inr(fv)+"</b> in "+Y+" years (interest earned "+inr(fv-P)+").";
+  }
+  ["efR","efF","efY","efP"].forEach(function(id){$(id).oninput=eff;}); eff();
+
+  /* ---------- Level 3: bond ---------- */
+  function bondStats(F,c,N,y,m){
+    var n=Math.round(N*m), cp=F*c/m, yy=y/m, P=0, Dm=0, Cv=0;
+    for(var k=1;k<=n;k++){var cf=cp+(k===n?F:0), d=Math.pow(1+yy,-k); P+=cf*d; Dm+=(k/m)*cf*d; Cv+=cf*d*k*(k+1)/(m*m);}
+    var mac=Dm/P, mod=mac/(1+yy), conv=Cv/(P*Math.pow(1+yy,2));
+    return {P:P,mac:mac,mod:mod,conv:conv};
+  }
+  function bond(){
+    var g=function(id){return +$(id).value||0;};
+    var F=g("bdF"),c=g("bdC")/100,N=Math.max(1,g("bdN")),y=g("bdY")/100,s=g("bdS")/10000,m=+$("bdM").value;
+    var a=bondStats(F,c,N,y,m), b=bondStats(F,c,N,y+s,m);
+    var approx=-a.mod*s+0.5*a.conv*s*s, actual=(b.P-a.P)/a.P;
+    $("bdOut").innerHTML="Price <b>"+a.P.toFixed(3)+"</b> · Macaulay duration <b>"+a.mac.toFixed(2)+"</b> y · modified duration <b>"+a.mod.toFixed(2)+"</b> · convexity <b>"+a.conv.toFixed(1)+"</b><br>"+
+      "For a "+(s>=0?"+":"")+(s*10000).toFixed(0)+" bp shock: actual price change <b>"+(actual*100).toFixed(3)+"%</b> · duration + convexity estimate <b>"+(approx*100).toFixed(3)+"%</b> · new price "+b.P.toFixed(3);
+  }
+  ["bdF","bdC","bdN","bdY","bdS","bdM"].forEach(function(id){$(id).oninput=bond;}); bond();
+
+  /* ---------- quizzes ---------- */
+  var Q={
+    school:[
+      ["Interest is best described as…",["A fine for being late","Rent paid for using someone else's money","A gift from the bank","A type of tax"],1,"Interest is the price of borrowing money, like rent for a bicycle."],
+      ["You save ₹1,000 at 10% simple interest. How much do you have after 2 years?",["₹1,100","₹1,200","₹1,210","₹2,000"],1,"Simple interest: ₹100 a year × 2 = ₹200, so ₹1,200."],
+      ["With 10% compound interest, ₹1,000 after 2 years becomes…",["₹1,200","₹1,210","₹1,100","₹1,020"],1,"Year 1: ₹1,100. Year 2: ₹1,100 + 10% of ₹1,100 = ₹1,210. You earn interest on interest."],
+      ["Which rate does the RBI set that guides all other rates?",["The repo rate","The bus fare","The GST rate","The petrol price"],0,"The repo rate is what the RBI charges banks; it guides loan and deposit rates."],
+      ["Why might the RBI raise interest rates?",["To make prices rise faster","To cool down rising prices","To close banks","To print more notes"],1,"Higher rates make borrowing costlier, so spending slows and price rises cool."]
+    ],
+    working:[
+      ["Your floating home loan is repo-linked. RBI hikes the repo by 0.25 pp. Usually…",["Nothing changes","Your rate rises at the next reset, within three months","Only new loans are affected","Your loan becomes fixed-rate"],1,"External-benchmark loans must be reset at least once every three months."],
+      ["After a rate hike, a bank keeps your EMI unchanged. What has happened?",["The bank absorbed the hike","Your tenure was extended","Your principal was reduced","Nothing"],1,"Banks often extend the tenure; this can add many months and a lot of interest."],
+      ["Interest rates rise sharply. The price of an existing 10-year bond will…",["Rise","Fall","Stay the same","Double"],1,"Bond prices move opposite to yields; long bonds fall the most."],
+      ["7% compounded quarterly gives an effective annual yield of about…",["7.00%","7.19%","7.50%","28%"],1,"(1 + 0.07/4)^4 − 1 ≈ 7.19%."],
+      ["Who sets PPF and SCSS interest rates?",["RBI's MPC","Each bank","The Finance Ministry, every quarter","SEBI"],2,"Small savings rates are administered by the government and do not move automatically with the repo."]
+    ],
+    expert:[
+      ["India's policy corridor in Nov 2026 is…",["Reverse repo 3.35 – MSF 6.75","SDF 5.25 – repo 5.50 – MSF 5.75","Repo 5.50 – Bank Rate 6.50","SDF 5.00 – MSF 6.00"],1,"A symmetric ±25 bp corridor around the 5.50% repo."],
+      ["RBI's operating target for monetary policy is…",["The 10-year G-sec yield","The WACR","M3 growth","The USD/INR rate"],1,"The weighted average call rate is kept close to the repo through liquidity operations."],
+      ["A bond has modified duration 7 and yields rise by 50 bp. The first-order price change is about…",["−0.35%","−3.5%","+3.5%","−7%"],1,"ΔP/P ≈ −D_mod·Δy = −7 × 0.005 = −3.5% (convexity slightly offsets this)."],
+      ["Under UIP, if India's rate is 2 pp above the US rate, the rupee is expected to…",["Appreciate by about 2% a year","Depreciate by about 2% a year","Stay fixed","Depreciate by 20%"],1,"The higher-yielding currency is expected to depreciate by the differential (absent a risk premium)."],
+      ["Rey's 'dilemma not trilemma' argues that…",["Fixed exchange rates guarantee independence","A global financial cycle driven by US policy limits independence even with floating rates","Capital controls never work","Inflation targeting is impossible"],1,"Floating rates do not fully insulate an economy from the global financial cycle."]
+    ]
+  };
+  document.querySelectorAll(".quiz").forEach(function(box){
+    var set=Q[box.getAttribute("data-quiz")], score=0, done=0, h="";
+    set.forEach(function(q,qi){
+      h+='<div class="q" data-i="'+qi+'"><p>'+(qi+1)+'. '+q[0]+'</p>';
+      q[1].forEach(function(o,oi){h+='<button data-o="'+oi+'">'+o+'</button>';});
+      h+='<div class="why">'+q[3]+'</div></div>';
+    });
+    h+='<p class="score"></p>'; box.innerHTML=h;
+    box.querySelectorAll(".q").forEach(function(qd){
+      var q=set[+qd.getAttribute("data-i")];
+      qd.querySelectorAll("button").forEach(function(b){
+        b.onclick=function(){
+          if(qd.classList.contains("done"))return;
+          var o=+b.getAttribute("data-o"); qd.classList.add("done"); done++;
+          if(o===q[2])score++; else b.classList.add("wrong");
+          qd.querySelectorAll("button")[q[2]].classList.add("right");
+          box.querySelector(".score").textContent="Score: "+score+" / "+done+(done===set.length?(score===set.length?" — perfect!":" — review the explanations above."):"");
+        };
+      });
+    });
+  });
+
+  /* ---------- keyboard ---------- */
+  document.addEventListener("keydown",function(e){
+    if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
+    var k=e.key.toLowerCase();
+    if(k==="1")setLevel("school"); else if(k==="2")setLevel("working"); else if(k==="3")setLevel("expert");
+    else if(k==="m")toggleSB(); else if(k==="t")toggleTheme(); else if(k==="f")toggleFS();
+    else if(body.getAttribute("data-level")==="school"){
+      if(k==="p"){anPlay();} else if(k==="s"){anPause();anStep();} else if(k==="x"){anPause();}
+    }
+  });
+
+  setLevel((location.hash||"#school").slice(1),true);
+  window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(LV.indexOf(h)>=0)setLevel(h,true);});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<!--
+TOOL:    finance-economics/06-taxes.html — Finance & Economics Topic 06: Taxes (three levels)
+FAMILY:  finance-economics
+VERSION: 1.0.0
+DATE:    2026-11-14
+CHAT:    Finance & Economics series — three levels (school, working, expert); Topic 06 Taxes
+CHANGES: 1.0.0 - sixth topic: what taxes are, GST input-credit chain animation, direct vs indirect, slabs
+                 FY 2026-27 (new IT Act 2025), new-vs-old regime calculator with break-even, GST 2.0,
+                 capital gains, compliance, federalism, incidence/DWL and Diamond-Saez calculators,
+                 international tax; Nov 2026 snapshot; quiz per level
+STATUS:  working
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taxes — Finance &amp; Economics in Three Levels — K Vijay Anand</title>
+<meta name="description" content="Taxes explained at three levels — for school students, for working people and as a review for experts: GST and income tax in India, new vs old regime, the Income-tax Act 2025, incidence, efficiency and optimal taxation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* Colour-blind-safe palette: blue / orange / purple / gold — no red-vs-green coding */
+  :root{--bg:#f4f2ed;--bg2:#e9e5dc;--card:#fffdf8;--ink:#1d1b18;--soft:#4f4940;--faint:#857c6f;--rule:#d6cdbd;
+        --acc:#1d5fa6;--l1:#d9730d;--l2:#1d5fa6;--l3:#6a3fa0;--gold:#a87908;--hi:#fff1d6}
+  :root[data-theme="dark"]{--bg:#121316;--bg2:#1a1c21;--card:#1f2228;--ink:#ece9e2;--soft:#c3bdb2;--faint:#8c8578;--rule:#33363d;
+        --acc:#6aa8ee;--l1:#f39a3d;--l2:#6aa8ee;--l3:#b28ae6;--gold:#e5b33c;--hi:#3a2f17}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.65}
+  a{color:var(--acc)}
+  .toolbar{position:fixed;top:10px;right:12px;z-index:30;display:flex;gap:8px;font-size:13px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button,.toolbar a{background:var(--card);color:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;text-decoration:none}
+  header{padding:70px 4vw 18px;max-width:1600px;margin:0 auto}
+  .series{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-family:"Playfair Display",serif;font-weight:800;font-size:clamp(46px,7vw,84px);margin:6px 0 4px;line-height:1}
+  .tag{color:var(--soft);max-width:70ch;margin:0}
+  /* level switch */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 0}
+  .levels button{text-align:left;background:var(--card);border:2px solid var(--rule);border-radius:12px;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink)}
+  .levels button b{display:block;font-size:18px}
+  .levels button small{color:var(--faint)}
+  .levels button .k{float:right;font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:0 6px;color:var(--faint)}
+  .levels button[data-l="school"].on{border-color:var(--l1);background:color-mix(in srgb,var(--l1) 10%,var(--card))}
+  .levels button[data-l="working"].on{border-color:var(--l2);background:color-mix(in srgb,var(--l2) 10%,var(--card))}
+  .levels button[data-l="expert"].on{border-color:var(--l3);background:color-mix(in srgb,var(--l3) 10%,var(--card))}
+  /* layout */
+  .wrap{max-width:1600px;margin:0 auto;padding:0 4vw 40px;display:grid;grid-template-columns:250px 1fr;gap:34px}
+  body.nosb .wrap{grid-template-columns:1fr}
+  body.nosb aside{display:none}
+  aside{position:sticky;top:60px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;font-size:14.5px;padding-top:20px}
+  aside .h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  aside a{display:block;padding:5px 10px;border-left:3px solid var(--rule);color:var(--soft);text-decoration:none}
+  aside a:hover{border-left-color:var(--lc);color:var(--ink)}
+  aside .keys{margin-top:18px;color:var(--faint);font-size:12.5px;line-height:1.9}
+  kbd{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--card)}
+  main{min-width:0}
+  .panel{display:none}
+  .panel.on{display:block}
+  #p-school{--lc:var(--l1)} #p-working{--lc:var(--l2)} #p-expert{--lc:var(--l3)}
+  body[data-level="school"]{--lc:var(--l1)} body[data-level="working"]{--lc:var(--l2)} body[data-level="expert"]{--lc:var(--l3)}
+  .lvhead{border-left:6px solid var(--lc);padding:4px 0 4px 16px;margin:24px 0 10px}
+  .lvhead .who{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--lc);font-weight:700}
+  .lvhead p{margin:4px 0 0;color:var(--soft)}
+  section{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:22px 28px;margin:18px 0}
+  h2{font-family:"Playfair Display",serif;font-size:30px;margin:0 0 10px;line-height:1.2}
+  h2 .n{color:var(--lc);margin-right:8px}
+  h3{font-size:18px;margin:20px 0 6px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .box{border:1px solid var(--rule);border-radius:10px;padding:14px 16px;background:var(--bg)}
+  .box b.t{display:block;color:var(--lc);margin-bottom:4px}
+  .def{font-size:20px;border-left:5px solid var(--lc);background:color-mix(in srgb,var(--lc) 8%,transparent);padding:12px 18px;border-radius:0 10px 10px 0;margin:8px 0 14px}
+  .note{background:var(--hi);border-radius:8px;padding:10px 14px;font-size:15.5px}
+  .eq{font-family:"JetBrains Mono",monospace;background:var(--bg2);border-radius:8px;padding:10px 14px;overflow-x:auto;font-size:15px;white-space:pre}
+  table{border-collapse:collapse;width:100%;font-size:15.5px;margin:8px 0}
+  th,td{border-bottom:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:10px}
+  .stat{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--bg)}
+  .stat .v{font-size:28px;white-space:nowrap;font-weight:700;color:var(--acc);line-height:1.1}
+  .stat .l{font-size:13.5px;color:var(--soft)}
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;margin:10px 0}
+  .ctl label{font-size:13.5px;color:var(--soft);display:flex;flex-direction:column;gap:3px}
+  .ctl input[type=number]{width:120px;font:inherit;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)}
+  .ctl input[type=range]{width:200px}
+  .btn{background:var(--lc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--lc);border:1px solid var(--lc)}
+  .out{font-size:18px;margin:8px 0}
+  .out b{color:var(--lc)}
+  svg text{fill:var(--soft);font-family:Inter,sans-serif}
+  /* basket animation */
+  .stage{border:1px dashed var(--rule);border-radius:10px;padding:14px;background:var(--bg);min-height:170px}
+  .stage .yr{font-size:26px;font-weight:700}
+  .stage .yr span{color:var(--l1)}
+  .samosas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:44px}
+  .sam{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:30px solid var(--l1);transition:opacity .3s}
+  .sam.gone{opacity:.15}
+  /* quiz */
+  .q{border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:10px 0;background:var(--bg)}
+  .q p{margin:0 0 8px;font-weight:600}
+  .q button{display:block;width:100%;text-align:left;margin:5px 0;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;font:inherit;color:var(--ink);cursor:pointer}
+  .q button.right{border:2px solid var(--l2);background:color-mix(in srgb,var(--l2) 14%,var(--card))}
+  .q button.right::after{content:"  ✔ correct";font-weight:700;color:var(--l2)}
+  .q button.wrong{border:2px dashed var(--l1)}
+  .q button.wrong::after{content:"  ✘ not this one";font-weight:700;color:var(--l1)}
+  .q .why{display:none;font-size:15px;color:var(--soft);margin-top:6px}
+  .q.done .why{display:block}
+  .score{font-weight:700;color:var(--lc)}
+  footer{max-width:1600px;margin:0 auto;padding:20px 4vw 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--faint)}
+  footer a{color:var(--soft)}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}aside{display:none}.levels{grid-template-columns:1fr}section{padding:18px}}
+  @media print{.toolbar,aside,.levels{display:none}.panel{display:block!important}.wrap{display:block}}
+</style>
+</head>
+<body data-level="school">
+<div class="toolbar">
+  <a href="./">← Series</a>
+  <button id="sbBtn" title="Show / hide contents (M)">☰ Contents</button>
+  <button id="themeBtn" title="Light / dark (T)">◐ Theme</button>
+  <button id="fsBtn" title="Full screen (F)">⤢ Full screen</button>
+</div>
+
+<header>
+  <div class="series">Finance &amp; Economics · Topic 06</div>
+  <h1>Taxes</h1>
+  <p class="tag">Why we pay taxes, how income tax and GST work in India, how to compare the old and new regimes, where the money goes, and how economists judge whether a tax is fair and efficient. Pick your level.</p>
+  <div class="levels" role="tablist">
+    <button data-l="school" class="on"><span class="k">1</span><b>🎒 School</b><small>How GST travels from factory to you</small></button>
+    <button data-l="working"><span class="k">2</span><b>💼 Working people</b><small>Slabs, regimes, GST, capital gains, the country</small></button>
+    <button data-l="expert"><span class="k">3</span><b>🎓 Experts — review</b><small>Incidence, efficiency, optimal tax, federalism</small></button>
+  </div>
+</header>
+
+<div class="wrap">
+<aside id="toc"></aside>
+<main>
+
+<section id="snapshot" style="border-top:4px solid var(--gold)">
+  <h2>Where things stand — November 2026</h2>
+  <div class="snap">
+    <div class="stat"><div class="v">IT Act 2025</div><div class="l">The new Income-tax Act replaced the 1961 Act from 1 April 2026. The term "Tax Year" replaces "previous year" and "assessment year".</div></div>
+    <div class="stat"><div class="v">₹12 lakh</div><div class="l">Income with zero tax under the new regime (₹12.75 lakh for salaried people, after the ₹75,000 standard deduction). Slabs are unchanged for 2026–27.</div></div>
+    <div class="stat"><div class="v">₹2.31 lakh cr</div><div class="l">Gross GST collected in October 2026, up 22.9% on a year earlier; ₹14.78 lakh crore for April–October</div></div>
+    <div class="stat"><div class="v">₹14.42 lakh cr</div><div class="l">Net direct tax collected in FY27 up to 10 Nov 2026, up 11.8% and about 53% of the full-year budget target</div></div>
+    <div class="stat"><div class="v">5% / 18% / 40%</div><div class="l">Main GST rates since the September 2025 reform: merit, standard and demerit (luxury and sin goods)</div></div>
+  </div>
+  <p class="note" style="margin-top:12px">This is a dated snapshot. Tax rules change with every Budget, so check the current law or a tax professional before acting. The ideas below don't change; these numbers will.</p>
+</section>
+
+<!-- ========================= LEVEL 1 : SCHOOL ====================== -->
+<div class="panel on" id="p-school">
+  <div class="lvhead"><div class="who">Level 1 · For school students</div><p>Taxes are how a country pools money to pay for things we all share.</p></div>
+
+  <section id="s1">
+    <h2><span class="n">1</span>What is a tax?</h2>
+    <div class="def">A <b>tax</b> is money that people and businesses must pay to the government, by law. The government uses it to pay for things that everyone shares.</div>
+    <p>Think of a class collecting ₹20 from each student to buy a cricket kit for everyone. No single student could afford the whole kit, but together you can. Taxes work the same way, for a whole country: roads, schools, hospitals, the army, police, satellites and much more.</p>
+    <div class="cols">
+      <div class="box"><b class="t">It is compulsory</b>Unlike a donation, a tax must be paid. Not paying it is against the law.</div>
+      <div class="box"><b class="t">No direct return</b>You do not get a specific thing back for your tax payment, but you benefit from everything it pays for.</div>
+      <div class="box"><b class="t">Decided by Parliament</b>In India, no tax can be collected unless a law passed by Parliament or a State Assembly allows it (Article 265 of the Constitution).</div>
+    </div>
+  </section>
+
+  <section id="s2">
+    <h2><span class="n">2</span>Watch it happen: GST from factory to you</h2>
+    <p><b>GST (Goods and Services Tax)</b> is collected at every step, but each seller gets credit for the tax already paid by the step before. Follow an example item taxed at 18%. Press Play, or press S to take one step at a time.</p>
+    <div class="ctl">
+      <button class="btn" id="anPlay">▶ Play (P)</button>
+      <button class="btn ghost" id="anStep">Next step (S)</button>
+      <button class="btn ghost" id="anPause">⏸ Pause (X)</button>
+      <button class="btn ghost" id="anReset">↺ Reset</button>
+    </div>
+    <div class="stage">
+      <svg id="anChart" viewBox="0 0 900 250" style="width:100%;height:auto"></svg>
+      <p id="anMsg" style="margin:6px 0 0;color:var(--soft);font-size:17px">Press Play, or press S to move one step at a time.</p>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="n">3</span>Two families of taxes</h2>
+    <div class="cols">
+      <div class="box"><b class="t">Direct taxes</b>Paid directly by the person who earns: <b>income tax</b> on salaries and business profits, and <b>corporate tax</b> on company profits. The more you earn, the more you pay.</div>
+      <div class="box"><b class="t">Indirect taxes</b>Included in the price of what you buy: <b>GST</b> on most goods and services, and <b>customs duty</b> on imports. The shop collects it and passes it on to the government. Everyone pays it, even children buying a pencil!</div>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="n">4</span>What do taxes pay for?</h2>
+    <div class="cols">
+      <div class="box"><b class="t">🏫 Schools &amp; 🏥 hospitals</b>Government schools, midday meals, scholarships, hospitals and vaccines</div>
+      <div class="box"><b class="t">🛣️ Roads, 🚆 railways &amp; ⚡ power</b>Highways, metro lines, bridges, electricity and water supply</div>
+      <div class="box"><b class="t">🛡️ Safety</b>The army, navy, air force, police, courts and disaster relief</div>
+      <div class="box"><b class="t">🚀 Science</b>ISRO's rockets, research labs and weather forecasting</div>
+      <div class="box"><b class="t">🌾 Support</b>Food grains for poor families, pensions and help for farmers</div>
+      <div class="box"><b class="t">💸 Interest</b>A large share also pays interest on money the government borrowed in the past</div>
+    </div>
+  </section>
+
+  <section id="s5">
+    <h2><span class="n">5</span>Is it fair? More income, higher rate</h2>
+    <p>India's income tax is <b>progressive</b>: people with higher incomes pay a <b>higher percentage</b>, not just a higher amount. Income is cut into <b>slabs</b>, and each slab has its own rate.</p>
+    <p class="note">Example (new regime, simplified): the first ₹4 lakh of a year's income is tax-free, the next ₹4 lakh is taxed at 5%, the next ₹4 lakh at 10%, and so on up to 30%. A special rebate means that anyone earning up to ₹12 lakh pays <b>no</b> income tax at all.</p>
+    <p>GST is different: a rich and a poor person pay the same GST on a pencil. That is why essentials such as milk and rice are usually exempt or taxed lightly, while luxury cars carry the highest rate.</p>
+  </section>
+
+  <section id="s6">
+    <h2><span class="n">6</span>Who collects which tax?</h2>
+    <table>
+      <tr><th>Government</th><th>Examples of taxes it collects</th></tr>
+      <tr><td>Central (Union) government</td><td>Income tax, corporate tax, customs duty, central GST, excise on petrol and diesel</td></tr>
+      <tr><td>State government</td><td>State GST, stamp duty on property purchases, tax on liquor, VAT on petrol and diesel</td></tr>
+      <tr><td>Local bodies (municipality, panchayat)</td><td>Property tax, water charges, some fees</td></tr>
+    </table>
+    <p>The Centre also shares a large part of what it collects with the states, so that poorer states get help too.</p>
+  </section>
+
+  <section id="s7">
+    <h2><span class="n">7</span>Words to remember</h2>
+    <table>
+      <tr><th>Word</th><th>Meaning</th></tr>
+      <tr><td>Tax</td><td>A compulsory payment to the government</td></tr>
+      <tr><td>Direct tax</td><td>A tax paid on your own income or profits</td></tr>
+      <tr><td>Indirect tax</td><td>A tax included in the price of goods and services</td></tr>
+      <tr><td>GST</td><td>Goods and Services Tax: one tax on most goods and services across India</td></tr>
+      <tr><td>Slab</td><td>A range of income taxed at one rate</td></tr>
+      <tr><td>Progressive tax</td><td>A tax where the rate rises as income rises</td></tr>
+      <tr><td>Tax evasion</td><td>Illegally not paying tax, which is a crime</td></tr>
+    </table>
+  </section>
+
+  <section id="s8">
+    <h2><span class="n">8</span>Check yourself</h2>
+    <div class="quiz" data-quiz="school"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 2 : WORKING ===================== -->
+<div class="panel" id="p-working">
+  <div class="lvhead"><div class="who">Level 2 · For working people</div><p>Your income tax under the new and old regimes, GST, capital gains, compliance, and how taxes shape the country and the world. This is educational only, not tax advice: rules have conditions and exceptions, so verify with the law or a chartered accountant.</p></div>
+
+  <section id="w1">
+    <h2><span class="n">1</span>India's tax map, and the new law</h2>
+    <ul>
+      <li><b>Direct taxes (Centre):</b> personal income tax, corporate tax, securities transaction tax (STT). Capital gains are part of income tax.</li>
+      <li><b>Indirect taxes:</b> GST (shared between Centre and states), customs duty, central excise on petrol, diesel and tobacco, state VAT on fuel and alcohol, and stamp duty.</li>
+      <li><b>The Income-tax Act, 2025</b> took effect on <b>1 April 2026</b>, replacing the 1961 Act. It has simpler language and renumbered sections, and the single term <b>"Tax Year"</b> replaces "previous year / assessment year". Rates and slabs were not changed by the switch; returns for income earned up to March 2026 still follow the 1961 Act.</li>
+    </ul>
+  </section>
+
+  <section id="w2">
+    <h2><span class="n">2</span>Income-tax slabs, FY 2026-27</h2>
+    <div class="cols">
+      <div class="box"><b class="t">New regime (default)</b>
+        <table>
+          <tr><th>Income</th><th>Rate</th></tr>
+          <tr><td>Up to ₹4 lakh</td><td>Nil</td></tr>
+          <tr><td>₹4–8 lakh</td><td>5%</td></tr>
+          <tr><td>₹8–12 lakh</td><td>10%</td></tr>
+          <tr><td>₹12–16 lakh</td><td>15%</td></tr>
+          <tr><td>₹16–20 lakh</td><td>20%</td></tr>
+          <tr><td>₹20–24 lakh</td><td>25%</td></tr>
+          <tr><td>Above ₹24 lakh</td><td>30%</td></tr>
+        </table>
+        Rebate: no tax if taxable income is ₹12 lakh or less (marginal relief just above). Standard deduction for salaried people: ₹75,000. Few other deductions apply (for example, the employer's NPS contribution).</div>
+      <div class="box"><b class="t">Old regime (optional)</b>
+        <table>
+          <tr><th>Income</th><th>Rate</th></tr>
+          <tr><td>Up to ₹2.5 lakh</td><td>Nil</td></tr>
+          <tr><td>₹2.5–5 lakh</td><td>5%</td></tr>
+          <tr><td>₹5–10 lakh</td><td>20%</td></tr>
+          <tr><td>Above ₹10 lakh</td><td>30%</td></tr>
+        </table>
+        Rebate (up to ₹12,500) if taxable income is ₹5 lakh or less, with no marginal relief above that. Standard deduction: ₹50,000. Allows deductions for 80C investments (up to ₹1.5 lakh), health insurance (80D), HRA, home-loan interest (up to ₹2 lakh on a self-occupied home) and more. Senior citizens have higher exemption limits under this regime.</div>
+    </div>
+    <p class="note">On top of income tax: a 4% health and education cess on the tax, and a surcharge for incomes above ₹50 lakh (10%, 15% and 25%; up to 37% under the old regime above ₹5 crore).</p>
+  </section>
+
+  <section id="w3">
+    <h2><span class="n">3</span>Calculator: new vs old regime</h2>
+    <div class="ctl">
+      <label>Gross annual income (₹)<input type="number" id="itG" value="1800000" step="10000"></label>
+      <label>Salaried / pensioner?<select id="itS" style="font:inherit;padding:6px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)"><option value="1" selected>Yes</option><option value="0">No</option></select></label>
+      <label>Old-regime deductions (80C, 80D, HRA, home loan…) (₹)<input type="number" id="itD" value="350000" step="10000"></label>
+    </div>
+    <div class="out" id="itOut"></div>
+    <svg id="itChart" viewBox="0 0 900 280" style="width:100%;max-width:1000px;height:auto"></svg>
+    <p class="note">Simplified model for a resident individual below 60: slab tax, the rebate (with marginal relief in the new regime only), the surcharge (without marginal relief on the surcharge) and the 4% cess. Special-rate income (capital gains and similar) is not included. Use the official Income Tax Department calculator before filing.</p>
+  </section>
+
+  <section id="w4">
+    <h2><span class="n">4</span>GST: how it works, and the 2025 reform</h2>
+    <ul>
+      <li><b>One tax, credited along the chain.</b> Each business pays GST on its sales minus the GST it already paid on inputs (<b>input tax credit</b>). The final consumer bears the full tax, as the school-level animation shows.</li>
+      <li><b>CGST + SGST</b> on sales within a state (split equally); <b>IGST</b> on sales between states and on imports, later apportioned to the consuming state. GST is a <b>destination-based</b> tax.</li>
+      <li><b>GST 2.0 (from 22 September 2025):</b> most items moved into two main rates, <b>5%</b> and <b>18%</b>, with <b>40%</b> for luxury and sin goods. Many daily-use items, medicines and small vehicles became cheaper. Some essentials are exempt (0%), and special low rates apply to gold and precious stones.</li>
+      <li><b>Outside GST:</b> petrol, diesel, ATF, natural gas and alcohol for drinking still carry central excise and state VAT. That is why fuel prices differ across states.</li>
+    </ul>
+  </section>
+
+  <section id="w5">
+    <h2><span class="n">5</span>Investments and capital gains (in brief)</h2>
+    <table>
+      <tr><th>Asset</th><th>Short-term</th><th>Long-term</th></tr>
+      <tr><td>Listed equity shares and equity mutual funds</td><td>20% (held ≤ 12 months)</td><td>12.5% on gains above ₹1.25 lakh a year (held &gt; 12 months)</td></tr>
+      <tr><td>Debt mutual funds (bought from April 2023)</td><td colspan="2">Taxed at your slab rate, whatever the holding period</td></tr>
+      <tr><td>Property, gold, unlisted shares</td><td>Slab rate</td><td>Generally 12.5% without indexation after 24 months (transition rules apply to older property purchases)</td></tr>
+    </table>
+    <p>Bank FD interest is added to income and taxed at your slab rate (with TDS deducted by the bank). As Topic 01 showed, the <b>after-tax, after-inflation</b> return is what matters.</p>
+  </section>
+
+  <section id="w6">
+    <h2><span class="n">6</span>Staying compliant</h2>
+    <ul>
+      <li><b>TDS/TCS:</b> tax deducted or collected at source on salary, interest, rent and some purchases. Check that it appears in your <b>Form 26AS / AIS</b>.</li>
+      <li><b>Advance tax</b> is due in instalments if your tax not covered by TDS exceeds ₹10,000 in a year (for example, rental, freelance or capital-gains income). Late payment attracts interest.</li>
+      <li><b>File your return</b> even if your tax is zero: it builds a record for loans and visas and lets you claim refunds. The department matches your return with its data from banks, employers and registrars.</li>
+      <li><b>Tax planning vs evasion:</b> using legal deductions and choosing a regime is planning. Hiding income, fake rent receipts or cash deals is evasion, with penalties and prosecution.</li>
+    </ul>
+  </section>
+
+  <section id="w7">
+    <h2><span class="n">7</span>Taxes and the country</h2>
+    <div class="cols">
+      <div class="box"><b class="t">How much?</b>Combined Centre and state tax revenue is roughly 17–18% of GDP, low compared with advanced economies. That limits spending on health and education without borrowing.</div>
+      <div class="box"><b class="t">2026 so far</b>Net direct taxes were up 11.8% to ₹14.42 lakh crore by 10 November, and gross GST rose 22.9% in October. Strong collections help keep the fiscal deficit on track (Topic 03, Topic 08).</div>
+      <div class="box"><b class="t">Sharing with states</b>The Finance Commission decides the states' share of the Centre's divisible tax pool (41% under the 15th Finance Commission) and how it is split among them. The <b>GST Council</b>, with the Union and state finance ministers, sets GST rates.</div>
+      <div class="box"><b class="t">Taxes shape behaviour</b>High taxes on tobacco and sugary drinks discourage their use; tax breaks encourage saving, housing and pension investment. Every exemption has a cost, called <b>tax expenditure</b>.</div>
+    </div>
+  </section>
+
+  <section id="w8">
+    <h2><span class="n">8</span>The global picture</h2>
+    <ul>
+      <li><b>Global minimum tax:</b> under the OECD/G20 Pillar Two rules, large multinationals face a minimum effective rate of 15% in each country where they operate, to curb profit shifting to tax havens.</li>
+      <li><b>Digital economy:</b> countries are debating how to tax tech giants that earn from users without a physical presence. India abolished its 6% equalisation levy on online advertising from April 2025.</li>
+      <li><b>Tariffs are taxes too:</b> import duties raise prices for domestic buyers. The wave of tariffs since 2025 has reshaped trade flows and costs worldwide.</li>
+      <li><b>Corporate tax competition:</b> India cut its base corporate rate to 22% (15% for new manufacturing firms at the time) in 2019 to stay competitive with Asian peers.</li>
+    </ul>
+  </section>
+
+  <section id="w9">
+    <h2><span class="n">9</span>Check yourself</h2>
+    <div class="quiz" data-quiz="working"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 3 : EXPERT ====================== -->
+<div class="panel" id="p-expert">
+  <div class="lvhead"><div class="who">Level 3 · Review for experts</div><p>Principles, incidence and deadweight loss, optimal taxation, India's tax architecture and fiscal federalism, and international tax.</p></div>
+
+  <section id="e1">
+    <h2><span class="n">1</span>Principles</h2>
+    <ul>
+      <li><b>Adam Smith's canons:</b> equity, certainty, convenience and economy (low collection cost). Modern additions: efficiency (minimal distortion), simplicity and administrability.</li>
+      <li><b>Benefit vs ability to pay.</b> Horizontal equity means equal treatment of equals; vertical equity means appropriate differences for unequals.</li>
+      <li><b>Average vs marginal rates.</b> Progressivity is measured by how the average rate rises with income (or by the Kakwani index). Incentives depend on the <b>effective marginal rate</b>, including benefit withdrawal and phase-outs such as India's rebate cliff and its marginal relief.</li>
+    </ul>
+  </section>
+
+  <section id="e2">
+    <h2><span class="n">2</span>Incidence and deadweight loss</h2>
+    <div class="eq">Consumer share of a per-unit tax  ≈  ε_s / (ε_s + |ε_d|)          Producer share ≈ |ε_d| / (ε_s + |ε_d|)
+Deadweight loss (Harberger triangle)  ≈  ½ · t² · [ε_s·|ε_d| / (ε_s + |ε_d|)] · P·Q          (t as a share of price)</div>
+    <div class="ctl">
+      <label>Tax rate t (% of price)<input type="number" id="dwT" value="18" step="1"></label>
+      <label>Supply elasticity ε_s<input type="number" id="dwS" value="1.5" step="0.1"></label>
+      <label>Demand elasticity |ε_d|<input type="number" id="dwD" value="0.5" step="0.1"></label>
+      <label>Market size P·Q (₹ crore)<input type="number" id="dwPQ" value="10000" step="100"></label>
+    </div>
+    <div class="out" id="dwOut"></div>
+    <ul>
+      <li>Statutory incidence (who writes the cheque) is irrelevant to economic incidence in competitive markets. The more inelastic side bears more of the tax.</li>
+      <li>DWL rises with the <b>square</b> of the rate: many low rates on broad bases beat a few high rates on narrow ones. This is the efficiency case for GST rate rationalisation and for a broad income-tax base with few exemptions.</li>
+      <li>Corporate tax incidence is shared between capital and labour. In open economies, a substantial share may fall on workers through lower investment (an estimate that remains contested).</li>
+    </ul>
+  </section>
+
+  <section id="e3">
+    <h2><span class="n">3</span>Optimal taxation</h2>
+    <ul>
+      <li><b>Ramsey (1927):</b> commodity tax rates should be inversely proportional to the demand elasticity. This is efficient but regressive, since necessities are inelastic, hence the equity–efficiency trade-off in GST design.</li>
+      <li><b>Mirrlees (1971):</b> optimal non-linear income taxation under hidden ability; marginal rates should balance incentives against redistribution.</li>
+      <li><b>Atkinson–Stiglitz (1976):</b> with an optimal non-linear income tax and separable preferences, differentiated commodity taxes add nothing. This is a theoretical case for uniform GST, though weak administration in developing countries gives reasons to depart from it.</li>
+      <li><b>Diamond–Saez top rate:</b> τ* = 1 / (1 + a·e), where a is the Pareto parameter of the top income tail and e the elasticity of taxable income.</li>
+    </ul>
+    <div class="ctl">
+      <label>Pareto parameter a<input type="number" id="dsA" value="1.5" step="0.1"></label>
+      <label>Elasticity of taxable income e<input type="number" id="dsE" value="0.25" step="0.05"></label>
+    </div>
+    <div class="out" id="dsOut"></div>
+    <p class="note">Laffer logic is embedded here: above τ*, a higher rate lowers revenue from top earners. The empirical elasticity (which depends on avoidance opportunities and the breadth of the base) is the crux, which is why broadening the base raises the optimal rate.</p>
+  </section>
+
+  <section id="e4">
+    <h2><span class="n">4</span>India's tax architecture</h2>
+    <ul>
+      <li><b>Direct-tax shift.</b> The corporate rate cut (2019), the new personal regime (2020), which became the default (2023), and the rebate extended to ₹12 lakh (2025) have narrowed the base for personal income tax. Revenue growth now relies on compliance, data analytics (AIS, TDS/TCS coverage) and formalisation.</li>
+      <li><b>The Income-tax Act 2025</b> is a consolidation and simplification (Tax Year concept, fewer sections) rather than a policy change. The test is whether it reduces litigation: a large stock of disputed direct-tax demand remains under appeal.</li>
+      <li><b>GST design issues:</b> petroleum and electricity remain outside GST, which breaks the credit chain and causes tax cascading. GST 2.0 reduced inverted duty structures, the end of the compensation cess raises questions about state revenues, and rate changes may not be fully passed on to consumers.</li>
+      <li><b>Buoyancy:</b> tax buoyancy (the % change in tax revenue / % change in nominal GDP) above 1 shows gains in compliance or structure. With low GDP-deflator inflation (Topic 03), nominal growth and therefore collections can lag real growth.</li>
+    </ul>
+  </section>
+
+  <section id="e5">
+    <h2><span class="n">5</span>Fiscal federalism</h2>
+    <ul>
+      <li><b>Vertical imbalance:</b> states carry most spending responsibilities, while the Centre raises the more buoyant taxes. Finance Commission devolution (41% of the divisible pool under the 15th FC) and its horizontal formula (population, area, income distance, demographic performance, forest cover, tax effort) correct for this.</li>
+      <li><b>Cesses and surcharges</b> are outside the divisible pool, and their growing share has been a point of Centre–state contention.</li>
+      <li><b>GST Council:</b> pooled sovereignty. The Centre has one-third of the votes and states two-thirds, and decisions need a three-quarters majority, so neither can act alone.</li>
+    </ul>
+  </section>
+
+  <section id="e6">
+    <h2><span class="n">6</span>International tax</h2>
+    <ul>
+      <li><b>BEPS</b> (base erosion and profit shifting): transfer pricing, intangibles in low-tax jurisdictions, treaty shopping. The responses include the OECD BEPS actions, the multilateral instrument and country-by-country reporting.</li>
+      <li><b>Pillar Two</b> (GloBE rules, 15% minimum, with an income inclusion rule, an undertaxed profits rule and qualified domestic top-up taxes) is being implemented by many jurisdictions, though US participation remains contested. <b>Pillar One</b>, which reallocates taxing rights over residual profits, has stalled.</li>
+      <li><b>Tariff incidence:</b> recent evidence suggests that tariffs are passed on largely to domestic importers and consumers, a reminder that border taxes are domestic taxes on residents.</li>
+    </ul>
+  </section>
+
+  <section id="e7">
+    <h2><span class="n">7</span>Review checklist: open questions</h2>
+    <ol>
+      <li>With most earners now below the zero-tax threshold, is India's personal income-tax base too narrow? What is the role of TDS/TCS data in widening it?</li>
+      <li>Should petroleum and electricity be brought into GST, and how should states be compensated?</li>
+      <li>Is the three-rate GST (5/18/40) close to the efficient frontier, or should India move towards a single standard rate?</li>
+      <li>How much of the 2019 corporate tax cut passed through to investment and wages?</li>
+      <li>Should the old regime be phased out entirely, and what replaces its incentives for saving and housing?</li>
+      <li>How should India position itself on Pillar Two and on taxing the digital economy after abolishing the equalisation levy?</li>
+    </ol>
+  </section>
+
+  <section id="e8">
+    <h2><span class="n">8</span>Check yourself</h2>
+    <div class="quiz" data-quiz="expert"></div>
+  </section>
+</div>
+
+<section id="sources">
+  <h2>Sources and further reading</h2>
+  <ul>
+    <li>Slabs for FY 2026-27 and the new Act: <a href="https://www.businesstoday.in/personal-finance/tax/story/tax-slabs-fy-2026-27-what-budget-2026-changed-for-individual-taxpayers-and-which-regime-works-best-514044-2026-02-01">Business Today</a>, <a href="https://scroll.in/latest/1090410/scroll_in">Scroll</a>, <a href="https://bhattandjoshiassociates.com/?p=32114">Bhatt &amp; Joshi Associates</a>, <a href="https://www.hdfc.bank.in/blogs/union-budget/budget-2026-27-income-tax-act-2026-tax-slabs-stt">HDFC Bank</a>; official calculator and data: <a href="https://www.incometaxindia.gov.in/">incometaxindia.gov.in</a>.</li>
+    <li>GST, October 2026: <a href="https://swarajyamag.com/economy/indias-gst-collections-surge-229-per-cent-to-rs-231-lakh-crore-in-october">Swarajya</a>, <a href="https://www.deccanherald.com/business/gst-mop-up-grows-23-to-over-rs-231-lakh-crore-in-october-2026-4203190">Deccan Herald</a>.</li>
+    <li>Direct taxes: <a href="https://ddindia.co.in/2026/11/indias-net-direct-tax-collections-rise-11-8-to-rs-14-42-lakh-crore-so-far-in-fy27/">DD India (to 10 Nov 2026)</a>; <a href="https://www.incometaxindia.gov.in/documents/d/guest/direct_tax_data_14_10_2026-pdf">Income Tax Department data (14 Oct 2026)</a>.</li>
+    <li>Ramsey, F. (1927); Mirrlees, J. (1971); Atkinson, A. and Stiglitz, J. (1976); Diamond, P. and Saez, E. (2011), "The Case for a Progressive Tax", <i>Journal of Economic Perspectives</i>.</li>
+    <li>OECD, <i>Global Anti-Base Erosion Model Rules (Pillar Two)</i>; Report of the Fifteenth Finance Commission.</li>
+    <li>Earlier topics: <a href="01-inflation.html">Inflation</a> · <a href="02-interest-rates.html">Interest Rates</a> · <a href="03-gdp.html">GDP</a> · <a href="04-money-banking.html">Money &amp; Banking</a> · <a href="05-exchange-rates.html">Exchange Rates</a>.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<footer>
+  Finance &amp; Economics in Three Levels · Topic 06 · K Vijay Anand · <a href="05-exchange-rates.html">← Topic 05 Exchange Rates</a> · <a href="./">All topics</a> · <a href="/">Home</a><br>
+  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.
+  Educational content, not tax advice. Figures dated November 2026.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var root=document.documentElement, body=document.body;
+  var $=function(id){return document.getElementById(id);};
+  var inr=function(x,d){return "₹"+Number(x).toLocaleString("en-IN",{minimumFractionDigits:d||0,maximumFractionDigits:d||0});};
+  var cssv=function(n){return getComputedStyle(root).getPropertyValue(n).trim();};
+
+  try{var t=localStorage.getItem("fe-theme");if(t)root.setAttribute("data-theme",t);}catch(e){}
+  function redraw(){anRender();drawIT();}
+  function toggleTheme(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("fe-theme",n);}catch(e){}redraw();}
+  function toggleFS(){if(!document.fullscreenElement){(root.requestFullscreen||function(){}).call(root);}else{document.exitFullscreen();}}
+  function toggleSB(){body.classList.toggle("nosb");}
+  $("themeBtn").onclick=toggleTheme; $("fsBtn").onclick=toggleFS; $("sbBtn").onclick=toggleSB;
+
+  var LV=["school","working","expert"];
+  function setLevel(l,noHash){
+    if(LV.indexOf(l)<0)l="school";
+    body.setAttribute("data-level",l);
+    LV.forEach(function(x){$("p-"+x).classList.toggle("on",x===l);});
+    document.querySelectorAll(".levels button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-l")===l);});
+    buildTOC(l);
+    if(!noHash)history.replaceState(null,"","#"+l);
+    redraw();
+  }
+  document.querySelectorAll(".levels button").forEach(function(b){b.onclick=function(){setLevel(b.getAttribute("data-l"));};});
+  function buildTOC(l){
+    var names={school:"School",working:"Working people",expert:"Experts"};
+    var h='<div class="h">Contents · '+names[l]+'</div><a href="#snapshot">Snapshot · Nov 2026</a>';
+    $("p-"+l).querySelectorAll("section").forEach(function(s){
+      var t=s.querySelector("h2").textContent; h+='<a href="#'+s.id+'">'+t.replace(/^(\d+)/,"$1 · ")+'</a>';
+    });
+    h+='<a href="#sources">Sources</a>';
+    h+='<div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> level<br><kbd>M</kbd> hide contents<br><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause<br><kbd>T</kbd> theme · <kbd>F</kbd> full screen</div>';
+    $("toc").innerHTML=h;
+  }
+
+  /* ---------- Level 1: GST chain animation (18% example) ---------- */
+  var ST=[{who:"🏭 Maker",sell:100,buy:0},{who:"🚚 Wholesaler",sell:130,buy:100},{who:"🏪 Shop",sell:150,buy:130},{who:"🧒 You (final buyer)",sell:null,buy:150}];
+  var R=0.18, anS=0, anTimer=null, MAXS=ST.length+1;
+  function anRender(){
+    var svg="", c1=cssv("--l1"), c2=cssv("--l2"), c3=cssv("--l3"), ink=cssv("--ink"), ru=cssv("--rule");
+    var bx=20, bw=200, gap=20, base=190, sc=0.85;
+    for(var i=0;i<ST.length;i++){
+      var x=bx+i*(bw+gap), s=ST[i], shown=i<anS;
+      svg+='<text x="'+(x+bw/2)+'" y="22" font-size="16" text-anchor="middle" style="fill:'+ink+';font-weight:600;opacity:'+(shown?1:.3)+'">'+s.who+'</text>';
+      if(!shown)continue;
+      if(s.sell!==null){
+        var gst=s.sell*R, credit=s.buy*R, pay=gst-credit, hp=s.sell*sc, hg=gst*sc*2.2;
+        svg+='<rect x="'+(x+30)+'" y="'+(base-hp)+'" width="60" height="'+hp+'" fill="'+ru+'"/><text x="'+(x+60)+'" y="'+(base-hp/2+5)+'" font-size="13" text-anchor="middle">price ₹'+s.sell+'</text>';
+        svg+='<rect x="'+(x+110)+'" y="'+(base-hg)+'" width="60" height="'+hg+'" fill="'+c1+'"/><text x="'+(x+140)+'" y="'+(base-hg-6)+'" font-size="13" text-anchor="middle">GST ₹'+gst.toFixed(1)+'</text>';
+        svg+='<text x="'+(x+bw/2)+'" y="'+(base+20)+'" font-size="13" text-anchor="middle" style="fill:'+ink+'">credit ₹'+credit.toFixed(1)+' → pays govt</text>';
+        svg+='<text x="'+(x+bw/2)+'" y="'+(base+40)+'" font-size="16" text-anchor="middle" style="fill:'+c2+';font-weight:700">₹'+pay.toFixed(1)+'</text>';
+      } else {
+        var tot=s.buy*(1+R);
+        svg+='<rect x="'+(x+40)+'" y="'+(base-tot*sc)+'" width="120" height="'+(tot*sc)+'" fill="'+c3+'" fill-opacity=".85"/><text x="'+(x+100)+'" y="'+(base-tot*sc/2)+'" font-size="15" text-anchor="middle" style="fill:#fff;font-weight:700">pays ₹'+tot.toFixed(0)+'</text>';
+        svg+='<text x="'+(x+100)+'" y="'+(base+20)+'" font-size="13" text-anchor="middle" style="fill:'+ink+'">₹150 + ₹27 GST</text>';
+      }
+    }
+    if(anS>=MAXS)svg+='<text x="450" y="246" font-size="15" text-anchor="middle" style="fill:'+c3+';font-weight:700">Government gets 18 + 5.4 + 3.6 = ₹27 = 18% of the final price ₹150 ✔  The final buyer bears it all.</text>';
+    $("anChart").innerHTML=svg;
+    var m;
+    if(anS===0)m="Press Play, or press S to move one step at a time.";
+    else if(anS<=3){var s=ST[anS-1], g=s.sell*R, c=s.buy*R; m=s.who+" sells for ₹"+s.sell+" plus ₹"+g.toFixed(1)+" GST. "+(c>0?"It already paid ₹"+c.toFixed(1)+" GST when buying, so it gets that as credit and":"It")+" pays only ₹"+(g-c).toFixed(1)+" to the government.";}
+    else if(anS===4)m="You buy it for ₹150 + ₹27 GST = ₹177. You cannot claim any credit; you are the final consumer.";
+    else m="Each seller paid tax only on the value it added. The total collected, ₹27, equals 18% of the final price, with no tax on tax.";
+    $("anMsg").textContent=m;
+  }
+  function anStep(){ if(anS<MAXS){anS++;anRender();} else anPause(); }
+  function anPlay(){ if(anTimer)return; if(anS>=MAXS)anS=0; anTimer=setInterval(anStep,1500); }
+  function anPause(){ clearInterval(anTimer); anTimer=null; }
+  $("anPlay").onclick=anPlay; $("anStep").onclick=function(){anPause();anStep();}; $("anPause").onclick=anPause;
+  $("anReset").onclick=function(){anPause();anS=0;anRender();};
+
+  /* ---------- Level 2: income tax calculator ---------- */
+  var NEW=[[400000,0],[800000,.05],[1200000,.10],[1600000,.15],[2000000,.20],[2400000,.25],[Infinity,.30]];
+  var OLD=[[250000,0],[500000,.05],[1000000,.20],[Infinity,.30]];
+  function slab(ti,S){var t=0,lo=0;for(var i=0;i<S.length;i++){var hi=S[i][0];if(ti>lo)t+=(Math.min(ti,hi)-lo)*S[i][1];lo=hi;}return t;}
+  function sur(ti,isNew){if(ti>50000000&&!isNew)return .37;if(ti>20000000)return .25;if(ti>10000000)return .15;if(ti>5000000)return .10;return 0;}
+  function taxNew(g,sal){var ti=Math.max(0,g-(sal?75000:0));var t=slab(ti,NEW);if(ti<=1200000)t=0;else t=Math.min(t,ti-1200000);t*=1+sur(ti,true);return {ti:ti,tax:t*1.04};}
+  function taxOld(g,sal,d){var ti=Math.max(0,g-(sal?50000:0)-d);var t=slab(ti,OLD);if(ti<=500000)t=0;t*=1+sur(ti,false);return {ti:ti,tax:t*1.04};}
+  function drawIT(){
+    var g=+$("itG").value||0, sal=$("itS").value==="1", d=+$("itD").value||0;
+    var a=taxNew(g,sal), b=taxOld(g,sal,d), better=a.tax<=b.tax?"new":"old";
+    var mr=function(f){return (f(g+1000)-f(g))/1000;};
+    var mN=mr(function(x){return taxNew(x,sal).tax;}), mO=mr(function(x){return taxOld(x,sal,d).tax;});
+    $("itOut").innerHTML="New regime: taxable "+inr(a.ti)+", tax <b>"+inr(a.tax)+"</b> (effective "+(g?100*a.tax/g:0).toFixed(1)+"%, marginal ≈ "+(100*mN).toFixed(1)+"%)<br>"+
+      "Old regime: taxable "+inr(b.ti)+", tax <b>"+inr(b.tax)+"</b> (effective "+(g?100*b.tax/g:0).toFixed(1)+"%, marginal ≈ "+(100*mO).toFixed(1)+"%)<br>"+
+      "→ The <b>"+better+" regime</b> saves about <b>"+inr(Math.abs(a.tax-b.tax))+"</b> a year. "+
+      "Break-even: old-regime deductions would need to be about <b>"+inr(breakEven(g,sal))+"</b> to match the new regime.";
+    var W=900,H=280,L=80,Rm=20,T=34,B=34, svg="", c1=cssv("--l2"), c2=cssv("--l1"), ru=cssv("--rule"), ink=cssv("--ink");
+    var xmax=Math.max(4000000,g*1.3), N=120, ymax=0, pa="", pb="";
+    for(var i=0;i<=N;i++){var x=xmax*i/N; ymax=Math.max(ymax,taxNew(x,sal).tax,taxOld(x,sal,d).tax);}
+    ymax*=1.05;
+    var X=function(v){return L+(W-L-Rm)*v/xmax;}, Y=function(v){return T+(H-T-B)*(1-v/ymax);};
+    for(var q=0;q<=4;q++){var gv=ymax*q/4;svg+='<line x1="'+L+'" x2="'+(W-Rm)+'" y1="'+Y(gv)+'" y2="'+Y(gv)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(Y(gv)+4)+'" font-size="12" text-anchor="end">'+inr(gv/100000,1)+' L</text>';}
+    for(q=0;q<=5;q++){var xv=xmax*q/5;svg+='<text x="'+X(xv)+'" y="'+(H-B+18)+'" font-size="12" text-anchor="middle">'+inr(xv/100000,0)+' L</text>';}
+    for(i=0;i<=N;i++){var xx=xmax*i/N;pa+=(i?"L":"M")+X(xx)+","+Y(taxNew(xx,sal).tax);pb+=(i?"L":"M")+X(xx)+","+Y(taxOld(xx,sal,d).tax);}
+    svg+='<path d="'+pa+'" fill="none" stroke="'+c1+'" stroke-width="3.5"/><path d="'+pb+'" fill="none" stroke="'+c2+'" stroke-width="3.5" stroke-dasharray="9 6"/>';
+    svg+='<line x1="'+X(g)+'" x2="'+X(g)+'" y1="'+T+'" y2="'+(H-B)+'" stroke="'+ink+'" stroke-dasharray="3 4"/><text x="'+(X(g)+4)+'" y="'+(T+10)+'" font-size="12" style="fill:'+ink+'">your income</text>';
+    svg+='<line x1="'+L+'" x2="'+(L+36)+'" y1="14" y2="14" stroke="'+c1+'" stroke-width="3.5"/><text x="'+(L+42)+'" y="19" font-size="14" style="fill:'+c1+';font-weight:600">new regime (solid)</text>';
+    svg+='<line x1="'+(L+220)+'" x2="'+(L+256)+'" y1="14" y2="14" stroke="'+c2+'" stroke-width="3.5" stroke-dasharray="9 6"/><text x="'+(L+262)+'" y="19" font-size="14" style="fill:'+c2+';font-weight:600">old regime with your deductions (dashed)</text>';
+    svg+='<text x="'+((W+L)/2)+'" y="'+(H-2)+'" font-size="12" text-anchor="middle">gross income</text>';
+    $("itChart").innerHTML=svg;
+  }
+  function breakEven(g,sal){var target=taxNew(g,sal).tax,lo=0,hi=g;if(taxOld(g,sal,0).tax<=target)return 0;if(taxOld(g,sal,hi).tax>target)return hi;for(var k=0;k<50;k++){var m=(lo+hi)/2;if(taxOld(g,sal,m).tax>target)lo=m;else hi=m;}return Math.round(hi/1000)*1000;}
+  ["itG","itS","itD"].forEach(function(id){$(id).oninput=drawIT;});
+
+  /* ---------- Level 3: incidence / DWL, Diamond–Saez ---------- */
+  function dwl(){
+    var t=(+$("dwT").value||0)/100, s=+$("dwS").value||0, d=+$("dwD").value||0, PQ=+$("dwPQ").value||0;
+    var cs=(s+d)>0?s/(s+d):0, harm=(s+d)>0?s*d/(s+d):0, D=0.5*t*t*harm*PQ, rev=t*PQ*(1-t*harm);
+    $("dwOut").innerHTML="Consumers bear ≈ <b>"+(cs*100).toFixed(0)+"%</b>, producers ≈ <b>"+((1-cs)*100).toFixed(0)+"%</b> · deadweight loss ≈ <b>₹"+D.toFixed(0)+" crore</b> · approx. revenue ₹"+rev.toFixed(0)+" crore · DWL per rupee of revenue ≈ <b>"+(rev>0?(D/rev*100).toFixed(1):"–")+" paise</b>. Doubling t would roughly quadruple the DWL.";
+  }
+  ["dwT","dwS","dwD","dwPQ"].forEach(function(id){$(id).oninput=dwl;}); dwl();
+  function ds(){var a=+$("dsA").value||0, e=+$("dsE").value||0; $("dsOut").innerHTML="Revenue-maximising top marginal rate τ* = 1/(1 + a·e) = <b>"+(100/(1+a*e)).toFixed(1)+"%</b> (all taxes combined at the margin)."; }
+  ["dsA","dsE"].forEach(function(id){$(id).oninput=ds;}); ds();
+
+  /* ---------- quizzes ---------- */
+  var Q={
+    school:[
+      ["A tax is…",["A gift to the government","A compulsory payment to the government by law","A bank loan","A school fee"],1,"Taxes are compulsory and set by law."],
+      ["Which of these is an INDIRECT tax?",["Income tax","Corporate tax","GST on a notebook","Tax on a salary"],2,"GST is included in the price of goods and services."],
+      ["In the GST chain, how much GST does the wholesaler actually pay the government?",["₹23.4","₹18","₹5.4","₹0"],2,"It collects ₹23.4 but gets ₹18 credit for GST already paid, so it pays ₹5.4."],
+      ["A 'progressive' income tax means…",["Everyone pays the same amount","Higher incomes pay a higher percentage","Only companies pay","Tax falls as income rises"],1,"The rate rises with income, slab by slab."],
+      ["Which tax is usually collected by a municipality?",["GST","Customs duty","Property tax","Income tax"],2,"Local bodies collect property tax to pay for local roads, drains and lights."]
+    ],
+    working:[
+      ["Under the new regime in FY 2026-27, a salaried person earning ₹12.5 lakh gross pays income tax of…",["₹0","₹60,000","₹80,000","₹1.2 lakh"],0,"Taxable income is ₹12.5 lakh − ₹75,000 = ₹11.75 lakh, which is under the ₹12 lakh rebate limit, so the tax is nil."],
+      ["The Income-tax Act 2025 replaced the 1961 Act from…",["1 April 2025","1 April 2026","1 July 2026","1 April 2027"],1,"It applies from Tax Year 2026-27 onwards."],
+      ["Long-term capital gains on listed equity are taxed at…",["10% above ₹1 lakh","12.5% above ₹1.25 lakh","20% flat","Slab rate"],1,"Since July 2024: 12.5% on LTCG above ₹1.25 lakh a year."],
+      ["Which item is still OUTSIDE GST?",["Mobile phones","Restaurant food","Petrol and diesel","Cement"],2,"Petroleum fuels carry central excise and state VAT instead."],
+      ["Input tax credit means…",["A refund of income tax","Credit for GST paid on inputs, set off against GST on sales","A bank loan for taxes","A discount for early filing"],1,"It prevents tax-on-tax across the supply chain."]
+    ],
+    expert:[
+      ["With ε_s = 1.5 and |ε_d| = 0.5, consumers bear about…",["25%","50%","75%","100%"],2,"ε_s / (ε_s + |ε_d|) = 1.5 / 2 = 75%: the inelastic side bears more."],
+      ["Deadweight loss rises with the tax rate…",["Linearly","Quadratically","Not at all","Inversely"],1,"The Harberger triangle is proportional to t²."],
+      ["The Ramsey rule says commodity tax rates should be…",["Uniform","Proportional to price","Inversely proportional to demand elasticity","Zero on necessities"],2,"Tax inelastic goods more, which is efficient but regressive."],
+      ["With a = 1.5 and e = 0.25, the Diamond–Saez top rate is about…",["40%","57%","73%","90%"],2,"1 / (1 + 0.375) ≈ 72.7%."],
+      ["Decisions in India's GST Council need…",["A simple majority","Unanimity","A three-fourths majority of weighted votes","Only the Centre's approval"],2,"The Centre has 1/3 of votes and the states 2/3; three-fourths is required."]
+    ]
+  };
+  document.querySelectorAll(".quiz").forEach(function(box){
+    var set=Q[box.getAttribute("data-quiz")], score=0, done=0, h="";
+    set.forEach(function(q,qi){
+      h+='<div class="q" data-i="'+qi+'"><p>'+(qi+1)+'. '+q[0]+'</p>';
+      q[1].forEach(function(o,oi){h+='<button data-o="'+oi+'">'+o+'</button>';});
+      h+='<div class="why">'+q[3]+'</div></div>';
+    });
+    h+='<p class="score"></p>'; box.innerHTML=h;
+    box.querySelectorAll(".q").forEach(function(qd){
+      var q=set[+qd.getAttribute("data-i")];
+      qd.querySelectorAll("button").forEach(function(b){
+        b.onclick=function(){
+          if(qd.classList.contains("done"))return;
+          var o=+b.getAttribute("data-o"); qd.classList.add("done"); done++;
+          if(o===q[2])score++; else b.classList.add("wrong");
+          qd.querySelectorAll("button")[q[2]].classList.add("right");
+          box.querySelector(".score").textContent="Score: "+score+" / "+done+(done===set.length?(score===set.length?" — perfect!":" — review the explanations above."):"");
+        };
+      });
+    });
+  });
+
+  document.addEventListener("keydown",function(e){
+    if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
+    var k=e.key.toLowerCase();
+    if(k==="1")setLevel("school"); else if(k==="2")setLevel("working"); else if(k==="3")setLevel("expert");
+    else if(k==="m")toggleSB(); else if(k==="t")toggleTheme(); else if(k==="f")toggleFS();
+    else if(body.getAttribute("data-level")==="school"){
+      if(k==="p"){anPlay();} else if(k==="s"){anPause();anStep();} else if(k==="x"){anPause();}
+    }
+  });
+
+  setLevel((location.hash||"#school").slice(1),true);
+  window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(LV.indexOf(h)>=0)setLevel(h,true);});
+})();
+</script>
+</body>
+</html>

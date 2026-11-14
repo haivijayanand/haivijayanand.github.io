@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<!--
+TOOL:    finance-economics/15-pensions-retirement.html — Finance & Economics Topic 15: Pensions & Retirement (three levels)
+FAMILY:  finance-economics
+VERSION: 1.0.0
+DATE:    2026-11-14
+CHAT:    Finance & Economics series — second set of ten topics; Topic 15 Pensions & Retirement
+CHANGES: 1.0.0 - fifteenth topic: Meena/Ravi retirement-tank animation (start early, drawdown);
+                 pension map (OPS, NPS, UPS, EPF/EPS, APY, PPF, SCSS), Dec 2025 NPS exit rules, corpus and
+                 SIP calculator with path chart, NPS vs UPS; life-cycle model, DC replacement-rate vs UPS
+                 calculator, PAYG vs funding, longevity/sequence risk, defaults, ageing; quiz per level
+STATUS:  working
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pensions &amp; Retirement — Finance &amp; Economics in Three Levels — K Vijay Anand</title>
+<meta name="description" content="Pensions and retirement explained at three levels — for school students, for working people and as a review for experts: EPF, NPS, UPS, OPS, APY, retirement corpus calculator, life-cycle model, DB vs DC, PAYG vs funding, longevity risk, India's ageing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* Colour-blind-safe palette: blue / orange / purple / gold — no red-vs-green coding */
+  :root{--bg:#f4f2ed;--bg2:#e9e5dc;--card:#fffdf8;--ink:#1d1b18;--soft:#4f4940;--faint:#857c6f;--rule:#d6cdbd;
+        --acc:#1d5fa6;--l1:#d9730d;--l2:#1d5fa6;--l3:#6a3fa0;--gold:#a87908;--hi:#fff1d6}
+  :root[data-theme="dark"]{--bg:#121316;--bg2:#1a1c21;--card:#1f2228;--ink:#ece9e2;--soft:#c3bdb2;--faint:#8c8578;--rule:#33363d;
+        --acc:#6aa8ee;--l1:#f39a3d;--l2:#6aa8ee;--l3:#b28ae6;--gold:#e5b33c;--hi:#3a2f17}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.65}
+  a{color:var(--acc)}
+  .toolbar{position:fixed;top:10px;right:12px;z-index:30;display:flex;gap:8px;font-size:13px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button,.toolbar a{background:var(--card);color:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;text-decoration:none}
+  header{padding:70px 4vw 18px;max-width:1600px;margin:0 auto}
+  .series{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-family:"Playfair Display",serif;font-weight:800;font-size:clamp(46px,7vw,84px);margin:6px 0 4px;line-height:1}
+  .tag{color:var(--soft);max-width:70ch;margin:0}
+  /* level switch */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 0}
+  .levels button{text-align:left;background:var(--card);border:2px solid var(--rule);border-radius:12px;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink)}
+  .levels button b{display:block;font-size:18px}
+  .levels button small{color:var(--faint)}
+  .levels button .k{float:right;font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:0 6px;color:var(--faint)}
+  .levels button[data-l="school"].on{border-color:var(--l1);background:color-mix(in srgb,var(--l1) 10%,var(--card))}
+  .levels button[data-l="working"].on{border-color:var(--l2);background:color-mix(in srgb,var(--l2) 10%,var(--card))}
+  .levels button[data-l="expert"].on{border-color:var(--l3);background:color-mix(in srgb,var(--l3) 10%,var(--card))}
+  /* layout */
+  .wrap{max-width:1600px;margin:0 auto;padding:0 4vw 40px;display:grid;grid-template-columns:250px 1fr;gap:34px}
+  body.nosb .wrap{grid-template-columns:1fr}
+  body.nosb aside{display:none}
+  aside{position:sticky;top:60px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;font-size:14.5px;padding-top:20px}
+  aside .h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  aside a{display:block;padding:5px 10px;border-left:3px solid var(--rule);color:var(--soft);text-decoration:none}
+  aside a:hover{border-left-color:var(--lc);color:var(--ink)}
+  aside .keys{margin-top:18px;color:var(--faint);font-size:12.5px;line-height:1.9}
+  kbd{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--card)}
+  main{min-width:0}
+  .panel{display:none}
+  .panel.on{display:block}
+  #p-school{--lc:var(--l1)} #p-working{--lc:var(--l2)} #p-expert{--lc:var(--l3)}
+  body[data-level="school"]{--lc:var(--l1)} body[data-level="working"]{--lc:var(--l2)} body[data-level="expert"]{--lc:var(--l3)}
+  .lvhead{border-left:6px solid var(--lc);padding:4px 0 4px 16px;margin:24px 0 10px}
+  .lvhead .who{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--lc);font-weight:700}
+  .lvhead p{margin:4px 0 0;color:var(--soft)}
+  section{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:22px 28px;margin:18px 0}
+  h2{font-family:"Playfair Display",serif;font-size:30px;margin:0 0 10px;line-height:1.2}
+  h2 .n{color:var(--lc);margin-right:8px}
+  h3{font-size:18px;margin:20px 0 6px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .box{border:1px solid var(--rule);border-radius:10px;padding:14px 16px;background:var(--bg)}
+  .box b.t{display:block;color:var(--lc);margin-bottom:4px}
+  .def{font-size:20px;border-left:5px solid var(--lc);background:color-mix(in srgb,var(--lc) 8%,transparent);padding:12px 18px;border-radius:0 10px 10px 0;margin:8px 0 14px}
+  .note{background:var(--hi);border-radius:8px;padding:10px 14px;font-size:15.5px}
+  .eq{font-family:"JetBrains Mono",monospace;background:var(--bg2);border-radius:8px;padding:10px 14px;overflow-x:auto;font-size:15px;white-space:pre}
+  table{border-collapse:collapse;width:100%;font-size:15.5px;margin:8px 0}
+  th,td{border-bottom:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:10px}
+  .stat{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--bg)}
+  .stat .v{font-size:28px;white-space:nowrap;font-weight:700;color:var(--acc);line-height:1.1}
+  .stat .l{font-size:13.5px;color:var(--soft)}
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;margin:10px 0}
+  .ctl label{font-size:13.5px;color:var(--soft);display:flex;flex-direction:column;gap:3px}
+  .ctl input[type=number]{width:120px;font:inherit;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)}
+  .ctl input[type=range]{width:200px}
+  .btn{background:var(--lc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--lc);border:1px solid var(--lc)}
+  .out{font-size:18px;margin:8px 0}
+  .out b{color:var(--lc)}
+  svg text{fill:var(--soft);font-family:Inter,sans-serif}
+  /* basket animation */
+  .stage{border:1px dashed var(--rule);border-radius:10px;padding:14px;background:var(--bg);min-height:170px}
+  .stage .yr{font-size:26px;font-weight:700}
+  .stage .yr span{color:var(--l1)}
+  .samosas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:44px}
+  .sam{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:30px solid var(--l1);transition:opacity .3s}
+  .sam.gone{opacity:.15}
+  /* quiz */
+  .q{border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:10px 0;background:var(--bg)}
+  .q p{margin:0 0 8px;font-weight:600}
+  .q button{display:block;width:100%;text-align:left;margin:5px 0;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;font:inherit;color:var(--ink);cursor:pointer}
+  .q button.right{border:2px solid var(--l2);background:color-mix(in srgb,var(--l2) 14%,var(--card))}
+  .q button.right::after{content:"  ✔ correct";font-weight:700;color:var(--l2)}
+  .q button.wrong{border:2px dashed var(--l1)}
+  .q button.wrong::after{content:"  ✘ not this one";font-weight:700;color:var(--l1)}
+  .q .why{display:none;font-size:15px;color:var(--soft);margin-top:6px}
+  .q.done .why{display:block}
+  .score{font-weight:700;color:var(--lc)}
+  footer{max-width:1600px;margin:0 auto;padding:20px 4vw 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--faint)}
+  footer a{color:var(--soft)}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}aside{display:none}.levels{grid-template-columns:1fr}section{padding:18px}}
+  @media print{.toolbar,aside,.levels{display:none}.panel{display:block!important}.wrap{display:block}}
+</style>
+</head>
+<body data-level="school">
+<div class="toolbar">
+  <a href="./">← Series</a>
+  <button id="sbBtn" title="Show / hide contents (M)">☰ Contents</button>
+  <button id="themeBtn" title="Light / dark (T)">◐ Theme</button>
+  <button id="fsBtn" title="Full screen (F)">⤢ Full screen</button>
+</div>
+
+<header>
+  <div class="series">Finance &amp; Economics · Topic 15</div>
+  <h1>Pensions &amp; Retirement</h1>
+  <p class="tag">How to pay for 20–30 years of life after work ends. Covers India's pension schemes from EPF and NPS to the new Unified Pension Scheme, how much to save and when to start, and the economics of ageing societies. Pick your level.</p>
+  <div class="levels" role="tablist">
+    <button data-l="school" class="on"><span class="k">1</span><b>🎒 School</b><small>Filling a tank for old age</small></button>
+    <button data-l="working"><span class="k">2</span><b>💼 Working people</b><small>EPF, NPS, UPS, how much you need</small></button>
+    <button data-l="expert"><span class="k">3</span><b>🎓 Experts — review</b><small>Life cycle, DB vs DC, PAYG, longevity</small></button>
+  </div>
+</header>
+
+<div class="wrap">
+<aside id="toc"></aside>
+<main>
+
+<section id="snapshot" style="border-top:4px solid var(--gold)">
+  <h2>Where things stand — November 2026</h2>
+  <div class="snap">
+    <div class="stat"><div class="v">8.25%</div><div class="l">EPF interest rate for 2025-26, unchanged for a third year (PPF 7.1%, Senior Citizens Savings Scheme 8.2%)</div></div>
+    <div class="stat"><div class="v">₹16 lakh crore</div><div class="l">Assets in the National Pension System (March 2026), with over 2.17 crore subscribers; Atal Pension Yojana has about 9 crore enrolments</div></div>
+    <div class="stat"><div class="v">1.18 lakh</div><div class="l">Central government employees who chose the new Unified Pension Scheme (UPS) by July 2026, out of roughly 23 lakh eligible</div></div>
+    <div class="stat"><div class="v">15%</div><div class="l">Share of Indians aged 60+ by 2036 (22.7 crore people), up from 8.4% in 2011; Kerala will reach about 23%</div></div>
+    <div class="stat"><div class="v">~1 in 4</div><div class="l">Elderly Indians receiving any pension, by most estimates; most depend on family or keep working</div></div>
+  </div>
+  <p class="note" style="margin-top:12px">Interest rates and scheme rules change. Check the current rate and terms before you decide. Figures here are dated November 2026.</p>
+</section>
+
+<!-- ========================= LEVEL 1 : SCHOOL ====================== -->
+<div class="panel on" id="p-school">
+  <div class="lvhead"><div class="who">Level 1 · For school students</div><p>One day your parents and grandparents stop working. How do they still buy food and medicine? With money they saved while working: their pension.</p></div>
+
+  <section id="s1">
+    <h2><span class="n">1</span>What is retirement? What is a pension?</h2>
+    <div class="def"><b>Retirement</b> is when a person stops working, usually around age 58–65. A <b>pension</b> is a regular income they get after retiring, paid from money saved during their working years.</div>
+    <p>People in India now live longer: many live to 80 or more. So savings must last <b>20 to 30 years</b> without a salary, while prices keep rising (Topic 01).</p>
+  </section>
+
+  <section id="s2">
+    <h2><span class="n">2</span>Watch it happen: filling the tank</h2>
+    <p>Think of retirement savings as a water tank. While working, you pour in a little every year. After retiring, you take some out every year. Two friends, <b>Meena</b> and <b>Ravi</b>, each save ₹1 lakh a year and earn 4% more than inflation. Meena starts at 25; Ravi starts at 40. Press Play, or press S for each step.</p>
+    <div class="ctl">
+      <button class="btn" id="anPlay">▶ Play (P)</button>
+      <button class="btn ghost" id="anStep">Next step (S)</button>
+      <button class="btn ghost" id="anPause">⏸ Pause (X)</button>
+      <button class="btn ghost" id="anReset">↺ Reset</button>
+    </div>
+    <div class="stage">
+      <div class="yr" id="anTitle">Two friends</div>
+      <svg id="anChart" viewBox="0 0 900 300" style="width:100%;height:auto;margin-top:6px"></svg>
+      <p id="anMsg" style="margin:6px 0 0;color:var(--soft);font-size:17px">Press Play, or press S to begin.</p>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="n">3</span>Who pays pensions in India?</h2>
+    <div class="cols">
+      <div class="box"><b class="t">🏛️ Government jobs</b>Older staff get a fixed pension from the government. Newer staff save in NPS, and central staff can choose the new UPS, which promises half their last pay.</div>
+      <div class="box"><b class="t">🏢 Company jobs</b>Worker and employer each put 12% of basic pay into EPF, which pays interest every year.</div>
+      <div class="box"><b class="t">🧺 Farmers, shopkeepers, workers</b>Most have no employer pension. They can join Atal Pension Yojana or NPS, and the poorest elderly get a small government old-age pension.</div>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="n">4</span>Three lessons</h2>
+    <ol>
+      <li><b>Start early.</b> Money saved young has many years to grow (compounding, Topic 09).</li>
+      <li><b>Don't touch it.</b> Taking retirement money out early for other things leaves the tank empty later.</li>
+      <li><b>Beat inflation.</b> Savings must grow faster than prices, or they buy less each year.</li>
+    </ol>
+  </section>
+
+  <section id="s5">
+    <h2><span class="n">5</span>Words to remember</h2>
+    <table>
+      <tr><th>Word</th><th>Meaning</th></tr>
+      <tr><td>Retirement</td><td>Stopping regular work, usually around 58–65</td></tr>
+      <tr><td>Pension</td><td>Regular income after retirement</td></tr>
+      <tr><td>Corpus</td><td>The total savings built up for retirement</td></tr>
+      <tr><td>EPF</td><td>Employees' Provident Fund, a savings account for company workers</td></tr>
+      <tr><td>NPS</td><td>National Pension System, a market-linked pension account anyone can open</td></tr>
+      <tr><td>Annuity</td><td>A product that turns a lump sum into a fixed monthly income for life</td></tr>
+    </table>
+  </section>
+
+  <section id="s6">
+    <h2><span class="n">6</span>Check yourself</h2>
+    <div class="quiz" data-quiz="school"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 2 : WORKING ===================== -->
+<div class="panel" id="p-working">
+  <div class="lvhead"><div class="who">Level 2 · For working people</div><p>The schemes, how they compare, how big a corpus you need, and the common mistakes. This is educational only, not financial or tax advice. Scheme rules and rates change.</p></div>
+
+  <section id="w1">
+    <h2><span class="n">1</span>India's pension map</h2>
+    <table>
+      <tr><th>Scheme</th><th>Who</th><th>Type</th><th>Key features</th></tr>
+      <tr><td>Old Pension Scheme (OPS)</td><td>Govt staff who joined before 2004 (central)</td><td>Defined benefit, unfunded</td><td>50% of last pay, inflation-linked (DA), paid from the budget</td></tr>
+      <tr><td>NPS</td><td>Govt staff since 2004; anyone 18–70 voluntarily</td><td>Defined contribution, market-linked</td><td>Low cost; equity/debt choice; at exit, government staff: up to 60% lump sum, 40% annuity; non-government: up to 80% lump sum, 20% annuity (December 2025 rules); full withdrawal if the corpus is ₹8 lakh or less; can stay invested until 85</td></tr>
+      <tr><td>UPS (from 1 April 2025)</td><td>Central govt NPS staff who opted in</td><td>Assured payout inside NPS</td><td>50% of average basic pay of the last 12 months after 25 years' service; minimum ₹10,000 a month after 10 years; 60% family pension; inflation-indexed. Employee 10%, government 18.5%.</td></tr>
+      <tr><td>EPF + EPS</td><td>Organised private-sector employees</td><td>EPF: savings at a declared rate; EPS: small defined pension</td><td>12% + 12% of basic; employer's 8.33% (on pay up to ₹15,000) goes to EPS. 8.25% interest for 2025-26.</td></tr>
+      <tr><td>Atal Pension Yojana</td><td>Unorganised workers, 18–40</td><td>Guaranteed small pension</td><td>₹1,000–5,000 a month from 60, depending on contribution</td></tr>
+      <tr><td>PPF, SCSS</td><td>Anyone / seniors</td><td>Small savings</td><td>PPF 7.1% tax-free, 15-year lock-in; SCSS 8.2% for 60+</td></tr>
+      <tr><td>IGNOAPS</td><td>Elderly below poverty line</td><td>Social pension</td><td>₹200–500 a month from the Centre, topped up by states</td></tr>
+    </table>
+  </section>
+
+  <section id="w2">
+    <h2><span class="n">2</span>Calculator: how much do you need?</h2>
+    <div class="ctl">
+      <label>Current age<input type="number" id="rcA" value="35" step="1"></label>
+      <label>Retire at<input type="number" id="rcR" value="60" step="1"></label>
+      <label>Plan until age<input type="number" id="rcL" value="90" step="1"></label>
+      <label>Monthly expenses today (₹)<input type="number" id="rcE" value="50000" step="1000"></label>
+      <label>Inflation %<input type="number" id="rcI" value="6" step="0.5"></label>
+      <label>Return before retiring %<input type="number" id="rcP" value="10" step="0.5"></label>
+      <label>Return after retiring %<input type="number" id="rcQ" value="7" step="0.5"></label>
+      <label>Savings already (₹)<input type="number" id="rcS" value="1000000" step="100000"></label>
+    </div>
+    <div class="out" id="rcOut"></div>
+    <svg id="rcChart" viewBox="0 0 900 300" style="width:100%;height:auto;margin-top:8px"></svg>
+    <p class="note">The corpus needed is the value at retirement of expenses that keep rising with inflation until the plan's end age. Monthly saving assumes a fixed SIP until retirement. Raising the SIP each year with your salary lowers the starting amount. Returns are not guaranteed.</p>
+  </section>
+
+  <section id="w3">
+    <h2><span class="n">3</span>NPS or UPS? (central government staff)</h2>
+    <div class="cols">
+      <div class="box"><b class="t">UPS: the assured option</b>Predictable, inflation-indexed pension and family pension, like OPS but funded by contributions. The government keeps its contribution and returns, and there is a smaller lump sum. Best for those who value certainty and expect long service.</div>
+      <div class="box"><b class="t">NPS: the market option</b>Your corpus is yours, including the government's 14% share, and is passed on fully to heirs. The pension depends on market returns and annuity rates at retirement. It may beat UPS for long equity-heavy careers, or fall short.</div>
+    </div>
+    <p>Take-up of UPS has been low (about 1.18 lakh by July 2026). The switch window closed on 30 November 2025; staff who did nothing stay in NPS. UPS members keep a one-time option to move back to NPS before retirement.</p>
+  </section>
+
+  <section id="w4">
+    <h2><span class="n">4</span>Common mistakes</h2>
+    <ul>
+      <li><b>Withdrawing EPF when changing jobs.</b> Transfer it instead; withdrawals lose decades of tax-free compounding.</li>
+      <li><b>Too little equity when young.</b> 25–30 years is long enough for equities to matter (Topic 07); shift gradually towards debt near retirement.</li>
+      <li><b>Ignoring health costs.</b> Medical bills rise faster than general prices; keep health cover beyond employment (Topic 14).</li>
+      <li><b>Mixing goals.</b> Children's education and weddings compete with retirement. Children can borrow for education; you cannot borrow for retirement.</li>
+      <li><b>Underestimating longevity.</b> Plan to 85–90, not to the average life expectancy.</li>
+    </ul>
+  </section>
+
+  <section id="w5">
+    <h2><span class="n">5</span>After retirement: making the money last</h2>
+    <ul>
+      <li><b>Bucket approach:</b> 2–3 years of expenses in safe instruments (SCSS, FDs, liquid funds), the next 5–7 years in debt funds, and the rest in a modest equity share to keep up with inflation.</li>
+      <li><b>Annuities</b> give lifelong income and remove longevity risk, but rates (around 6–7%) are fixed and usually not inflation-linked.</li>
+      <li><b>Withdrawal rate:</b> taking out more than about 3–4% of the corpus a year, rising with inflation, risks running out over 30 years in India's higher-inflation setting.</li>
+    </ul>
+  </section>
+
+  <section id="w6">
+    <h2><span class="n">6</span>Pensions and the country</h2>
+    <ul>
+      <li><b>Fiscal cost:</b> pensions are among the biggest items in state budgets. Several states announced a return to OPS in 2022–23; the RBI warned this would burden future taxpayers, since OPS is unfunded.</li>
+      <li><b>Coverage gap:</b> about 80–90% of workers are informal (Topic 11) and have no employer pension, so most elderly rely on family.</li>
+      <li><b>Capital markets:</b> EPF and NPS money funds government bonds and, through equity, Indian companies (Topics 07 and 08).</li>
+    </ul>
+  </section>
+
+  <section id="w7">
+    <h2><span class="n">7</span>Check yourself</h2>
+    <div class="quiz" data-quiz="working"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 3 : EXPERT ====================== -->
+<div class="panel" id="p-expert">
+  <div class="lvhead"><div class="who">Level 3 · Review for experts</div><p>The life-cycle model, defined benefit vs defined contribution, pay-as-you-go vs funding, longevity and sequence risk, behavioural design, and India's demographic window.</p></div>
+
+  <section id="e1">
+    <h2><span class="n">1</span>The life-cycle model</h2>
+    <div class="eq">max Σ β^t u(c_t)  s.t.  Σ c_t/(1+r)^t = W_0 + Σ y_t/(1+r)^t        → consumption smoothing; saving = y_t − c_t, positive in working years, negative after</div>
+    <ul>
+      <li>Modigliani–Brumberg (1954) and Friedman's permanent income: households save in mid-life to smooth consumption. In aggregate, saving depends on growth and the age structure, which is why the "demographic dividend" years are also high-saving years.</li>
+      <li>Empirical puzzles include the retirement-consumption drop, under-saving (present bias), the low uptake of annuities, and high saving by Indian households in physical assets (gold, land) rather than pensions.</li>
+    </ul>
+  </section>
+
+  <section id="e2">
+    <h2><span class="n">2</span>DC replacement rate vs a 50% promise: calculator</h2>
+    <div class="eq">Wage at year t (final = 1): w_t = (1+g)^{t−N}.   Corpus = Σ c·w_t·(1+r)^{N−t}.   Pension = Corpus / ä_D(r_a).   Replacement rate = Pension / final wage</div>
+    <div class="ctl">
+      <label>Contribution rate %<input type="number" id="drC" value="24" step="1"></label>
+      <label>Years contributing<input type="number" id="drN" value="30" step="1"></label>
+      <label>Real wage growth %<input type="number" id="drG" value="2" step="0.5"></label>
+      <label>Real return (accumulation) %<input type="number" id="drR" value="4" step="0.5"></label>
+      <label>Years in retirement<input type="number" id="drD" value="25" step="1"></label>
+      <label>Real annuity rate %<input type="number" id="drA" value="1.5" step="0.5"></label>
+    </div>
+    <div class="out" id="drOut"></div>
+    <svg id="drChart" viewBox="0 0 900 260" style="width:100%;height:auto;margin-top:8px"></svg>
+    <p class="note">All in real terms, against final pay. The UPS benchmark of 50% is of the last 12 months' average basic pay, and is indexed. The 24% default is NPS's 10% employee + 14% government contribution. A real annuity rate assumes an inflation-indexed annuity, which is scarce in India; a nominal annuity's real value erodes.</p>
+  </section>
+
+  <section id="e3">
+    <h2><span class="n">3</span>Pay-as-you-go vs funded</h2>
+    <ul>
+      <li><b>Aaron (1966) / Samuelson (1958):</b> PAYG yields an implicit return of population growth plus productivity growth (n + g). Funding yields r. When r &gt; n + g, which is typical as populations age, funding dominates, but the transition generation pays twice.</li>
+      <li><b>OPS is an unfunded DB promise:</b> its liability appears only as future pension spending. Moving to NPS in 2004 converted it into explicit current contributions. Reverting brings short-run fiscal relief (no contributions) and long-run cost.</li>
+      <li><b>UPS is a hybrid:</b> funded contributions with a government guarantee topping up to the assured level. The fiscal risk shifts to the gap between assured benefits and fund performance.</li>
+    </ul>
+  </section>
+
+  <section id="e4">
+    <h2><span class="n">4</span>Longevity, sequence and inflation risk</h2>
+    <ul>
+      <li><b>Longevity risk:</b> individuals cannot diversify it, but annuity pools can. The "annuity puzzle" (Yaari, 1965, predicts full annuitisation) persists because of bequest motives, health-cost liquidity needs, adverse selection in pricing and distrust.</li>
+      <li><b>Sequence-of-returns risk:</b> the same average return gives very different outcomes depending on when losses occur. Losses near retirement do most damage. Glide paths (lifecycle funds, NPS auto choice) reduce equity exposure with age.</li>
+      <li><b>Inflation risk:</b> India lacks a deep market for inflation-indexed annuities, so DA-indexed government pensions are uniquely valuable.</li>
+    </ul>
+  </section>
+
+  <section id="e5">
+    <h2><span class="n">5</span>Behavioural design</h2>
+    <ul>
+      <li>Defaults dominate (Madrian and Shea, 2001). Auto-enrolment with opt-out, as in the UK and New Zealand, raises participation sharply. India's EPF is mandatory for covered firms; NPS for private workers is voluntary and has low take-up.</li>
+      <li>Save More Tomorrow (Thaler and Benartzi, 2004): pre-commit increases to future pay rises. Lifecycle default funds and simple choice sets reduce inertia costs.</li>
+      <li>Liquidity versus lock-in: India allows generous EPF withdrawals (housing, illness, unemployment), which helps in emergencies but leaks retirement adequacy.</li>
+    </ul>
+  </section>
+
+  <section id="e6">
+    <h2><span class="n">6</span>India's demographic window</h2>
+    <ul>
+      <li>The elderly share rises from 8.4% (2011) to about 15% (2036), with wide state variation: southern states are ageing well ahead of the north. India risks "growing old before growing rich".</li>
+      <li>A universal non-contributory social pension, paid for by taxes, is debated as the floor beneath contributory schemes. Costs at 0.5–1% of GDP depend on the amount and targeting.</li>
+      <li>Female longevity, lower lifetime earnings and widowhood make old-age poverty disproportionately female.</li>
+    </ul>
+  </section>
+
+  <section id="e7">
+    <h2><span class="n">7</span>Review checklist: open questions</h2>
+    <ol>
+      <li>Should NPS be auto-enrolment with opt-out for all formal private workers?</li>
+      <li>How should India price and fund the UPS guarantee, and report its contingent liability?</li>
+      <li>What level of universal social pension is affordable, and should it replace fragmented state schemes?</li>
+      <li>How can India develop inflation-indexed annuities?</li>
+      <li>Should EPF's declared-rate model move to market-linked crediting with smoothing?</li>
+    </ol>
+  </section>
+
+  <section id="e8">
+    <h2><span class="n">8</span>Check yourself</h2>
+    <div class="quiz" data-quiz="expert"></div>
+  </section>
+</div>
+
+<section id="sources">
+  <h2>Sources and further reading</h2>
+  <ul>
+    <li>EPF rate 2025-26: <a href="https://theprint.in/economy/epfo-fixes-8-25-pc-interest-rate-on-epf-deposits-for-2025-26-holds-rate-for-3rd-year-in-a-row/2868007">ThePrint</a>; small savings rates: <a href="https://www.oquilia.com/news/nps-apy-scale-subscribers-aum-2026">Oquilia</a>.</li>
+    <li>NPS and APY scale (March 2026): <a href="https://www.universalassetowners.com/registry/institution/national-pension-system-trust/">NPS Trust registry, citing PIB</a>.</li>
+    <li>UPS: <a href="https://www.newkerala.com/news/a/over-118-lakh-government-employees-opted-unified-pension-464.htm">1.18 lakh opted (Finance Ministry, August 2026)</a>; <a href="https://www.tribuneindia.com/news/business/fin-min-urges-eligible-employees-and-nps-subscribers-to-opt-for-ups-by-november-30">Tribune on the 30 November 2025 deadline</a>; <a href="https://vajiramandravi.com/current-affairs/nps-to-ups-govt-extends-one-time-switch-option/">switch-back option</a>.</li>
+    <li>Ageing: <a href="https://www.newkerala.com/news/o/elderly-population-rise-2274-crore-2036-mos-home-nityanand-550">22.74 crore elderly by 2036 (TGPP)</a>; <a href="https://www.outlookmoney.com/retirement/outlook-money-40after40-we-must-not-merely-retire-we-must-retire-right-says-pk-saxena-of-lic-pension-fund">pension coverage remarks</a>; UNFPA–IIPS <i>India Ageing Report 2023</i>.</li>
+    <li>Modigliani and Brumberg (1954); Samuelson (1958), <i>JPE</i>; Aaron (1966); Yaari (1965), <i>REStud</i>; Madrian and Shea (2001), <i>QJE</i>; Thaler and Benartzi (2004), <i>JPE</i>.</li>
+    <li>Earlier topics: <a href="09-compounding.html">Compounding</a> · <a href="07-stock-markets.html">Stock Markets</a> · <a href="14-insurance-risk.html">Insurance &amp; Risk</a>.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<footer>
+  Finance &amp; Economics in Three Levels · Topic 15 · K Vijay Anand · <a href="14-insurance-risk.html">← Topic 14 Insurance &amp; Risk</a> · <a href="./">All topics</a> · <a href="/">Home</a><br>
+  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.
+  Educational content. Figures dated November 2026.
+</footer>
+<script>
+(function(){
+  "use strict";
+  var root=document.documentElement, body=document.body;
+  var $=function(id){return document.getElementById(id);};
+  var cssv=function(n){return getComputedStyle(root).getPropertyValue(n).trim();};
+
+  try{var t=localStorage.getItem("fe-theme");if(t)root.setAttribute("data-theme",t);}catch(e){}
+  function redraw(){anRender();rc();dr();}
+  function toggleTheme(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("fe-theme",n);}catch(e){}redraw();}
+  function toggleFS(){if(!document.fullscreenElement){(root.requestFullscreen||function(){}).call(root);}else{document.exitFullscreen();}}
+  function toggleSB(){body.classList.toggle("nosb");}
+  $("themeBtn").onclick=toggleTheme; $("fsBtn").onclick=toggleFS; $("sbBtn").onclick=toggleSB;
+
+  var LV=["school","working","expert"];
+  function setLevel(l,noHash){
+    if(LV.indexOf(l)<0)l="school";
+    body.setAttribute("data-level",l);
+    LV.forEach(function(x){$("p-"+x).classList.toggle("on",x===l);});
+    document.querySelectorAll(".levels button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-l")===l);});
+    buildTOC(l);
+    if(!noHash)history.replaceState(null,"","#"+l);
+    redraw();
+  }
+  document.querySelectorAll(".levels button").forEach(function(b){b.onclick=function(){setLevel(b.getAttribute("data-l"));};});
+  function buildTOC(l){
+    var names={school:"School",working:"Working people",expert:"Experts"};
+    var h='<div class="h">Contents · '+names[l]+'</div><a href="#snapshot">Snapshot · Nov 2026</a>';
+    $("p-"+l).querySelectorAll("section").forEach(function(s){
+      var t=s.querySelector("h2").textContent; h+='<a href="#'+s.id+'">'+t.replace(/^(\d+)/,"$1 · ")+'</a>';
+    });
+    h+='<a href="#sources">Sources</a>';
+    h+='<div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> level<br><kbd>M</kbd> hide contents<br><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause<br><kbd>T</kbd> theme · <kbd>F</kbd> full screen</div>';
+    $("toc").innerHTML=h;
+  }
+  function rep(v,n){var a=[];for(var i=0;i<n;i++)a.push(v);return a;}
+
+    /* ---------- Level 1: tank ---------- */
+  function path(start){var c=0,o=[];for(var a=25;a<=90;a++){o.push([a,Math.max(0,c)]); if(a<60){if(a>=start)c=c*1.04+1;} else {c=c*1.04-4.71; if(c<0)c=0;}}return o;}
+  var PM=path(25), PR=path(40);
+  var ST=[
+    {t:"Two friends",upto:24,ravi:false,m:"Meena and Ravi each can save ₹1 lakh a year and earn 4% a year more than inflation (all amounts in today's rupees). Meena starts at 25, Ravi at 40. Both retire at 60. Press S."},
+    {t:"Step 1 · Age 25 to 40: Meena saves, Ravi spends",upto:40,ravi:true,m:"By 40, Meena has about ₹20 lakh in her tank. Ravi has nothing yet; he decided to start 'later'."},
+    {t:"Step 2 · Age 40 to 60: both save",upto:60,ravi:true,m:"At 60, Meena has about ₹74 lakh but Ravi only about ₹30 lakh. Meena saved 35 lakh and Ravi 20 lakh, yet her tank is 2.5× bigger: her early money had longer to grow (compounding)."},
+    {t:"Step 3 · Retirement: both take out ₹4.7 lakh a year",upto:90,ravi:true,m:"Both need about ₹4.7 lakh a year to live. Meena's tank lasts until about 85. Ravi's runs dry at about 67, leaving him 20 years or more with no savings."},
+    {t:"The lesson",upto:90,ravi:true,m:"Starting early matters more than saving a little extra later. Ravi would have to save about ₹2.5 lakh a year from 40 to match Meena. Start your retirement tank with your first salary."}
+  ];
+  var anI=0, anTimer=null;
+  function anRender(){
+    var s=ST[anI], W=900,H=300,L=60,R=30,T=30,B=45, ink=cssv("--ink"), ru=cssv("--rule"), c1=cssv("--l1"), c2=cssv("--l2"), fa=cssv("--faint"), svg="";
+    var X=function(a){return L+(W-L-R)*(a-25)/65;}, Y=function(v){return T+(H-T-B)*(1-v/80);};
+    svg+='<rect x="'+X(60)+'" y="'+T+'" width="'+(X(90)-X(60))+'" height="'+(H-T-B)+'" fill="'+fa+'" fill-opacity=".12"/><text x="'+((X(60)+X(90))/2)+'" y="'+(T+16)+'" font-size="13" text-anchor="middle" style="fill:'+ink+'">retired</text><text x="'+((X(25)+X(60))/2)+'" y="'+(T+16)+'" font-size="13" text-anchor="middle" style="fill:'+ink+'">working</text>';
+    for(var g=0;g<=80;g+=20)svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(g)+'" y2="'+Y(g)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(Y(g)+4)+'" font-size="12" text-anchor="end">₹'+g+'L</text>';
+    for(var a=25;a<=90;a+=5)svg+='<text x="'+X(a)+'" y="'+(H-B+18)+'" font-size="12" text-anchor="middle">'+a+'</text>';
+    svg+='<text x="'+((L+W-R)/2)+'" y="'+(H-6)+'" font-size="13" text-anchor="middle">age</text>';
+    function line(P,col,dash){var pts=P.filter(function(p){return p[0]<=s.upto;}).map(function(p){return X(p[0])+","+Y(p[1]);}).join(" "); return pts?'<polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="3.5" stroke-dasharray="'+dash+'"/>':"";}
+    svg+=line(PM,c2,"0"); if(s.ravi)svg+=line(PR,c1,"9 6");
+    svg+='<line x1="'+(L+10)+'" x2="'+(L+46)+'" y1="'+(T+34)+'" y2="'+(T+34)+'" stroke="'+c2+'" stroke-width="3.5"/><text x="'+(L+52)+'" y="'+(T+39)+'" font-size="14" style="fill:'+ink+';font-weight:600">solid: Meena (starts at 25)</text>';
+    svg+='<line x1="'+(L+10)+'" x2="'+(L+46)+'" y1="'+(T+56)+'" y2="'+(T+56)+'" stroke="'+c1+'" stroke-width="3.5" stroke-dasharray="9 6"/><text x="'+(L+52)+'" y="'+(T+61)+'" font-size="14" style="fill:'+ink+';font-weight:600">dashed: Ravi (starts at 40)</text>';
+    $("anChart").innerHTML=svg; $("anTitle").textContent=s.t; $("anMsg").textContent=s.m;
+  }
+  function anStep(){ if(anI<ST.length-1){anI++;anRender();} else anPause(); }
+  function anPlay(){ if(anTimer)return; if(anI>=ST.length-1)anI=0; anRender(); anTimer=setInterval(anStep,4000); }
+  function anPause(){ clearInterval(anTimer); anTimer=null; }
+  $("anPlay").onclick=anPlay; $("anStep").onclick=function(){anPause();anStep();}; $("anPause").onclick=anPause;
+  $("anReset").onclick=function(){anPause();anI=0;anRender();};
+
+  /* ---------- Level 2: retirement corpus ---------- */
+  var cr=function(v){return Math.abs(v)>=1e7?"₹"+(v/1e7).toFixed(2)+" crore":"₹"+(v/1e5).toFixed(1)+" lakh";};
+  function rc(){
+    var g=function(id){return +$(id).value||0;};
+    var A=g("rcA"),R=Math.max(A+1,g("rcR")),Lf=Math.max(R+1,g("rcL")),E=g("rcE")*12,i=g("rcI")/100,p=g("rcP")/100,q=g("rcQ")/100,S=g("rcS");
+    var n=R-A, D=Lf-R, E0=E*Math.pow(1+i,n), k=(1+i)/(1+q), f=0; for(var t=0;t<D;t++)f+=Math.pow(k,t);
+    var need=E0*f, fvS=S*Math.pow(1+p,n), gap=Math.max(0,need-fvS), m=p/12, N=n*12;
+    var sip=gap>0?(m>0?gap*m/((Math.pow(1+m,N)-1)*(1+m)):gap/N):0;
+    $("rcOut").innerHTML="Expenses at "+R+": <b>"+cr(E0)+"</b> a year ("+cr(E0/12).replace(" lakh"," lakh")+" a month), because of "+(i*100).toFixed(1)+"% inflation over "+n+" years. Corpus needed at "+R+" to last until "+Lf+": <b>"+cr(need)+"</b> ("+(need/E0).toFixed(1)+"× first-year expenses). Your existing savings may grow to "+cr(fvS)+". Monthly SIP needed: <b>₹"+Math.round(sip).toLocaleString("en-IN")+"</b>.";
+    var pts=[], c=S, cs=0, mx=0;
+    var cS=S; for(var a=A;a<=Lf;a++){if(a<=R)c=cS+cs; pts.push([a,c]); mx=Math.max(mx,c); if(a<R){cS*=(1+p); for(var mm=0;mm<12;mm++)cs=(cs+sip)*(1+m);} else {var ex=E0*Math.pow(1+i,a-R); c=(c-ex)*(1+q);} }
+    mx=Math.max(mx,need)*1.08;
+    var W=900,H=300,L=80,Rm=30,T=20,B=45, ink=cssv("--ink"), ru=cssv("--rule"), c1=cssv("--l1"), c2=cssv("--l2"), svg="";
+    var X=function(a){return L+(W-L-Rm)*(a-A)/(Lf-A);}, Y=function(v){return T+(H-T-B)*(1-Math.max(v,0)/mx);};
+    for(var j=0;j<=4;j++){var v=mx*j/4;svg+='<line x1="'+L+'" x2="'+(W-Rm)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(Y(v)+4)+'" font-size="12" text-anchor="end">'+(j?cr(v).replace("₹",""):"0")+'</text>';}
+    var st=Math.max(1,Math.round((Lf-A)/12)); for(var a2=A;a2<=Lf;a2+=st)svg+='<text x="'+X(a2)+'" y="'+(H-B+18)+'" font-size="12" text-anchor="middle">'+a2+'</text>';
+    svg+='<text x="'+((L+W-Rm)/2)+'" y="'+(H-6)+'" font-size="13" text-anchor="middle">age</text>';
+    svg+='<line x1="'+X(R)+'" x2="'+X(R)+'" y1="'+T+'" y2="'+(H-B)+'" stroke="'+ink+'" stroke-dasharray="5 4"/><text x="'+(X(R)+6)+'" y="'+(H-B-8)+'" font-size="13" style="fill:'+ink+'">retire at '+R+'</text>';
+    svg+='<polyline points="'+pts.map(function(p){return X(p[0])+","+Y(p[1]);}).join(" ")+'" fill="none" stroke="'+c2+'" stroke-width="3.5"/>';
+    svg+='<circle cx="'+X(R)+'" cy="'+Y(need)+'" r="6" fill="'+c1+'"/><text x="'+(X(R)-10)+'" y="'+(Y(need)-10)+'" font-size="13" text-anchor="end" style="fill:'+ink+';font-weight:700">● target '+cr(need)+'</text>';
+    svg+='<text x="'+(L+10)+'" y="'+(T+14)+'" font-size="13" style="fill:'+ink+'">solid line: corpus (SIP until '+R+', then withdrawals rising with inflation)</text>';
+    $("rcChart").innerHTML=svg;
+  }
+  ["rcA","rcR","rcL","rcE","rcI","rcP","rcQ","rcS"].forEach(function(id){$(id).oninput=rc;}); rc();
+
+  /* ---------- Level 3: DC replacement rate ---------- */
+  function dr(){
+    var g=function(id){return +$(id).value||0;};
+    var c=g("drC")/100,N=Math.max(1,Math.round(g("drN"))),gr=g("drG")/100,r=g("drR")/100,D=Math.max(1,Math.round(g("drD"))),ra=g("drA")/100;
+    var corp=0; for(var t=1;t<=N;t++)corp+=c*Math.pow(1+gr,t-N)*Math.pow(1+r,N-t);
+    var ann=0; for(var k=0;k<D;k++)ann+=Math.pow(1+ra,-k);
+    var rr=corp/ann;
+    $("drOut").innerHTML="Corpus = <b>"+corp.toFixed(2)+"×</b> final annual wage. Annuity factor ä = "+ann.toFixed(1)+". Replacement rate ≈ <b>"+(rr*100).toFixed(0)+"%</b> of final pay, against the UPS assured <b>50%</b>"+(rr>=0.5?": the DC plan meets it under these assumptions.":": a shortfall of "+((0.5-rr)*100).toFixed(0)+" points under these assumptions.");
+    var W=900,H=260,L=200,R=60, ink=cssv("--ink"), ru=cssv("--rule"), c1=cssv("--l1"), c2=cssv("--l2"), svg="", mx=Math.max(1,rr*1.1,0.6);
+    var X=function(v){return L+(W-L-R)*v/mx;};
+    for(var j=0;j<=mx+1e-9;j+=0.25)svg+='<line x1="'+X(j)+'" x2="'+X(j)+'" y1="20" y2="200" stroke="'+ru+'"/><text x="'+X(j)+'" y="220" font-size="12" text-anchor="middle">'+(j*100).toFixed(0)+'%</text>';
+    svg+='<text x="'+(L-12)+'" y="75" font-size="14" text-anchor="end" style="fill:'+ink+';font-weight:600">DC plan (your inputs)</text><rect x="'+L+'" y="50" width="'+(X(rr)-L)+'" height="40" fill="'+c2+'"/><text x="'+(X(rr)+8)+'" y="76" font-size="15" style="fill:'+ink+';font-weight:700">'+(rr*100).toFixed(0)+'%</text>';
+    svg+='<text x="'+(L-12)+'" y="155" font-size="14" text-anchor="end" style="fill:'+ink+';font-weight:600">UPS assured</text><rect x="'+L+'" y="130" width="'+(X(0.5)-L)+'" height="40" fill="none" stroke="'+c1+'" stroke-width="3" stroke-dasharray="8 5"/><text x="'+(X(0.5)+8)+'" y="156" font-size="15" style="fill:'+ink+';font-weight:700">50%</text>';
+    svg+='<text x="'+((L+W-R)/2)+'" y="248" font-size="13" text-anchor="middle">replacement rate (pension ÷ final pay)</text>';
+    $("drChart").innerHTML=svg;
+  }
+  ["drC","drN","drG","drR","drD","drA"].forEach(function(id){$(id).oninput=dr;}); dr();
+
+  /* ---------- quizzes ---------- */
+  var Q={
+    school:[
+      ["A pension is…",["A loan","Regular income after retirement","A school fee","A tax"],1,"It is paid from savings built while working."],
+      ["Why did Meena end with a much bigger tank than Ravi?",["She saved much more each year","She started 15 years earlier, so compounding had longer","Her bank was better","She retired later"],1,"Both saved ₹1 lakh a year; time made the difference."],
+      ["In EPF, how much of basic pay do the worker and employer each put in?",["2%","12%","25%","50%"],1,"12% each, every month."],
+      ["Why must retirement savings beat inflation?",["Prices rise, so money buys less each year","Banks require it","Because of exams","It doesn't matter"],0,"Savings that only keep pace lose value in real terms after costs."],
+      ["By 2036, about what share of Indians will be 60 or older?",["2%","15%","50%","80%"],1,"About 22.7 crore people, or 15%."]
+    ],
+    working:[
+      ["The EPF interest rate for 2025-26 is…",["7.1%","8.25%","10%","12%"],1,"Unchanged for a third year."],
+      ["Under UPS, the assured pension after 25 years' service is…",["25% of last pay","50% of average basic pay of the last 12 months","100% of last pay","₹10,000 flat"],1,"Minimum ₹10,000 a month after 10 years; it is inflation-indexed."],
+      ["Non-government NPS subscribers retiring with a large corpus can now take up to … as a lump sum",["40%","60%","80%","100%"],2,"December 2025 rules: 80% lump sum, at least 20% annuity."],
+      ["Withdrawing EPF on each job change is a mistake because…",["It is illegal","You lose decades of tax-free compounding","Banks charge fees","It cancels your PAN"],1,"Transfer the account instead."],
+      ["A sustainable withdrawal rate in India over 30 years is usually thought to be around…",["1%","3–4% rising with inflation","10%","15%"],1,"Higher inflation makes Western '4% rules' riskier."]
+    ],
+    expert:[
+      ["PAYG pensions earn an implicit return of…",["r","n + g (population plus productivity growth)","Zero","The inflation rate"],1,"Aaron–Samuelson result."],
+      ["The 'annuity puzzle' is that…",["Annuities are too cheap","People annuitise far less than theory predicts","Annuities are illegal","Everyone annuitises"],1,"Yaari predicts full annuitisation absent bequest motives."],
+      ["Sequence-of-returns risk is greatest…",["At age 20","Just before and after retirement","Never","Only for bonds"],1,"Losses when the corpus is largest and withdrawals begin do most harm."],
+      ["Reverting to OPS gives a state…",["Long-run savings","Short-run relief but larger unfunded long-run liabilities","No change","Higher NPS returns"],1,"Contributions stop now; pension bills grow later."],
+      ["Madrian and Shea (2001) showed that…",["Defaults strongly raise participation","Education alone fixes saving","Interest rates drive enrolment","Matching contributions don't matter"],0,"Auto-enrolment is a powerful design lever."]
+    ]
+  };
+  document.querySelectorAll(".quiz").forEach(function(box){
+    var set=Q[box.getAttribute("data-quiz")], score=0, done=0, h="";
+    set.forEach(function(q,qi){
+      h+='<div class="q" data-i="'+qi+'"><p>'+(qi+1)+'. '+q[0]+'</p>';
+      q[1].forEach(function(o,oi){h+='<button data-o="'+oi+'">'+o+'</button>';});
+      h+='<div class="why">'+q[3]+'</div></div>';
+    });
+    h+='<p class="score"></p>'; box.innerHTML=h;
+    box.querySelectorAll(".q").forEach(function(qd){
+      var q=set[+qd.getAttribute("data-i")];
+      qd.querySelectorAll("button").forEach(function(b){
+        b.onclick=function(){
+          if(qd.classList.contains("done"))return;
+          var o=+b.getAttribute("data-o"); qd.classList.add("done"); done++;
+          if(o===q[2])score++; else b.classList.add("wrong");
+          qd.querySelectorAll("button")[q[2]].classList.add("right");
+          box.querySelector(".score").textContent="Score: "+score+" / "+done+(done===set.length?(score===set.length?" — perfect!":" — review the explanations above."):"");
+        };
+      });
+    });
+  });
+
+  document.addEventListener("keydown",function(e){
+    if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
+    var k=e.key.toLowerCase();
+    if(k==="1")setLevel("school"); else if(k==="2")setLevel("working"); else if(k==="3")setLevel("expert");
+    else if(k==="m")toggleSB(); else if(k==="t")toggleTheme(); else if(k==="f")toggleFS();
+    else if(body.getAttribute("data-level")==="school"){
+      if(k==="p"){anPlay();} else if(k==="s"){anPause();anStep();} else if(k==="x"){anPause();}
+    }
+  });
+
+  setLevel((location.hash||"#school").slice(1),true);
+  window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(LV.indexOf(h)>=0)setLevel(h,true);});
+})();
+</script>
+</body>
+</html>

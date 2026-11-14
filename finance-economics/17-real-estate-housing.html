@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<!--
+TOOL:    finance-economics/17-real-estate-housing.html — Finance & Economics Topic 17: Real Estate & Housing (three levels)
+FAMILY:  finance-economics
+VERSION: 1.0.0
+DATE:    2026-11-14
+CHAT:    Finance & Economics series — second set of ten topics; Topic 17 Real Estate & Housing
+CHANGES: 1.0.0 - seventeenth topic: city-flat animation (price vs income, down payment, EMI, total paid,
+                 alternatives); rent-vs-buy net-worth calculator with chart, true costs, RERA checklist,
+                 loans and tax, REITs; ANAROCK Q3 2026, repo 5.25%, PMAY-U 2.0; user-cost / price-to-rent
+                 calculator, supply and FSI, cycles and credit, rental market, inequality; quiz per level
+STATUS:  working
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Real Estate &amp; Housing — Finance &amp; Economics in Three Levels — K Vijay Anand</title>
+<meta name="description" content="Real estate and housing explained at three levels — for school students, for working people and as a review for experts: price-to-income, rent vs buy calculator, home costs, RERA checklist, home loan tax, 2026 housing data, user cost, supply and cycles.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* Colour-blind-safe palette: blue / orange / purple / gold — no red-vs-green coding */
+  :root{--bg:#f4f2ed;--bg2:#e9e5dc;--card:#fffdf8;--ink:#1d1b18;--soft:#4f4940;--faint:#857c6f;--rule:#d6cdbd;
+        --acc:#1d5fa6;--l1:#d9730d;--l2:#1d5fa6;--l3:#6a3fa0;--gold:#a87908;--hi:#fff1d6}
+  :root[data-theme="dark"]{--bg:#121316;--bg2:#1a1c21;--card:#1f2228;--ink:#ece9e2;--soft:#c3bdb2;--faint:#8c8578;--rule:#33363d;
+        --acc:#6aa8ee;--l1:#f39a3d;--l2:#6aa8ee;--l3:#b28ae6;--gold:#e5b33c;--hi:#3a2f17}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.65}
+  a{color:var(--acc)}
+  .toolbar{position:fixed;top:10px;right:12px;z-index:30;display:flex;gap:8px;font-size:13px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button,.toolbar a{background:var(--card);color:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;text-decoration:none}
+  header{padding:70px 4vw 18px;max-width:1600px;margin:0 auto}
+  .series{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-family:"Playfair Display",serif;font-weight:800;font-size:clamp(46px,7vw,84px);margin:6px 0 4px;line-height:1}
+  .tag{color:var(--soft);max-width:70ch;margin:0}
+  /* level switch */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 0}
+  .levels button{text-align:left;background:var(--card);border:2px solid var(--rule);border-radius:12px;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink)}
+  .levels button b{display:block;font-size:18px}
+  .levels button small{color:var(--faint)}
+  .levels button .k{float:right;font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:0 6px;color:var(--faint)}
+  .levels button[data-l="school"].on{border-color:var(--l1);background:color-mix(in srgb,var(--l1) 10%,var(--card))}
+  .levels button[data-l="working"].on{border-color:var(--l2);background:color-mix(in srgb,var(--l2) 10%,var(--card))}
+  .levels button[data-l="expert"].on{border-color:var(--l3);background:color-mix(in srgb,var(--l3) 10%,var(--card))}
+  /* layout */
+  .wrap{max-width:1600px;margin:0 auto;padding:0 4vw 40px;display:grid;grid-template-columns:250px 1fr;gap:34px}
+  body.nosb .wrap{grid-template-columns:1fr}
+  body.nosb aside{display:none}
+  aside{position:sticky;top:60px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;font-size:14.5px;padding-top:20px}
+  aside .h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  aside a{display:block;padding:5px 10px;border-left:3px solid var(--rule);color:var(--soft);text-decoration:none}
+  aside a:hover{border-left-color:var(--lc);color:var(--ink)}
+  aside .keys{margin-top:18px;color:var(--faint);font-size:12.5px;line-height:1.9}
+  kbd{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--card)}
+  main{min-width:0}
+  .panel{display:none}
+  .panel.on{display:block}
+  #p-school{--lc:var(--l1)} #p-working{--lc:var(--l2)} #p-expert{--lc:var(--l3)}
+  body[data-level="school"]{--lc:var(--l1)} body[data-level="working"]{--lc:var(--l2)} body[data-level="expert"]{--lc:var(--l3)}
+  .lvhead{border-left:6px solid var(--lc);padding:4px 0 4px 16px;margin:24px 0 10px}
+  .lvhead .who{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--lc);font-weight:700}
+  .lvhead p{margin:4px 0 0;color:var(--soft)}
+  section{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:22px 28px;margin:18px 0}
+  h2{font-family:"Playfair Display",serif;font-size:30px;margin:0 0 10px;line-height:1.2}
+  h2 .n{color:var(--lc);margin-right:8px}
+  h3{font-size:18px;margin:20px 0 6px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .box{border:1px solid var(--rule);border-radius:10px;padding:14px 16px;background:var(--bg)}
+  .box b.t{display:block;color:var(--lc);margin-bottom:4px}
+  .def{font-size:20px;border-left:5px solid var(--lc);background:color-mix(in srgb,var(--lc) 8%,transparent);padding:12px 18px;border-radius:0 10px 10px 0;margin:8px 0 14px}
+  .note{background:var(--hi);border-radius:8px;padding:10px 14px;font-size:15.5px}
+  .eq{font-family:"JetBrains Mono",monospace;background:var(--bg2);border-radius:8px;padding:10px 14px;overflow-x:auto;font-size:15px;white-space:pre}
+  table{border-collapse:collapse;width:100%;font-size:15.5px;margin:8px 0}
+  th,td{border-bottom:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:10px}
+  .stat{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--bg)}
+  .stat .v{font-size:28px;white-space:nowrap;font-weight:700;color:var(--acc);line-height:1.1}
+  .stat .l{font-size:13.5px;color:var(--soft)}
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;margin:10px 0}
+  .ctl label{font-size:13.5px;color:var(--soft);display:flex;flex-direction:column;gap:3px}
+  .ctl input[type=number]{width:120px;font:inherit;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)}
+  .ctl input[type=range]{width:200px}
+  .btn{background:var(--lc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--lc);border:1px solid var(--lc)}
+  .out{font-size:18px;margin:8px 0}
+  .out b{color:var(--lc)}
+  svg text{fill:var(--soft);font-family:Inter,sans-serif}
+  /* basket animation */
+  .stage{border:1px dashed var(--rule);border-radius:10px;padding:14px;background:var(--bg);min-height:170px}
+  .stage .yr{font-size:26px;font-weight:700}
+  .stage .yr span{color:var(--l1)}
+  .samosas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:44px}
+  .sam{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:30px solid var(--l1);transition:opacity .3s}
+  .sam.gone{opacity:.15}
+  /* quiz */
+  .q{border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:10px 0;background:var(--bg)}
+  .q p{margin:0 0 8px;font-weight:600}
+  .q button{display:block;width:100%;text-align:left;margin:5px 0;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;font:inherit;color:var(--ink);cursor:pointer}
+  .q button.right{border:2px solid var(--l2);background:color-mix(in srgb,var(--l2) 14%,var(--card))}
+  .q button.right::after{content:"  ✔ correct";font-weight:700;color:var(--l2)}
+  .q button.wrong{border:2px dashed var(--l1)}
+  .q button.wrong::after{content:"  ✘ not this one";font-weight:700;color:var(--l1)}
+  .q .why{display:none;font-size:15px;color:var(--soft);margin-top:6px}
+  .q.done .why{display:block}
+  .score{font-weight:700;color:var(--lc)}
+  footer{max-width:1600px;margin:0 auto;padding:20px 4vw 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--faint)}
+  footer a{color:var(--soft)}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}aside{display:none}.levels{grid-template-columns:1fr}section{padding:18px}}
+  @media print{.toolbar,aside,.levels{display:none}.panel{display:block!important}.wrap{display:block}}
+</style>
+</head>
+<body data-level="school">
+<div class="toolbar">
+  <a href="./">← Series</a>
+  <button id="sbBtn" title="Show / hide contents (M)">☰ Contents</button>
+  <button id="themeBtn" title="Light / dark (T)">◐ Theme</button>
+  <button id="fsBtn" title="Full screen (F)">⤢ Full screen</button>
+</div>
+
+<header>
+  <div class="series">Finance &amp; Economics · Topic 17</div>
+  <h1>Real Estate &amp; Housing</h1>
+  <p class="tag">A home is the biggest purchase most families ever make, and India's largest store of household wealth. Covers why city homes cost so much, whether to rent or buy, what to check before signing, and the economics of housing markets. Pick your level.</p>
+  <div class="levels" role="tablist">
+    <button data-l="school" class="on"><span class="k">1</span><b>🎒 School</b><small>How many years of pay is a flat?</small></button>
+    <button data-l="working"><span class="k">2</span><b>💼 Working people</b><small>Rent vs buy, loans, RERA, taxes</small></button>
+    <button data-l="expert"><span class="k">3</span><b>🎓 Experts — review</b><small>User cost, supply, cycles, policy</small></button>
+  </div>
+</header>
+
+<div class="wrap">
+<aside id="toc"></aside>
+<main>
+
+<section id="snapshot" style="border-top:4px solid var(--gold)">
+  <h2>Where things stand — November 2026</h2>
+  <div class="snap">
+    <div class="stat"><div class="v">1.0 lakh</div><div class="l">Homes sold in India's top 7 cities in July–September 2026 (+3% year-on-year), worth about ₹1.55 lakh crore (ANAROCK)</div></div>
+    <div class="stat"><div class="v">₹9,714/sq ft</div><div class="l">Average price across the top 7 cities, up 7% in a year; NCR up 12%. Mumbai region averages roughly ₹17,800/sq ft.</div></div>
+    <div class="stat"><div class="v">6.3 lakh</div><div class="l">Unsold homes in the top 7 cities, up 12% in a year, as new launches (+18%) outpaced sales</div></div>
+    <div class="stat"><div class="v">5.25%</div><div class="l">RBI repo rate after 125 basis points of cuts in 2025, held through 2026; home loans from about 7.1–7.4% for the best borrowers</div></div>
+    <div class="stat"><div class="v">1 crore</div><div class="l">Urban homes targeted under PMAY-Urban 2.0 (2024–29), with up to ₹2.5 lakh help per home</div></div>
+  </div>
+  <p class="note" style="margin-top:12px">ANAROCK data cover the top 7 cities only (NCR, MMR, Bengaluru, Pune, Hyderabad, Chennai, Kolkata). Prices vary hugely by locality; treat these as broad averages.</p>
+</section>
+
+<!-- ========================= LEVEL 1 : SCHOOL ====================== -->
+<div class="panel on" id="p-school">
+  <div class="lvhead"><div class="who">Level 1 · For school students</div><p>Land and buildings are called real estate. A home is a need, but in big cities it is also very expensive. Let's see why.</p></div>
+
+  <section id="s1">
+    <h2><span class="n">1</span>What is real estate?</h2>
+    <div class="def"><b>Real estate</b> means land and anything built on it: houses, flats, shops, offices, factories and farms. It is "real" because you can't move it.</div>
+    <p>A family can <b>own</b> a home (buy it, often with a loan) or <b>rent</b> one (pay the owner every month to live there). Both are sensible choices; which is better depends on prices, rents, jobs and plans.</p>
+  </section>
+
+  <section id="s2">
+    <h2><span class="n">2</span>Watch it happen: buying a city flat</h2>
+    <p>A family earns ₹12 lakh a year (₹1 lakh a month). They want a 1,000 sq ft flat in a big city. Press Play, or press S for each step.</p>
+    <div class="ctl">
+      <button class="btn" id="anPlay">▶ Play (P)</button>
+      <button class="btn ghost" id="anStep">Next step (S)</button>
+      <button class="btn ghost" id="anPause">⏸ Pause (X)</button>
+      <button class="btn ghost" id="anReset">↺ Reset</button>
+    </div>
+    <div class="stage">
+      <div class="yr" id="anTitle">A city flat</div>
+      <svg id="anChart" viewBox="0 0 900 300" style="width:100%;height:auto;margin-top:6px"></svg>
+      <p id="anMsg" style="margin:6px 0 0;color:var(--soft);font-size:17px">Press Play, or press S to begin.</p>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="n">3</span>Why are city homes so expensive?</h2>
+    <div class="cols">
+      <div class="box"><b class="t">📍 Land is limited</b>Everyone wants to live near jobs, schools and metro stations, but there is only so much land there.</div>
+      <div class="box"><b class="t">🏗️ Building rules</b>Rules limit how tall buildings can be, so less housing fits on scarce land.</div>
+      <div class="box"><b class="t">💼 Jobs pull people in</b>Cities like Bengaluru and Mumbai attract workers, so demand keeps rising.</div>
+      <div class="box"><b class="t">🧱 Costs</b>Cement, steel, labour, approvals and taxes all add to the price.</div>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="n">4</span>Helping families get homes</h2>
+    <p>The government's <b>Pradhan Mantri Awas Yojana</b> has helped build over 1 crore homes in cities and more in villages, giving money or cheaper loans to poorer and middle-income families. Rules called <b>RERA</b> protect buyers from builders who delay or cheat.</p>
+  </section>
+
+  <section id="s5">
+    <h2><span class="n">5</span>Words to remember</h2>
+    <table>
+      <tr><th>Word</th><th>Meaning</th></tr>
+      <tr><td>Rent</td><td>Monthly payment to live in someone else's home</td></tr>
+      <tr><td>Down payment</td><td>The part of the price you pay from your own savings</td></tr>
+      <tr><td>Home loan</td><td>A long loan (often 15–30 years) to buy a home; the home is the security</td></tr>
+      <tr><td>Square feet (sq ft)</td><td>How flat sizes and prices are measured</td></tr>
+      <tr><td>RERA</td><td>Law protecting home buyers from builder delays and false promises</td></tr>
+    </table>
+  </section>
+
+  <section id="s6">
+    <h2><span class="n">6</span>Check yourself</h2>
+    <div class="quiz" data-quiz="school"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 2 : WORKING ===================== -->
+<div class="panel" id="p-working">
+  <div class="lvhead"><div class="who">Level 2 · For working people</div><p>The rent-or-buy decision, what a home really costs, the checks before you sign, and the tax rules. This is educational only, not financial, legal or tax advice.</p></div>
+
+  <section id="w1">
+    <h2><span class="n">1</span>Calculator: rent or buy?</h2>
+    <div class="ctl">
+      <label>Home price (₹)<input type="number" id="rbP" value="10000000" step="500000"></label>
+      <label>Down payment %<input type="number" id="rbD" value="20" step="5"></label>
+      <label>Loan rate %<input type="number" id="rbR" value="8" step="0.25"></label>
+      <label>Loan tenure (years)<input type="number" id="rbN" value="20" step="1"></label>
+      <label>Rent for a similar home (₹/month)<input type="number" id="rbM" value="22000" step="1000"></label>
+      <label>Rent rise % a year<input type="number" id="rbG" value="6" step="0.5"></label>
+      <label>Home price rise % a year<input type="number" id="rbH" value="6" step="0.5"></label>
+      <label>Return on investments %<input type="number" id="rbI" value="10" step="0.5"></label>
+      <label>Owner costs % of price a year<input type="number" id="rbC" value="1" step="0.25"></label>
+      <label>Buying costs % (stamp duty etc.)<input type="number" id="rbS" value="7" step="0.5"></label>
+      <label>Compare after (years)<input type="number" id="rbY" value="15" step="1"></label>
+    </div>
+    <div class="out" id="rbOut"></div>
+    <svg id="rbChart" viewBox="0 0 900 300" style="width:100%;height:auto;margin-top:8px"></svg>
+    <p class="note">Each month, whoever spends less (owner: EMI + upkeep; renter: rent) invests the difference at your return. The renter also invests the down payment and buying costs from day one. Owner wealth = home value − loan left − 2% selling cost. Tax benefits are ignored. In Indian metros, rent is only about 2–3% of the price a year, which often favours renting financially; owning buys security and freedom from landlords.</p>
+  </section>
+
+  <section id="w2">
+    <h2><span class="n">2</span>What a home really costs</h2>
+    <table>
+      <tr><th>Item</th><th>Typical</th></tr>
+      <tr><td>Stamp duty + registration</td><td>About 5–8% of value, depending on state (often lower for women buyers)</td></tr>
+      <tr><td>GST on under-construction homes</td><td>5% (1% for affordable homes); none on ready-to-move homes with an occupancy certificate</td></tr>
+      <tr><td>Home loan processing</td><td>0.25–1% of the loan</td></tr>
+      <tr><td>Parking, club, maintenance deposit, brokerage</td><td>Often several lakh; get it in writing</td></tr>
+      <tr><td>Interiors and furnishing</td><td>Easily 5–10% of the price</td></tr>
+      <tr><td>Ongoing</td><td>Maintenance, property tax, insurance, repairs: roughly 0.5–1.5% of value a year</td></tr>
+    </table>
+    <p>A common affordability guide: a home price below about 5 times annual household income, and EMIs below about 35–40% of take-home pay.</p>
+  </section>
+
+  <section id="w3">
+    <h2><span class="n">3</span>Checklist before you sign</h2>
+    <ul>
+      <li><b>RERA registration</b> of the project (state RERA website): check the approved plan, timeline, litigation and complaints. Builders must keep 70% of buyers' money in a separate account.</li>
+      <li><b>Carpet area</b> is the usable floor area; RERA requires pricing on carpet area, not "super built-up".</li>
+      <li><b>Title and approvals:</b> clear title (30-year search), encumbrance certificate, approved building plan, commencement certificate, and for ready homes the <b>occupancy certificate</b>.</li>
+      <li><b>Builder track record:</b> delivery history matters more than brochures; stalled projects have trapped lakhs of buyers.</li>
+      <li><b>Loan sanction first</b>, then booking; compare banks and housing finance companies.</li>
+    </ul>
+  </section>
+
+  <section id="w4">
+    <h2><span class="n">4</span>Home loans and tax</h2>
+    <ul>
+      <li>Home loans are linked to the repo rate (Topic 02). Your rate = benchmark + spread, so a better credit score (Topic 16) earns a lower spread. There is no prepayment penalty on floating-rate loans.</li>
+      <li><b>Prepaying early</b> saves the most interest, because early EMIs are mostly interest.</li>
+      <li><b>Tax (old regime):</b> up to ₹2 lakh interest deduction on a self-occupied home (Section 24(b)) and principal under the ₹1.5 lakh Section 80C limit. The new regime (Topic 06) gives no benefit for self-occupied homes, but interest on let-out property can still be set against rent.</li>
+      <li><b>PMAY-U 2.0:</b> eligible EWS/LIG/MIG first-time buyers can get an interest subsidy (about 4% on the first ₹8 lakh of the loan, subject to limits).</li>
+      <li><b>Capital gains:</b> profit on sale after 2 years is long-term; reinvesting in another home can save tax (Section 54).</li>
+    </ul>
+  </section>
+
+  <section id="w5">
+    <h2><span class="n">5</span>Real estate as an investment</h2>
+    <div class="cols">
+      <div class="box"><b class="t">Pros</b>Tangible, can be bought with borrowed money, rental income, inflation hedge over long periods.</div>
+      <div class="box"><b class="t">Cons</b>Illiquid, high transaction costs, concentration in one asset, low rental yield (2–3%), title and tenant risks.</div>
+      <div class="box"><b class="t">REITs</b>Real estate investment trusts (listed on NSE/BSE) give a share of office and retail rents from a few hundred rupees, with regular payouts and easy exit.</div>
+    </div>
+  </section>
+
+  <section id="w6">
+    <h2><span class="n">6</span>Housing and the country</h2>
+    <ul>
+      <li>Construction is one of India's largest employers, mostly informal. Real estate linkages (cement, steel, paint, furniture) make it a major driver of growth.</li>
+      <li>Physical assets (land, housing, gold) make up most Indian household wealth, far more than financial assets.</li>
+      <li>The market has shifted towards premium homes. Sales of homes under ₹40–50 lakh have shrunk in big cities, even as unsold stock builds up.</li>
+    </ul>
+  </section>
+
+  <section id="w7">
+    <h2><span class="n">7</span>Check yourself</h2>
+    <div class="quiz" data-quiz="working"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 3 : EXPERT ====================== -->
+<div class="panel" id="p-expert">
+  <div class="lvhead"><div class="who">Level 3 · Review for experts</div><p>User cost and price-to-rent, supply elasticity and land-use regulation, housing cycles and credit, and India's housing policy questions.</p></div>
+
+  <section id="e1">
+    <h2><span class="n">1</span>User cost of housing: calculator</h2>
+    <div class="eq">User cost u = P·(r + τ + δ + m − g)        In equilibrium: rent R = u  →  P/R = 1 / (r + τ + δ + m − g)
+r = after-tax cost of funds, τ = property tax, δ = depreciation, m = maintenance, g = expected capital gain</div>
+    <div class="ctl">
+      <label>Cost of funds r %<input type="number" id="ucR" value="8" step="0.25"></label>
+      <label>Property tax τ %<input type="number" id="ucT" value="0.2" step="0.1"></label>
+      <label>Depreciation δ %<input type="number" id="ucD" value="1" step="0.25"></label>
+      <label>Maintenance m %<input type="number" id="ucM" value="0.8" step="0.1"></label>
+      <label>Expected gain g %<input type="number" id="ucG" value="6" step="0.5"></label>
+      <label>Actual rental yield %<input type="number" id="ucY" value="2.7" step="0.1"></label>
+    </div>
+    <div class="out" id="ucOut"></div>
+    <svg id="ucChart" viewBox="0 0 900 260" style="width:100%;height:auto;margin-top:8px"></svg>
+    <p class="note">Poterba (1984); Himmelberg, Mayer and Sinai (2005). Low yields can be "justified" only by high expected appreciation g. When g is extrapolated from recent gains, price-to-rent ratios become fragile.</p>
+  </section>
+
+  <section id="e2">
+    <h2><span class="n">2</span>Supply, land and regulation</h2>
+    <ul>
+      <li>The price level depends on demand and on supply elasticity (Glaeser, Gyourko and Saiz). Inelastic supply turns demand shocks into price, not quantity.</li>
+      <li>Indian cities have historically low floor space index (FSI) limits, rent control legacies, slow approvals and unclear land titles, all of which restrict formal supply and push growth to the periphery and informal settlements (Bertaud).</li>
+      <li>Reforms: tradeable development rights, transit-oriented higher FSI (Mumbai, Bengaluru metro corridors), digitised land records (DILRMP) and conclusive titling are the main levers.</li>
+    </ul>
+  </section>
+
+  <section id="e3">
+    <h2><span class="n">3</span>Housing cycles and credit</h2>
+    <ul>
+      <li>Housing is the most credit-sensitive sector. Cycles amplify through collateral values (Kiyotaki–Moore) and bank balance sheets; mortgage credit booms precede many crises (Jordà, Schularick and Taylor).</li>
+      <li>India's 2013–19 slump came from unsold inventory, builder leverage, demonetisation, GST transition and the IL&amp;FS-triggered NBFC funding shock. Recovery after 2021 was led by lower rates and premium demand.</li>
+      <li>Macroprudential tools: loan-to-value caps (75–90% by ticket size) and housing risk weights; India's household mortgage-to-GDP ratio (around 11%) remains low by international standards.</li>
+    </ul>
+  </section>
+
+  <section id="e4">
+    <h2><span class="n">4</span>The rental market</h2>
+    <ul>
+      <li>A large share of urban households rent, many informally, with weak contracts. The Model Tenancy Act (2021) offers a template (deposits capped, rent authorities), but adoption by states is slow.</li>
+      <li>Institutional rental (co-living, build-to-rent) and Affordable Rental Housing Complexes (ARHC, PMAY-U 2.0) aim to serve migrants. Low yields make purely private rental supply hard to finance.</li>
+    </ul>
+  </section>
+
+  <section id="e5">
+    <h2><span class="n">5</span>Housing, wealth and inequality</h2>
+    <ul>
+      <li>Housing is the main asset of the middle class and a key driver of wealth inequality (Topic 13). Rising urban prices transfer wealth from young renters to older owners.</li>
+      <li>Stamp duties discourage transactions and mobility. Undervaluation and cash components persist, despite circle rates and Section 56/50C rules.</li>
+      <li>Shortage estimates are dominated by congestion and obsolescence among low-income households, not by a lack of high-end supply. Unsold premium stock coexists with shortages at the bottom.</li>
+    </ul>
+  </section>
+
+  <section id="e6">
+    <h2><span class="n">6</span>Review checklist: open questions</h2>
+    <ol>
+      <li>Are current metro price-to-rent ratios consistent with plausible long-run g?</li>
+      <li>Which land-use reforms (FSI, titling, approvals) would most raise affordable supply?</li>
+      <li>Should stamp duty be replaced with a recurring property tax?</li>
+      <li>How can rental housing be made bankable for institutions?</li>
+      <li>What is the right role of PMAY subsidies against supply-side reform?</li>
+    </ol>
+  </section>
+
+  <section id="e7">
+    <h2><span class="n">7</span>Check yourself</h2>
+    <div class="quiz" data-quiz="expert"></div>
+  </section>
+</div>
+
+<section id="sources">
+  <h2>Sources and further reading</h2>
+  <ul>
+    <li>ANAROCK Q3 2026: <a href="https://therealtytoday.com/news/news/q3-2026-housing-sales-rise-3-y-o-y-in-top-7-cities-new-launches-up-18/">The Realty Today</a>, <a href="https://www.businesstoday.in/real-estate/story/housing-sales-in-top-seven-cities-rise-3-percent-on-year-in-q3-mumbai-records-highest-sales-558274-2026-09-29">Business Today</a>; <a href="https://websitemedia.anarock.com/media/Q2_2026_PAN_India_Residential_Market_Viewpoints_7908380daa.pdf">ANAROCK Q2 2026 viewpoints (city prices)</a>.</li>
+    <li>Repo rate and home loan rates: <a href="https://www.businesstoday.in/amp/personal-finance/banking/story/rbi-holds-repo-rate-at-5-25-what-it-means-for-home-loan-borrowers-and-homebuyers-535118-2026-06-05">Business Today (June 2026)</a>, <a href="https://ambak.com/home-loans">rate survey, September 2026</a>.</li>
+    <li>PMAY-U 2.0: <a href="https://www.civilsdaily.com/?p=799431">Civilsdaily summary of Ministry data</a>.</li>
+    <li>Poterba (1984), <i>QJE</i>; Himmelberg, Mayer and Sinai (2005), <i>JEP</i>; Glaeser, Gyourko and Saiz (2008), <i>JUE</i>; Jordà, Schularick and Taylor (2016), <i>Economic Policy</i>; Bertaud, <i>Order Without Design</i> (2018).</li>
+    <li>Earlier topics: <a href="02-interest-rates.html">Interest Rates</a> · <a href="06-taxes.html">Taxes</a> · <a href="16-credit-debt.html">Credit Scores &amp; Personal Debt</a>.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<footer>
+  Finance &amp; Economics in Three Levels · Topic 17 · K Vijay Anand · <a href="16-credit-debt.html">← Topic 16 Credit Scores &amp; Personal Debt</a> · <a href="./">All topics</a> · <a href="/">Home</a><br>
+  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.
+  Educational content. Figures dated November 2026.
+</footer>
+<script>
+(function(){
+  "use strict";
+  var root=document.documentElement, body=document.body;
+  var $=function(id){return document.getElementById(id);};
+  var cssv=function(n){return getComputedStyle(root).getPropertyValue(n).trim();};
+
+  try{var t=localStorage.getItem("fe-theme");if(t)root.setAttribute("data-theme",t);}catch(e){}
+  function redraw(){anRender();rb();uc();}
+  function toggleTheme(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("fe-theme",n);}catch(e){}redraw();}
+  function toggleFS(){if(!document.fullscreenElement){(root.requestFullscreen||function(){}).call(root);}else{document.exitFullscreen();}}
+  function toggleSB(){body.classList.toggle("nosb");}
+  $("themeBtn").onclick=toggleTheme; $("fsBtn").onclick=toggleFS; $("sbBtn").onclick=toggleSB;
+
+  var LV=["school","working","expert"];
+  function setLevel(l,noHash){
+    if(LV.indexOf(l)<0)l="school";
+    body.setAttribute("data-level",l);
+    LV.forEach(function(x){$("p-"+x).classList.toggle("on",x===l);});
+    document.querySelectorAll(".levels button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-l")===l);});
+    buildTOC(l);
+    if(!noHash)history.replaceState(null,"","#"+l);
+    redraw();
+  }
+  document.querySelectorAll(".levels button").forEach(function(b){b.onclick=function(){setLevel(b.getAttribute("data-l"));};});
+  function buildTOC(l){
+    var names={school:"School",working:"Working people",expert:"Experts"};
+    var h='<div class="h">Contents · '+names[l]+'</div><a href="#snapshot">Snapshot · Nov 2026</a>';
+    $("p-"+l).querySelectorAll("section").forEach(function(s){
+      var t=s.querySelector("h2").textContent; h+='<a href="#'+s.id+'">'+t.replace(/^(\d+)/,"$1 · ")+'</a>';
+    });
+    h+='<a href="#sources">Sources</a>';
+    h+='<div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> level<br><kbd>M</kbd> hide contents<br><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause<br><kbd>T</kbd> theme · <kbd>F</kbd> full screen</div>';
+    $("toc").innerHTML=h;
+  }
+  function rep(v,n){var a=[];for(var i=0;i<n;i++)a.push(v);return a;}
+
+    /* ---------- Level 1: city flat ---------- */
+  var rs=function(v){return "₹"+Math.round(v).toLocaleString("en-IN");};
+  var emi=function(L,ra,n){var r=ra/1200;return r>0?L*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1):L/n;};
+  var PR=1000*9714, DN=0.2*PR, E1=emi(PR-DN,8,240), TOT=DN+E1*240, P2=700*6000, E2=emi(P2*0.8,8,240), RENT=PR*0.027/12;
+  var L=function(v){return (v/1e5).toFixed(1)+" lakh";};
+  var ST=[
+    {t:"A city flat",bars:[],u:"",m:"A 1,000 sq ft flat in a big city at the 2026 average of ₹9,714 per sq ft. The family earns ₹12 lakh a year. Press S."},
+    {t:"Step 1 · Price vs income",u:"₹ lakh",bars:[["flat price",PR/1e5,"l1"],["a year's income",12,"l2"]],m:"The flat costs about ₹"+L(PR)+", about "+(PR/12e5).toFixed(0)+" years of the family's ENTIRE income. Experts say a home should cost less than about 5 years' income."},
+    {t:"Step 2 · The down payment",u:"₹ lakh",bars:[["down payment (20%)",DN/1e5,"l1"],["savings a year",2,"l2"]],m:"Banks lend up to about 80%, so the family must pay ₹"+L(DN)+" themselves. Saving ₹2 lakh a year, that takes about "+(DN/2e5).toFixed(0)+" years."},
+    {t:"Step 3 · The monthly EMI",u:"₹ thousand a month",bars:[["EMI (8%, 20 years)",E1/1000,"l1"],["monthly income",100,"l2"]],m:"A loan of ₹"+L(PR-DN)+" at 8% for 20 years needs an EMI of "+rs(E1)+" a month: "+(E1/1e3).toFixed(0)+"% of their income. That leaves too little to live on; banks usually cap EMIs near 40–50%."},
+    {t:"Step 4 · What they pay in total",u:"₹ lakh",bars:[["flat price",PR/1e5,"l1"],["total paid over 20 years",TOT/1e5,"l3"]],m:"Over 20 years they would pay about ₹"+L(TOT)+", including ₹"+L(TOT-PR)+" of interest. Interest nearly doubles the price."},
+    {t:"Step 5 · Other choices",u:"₹ thousand a month",bars:[["EMI: big city flat",E1/1000,"l1"],["EMI: smaller suburban flat",E2/1000,"l3"],["rent: same city flat",RENT/1000,"l2"]],m:"A 700 sq ft suburban flat at ₹6,000/sq ft needs an EMI of about "+rs(E2)+". Or they could rent the city flat for about "+rs(RENT)+" and save the rest. Many choices are sensible; borrowing beyond your means is not."}
+  ];
+  var anI=0, anTimer=null;
+  function anRender(){
+    var s=ST[anI], W=900,H=300,Lm=230,R=110, ink=cssv("--ink"), ru=cssv("--rule"), fa=cssv("--faint"), svg="";
+    if(!s.bars.length){svg='<text x="450" y="150" font-size="18" text-anchor="middle" style="fill:'+fa+'">1,000 sq ft × ₹9,714 per sq ft</text>';}
+    else{var mx=Math.max.apply(null,s.bars.map(function(b){return b[1];}))*1.05, X=function(v){return Lm+(W-Lm-R)*v/mx;}, bh=46, gap=(H-40-s.bars.length*bh)/(s.bars.length+1);
+      s.bars.forEach(function(b,i){var y=20+gap+i*(bh+gap);
+        svg+='<text x="'+(Lm-12)+'" y="'+(y+bh/2+5)+'" font-size="15" text-anchor="end" style="fill:'+ink+';font-weight:600">'+b[0]+'</text>';
+        svg+='<rect x="'+Lm+'" y="'+y+'" width="'+(X(b[1])-Lm)+'" height="'+bh+'" fill="'+cssv("--"+b[2])+'"/>';
+        svg+='<text x="'+(X(b[1])+8)+'" y="'+(y+bh/2+5)+'" font-size="15" style="fill:'+ink+';font-weight:700">'+(b[1]>=100?Math.round(b[1]):b[1].toFixed(1))+'</text>';});
+      svg+='<text x="'+Lm+'" y="'+(H-4)+'" font-size="13" style="fill:'+ink+'">values in '+s.u+'</text>';}
+    $("anChart").innerHTML=svg; $("anTitle").textContent=s.t; $("anMsg").textContent=s.m;
+  }
+  function anStep(){ if(anI<ST.length-1){anI++;anRender();} else anPause(); }
+  function anPlay(){ if(anTimer)return; if(anI>=ST.length-1)anI=0; anRender(); anTimer=setInterval(anStep,4000); }
+  function anPause(){ clearInterval(anTimer); anTimer=null; }
+  $("anPlay").onclick=anPlay; $("anStep").onclick=function(){anPause();anStep();}; $("anPause").onclick=anPause;
+  $("anReset").onclick=function(){anPause();anI=0;anRender();};
+
+  /* ---------- Level 2: rent vs buy ---------- */
+  var cr=function(v){return (v<0?"−":"")+(Math.abs(v)>=1e7?"₹"+(Math.abs(v)/1e7).toFixed(2)+" crore":"₹"+(Math.abs(v)/1e5).toFixed(1)+" lakh");};
+  function rb(){
+    var g=function(id){return +$(id).value||0;};
+    var P=g("rbP"),d=g("rbD")/100,ra=g("rbR"),N=Math.max(1,Math.round(g("rbN"))),M=g("rbM"),rg=g("rbG")/100,hg=g("rbH")/100,iv=g("rbI")/100,oc=g("rbC")/100,sc=g("rbS")/100,Y=Math.max(1,Math.round(g("rbY")));
+    var Lo=P*(1-d), E=emi(Lo,ra,N*12), r=ra/1200, im=Math.pow(1+iv,1/12)-1, bal=Lo, oP=0, rP=P*d+P*sc, rent=M, Pc=P, ow=[], re=[], be=null;
+    for(var m=0;m<=Y*12;m++){
+      if(m%12===0){var y=m/12, owW=Pc*0.98-bal+oP; ow.push([y,owW]); re.push([y,rP]); if(be===null&&y>0&&owW>=rP)be=y; if(m>0)rent*=1+rg;}
+      if(m===Y*12)break;
+      var pay=bal>0?Math.min(E,bal*(1+r)):0; bal=Math.max(0,bal*(1+r)-pay);
+      var oCost=pay+oc*Pc/12, diff=oCost-rent;
+      oP*=1+im; rP*=1+im; if(diff>0)rP+=diff; else oP+=-diff;
+      Pc*=Math.pow(1+hg,1/12);
+    }
+    var o=ow[ow.length-1][1], rr=re[re.length-1][1];
+    $("rbOut").innerHTML="EMI <b>"+rs(E)+"</b> vs starting rent "+rs(M)+" (rental yield "+(M*12/P*100).toFixed(1)+"%). After "+Y+" years: owner's net worth <b>"+cr(o)+"</b>, renter's <b>"+cr(rr)+"</b>. "+(o>=rr?"Buying comes out ahead by "+cr(o-rr):"Renting comes out ahead by "+cr(rr-o))+(be!==null?"; the owner first draws level in year "+be+".":" over this period.")+" Change the price growth and return to see how sensitive this is.";
+    var W=900,H=300,Lm=90,R=30,T=20,B=45, all=ow.concat(re).map(function(p){return p[1];}), mx=Math.max.apply(null,all)*1.08, mn=Math.min(0,Math.min.apply(null,all));
+    var X=function(y){return Lm+(W-Lm-R)*y/Y;}, Yp=function(v){return T+(H-T-B)*(1-(v-mn)/(mx-mn));}, ink=cssv("--ink"), ru=cssv("--rule"), c1=cssv("--l1"), c2=cssv("--l2"), svg="";
+    for(var j=0;j<=4;j++){var v=mn+(mx-mn)*j/4;svg+='<line x1="'+Lm+'" x2="'+(W-R)+'" y1="'+Yp(v)+'" y2="'+Yp(v)+'" stroke="'+ru+'"/><text x="'+(Lm-6)+'" y="'+(Yp(v)+4)+'" font-size="12" text-anchor="end">'+cr(v).replace("₹","")+'</text>';}
+    var st=Math.max(1,Math.round(Y/10)); for(var y2=0;y2<=Y;y2+=st)svg+='<text x="'+X(y2)+'" y="'+(H-B+18)+'" font-size="12" text-anchor="middle">'+y2+'</text>';
+    svg+='<text x="'+((Lm+W-R)/2)+'" y="'+(H-6)+'" font-size="13" text-anchor="middle">years</text>';
+    svg+='<polyline points="'+ow.map(function(p){return X(p[0])+","+Yp(p[1]);}).join(" ")+'" fill="none" stroke="'+c1+'" stroke-width="3.5"/>';
+    svg+='<polyline points="'+re.map(function(p){return X(p[0])+","+Yp(p[1]);}).join(" ")+'" fill="none" stroke="'+c2+'" stroke-width="3.5" stroke-dasharray="9 6"/>';
+    svg+='<line x1="'+(Lm+12)+'" x2="'+(Lm+48)+'" y1="'+(T+12)+'" y2="'+(T+12)+'" stroke="'+c1+'" stroke-width="3.5"/><text x="'+(Lm+54)+'" y="'+(T+17)+'" font-size="13" style="fill:'+ink+'">solid: owner\'s net worth</text>';
+    svg+='<line x1="'+(Lm+12)+'" x2="'+(Lm+48)+'" y1="'+(T+34)+'" y2="'+(T+34)+'" stroke="'+c2+'" stroke-width="3.5" stroke-dasharray="9 6"/><text x="'+(Lm+54)+'" y="'+(T+39)+'" font-size="13" style="fill:'+ink+'">dashed: renter\'s investments</text>';
+    $("rbChart").innerHTML=svg;
+  }
+  ["rbP","rbD","rbR","rbN","rbM","rbG","rbH","rbI","rbC","rbS","rbY"].forEach(function(id){$(id).oninput=rb;}); rb();
+
+  /* ---------- Level 3: user cost ---------- */
+  function uc(){
+    var g=function(id){return +$(id).value||0;};
+    var r=g("ucR"),t=g("ucT"),d=g("ucD"),m=g("ucM"),gg=g("ucG"),y=g("ucY");
+    var u=r+t+d+m-gg, gs=r+t+d+m-y;
+    $("ucOut").innerHTML="User cost = "+r+" + "+t+" + "+d+" + "+m+" − "+gg+" = <b>"+u.toFixed(2)+"%</b> of price a year → equilibrium price-to-rent <b>"+(u>0?(100/u).toFixed(0)+"×":"unbounded (g too high)")+"</b>. Actual: yield "+y+"% → P/R "+(100/Math.max(y,0.01)).toFixed(0)+"×. Expected appreciation needed to justify today's yield: <b>g* = "+gs.toFixed(2)+"% a year</b>.";
+    var W=900,H=260,Lm=60,R=40, ink=cssv("--ink"), ru=cssv("--rule"), c1=cssv("--l1"), c2=cssv("--l2"), c3=cssv("--l3"), fa=cssv("--faint"), svg="";
+    var tot=r+t+d+m, mx=Math.max(tot,y,1)*1.1, X=function(v){return Lm+(W-Lm-R)*v/mx;}, x=0;
+    [[r,c2,"r"],[t,c3,"τ"],[d,fa,"δ"],[m,c3,"m"]].forEach(function(c){var w=X(x+c[0])-X(x);svg+='<rect x="'+X(x)+'" y="40" width="'+w+'" height="40" fill="'+c[1]+'" stroke="'+cssv("--card")+'" stroke-width="2"/>'; if(w>26)svg+='<text x="'+(X(x)+w/2)+'" y="66" font-size="14" text-anchor="middle" style="fill:#fff;font-weight:700">'+c[2]+'</text>'; x+=c[0];});
+    svg+='<text x="'+(X(tot)+6)+'" y="66" font-size="13" style="fill:'+ink+'">costs '+tot.toFixed(1)+'%</text>';
+    svg+='<rect x="'+X(Math.max(0,u))+'" y="100" width="'+(X(tot)-X(Math.max(0,u)))+'" height="34" fill="none" stroke="'+c1+'" stroke-width="2.5" stroke-dasharray="7 5"/><text x="'+((X(Math.max(0,u))+X(tot))/2)+'" y="122" font-size="13" text-anchor="middle" style="fill:'+ink+';font-weight:600">− expected gain g = '+gg+'%</text>';
+    svg+='<rect x="'+X(0)+'" y="150" width="'+(X(Math.max(0,u))-X(0))+'" height="34" fill="'+c1+'"/><text x="'+(X(Math.max(0,u))+6)+'" y="172" font-size="14" style="fill:'+ink+';font-weight:700">user cost '+u.toFixed(2)+'%</text>';
+    svg+='<line x1="'+X(y)+'" x2="'+X(y)+'" y1="30" y2="200" stroke="'+ink+'" stroke-width="2"/><text x="'+X(y)+'" y="218" font-size="13" text-anchor="middle" style="fill:'+ink+';font-weight:700">│ actual rental yield '+y+'%</text>';
+    for(var k=0;k<=mx;k+=2)svg+='<text x="'+X(k)+'" y="246" font-size="12" text-anchor="middle">'+k+'%</text>';
+    $("ucChart").innerHTML=svg;
+  }
+  ["ucR","ucT","ucD","ucM","ucG","ucY"].forEach(function(id){$(id).oninput=uc;}); uc();
+
+  /* ---------- quizzes ---------- */
+  var Q={
+    school:[
+      ["Real estate means…",["Cars and bikes","Land and buildings","Gold and silver","Shares"],1,"It is 'real' because it can't be moved."],
+      ["The down payment is…",["The monthly rent","The part of the price paid from your own savings","A bank fee","The interest"],1,"Banks lend the rest, usually up to about 80%."],
+      ["Why are homes near city jobs so expensive?",["Land there is limited and many people want it","Bricks are made of gold","Houses are bigger","Nobody lives there"],0,"High demand for scarce land raises prices."],
+      ["What does RERA do?",["Builds houses","Protects home buyers from builder delays and false promises","Sets interest rates","Collects rent"],1,"Projects must register and follow rules."],
+      ["Over a 20-year loan, interest can add roughly … to what you pay",["Nothing","A little","Almost as much again as the price","Ten times the price"],2,"In the example, about ₹78 lakh of interest on a ₹97 lakh flat."]
+    ],
+    working:[
+      ["Rental yield in Indian metros is typically about…",["0.5%","2–3%","8–10%","20%"],1,"Low yields often make renting cheaper than owning in pure money terms."],
+      ["RERA requires flats to be priced on…",["Super built-up area","Carpet area","Plot area","Balcony area"],1,"Carpet area is the actual usable floor."],
+      ["GST on a ready-to-move flat with an occupancy certificate is…",["18%","12%","5%","Nil"],3,"GST applies to under-construction homes."],
+      ["Under the old tax regime, interest on a self-occupied home loan is deductible up to…",["₹50,000","₹1.5 lakh","₹2 lakh","No limit"],2,"Section 24(b); the new regime gives no such benefit."],
+      ["Prepaying a home loan saves the most interest when done…",["Near the end","Early in the loan","Never","Only in December"],1,"Early EMIs are mostly interest."]
+    ],
+    expert:[
+      ["In the user-cost model, P/R equals…",["r","1/(r + τ + δ + m − g)","g/r","r − g"],1,"Rent covers the user cost of owning in equilibrium."],
+      ["With r = 8, τ = 0.2, δ = 1, m = 0.8 and yield 2.7%, the expected gain needed is about…",["2.7%","5.0%","7.3%","10%"],2,"10 − 2.7 = 7.3% a year."],
+      ["Inelastic housing supply means demand shocks mainly raise…",["Quantity","Prices","Rents only","Nothing"],1,"Glaeser, Gyourko and Saiz."],
+      ["Low FSI limits in Indian cities tend to…",["Raise density","Push growth to the periphery and raise prices","Lower land prices","Have no effect"],1,"Bertaud's critique of Indian land-use rules."],
+      ["Kiyotaki–Moore collateral dynamics imply that housing cycles are…",["Dampened by credit","Amplified through collateral values and borrowing","Unrelated to credit","Only demographic"],1,"Rising prices expand borrowing capacity, and vice versa."]
+    ]
+  };
+  document.querySelectorAll(".quiz").forEach(function(box){
+    var set=Q[box.getAttribute("data-quiz")], score=0, done=0, h="";
+    set.forEach(function(q,qi){
+      h+='<div class="q" data-i="'+qi+'"><p>'+(qi+1)+'. '+q[0]+'</p>';
+      q[1].forEach(function(o,oi){h+='<button data-o="'+oi+'">'+o+'</button>';});
+      h+='<div class="why">'+q[3]+'</div></div>';
+    });
+    h+='<p class="score"></p>'; box.innerHTML=h;
+    box.querySelectorAll(".q").forEach(function(qd){
+      var q=set[+qd.getAttribute("data-i")];
+      qd.querySelectorAll("button").forEach(function(b){
+        b.onclick=function(){
+          if(qd.classList.contains("done"))return;
+          var o=+b.getAttribute("data-o"); qd.classList.add("done"); done++;
+          if(o===q[2])score++; else b.classList.add("wrong");
+          qd.querySelectorAll("button")[q[2]].classList.add("right");
+          box.querySelector(".score").textContent="Score: "+score+" / "+done+(done===set.length?(score===set.length?" — perfect!":" — review the explanations above."):"");
+        };
+      });
+    });
+  });
+
+  document.addEventListener("keydown",function(e){
+    if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
+    var k=e.key.toLowerCase();
+    if(k==="1")setLevel("school"); else if(k==="2")setLevel("working"); else if(k==="3")setLevel("expert");
+    else if(k==="m")toggleSB(); else if(k==="t")toggleTheme(); else if(k==="f")toggleFS();
+    else if(body.getAttribute("data-level")==="school"){
+      if(k==="p"){anPlay();} else if(k==="s"){anPause();anStep();} else if(k==="x"){anPause();}
+    }
+  });
+
+  setLevel((location.hash||"#school").slice(1),true);
+  window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(LV.indexOf(h)>=0)setLevel(h,true);});
+})();
+</script>
+</body>
+</html>

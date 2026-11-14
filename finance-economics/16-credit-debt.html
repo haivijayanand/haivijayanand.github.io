@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<!--
+TOOL:    finance-economics/16-credit-debt.html — Finance & Economics Topic 16: Credit Scores & Personal Debt (three levels)
+FAMILY:  finance-economics
+VERSION: 1.0.0
+DATE:    2026-11-14
+CHAT:    Finance & Economics series — second set of ten topics; Topic 16 Credit Scores & Personal Debt
+CHANGES: 1.0.0 - sixteenth topic: phone-three-ways animation (minimum due vs fixed payment vs save
+                 first); score factors, loan true-cost/APR/EMI-to-income calculator, typical rates, borrower
+                 rights (KFS, no prepayment penalty, recovery, ₹100/day), avalanche/snowball; FSR June 2026;
+                 scorecard PDO calculator with PD curve, rationing, leverage, behavioural credit; quizzes
+STATUS:  working
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Credit Scores &amp; Personal Debt — Finance &amp; Economics in Three Levels — K Vijay Anand</title>
+<meta name="description" content="Credit scores and personal debt explained at three levels — for school students, for working people and as a review for experts: minimum-due trap, credit score factors, true loan cost and APR, borrower rights, household debt 2026, scorecards, credit rationing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* Colour-blind-safe palette: blue / orange / purple / gold — no red-vs-green coding */
+  :root{--bg:#f4f2ed;--bg2:#e9e5dc;--card:#fffdf8;--ink:#1d1b18;--soft:#4f4940;--faint:#857c6f;--rule:#d6cdbd;
+        --acc:#1d5fa6;--l1:#d9730d;--l2:#1d5fa6;--l3:#6a3fa0;--gold:#a87908;--hi:#fff1d6}
+  :root[data-theme="dark"]{--bg:#121316;--bg2:#1a1c21;--card:#1f2228;--ink:#ece9e2;--soft:#c3bdb2;--faint:#8c8578;--rule:#33363d;
+        --acc:#6aa8ee;--l1:#f39a3d;--l2:#6aa8ee;--l3:#b28ae6;--gold:#e5b33c;--hi:#3a2f17}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.65}
+  a{color:var(--acc)}
+  .toolbar{position:fixed;top:10px;right:12px;z-index:30;display:flex;gap:8px;font-size:13px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button,.toolbar a{background:var(--card);color:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;text-decoration:none}
+  header{padding:70px 4vw 18px;max-width:1600px;margin:0 auto}
+  .series{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-family:"Playfair Display",serif;font-weight:800;font-size:clamp(46px,7vw,84px);margin:6px 0 4px;line-height:1}
+  .tag{color:var(--soft);max-width:70ch;margin:0}
+  /* level switch */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 0}
+  .levels button{text-align:left;background:var(--card);border:2px solid var(--rule);border-radius:12px;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink)}
+  .levels button b{display:block;font-size:18px}
+  .levels button small{color:var(--faint)}
+  .levels button .k{float:right;font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:0 6px;color:var(--faint)}
+  .levels button[data-l="school"].on{border-color:var(--l1);background:color-mix(in srgb,var(--l1) 10%,var(--card))}
+  .levels button[data-l="working"].on{border-color:var(--l2);background:color-mix(in srgb,var(--l2) 10%,var(--card))}
+  .levels button[data-l="expert"].on{border-color:var(--l3);background:color-mix(in srgb,var(--l3) 10%,var(--card))}
+  /* layout */
+  .wrap{max-width:1600px;margin:0 auto;padding:0 4vw 40px;display:grid;grid-template-columns:250px 1fr;gap:34px}
+  body.nosb .wrap{grid-template-columns:1fr}
+  body.nosb aside{display:none}
+  aside{position:sticky;top:60px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;font-size:14.5px;padding-top:20px}
+  aside .h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  aside a{display:block;padding:5px 10px;border-left:3px solid var(--rule);color:var(--soft);text-decoration:none}
+  aside a:hover{border-left-color:var(--lc);color:var(--ink)}
+  aside .keys{margin-top:18px;color:var(--faint);font-size:12.5px;line-height:1.9}
+  kbd{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--card)}
+  main{min-width:0}
+  .panel{display:none}
+  .panel.on{display:block}
+  #p-school{--lc:var(--l1)} #p-working{--lc:var(--l2)} #p-expert{--lc:var(--l3)}
+  body[data-level="school"]{--lc:var(--l1)} body[data-level="working"]{--lc:var(--l2)} body[data-level="expert"]{--lc:var(--l3)}
+  .lvhead{border-left:6px solid var(--lc);padding:4px 0 4px 16px;margin:24px 0 10px}
+  .lvhead .who{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--lc);font-weight:700}
+  .lvhead p{margin:4px 0 0;color:var(--soft)}
+  section{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:22px 28px;margin:18px 0}
+  h2{font-family:"Playfair Display",serif;font-size:30px;margin:0 0 10px;line-height:1.2}
+  h2 .n{color:var(--lc);margin-right:8px}
+  h3{font-size:18px;margin:20px 0 6px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .box{border:1px solid var(--rule);border-radius:10px;padding:14px 16px;background:var(--bg)}
+  .box b.t{display:block;color:var(--lc);margin-bottom:4px}
+  .def{font-size:20px;border-left:5px solid var(--lc);background:color-mix(in srgb,var(--lc) 8%,transparent);padding:12px 18px;border-radius:0 10px 10px 0;margin:8px 0 14px}
+  .note{background:var(--hi);border-radius:8px;padding:10px 14px;font-size:15.5px}
+  .eq{font-family:"JetBrains Mono",monospace;background:var(--bg2);border-radius:8px;padding:10px 14px;overflow-x:auto;font-size:15px;white-space:pre}
+  table{border-collapse:collapse;width:100%;font-size:15.5px;margin:8px 0}
+  th,td{border-bottom:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:10px}
+  .stat{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--bg)}
+  .stat .v{font-size:28px;white-space:nowrap;font-weight:700;color:var(--acc);line-height:1.1}
+  .stat .l{font-size:13.5px;color:var(--soft)}
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;margin:10px 0}
+  .ctl label{font-size:13.5px;color:var(--soft);display:flex;flex-direction:column;gap:3px}
+  .ctl input[type=number]{width:120px;font:inherit;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)}
+  .ctl input[type=range]{width:200px}
+  .btn{background:var(--lc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--lc);border:1px solid var(--lc)}
+  .out{font-size:18px;margin:8px 0}
+  .out b{color:var(--lc)}
+  svg text{fill:var(--soft);font-family:Inter,sans-serif}
+  /* basket animation */
+  .stage{border:1px dashed var(--rule);border-radius:10px;padding:14px;background:var(--bg);min-height:170px}
+  .stage .yr{font-size:26px;font-weight:700}
+  .stage .yr span{color:var(--l1)}
+  .samosas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:44px}
+  .sam{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:30px solid var(--l1);transition:opacity .3s}
+  .sam.gone{opacity:.15}
+  /* quiz */
+  .q{border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:10px 0;background:var(--bg)}
+  .q p{margin:0 0 8px;font-weight:600}
+  .q button{display:block;width:100%;text-align:left;margin:5px 0;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;font:inherit;color:var(--ink);cursor:pointer}
+  .q button.right{border:2px solid var(--l2);background:color-mix(in srgb,var(--l2) 14%,var(--card))}
+  .q button.right::after{content:"  ✔ correct";font-weight:700;color:var(--l2)}
+  .q button.wrong{border:2px dashed var(--l1)}
+  .q button.wrong::after{content:"  ✘ not this one";font-weight:700;color:var(--l1)}
+  .q .why{display:none;font-size:15px;color:var(--soft);margin-top:6px}
+  .q.done .why{display:block}
+  .score{font-weight:700;color:var(--lc)}
+  footer{max-width:1600px;margin:0 auto;padding:20px 4vw 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--faint)}
+  footer a{color:var(--soft)}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}aside{display:none}.levels{grid-template-columns:1fr}section{padding:18px}}
+  @media print{.toolbar,aside,.levels{display:none}.panel{display:block!important}.wrap{display:block}}
+</style>
+</head>
+<body data-level="school">
+<div class="toolbar">
+  <a href="./">← Series</a>
+  <button id="sbBtn" title="Show / hide contents (M)">☰ Contents</button>
+  <button id="themeBtn" title="Light / dark (T)">◐ Theme</button>
+  <button id="fsBtn" title="Full screen (F)">⤢ Full screen</button>
+</div>
+
+<header>
+  <div class="series">Finance &amp; Economics · Topic 16</div>
+  <h1>Credit Scores &amp; Personal Debt</h1>
+  <p class="tag">Borrowing can buy a home or bury a family. Covers how a credit score works, what a loan really costs, why the credit card "minimum due" is a trap, what changed in India's lending rules in 2025–26, and the economics of household debt. Pick your level.</p>
+  <div class="levels" role="tablist">
+    <button data-l="school" class="on"><span class="k">1</span><b>🎒 School</b><small>A ₹20,000 phone, three ways</small></button>
+    <button data-l="working"><span class="k">2</span><b>💼 Working people</b><small>Your score, loan costs, debt traps</small></button>
+    <button data-l="expert"><span class="k">3</span><b>🎓 Experts — review</b><small>Scorecards, rationing, household leverage</small></button>
+  </div>
+</header>
+
+<div class="wrap">
+<aside id="toc"></aside>
+<main>
+
+<section id="snapshot" style="border-top:4px solid var(--gold)">
+  <h2>Where things stand — November 2026</h2>
+  <div class="snap">
+    <div class="stat"><div class="v">45.5%</div><div class="l">Indian household debt as a share of GDP (RBI Financial Stability Report, June 2026), up from about 41% a year earlier and above its five-year average</div></div>
+    <div class="stat"><div class="v">58.4%</div><div class="l">Share of household borrowing that is not for housing: personal loans, cards, vehicles, gold loans, consumer loans</div></div>
+    <div class="stat"><div class="v">6.4%</div><div class="l">Delinquency on small personal loans (below ₹50,000) in March 2026, up from 4.5% two years earlier. Fintech lenders hold most of these loans.</div></div>
+    <div class="stat"><div class="v">4× a month</div><div class="l">Lenders now report to credit bureaus on the 9th, 16th, 23rd and last day of each month (from 1 July 2026), up from fortnightly in 2025 and monthly before that</div></div>
+    <div class="stat"><div class="v">₹0</div><div class="l">Prepayment charge allowed on floating-rate loans to individuals sanctioned from 1 January 2026</div></div>
+  </div>
+  <p class="note" style="margin-top:12px">Bank asset quality is strong (gross bad loans 1.8% in March 2026). The RBI's concern is the fast growth of small, unsecured, consumption loans, not the banking system as a whole.</p>
+</section>
+
+<!-- ========================= LEVEL 1 : SCHOOL ====================== -->
+<div class="panel on" id="p-school">
+  <div class="lvhead"><div class="who">Level 1 · For school students</div><p>Borrowing means using tomorrow's money today. It costs extra, called interest, and banks keep a report card on how you repay.</p></div>
+
+  <section id="s1">
+    <h2><span class="n">1</span>What is a loan? What is interest?</h2>
+    <div class="def">A <b>loan</b> is money you borrow and promise to pay back. <b>Interest</b> is the extra you pay for using someone else's money. The longer you take and the higher the rate, the more extra you pay.</div>
+    <p>Some borrowing helps you build something that lasts: a home, an education, a shop. Other borrowing just lets you spend sooner, on a phone, a holiday or a party, and leaves you paying long after the fun is over.</p>
+  </section>
+
+  <section id="s2">
+    <h2><span class="n">2</span>Watch it happen: a ₹20,000 phone, three ways</h2>
+    <p>Priya wants a ₹20,000 phone. A credit card charges about 3.5% interest <b>every month</b> (42% a year). Press Play, or press S for each step.</p>
+    <div class="ctl">
+      <button class="btn" id="anPlay">▶ Play (P)</button>
+      <button class="btn ghost" id="anStep">Next step (S)</button>
+      <button class="btn ghost" id="anPause">⏸ Pause (X)</button>
+      <button class="btn ghost" id="anReset">↺ Reset</button>
+    </div>
+    <div class="stage">
+      <div class="yr" id="anTitle">Three ways to buy</div>
+      <svg id="anChart" viewBox="0 0 900 300" style="width:100%;height:auto;margin-top:6px"></svg>
+      <p id="anMsg" style="margin:6px 0 0;color:var(--soft);font-size:17px">Press Play, or press S to begin.</p>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="n">3</span>Your financial report card: the credit score</h2>
+    <div class="def">A <b>credit score</b> is a number from <b>300 to 900</b> that shows how reliably a person has repaid loans. Above 750 is usually seen as good.</div>
+    <p>Four companies called <b>credit bureaus</b> (CIBIL, Experian, Equifax and CRIF High Mark) collect repayment records from banks. When you ask for a loan, the bank checks your score. A good score gets you loans more easily and at lower interest. Paying late, even a little, pulls it down.</p>
+  </section>
+
+  <section id="s4">
+    <h2><span class="n">4</span>Good rules about borrowing</h2>
+    <ol>
+      <li><b>Borrow for things that grow in value or earn</b> (education, a home, tools for work), rarely for things you consume.</li>
+      <li><b>Never borrow to repay another loan</b>; that's how debt traps start.</li>
+      <li><b>Always pay on time</b>, and pay the full credit card bill.</li>
+      <li><b>Read the total cost</b>, not just the monthly payment.</li>
+      <li><b>Beware "easy" loan apps</b> that lend in minutes; some charge huge fees and harass borrowers.</li>
+    </ol>
+  </section>
+
+  <section id="s5">
+    <h2><span class="n">5</span>Words to remember</h2>
+    <table>
+      <tr><th>Word</th><th>Meaning</th></tr>
+      <tr><td>Principal</td><td>The amount borrowed</td></tr>
+      <tr><td>Interest</td><td>The extra paid for borrowing</td></tr>
+      <tr><td>EMI</td><td>Equated monthly instalment: the same payment every month that repays a loan</td></tr>
+      <tr><td>Credit score</td><td>A 300–900 number showing how well you repay</td></tr>
+      <tr><td>Default</td><td>Failing to repay as promised</td></tr>
+      <tr><td>Collateral</td><td>Something pledged (a house, gold) that the lender can take if you don't repay</td></tr>
+    </table>
+  </section>
+
+  <section id="s6">
+    <h2><span class="n">6</span>Check yourself</h2>
+    <div class="quiz" data-quiz="school"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 2 : WORKING ===================== -->
+<div class="panel" id="p-working">
+  <div class="lvhead"><div class="who">Level 2 · For working people</div><p>What moves your score, what a loan really costs, your rights as a borrower, and how to get out of debt. This is educational only, not financial or legal advice.</p></div>
+
+  <section id="w1">
+    <h2><span class="n">1</span>What moves your credit score</h2>
+    <table>
+      <tr><th>Factor</th><th>Rough weight*</th><th>What helps</th></tr>
+      <tr><td>Repayment history</td><td>Largest (~35%)</td><td>Never miss an EMI or card due date; one 30-day delay stays on record for years</td></tr>
+      <tr><td>Credit utilisation</td><td>~30%</td><td>Keep card balances below about 30% of the limit</td></tr>
+      <tr><td>Length of history</td><td>~15%</td><td>Keep old cards open; don't close your oldest account</td></tr>
+      <tr><td>Credit mix</td><td>~10%</td><td>A mix of secured (home, car) and unsecured loans, handled well</td></tr>
+      <tr><td>New credit / enquiries</td><td>~10%</td><td>Avoid many loan or card applications in a short time</td></tr>
+    </table>
+    <p class="note">*Bureaus don't publish their exact formulas; these are typical weights in widely used scoring models. Checking your own score is a "soft" enquiry and does not lower it. You are entitled to one free full credit report a year from each bureau.</p>
+  </section>
+
+  <section id="w2">
+    <h2><span class="n">2</span>Calculator: the true cost of a loan</h2>
+    <div class="ctl">
+      <label>Loan amount (₹)<input type="number" id="lnP" value="500000" step="10000"></label>
+      <label>Interest rate % a year<input type="number" id="lnR" value="14" step="0.25"></label>
+      <label>Tenure (months)<input type="number" id="lnN" value="48" step="6"></label>
+      <label>Processing fee + charges (₹)<input type="number" id="lnF" value="10000" step="1000"></label>
+      <label>Your monthly take-home pay (₹)<input type="number" id="lnI" value="80000" step="5000"></label>
+    </div>
+    <div class="out" id="lnOut"></div>
+    <svg id="lnChart" viewBox="0 0 900 120" style="width:100%;height:auto;margin-top:8px"></svg>
+    <p class="note">Effective annual rate (APR) treats the fee as reducing the money you actually receive, which is what the Key Facts Statement must show. A common rule of thumb is to keep all EMIs below about 40% of take-home pay.</p>
+  </section>
+
+  <section id="w3">
+    <h2><span class="n">3</span>Typical costs of borrowing in India</h2>
+    <table>
+      <tr><th>Product</th><th>Typical annual rate</th><th>Note</th></tr>
+      <tr><td>Home loan (floating)</td><td>~7.5–9.5%</td><td>Linked to the repo rate (Topic 02); no prepayment penalty</td></tr>
+      <tr><td>Gold loan</td><td>~9–18%</td><td>Fast; the jewellery is auctioned if you default</td></tr>
+      <tr><td>Car / two-wheeler loan</td><td>~8.5–15%</td><td>The vehicle is the security</td></tr>
+      <tr><td>Personal loan (bank)</td><td>~10.5–24%</td><td>Unsecured; rate depends heavily on your score</td></tr>
+      <tr><td>Credit card revolving balance</td><td>~36–48%</td><td>Charged if you pay less than the full bill</td></tr>
+      <tr><td>Small app loans, BNPL</td><td>Can exceed 30–60% once fees are counted</td><td>Check whether the lender is RBI-regulated and see the Key Facts Statement</td></tr>
+    </table>
+    <p class="note">Ranges are indicative for November 2026 and vary by lender and borrower.</p>
+  </section>
+
+  <section id="w4">
+    <h2><span class="n">4</span>Your rights as a borrower</h2>
+    <ul>
+      <li><b>Key Facts Statement (KFS)</b> before you sign: the all-in annual rate, fees and repayment schedule, in a standard format.</li>
+      <li><b>No prepayment penalty</b> on floating-rate loans to individuals sanctioned from 1 January 2026.</li>
+      <li><b>Digital lending rules:</b> the loan goes straight to your bank account; apps cannot access your contacts or photos; a cooling-off period lets you exit early. Check that the lender is RBI-regulated.</li>
+      <li><b>Recovery conduct:</b> agents may not threaten you, call outside 8 am–7 pm, or shame you to family, employers or neighbours.</li>
+      <li><b>Credit report errors:</b> bureaus and lenders must fix complaints within 30 days, or pay ₹100 a day in compensation. Escalate to the RBI Ombudsman (cms.rbi.org.in) if unresolved.</li>
+    </ul>
+  </section>
+
+  <section id="w5">
+    <h2><span class="n">5</span>Getting out of debt</h2>
+    <div class="cols">
+      <div class="box"><b class="t">Avalanche</b>Pay minimums on all loans and put every spare rupee on the <b>highest-interest</b> one first. This saves the most money.</div>
+      <div class="box"><b class="t">Snowball</b>Clear the <b>smallest</b> balance first for a quick win, then roll that payment into the next. Better for motivation.</div>
+      <div class="box"><b class="t">Consolidate</b>Replace card debt at 40% with a personal loan at 12–15%, or a gold loan, but only if you stop using the cards.</div>
+      <div class="box"><b class="t">Talk early</b>Ask the lender for restructuring before you default. "Settlement" leaves a negative mark on your report for years.</div>
+    </div>
+  </section>
+
+  <section id="w6">
+    <h2><span class="n">6</span>Household debt and the country</h2>
+    <ul>
+      <li>India's household debt (about 45% of GDP) is still lower than in many emerging economies, but it is rising, and household financial savings fell to about 5–6% of GDP before recovering slightly.</li>
+      <li>More borrowing for consumption supports spending now, but raises the risk of a squeeze if incomes or jobs weaken (Topic 11).</li>
+      <li>Gold loans have surged as gold prices rose (Topic 18). If gold falls sharply, that collateral weakens just when stressed borrowers rely on it.</li>
+    </ul>
+  </section>
+
+  <section id="w7">
+    <h2><span class="n">7</span>Check yourself</h2>
+    <div class="quiz" data-quiz="working"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 3 : EXPERT ====================== -->
+<div class="panel" id="p-expert">
+  <div class="lvhead"><div class="who">Level 3 · Review for experts</div><p>Credit scoring models, information asymmetry and rationing, credit-bureau economics, household leverage and the macroeconomy, behavioural biases, and India's digital credit stack.</p></div>
+
+  <section id="e1">
+    <h2><span class="n">1</span>Scorecards: calculator</h2>
+    <div class="eq">Score = Offset + Factor · ln(odds_good:bad)        Factor = PDO / ln 2        Offset = S₀ − Factor · ln(odds₀)
+PD(score) = 1 / (1 + odds),   odds = exp((score − Offset) / Factor)</div>
+    <div class="ctl">
+      <label>Anchor score S₀<input type="number" id="scS" value="700" step="10"></label>
+      <label>Odds at anchor (good:bad)<input type="number" id="scO" value="30" step="1"></label>
+      <label>Points to double odds (PDO)<input type="number" id="scP" value="40" step="5"></label>
+      <label>Check a score<input type="number" id="scX" value="650" step="10"></label>
+    </div>
+    <div class="out" id="scOut"></div>
+    <svg id="scChart" viewBox="0 0 900 300" style="width:100%;height:auto;margin-top:8px"></svg>
+    <p class="note">These are illustrative calibration parameters. Real bureau scores are proprietary, and models (logistic scorecards, gradient-boosted trees) are judged by discrimination (Gini/AUC, KS) and calibration across segments.</p>
+  </section>
+
+  <section id="e2">
+    <h2><span class="n">2</span>Information asymmetry and credit rationing</h2>
+    <ul>
+      <li><b>Stiglitz and Weiss (1981):</b> raising interest rates worsens the borrower pool (adverse selection) and induces riskier projects (moral hazard), so lenders ration credit instead of clearing the market by price.</li>
+      <li><b>Collateral and screening</b> mitigate this. Gold loans and secured lending dominate where information is thin; microfinance group liability substitutes social collateral.</li>
+      <li><b>Credit bureaus</b> (Jappelli and Pagano, 2002) reduce adverse selection and discipline borrowers through reputation. Coverage of thin-file borrowers is the frontier, using alternative data (UPI cash flows, GST invoices, account aggregator consent flows).</li>
+    </ul>
+  </section>
+
+  <section id="e3">
+    <h2><span class="n">3</span>Household leverage and the macroeconomy</h2>
+    <ul>
+      <li><b>Mian and Sufi:</b> household debt booms predict weaker future growth. Debt overhang depresses consumption, especially where marginal propensities to consume are high. The debt service ratio (DSR) matters more than debt-to-GDP.</li>
+      <li>India's mix has shifted from housing (asset-backed, long tenor) to short-tenor unsecured consumption credit, which raises DSR sensitivity even at moderate debt-to-GDP.</li>
+      <li>Macroprudential tools: the RBI raised risk weights on unsecured consumer credit and on bank lending to NBFCs in November 2023, cooling growth. These were partly eased in 2025 as growth slowed, a live example of counter-cyclical calibration.</li>
+    </ul>
+  </section>
+
+  <section id="e4">
+    <h2><span class="n">4</span>Behavioural credit</h2>
+    <ul>
+      <li><b>Present bias</b> (Laibson; O'Donoghue–Rabin) explains revolving high-cost debt alongside low-yield savings: the "co-holding puzzle".</li>
+      <li><b>Minimum-payment anchoring</b> (Stewart, 2009): showing a minimum due lowers repayments. The UK's disclosures of payoff time and total cost help partly.</li>
+      <li>BNPL and frictionless digital credit lower the pain of paying. Small-ticket fintech loans have the highest delinquency, consistent with impulse borrowing and over-indebtedness.</li>
+    </ul>
+  </section>
+
+  <section id="e5">
+    <h2><span class="n">5</span>India's credit infrastructure</h2>
+    <ul>
+      <li>Four credit bureaus, near-real-time reporting (four dates a month from July 2026), CKYC-based identity matching and standardised data formats.</li>
+      <li>Account Aggregator (consent-based financial data sharing), OCEN and the RBI's Unified Lending Interface (ULI) aim to cut the cost of underwriting small borrowers.</li>
+      <li>Regulation: Digital Lending Directions 2025 (lending service provider accountability, default loss guarantee caps), KFS with all-in cost, a fair practices code, and the end of prepayment penalties on floating-rate retail loans.</li>
+      <li>Concerns: algorithmic opacity and fairness, data-protection compliance (DPDP Act), and multiple lending to the same over-leveraged borrowers.</li>
+    </ul>
+  </section>
+
+  <section id="e6">
+    <h2><span class="n">6</span>Review checklist: open questions</h2>
+    <ol>
+      <li>Is India's consumption-credit growth smoothing incomes or financing structural income shortfalls?</li>
+      <li>Should regulators impose debt-service-to-income caps on unsecured retail loans, as some countries do?</li>
+      <li>How should alternative-data scoring be regulated for fairness and explainability?</li>
+      <li>Do gold loans create procyclical risk tied to gold prices?</li>
+      <li>Should "minimum due" disclosures include payoff time and total cost, as in the UK and US?</li>
+    </ol>
+  </section>
+
+  <section id="e7">
+    <h2><span class="n">7</span>Check yourself</h2>
+    <div class="quiz" data-quiz="expert"></div>
+  </section>
+</div>
+
+<section id="sources">
+  <h2>Sources and further reading</h2>
+  <ul>
+    <li>RBI <i>Financial Stability Report</i>, June 2026: <a href="https://www.businesstoday.in/latest/economy/story/indias-household-debt-rises-to-45-5-of-gdp-non-housing-retail-loans-account-for-58-4-show-data-544604-2026-07-22">Business Today</a>, <a href="https://www.policyedge.in/p/retail-credit-is-changing-faster-than-household-risk-rbi">The Policy Edge</a>, <a href="https://www.policycircle.org/economy/rbi-financial-stability-report-loans/amp/">Policy Circle</a>, <a href="https://www.billcut.com/blogs/india-household-debt-rbi-report/">BillCut summary</a>.</li>
+    <li>Credit reporting: <a href="https://www.business-standard.com/finance/personal-finance/rbi-s-new-15-day-credit-reporting-rule-what-it-means-for-your-credit-score-125010601170_1.html">Business Standard on fortnightly reporting (2025)</a>; <a href="https://www.iifl.com/blogs/credit-score/credit-score-reporting-rules-2026-what-changed">IIFL on four reporting dates from July 2026</a>.</li>
+    <li>Pre-payment Charges on Loans Directions, 2025: <a href="https://www.taxmann.com/post/blog/rbi-bans-pre-payment-charges-on-floating-rate-loans">Taxmann</a>, <a href="https://www.outlookmoney.com/banking/loan-prepayment-to-consent-first-digital-banking-what-will-change-for-bank-customers-from-january-1-2026">Outlook Money</a>.</li>
+    <li>Stiglitz and Weiss (1981), <i>AER</i>; Jappelli and Pagano (2002), <i>JBF</i>; Mian and Sufi, <i>House of Debt</i> (2014); Stewart (2009), <i>Psychological Science</i>; Laibson (1997), <i>QJE</i>.</li>
+    <li>Earlier topics: <a href="02-interest-rates.html">Interest Rates</a> · <a href="04-money-banking.html">Money &amp; Banking</a> · <a href="09-compounding.html">Compounding</a>.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<footer>
+  Finance &amp; Economics in Three Levels · Topic 16 · K Vijay Anand · <a href="15-pensions-retirement.html">← Topic 15 Pensions &amp; Retirement</a> · <a href="./">All topics</a> · <a href="/">Home</a><br>
+  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.
+  Educational content. Figures dated November 2026.
+</footer>
+<script>
+(function(){
+  "use strict";
+  var root=document.documentElement, body=document.body;
+  var $=function(id){return document.getElementById(id);};
+  var cssv=function(n){return getComputedStyle(root).getPropertyValue(n).trim();};
+
+  try{var t=localStorage.getItem("fe-theme");if(t)root.setAttribute("data-theme",t);}catch(e){}
+  function redraw(){anRender();ln();sc();}
+  function toggleTheme(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("fe-theme",n);}catch(e){}redraw();}
+  function toggleFS(){if(!document.fullscreenElement){(root.requestFullscreen||function(){}).call(root);}else{document.exitFullscreen();}}
+  function toggleSB(){body.classList.toggle("nosb");}
+  $("themeBtn").onclick=toggleTheme; $("fsBtn").onclick=toggleFS; $("sbBtn").onclick=toggleSB;
+
+  var LV=["school","working","expert"];
+  function setLevel(l,noHash){
+    if(LV.indexOf(l)<0)l="school";
+    body.setAttribute("data-level",l);
+    LV.forEach(function(x){$("p-"+x).classList.toggle("on",x===l);});
+    document.querySelectorAll(".levels button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-l")===l);});
+    buildTOC(l);
+    if(!noHash)history.replaceState(null,"","#"+l);
+    redraw();
+  }
+  document.querySelectorAll(".levels button").forEach(function(b){b.onclick=function(){setLevel(b.getAttribute("data-l"));};});
+  function buildTOC(l){
+    var names={school:"School",working:"Working people",expert:"Experts"};
+    var h='<div class="h">Contents · '+names[l]+'</div><a href="#snapshot">Snapshot · Nov 2026</a>';
+    $("p-"+l).querySelectorAll("section").forEach(function(s){
+      var t=s.querySelector("h2").textContent; h+='<a href="#'+s.id+'">'+t.replace(/^(\d+)/,"$1 · ")+'</a>';
+    });
+    h+='<a href="#sources">Sources</a>';
+    h+='<div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> level<br><kbd>M</kbd> hide contents<br><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause<br><kbd>T</kbd> theme · <kbd>F</kbd> full screen</div>';
+    $("toc").innerHTML=h;
+  }
+  function rep(v,n){var a=[];for(var i=0;i<n;i++)a.push(v);return a;}
+
+    /* ---------- Level 1: phone three ways ---------- */
+  function simA(){var b=20000,o=[[0,b]],paid=0,m=0;while(b>0.5&&m<400){var pay=Math.min(Math.max(b*0.05,200),b);b-=pay;paid+=pay;b*=1.035;m++;if(b<1)b=0;o.push([m,b]);}return {pts:o,paid:paid,m:m};}
+  function simB(){var b=20000,o=[[0,b]],paid=0,m=0;while(b>0.5){var pay=Math.min(2000,b*1.035);b=b*1.035-pay;paid+=pay;m++;if(b<1)b=0;o.push([m,b]);}return {pts:o,paid:paid,m:m};}
+  var SA=simA(), SB=simB(), SC=[];for(var q=0;q<=10;q++)SC.push([q,q*2000]);
+  var a12=SA.pts[12][1], p12=0;(function(){var b=20000;for(var k=0;k<12;k++){var pay=Math.max(b*0.05,200);p12+=pay;b=(b-pay)*1.035;}})();
+  var rs=function(v){return "₹"+Math.round(v).toLocaleString("en-IN");};
+  var ST=[
+    {t:"Three ways to buy",a:0,b:false,c:false,m:"Way 1: credit card, pay only the 'minimum due'. Way 2: credit card, pay ₹2,000 every month. Way 3: save ₹2,000 a month first, then buy. Press S."},
+    {t:"Way 1 · Pay only the minimum due: first year",a:12,b:false,c:false,m:"Priya pays the minimum (5% of the bill) each month. After a year she has paid "+rs(p12)+", but she still owes "+rs(a12)+". Most of what she paid went to interest."},
+    {t:"Way 1 · ...and on, and on",a:999,b:false,c:false,m:"Paying only the minimum, the phone takes about "+Math.round(SA.m/12)+" years ("+SA.m+" months) to pay off, and costs "+rs(SA.paid)+" in total. The phone will be junk long before that."},
+    {t:"Way 2 · Pay ₹2,000 a month on the card",a:999,b:true,c:false,m:"Paying a fixed ₹2,000 clears it in "+SB.m+" months, for "+rs(SB.paid)+" in total: still "+rs(SB.paid-20000)+" of interest, but far less."},
+    {t:"Way 3 · Save first, then buy",a:999,b:true,c:true,m:"Saving ₹2,000 a month, Priya can buy the phone with cash in 10 months for exactly ₹20,000, and her savings even earn a little interest. Waiting 10 months saved her "+rs(SA.paid-20000)+" compared with Way 1."},
+    {t:"The lesson",a:999,b:true,c:true,m:"Interest works for savers and against borrowers. If you use a credit card, always pay the full bill by the due date; then it costs nothing at all."}
+  ];
+  var anI=0, anTimer=null;
+  function anRender(){
+    var s=ST[anI], W=900,H=300,L=70,R=30,T=30,B=45, ink=cssv("--ink"), ru=cssv("--rule"), c1=cssv("--l1"), c2=cssv("--l2"), c3=cssv("--l3"), svg="", MX=Math.ceil(SA.m/12)*12;
+    var X=function(m){return L+(W-L-R)*m/MX;}, Y=function(v){return T+(H-T-B)*(1-v/22000);};
+    for(var g=0;g<=20000;g+=5000)svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(g)+'" y2="'+Y(g)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(Y(g)+4)+'" font-size="12" text-anchor="end">₹'+(g/1000)+'k</text>';
+    for(var y=0;y<=MX;y+=12)svg+='<text x="'+X(y)+'" y="'+(H-B+18)+'" font-size="12" text-anchor="middle">'+(y/12)+'</text>';
+    svg+='<text x="'+((L+W-R)/2)+'" y="'+(H-6)+'" font-size="13" text-anchor="middle">years</text>';
+    function poly(P,col,dash,w){return '<polyline points="'+P.map(function(p){return X(p[0])+","+Y(p[1]);}).join(" ")+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" stroke-dasharray="'+dash+'"/>';}
+    if(s.a)svg+=poly(SA.pts.filter(function(p){return p[0]<=s.a;}),c1,"9 6",3.5);
+    if(s.b)svg+=poly(SB.pts,c2,"0",3.5);
+    if(s.c)svg+=poly(SC,c3,"2 5",4);
+    var lg=[[c1,"9 6","dashed: owed, paying minimum due",s.a],[c2,"0","solid: owed, paying ₹2,000 a month",s.b],[c3,"2 5","dotted: savings, saving ₹2,000 a month",s.c]], ly=T+8;
+    lg.forEach(function(l){if(l[3]){svg+='<line x1="'+(W-R-330)+'" x2="'+(W-R-294)+'" y1="'+ly+'" y2="'+ly+'" stroke="'+l[0]+'" stroke-width="3.5" stroke-dasharray="'+l[1]+'"/><text x="'+(W-R-286)+'" y="'+(ly+5)+'" font-size="13" style="fill:'+ink+'">'+l[2]+'</text>';ly+=22;}});
+    $("anChart").innerHTML=svg; $("anTitle").textContent=s.t; $("anMsg").textContent=s.m;
+  }
+  function anStep(){ if(anI<ST.length-1){anI++;anRender();} else anPause(); }
+  function anPlay(){ if(anTimer)return; if(anI>=ST.length-1)anI=0; anRender(); anTimer=setInterval(anStep,4000); }
+  function anPause(){ clearInterval(anTimer); anTimer=null; }
+  $("anPlay").onclick=anPlay; $("anStep").onclick=function(){anPause();anStep();}; $("anPause").onclick=anPause;
+  $("anReset").onclick=function(){anPause();anI=0;anRender();};
+
+  /* ---------- Level 2: loan cost ---------- */
+  function ln(){
+    var g=function(id){return +$(id).value||0;};
+    var P=g("lnP"),r=g("lnR")/1200,N=Math.max(1,Math.round(g("lnN"))),F=g("lnF"),I=g("lnI");
+    var E=r>0?P*r*Math.pow(1+r,N)/(Math.pow(1+r,N)-1):P/N, tot=E*N, int=tot-P;
+    var pv=function(x){return x>0?E*(1-Math.pow(1+x,-N))/x:E*N;}, lo=0, hi=1, net=P-F;
+    for(var k=0;k<100;k++){var mid=(lo+hi)/2; if(pv(mid)>net)lo=mid; else hi=mid;}
+    var apr=(Math.pow(1+lo,12)-1)*100, dti=I>0?E/I*100:0;
+    $("lnOut").innerHTML="EMI <b>"+rs(E)+"</b>. Total repaid "+rs(tot)+": interest <b>"+rs(int)+"</b> + fees "+rs(F)+" = cost of credit "+rs(int+F)+" ("+((int+F)/P*100).toFixed(0)+"% of the amount borrowed). Effective annual rate ≈ <b>"+apr.toFixed(1)+"%</b> against the quoted "+(r*1200).toFixed(2)+"%. This EMI is <b>"+dti.toFixed(0)+"%</b> of take-home pay"+(dti>40?": above the ~40% comfort limit.":".");
+    var W=900,L=20,R=20, tot2=P+int+F, X=function(v){return (W-L-R)*v/tot2;}, c1=cssv("--l1"), c2=cssv("--l2"), c3=cssv("--l3"), x=L, svg="";
+    [[P,c2,"principal "+rs(P)],[int,c1,"interest "+rs(int)],[F,c3,"fees "+rs(F)]].forEach(function(s){var w=X(s[0]); if(w>0){svg+='<rect x="'+x+'" y="20" width="'+w+'" height="44" fill="'+s[1]+'" stroke="'+cssv("--card")+'" stroke-width="2"/>'; if(w>120)svg+='<text x="'+(x+w/2)+'" y="48" font-size="14" text-anchor="middle" style="fill:#fff;font-weight:700">'+s[2]+'</text>'; else svg+='<text x="'+(x+w/2)+'" y="90" font-size="12" text-anchor="middle" style="fill:'+cssv("--ink")+'">'+s[2]+'</text>';} x+=w;});
+    svg+='<text x="'+L+'" y="112" font-size="13" style="fill:'+cssv("--ink")+'">Everything you pay over the loan\'s life, split into principal, interest and fees</text>';
+    $("lnChart").innerHTML=svg;
+  }
+  ["lnP","lnR","lnN","lnF","lnI"].forEach(function(id){$(id).oninput=ln;}); ln();
+
+  /* ---------- Level 3: scorecard ---------- */
+  function sc(){
+    var g=function(id){return +$(id).value||0;};
+    var S0=g("scS"),O0=Math.max(1e-6,g("scO")),PDO=Math.max(1,g("scP")),Sx=g("scX");
+    var F=PDO/Math.log(2), Off=S0-F*Math.log(O0), pd=function(s){return 1/(1+Math.exp((s-Off)/F));};
+    $("scOut").innerHTML="Factor = "+F.toFixed(2)+", Offset = "+Off.toFixed(1)+". At score <b>"+Sx+"</b>: odds "+Math.exp((Sx-Off)/F).toFixed(1)+":1, probability of default ≈ <b>"+(pd(Sx)*100).toFixed(2)+"%</b>. Each "+PDO+" points halves the odds of default; 300 → "+(pd(300)*100).toFixed(1)+"%, 900 → "+(pd(900)*100).toFixed(3)+"%.";
+    var W=900,H=300,L=70,R=30,T=20,B=45, ink=cssv("--ink"), ru=cssv("--rule"), c1=cssv("--l1"), c2=cssv("--l2"), svg="";
+    var X=function(s){return L+(W-L-R)*(s-300)/600;}, Y=function(p){return T+(H-T-B)*(1-p);};
+    for(var p=0;p<=1.0001;p+=0.25)svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(p)+'" y2="'+Y(p)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(Y(p)+4)+'" font-size="12" text-anchor="end">'+(p*100)+'%</text>';
+    for(var s=300;s<=900;s+=100)svg+='<text x="'+X(s)+'" y="'+(H-B+18)+'" font-size="12" text-anchor="middle">'+s+'</text>';
+    svg+='<text x="'+((L+W-R)/2)+'" y="'+(H-6)+'" font-size="13" text-anchor="middle">credit score</text><text transform="translate(18,'+((T+H-B)/2)+') rotate(-90)" font-size="13" text-anchor="middle">probability of default</text>';
+    var pts="";for(var k=300;k<=900;k+=5)pts+=X(k)+","+Y(pd(k))+" ";
+    svg+='<polyline points="'+pts+'" fill="none" stroke="'+c2+'" stroke-width="3.5"/>';
+    svg+='<line x1="'+X(Sx)+'" x2="'+X(Sx)+'" y1="'+T+'" y2="'+(H-B)+'" stroke="'+c1+'" stroke-width="2" stroke-dasharray="6 4"/><circle cx="'+X(Sx)+'" cy="'+Y(pd(Sx))+'" r="6" fill="'+c1+'"/><text x="'+(X(Sx)+10)+'" y="'+(Y(pd(Sx))-10)+'" font-size="14" style="fill:'+ink+';font-weight:700">score '+Sx+': PD '+(pd(Sx)*100).toFixed(1)+'%</text>';
+    $("scChart").innerHTML=svg;
+  }
+  ["scS","scO","scP","scX"].forEach(function(id){$(id).oninput=sc;}); sc();
+
+  /* ---------- quizzes ---------- */
+  var Q={
+    school:[
+      ["Interest on a loan is…",["A gift from the bank","The extra you pay for borrowing","A type of tax","The loan amount"],1,"The longer and higher the rate, the more you pay."],
+      ["Paying only the credit card 'minimum due' on ₹20,000 at 3.5% a month takes about…",["2 months","1 year","More than 10 years","It is free"],2,"Most of each payment goes to interest."],
+      ["A credit score in India ranges from…",["0 to 100","300 to 900","1 to 10","A to F"],1,"Above 750 is usually considered good."],
+      ["Which is usually a better reason to borrow?",["A party","A holiday","Education or a home","A new phone every year"],2,"Borrow for things that last or earn."],
+      ["How can a credit card cost nothing?",["Pay only the minimum","Pay the full bill by the due date every month","Never use it","Use two cards"],1,"Interest is charged only on unpaid balances."]
+    ],
+    working:[
+      ["The biggest factor in most credit scores is…",["Your salary","Repayment history","Your age","Number of bank accounts"],1,"On-time repayment matters most."],
+      ["Keeping credit card utilisation below about … helps your score",["90%","60%","30%","100%"],2,"High utilisation signals stress."],
+      ["Since 1 January 2026, prepayment penalties on floating-rate loans to individuals are…",["Up to 2%","Up to 4%","Not allowed","Doubled"],2,"RBI Pre-payment Charges Directions, 2025."],
+      ["The 'avalanche' method pays off first the loan with the…",["Smallest balance","Highest interest rate","Longest tenure","Newest date"],1,"It saves the most interest."],
+      ["Where can you complain if a bank or bureau doesn't fix your credit report?",["Police","RBI Ombudsman (cms.rbi.org.in)","Income Tax department","Nowhere"],1,"Unresolved after 30 days also earns ₹100 a day in compensation."]
+    ],
+    expert:[
+      ["In a scorecard with PDO = 40, adding 40 points…",["Doubles the PD","Doubles the odds good:bad (halves odds of default)","Adds 40% to PD","Has no effect"],1,"Scores are linear in log-odds."],
+      ["Stiglitz–Weiss credit rationing arises because…",["Interest rates are capped by law","Higher rates worsen borrower quality and risk-taking","Banks dislike profit","Demand is low"],1,"Adverse selection and moral hazard make the expected return non-monotonic in the rate."],
+      ["Mian and Sufi emphasise that household debt booms…",["Always raise growth","Predict weaker future consumption and growth","Are irrelevant","Lower inflation only"],1,"Debt overhang reduces spending."],
+      ["Minimum-payment anchoring means…",["Borrowers pay more than required","Showing a minimum due lowers actual repayments","Banks fix minimum rates","Scores ignore minimum payments"],1,"Stewart (2009)."],
+      ["Credit bureaus mainly reduce…",["Inflation","Information asymmetry between lenders and borrowers","Tax evasion","Exchange-rate risk"],1,"Shared repayment histories reduce adverse selection and discipline borrowers."]
+    ]
+  };
+  document.querySelectorAll(".quiz").forEach(function(box){
+    var set=Q[box.getAttribute("data-quiz")], score=0, done=0, h="";
+    set.forEach(function(q,qi){
+      h+='<div class="q" data-i="'+qi+'"><p>'+(qi+1)+'. '+q[0]+'</p>';
+      q[1].forEach(function(o,oi){h+='<button data-o="'+oi+'">'+o+'</button>';});
+      h+='<div class="why">'+q[3]+'</div></div>';
+    });
+    h+='<p class="score"></p>'; box.innerHTML=h;
+    box.querySelectorAll(".q").forEach(function(qd){
+      var q=set[+qd.getAttribute("data-i")];
+      qd.querySelectorAll("button").forEach(function(b){
+        b.onclick=function(){
+          if(qd.classList.contains("done"))return;
+          var o=+b.getAttribute("data-o"); qd.classList.add("done"); done++;
+          if(o===q[2])score++; else b.classList.add("wrong");
+          qd.querySelectorAll("button")[q[2]].classList.add("right");
+          box.querySelector(".score").textContent="Score: "+score+" / "+done+(done===set.length?(score===set.length?" — perfect!":" — review the explanations above."):"");
+        };
+      });
+    });
+  });
+
+  document.addEventListener("keydown",function(e){
+    if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
+    var k=e.key.toLowerCase();
+    if(k==="1")setLevel("school"); else if(k==="2")setLevel("working"); else if(k==="3")setLevel("expert");
+    else if(k==="m")toggleSB(); else if(k==="t")toggleTheme(); else if(k==="f")toggleFS();
+    else if(body.getAttribute("data-level")==="school"){
+      if(k==="p"){anPlay();} else if(k==="s"){anPause();anStep();} else if(k==="x"){anPause();}
+    }
+  });
+
+  setLevel((location.hash||"#school").slice(1),true);
+  window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(LV.indexOf(h)>=0)setLevel(h,true);});
+})();
+</script>
+</body>
+</html>

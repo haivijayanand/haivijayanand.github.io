@@ -64,7 +64,7 @@ function line(series,o){o=o||{};var W=900,H=o.h||340,L=70,R=20,T=20,B=48,xs=[],y
   if(y0<0&&y1>0)s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(0)+'" y2="'+Y(0)+'" stroke="'+cssv("--faint")+'" stroke-width="1.5"/>';
   if(o.xl)s+='<text x="'+((L+W-R)/2)+'" y="'+(H-8)+'" font-size="13" text-anchor="middle">'+esc(o.xl)+'</text>';
   if(o.yl)s+='<text transform="translate(14,'+((T+H-B)/2)+') rotate(-90)" font-size="13" text-anchor="middle">'+esc(o.yl)+'</text>';
-  (o.vlines||[]).forEach(function(v){s+='<line x1="'+X(v[0])+'" x2="'+X(v[0])+'" y1="'+T+'" y2="'+(H-B)+'" stroke="'+col(v[2]||"--gold")+'" stroke-width="2" stroke-dasharray="4 4"/><text x="'+(X(v[0])+6)+'" y="'+(T+14)+'" font-size="13" style="fill:'+col(v[2]||"--gold")+';font-weight:700">'+esc(v[1])+'</text>';});
+  (o.vlines||[]).forEach(function(v,vi){s+='<line x1="'+X(v[0])+'" x2="'+X(v[0])+'" y1="'+T+'" y2="'+(H-B)+'" stroke="'+col(v[2]||"--gold")+'" stroke-width="2" stroke-dasharray="4 4"/><text x="'+(X(v[0])+6)+'" y="'+(T+14+vi*18)+'" font-size="13" style="fill:'+col(v[2]||"--gold")+';font-weight:700">'+esc(v[1])+'</text>';});
   var ly=T+8;series.forEach(function(se,k){var c=col(se.c||PAL[k%PAL.length]);
     s+='<polyline fill="none" stroke="'+c+'" stroke-width="'+(se.w||3)+'"'+(se.dash?' stroke-dasharray="8 5"':'')+' points="'+se.pts.map(function(p){return X(p[0])+","+Y(p[1]);}).join(" ")+'"/>';
     if(se.dots)se.pts.forEach(function(p){s+='<circle cx="'+X(p[0])+'" cy="'+Y(p[1])+'" r="4" fill="'+c+'"/>';});
@@ -139,7 +139,7 @@ function flips(id,cards){var el=$(id);if(!el)return;el.classList.add("flips");
   el.querySelectorAll(".flip").forEach(function(f){f.onclick=function(){f.classList.toggle("on");};});}
 
 /* ---- calculator binding ---- */
-function calc(ids,fn){function run(){var v={};ids.forEach(function(i){var e=$(i);if(!e)return;v[i]=e.type==="checkbox"?e.checked:(e.tagName==="SELECT"||e.type==="text"?e.value:(+e.value||0));
+function calc(ids,fn){function run(){var v={};ids.forEach(function(i){var e=$(i);if(!e)return;v[i]=e.type==="checkbox"?e.checked:(e.tagName==="SELECT"||e.type==="text"||e.type==="date"?e.value:(+e.value||0));
   var o=$(i+"V");if(o)o.textContent=e.value;});fn(v);}
   ids.forEach(function(i){var e=$(i);if(e){e.addEventListener("input",run);e.addEventListener("change",run);}});onRedraw(run);run();}
 

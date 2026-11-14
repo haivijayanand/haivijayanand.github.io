@@ -2,10 +2,10 @@
 <!--
 TOOL: Blown Film Mixture Calculator
 FAMILY: blown-film-mechanics
-VERSION: 1.2.0
+VERSION: 1.3.0
 DATE: 2026-11-14
 CHAT: Paper 02 - Mechanical properties of blown PE films by method of mixtures
-CHANGES: 1.2.0 - 26 industry recipes in groups (dairy, lamination, shrink/stretch, heavy duty, bags) with use notes and sources; new Recipe library tab comparing all recipes, sortable, with CSV export | 1.1.1 - Method notes link to the published Technical Paper No. 02 | 1.1.0 - Cost components: editable resin/MB prices and conversion inputs, cost build-up per kg and per m2, cost outputs in combination tables | 1.0.1 - Symmetric-skin option for sweeps; chart tick decimals follow range; compact grid tables | 1.0.0 - First release: 1-3 layer recipes, blend + layer mixture model, bounds, flags, combination tables (1 or 2 variables), CSV export, editable library
+CHANGES: 1.3.0 - Process tab: BUR, DDR, die gap, output, frost-line/neck height corrections, bubble mode, kinematics, melt-fracture check, operating windows, BUR and die-gap optimiser; process variables in combination tables | 1.2.0 - 26 industry recipes in groups (dairy, lamination, shrink/stretch, heavy duty, bags) with use notes and sources; new Recipe library tab comparing all recipes, sortable, with CSV export | 1.1.1 - Method notes link to the published Technical Paper No. 02 | 1.1.0 - Cost components: editable resin/MB prices and conversion inputs, cost build-up per kg and per m2, cost outputs in combination tables | 1.0.1 - Symmetric-skin option for sweeps; chart tick decimals follow range; compact grid tables | 1.0.0 - First release: 1-3 layer recipes, blend + layer mixture model, bounds, flags, combination tables (1 or 2 variables), CSV export, editable library
 STATUS: Companion tool to Technical Paper 02
 -->
 <html lang="en">
@@ -80,6 +80,7 @@ table.res thead th{background:#f1f0eb;color:var(--ink2);font-weight:600;position
 <nav class="tabs">
   <button data-t="t1" class="on">Structure &amp; results</button>
   <button data-t="t2">Combination tables</button>
+  <button data-t="t7">Process &amp; melt fracture</button>
   <button data-t="t6">Recipe library</button>
   <button data-t="t5">Cost settings</button>
   <button data-t="t3">Resin library</button>
@@ -91,7 +92,7 @@ table.res thead th{background:#f1f0eb;color:var(--ink2);font-weight:600;position
  <div class="grid">
   <div>
    <div class="card">
-    <h2>Film structure</h2>
+    <h2>Film structure <span class="pill" id="pState"></span></h2>
     <div class="row">
      <label class="f">Recipe (industry presets)<select id="preset" style="max-width:340px"></select></label>
      <label class="f">Total gauge (µm)<input type="number" id="thick" value="55" min="5" max="400" step="1"></label>
@@ -129,6 +130,40 @@ table.res thead th{background:#f1f0eb;color:var(--ink2);font-weight:600;position
   </div>
  </div>
  <div class="card"><h2 id="ctTitle">Result</h2><div id="ctNote" class="note"></div><div class="chartbox" id="chartbox"></div><div id="ctable"></div></div>
+</section>
+
+<!-- TAB 7 -->
+<section class="tab" id="t7">
+ <div class="grid">
+  <div>
+   <div class="card"><h2>Process conditions</h2>
+    <div class="row" style="margin-bottom:8px"><label style="font-size:13px"><input type="checkbox" id="pOn"> <b>Apply process corrections to all results</b></label></div>
+    <div class="row">
+     <label class="f">Die diameter (mm)<input type="number" id="pD" step="5" min="20"></label>
+     <label class="f">Die gap (mm)<input type="number" id="pG" step="0.05" min="0.3"></label>
+     <label class="f">Output (kg/h)<input type="number" id="pQ" step="5" min="1"></label>
+     <label class="f">BUR<input type="number" id="pB" step="0.1" min="1"></label>
+     <label class="f">Frost-line / neck height (die diameters)<input type="number" id="pF" step="0.5" min="0.5"></label>
+     <label class="f">Bubble<select id="pM"><option value="auto">auto (from resins)</option><option value="pocket">pocket (LDPE/LLDPE)</option><option value="stalk">high stalk (HDPE)</option></select></label>
+    </div>
+    <div class="row"><button id="pWin">Set gap and frost line to the typical window</button></div>
+    <p class="note">Gauge comes from the first tab. Library data are taken as measured at each resin's reference condition (LLDPE/mLLDPE: BUR 2.5, gap 1.8 mm, frost line 3 die diameters; LDPE: BUR 2.5, gap 1.0 mm; HMW-HDPE: BUR 4, high stalk with neck 8 die diameters). The corrections move each resin to the conditions entered here, then the usual mixture rules apply. Coefficients are illustrative trend fits from the literature (see the Technical Paper on process effects); calibrate on your line.</p>
+   </div>
+   <div class="card"><h2>Bubble and die</h2><div class="kpis" id="pK"></div></div>
+   <div class="card"><h2>Melt fracture (sharkskin) check</h2><div id="pMF"></div>
+    <p class="note">Apparent wall shear rate in the die gap, 6Q/(πDh²), against a typical onset rate for each resin family without process aid (LLDPE ≈ 200 1/s; mLLDPE lower; LDPE rarely fractures; HDPE higher). A process-aid masterbatch (PPA ≥ 0.5 % in the layer) raises the onset about four-fold. Sharkskin roughens the surface, lowers clarity and is most visible as a loss of dart impact. Onset values vary with molecular-weight distribution and temperature; treat them as screening values.</p></div>
+  </div>
+  <div>
+   <div class="card"><h2>Operating window for this film <span class="pill" id="pDom"></span></h2><div id="pW"></div></div>
+   <div class="card"><h2>Effect on properties</h2><div id="pEff"></div></div>
+   <div class="card"><h2>Find the best BUR and die gap</h2>
+    <div class="row"><label class="f">Objective<select id="pObj"><option value="toughness">Toughness: √(dart × lower tear)</option><option value="dart">Maximum dart</option><option value="mdtear">Maximum MD tear</option><option value="balance">Balanced MD/TD tear</option></select></label>
+     <button class="pri" id="pScanB">Scan BUR</button><button id="pScanG">Scan die gap</button></div>
+    <div id="pScan"></div>
+    <p class="note">BUR scan keeps die gap and gauge fixed, so DDR falls as BUR rises. It covers 1.5–4.0 for a pocket bubble and 2.5–5.5 for a high stalk. Die-gap scan keeps BUR fixed: a narrower gap lowers DDR (better MD tear) but raises die shear (sharkskin). The suggested gap is the narrowest one that keeps the shear rate below 80 % of onset.</p>
+   </div>
+  </div>
+ </div>
 </section>
 
 <!-- TAB 6 -->
@@ -177,6 +212,8 @@ table.res thead th{background:#f1f0eb;color:var(--ink2);font-weight:600;position
   <p>Density is exact: specific volumes add. Fillers: modulus × (1 + 2.5φ + 14.1φ²) (Guth); yield, break strength and elongation × (1 − 1.21φ<sup>2/3</sup>) (Nicolais–Narkis, no adhesion, a lower bound). Dart and tear are not corrected for filler.</p>
   <h3>Level 2 — layers in the coextruded film</h3>
   <p>Layers are strained together in the film plane, so modulus and strengths add by thickness fraction (iso-strain). Fracture properties do not add: dart and tear are reported between the inverse (series) and linear (parallel) bounds, with the thickness-weighted log mean as the central value.</p>
+  <h3>Process conditions</h3>
+  <p>With process corrections on, each resin's end-member values are first moved from its datasheet condition to your BUR, draw-down ratio (DDR = die gap ÷ (gauge × BUR)) and frost-line or neck height, using family-specific power laws: break strength MD falls and TD rises with BUR; MD tear falls with DDR; dart rises with BUR to an optimum near BUR 3.3 for LLDPE and falls with DDR and with a high frost line; HMW-HDPE needs a high stalk (best dart at a neck of about 8 die diameters). The mixture rules then apply as before. A melt-fracture check compares the die shear rate with typical sharkskin onset rates. All coefficients are illustrative trend fits; calibrate them on your own line.</p>
   <h3>Recipes</h3>
   <p>The recipe presets are typical industry starting points for each application, built only from this tool's resin and masterbatch library (no tackifiers, carbon black, UV stabilisers or barrier layers). The basis of each is shown when it is loaded. Replace them with your own recipes and resin data before using the numbers.</p>
   <h3>Cost</h3>
@@ -192,14 +229,14 @@ table.res thead th{background:#f1f0eb;color:var(--ink2);font-weight:600;position
 /*
 TOOL: Blown Film Mixture Model (shared engine)
 FAMILY: blown-film-mechanics
-VERSION: 1.1.0
-DATE: 2026-11-13
+VERSION: 1.2.0
+DATE: 2026-11-14
 CHAT: Paper 02 - Mechanical properties of blown PE films by method of mixtures
-CHANGES: 1.1.0 - Cost model: resin/MB prices, waste and scrap credit, conversion components, Rs/kg and Rs/m2 | 1.0.0 - First version: resin library, blend-level power-mean + excess terms, filler corrections, layer bounds
+CHANGES: 1.2.0 - Process module: BUR, DDR, frost-line/neck height corrections per resin family, die kinematics, melt-fracture check, operating windows, BUR/die-gap optimiser | 1.1.0 - Cost model: resin/MB prices, waste and scrap credit, conversion components, Rs/kg and Rs/m2 | 1.0.0 - First version: resin library, blend-level power-mean + excess terms, filler corrections, layer bounds
 */
 (function (root) {
   'use strict';
-  const VERSION = '1.1.0';
+  const VERSION = '1.2.0';
 
   // ---- Property keys -------------------------------------------------------
   // E = 1% secant modulus (MPa); Y = tensile yield (MPa); TS = tensile at break (MPa)
@@ -429,7 +466,150 @@ CHANGES: 1.1.0 - Cost model: resin/MB prices, waste and scrap credit, conversion
             m2PerKg: 1/kgPerM2, per1000m2: total*kgPerM2*1000};
   }
 
-  const API = {VERSION, PRICES, CONV, layerMaterialCost, structureCost, PROPS, PROP_INFO, RESINS, ADDITIVES, EXCESS, powerMean, expandRecipe, layerProps, structureProps, clone};
+
+  // ---- Process module (BUR, DDR, frost line, die, melt fracture) ----------------
+  // Reference conditions under which each family's library data are taken (assumed where datasheets are silent)
+  const PROC_REF = {
+    ZN:{bur:2.5, gap:1.8, flh:3},   // gap mm, flh in die diameters
+    M: {bur:2.5, gap:1.8, flh:3},
+    LD:{bur:2.5, gap:1.0, flh:3},
+    HD:{bur:4.0, gap:1.2, flh:8}    // HMW-HDPE high stalk: neck height ~8 die diameters
+  };
+  // Exponents / coefficients per family (illustrative; see Paper on process effects)
+  const PROC_COEF = {
+    ZN:{eE:[-0.10,0.15], eTS:[-0.30,0.49], eEL:[0.20,-0.15], dartBeta:0.25, burOpt:3.3, dartDDR:-0.15, tmDDR:-0.40, ttBUR:-0.25, flhDart:-0.03, flhTM:-0.02},
+    M: {eE:[-0.10,0.15], eTS:[-0.30,0.49], eEL:[0.20,-0.15], dartBeta:0.30, burOpt:3.3, dartDDR:-0.15, tmDDR:-0.30, ttBUR:-0.25, flhDart:-0.03, flhTM:-0.02},
+    LD:{eE:[-0.05,0.08], eTS:[-0.15,0.25], eEL:[0.10,-0.08], dartBeta:0.15, burOpt:3.5, dartDDR:-0.10, tmDDR:-0.30, ttBUR:-0.15, flhDart:0,     flhTM:0},
+    HD:{eE:[-0.10,0.15], eTS:[-0.30,0.49], eEL:[0.20,-0.15], dartBeta:0.15, burOpt:4.5, tmBUR:0.60, ttBUR:-0.40, neckOpt:8, neckK:0.012, neckTM:0.40, neckTT:-0.20}
+  };
+  // Typical operating windows (sources in the paper)
+  const WINDOWS = {
+    ZN:{bur:[2.0,3.0], gap:[1.8,2.5], flh:[2,4], ddr:[8,40], note:'LLDPE: wide die gap (or narrow gap with process aid), low frost line, pocket bubble'},
+    M: {bur:[2.0,3.0], gap:[1.8,2.5], flh:[2,4], ddr:[8,40], note:'mLLDPE: as LLDPE; most prone to sharkskin, so plan process aid'},
+    LD:{bur:[2.0,3.5], gap:[0.8,1.2], flh:[2,5], ddr:[5,20],  note:'LDPE: narrow die gap; BUR 3-4 for shrink films (TD shrink)'},
+    HD:{bur:[3.5,5.0], gap:[1.0,1.5], flh:[6,9], ddr:[8,25],  note:'HMW-HDPE: high stalk, neck 6-9 die diameters, high BUR'}
+  };
+  // Melt fracture: critical apparent wall shear rate (1/s) without process aid; PPA multiplies it
+  const BUR_RANGE = {pocket:[1.5,4.0], stalk:[2.5,5.5]};
+  const MF = {crit:{ZN:200, M:120, LD:2000, HD:400}, ppaFactor:4, meltRho:0.76};
+
+  // relative dart vs BUR: quadratic with optimum Bopt, slope beta (per unit BUR) at B0; B clamped to the studied range
+  function dartBur(B, beta, Bopt, B0, lo, hi){ const b = Math.min(hi, Math.max(lo, B)); return Math.max(0.3, 1 + beta*(b-B0)*(2*Bopt-B0-b)/(2*Bopt-2*B0)); }
+  // factors for one resin family at condition c = {bur, gap(mm), thick(um), flh(DD), mode} relative to its reference, given ref gauge t0(um)
+  // mode 'pocket' (LDPE/LLDPE-type bubble) or 'stalk' (HDPE-type high stalk). In stalk mode the HDPE law is applied to every
+  // resin, taking each resin's library data as valid at the stalk reference (BUR 4, neck 8 die diameters).
+  function procFactors(fam, c, t0){
+    const mode = c.mode || 'pocket';
+    const lawFam = (mode === 'stalk') ? 'HD' : fam;
+    const K = PROC_COEF[lawFam];
+    const R0 = (mode === 'stalk') ? PROC_REF.HD : PROC_REF[fam];
+    const B = c.bur, B0 = R0.bur, rb = B/B0;
+    const ddr = c.gap/(c.thick/1000*B), ddr0 = PROC_REF[fam].gap/(t0/1000*PROC_REF[fam].bur), rd = ddr/ddr0;
+    const f = {};
+    f.E_MD = Math.pow(rb,K.eE[0]); f.E_TD = Math.pow(rb,K.eE[1]);
+    f.Y_MD = f.E_MD; f.Y_TD = f.E_TD;
+    f.TS_MD = Math.pow(rb,K.eTS[0]); f.TS_TD = Math.pow(rb,K.eTS[1]);
+    f.EL_MD = Math.pow(rb,K.eEL[0]); f.EL_TD = Math.pow(rb,K.eEL[1]);
+    if (lawFam === 'HD'){
+      if (mode === 'stalk'){
+        const nh = c.flh;
+        f.DART = Math.min(1.05, Math.max(0.45, 1 - K.neckK*Math.pow(nh-K.neckOpt,2)))*dartBur(B,K.dartBeta,K.burOpt,B0,2.5,5.5);
+        f.TM = Math.pow(rb,K.tmBUR)*Math.pow(Math.max(nh,0.5)/R0.flh, K.neckTM);
+        f.TT = Math.pow(rb,K.ttBUR)*Math.pow(Math.max(nh,0.5)/R0.flh, K.neckTT);
+      } else {
+        // HDPE inside a pocket bubble: the HDPE-in-LLDPE excess terms of the blend model already carry the toughness loss,
+        // so only the BUR tear law is applied here (avoids counting the same effect twice)
+        f.DART = 1; f.TM = Math.pow(rb,K.tmBUR); f.TT = Math.pow(rb,K.ttBUR);
+      }
+    } else {
+      const fl = c.flh - R0.flh;
+      f.DART = dartBur(B,K.dartBeta,K.burOpt,B0,1.5,4.0)*Math.pow(rd,K.dartDDR)*Math.min(1.1,Math.max(0.7,1+K.flhDart*fl));
+      f.TM = Math.pow(rd,K.tmDDR)*Math.min(1.1,Math.max(0.7,1+K.flhTM*fl));
+      f.TT = Math.pow(rb,K.ttBUR);
+    }
+    return {f, ddr, ddr0, mode};
+  }
+  // library adjusted to process conditions (each resin end member moved to the actual condition)
+  function processLib(lib, c){
+    const out = {};
+    for (const k in lib){
+      const r = Object.assign({}, lib[k]);
+      const {f} = procFactors(r.family, c, r.t);
+      for (const p in f) r[p] = r[p]*f[p];
+      out[k] = r;
+    }
+    return out;
+  }
+  // kinematics and checks; cond = {dieD mm, gap mm, bur, output kg/h, flh DD}; res = structureProps result
+  function processCheck(res, cond, opts){
+    opts = opts || {};
+    const D = cond.dieD/1000, h = cond.gap/1000, t = res.thick*1e-6, Q = cond.output/3600; // SI
+    const rhoF = res.rho*1000, rhoM = MF.meltRho*1000;
+    const circ = Math.PI*D*cond.bur;                  // bubble circumference, m
+    const layflat = circ/2*1000;                      // mm
+    const vLine = Q/(rhoF*circ*t)*60;                 // m/min
+    const vDie = Q/(rhoM*Math.PI*D*h)*60;             // m/min, mean exit velocity
+    const ddr = h/(t*cond.bur);
+    const shear = 6*(Q/rhoM)/(Math.PI*D*h*h);         // apparent wall shear rate, 1/s (slit approximation)
+    const specOut = cond.output/(Math.PI*cond.dieD);  // kg/h per mm of die circumference
+    // dominant family by mass
+    const fm = {ZN:0,M:0,LD:0,HD:0};
+    res.layers.forEach(L=>{ const m = L.t*L.props.rho; for (const k in L.props.famW) fm[k] += m*L.props.famW[k]; });
+    const dom = Object.keys(fm).sort((a,b)=>fm[b]-fm[a])[0];
+    // melt fracture per wall-contact layer (first and last)
+    const wall = res.layers.length===1 ? [res.layers[0]] : [res.layers[0], res.layers[res.layers.length-1]];
+    const mf = wall.map(L=>{
+      const fw = L.props.famW; let s=0, sw=0;
+      for (const k in fw){ if (fw[k]>0){ s += fw[k]/MF.crit[k]; sw += fw[k]; } }
+      let crit = sw>0 ? sw/s : 1e9;
+      const ppa = (L.recipe && L.recipe.PPA) ? Number(L.recipe.PPA) : 0;
+      if (ppa >= 0.5) crit *= MF.ppaFactor;
+      const ratio = shear/crit;
+      return {name:L.name, crit, ppa, ratio, status: ratio<0.7?'OK':ratio<1?'Caution':'Sharkskin likely'};
+    });
+    const W = WINDOWS[dom], flags = [];
+    if (cond.bur < W.bur[0] || cond.bur > W.bur[1]) flags.push(`BUR ${cond.bur} is outside the usual ${W.bur[0]}–${W.bur[1]} for a ${dom==='HD'?'HDPE':dom==='LD'?'LDPE':'LLDPE'}-rich film.`);
+    if (cond.gap < W.gap[0] || cond.gap > W.gap[1]) flags.push(`Die gap ${cond.gap} mm is outside the usual ${W.gap[0]}–${W.gap[1]} mm for this film type.`);
+    if (cond.flh < W.flh[0] || cond.flh > W.flh[1]) flags.push(`${dom==='HD'?'Neck (stalk) height':'Frost-line height'} ${cond.flh} die diameters is outside the usual ${W.flh[0]}–${W.flh[1]}.`);
+    if (ddr < W.ddr[0] || ddr > W.ddr[1]) flags.push(`DDR ${ddr.toFixed(1)} is outside the usual ${W.ddr[0]}–${W.ddr[1]}.`);
+    mf.forEach(m=>{ if (m.ratio>=0.7) flags.push(`${m.name}: die shear rate ${shear.toFixed(0)} 1/s is ${(m.ratio*100).toFixed(0)} % of the sharkskin onset (${m.crit.toFixed(0)} 1/s) — ${m.status}. Sharkskin lowers dart and clarity; remedies: process aid, wider die gap, higher melt temperature, lower output, more LDPE in the skin.`); });
+    return {bur:cond.bur, ddr, mdDraw:ddr, layflat, vLine, vDie, shear, specOut, dom, window:W, mf, flags};
+  }
+  // full prediction with process: structure props at the actual conditions
+  function structureAtProcess(layers, thick, cond, opts){
+    opts = Object.assign({}, opts||{});
+    const base = opts.lib || RESINS;
+    // bubble mode from the dominant resin family unless given
+    let mode = cond.mode;
+    if (!mode || mode === 'auto'){
+      const r0 = structureProps(layers, thick, opts); const fm = {ZN:0,M:0,LD:0,HD:0};
+      r0.layers.forEach(L=>{ const m = L.t*L.props.rho; for (const k in L.props.famW) fm[k] += m*L.props.famW[k]; });
+      mode = (fm.HD >= Math.max(fm.ZN, fm.M, fm.LD)) ? 'stalk' : 'pocket';
+    }
+    opts.lib = processLib(base, {bur:cond.bur, gap:cond.gap, thick:thick, flh:cond.flh, mode});
+    const res = structureProps(layers, thick, opts);
+    res.process = processCheck(res, Object.assign({}, cond, {mode}), opts);
+    res.process.mode = mode;
+    if (cond.bur < 1.5 || cond.bur > 5.5) res.process.flags.push('BUR beyond 1.5–5.5: process corrections are extrapolated.');
+    return res;
+  }
+  // optimiser: scan BUR at fixed gap and gauge; and die gap at fixed BUR
+  function scanBur(layers, thick, cond, opts, from, to, step){
+    const out=[]; for (let b=from; b<=to+1e-9; b+=step){ const c=Object.assign({},cond,{bur:Math.round(b*100)/100}); const r=structureAtProcess(layers,thick,c,opts);
+      out.push({bur:c.bur, ddr:r.process.ddr, dart:r.gauge.DART, tm:r.gauge.TM, tt:r.gauge.TT, tsMD:r.value.TS_MD, tsTD:r.value.TS_TD, eMD:r.value.E_MD, eTD:r.value.E_TD, mf:Math.max(...r.process.mf.map(m=>m.ratio))}); }
+    return out;
+  }
+  function scanGap(layers, thick, cond, opts, from, to, step){
+    const out=[]; for (let g=from; g<=to+1e-9; g+=step){ const c=Object.assign({},cond,{gap:Math.round(g*100)/100}); const r=structureAtProcess(layers,thick,c,opts);
+      out.push({gap:c.gap, ddr:r.process.ddr, dart:r.gauge.DART, tm:r.gauge.TM, tt:r.gauge.TT, shear:r.process.shear, mf:Math.max(...r.process.mf.map(m=>m.ratio))}); }
+    return out;
+  }
+  function bestOf(scan, objective){
+    const key = {dart:r=>r.dart, mdtear:r=>r.tm, balance:r=>Math.min(r.tm/(r.tt||1), (r.tt||1)/r.tm)*Math.sqrt(r.tm*r.tt), toughness:r=>Math.sqrt(r.dart*Math.min(r.tm,r.tt))}[objective];
+    return scan.reduce((a,b)=> key(b)>key(a)?b:a);
+  }
+
+  const API = {VERSION, BUR_RANGE, PROC_REF, PROC_COEF, WINDOWS, MF, procFactors, processLib, processCheck, structureAtProcess, scanBur, scanGap, bestOf, PRICES, CONV, layerMaterialCost, structureCost, PROPS, PROP_INFO, RESINS, ADDITIVES, EXCESS, powerMean, expandRecipe, layerProps, structureProps, clone};
   if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.BFM = API;
 })(typeof window !== 'undefined' ? window : this);
 
@@ -437,7 +617,7 @@ CHANGES: 1.1.0 - Cost model: resin/MB prices, waste and scrap credit, conversion
 <script>
 (function(){
 'use strict';
-const APPV='1.2.0';
+const APPV='1.3.0';
 document.getElementById('ver').textContent='v'+APPV+' · model '+BFM.VERSION;
 const P=BFM.PROPS, PI=BFM.PROP_INFO;
 let LIB=BFM.clone(BFM.RESINS), EXC=BFM.clone(BFM.EXCESS), EXP={};
@@ -525,10 +705,10 @@ $('btnFs').onclick=()=>{if(!document.fullscreenElement){(document.documentElemen
 const ps=$('preset'); const GROUPS=[...new Set(PRESET_LIB.map(p=>p.g))];
 ps.innerHTML='<option value="">— choose a recipe —</option>'+GROUPS.map(g=>`<optgroup label="${g}">`+PRESET_LIB.filter(p=>p.g===g).map(p=>`<option>${p.n}</option>`).join('')+'</optgroup>').join('');
 function showNote(name){const p=PRESET_LIB.find(x=>x.n===name),el=$('presetNote');if(!p){el.style.display='none';return;}el.style.display='block';el.innerHTML=`<b>Use:</b> ${p.use}<br><b>Basis:</b> ${p.src}. Recipes are typical starting points built from this library's six resins and five masterbatches, not any converter's specification.`;}
-function loadPreset(name){ps.value=name;ST=BFM.clone(PRESETS[name]);$('thick').value=ST.thick;$('bur').value=ST.bur;$('nl').value=ST.layers.length;showNote(name);drawLayers();calc();}
+function loadPreset(name){ps.value=name;ST=BFM.clone(PRESETS[name]);$('thick').value=ST.thick;$('bur').value=ST.bur;$('nl').value=ST.layers.length;showNote(name);drawLayers();setWindow(false);calc();}
 ps.onchange=()=>{if(!ps.value)return;showNote(ps.value);ST=BFM.clone(PRESETS[ps.value]);$('thick').value=ST.thick;$('bur').value=ST.bur;$('nl').value=ST.layers.length;drawLayers();calc();};
 $('thick').oninput=()=>{ST.thick=+$('thick').value;calc();};
-$('bur').oninput=()=>{ST.bur=+$('bur').value;calc();};
+$('bur').oninput=()=>{ST.bur=+$('bur').value;$('pB').value=ST.bur;calc();};
 $('nl').onchange=()=>{const n=+$('nl').value;const names=n===1?['Mono']:n===2?['A outer','C inner']:['A outer','B core','C inner'];
  while(ST.layers.length<n)ST.layers.push({name:'',ratio:1,recipe:{C8:100}});ST.layers=ST.layers.slice(0,n);ST.layers.forEach((L,i)=>L.name=names[i]);drawLayers();calc();};
 function drawLayers(){
@@ -547,7 +727,13 @@ function drawLayers(){
  box.querySelectorAll('.norm').forEach(b=>b.onclick=()=>{const R=ST.layers[b.dataset.l].recipe;const s=Object.values(R).reduce((a,c)=>a+c,0);if(s>0)for(const k in R)R[k]=Math.round(R[k]/s*1000)/10;drawLayers();calc();});
 }
 function opts(){return {lib:LIB,excess:EXC,exponents:EXP,bur:ST.bur};}
-function run(st){return BFM.structureProps(st.layers,st.thick,Object.assign(opts(),{bur:st.bur}));}
+let PROC={on:false,dieD:250,gap:1.8,output:150,flh:3,mode:'auto'};
+try{const p=JSON.parse(localStorage.getItem('bfm_calc_proc_v1')||'null');if(p)PROC=Object.assign(PROC,p);}catch(e){}
+function saveProc(){try{localStorage.setItem('bfm_calc_proc_v1',JSON.stringify(PROC));}catch(e){}}
+function cond(st){const p=Object.assign({},PROC,st.proc||{});return {dieD:p.dieD,gap:p.gap,output:p.output,flh:p.flh,mode:p.mode,bur:st.bur};}
+function run(st){const on=st.procOn!==undefined?st.procOn:PROC.on;
+ if(on){const r=BFM.structureAtProcess(st.layers,st.thick,cond(st),Object.assign(opts(),{bur:st.bur}));r.flags=r.flags.filter(x=>!/^BUR .* is outside 2\.0-3\.0/.test(x)).concat(r.process.flags);return r;}
+ return BFM.structureProps(st.layers,st.thick,Object.assign(opts(),{bur:st.bur}));}
 
 function calc(){
  ST.layers.forEach((L,i)=>{const s=Object.values(L.recipe).reduce((a,c)=>a+(+c||0),0);const e=$('sum'+i);if(e){e.textContent='Σ '+f(s,1)+' %';e.classList.toggle('bad',Math.abs(s-100)>0.05);}});
@@ -572,9 +758,53 @@ function calc(){
  const fl=r.flags.slice();
  ST.layers.forEach(L=>{const s=Object.values(L.recipe).reduce((a,c)=>a+(+c||0),0);if(Math.abs(s-100)>0.05)fl.unshift(L.name+': recipe sums to '+f(s,1)+' % — results use normalised weights.');});
  drawCost(r);
+ drawProcess();
  $('flags').innerHTML=fl.length?fl.map(x=>`<li>⚠ ${x}</li>`).join(''):'<li style="background:#eaf6ee;color:#1b7a3e">No range warnings. Toughness values remain screening estimates.</li>';
  drawVarBoxes();
 }
+
+// ---------- process tab ----------
+function domInfo(){const r=BFM.structureAtProcess(ST.layers,ST.thick,cond(ST),opts());return r.process;}
+function setWindow(redraw){const p=domInfo();const W=p.window;PROC.gap=+((W.gap[0]+W.gap[1])/2).toFixed(2);PROC.flh=(W.flh[0]+W.flh[1])/2;saveProc();if(redraw!==false)calc();}
+function syncProcInputs(){$('pOn').checked=PROC.on;$('pD').value=PROC.dieD;$('pG').value=PROC.gap;$('pQ').value=PROC.output;$('pB').value=ST.bur;$('pF').value=PROC.flh;$('pM').value=PROC.mode;}
+[['pD','dieD'],['pG','gap'],['pQ','output'],['pF','flh']].forEach(([id,k])=>$(id).oninput=()=>{PROC[k]=+$(id).value;saveProc();calc();});
+$('pB').oninput=()=>{ST.bur=+$('pB').value;$('bur').value=ST.bur;calc();};
+$('pM').onchange=()=>{PROC.mode=$('pM').value;saveProc();calc();};
+$('pOn').onchange=()=>{PROC.on=$('pOn').checked;saveProc();calc();};
+$('pWin').onclick=()=>setWindow(true);
+const FAMN={ZN:'LLDPE (ZN)',M:'mLLDPE',LD:'LDPE',HD:'HMW-HDPE'};
+function drawProcess(){
+ syncProcInputs();
+ $('pState').textContent=PROC.on?'process corrections ON':'datasheet conditions';
+ const rP=BFM.structureAtProcess(ST.layers,ST.thick,cond(ST),opts()),p=rP.process;
+ const rB=BFM.structureProps(ST.layers,ST.thick,opts());
+ const k=[['BUR / DDR',f(p.bur,2)+' / '+f(p.ddr,1),'DDR = gap ÷ (gauge × BUR) = MD draw'],['Layflat width',f(p.layflat,0)+' mm','bubble Ø '+f(PROC.dieD*p.bur,0)+' mm'],['Line speed',f(p.vLine,1)+' m/min','die exit '+f(p.vDie,2)+' m/min'],
+  ['Specific output',f(p.specOut,3)+' kg/h/mm','per mm of die circumference'],['Die shear rate',f(p.shear,0)+' 1/s','apparent, at the die gap'],['Bubble mode',p.mode==='stalk'?'High stalk':'Pocket',PROC.mode==='auto'?'chosen from resins':'set by you']];
+ $('pK').innerHTML=k.map(x=>`<div class="kpi"><div class="k">${x[0]}</div><div class="v" style="font-size:18px">${x[1]}</div><div class="s">${x[2]}</div></div>`).join('');
+ $('pMF').innerHTML='<table class="res"><thead><tr><th>Wall layer</th><th>PPA in layer</th><th>Onset 1/s</th><th>Shear / onset</th><th>Status</th></tr></thead><tbody>'+p.mf.map(m=>`<tr><td>${m.name}</td><td>${m.ppa?f(m.ppa,1)+' %':'none'}</td><td>${f(m.crit,0)}</td><td>${f(m.ratio*100,0)} %</td><td style="font-weight:600;color:${m.ratio<0.7?'#1c5aa6':m.ratio<1?'#9a5b00':'#c62828'}">${m.status==='OK'?'✓ OK':m.status==='Caution'?'⚠ Caution':'✖ Sharkskin likely'}</td></tr>`).join('')+'</tbody></table>';
+ const W=p.window,inr=(v,a)=>v>=a[0]&&v<=a[1];
+ $('pDom').textContent='dominant: '+FAMN[p.dom];
+ $('pW').innerHTML='<table class="res"><thead><tr><th>Setting</th><th>Yours</th><th>Typical window</th><th></th></tr></thead><tbody>'+
+  [['BUR',p.bur,W.bur],['Die gap, mm',PROC.gap,W.gap],[p.mode==='stalk'?'Neck height, die Ø':'Frost-line height, die Ø',PROC.flh,W.flh],['DDR',p.ddr,W.ddr]].map(([n,v,a])=>`<tr><td>${n}</td><td>${f(v,2)}</td><td>${a[0]} – ${a[1]}</td><td>${inr(v,a)?'✓ in window':'⚠ outside'}</td></tr>`).join('')+`</tbody></table><p class="note">${W.note}.</p>`;
+ const rows=[['E_MD','1% modulus MD','MPa'],['E_TD','1% modulus TD','MPa'],['TS_MD','Break strength MD','MPa'],['TS_TD','Break strength TD','MPa'],['EL_MD','Elongation MD','%'],['EL_TD','Elongation TD','%']];
+ let h='<table class="res"><thead><tr><th>Property</th><th>Datasheet conditions</th><th>At these conditions</th><th>Change</th></tr></thead><tbody>';
+ rows.forEach(([q,n,u])=>{h+=`<tr><td>${n}, ${u}</td><td>${f(rB.value[q])}</td><td><b>${f(rP.value[q])}</b></td><td>${f((rP.value[q]/rB.value[q]-1)*100,1)} %</td></tr>`;});
+ [['DART','Dart impact'],['TM','Elmendorf tear MD'],['TT','Elmendorf tear TD']].forEach(([q,n])=>{h+=`<tr><td>${n}, g</td><td>${f(rB.gauge[q],0)}</td><td><b>${f(rP.gauge[q],0)}</b></td><td>${f((rP.gauge[q]/rB.gauge[q]-1)*100,1)} %</td></tr>`;});
+ $('pEff').innerHTML=h+'</tbody></table>';
+}
+function scanTable(kind){
+ const c=cond(ST),obj=$('pObj').value;let sc,best,head,rows;
+ if(kind==='bur'){const md=BFM.structureAtProcess(ST.layers,ST.thick,c,opts()).process.mode,BR=BFM.BUR_RANGE[md];sc=BFM.scanBur(ST.layers,ST.thick,c,opts(),BR[0],BR[1],0.1);best=BFM.bestOf(sc,obj);
+  head=['BUR','DDR','Dart g','Tear MD g','Tear TD g','Break MD/TD MPa','Shear/onset'];rows=null;}
+ else{sc=BFM.scanGap(ST.layers,ST.thick,c,opts(),0.6,3.0,0.1);const ok=sc.filter(r=>r.mf<0.8);best=ok.length?ok[0]:sc[sc.length-1];
+  head=['Die gap mm','DDR','Dart g','Tear MD g','Tear TD g','Shear 1/s','Shear/onset'];rows=sc.map(r=>[f(r.gap,2),f(r.ddr,1),f(r.dart,0),f(r.tm,0),f(r.tt,0),f(r.shear,0),f(r.mf*100,0)+' %',r===best]);}
+ let extra='';if(kind==='bur'){const W=BFM.structureAtProcess(ST.layers,ST.thick,c,opts()).process.window;const inw=sc.filter(r=>r.bur>=W.bur[0]-1e-9&&r.bur<=W.bur[1]+1e-9);if(inw.length&&(best.bur<W.bur[0]||best.bur>W.bur[1])){const bw=BFM.bestOf(inw,obj);best=bw;extra=` Best over the whole scan is BUR ${f(sc.reduce((a,b)=>BFM.bestOf([a,b],obj)).bur,1)}, outside the usual ${W.bur[0]}–${W.bur[1]} window, where bubble stability is the limit; the suggestion stays inside the window.`;}}
+ const val=kind==='bur'?best.bur:best.gap;
+ if(kind==='bur')rows=sc.map(r=>[f(r.bur,1),f(r.ddr,1),f(r.dart,0),f(r.tm,0),f(r.tt,0),f(r.tsMD,1)+' / '+f(r.tsTD,1),f(r.mf*100,0)+' %',r===best]);
+ $('pScan').innerHTML=`<p style="margin:8px 0"><b>Suggested ${kind==='bur'?'BUR':'die gap'}: ${kind==='bur'?f(val,1):f(val,2)+' mm'}</b> (DDR ${f(best.ddr,1)}) <button id="pApply">Apply</button><br><span class="note">${extra}</span></p><div class="scroll" style="max-height:360px"><table class="res"><thead><tr>${head.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>`+rows.map(r=>`<tr style="${r[7]?'background:#e9f1fb;font-weight:600':''}">${r.slice(0,7).map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')+'</tbody></table></div>';
+ $('pApply').onclick=()=>{if(kind==='bur'){ST.bur=val;$('bur').value=val;}else{PROC.gap=val;saveProc();}calc();};
+}
+$('pScanB').onclick=()=>scanTable('bur');$('pScanG').onclick=()=>scanTable('gap');
 
 // ---------- recipe library ----------
 const RCOLS=[['g','Group',0],['n','Recipe',0],['thick','Gauge µm',0],['ratio','Ratio',0],['rho','ρ g/cm³',3],['gsm','g/m²',1],['E','E MD MPa',0],['TS','σb MD MPa',1],['dart','Dart g',0],['tm','Tear MD g',0],['tt','Tear TD g',0],['kg','Rs/kg',1],['m2','Rs/m²',2],['w','Warnings',0]];
@@ -623,16 +853,16 @@ function drawCostSettings(){
 $('btnResetCost').onclick=()=>{PRICES=BFM.clone(BFM.PRICES);CONV=BFM.clone(BFM.CONV);try{localStorage.removeItem(CSTORE);}catch(e){}drawCostSettings();calc();};
 
 // ---------- combination tables ----------
-const OUTS=[['rho','Density (g/cm³)'],['gsm','Grammage (g/m²)'],['E_MD','Modulus MD (MPa)'],['E_TD','Modulus TD (MPa)'],['Y_MD','Yield MD (MPa)'],['TS_MD','Break MD (MPa)'],['TS_TD','Break TD (MPa)'],['EL_MD','Elong. MD (%)'],['EL_TD','Elong. TD (%)'],['DART_g','Dart (g)'],['DART_lo','Dart lower (g)'],['DART_hi','Dart upper (g)'],['TM_g','Tear MD (g)'],['TT_g','Tear TD (g)'],['MAT_kg','Material (Rs/kg)'],['COST_kg','Total cost (Rs/kg)'],['COST_m2','Cost (Rs/m²)']];
+const OUTS=[['rho','Density (g/cm³)'],['gsm','Grammage (g/m²)'],['E_MD','Modulus MD (MPa)'],['E_TD','Modulus TD (MPa)'],['Y_MD','Yield MD (MPa)'],['TS_MD','Break MD (MPa)'],['TS_TD','Break TD (MPa)'],['EL_MD','Elong. MD (%)'],['EL_TD','Elong. TD (%)'],['DART_g','Dart (g)'],['DART_lo','Dart lower (g)'],['DART_hi','Dart upper (g)'],['TM_g','Tear MD (g)'],['TT_g','Tear TD (g)'],['MAT_kg','Material (Rs/kg)'],['COST_kg','Total cost (Rs/kg)'],['COST_m2','Cost (Rs/m²)'],['DDR','DDR'],['SHEAR','Die shear rate (1/s)'],['MF','Shear / sharkskin onset (%)']];
 const DEFOUT=['rho','E_MD','E_TD','TS_MD','DART_g','DART_lo','DART_hi','TM_g','TT_g','COST_kg','COST_m2'];
 $('outsel').innerHTML=OUTS.map(([k,n])=>`<label style="margin-right:12px;font-size:12.5px"><input type="checkbox" value="${k}" ${DEFOUT.includes(k)?'checked':''}> ${n}</label>`).join('');
-function pick(r,k){if(k.startsWith('COST')||k==='MAT_kg'){const c=BFM.structureCost(r,PRICES,CONV);return k==='MAT_kg'?c.matPerKg:k==='COST_kg'?c.total:c.perM2;}if(k==='rho')return r.rho;if(k==='gsm')return r.gsm;if(k==='DART_g')return r.gauge.DART;if(k==='TM_g')return r.gauge.TM;if(k==='TT_g')return r.gauge.TT;if(k.endsWith('_lo')||k.endsWith('_hi'))return r.gauge[k];return r.value[k];}
+function pick(r,k){if(k==='DDR'||k==='SHEAR'||k==='MF'){const p=r.process||BFM.processCheck(r,cond({bur:ST.bur}),{});return k==='DDR'?p.ddr:k==='SHEAR'?p.shear:100*Math.max(...p.mf.map(m=>m.ratio));}if(k.startsWith('COST')||k==='MAT_kg'){const c=BFM.structureCost(r,PRICES,CONV);return k==='MAT_kg'?c.matPerKg:k==='COST_kg'?c.total:c.perM2;}if(k==='rho')return r.rho;if(k==='gsm')return r.gsm;if(k==='DART_g')return r.gauge.DART;if(k==='TM_g')return r.gauge.TM;if(k==='TT_g')return r.gauge.TT;if(k.endsWith('_lo')||k.endsWith('_hi'))return r.gauge[k];return r.value[k];}
 const vstate={v1:{type:'comp',layer:0,comp:'',bal:'',from:0,to:40,step:10,sym:1},v2:{type:'none',layer:0,comp:'',bal:'',from:0,to:30,step:10,sym:1}};
 function varBox(id,title,allowNone){
  const v=vstate[id];const L=ST.layers[Math.min(v.layer,ST.layers.length-1)];v.layer=Math.min(v.layer,ST.layers.length-1);
  const comps=COMP();
  if(!v.comp)v.comp=Object.keys(L.recipe)[1]||comps[0][0]; if(!v.bal)v.bal=Object.keys(L.recipe)[0]||comps[0][0];
- const types=(allowNone?[['none','— none —']]:[]).concat([['comp','Component wt % in a layer'],['ratio','Layer thickness ratio'],['thick','Total gauge (µm)']]);
+ const types=(allowNone?[['none','— none —']]:[]).concat([['comp','Component wt % in a layer'],['ratio','Layer thickness ratio'],['thick','Total gauge (µm)'],['bur','BUR (process on)'],['gap','Die gap, mm (process on)'],['flh','Frost-line / neck height, die Ø (process on)'],['output','Output, kg/h (process on)']]);
  return `<h3>${title}</h3><div class="row">
  <label class="f">Variable<select data-v="${id}" data-f="type">${types.map(([k,n])=>`<option value="${k}" ${v.type===k?'selected':''}>${n}</option>`).join('')}</select></label>
  ${v.type==='comp'||v.type==='ratio'?`<label class="f">Layer<select data-v="${id}" data-f="layer">${ST.layers.map((L,i)=>`<option value="${i}" ${v.layer==i?'selected':''}>${L.name}</option>`).join('')}</select></label>`:''}
@@ -645,19 +875,21 @@ function varBox(id,title,allowNone){
 function drawVarBoxes(){
  $('v1box').innerHTML=varBox('v1','Variable 1 (rows)',false);$('v2box').innerHTML=varBox('v2','Variable 2 (columns, optional)',true);
  document.querySelectorAll('[data-v]').forEach(el=>el.onchange=()=>{const v=vstate[el.dataset.v],k=el.dataset.f;v[k]=(k==='type'||k==='comp'||k==='bal')?el.value:+el.value;
-  if(k==='type'){if(v.type==='ratio'){v.from=1;v.to=4;v.step=1;}if(v.type==='thick'){v.from=Math.max(10,ST.thick-20);v.to=ST.thick+20;v.step=10;}if(v.type==='comp'){v.from=0;v.to=40;v.step=10;}}
+  if(k==='type'){if(v.type==='bur'){v.from=1.5;v.to=4;v.step=0.5;}if(v.type==='gap'){v.from=0.8;v.to=2.6;v.step=0.2;}if(v.type==='flh'){v.from=1;v.to=9;v.step=1;}if(v.type==='output'){v.from=50;v.to=300;v.step=50;}if(v.type==='ratio'){v.from=1;v.to=4;v.step=1;}if(v.type==='thick'){v.from=Math.max(10,ST.thick-20);v.to=ST.thick+20;v.step=10;}if(v.type==='comp'){v.from=0;v.to=40;v.step=10;}}
   if(k==='layer'){v.comp='';v.bal='';}drawVarBoxes();});
 }
 function series(v){const a=[];if(v.step<=0)return a;for(let x=v.from;x<=v.to+1e-9;x+=v.step)a.push(Math.round(x*1000)/1000);return a.slice(0,200);}
 function applyVar(st,v,x){
  if(v.type==='thick'){st.thick=x;return true;}
+ if(v.type==='bur'){st.bur=x;st.procOn=true;return true;}
+ if(['gap','flh','output'].includes(v.type)){st.proc=Object.assign({},st.proc||{});st.proc[v.type]=x;st.procOn=true;return true;}
  if(v.sym&&st.layers.length===3&&v.layer!=1){const o=Object.assign({},v,{sym:0,layer:2-v.layer});if(!applyVar(st,Object.assign({},v,{sym:0}),x))return false;return applyVar(st,o,x);}
  const L=st.layers[v.layer]; if(!L)return false;
  if(v.type==='ratio'){L.ratio=x;return true;}
  if(v.type==='comp'){const R=L.recipe,old=R[v.comp]||0,bal=R[v.bal]||0;if(v.comp===v.bal)return false;const nb=bal+old-x;if(nb<-1e-9)return false;R[v.comp]=x;R[v.bal]=nb;return true;}
  return true;
 }
-function vlabel(v){if(v.type==='thick')return 'Gauge (µm)';const L=ST.layers[v.layer];const nm=(v.sym&&ST.layers.length===3&&v.layer!=1)?'both skins':L.name;if(v.type==='ratio')return nm+' ratio';return cname(v.comp)+' in '+nm+' (wt %, balance '+cname(v.bal)+')';}
+function vlabel(v){if(v.type==='thick')return 'Gauge (µm)';if(v.type==='bur')return 'BUR';if(v.type==='gap')return 'Die gap (mm)';if(v.type==='flh')return 'Frost-line / neck height (die Ø)';if(v.type==='output')return 'Output (kg/h)';const L=ST.layers[v.layer];const nm=(v.sym&&ST.layers.length===3&&v.layer!=1)?'both skins':L.name;if(v.type==='ratio')return nm+' ratio';return cname(v.comp)+' in '+nm+' (wt %, balance '+cname(v.bal)+')';}
 let LAST=null;
 $('btnGen').onclick=()=>{
  const outs=[...document.querySelectorAll('#outsel input:checked')].map(i=>i.value);if(!outs.length){alert('Select at least one output.');return;}

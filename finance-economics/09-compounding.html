@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<!--
+TOOL:    finance-economics/09-compounding.html — Finance & Economics Topic 09: Compounding (three levels)
+FAMILY:  finance-economics
+VERSION: 1.0.0
+DATE:    2026-11-14
+CHAT:    Finance & Economics series — three levels (school, working, expert); Topic 09 Compounding
+CHANGES: 1.0.0 - ninth topic (series close): chessboard-rice animation, rule of 72, Asha vs Bala,
+                 early-vs-late and fee-drag calculators, inflation/debt/tax compounding, growth;
+                 log returns, volatility-drag/Kelly and retirement-corpus calculators, behavioural
+                 biases, series cross-reference; quiz per level
+STATUS:  working
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compounding — Finance &amp; Economics in Three Levels — K Vijay Anand</title>
+<meta name="description" content="Compounding explained at three levels — for school students, for working people and as a review for experts: the rule of 72, starting early, fee drag, inflation and debt, volatility drag and retirement planning.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* Colour-blind-safe palette: blue / orange / purple / gold — no red-vs-green coding */
+  :root{--bg:#f4f2ed;--bg2:#e9e5dc;--card:#fffdf8;--ink:#1d1b18;--soft:#4f4940;--faint:#857c6f;--rule:#d6cdbd;
+        --acc:#1d5fa6;--l1:#d9730d;--l2:#1d5fa6;--l3:#6a3fa0;--gold:#a87908;--hi:#fff1d6}
+  :root[data-theme="dark"]{--bg:#121316;--bg2:#1a1c21;--card:#1f2228;--ink:#ece9e2;--soft:#c3bdb2;--faint:#8c8578;--rule:#33363d;
+        --acc:#6aa8ee;--l1:#f39a3d;--l2:#6aa8ee;--l3:#b28ae6;--gold:#e5b33c;--hi:#3a2f17}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.65}
+  a{color:var(--acc)}
+  .toolbar{position:fixed;top:10px;right:12px;z-index:30;display:flex;gap:8px;font-size:13px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button,.toolbar a{background:var(--card);color:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;text-decoration:none}
+  header{padding:70px 4vw 18px;max-width:1600px;margin:0 auto}
+  .series{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-family:"Playfair Display",serif;font-weight:800;font-size:clamp(46px,7vw,84px);margin:6px 0 4px;line-height:1}
+  .tag{color:var(--soft);max-width:70ch;margin:0}
+  /* level switch */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 0}
+  .levels button{text-align:left;background:var(--card);border:2px solid var(--rule);border-radius:12px;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink)}
+  .levels button b{display:block;font-size:18px}
+  .levels button small{color:var(--faint)}
+  .levels button .k{float:right;font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:0 6px;color:var(--faint)}
+  .levels button[data-l="school"].on{border-color:var(--l1);background:color-mix(in srgb,var(--l1) 10%,var(--card))}
+  .levels button[data-l="working"].on{border-color:var(--l2);background:color-mix(in srgb,var(--l2) 10%,var(--card))}
+  .levels button[data-l="expert"].on{border-color:var(--l3);background:color-mix(in srgb,var(--l3) 10%,var(--card))}
+  /* layout */
+  .wrap{max-width:1600px;margin:0 auto;padding:0 4vw 40px;display:grid;grid-template-columns:250px 1fr;gap:34px}
+  body.nosb .wrap{grid-template-columns:1fr}
+  body.nosb aside{display:none}
+  aside{position:sticky;top:60px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;font-size:14.5px;padding-top:20px}
+  aside .h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  aside a{display:block;padding:5px 10px;border-left:3px solid var(--rule);color:var(--soft);text-decoration:none}
+  aside a:hover{border-left-color:var(--lc);color:var(--ink)}
+  aside .keys{margin-top:18px;color:var(--faint);font-size:12.5px;line-height:1.9}
+  kbd{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--card)}
+  main{min-width:0}
+  .panel{display:none}
+  .panel.on{display:block}
+  #p-school{--lc:var(--l1)} #p-working{--lc:var(--l2)} #p-expert{--lc:var(--l3)}
+  body[data-level="school"]{--lc:var(--l1)} body[data-level="working"]{--lc:var(--l2)} body[data-level="expert"]{--lc:var(--l3)}
+  .lvhead{border-left:6px solid var(--lc);padding:4px 0 4px 16px;margin:24px 0 10px}
+  .lvhead .who{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--lc);font-weight:700}
+  .lvhead p{margin:4px 0 0;color:var(--soft)}
+  section{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:22px 28px;margin:18px 0}
+  h2{font-family:"Playfair Display",serif;font-size:30px;margin:0 0 10px;line-height:1.2}
+  h2 .n{color:var(--lc);margin-right:8px}
+  h3{font-size:18px;margin:20px 0 6px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .box{border:1px solid var(--rule);border-radius:10px;padding:14px 16px;background:var(--bg)}
+  .box b.t{display:block;color:var(--lc);margin-bottom:4px}
+  .def{font-size:20px;border-left:5px solid var(--lc);background:color-mix(in srgb,var(--lc) 8%,transparent);padding:12px 18px;border-radius:0 10px 10px 0;margin:8px 0 14px}
+  .note{background:var(--hi);border-radius:8px;padding:10px 14px;font-size:15.5px}
+  .eq{font-family:"JetBrains Mono",monospace;background:var(--bg2);border-radius:8px;padding:10px 14px;overflow-x:auto;font-size:15px;white-space:pre}
+  table{border-collapse:collapse;width:100%;font-size:15.5px;margin:8px 0}
+  th,td{border-bottom:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:10px}
+  .stat{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--bg)}
+  .stat .v{font-size:28px;white-space:nowrap;font-weight:700;color:var(--acc);line-height:1.1}
+  .stat .l{font-size:13.5px;color:var(--soft)}
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;margin:10px 0}
+  .ctl label{font-size:13.5px;color:var(--soft);display:flex;flex-direction:column;gap:3px}
+  .ctl input[type=number]{width:120px;font:inherit;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)}
+  .ctl input[type=range]{width:200px}
+  .btn{background:var(--lc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--lc);border:1px solid var(--lc)}
+  .out{font-size:18px;margin:8px 0}
+  .out b{color:var(--lc)}
+  svg text{fill:var(--soft);font-family:Inter,sans-serif}
+  /* basket animation */
+  .stage{border:1px dashed var(--rule);border-radius:10px;padding:14px;background:var(--bg);min-height:170px}
+  .stage .yr{font-size:26px;font-weight:700}
+  .stage .yr span{color:var(--l1)}
+  .samosas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:44px}
+  .sam{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:30px solid var(--l1);transition:opacity .3s}
+  .sam.gone{opacity:.15}
+  /* quiz */
+  .q{border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:10px 0;background:var(--bg)}
+  .q p{margin:0 0 8px;font-weight:600}
+  .q button{display:block;width:100%;text-align:left;margin:5px 0;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;font:inherit;color:var(--ink);cursor:pointer}
+  .q button.right{border:2px solid var(--l2);background:color-mix(in srgb,var(--l2) 14%,var(--card))}
+  .q button.right::after{content:"  ✔ correct";font-weight:700;color:var(--l2)}
+  .q button.wrong{border:2px dashed var(--l1)}
+  .q button.wrong::after{content:"  ✘ not this one";font-weight:700;color:var(--l1)}
+  .q .why{display:none;font-size:15px;color:var(--soft);margin-top:6px}
+  .q.done .why{display:block}
+  .score{font-weight:700;color:var(--lc)}
+  footer{max-width:1600px;margin:0 auto;padding:20px 4vw 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--faint)}
+  footer a{color:var(--soft)}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}aside{display:none}.levels{grid-template-columns:1fr}section{padding:18px}}
+  @media print{.toolbar,aside,.levels{display:none}.panel{display:block!important}.wrap{display:block}}
+</style>
+</head>
+<body data-level="school">
+<div class="toolbar">
+  <a href="./">← Series</a>
+  <button id="sbBtn" title="Show / hide contents (M)">☰ Contents</button>
+  <button id="themeBtn" title="Light / dark (T)">◐ Theme</button>
+  <button id="fsBtn" title="Full screen (F)">⤢ Full screen</button>
+</div>
+
+<header>
+  <div class="series">Finance &amp; Economics · Topic 09</div>
+  <h1>Compounding</h1>
+  <p class="tag">Growth on top of growth: why starting early beats investing more, how small fees and debts snowball, why a country growing at 7% doubles its size in a decade, and the mathematics that ties together everything in this series. Pick your level.</p>
+  <div class="levels" role="tablist">
+    <button data-l="school" class="on"><span class="k">1</span><b>🎒 School</b><small>Rice grains on a chessboard</small></button>
+    <button data-l="working"><span class="k">2</span><b>💼 Working people</b><small>Time, fees, inflation, debt and growth</small></button>
+    <button data-l="expert"><span class="k">3</span><b>🎓 Experts — review</b><small>Continuous time, volatility drag, annuities</small></button>
+  </div>
+</header>
+
+<div class="wrap">
+<aside id="toc"></aside>
+<main>
+
+<section id="snapshot" style="border-top:4px solid var(--gold)">
+  <h2>Compounding in today's numbers — November 2026</h2>
+  <div class="snap">
+    <div class="stat"><div class="v">≈ 10 years</div><div class="l">Time to double money in PPF at the current 7.1% a year (72 ÷ 7.1 ≈ 10.1)</div></div>
+    <div class="stat"><div class="v">≈ 11.7 years</div><div class="l">Time for October 2026's 6.09% CPI inflation, if it continued, to halve what a rupee buys (Topic 01)</div></div>
+    <div class="stat"><div class="v">≈ 7 years</div><div class="l">Time to double India's economy in rupee terms at about 10% nominal growth (10.3% in Q1 FY27, Topic 03)</div></div>
+    <div class="stat"><div class="v">≈ 1.7 years</div><div class="l">Time for an unpaid credit-card balance at about 3.5% a month to double (about 51% a year compounded)</div></div>
+    <div class="stat"><div class="v">₹32,000 cr</div><div class="l">Monthly SIP money Indians invest in mutual funds (2026), compounding for millions of households (Topic 07)</div></div>
+  </div>
+  <p class="note" style="margin-top:12px">These are illustrations based on rates quoted in earlier topics. Rates change; the arithmetic does not.</p>
+</section>
+
+<!-- ========================= LEVEL 1 : SCHOOL ====================== -->
+<div class="panel on" id="p-school">
+  <div class="lvhead"><div class="who">Level 1 · For school students</div><p>Compounding is growth that builds on itself, like a snowball rolling downhill.</p></div>
+
+  <section id="s1">
+    <h2><span class="n">1</span>What is compounding?</h2>
+    <div class="def"><b>Compounding</b> means earning growth not only on what you started with, but also on the growth you have already earned. The bigger it gets, the faster it grows.</div>
+    <p>Roll a small snowball down a snowy hill. As it rolls it picks up snow, and because it is now bigger, it picks up even <b>more</b> snow on the next turn. Money in a bank works the same way: you earn interest, the interest is added to your money, and next year you earn interest on that too. (You met this in Topic 02, where simple and compound interest raced each other.)</p>
+  </section>
+
+  <section id="s2">
+    <h2><span class="n">2</span>Watch it happen: rice on the chessboard</h2>
+    <p>An old Indian legend tells of the clever inventor of chess. The pleased king offered any reward. The inventor asked for just some rice: <b>1 grain</b> on the first square, <b>2</b> on the second, <b>4</b> on the third, doubling each time up to square 64. The king laughed at such a small request… Press Play, or press S to fill one square at a time.</p>
+    <div class="ctl">
+      <button class="btn" id="anPlay">▶ Play (P)</button>
+      <button class="btn ghost" id="anStep">Next square (S)</button>
+      <button class="btn ghost" id="anPause">⏸ Pause (X)</button>
+      <button class="btn ghost" id="anReset">↺ Reset</button>
+    </div>
+    <div class="stage" style="display:grid;grid-template-columns:minmax(260px,360px) 1fr;gap:18px;align-items:start">
+      <svg id="anBoard" viewBox="0 0 320 320" style="width:100%;height:auto"></svg>
+      <div>
+        <div class="yr">Square <span id="anSq">0</span> of 64</div>
+        <p style="font-size:18px;margin:8px 0">On this square: <b id="anOn" style="color:var(--l2)">0</b> grains<br>Total so far: <b id="anTot" style="color:var(--l1)">0</b> grains<br>That weighs about <b id="anWt">0 g</b></p>
+        <p id="anMsg" style="margin:6px 0 0;color:var(--soft)">Press Play, or press S to start.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="n">3</span>The magic number 72</h2>
+    <p>To find out how long it takes for something to <b>double</b>, divide 72 by the yearly growth rate.</p>
+    <table>
+      <tr><th>Growth per year</th><th>Doubles in about</th><th>Example</th></tr>
+      <tr><td>4%</td><td>18 years</td><td>A savings account</td></tr>
+      <tr><td>6%</td><td>12 years</td><td>Prices, when inflation is about 6%</td></tr>
+      <tr><td>8%</td><td>9 years</td><td>A good long-term deposit</td></tr>
+      <tr><td>12%</td><td>6 years</td><td>Shares, in a good long period (not guaranteed!)</td></tr>
+    </table>
+  </section>
+
+  <section id="s4">
+    <h2><span class="n">4</span>Start early: the story of Asha and Bala</h2>
+    <p><b>Asha</b> saves ₹1,000 every year from age <b>15 to 25</b>, then stops. <b>Bala</b> starts at <b>25</b> and saves ₹1,000 every year until <b>60</b>. Both earn 10% a year.</p>
+    <div class="cols">
+      <div class="box"><b class="t">Asha</b>Saves for 10 years: ₹10,000 in total</div>
+      <div class="box"><b class="t">Bala</b>Saves for 35 years: ₹35,000 in total</div>
+      <div class="box"><b class="t">At 60, who has more?</b><b>Asha!</b> About ₹4.9 lakh, against Bala's ₹3.0 lakh. Her money had 10 extra years to snowball. <b>Time matters more than amount.</b></div>
+    </div>
+  </section>
+
+  <section id="s5">
+    <h2><span class="n">5</span>Compounding is everywhere</h2>
+    <ul>
+      <li><b>Learning:</b> each new idea makes the next easier to understand. Getting just 1% better every day makes you about <b>37 times</b> better after a year (1.01<sup>365</sup> ≈ 37.8).</li>
+      <li><b>Nature:</b> bacteria and plants grow by doubling, until they run out of food or space.</li>
+      <li><b>Countries:</b> an economy growing 7% a year doubles in about 10 years, which is how countries escape poverty.</li>
+      <li><b>Trees and habits:</b> small, regular actions add up to big results over time.</li>
+    </ul>
+  </section>
+
+  <section id="s6">
+    <h2><span class="n">6</span>The dark side of compounding</h2>
+    <ul>
+      <li><b>Debt grows the same way.</b> An unpaid credit-card bill can double in under two years.</li>
+      <li><b>Inflation compounds too:</b> prices rising 6% a year double in about 12 years, so money kept idle loses value (Topic 01).</li>
+      <li><b>Bad habits compound:</b> skipping a little study every day adds up just as fast as good habits do.</li>
+    </ul>
+  </section>
+
+  <section id="s7">
+    <h2><span class="n">7</span>Words to remember</h2>
+    <table>
+      <tr><th>Word</th><th>Meaning</th></tr>
+      <tr><td>Compounding</td><td>Growth on top of growth</td></tr>
+      <tr><td>Principal</td><td>The starting amount</td></tr>
+      <tr><td>Doubling time</td><td>How long it takes to double</td></tr>
+      <tr><td>Rule of 72</td><td>72 ÷ growth rate ≈ years to double</td></tr>
+      <tr><td>Exponential growth</td><td>Growth that gets faster and faster because it builds on itself</td></tr>
+    </table>
+  </section>
+
+  <section id="s8">
+    <h2><span class="n">8</span>Check yourself</h2>
+    <div class="quiz" data-quiz="school"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 2 : WORKING ===================== -->
+<div class="panel" id="p-working">
+  <div class="lvhead"><div class="who">Level 2 · For working people</div><p>The formula, the rules of thumb, and how compounding works for you (time, saving) or against you (fees, inflation, debt). This is educational only, not financial advice.</p></div>
+
+  <section id="w1">
+    <h2><span class="n">1</span>The formula, and quick rules</h2>
+    <div class="eq">Future value:   FV = P × (1 + r/m)^(m·t)          r = annual rate, m = compounding periods a year, t = years
+Doubling time:  ≈ 72 / r(%)   (69.3 / r for continuous compounding;  rule of 114 for tripling, 144 for quadrupling)</div>
+    <ul>
+      <li>Compounding has three levers: <b>rate</b>, <b>time</b> and <b>regularity</b>. Time is the exponent, which is why it dominates.</li>
+      <li>Always compare <b>effective annual yields</b> (Topic 02) and <b>real, after-tax</b> returns (Topics 01 and 06).</li>
+      <li>Rates compound multiplicatively: a 50% loss needs a 100% gain to recover.</li>
+    </ul>
+  </section>
+
+  <section id="w2">
+    <h2><span class="n">2</span>Calculator: early starter vs late starter</h2>
+    <div class="ctl">
+      <label>Monthly investment (₹)<input type="number" id="elA" value="5000" step="500"></label>
+      <label>Return % a year<input type="number" id="elR" value="10" step="0.5"></label>
+      <label>Early starter: start age<input type="number" id="elS1" value="25" min="15" max="60"></label>
+      <label>Early starter: stop age<input type="number" id="elE1" value="35" min="16" max="70"></label>
+      <label>Late starter: start age<input type="number" id="elS2" value="35" min="15" max="60"></label>
+      <label>Goal age (both stop by)<input type="number" id="elG" value="60" min="30" max="80"></label>
+    </div>
+    <div class="out" id="elOut"></div>
+    <svg id="elChart" viewBox="0 0 900 270" style="width:100%;max-width:1000px;height:auto"></svg>
+  </section>
+
+  <section id="w3">
+    <h2><span class="n">3</span>Costs compound too: the fee drag</h2>
+    <p>A difference of 1% a year in fees sounds small. Compounded over decades it can eat a fifth or more of your final wealth. That is why low-cost index funds and direct plans matter (Topic 07).</p>
+    <div class="ctl">
+      <label>Monthly SIP (₹)<input type="number" id="feA" value="10000" step="500"></label>
+      <label>Gross return %<input type="number" id="feR" value="11" step="0.5"></label>
+      <label>Low-cost fund fee %<input type="number" id="feL" value="0.2" step="0.05"></label>
+      <label>High-cost fund fee %<input type="number" id="feH" value="1.5" step="0.05"></label>
+      <label>Years<input type="number" id="feY" value="25" min="1" max="45"></label>
+    </div>
+    <div class="out" id="feOut"></div>
+  </section>
+
+  <section id="w4">
+    <h2><span class="n">4</span>Inflation: compounding in reverse</h2>
+    <ul>
+      <li>At 6% inflation, ₹1 lakh of today's spending will need about ₹3.2 lakh in 20 years, and about ₹5.7 lakh in 30 years (Topic 01).</li>
+      <li>Your <b>real</b> return is what compounds your purchasing power: 7% nominal with 6% inflation is only about 1% real, which doubles your purchasing power in about 70 years, not 10.</li>
+      <li>Plan goals in today's money, then inflate them. Plan investments in real returns.</li>
+    </ul>
+  </section>
+
+  <section id="w5">
+    <h2><span class="n">5</span>Debt: compounding against you</h2>
+    <ul>
+      <li><b>Credit cards</b> at about 3.5% a month compound to roughly 51% a year. A ₹50,000 balance paying only the minimum can take years to clear and cost more than the original purchases.</li>
+      <li><b>Home loans:</b> early EMIs are mostly interest (Topic 02). Prepaying in the first years saves the most, because it removes principal that would have compounded for decades.</li>
+      <li><b>The order of priorities:</b> clear high-interest debt before investing. Paying off a 36% loan is a guaranteed 36% "return".</li>
+    </ul>
+  </section>
+
+  <section id="w6">
+    <h2><span class="n">6</span>Taxes and compounding</h2>
+    <ul>
+      <li><b>Tax deferral</b> lets the whole amount keep compounding: equity gains are taxed only when you sell (Topic 06), while FD interest is taxed every year.</li>
+      <li><b>EEE products</b> such as PPF (exempt when you invest, while it grows and when you withdraw) compound fully tax-free, which is why 7.1% in PPF can beat a higher taxable FD rate.</li>
+      <li>Frequent switching between funds resets the clock and triggers tax, interrupting the compounding.</li>
+    </ul>
+  </section>
+
+  <section id="w7">
+    <h2><span class="n">7</span>Compounding and the country</h2>
+    <ul>
+      <li><b>Small differences in growth become huge differences in living standards.</b> At 7% real growth, income per person doubles in about 10 years; at 4% it takes 18. Over 30 years, that gap is roughly 8 times versus 3 times today's level.</li>
+      <li>South Korea and China compounded high growth for decades to transform their economies. India's ambition of "Viksit Bharat by 2047" is, at its core, a compounding target.</li>
+      <li><b>Compounding works on debt too:</b> a government whose interest rate exceeds its growth rate sees debt snowball (Topic 08).</li>
+      <li><b>Population and climate:</b> carbon emissions accumulate rather than vanish, so delayed action compounds the cost.</li>
+    </ul>
+  </section>
+
+  <section id="w8">
+    <h2><span class="n">8</span>Sensible habits</h2>
+    <ul>
+      <li>Start early, even with small amounts. Automate SIPs and increase them with each pay rise (a step-up).</li>
+      <li>Keep costs low, stay invested, and avoid interrupting compounding through panic selling.</li>
+      <li>Kill high-interest debt first.</li>
+      <li>Think in real, after-tax terms, and review once a year, not every day.</li>
+    </ul>
+    <p class="note">Educational content only, not investment advice.</p>
+  </section>
+
+  <section id="w9">
+    <h2><span class="n">9</span>Check yourself</h2>
+    <div class="quiz" data-quiz="working"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 3 : EXPERT ====================== -->
+<div class="panel" id="p-expert">
+  <div class="lvhead"><div class="who">Level 3 · Review for experts</div><p>Continuous compounding and log returns, arithmetic vs geometric means and volatility drag, present-value machinery for retirement, growth convergence, and why humans misjudge exponentials.</p></div>
+
+  <section id="e1">
+    <h2><span class="n">1</span>Continuous compounding and log returns</h2>
+    <div class="eq">lim (1 + r/m)^(m·t) = e^(r·t)  as m → ∞         continuous rate ρ = ln(1 + r)
+Log returns add over time:  ln(W_T / W_0) = Σ ln(1 + r_t)       doubling time = ln 2 / ρ ≈ 69.3 / ρ(%)</div>
+    <ul>
+      <li>The rule of 72 is a convenient approximation: 72 has many divisors and corrects for the error of 69.3 at typical rates (around 8%).</li>
+      <li>Log returns are additive over time and roughly normal for diversified indices over short horizons, which makes them the natural unit for compounding risk.</li>
+    </ul>
+  </section>
+
+  <section id="e2">
+    <h2><span class="n">2</span>Arithmetic vs geometric mean: volatility drag</h2>
+    <div class="eq">Geometric (compound) growth ≈ μ − σ²/2           Median wealth after T years ≈ W₀ · e^{(μ − σ²/2)·T}
++50% then −50% → arithmetic mean 0%, geometric mean −13.4%, wealth −25%</div>
+    <div class="ctl">
+      <label>Arithmetic mean return μ %<input type="number" id="vdM" value="12" step="0.5"></label>
+      <label>Volatility σ %<input type="number" id="vdS" value="20" step="1"></label>
+      <label>Years<input type="number" id="vdT" value="20" min="1" max="50"></label>
+    </div>
+    <div class="out" id="vdOut"></div>
+    <ul>
+      <li>Reducing volatility at the same arithmetic return raises compound growth. This is the core of the case for diversification and rebalancing (Topic 07) and against leverage.</li>
+      <li>Leveraged daily-reset products and F&amp;O positions suffer amplified drag, a mechanical reason long-term retail outcomes are poor.</li>
+      <li>The <b>Kelly criterion</b> maximises long-run geometric growth: f* = μ/σ² for a lognormal asset. Over-betting beyond f* lowers growth and raises ruin risk.</li>
+    </ul>
+  </section>
+
+  <section id="e3">
+    <h2><span class="n">3</span>Present value and annuities: the retirement problem</h2>
+    <div class="eq">PV of a growing annuity (first payment C, growth g, discount r, n periods) = C · [1 − ((1+g)/(1+r))^n] / (r − g)
+Perpetuity: C/r       Growing perpetuity: C/(r − g)        Required SIP: corpus × r_m / ((1 + r_m)^N − 1)</div>
+    <div class="ctl">
+      <label>Annual expenses today (₹)<input type="number" id="rtE" value="600000" step="10000"></label>
+      <label>Years to retirement<input type="number" id="rtN" value="20" min="1" max="45"></label>
+      <label>Inflation %<input type="number" id="rtI" value="6" step="0.1"></label>
+      <label>Years in retirement<input type="number" id="rtR" value="25" min="1" max="45"></label>
+      <label>Return after retiring %<input type="number" id="rtP" value="8" step="0.1"></label>
+      <label>Return before retiring %<input type="number" id="rtA" value="11" step="0.1"></label>
+    </div>
+    <div class="out" id="rtOut"></div>
+    <p class="note">This is a deterministic sketch: sequence-of-returns risk, longevity risk and taxes all matter. A real plan stress-tests the numbers, for example with Monte Carlo simulation, and keeps a margin of safety.</p>
+  </section>
+
+  <section id="e4">
+    <h2><span class="n">4</span>Compounding in growth economics</h2>
+    <ul>
+      <li>"Once one starts to think about [growth], it is hard to think about anything else" (Lucas, 1988). Small differences in g, compounded, explain most cross-country income gaps.</li>
+      <li><b>Convergence speed:</b> in Solow-type models, the gap to steady state closes at about 2% a year (Barro and Sala-i-Martin), a half-life of about 35 years. Catching up is slow without rising TFP growth.</li>
+      <li><b>Kaldor's facts and balanced growth:</b> exponential growth is the norm for GDP per capita at the frontier (about 2% a year since the 1870s in the US).</li>
+      <li><b>Exponential vs logistic:</b> real processes such as epidemics, technology adoption and UPI growth (Topic 04) follow S-curves. Extrapolating the exponential phase is a classic forecasting error.</li>
+    </ul>
+  </section>
+
+  <section id="e5">
+    <h2><span class="n">5</span>Why people misjudge compounding</h2>
+    <ul>
+      <li><b>Exponential-growth bias</b> (Stango and Zinman, 2009): people linearise compound processes. They underestimate loan costs and the growth of savings, and borrow more as a result.</li>
+      <li><b>Present bias and hyperbolic discounting</b> (Laibson, 1997): preferring immediate rewards undermines long-horizon compounding. Commitment devices (auto-SIPs, lock-ins, EPF/NPS defaults) help.</li>
+      <li><b>Interrupted compounding:</b> missing the market's best few days, often clustered near the worst ones, sharply reduces long-run returns. Selling in panic is a compounding killer.</li>
+      <li><b>A misattributed quote:</b> "compound interest is the eighth wonder of the world" is widely attributed to Einstein, without any reliable source.</li>
+    </ul>
+  </section>
+
+  <section id="e6">
+    <h2><span class="n">6</span>Review: compounding across this series</h2>
+    <table>
+      <tr><th>Topic</th><th>Where compounding appears</th></tr>
+      <tr><td>01 Inflation</td><td>Price levels compound; the rule of 70 for purchasing-power halving</td></tr>
+      <tr><td>02 Interest rates</td><td>EMI amortisation, effective yields, bond duration as a PV-weighted maturity</td></tr>
+      <tr><td>03 GDP</td><td>Growth accounting; small differences in g, compounded, create big gaps between countries</td></tr>
+      <tr><td>04 Money &amp; banking</td><td>The geometric deposit-multiplier series</td></tr>
+      <tr><td>05 Exchange rates</td><td>Compounding inflation differentials (relative PPP); the CIP forward</td></tr>
+      <tr><td>06 Taxes</td><td>Tax deferral and EEE treatment; bracket creep under inflation</td></tr>
+      <tr><td>07 Stock markets</td><td>The Gordon growth model; volatility drag; SIP growth</td></tr>
+      <tr><td>08 Budgets &amp; deficits</td><td>Debt dynamics and r − g</td></tr>
+    </table>
+  </section>
+
+  <section id="e7">
+    <h2><span class="n">7</span>Check yourself</h2>
+    <div class="quiz" data-quiz="expert"></div>
+  </section>
+</div>
+
+<section id="sources">
+  <h2>Sources and further reading</h2>
+  <ul>
+    <li>Rates used in the snapshot are from earlier topics in this series: PPF and SCSS rates for Oct–Dec 2026 (<a href="02-interest-rates.html">Topic 02</a>), October 2026 CPI (<a href="01-inflation.html">Topic 01</a>), Q1 FY27 nominal GDP growth (<a href="03-gdp.html">Topic 03</a>) and SIP inflows (<a href="07-stock-markets.html">Topic 07</a>).</li>
+    <li>Stango, V. and Zinman, J. (2009), "Exponential Growth Bias and Household Finance", <i>Journal of Finance</i>.</li>
+    <li>Laibson, D. (1997), "Golden Eggs and Hyperbolic Discounting", <i>Quarterly Journal of Economics</i>.</li>
+    <li>Kelly, J. L. (1956), "A New Interpretation of Information Rate", <i>Bell System Technical Journal</i>.</li>
+    <li>Lucas, R. (1988), "On the Mechanics of Economic Development", <i>Journal of Monetary Economics</i>; Barro, R. and Sala-i-Martin, X., <i>Economic Growth</i>.</li>
+    <li>All topics: <a href="01-inflation.html">Inflation</a> · <a href="02-interest-rates.html">Interest Rates</a> · <a href="03-gdp.html">GDP</a> · <a href="04-money-banking.html">Money &amp; Banking</a> · <a href="05-exchange-rates.html">Exchange Rates</a> · <a href="06-taxes.html">Taxes</a> · <a href="07-stock-markets.html">Stock Markets</a> · <a href="08-budgets-deficits.html">Budgets &amp; Deficits</a>.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<footer>
+  Finance &amp; Economics in Three Levels · Topic 09 · K Vijay Anand · <a href="08-budgets-deficits.html">← Topic 08 Budgets &amp; Deficits</a> · <a href="./">All topics</a> · <a href="/">Home</a><br>
+  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.
+  Educational content, not financial advice.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var root=document.documentElement, body=document.body;
+  var $=function(id){return document.getElementById(id);};
+  var inr=function(x,d){return "₹"+Number(x).toLocaleString("en-IN",{minimumFractionDigits:d||0,maximumFractionDigits:d||0});};
+  var cssv=function(n){return getComputedStyle(root).getPropertyValue(n).trim();};
+  var lakh=function(x){return x>=1e7?"₹"+(x/1e7).toFixed(2)+" crore":"₹"+(x/1e5).toFixed(2)+" lakh";};
+
+  try{var t=localStorage.getItem("fe-theme");if(t)root.setAttribute("data-theme",t);}catch(e){}
+  function redraw(){anRender();drawEL();}
+  function toggleTheme(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("fe-theme",n);}catch(e){}redraw();}
+  function toggleFS(){if(!document.fullscreenElement){(root.requestFullscreen||function(){}).call(root);}else{document.exitFullscreen();}}
+  function toggleSB(){body.classList.toggle("nosb");}
+  $("themeBtn").onclick=toggleTheme; $("fsBtn").onclick=toggleFS; $("sbBtn").onclick=toggleSB;
+
+  var LV=["school","working","expert"];
+  function setLevel(l,noHash){
+    if(LV.indexOf(l)<0)l="school";
+    body.setAttribute("data-level",l);
+    LV.forEach(function(x){$("p-"+x).classList.toggle("on",x===l);});
+    document.querySelectorAll(".levels button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-l")===l);});
+    buildTOC(l);
+    if(!noHash)history.replaceState(null,"","#"+l);
+    redraw();
+  }
+  document.querySelectorAll(".levels button").forEach(function(b){b.onclick=function(){setLevel(b.getAttribute("data-l"));};});
+  function buildTOC(l){
+    var names={school:"School",working:"Working people",expert:"Experts"};
+    var h='<div class="h">Contents · '+names[l]+'</div><a href="#snapshot">Snapshot · Nov 2026</a>';
+    $("p-"+l).querySelectorAll("section").forEach(function(s){
+      var t=s.querySelector("h2").textContent; h+='<a href="#'+s.id+'">'+t.replace(/^(\d+)/,"$1 · ")+'</a>';
+    });
+    h+='<a href="#sources">Sources</a>';
+    h+='<div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> level<br><kbd>M</kbd> hide contents<br><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause<br><kbd>T</kbd> theme · <kbd>F</kbd> full screen</div>';
+    $("toc").innerHTML=h;
+  }
+
+  /* ---------- Level 1: chessboard ---------- */
+  var anS=0, anTimer=null, GRAIN_G=0.025; // ~25 mg per rice grain
+  function big(n){ // format large numbers in Indian words
+    if(n<1e5)return Math.round(n).toLocaleString("en-IN");
+    var units=[[1e12,"lakh crore"],[1e7,"crore"],[1e5,"lakh"]];
+    if(n>=1e14){var e=Math.floor(Math.log10(n));return (n/Math.pow(10,e)).toFixed(2)+" × 10^"+e;}
+    for(var i=0;i<units.length;i++)if(n>=units[i][0])return (n/units[i][0]).toLocaleString("en-IN",{maximumFractionDigits:2})+" "+units[i][1];
+  }
+  function weight(g){if(g<1000)return g.toFixed(g<1?3:1)+" g";var kg=g/1000;if(kg<1000)return kg.toFixed(1)+" kg";var t=kg/1000;if(t<1e6)return Math.round(t).toLocaleString("en-IN")+" tonnes";return (t/1e9).toLocaleString("en-IN",{maximumFractionDigits:1})+" billion tonnes";}
+  function anRender(){
+    var c=cssv("--l2"), c1=cssv("--l1"), ru=cssv("--rule"), bg=cssv("--card"), svg="";
+    for(var k=0;k<64;k++){
+      var r=Math.floor(k/8), col=k%8, x=col*40, y=(7-r)*40, filled=k<anS, base=((r+col)%2===0)?bg:ru;
+      svg+='<rect x="'+x+'" y="'+y+'" width="40" height="40" fill="'+base+'" stroke="'+ru+'"/>';
+      if(filled){var op=0.15+0.85*(k/63);svg+='<rect x="'+(x+3)+'" y="'+(y+3)+'" width="34" height="34" rx="4" fill="'+c+'" fill-opacity="'+op.toFixed(2)+'"/>';}
+      if(k===anS-1)svg+='<rect x="'+(x+1)+'" y="'+(y+1)+'" width="38" height="38" fill="none" stroke="'+c1+'" stroke-width="3"/>';
+    }
+    $("anBoard").innerHTML=svg;
+    var on=anS?Math.pow(2,anS-1):0, tot=Math.pow(2,anS)-1;
+    $("anSq").textContent=anS; $("anOn").textContent=big(on); $("anTot").textContent=big(tot); $("anWt").textContent=weight(tot*GRAIN_G);
+    var m;
+    if(anS===0)m="Press Play, or press S to start.";
+    else if(anS<=10)m="Still tiny. A spoonful of rice. The king is smiling.";
+    else if(anS<=20)m="Square "+anS+": about "+weight(tot*GRAIN_G)+" so far. The king's servants start to worry.";
+    else if(anS<=32)m="Halfway along the board: "+weight(tot*GRAIN_G)+". That fills a granary.";
+    else if(anS<64)m="Square "+anS+": "+weight(tot*GRAIN_G)+". More rice than the kingdom has ever seen.";
+    else m="All 64 squares: about "+big(tot)+" grains, roughly "+weight(tot*GRAIN_G)+". That is hundreds of years of the whole world's rice harvest! Doubling 63 times is the power of compounding.";
+    $("anMsg").textContent=m;
+  }
+  function anStep(){ if(anS<64){anS++;anRender();} else anPause(); }
+  function anPlay(){ if(anTimer)return; if(anS>=64)anS=0; anTimer=setInterval(anStep,350); }
+  function anPause(){ clearInterval(anTimer); anTimer=null; }
+  $("anPlay").onclick=anPlay; $("anStep").onclick=function(){anPause();anStep();}; $("anPause").onclick=anPause;
+  $("anReset").onclick=function(){anPause();anS=0;anRender();};
+
+  /* ---------- Level 2: early vs late ---------- */
+  function path(A,r,s,e,G,from){var m=Math.pow(1+r,1/12)-1, v=0, out=[];for(var age=from;age<=G;age++){out.push([age,v]);if(age<G)for(var k=0;k<12;k++){v=v*(1+m)+((age>=s&&age<e)?A:0);}}return out;}
+  function drawEL(){
+    var g=function(id){return +$(id).value||0;};
+    var A=g("elA"), r=g("elR")/100, s1=g("elS1"), e1=Math.max(s1,g("elE1")), s2=g("elS2"), G=Math.max(Math.max(e1,s2)+1,g("elG"));
+    var from=Math.min(s1,s2), p1=path(A,r,s1,e1,G,from), p2=path(A,r,s2,G,G,from);
+    var inv1=A*12*(e1-s1), inv2=A*12*(G-s2), f1=p1[p1.length-1][1], f2=p2[p2.length-1][1];
+    $("elOut").innerHTML="Early starter invests "+lakh(inv1)+" over "+(e1-s1)+" years, then stops, and has <b>"+lakh(f1)+"</b> at "+G+". "+
+      "Late starter invests "+lakh(inv2)+" over "+(G-s2)+" years and has <b>"+lakh(f2)+"</b>. "+
+      (f1>f2?"Despite investing "+(inv2/Math.max(inv1,1)).toFixed(1)+"× less, the early starter ends with more.":"Here the late starter ends with more; try a higher return or an earlier start.");
+    var W=900,H=270,L=80,Rm=20,T=34,B=34, svg="", c1=cssv("--l1"), c2=cssv("--l2"), ru=cssv("--rule");
+    var ymax=Math.max(f1,f2)*1.08, n=G-from, X=function(a){return L+(W-L-Rm)*(a-from)/n;}, Y=function(v){return T+(H-T-B)*(1-v/ymax);};
+    for(var q=0;q<=4;q++){var gv=ymax*q/4;svg+='<line x1="'+L+'" x2="'+(W-Rm)+'" y1="'+Y(gv)+'" y2="'+Y(gv)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(Y(gv)+4)+'" font-size="12" text-anchor="end">'+(gv>=1e7?(gv/1e7).toFixed(1)+" Cr":(gv/1e5).toFixed(0)+" L")+'</text>';}
+    var d1="",d2="";p1.forEach(function(p,i){d1+=(i?"L":"M")+X(p[0])+","+Y(p[1]);});p2.forEach(function(p,i){d2+=(i?"L":"M")+X(p[0])+","+Y(p[1]);});
+    svg+='<rect x="'+X(s1)+'" y="'+T+'" width="'+(X(e1)-X(s1))+'" height="'+(H-T-B)+'" fill="'+c1+'" fill-opacity=".08"/>';
+    svg+='<path d="'+d1+'" fill="none" stroke="'+c1+'" stroke-width="4"/><path d="'+d2+'" fill="none" stroke="'+c2+'" stroke-width="4" stroke-dasharray="10 6"/>';
+    var st=Math.max(1,Math.round(n/10));for(var a=from;a<=G;a+=st)svg+='<text x="'+X(a)+'" y="'+(H-B+18)+'" font-size="12" text-anchor="middle">age '+a+'</text>';
+    svg+='<line x1="'+L+'" x2="'+(L+34)+'" y1="14" y2="14" stroke="'+c1+'" stroke-width="4"/><text x="'+(L+40)+'" y="19" font-size="14" style="fill:'+c1+';font-weight:600">early starter (solid; shaded = years investing)</text>';
+    svg+='<line x1="'+(L+400)+'" x2="'+(L+434)+'" y1="14" y2="14" stroke="'+c2+'" stroke-width="4" stroke-dasharray="10 6"/><text x="'+(L+440)+'" y="19" font-size="14" style="fill:'+c2+';font-weight:600">late starter (dashed)</text>';
+    $("elChart").innerHTML=svg;
+  }
+  ["elA","elR","elS1","elE1","elS2","elG"].forEach(function(id){$(id).oninput=drawEL;});
+
+  /* ---------- Level 2: fee drag ---------- */
+  function sipFV(A,r,Y){var m=Math.pow(1+r,1/12)-1,v=0;for(var k=0;k<Y*12;k++)v=(v+A)*(1+m);return v;}
+  function fee(){
+    var g=function(id){return +$(id).value||0;};
+    var A=g("feA"), R=g("feR")/100, lo=g("feL")/100, hi=g("feH")/100, Y=Math.max(1,Math.round(g("feY")));
+    var a=sipFV(A,R-lo,Y), b=sipFV(A,R-hi,Y);
+    $("feOut").innerHTML="Low-cost: <b>"+lakh(a)+"</b> · High-cost: <b>"+lakh(b)+"</b> · Fees cost you <b>"+lakh(a-b)+"</b>, which is "+(100*(a-b)/a).toFixed(1)+"% of the final wealth, from a "+((hi-lo)*100).toFixed(2)+" percentage-point difference in annual fees. You invested "+lakh(A*12*Y)+" in both.";
+  }
+  ["feA","feR","feL","feH","feY"].forEach(function(id){$(id).oninput=fee;}); fee();
+
+  /* ---------- Level 3: volatility drag ---------- */
+  function vd(){
+    var mu=(+$("vdM").value||0)/100, s=(+$("vdS").value||0)/100, T=+$("vdT").value||1;
+    var gm=mu-s*s/2, arith=Math.pow(1+mu,T), med=Math.exp(gm*T);
+    $("vdOut").innerHTML="Approximate compound growth ≈ <b>"+(gm*100).toFixed(2)+"%</b> a year (drag "+(s*s/2*100).toFixed(2)+" points). After "+T+" years, ₹1 grows to ≈ ₹"+arith.toFixed(2)+" if compounded at the arithmetic mean, but the <b>median outcome is ≈ ₹"+med.toFixed(2)+"</b>. Kelly fraction μ/σ² ≈ "+(s>0?(mu/(s*s)).toFixed(2):"–")+"× (with the risk-free rate taken as 0).";
+  }
+  ["vdM","vdS","vdT"].forEach(function(id){$(id).oninput=vd;}); vd();
+
+  /* ---------- Level 3: retirement corpus ---------- */
+  function rt(){
+    var g=function(id){return +$(id).value||0;};
+    var E=g("rtE"), N=g("rtN"), i=g("rtI")/100, R=Math.max(1,Math.round(g("rtR"))), p=g("rtP")/100, a=g("rtA")/100;
+    var E1=E*Math.pow(1+i,N), corpus=(Math.abs(p-i)<1e-9)?E1*R/(1+p)*(1+p):E1*(1-Math.pow((1+i)/(1+p),R))/(p-i)*(1+p);
+    var rm=Math.pow(1+a,1/12)-1, n=N*12, sip=n>0?corpus*rm/((Math.pow(1+rm,n)-1)*(1+rm)):corpus;
+    $("rtOut").innerHTML="First-year expenses at retirement ≈ <b>"+lakh(E1)+"</b> (inflated "+N+" years). Corpus needed (expenses withdrawn at the start of each year, growing with inflation, for "+R+" years) ≈ <b>"+lakh(corpus)+"</b>, which is "+(corpus/E1).toFixed(1)+"× the first year's expenses. Monthly SIP needed now ≈ <b>"+inr(sip)+"</b> (flat, no step-up).";
+  }
+  ["rtE","rtN","rtI","rtR","rtP","rtA"].forEach(function(id){$(id).oninput=rt;}); rt();
+
+  /* ---------- quizzes ---------- */
+  var Q={
+    school:[
+      ["Compounding means…",["Earning only on what you first saved","Earning on your savings AND on past earnings","Losing money","Saving in a piggy bank"],1,"Growth on top of growth, like a snowball."],
+      ["Using the rule of 72, money growing at 8% a year doubles in about…",["4 years","9 years","18 years","72 years"],1,"72 ÷ 8 = 9 years."],
+      ["On the chessboard, how many grains are on square 11?",["11","22","1,024","2,048"],2,"Square n holds 2^(n−1): 2^10 = 1,024."],
+      ["Why did Asha end up with more than Bala?",["She saved more money","Her money had more years to compound","Bala lost his money","Asha got a higher rate"],1,"Starting 10 years earlier gave her money extra time to grow."],
+      ["Which of these also compounds against you?",["A gift","An unpaid credit-card bill","A birthday","A holiday"],1,"Debt interest compounds just like savings interest."]
+    ],
+    working:[
+      ["A 50% loss needs what gain to break even?",["50%","75%","100%","150%"],2,"₹100 → ₹50; you need +100% to get back to ₹100."],
+      ["At 6% inflation, prices roughly double in…",["6 years","12 years","20 years","36 years"],1,"72 ÷ 6 = 12 years."],
+      ["7% nominal return with 6% inflation gives a real return of about…",["13%","7%","1%","−1%"],2,"Real ≈ (1.07/1.06) − 1 ≈ 0.94%: purchasing power barely grows."],
+      ["Why can PPF at 7.1% beat a taxable FD at 7.5%?",["PPF has no lock-in","PPF's growth is tax-free (EEE), so the full amount compounds","FDs are illegal","PPF pays monthly"],1,"Tax drag lowers the FD's effective compounding rate."],
+      ["Best first use of spare money if you have a credit-card balance at 3.5% a month?",["Invest in equity","Pay off the card","Buy gold","Open an FD"],1,"Clearing roughly 51%-a-year debt is a guaranteed, unbeatable return."]
+    ],
+    expert:[
+      ["Continuous compounding at rate ρ doubles money in…",["72/ρ","ln2/ρ","ρ/2","e/ρ"],1,"Doubling time = ln 2 / ρ ≈ 69.3 / ρ(%)."],
+      ["With μ = 12% and σ = 20%, the approximate geometric growth is…",["12%","10%","8%","2%"],1,"μ − σ²/2 = 12% − 2% = 10%."],
+      ["+50% followed by −50% leaves wealth at…",["100%","75%","50%","125%"],1,"1.5 × 0.5 = 0.75, a 25% loss despite a 0% arithmetic mean."],
+      ["The PV of a growing perpetuity is…",["C/r","C/(r − g)","C·g/r","C/(r + g)"],1,"Valid only when r > g, as in the Gordon model (Topic 07)."],
+      ["Exponential-growth bias (Stango and Zinman) leads people to…",["Overestimate loan costs","Linearise compounding and underestimate loan costs","Save too much","Prefer bonds"],1,"Biased households borrow more and save less."]
+    ]
+  };
+  document.querySelectorAll(".quiz").forEach(function(box){
+    var set=Q[box.getAttribute("data-quiz")], score=0, done=0, h="";
+    set.forEach(function(q,qi){
+      h+='<div class="q" data-i="'+qi+'"><p>'+(qi+1)+'. '+q[0]+'</p>';
+      q[1].forEach(function(o,oi){h+='<button data-o="'+oi+'">'+o+'</button>';});
+      h+='<div class="why">'+q[3]+'</div></div>';
+    });
+    h+='<p class="score"></p>'; box.innerHTML=h;
+    box.querySelectorAll(".q").forEach(function(qd){
+      var q=set[+qd.getAttribute("data-i")];
+      qd.querySelectorAll("button").forEach(function(b){
+        b.onclick=function(){
+          if(qd.classList.contains("done"))return;
+          var o=+b.getAttribute("data-o"); qd.classList.add("done"); done++;
+          if(o===q[2])score++; else b.classList.add("wrong");
+          qd.querySelectorAll("button")[q[2]].classList.add("right");
+          box.querySelector(".score").textContent="Score: "+score+" / "+done+(done===set.length?(score===set.length?" — perfect!":" — review the explanations above."):"");
+        };
+      });
+    });
+  });
+
+  document.addEventListener("keydown",function(e){
+    if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
+    var k=e.key.toLowerCase();
+    if(k==="1")setLevel("school"); else if(k==="2")setLevel("working"); else if(k==="3")setLevel("expert");
+    else if(k==="m")toggleSB(); else if(k==="t")toggleTheme(); else if(k==="f")toggleFS();
+    else if(body.getAttribute("data-level")==="school"){
+      if(k==="p"){anPlay();} else if(k==="s"){anPause();anStep();} else if(k==="x"){anPause();}
+    }
+  });
+
+  setLevel((location.hash||"#school").slice(1),true);
+  window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(LV.indexOf(h)>=0)setLevel(h,true);});
+})();
+</script>
+</body>
+</html>

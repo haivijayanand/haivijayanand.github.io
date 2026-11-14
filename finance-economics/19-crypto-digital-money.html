@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<!--
+TOOL:    finance-economics/19-crypto-digital-money.html — Finance & Economics Topic 19: Crypto & Digital Money (three levels)
+FAMILY:  finance-economics
+VERSION: 1.0.0
+DATE:    2026-11-14
+CHAT:    Finance & Economics series — second set of ten topics; Topic 19 Crypto & Digital Money
+CHANGES: 1.0.0 - nineteenth topic: functions of money, shared-notebook blockchain animation with live toy
+                 hashes (chain, tamper, rejection, mining); UPI/e-rupee/crypto/stablecoin table, crypto vs
+                 equity tax calculator, legal position, risks and scams; theories of money, blockchain
+                 economics, stablecoin run calculator, CBDC design, macro policy; quiz per level
+STATUS:  working
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crypto &amp; Digital Money — Finance &amp; Economics in Three Levels — K Vijay Anand</title>
+<meta name="description" content="Crypto and digital money explained at three levels — for school students, for working people and as a review for experts: functions of money, blockchain animation, UPI vs e-rupee vs crypto, India's crypto tax, scams, stablecoin run risk and CBDC design.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* Colour-blind-safe palette: blue / orange / purple / gold — no red-vs-green coding */
+  :root{--bg:#f4f2ed;--bg2:#e9e5dc;--card:#fffdf8;--ink:#1d1b18;--soft:#4f4940;--faint:#857c6f;--rule:#d6cdbd;
+        --acc:#1d5fa6;--l1:#d9730d;--l2:#1d5fa6;--l3:#6a3fa0;--gold:#a87908;--hi:#fff1d6}
+  :root[data-theme="dark"]{--bg:#121316;--bg2:#1a1c21;--card:#1f2228;--ink:#ece9e2;--soft:#c3bdb2;--faint:#8c8578;--rule:#33363d;
+        --acc:#6aa8ee;--l1:#f39a3d;--l2:#6aa8ee;--l3:#b28ae6;--gold:#e5b33c;--hi:#3a2f17}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.65}
+  a{color:var(--acc)}
+  .toolbar{position:fixed;top:10px;right:12px;z-index:30;display:flex;gap:8px;font-size:13px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button,.toolbar a{background:var(--card);color:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;text-decoration:none}
+  header{padding:70px 4vw 18px;max-width:1600px;margin:0 auto}
+  .series{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-family:"Playfair Display",serif;font-weight:800;font-size:clamp(46px,7vw,84px);margin:6px 0 4px;line-height:1}
+  .tag{color:var(--soft);max-width:70ch;margin:0}
+  /* level switch */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 0}
+  .levels button{text-align:left;background:var(--card);border:2px solid var(--rule);border-radius:12px;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink)}
+  .levels button b{display:block;font-size:18px}
+  .levels button small{color:var(--faint)}
+  .levels button .k{float:right;font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:0 6px;color:var(--faint)}
+  .levels button[data-l="school"].on{border-color:var(--l1);background:color-mix(in srgb,var(--l1) 10%,var(--card))}
+  .levels button[data-l="working"].on{border-color:var(--l2);background:color-mix(in srgb,var(--l2) 10%,var(--card))}
+  .levels button[data-l="expert"].on{border-color:var(--l3);background:color-mix(in srgb,var(--l3) 10%,var(--card))}
+  /* layout */
+  .wrap{max-width:1600px;margin:0 auto;padding:0 4vw 40px;display:grid;grid-template-columns:250px 1fr;gap:34px}
+  body.nosb .wrap{grid-template-columns:1fr}
+  body.nosb aside{display:none}
+  aside{position:sticky;top:60px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;font-size:14.5px;padding-top:20px}
+  aside .h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  aside a{display:block;padding:5px 10px;border-left:3px solid var(--rule);color:var(--soft);text-decoration:none}
+  aside a:hover{border-left-color:var(--lc);color:var(--ink)}
+  aside .keys{margin-top:18px;color:var(--faint);font-size:12.5px;line-height:1.9}
+  kbd{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--card)}
+  main{min-width:0}
+  .panel{display:none}
+  .panel.on{display:block}
+  #p-school{--lc:var(--l1)} #p-working{--lc:var(--l2)} #p-expert{--lc:var(--l3)}
+  body[data-level="school"]{--lc:var(--l1)} body[data-level="working"]{--lc:var(--l2)} body[data-level="expert"]{--lc:var(--l3)}
+  .lvhead{border-left:6px solid var(--lc);padding:4px 0 4px 16px;margin:24px 0 10px}
+  .lvhead .who{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--lc);font-weight:700}
+  .lvhead p{margin:4px 0 0;color:var(--soft)}
+  section{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:22px 28px;margin:18px 0}
+  h2{font-family:"Playfair Display",serif;font-size:30px;margin:0 0 10px;line-height:1.2}
+  h2 .n{color:var(--lc);margin-right:8px}
+  h3{font-size:18px;margin:20px 0 6px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .box{border:1px solid var(--rule);border-radius:10px;padding:14px 16px;background:var(--bg)}
+  .box b.t{display:block;color:var(--lc);margin-bottom:4px}
+  .def{font-size:20px;border-left:5px solid var(--lc);background:color-mix(in srgb,var(--lc) 8%,transparent);padding:12px 18px;border-radius:0 10px 10px 0;margin:8px 0 14px}
+  .note{background:var(--hi);border-radius:8px;padding:10px 14px;font-size:15.5px}
+  .eq{font-family:"JetBrains Mono",monospace;background:var(--bg2);border-radius:8px;padding:10px 14px;overflow-x:auto;font-size:15px;white-space:pre}
+  table{border-collapse:collapse;width:100%;font-size:15.5px;margin:8px 0}
+  th,td{border-bottom:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:10px}
+  .stat{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--bg)}
+  .stat .v{font-size:28px;white-space:nowrap;font-weight:700;color:var(--acc);line-height:1.1}
+  .stat .l{font-size:13.5px;color:var(--soft)}
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;margin:10px 0}
+  .ctl label{font-size:13.5px;color:var(--soft);display:flex;flex-direction:column;gap:3px}
+  .ctl input[type=number]{width:120px;font:inherit;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)}
+  .ctl input[type=range]{width:200px}
+  .btn{background:var(--lc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--lc);border:1px solid var(--lc)}
+  .out{font-size:18px;margin:8px 0}
+  .out b{color:var(--lc)}
+  svg text{fill:var(--soft);font-family:Inter,sans-serif}
+  /* basket animation */
+  .stage{border:1px dashed var(--rule);border-radius:10px;padding:14px;background:var(--bg);min-height:170px}
+  .stage .yr{font-size:26px;font-weight:700}
+  .stage .yr span{color:var(--l1)}
+  .samosas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:44px}
+  .sam{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:30px solid var(--l1);transition:opacity .3s}
+  .sam.gone{opacity:.15}
+  /* quiz */
+  .q{border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:10px 0;background:var(--bg)}
+  .q p{margin:0 0 8px;font-weight:600}
+  .q button{display:block;width:100%;text-align:left;margin:5px 0;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;font:inherit;color:var(--ink);cursor:pointer}
+  .q button.right{border:2px solid var(--l2);background:color-mix(in srgb,var(--l2) 14%,var(--card))}
+  .q button.right::after{content:"  ✔ correct";font-weight:700;color:var(--l2)}
+  .q button.wrong{border:2px dashed var(--l1)}
+  .q button.wrong::after{content:"  ✘ not this one";font-weight:700;color:var(--l1)}
+  .q .why{display:none;font-size:15px;color:var(--soft);margin-top:6px}
+  .q.done .why{display:block}
+  .score{font-weight:700;color:var(--lc)}
+  footer{max-width:1600px;margin:0 auto;padding:20px 4vw 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--faint)}
+  footer a{color:var(--soft)}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}aside{display:none}.levels{grid-template-columns:1fr}section{padding:18px}}
+  @media print{.toolbar,aside,.levels{display:none}.panel{display:block!important}.wrap{display:block}}
+</style>
+</head>
+<body data-level="school">
+<div class="toolbar">
+  <a href="./">← Series</a>
+  <button id="sbBtn" title="Show / hide contents (M)">☰ Contents</button>
+  <button id="themeBtn" title="Light / dark (T)">◐ Theme</button>
+  <button id="fsBtn" title="Full screen (F)">⤢ Full screen</button>
+</div>
+
+<header>
+  <div class="series">Finance &amp; Economics · Topic 19</div>
+  <h1>Crypto &amp; Digital Money</h1>
+  <p class="tag">From UPI to bitcoin to the RBI's e-rupee: what makes something money, how a blockchain works, why crypto prices swing so wildly, how India taxes and regulates it, and the economics of stablecoins and central bank digital currency. Pick your level.</p>
+  <div class="levels" role="tablist">
+    <button data-l="school" class="on"><span class="k">1</span><b>🎒 School</b><small>A shared notebook nobody can cheat</small></button>
+    <button data-l="working"><span class="k">2</span><b>💼 Working people</b><small>UPI, e-rupee, crypto tax, scams</small></button>
+    <button data-l="expert"><span class="k">3</span><b>🎓 Experts — review</b><small>Money, blockchains, stablecoins, CBDC</small></button>
+  </div>
+</header>
+
+<div class="wrap">
+<aside id="toc"></aside>
+<main>
+
+<section id="snapshot" style="border-top:4px solid var(--gold)">
+  <h2>Where things stand — November 2026</h2>
+  <div class="snap">
+    <div class="stat"><div class="v">25.5 bn</div><div class="l">UPI transactions in October 2026, worth ₹31.5 lakh crore; daily value crossed ₹1 lakh crore for the first time</div></div>
+    <div class="stat"><div class="v">~$76,000</div><div class="l">Bitcoin in early November 2026, about 40% below its October 2025 record (~$126,000); ether near $2,300</div></div>
+    <div class="stat"><div class="v">30% + 1%</div><div class="l">India's crypto tax: a flat 30% on gains (no loss set-off) plus 1% TDS on transfers, both unchanged in Budget 2026, with new reporting penalties from April 2026</div></div>
+    <div class="stat"><div class="v">Not legal tender</div><div class="l">Crypto is legal to hold and trade in India but is not money; exchanges must register with FIU-IND. The RBI warns stablecoins carry "huge risk".</div></div>
+    <div class="stat"><div class="v">e₹</div><div class="l">The RBI's digital rupee (CBDC) is in pilot, including programmable uses such as digital food coupons</div></div>
+  </div>
+  <p class="note" style="margin-top:12px">Crypto prices move by 5–10% in a day. Figures are dated early November 2026. Nothing here is a recommendation to buy or sell any crypto asset.</p>
+</section>
+
+<!-- ========================= LEVEL 1 : SCHOOL ====================== -->
+<div class="panel on" id="p-school">
+  <div class="lvhead"><div class="who">Level 1 · For school students</div><p>Money has changed from shells and coins to paper notes to numbers on a phone. Crypto is a new kind of digital token. Is it money?</p></div>
+
+  <section id="s1">
+    <h2><span class="n">1</span>What makes something money?</h2>
+    <p>Money does three jobs:</p>
+    <div class="cols">
+      <div class="box"><b class="t">🔁 Medium of exchange</b>People accept it in return for goods and services.</div>
+      <div class="box"><b class="t">📏 Unit of account</b>Prices are written in it: a pencil costs ₹10.</div>
+      <div class="box"><b class="t">🏦 Store of value</b>It keeps its value reasonably well over time.</div>
+    </div>
+    <p>The rupee does all three because people <b>trust</b> it: the RBI issues it and the law says everyone must accept it. That's called <b>legal tender</b>.</p>
+  </section>
+
+  <section id="s2">
+    <h2><span class="n">2</span>Money goes digital</h2>
+    <ol>
+      <li><b>Bank money:</b> most rupees already exist only as numbers in bank accounts.</li>
+      <li><b>UPI:</b> pay anyone instantly by phone. India makes over 80 crore UPI payments a day.</li>
+      <li><b>e-rupee (e₹):</b> a digital rupee issued directly by the RBI, like a digital banknote.</li>
+      <li><b>Crypto (bitcoin and others):</b> digital tokens created by computer networks, not by any government or bank.</li>
+    </ol>
+  </section>
+
+  <section id="s3">
+    <h2><span class="n">3</span>Watch it happen: a shared notebook nobody can cheat</h2>
+    <p>Bitcoin keeps its records in a <b>blockchain</b>: a notebook that thousands of computers keep identical copies of. Press Play, or press S for each step.</p>
+    <div class="ctl">
+      <button class="btn" id="anPlay">▶ Play (P)</button>
+      <button class="btn ghost" id="anStep">Next step (S)</button>
+      <button class="btn ghost" id="anPause">⏸ Pause (X)</button>
+      <button class="btn ghost" id="anReset">↺ Reset</button>
+    </div>
+    <div class="stage">
+      <div class="yr" id="anTitle">A shared notebook</div>
+      <svg id="anChart" viewBox="0 0 900 300" style="width:100%;height:auto;margin-top:6px"></svg>
+      <p id="anMsg" style="margin:6px 0 0;color:var(--soft);font-size:17px">Press Play, or press S to begin.</p>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="n">4</span>Is crypto good money?</h2>
+    <ul>
+      <li><b>Prices swing wildly:</b> one bitcoin went from over ₹1 crore to under ₹70 lakh within about a year. That makes it a poor unit of account and a risky store of value.</li>
+      <li><b>No one stands behind it:</b> if you lose your password, or an exchange is hacked, there is usually no one to help.</li>
+      <li><b>Scams are common:</b> fake apps and "double your money" offers trap many people.</li>
+      <li>Supporters like that no government controls it and its supply is limited (bitcoin will never exceed 21 million coins).</li>
+    </ul>
+  </section>
+
+  <section id="s5">
+    <h2><span class="n">5</span>Words to remember</h2>
+    <table>
+      <tr><th>Word</th><th>Meaning</th></tr>
+      <tr><td>Legal tender</td><td>Money everyone must accept by law (the rupee in India)</td></tr>
+      <tr><td>UPI</td><td>India's instant phone payment system</td></tr>
+      <tr><td>Cryptocurrency</td><td>A digital token recorded on a blockchain, not issued by a government</td></tr>
+      <tr><td>Blockchain</td><td>A shared, linked record of transactions copied on many computers</td></tr>
+      <tr><td>Wallet / private key</td><td>The secret code that controls your crypto; lose it and the coins are gone</td></tr>
+      <tr><td>CBDC / e-rupee</td><td>Digital money issued by the central bank</td></tr>
+    </table>
+  </section>
+
+  <section id="s6">
+    <h2><span class="n">6</span>Check yourself</h2>
+    <div class="quiz" data-quiz="school"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 2 : WORKING ===================== -->
+<div class="panel" id="p-working">
+  <div class="lvhead"><div class="who">Level 2 · For working people</div><p>UPI, the e-rupee and crypto compared, how crypto is taxed, the main risks and scams, and how to protect yourself. This is educational only, not investment or tax advice.</p></div>
+
+  <section id="w1">
+    <h2><span class="n">1</span>UPI vs e-rupee vs crypto</h2>
+    <table>
+      <tr><th></th><th>UPI</th><th>e-rupee (CBDC)</th><th>Crypto (BTC, ETH…)</th><th>Stablecoins (USDT, USDC)</th></tr>
+      <tr><td>Issued by</td><td>Moves bank money</td><td>RBI</td><td>No issuer; network protocol</td><td>Private companies</td></tr>
+      <tr><td>Value</td><td>₹1 = ₹1</td><td>₹1 = ₹1</td><td>Market price, very volatile</td><td>Aims for $1, backed by reserves</td></tr>
+      <tr><td>Legal tender</td><td>Yes (rupees)</td><td>Yes</td><td>No</td><td>No</td></tr>
+      <tr><td>Protection</td><td>RBI-regulated banks, deposit insurance</td><td>Central bank liability</td><td>Little; exchange and key risk</td><td>Depends on issuer and reserves</td></tr>
+      <tr><td>Tax</td><td>None on payments</td><td>None on payments</td><td>30% on gains + 1% TDS</td><td>Taxed as VDAs, same as crypto</td></tr>
+    </table>
+  </section>
+
+  <section id="w2">
+    <h2><span class="n">2</span>Calculator: how crypto tax compares</h2>
+    <div class="ctl">
+      <label>Amount invested (₹)<input type="number" id="ctA" value="500000" step="10000"></label>
+      <label>Gain on winning coins %<input type="number" id="ctG" value="40" step="5"></label>
+      <label>Loss on other coins (₹)<input type="number" id="ctL" value="100000" step="10000"></label>
+      <label>Sell transactions in the year<input type="number" id="ctN" value="10" step="1"></label>
+      <label>Average sale size (₹)<input type="number" id="ctS" value="100000" step="10000"></label>
+    </div>
+    <div class="out" id="ctOut"></div>
+    <svg id="ctChart" viewBox="0 0 900 170" style="width:100%;height:auto;margin-top:8px"></svg>
+    <p class="note">Crypto: 30% on each gain plus 4% cess (31.2%); losses on one coin cannot be set off against gains on another, or carried forward. 1% TDS is deducted on each sale; it is credited against your tax, but it ties up cash for active traders. Equity comparison: long-term gains at 12.5% above the ₹1.25 lakh exemption, with losses set off. Surcharge ignored.</p>
+  </section>
+
+  <section id="w3">
+    <h2><span class="n">3</span>Legal position in India</h2>
+    <ul>
+      <li>Crypto is a "virtual digital asset" (VDA): legal to hold and trade, but not legal tender and with no dedicated law yet.</li>
+      <li>Exchanges serving Indians must register with <b>FIU-IND</b> and follow anti-money-laundering rules; several offshore exchanges were blocked for not registering.</li>
+      <li>From April 2026, platforms face penalties for not reporting transactions properly (₹200 a day for non-filing; ₹50,000 for incorrect filings). India is adopting the OECD's crypto reporting framework (CARF) for cross-border data sharing.</li>
+      <li>Many Indian traders have moved to offshore platforms, which offer even less protection.</li>
+    </ul>
+  </section>
+
+  <section id="w4">
+    <h2><span class="n">4</span>Risks and scams</h2>
+    <div class="cols">
+      <div class="box"><b class="t">Volatility</b>Falls of 50–80% have happened in every crypto cycle. Only invest money you can afford to lose entirely.</div>
+      <div class="box"><b class="t">Custody</b>Exchanges get hacked or fail (FTX, 2022; WazirX, 2024). "Not your keys, not your coins", but self-custody risks losing keys.</div>
+      <div class="box"><b class="t">Scams</b>Fake trading apps, "pig-butchering" romance-investment frauds, pump-and-dump tokens, and fake customer-care numbers.</div>
+      <div class="box"><b class="t">Rules can change</b>Tax and regulation can change suddenly, and you are taxed even on loss-making years overall.</div>
+    </div>
+    <p><b>Protect yourself:</b> use only FIU-registered platforms, enable two-factor authentication, never share OTPs or seed phrases, distrust "guaranteed returns", and report fraud at cybercrime.gov.in or helpline 1930.</p>
+  </section>
+
+  <section id="w5">
+    <h2><span class="n">5</span>UPI and the e-rupee: what's new</h2>
+    <ul>
+      <li>UPI keeps growing about 20–25% a year. A proposed small merchant fee (MDR) on larger payments was put off during the 2026 festive season; person-to-person payments remain free.</li>
+      <li>UPI now works in several countries (UAE, Singapore, France, Sri Lanka, Mauritius and others) and is linked to cross-border remittance corridors.</li>
+      <li>The e-rupee is being tried for targeted, programmable payments such as food-subsidy coupons that can only be spent on food.</li>
+    </ul>
+  </section>
+
+  <section id="w6">
+    <h2><span class="n">6</span>Check yourself</h2>
+    <div class="quiz" data-quiz="working"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 3 : EXPERT ====================== -->
+<div class="panel" id="p-expert">
+  <div class="lvhead"><div class="who">Level 3 · Review for experts</div><p>What money is, the economics of permissionless ledgers, valuation debates, stablecoin run risk, CBDC design, and India's policy choices.</p></div>
+
+  <section id="e1">
+    <h2><span class="n">1</span>What is money? Theories</h2>
+    <ul>
+      <li><b>Commodity and credit views:</b> metallist theories versus chartalist/credit theories (Innes, Knapp); modern money is mostly bank deposits created by lending (McLeay, Radia and Thomas, 2014; Topic 04).</li>
+      <li><b>Money as memory</b> (Kocherlakota, 1998): money substitutes for a public record of past trades, which a blockchain literally provides.</li>
+      <li>The <b>singleness of money</b>: different forms (central bank money, deposits, e-money) trade at par because of regulation, deposit insurance and settlement in central bank money. Private tokens without this can trade below par.</li>
+    </ul>
+  </section>
+
+  <section id="e2">
+    <h2><span class="n">2</span>Blockchain economics</h2>
+    <ul>
+      <li><b>Consensus without trust:</b> proof of work makes rewriting history costly. Budish (2018) shows that security requires flow payments to miners proportional to the value that could be attacked, so security is expensive relative to transaction value.</li>
+      <li><b>The trilemma:</b> decentralisation, security and scalability are hard to achieve together. Layer-2 networks and rollups trade some decentralisation for throughput.</li>
+      <li>Ethereum moved to proof of stake in 2022, cutting energy use by over 99%. Bitcoin's proof of work still uses a country-scale amount of electricity.</li>
+      <li><b>Valuation:</b> bitcoin has no cash flows. Its price rests on expected future demand as a store of value, which is self-fulfilling (sunspot-like, Garratt and Wallace) and so prone to bubbles and crashes.</li>
+    </ul>
+  </section>
+
+  <section id="e3">
+    <h2><span class="n">3</span>Stablecoin run risk: calculator</h2>
+    <div class="eq">Par redemption capacity = cash + T-bills·(1 − h₁) + other assets·(1 − h₂)
+Run if redemptions R exceed capacity before assets can be sold</div>
+    <div class="ctl">
+      <label>Cash / bank deposits %<input type="number" id="srC" value="15" step="5"></label>
+      <label>Short T-bills %<input type="number" id="srT" value="70" step="5"></label>
+      <label>Other assets (loans, bonds, crypto) %<input type="number" id="srO" value="15" step="5"></label>
+      <label>T-bill fire-sale haircut h₁ %<input type="number" id="srH1" value="1" step="0.5"></label>
+      <label>Other-asset haircut h₂ %<input type="number" id="srH2" value="40" step="5"></label>
+      <label>Redemptions demanded %<input type="number" id="srR" value="60" step="5"></label>
+    </div>
+    <div class="out" id="srOut"></div>
+    <svg id="srChart" viewBox="0 0 900 200" style="width:100%;height:auto;margin-top:8px"></svg>
+    <p class="note">This is a simplified first-come, first-served model, with liquidity used in order: cash, then T-bills, then other assets. Gorton and Zhang (2021) compare stablecoins to 19th-century private banknotes. The US GENIUS Act (2025) and the EU's MiCA require high-quality liquid reserves to reduce this risk.</p>
+  </section>
+
+  <section id="e4">
+    <h2><span class="n">4</span>Central bank digital currency design</h2>
+    <ul>
+      <li><b>Retail vs wholesale:</b> retail CBDC gives the public direct central bank money; wholesale CBDC settles interbank and tokenised-asset trades.</li>
+      <li><b>Bank disintermediation:</b> if households shift deposits into CBDC, especially in a panic, bank funding falls. Holding caps, zero remuneration and tiered designs limit this (Bindseil).</li>
+      <li><b>Privacy vs compliance:</b> account-based designs ease AML but risk surveillance; token-based and offline designs mimic cash.</li>
+      <li><b>Programmability:</b> purpose-bound money (like food coupons) improves targeting but fragments the singleness of money if overused.</li>
+      <li>India's case is unusual: UPI already delivers instant retail payments, so the e-rupee's value lies more in offline use, programmability and cross-border settlement (BIS mBridge-type projects).</li>
+    </ul>
+  </section>
+
+  <section id="e5">
+    <h2><span class="n">5</span>Macro and policy</h2>
+    <ul>
+      <li><b>Currency substitution:</b> dollar stablecoins can dollarise payments in emerging markets and weaken monetary policy and capital flow management. This is the RBI's core concern.</li>
+      <li><b>Regulatory paths:</b> licensing and full regulation (EU MiCA, US for stablecoins), heavy taxation and tolerance (India), or bans (China). The IMF–FSB synthesis paper (endorsed under India's 2023 G20 presidency) favours comprehensive regulation over outright bans.</li>
+      <li><b>Taxation as policy:</b> India's 1% TDS works as a transaction tax that moved volume offshore, eroding both revenue and oversight. This is an example of tax incidence and elasticity in a mobile market.</li>
+    </ul>
+  </section>
+
+  <section id="e6">
+    <h2><span class="n">6</span>Review checklist: open questions</h2>
+    <ol>
+      <li>Should India license crypto exchanges under a dedicated law, and cut TDS to bring trading onshore?</li>
+      <li>How should rupee-linked or dollar stablecoins be treated, given capital account controls?</li>
+      <li>What unique value does a retail e-rupee add alongside UPI?</li>
+      <li>Is proof-of-work security sustainable as block rewards halve every four years?</li>
+      <li>Will tokenisation of bonds, deposits and real assets matter more than cryptocurrencies themselves?</li>
+    </ol>
+  </section>
+
+  <section id="e7">
+    <h2><span class="n">7</span>Check yourself</h2>
+    <div class="quiz" data-quiz="expert"></div>
+  </section>
+</div>
+
+<section id="sources">
+  <h2>Sources and further reading</h2>
+  <ul>
+    <li>UPI October 2026: <a href="https://india.entrepreneur.com/business-news/upi-hits-record-25-47-bn-transactions-in-october-daily-value-crosses-inr-1-l-cr">Entrepreneur India</a>, <a href="https://www.freepressjournal.in/business/upi-transactions-hit-2547-billion-in-october-value-soars-to-3153-lakh-crore">Free Press Journal</a>; MDR deferral: <a href="https://www.analyticsinsight.net/news/upis-record-breaking-october-puts-merchant-monetization-back-in-focus">Analytics Insight</a>.</li>
+    <li>Bitcoin price, November 2026: <a href="https://cryptoticker.io/en/will-bitcoin-go-back-up-scenarios-year-end/">CryptoTicker</a>, <a href="https://cryptoticker.io/en/bitcoin-monthly-returns-november/">CryptoTicker on October returns</a>.</li>
+    <li>India crypto tax and Budget 2026: <a href="https://decrypt.co/356601/no-relief-for-crypto-investors-as-india-retains-current-crypto-tax-in-budget-2026?amp=1">Decrypt</a>, <a href="https://www.analyticsinsight.net/cryptocurrency-analytics-insight/crypto-regulation-in-india-whats-changing-in-2026">Analytics Insight</a>, <a href="https://www.fxleaders.com/?p=434667">FXLeaders on the CBDC food-coupon pilot</a>.</li>
+    <li>Nakamoto (2008); Kocherlakota (1998), <i>JET</i>; Budish (2018), NBER; Garratt and Wallace (2018), <i>Economic Inquiry</i>; Gorton and Zhang (2021); McLeay, Radia and Thomas (2014), BoE Quarterly Bulletin; BIS Annual Economic Report 2023 (tokenisation).</li>
+    <li>Earlier topics: <a href="04-money-banking.html">Money &amp; Banking</a> · <a href="05-exchange-rates.html">Exchange Rates</a> · <a href="06-taxes.html">Taxes</a> · <a href="16-credit-debt.html">Credit &amp; Debt</a>.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<footer>
+  Finance &amp; Economics in Three Levels · Topic 19 · K Vijay Anand · <a href="18-gold-commodities.html">← Topic 18 Gold &amp; Commodities</a> · <a href="./">All topics</a> · <a href="/">Home</a><br>
+  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.
+  Educational content. Figures dated November 2026.
+</footer>
+<script>
+(function(){
+  "use strict";
+  var root=document.documentElement, body=document.body;
+  var $=function(id){return document.getElementById(id);};
+  var cssv=function(n){return getComputedStyle(root).getPropertyValue(n).trim();};
+
+  try{var t=localStorage.getItem("fe-theme");if(t)root.setAttribute("data-theme",t);}catch(e){}
+  function redraw(){anRender();ct();sr();}
+  function toggleTheme(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("fe-theme",n);}catch(e){}redraw();}
+  function toggleFS(){if(!document.fullscreenElement){(root.requestFullscreen||function(){}).call(root);}else{document.exitFullscreen();}}
+  function toggleSB(){body.classList.toggle("nosb");}
+  $("themeBtn").onclick=toggleTheme; $("fsBtn").onclick=toggleFS; $("sbBtn").onclick=toggleSB;
+
+  var LV=["school","working","expert"];
+  function setLevel(l,noHash){
+    if(LV.indexOf(l)<0)l="school";
+    body.setAttribute("data-level",l);
+    LV.forEach(function(x){$("p-"+x).classList.toggle("on",x===l);});
+    document.querySelectorAll(".levels button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-l")===l);});
+    buildTOC(l);
+    if(!noHash)history.replaceState(null,"","#"+l);
+    redraw();
+  }
+  document.querySelectorAll(".levels button").forEach(function(b){b.onclick=function(){setLevel(b.getAttribute("data-l"));};});
+  function buildTOC(l){
+    var names={school:"School",working:"Working people",expert:"Experts"};
+    var h='<div class="h">Contents · '+names[l]+'</div><a href="#snapshot">Snapshot · Nov 2026</a>';
+    $("p-"+l).querySelectorAll("section").forEach(function(s){
+      var t=s.querySelector("h2").textContent; h+='<a href="#'+s.id+'">'+t.replace(/^(\d+)/,"$1 · ")+'</a>';
+    });
+    h+='<a href="#sources">Sources</a>';
+    h+='<div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> level<br><kbd>M</kbd> hide contents<br><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause<br><kbd>T</kbd> theme · <kbd>F</kbd> full screen</div>';
+    $("toc").innerHTML=h;
+  }
+  function rep(v,n){var a=[];for(var i=0;i<n;i++)a.push(v);return a;}
+
+    /* ---------- Level 1: blockchain ---------- */
+  function hsh(str){var h=5381;for(var i=0;i<str.length;i++){h=((h<<5)+h+str.charCodeAt(i))>>>0;}return ("0000"+(h%65536).toString(16).toUpperCase()).slice(-4);}
+  var TX=["Asha → Bala: 5","Bala → Chitra: 2","Chitra → Dev: 1","Dev → Asha: 3"];
+  function chain(tamper){var prev="0000",out=[];TX.forEach(function(t,i){var tx=(tamper&&i===1)?"Asha → Bala: 50":t; if(tamper&&i===1)tx="Bala → Chitra: 20"; var h=hsh(i+"|"+tx+"|"+prev); out.push({tx:tx,prev:prev,h:h}); prev=h;}); return out;}
+  var GOOD=chain(false), BAD=(function(){var g=chain(false), b=[]; var prev="0000"; TX.forEach(function(t,i){var tx=i===1?"Bala → Chitra: 20":t; var h=hsh(i+"|"+tx+"|"+(i===0?"0000":g[i-1].h)); b.push({tx:tx,prev:i===0?"0000":g[i-1].h,h:h});}); return b;})();
+  var ST=[
+    {t:"A shared notebook",n:0,bad:false,rej:false,m:"Instead of one bank keeping the record, thousands of computers each keep the same notebook of who paid whom. Press S."},
+    {t:"Step 1 · Write the first page (block)",n:1,bad:false,rej:false,m:"'Asha pays Bala 5 coins' is written on page 1, and every computer (bottom row) copies it. Each page gets a 'fingerprint' (hash) made from everything written on it."},
+    {t:"Step 2 · Pages are chained together",n:4,bad:false,rej:false,m:"Each new page also records the previous page's fingerprint. So the pages are linked like a chain: a blockchain."},
+    {t:"Step 3 · Someone tries to cheat",n:4,bad:true,rej:false,m:"A cheater changes page 2 from '2 coins' to '20 coins' on his own copy. The fingerprint of page 2 changes, so it no longer matches what page 3 recorded. The chain is broken (marked ✗)."},
+    {t:"Step 4 · The others say no",n:4,bad:true,rej:true,m:"The other computers compare copies. Their notebooks agree with each other, so the cheater's copy is rejected. To cheat, you'd have to fool most of the network at once."},
+    {t:"Step 5 · Who writes new pages?",n:4,bad:false,rej:false,m:"Computers ('miners') race to solve a hard maths puzzle to add the next page and win new coins. That's how new bitcoins are made, and why bitcoin uses as much electricity as a whole country."}
+  ];
+  var anI=0, anTimer=null;
+  function anRender(){
+    var s=ST[anI], ink=cssv("--ink"), ru=cssv("--rule"), c1=cssv("--l1"), c2=cssv("--l2"), fa=cssv("--faint"), svg="", B=s.bad?BAD:GOOD;
+    for(var i=0;i<s.n;i++){var x=30+i*215, y=20, b=B[i], broken=s.bad&&(i===2), changed=s.bad&&i===1;
+      svg+='<rect x="'+x+'" y="'+y+'" width="190" height="130" rx="8" fill="'+cssv("--card")+'" stroke="'+(broken||changed?c1:c2)+'" stroke-width="'+(broken||changed?3:2)+'" stroke-dasharray="'+(broken?"8 5":"0")+'"/>';
+      svg+='<text x="'+(x+12)+'" y="'+(y+24)+'" font-size="15" style="fill:'+ink+';font-weight:700">Page '+(i+1)+'</text>';
+      svg+='<text x="'+(x+12)+'" y="'+(y+52)+'" font-size="14" style="fill:'+ink+(changed?';font-weight:700':'')+'">'+b.tx+'</text>';
+      svg+='<text x="'+(x+12)+'" y="'+(y+82)+'" font-size="13" style="fill:'+ink+'">prev: '+b.prev+(broken?" ✗":"")+'</text>';
+      svg+='<text x="'+(x+12)+'" y="'+(y+108)+'" font-size="13" style="fill:'+ink+';font-weight:600">fingerprint: '+b.h+'</text>';
+      if(i>0)svg+='<line x1="'+(x-25)+'" x2="'+(x-2)+'" y1="'+(y+65)+'" y2="'+(y+65)+'" stroke="'+(broken?c1:ink)+'" stroke-width="2.5"/><text x="'+(x-14)+'" y="'+(y+60)+'" font-size="14" text-anchor="middle" style="fill:'+ink+'">→</text>';}
+    if(s.n){for(var k=0;k<6;k++){var cx=110+k*135, cy=230, cheat=s.bad&&k===5;
+      svg+='<rect x="'+(cx-36)+'" y="'+(cy-22)+'" width="72" height="44" rx="6" fill="'+(cheat?"none":c2)+'" fill-opacity=".15" stroke="'+(cheat?c1:c2)+'" stroke-width="2" stroke-dasharray="'+(cheat?"6 4":"0")+'"/>';
+      svg+='<text x="'+cx+'" y="'+(cy+5)+'" font-size="13" text-anchor="middle" style="fill:'+ink+';font-weight:600">'+(cheat?(s.rej?"✗ rejected":"cheater"):"copy ✓")+'</text>';}
+      svg+='<text x="450" y="290" font-size="13" text-anchor="middle" style="fill:'+ink+'">each box = one computer holding a full copy of the notebook</text>';}
+    else svg+='<text x="450" y="150" font-size="18" text-anchor="middle" style="fill:'+fa+'">thousands of computers, one shared record</text>';
+    $("anChart").innerHTML=svg; $("anTitle").textContent=s.t; $("anMsg").textContent=s.m;
+  }
+  function anStep(){ if(anI<ST.length-1){anI++;anRender();} else anPause(); }
+  function anPlay(){ if(anTimer)return; if(anI>=ST.length-1)anI=0; anRender(); anTimer=setInterval(anStep,4500); }
+  function anPause(){ clearInterval(anTimer); anTimer=null; }
+  $("anPlay").onclick=anPlay; $("anStep").onclick=function(){anPause();anStep();}; $("anPause").onclick=anPause;
+  $("anReset").onclick=function(){anPause();anI=0;anRender();};
+
+  /* ---------- Level 2: crypto tax ---------- */
+  var rs=function(v){return "₹"+Math.round(v).toLocaleString("en-IN");};
+  function ct(){
+    var g=function(id){return +$(id).value||0;};
+    var A=g("ctA"),G=A*g("ctG")/100,L=g("ctL"),N=Math.max(0,g("ctN")),S=g("ctS");
+    var cT=G*0.312, net=G-L, eT=Math.max(0,net-125000)*0.125*1.04, tds=N*S*0.01;
+    $("ctOut").innerHTML="Gains "+rs(G)+", losses "+rs(L)+": net profit <b>"+rs(net)+"</b>. Crypto tax: <b>"+rs(cT)+"</b> (losses not allowed) = "+(net>0?(cT/net*100).toFixed(0)+"% of your actual net profit":"tax even though you made no net profit")+". The same result in equity mutual funds (long-term): <b>"+rs(eT)+"</b>. TDS deducted along the way: "+rs(tds)+" (adjusted against your tax when you file).";
+    var W=900,Lm=230,R=130, mx=Math.max(cT,eT,tds,1)*1.08, X=function(v){return Lm+(W-Lm-R)*v/mx;}, ink=cssv("--ink"), svg="";
+    [["Crypto tax (30% + cess)",cT,"l1"],["Equity LTCG tax",eT,"l2"],["TDS deducted on sales",tds,"l3"]].forEach(function(r,i){var y=10+i*52;svg+='<text x="'+(Lm-10)+'" y="'+(y+24)+'" font-size="14" text-anchor="end" style="fill:'+ink+';font-weight:600">'+r[0]+'</text><rect x="'+Lm+'" y="'+y+'" width="'+Math.max(2,X(r[1])-Lm)+'" height="36" fill="'+cssv("--"+r[2])+'"/><text x="'+(X(r[1])+8)+'" y="'+(y+24)+'" font-size="14" style="fill:'+ink+';font-weight:700">'+rs(r[1])+'</text>';});
+    $("ctChart").innerHTML=svg;
+  }
+  ["ctA","ctG","ctL","ctN","ctS"].forEach(function(id){$(id).oninput=ct;}); ct();
+
+  /* ---------- Level 3: stablecoin run ---------- */
+  function sr(){
+    var g=function(id){return +$(id).value||0;};
+    var C=g("srC"),T=g("srT"),O=g("srO"),h1=g("srH1")/100,h2=g("srH2")/100,R=Math.min(100,Math.max(0,g("srR")));
+    var tot=C+T+O, Tn=T*(1-h1), On=O*(1-h2), cap=C+Tn+On;
+    var paid=Math.min(R,cap), left=100-R, back=left>0?Math.max(0,cap-R)/left:0;
+    var stage=R<=C?"cash alone":R<=C+Tn?"cash plus T-bill sales":R<=cap?"fire sales of other assets":"nothing: reserves run out";
+    $("srOut").innerHTML="Reserves = "+tot.toFixed(0)+"% of tokens"+(Math.abs(tot-100)>0.5?" (not fully backed at book value)":"")+". Liquidation value = <b>"+cap.toFixed(1)+"%</b>. Redemptions of "+R+"% are met by "+stage+". "+(R<=cap?"Holders who stay are backed at <b>"+(back*100).toFixed(1)+" cents per dollar</b>"+(back<0.995?": below par, so a rational holder runs too.":"."):"Only "+cap.toFixed(1)+"% can be paid at par; the rest get nothing. First movers win, so everyone runs.");
+    var W=900,Lm=170,Rr=40, X=function(v){return Lm+(W-Lm-Rr)*v/110;}, ink=cssv("--ink"), ru=cssv("--rule"), c1=cssv("--l1"), c2=cssv("--l2"), c3=cssv("--l3"), fa=cssv("--faint"), svg="", x=0;
+    for(var k=0;k<=100;k+=20)svg+='<line x1="'+X(k)+'" x2="'+X(k)+'" y1="10" y2="150" stroke="'+ru+'"/><text x="'+X(k)+'" y="168" font-size="12" text-anchor="middle">'+k+'%</text>';
+    svg+='<text x="'+(Lm-10)+'" y="48" font-size="14" text-anchor="end" style="fill:'+ink+';font-weight:600">Liquid value</text>';
+    [[C,c2,"cash"],[Tn,c3,"T-bills"],[On,fa,"other"]].forEach(function(s){var w=X(x+s[0])-X(x); if(w>0){svg+='<rect x="'+X(x)+'" y="24" width="'+w+'" height="40" fill="'+s[1]+'" stroke="'+cssv("--card")+'" stroke-width="2"/>'; if(w>50)svg+='<text x="'+(X(x)+w/2)+'" y="49" font-size="13" text-anchor="middle" style="fill:#fff;font-weight:700">'+s[2]+'</text>';} x+=s[0];});
+    svg+='<text x="'+(Lm-10)+'" y="118" font-size="14" text-anchor="end" style="fill:'+ink+';font-weight:600">Redemptions</text><rect x="'+X(0)+'" y="94" width="'+(X(R)-X(0))+'" height="40" fill="none" stroke="'+c1+'" stroke-width="3" stroke-dasharray="8 5"/><text x="'+(X(R)+6)+'" y="119" font-size="13" style="fill:'+ink+';font-weight:700">'+R+'%</text>';
+    svg+='<text x="'+Lm+'" y="192" font-size="13" style="fill:'+ink+'">% of tokens outstanding · solid bars = what reserves fetch in a hurry · dashed = what holders demand</text>';
+    $("srChart").innerHTML=svg;
+  }
+  ["srC","srT","srO","srH1","srH2","srR"].forEach(function(id){$(id).oninput=sr;}); sr();
+
+  /* ---------- quizzes ---------- */
+  var Q={
+    school:[
+      ["Which is NOT one of the three jobs of money?",["Medium of exchange","Unit of account","Store of value","Making you famous"],3,"Money helps trade, pricing and saving."],
+      ["Legal tender means…",["Any digital token","Money everyone must accept by law","A bank loan","A credit card"],1,"In India, the rupee is legal tender; crypto is not."],
+      ["In a blockchain, what happens if someone changes an old page?",["Nothing","Its fingerprint changes, the chain breaks and others reject it","It gets more coins","The bank fixes it"],1,"Linked fingerprints make cheating visible."],
+      ["What is the maximum number of bitcoins that will ever exist?",["Unlimited","21 million","1 billion","100"],1,"Bitcoin's supply is capped by its code."],
+      ["What should you NEVER share with anyone?",["Your favourite colour","Your OTP or crypto seed phrase","Your school name","The weather"],1,"Anyone with these can take your money."]
+    ],
+    working:[
+      ["Gains on crypto in India are taxed at…",["Your slab rate","30% flat, no loss set-off","12.5%","Nil"],1,"Plus 4% cess and 1% TDS on transfers."],
+      ["Can a loss on one crypto be set off against a gain on another?",["Yes","No","Only for bitcoin","Only after 3 years"],1,"Each gain is taxed separately."],
+      ["Crypto exchanges serving Indians must register with…",["SEBI","FIU-IND","IRDAI","PFRDA"],1,"For anti-money-laundering compliance."],
+      ["In October 2026, UPI handled about…",["2.5 crore transactions","25 billion transactions","25 million transactions","250 transactions"],1,"Worth over ₹31 lakh crore."],
+      ["Where do you report cyber fraud in India?",["cybercrime.gov.in / helpline 1930","Your gym","Any crypto app","Nowhere"],0,"Report quickly; the first hours matter."]
+    ],
+    expert:[
+      ["Kocherlakota (1998) describes money as…",["A commodity","Memory: a substitute for a record of past transactions","Pure debt","A tax"],1,"Blockchains are explicit public memory."],
+      ["Budish (2018) argues that proof-of-work security…",["Is free","Requires flow costs proportional to the value at risk of attack","Improves with fewer miners","Is unrelated to price"],1,"An economic limit on blockchain trust."],
+      ["A stablecoin backed 15% cash, 70% T-bills and 15% risky assets (40% haircut) can pay at par roughly…",["15%","85%","Over 90%","100%+"],2,"15 + 69.3 + 9 ≈ 93.3% of tokens."],
+      ["A key risk of retail CBDC for banks is…",["Higher deposits","Deposit flight and disintermediation","Lower inflation","More branches"],1,"Holding caps and zero interest mitigate it."],
+      ["The RBI's main macro concern with dollar stablecoins is…",["Energy use","Currency substitution undermining monetary policy and capital controls","Slow payments","Too much regulation"],1,"Dollarisation of payments."]
+    ]
+  };
+  document.querySelectorAll(".quiz").forEach(function(box){
+    var set=Q[box.getAttribute("data-quiz")], score=0, done=0, h="";
+    set.forEach(function(q,qi){
+      h+='<div class="q" data-i="'+qi+'"><p>'+(qi+1)+'. '+q[0]+'</p>';
+      q[1].forEach(function(o,oi){h+='<button data-o="'+oi+'">'+o+'</button>';});
+      h+='<div class="why">'+q[3]+'</div></div>';
+    });
+    h+='<p class="score"></p>'; box.innerHTML=h;
+    box.querySelectorAll(".q").forEach(function(qd){
+      var q=set[+qd.getAttribute("data-i")];
+      qd.querySelectorAll("button").forEach(function(b){
+        b.onclick=function(){
+          if(qd.classList.contains("done"))return;
+          var o=+b.getAttribute("data-o"); qd.classList.add("done"); done++;
+          if(o===q[2])score++; else b.classList.add("wrong");
+          qd.querySelectorAll("button")[q[2]].classList.add("right");
+          box.querySelector(".score").textContent="Score: "+score+" / "+done+(done===set.length?(score===set.length?" — perfect!":" — review the explanations above."):"");
+        };
+      });
+    });
+  });
+
+  document.addEventListener("keydown",function(e){
+    if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
+    var k=e.key.toLowerCase();
+    if(k==="1")setLevel("school"); else if(k==="2")setLevel("working"); else if(k==="3")setLevel("expert");
+    else if(k==="m")toggleSB(); else if(k==="t")toggleTheme(); else if(k==="f")toggleFS();
+    else if(body.getAttribute("data-level")==="school"){
+      if(k==="p"){anPlay();} else if(k==="s"){anPause();anStep();} else if(k==="x"){anPause();}
+    }
+  });
+
+  setLevel((location.hash||"#school").slice(1),true);
+  window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(LV.indexOf(h)>=0)setLevel(h,true);});
+})();
+</script>
+</body>
+</html>

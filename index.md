@@ -1,7 +1,7 @@
 ---
-# TOOL: index.md | FAMILY: SITE | VERSION: 2.5.0 | DATE: 2026-11-02
+# TOOL: index.md | FAMILY: SITE | VERSION: 2.6.0 | DATE: 2026-11-14
 # CHAT: Offline HTML inventory and online links
-# CHANGES: 2.5.0 - Class VIII Study Explorers card added; Tools card no longer lists the Class 8 pages; 2.4.0 - Law Study Explorers card added; 2.3.0 - Technical Papers card added; 2.2.0 - Life Books card added; 2.1.0 - Zen Series card added; 2.0.0 - home page is now a short guide to the four sections (Speaks, Tools, Book Review, Engineering Articles); article list moved to /engineering/
+# CHANGES: 2.6.0 - Movie & TV Review card added; 2.5.0 - Class VIII Study Explorers card added; Tools card no longer lists the Class 8 pages; 2.4.0 - Law Study Explorers card added; 2.3.0 - Technical Papers card added; 2.2.0 - Life Books card added; 2.1.0 - Zen Series card added; 2.0.0 - home page is now a short guide to the four sections (Speaks, Tools, Book Review, Engineering Articles); article list moved to /engineering/
 layout: default
 title: Home
 ---
@@ -18,7 +18,7 @@ title: Home
 </style>
 
 <p class="hm-intro">Welcome. This site collects my writing and the small browser tools I build: essays on life and work,
-interactive engineering and learning tools, daily book reviews on management and on life and family, study pages for Class VIII and law students, short Zen stories, longer engineering articles and referenced technical papers. Pick a section below.</p>
+interactive engineering and learning tools, daily book reviews on management and on life and family, study pages for Class VIII and law students, short Zen stories, reviews of Tamil and English films and TV series, longer engineering articles and referenced technical papers. Pick a section below.</p>
 
 <div class="hm-grid">
   <a class="hm-card" href="/speaks/" style="--c:#2c6a9e">
@@ -65,5 +65,10 @@ interactive engineering and learning tools, daily book reviews on management and
     <b>Class VIII Study Explorers →</b>
     <span>Interactive study pages for Class VIII CBSE / NCERT: Maths (new Ganita Prakash 2026 and CBSE), Science, Social Science and Direct &amp; Indirect Speech, with animations, labs, practice and certificates.</span>
     <small>4 subjects · 5 explorers · works offline</small>
+  </a>
+  <a class="hm-card" href="/movie-review/" style="--c:#b07a12">
+    <b>Movie &amp; TV Review →</b>
+    <span>Tamil and English films and TV series: plot, cast, crew, music, the technology behind them, budget and box office, and an emotional review. From Nayagan and Thalapathi to The Matrix, Inception, Chithi and Westworld.</span>
+    <small>Films · TV series · Tamil · English</small>
   </a>
 </div>

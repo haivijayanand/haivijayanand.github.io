@@ -30,7 +30,7 @@ function bars(items,o){o=o||{};var W=o.w||900,rh=o.rh||34,lw=o.lw||230,H=items.l
   items.forEach(function(it,k){var y=10+k*rh,v=it[1],w=Math.abs(v)*sc,x=v<0?z-w:z,c=col(it[2]||PAL[k%PAL.length]);
     s+='<text x="'+(lw-8)+'" y="'+(y+rh/2+5)+'" font-size="14" text-anchor="end" style="fill:'+ink+'">'+esc(it[0])+'</text>';
     s+='<rect x="'+x+'" y="'+(y+4)+'" width="'+Math.max(w,1)+'" height="'+(rh-10)+'" rx="4" fill="'+c+'"'+(it[3]?' fill-opacity=".35" stroke="'+c+'" stroke-dasharray="5 3"':'')+'/>';
-    s+='<text x="'+(v<0?x-6:x+w+6)+'" y="'+(y+rh/2+5)+'" font-size="14" text-anchor="'+(v<0?"end":"start")+'" style="fill:'+ink+';font-weight:600">'+fmt(v)+'</text>';});
+    s+='<text x="'+(v<0?z+6:x+w+6)+'" y="'+(y+rh/2+5)+'" font-size="14" text-anchor="start" style="fill:'+ink+';font-weight:600">'+fmt(v)+'</text>';});
   if(hasNeg)s+='<line x1="'+z+'" x2="'+z+'" y1="6" y2="'+(H-6)+'" stroke="'+cssv("--faint")+'"/>';
   return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">'+s+'</svg>';}
 function split(items,o){o=o||{};var W=900,H=o.h||70,tot=items.reduce(function(a,i){return a+Math.max(0,i[1]);},0)||1,x=0,s="";

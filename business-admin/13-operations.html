@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<!--
+TOOL:    business-admin/13-operations.html — Business Administration Chapter 13: Pillar 4 · Operations (three levels)
+FAMILY:  business-admin
+VERSION: 1.0.0
+DATE:    2026-11-14
+CHAT:    Business Administration series — 50 chapters, three levels (school, working, expert), interactive
+CHANGES: 1.0.0 - first version
+STATUS:  working
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pillar 4 · Operations — Business Administration in Three Levels — K Vijay Anand</title>
+<meta name="description" content="Pillar 4. Inputs, processes and outputs; capacity and utilisation; finding the bottleneck in a production line; quality, first-pass yield and the seven wastes of lean; Little&#x27;s law, OEE and Six Sigma levels.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ba.css">
+</head>
+<body data-level="school">
+<div class="toolbar">
+  <a href="./">← All chapters</a>
+  <button id="sbBtn" title="Show / hide contents (M)">☰ Contents</button>
+  <button id="themeBtn" title="Light / dark (T)">◐ Theme</button>
+  <button id="fsBtn" title="Full screen (F)">⤢ Full screen</button>
+</div>
+<header>
+  <div class="series">Business Administration · Part B · Chapter 13</div>
+  <h1>Operations</h1>
+  <p class="tag">Operations is where the promise is kept: the idli gets steamed, the part gets machined, the parcel arrives. Doing it right, on time and at low cost is how most businesses win or lose. Pick your level.</p>
+  <div class="levels" role="tablist">
+    <button data-l="school" class="on"><span class="k">1</span><b>🎒 School</b><small>Inside an idli batter factory</small></button>
+    <button data-l="working"><span class="k">2</span><b>💼 Working people</b><small>Capacity, bottlenecks, quality, waste</small></button>
+    <button data-l="expert"><span class="k">3</span><b>🎓 Experts — review</b><small>Little's law, OEE, Six Sigma</small></button>
+  </div>
+</header>
+
+<div class="wrap">
+<aside id="toc"></aside>
+<main>
+
+<div class="panel on" id="p-school">
+  <div class="lvhead"><div class="who">Level 1 · For school students</div><p>Operations turns inputs into the products and services customers pay for.</p></div>
+<section id="s1"><h2><span class="n">1</span>Input → process → output</h2><div id="idli" data-title="Annapoorna Batters, Ambattur"></div></section>
+<section id="s2"><h2><span class="n">2</span>Input, process or output?</h2><div id="sortIPO"></div></section>
+<section id="s3"><h2><span class="n">3</span>The slowest step decides</h2>
+<p>A line can only go as fast as its <b>slowest</b> step, like a queue behind a slow cashier. Move the sliders and see which step holds everyone back.</p>
+<div class="calc"><div class="ct">Packets per hour each step can handle</div><div class="ctl">
+<label>Washing <span id="k1V">300</span><input type="range" id="k1" min="50" max="400" step="10" value="300"></label>
+<label>Grinding <span id="k2V">160</span><input type="range" id="k2" min="50" max="400" step="10" value="160"></label>
+<label>Filling <span id="k3V">240</span><input type="range" id="k3" min="50" max="400" step="10" value="240"></label>
+<label>Sealing <span id="k4V">280</span><input type="range" id="k4" min="50" max="400" step="10" value="280"></label></div>
+<div id="kChart"></div><div class="out" id="kOut"></div></div></section>
+<section id="s4"><h2><span class="n">4</span>Words to remember</h2><div id="flip13"></div></section>
+  <section id="s-quiz"><h2><span class="n">✎</span>Check yourself</h2><div class="quiz" data-quiz="school"></div></section>
+</div>
+
+<div class="panel" id="p-working">
+  <div class="lvhead"><div class="who">Level 2 · For working people</div><p>How much you can make, where the line gets stuck, and how to cut defects and waste.</p></div>
+<section id="w1"><h2><span class="n">1</span>Capacity and utilisation</h2>
+<div class="eq">Design capacity      = the most a process can produce in ideal conditions
+Effective capacity   = design capacity − planned losses (changeovers, maintenance, breaks)
+Utilisation          = actual output ÷ design capacity
+Efficiency           = actual output ÷ effective capacity</div>
+<div class="calc"><div class="ct">CNC cell, one month</div><div class="ctl">
+<label>Machines<input type="number" id="cuM" value="4"></label><label>Shifts/day × hours<input type="number" id="cuH" value="16"></label><label>Working days<input type="number" id="cuD" value="25"></label>
+<label>Cycle time per part (min)<input type="number" id="cuC" value="6" step="0.5"></label><label>Planned losses %<input type="number" id="cuL" value="15"></label><label>Actual parts made<input type="number" id="cuA" value="11000"></label></div>
+<div class="out" id="cuOut"></div><div id="cuChart"></div></div></section>
+<section id="w2"><h2><span class="n">2</span>Balance the line</h2>
+<p>Five stations assemble a ceiling fan. Customer demand sets the <b>takt time</b> = available time ÷ demand. Any station slower than takt is a bottleneck.</p>
+<div class="calc"><div class="ct">Line balancing</div><div class="ctl">
+<label>Demand per shift<input type="number" id="lbDm" value="400"></label><label>Available minutes per shift<input type="number" id="lbAv" value="450"></label>
+<label>Motor fit (s)<input type="number" id="lb0" value="55"></label><label>Wiring (s)<input type="number" id="lb1" value="72"></label><label>Blades (s)<input type="number" id="lb2" value="48"></label><label>Test (s)<input type="number" id="lb3" value="60"></label><label>Pack (s)<input type="number" id="lb4" value="40"></label></div>
+<div id="lbChart"></div><div class="out" id="lbOut"></div></div></section>
+<section id="w3"><h2><span class="n">3</span>Quality: right first time</h2>
+<p><b>First-pass yield</b> = good units without rework ÷ units started. Across steps, rolled throughput yield multiplies: three steps at 95% each give only 85.7% right first time. Tools: check sheets, Pareto charts (80% of defects from 20% of causes), fishbone diagrams, 5 Whys, poka-yoke (mistake-proofing), standard work.</p>
+<div class="calc"><div class="ct">Rolled throughput yield</div><div class="ctl"><label>Steps<input type="number" id="ryN" value="6"></label><label>Yield per step %<input type="number" id="ryY" value="97" step="0.5"></label><label>Units started / day<input type="number" id="ryU" value="1000"></label></div><div class="out" id="ryOut"></div></div></section>
+<section id="w4"><h2><span class="n">4</span>The seven wastes (TIMWOOD)</h2>
+<p>Transport, Inventory, Motion, Waiting, Over-production, Over-processing, Defects. Which waste is it?</p><div id="sortW"></div></section>
+  <section id="w-quiz"><h2><span class="n">✎</span>Check yourself</h2><div class="quiz" data-quiz="working"></div></section>
+</div>
+
+<div class="panel" id="p-expert">
+  <div class="lvhead"><div class="who">Level 3 · For experts — a review</div><p>The few equations that govern flow, equipment effectiveness and process capability.</p></div>
+<section id="e1"><h2><span class="n">1</span>Little's law</h2>
+<div class="eq">WIP = Throughput × Flow time        (L = λW, any stable system)</div>
+<p>It holds regardless of arrival distribution. To halve lead time at constant throughput, halve work-in-process. This is the quantitative core of lean and of CONWIP / kanban limits.</p>
+<div class="calc"><div class="ct">Solve for the third</div><div class="ctl"><label>Throughput (units/day)<input type="number" id="llT" value="120"></label><label>WIP (units)<input type="number" id="llW" value="1800"></label></div><div class="out" id="llOut"></div></div></section>
+<section id="e2"><h2><span class="n">2</span>Overall equipment effectiveness</h2>
+<div class="eq">OEE = Availability × Performance × Quality
+Availability = run time ÷ planned time
+Performance  = (ideal cycle × total count) ÷ run time
+Quality      = good count ÷ total count</div>
+<div class="calc"><div class="ct">OEE</div><div class="ctl">
+<label>Planned production time (min)<input type="number" id="oeP" value="480"></label><label>Downtime (min)<input type="number" id="oeD" value="62"></label>
+<label>Ideal cycle (s/part)<input type="number" id="oeC" value="20"></label><label>Total parts<input type="number" id="oeT" value="1050"></label><label>Good parts<input type="number" id="oeG" value="1010"></label></div>
+<div id="oeChart"></div><div class="out" id="oeOut"></div></div>
+<p class="note">World-class OEE is often quoted as 85% (Nakajima); typical discrete manufacturing runs 40–60%. The three factors point to different fixes: TPM for availability, SMED and speed losses for performance, SPC for quality.</p></section>
+<section id="e3"><h2><span class="n">3</span>Six Sigma levels</h2>
+<p>DPMO = defects ÷ (units × opportunities per unit) × 10⁶. Conventional sigma level = Φ⁻¹(1 − DPMO/10⁶) + 1.5, the 1.5 being Motorola's assumed long-term mean shift. "Six Sigma" = 3.4 DPMO.</p>
+<div class="calc"><div class="ct">DPMO → sigma</div><div class="ctl"><label>Defects<input type="number" id="ssD" value="45"></label><label>Units<input type="number" id="ssU" value="5000"></label><label>Opportunities per unit<input type="number" id="ssO" value="12"></label></div><div class="out" id="ssOut"></div></div>
+<p>Process capability: Cp = (USL − LSL) / 6σ; Cpk = min(USL − μ, μ − LSL) / 3σ. Automotive PPAP usually expects Cpk ≥ 1.33 (1.67 for new processes).</p></section>
+  <section id="e-quiz"><h2><span class="n">✎</span>Check yourself</h2><div class="quiz" data-quiz="expert"></div></section>
+</div>
+<section id="sources"><h2>Sources and further reading</h2>
+<ul><li>Little, J. D. C. (1961), "A proof for the queuing formula L = λW", <i>Operations Research</i>; Hopp & Spearman, <i>Factory Physics</i>.</li><li>Nakajima, S. (1988), <i>Introduction to TPM</i>; Ohno, T. (1988), <i>Toyota Production System</i>.</li><li>AIAG, <i>Statistical Process Control</i> and PPAP manuals.</li></ul>
+</section>
+</main>
+</div>
+<nav class="pager"><a href="12-sales.html"><small>← Chapter 12</small>Pillar 3 · Sales</a><a class="nx" href="14-finance-pillar.html"><small>Chapter 14 →</small>Pillar 5 · Finance</a></nav>
+<footer>
+  Business Administration in Three Levels · Chapter 13 · K Vijay Anand · <a href="./">All chapters</a> · <a href="/finance-economics/">Finance &amp; Economics</a> · <a href="/">Home</a><br>
+  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.
+  Educational content, not legal, tax or investment advice. Rules and figures as of November 2026.
+</footer>
+<script>
+window.QUIZ={
+school:[["Rice and urad dal for batter are…",["Inputs","Outputs","Processes","Customers"],0,"Raw materials."],
+["Grinding is a…",["Process","Input","Output","Customer"],0,"Work done."],
+["Packed batter is the…",["Output","Input","Waste","Machine"],0,"The finished product."],
+["If grinding does 160 an hour and others 300, the line makes…",["300","160","760","460"],1,"Slowest step."],
+["Quality means…",["Making it right every time","Making it fast only","Making it cheap only","Making many"],0,"Right first time."]],
+working:[["Takt time = available time ÷…",["Machines","Customer demand","Defects","Workers"],1,"Pace set by demand."],
+["Three steps at 95% yield each give RTY of about…",["95%","90%","85.7%","75%"],2,"0.95³."],
+["Parts waiting between machines are which waste?",["Waiting/Inventory","Motion","Transport","Over-processing"],0,"WIP is inventory; idle parts also wait."],
+["Utilisation = actual output ÷…",["Effective capacity","Design capacity","Demand","Cost"],1,"Efficiency uses effective capacity."],
+["Poka-yoke means…",["Mistake-proofing","Painting","Overtime","Kanban"],0,"Designs that prevent errors."]],
+expert:[["Little's law: throughput 120/day, WIP 1,800 → flow time?",["15 days","1,920 days","0.07 days","120 days"],0,"1,800 / 120."],
+["OEE of 90% × 95% × 99% ≈",["84.6%","90%","95%","99%"],0,"Multiply."],
+["6σ corresponds to about…",["3.4 DPMO","66,807 DPMO","1%","0 defects"],0,"With the 1.5σ shift."],
+["Cpk = 1.0 means…",["Process just fits the nearest limit at 3σ","Perfect","Out of control","6σ"],0,"Barely capable."],
+["To cut lead time at the same throughput, reduce…",["WIP","Takt","Demand","Quality"],0,"Little's law."]]};
+window.CH={init:function(B){
+ var S=["Rice, dal, water","Wash & soak","Grind","Ferment","Pack","Batter packets"],M=[["Inputs arrive","Rice, urad dal, salt, water, packing film, electricity and workers: these are <b>inputs</b>."],["Wash and soak","Grains are washed and soaked for 5 hours. Every step that changes inputs is a <b>process</b>."],["Grind","Big wet grinders turn soaked grains into smooth batter."],["Ferment","The batter rests overnight in clean steel tanks so it rises."],["Pack","Machines fill 1 kg packets and seal them; each one is checked for weight and leaks."],["Output!","Cold packets go out in a van to 200 shops by 6 am. The <b>output</b> is what the customer buys."]];
+ B.stepper("idli",M.map(function(m,i){return {t:m[0],m:m[1],v:function(){return B.flow(S,i,{id:"id",per:6,bw:128});}};}));
+ B.sorter("sortIPO",{buckets:["Input","Process","Output"],items:[["Cotton for a shirt factory",0,"Raw material."],["Stitching",1,"Work."],["A finished shirt",2,"Product."],["Electricity",0,"Resource used."],["Checking quality",1,"An activity."],["A cooked meal served",2,"What the customer gets."]]});
+ B.calc(["k1","k2","k3","k4"],function(v){var a=[["Washing",v.k1],["Grinding",v.k2],["Filling",v.k3],["Sealing",v.k4]],m=Math.min(v.k1,v.k2,v.k3,v.k4);
+  B.$("kChart").innerHTML=B.bars(a.map(function(x){return [x[0],x[1],x[1]===m?"--l1":"--l2"];}).concat([["Line makes",m,"--l3"]]),{max:400,fmt:function(x){return x+"/hr";}});
+  B.$("kOut").innerHTML="The line makes <b>"+m+" packets an hour</b>. Bottleneck: <b>"+a.filter(function(x){return x[1]===m;}).map(function(x){return x[0];}).join(", ")+"</b>. Speeding up any other step does not help.";});
+ B.flips("flip13",[["Input","What goes into making a product."],["Process","The work that changes inputs."],["Output","The finished product or service."],["Bottleneck","The slowest step that holds up everything."],["Quality","Meeting what the customer expects, every time."]]);
+ B.calc(["cuM","cuH","cuD","cuC","cuL","cuA"],function(v){var des=v.cuM*v.cuH*v.cuD*60/v.cuC,eff=des*(1-v.cuL/100);
+  B.$("cuOut").innerHTML="Design capacity <b>"+B.num(des)+"</b> parts · effective <b>"+B.num(eff)+"</b> · utilisation <b>"+B.pct(v.cuA/des)+"</b> · efficiency <b>"+B.pct(v.cuA/eff)+"</b>";
+  B.$("cuChart").innerHTML=B.bars([["Design capacity",des,"--l2",1],["Effective capacity",eff,"--l2"],["Actual output",v.cuA,"--l1"]],{fmt:function(x){return B.num(x);}});});
+ B.calc(["lbDm","lbAv","lb0","lb1","lb2","lb3","lb4"],function(v){var takt=v.lbAv*60/v.lbDm,N=["Motor fit","Wiring","Blades","Test","Pack"],t=[v.lb0,v.lb1,v.lb2,v.lb3,v.lb4],mx=Math.max.apply(null,t),sum=t.reduce(function(a,b){return a+b;},0);
+  B.$("lbChart").innerHTML=B.bars(N.map(function(n,i){return [n,t[i],t[i]>takt?"--l1":"--l2"];}),{fmt:function(x){return x+" s";},max:Math.max(mx,takt)*1.1})+'<p style="margin:0;color:var(--soft)">Takt time: '+takt.toFixed(1)+' s (stations above it, in orange, cannot keep up)</p>';
+  B.$("lbOut").innerHTML="Output per shift = "+B.num(v.lbAv*60/mx)+" fans vs demand "+v.lbDm+". Balance efficiency = "+B.pct(sum/(5*mx))+". Theoretical minimum stations at takt: "+Math.ceil(sum/takt)+".";});
+ B.calc(["ryN","ryY","ryU"],function(v){var r=Math.pow(v.ryY/100,v.ryN);B.$("ryOut").innerHTML="RTY = "+v.ryY+"%<sup>"+v.ryN+"</sup> = <b>"+B.pct(r)+"</b>: of "+B.num(v.ryU)+" units, "+B.num(v.ryU*r)+" pass every step first time; "+B.num(v.ryU*(1-r))+" need rework or are scrapped.";});
+ B.sorter("sortW",{buckets:["Transport","Inventory","Motion","Waiting","Over-prod.","Over-proc.","Defects"],items:[["Parts carried between two buildings by forklift",0,"Moving material."],["Six months of packing boxes in stock",1,"Excess stock."],["Operator walks 20 m to fetch a tool every hour",2,"People moving."],["Machine idle while the supervisor approves a setting",3,"Waiting."],["Making 1,000 units when only 600 are ordered",4,"Over-production."],["Polishing a hidden internal surface to mirror finish",5,"More than the customer needs."],["Bills printed with wrong GSTIN, reprinted",6,"Defect."]]});
+ B.calc(["llT","llW"],function(v){B.$("llOut").innerHTML="Flow time = WIP ÷ throughput = <b>"+(v.llW/v.llT).toFixed(1)+" days</b>. Cut WIP to "+B.num(v.llW/2)+" and flow time halves to "+(v.llW/2/v.llT).toFixed(1)+" days.";});
+ B.calc(["oeP","oeD","oeC","oeT","oeG"],function(v){var run=v.oeP-v.oeD,A=run/v.oeP,P=v.oeC*v.oeT/60/run,Q=v.oeG/v.oeT,O=A*P*Q;
+  B.$("oeChart").innerHTML=B.bars([["Availability",A*100,"--l2"],["Performance",P*100,"--l3"],["Quality",Q*100,"--gold"],["OEE",O*100,"--l1"]],{max:100,fmt:function(x){return x.toFixed(1)+"%";}});
+  B.$("oeOut").innerHTML="OEE = <b>"+B.pct(O)+"</b>. Biggest loss: "+[["availability",A],["performance",P],["quality",Q]].sort(function(a,b){return a[1]-b[1];})[0][0]+".";});
+ function ninv(p){var a=[-39.69683028665376,220.9460984245205,-275.9285104469687,138.357751867269,-30.66479806614716,2.506628277459239],b=[-54.47609879822406,161.5858368580409,-155.6989798598866,66.80131188771972,-13.28068155288572],c=[-0.007784894002430293,-0.3223964580411365,-2.400758277161838,-2.549732539343734,4.374664141464968,2.938163982698783],d=[0.007784695709041462,0.3224671290700398,2.445134137142996,3.754408661907416],q,r;
+  if(p<0.02425){q=Math.sqrt(-2*Math.log(p));return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  if(p>1-0.02425){q=Math.sqrt(-2*Math.log(1-p));return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  q=p-0.5;r=q*q;return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);}
+ B.calc(["ssD","ssU","ssO"],function(v){var d=v.ssD/(v.ssU*v.ssO)*1e6,sg=d<=0?Infinity:ninv(1-d/1e6)+1.5;B.$("ssOut").innerHTML="DPMO = <b>"+B.num(d,0)+"</b> → sigma level ≈ <b>"+(isFinite(sg)?sg.toFixed(2):"∞")+"</b>, first-pass yield per opportunity "+(100-d/1e4).toFixed(3)+"%.";});
+}};
+</script>
+<script src="assets/ba.js"></script>
+</body>
+</html>

@@ -1,10 +1,10 @@
 /*
 TOOL:    business-admin/assets/ba.js — shared engine for Business Administration in Three Levels
 FAMILY:  business-admin
-VERSION: 1.0.0
+VERSION: 1.1.0
 DATE:    2026-11-14
 CHAT:    Business Administration series — 50 chapters, three levels (school, working, expert), interactive
-CHANGES: 1.0.0 - level switch, contents, theme, full screen, keys; stepper (P/S/X), quiz, sorter, flip cards,
+CHANGES: 1.1.0 - waterfall chart helper; ticks rounded; negative bar labels; 1.0.0 - level switch, contents, theme, full screen, keys; stepper (P/S/X), quiz, sorter, flip cards,
                  calculators, T-accounts, bar / split / flow / line chart helpers
 STATUS:  working
 */
@@ -70,6 +70,16 @@ function line(series,o){o=o||{};var W=900,H=o.h||340,L=70,R=20,T=20,B=48,xs=[],y
     if(se.dots)se.pts.forEach(function(p){s+='<circle cx="'+X(p[0])+'" cy="'+Y(p[1])+'" r="4" fill="'+c+'"/>';});
     if(se.n){s+='<line x1="'+(W-R-210)+'" x2="'+(W-R-180)+'" y1="'+ly+'" y2="'+ly+'" stroke="'+c+'" stroke-width="3"'+(se.dash?' stroke-dasharray="8 5"':'')+'/><text x="'+(W-R-172)+'" y="'+(ly+5)+'" font-size="13" style="fill:'+ink+'">'+esc(se.n)+'</text>';ly+=20;}});
   (o.marks||[]).forEach(function(m){s+='<circle cx="'+X(m[0])+'" cy="'+Y(m[1])+'" r="7" fill="'+col(m[3]||"--gold")+'"/><text x="'+(X(m[0])+10)+'" y="'+(Y(m[1])-10)+'" font-size="13.5" style="fill:'+ink+';font-weight:700">'+esc(m[2]||"")+'</text>';});
+  return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">'+s+'</svg>';}
+function waterfall(items,o){o=o||{};var W=900,H=o.h||330,L=60,R=10,T=20,B=70,n=items.length,bw=(W-L-R)/n,run=0,pts=[],mn=0,mx=0,fmt=o.fmt||function(v){return num(v);};
+  items.forEach(function(it){var a,b;if(it[2]==="t"){a=0;b=it[1];run=it[1];}else{a=run;b=run+it[1];run=b;}pts.push([a,b]);mn=Math.min(mn,a,b);mx=Math.max(mx,a,b);});
+  if(mx===mn)mx=mn+1;var Y=function(v){return T+(H-T-B)*(mx-v)/(mx-mn);},ink=cssv("--ink"),s="";
+  s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(0)+'" y2="'+Y(0)+'" stroke="'+cssv("--faint")+'"/>';
+  items.forEach(function(it,i){var p=pts[i],x=L+i*bw+bw*0.15,w=bw*0.7,y1=Y(Math.max(p[0],p[1])),y2=Y(Math.min(p[0],p[1])),c=col(it[2]==="t"?"--l3":it[1]>=0?"--l2":"--l1");
+    s+='<rect x="'+x+'" y="'+y1+'" width="'+w+'" height="'+Math.max(1,y2-y1)+'" fill="'+c+'" rx="3"/>';
+    if(i<n-1&&items[i+1][2]!=="t")s+='<line x1="'+(x+w)+'" x2="'+(x+bw)+'" y1="'+Y(p[1])+'" y2="'+Y(p[1])+'" stroke="'+cssv("--faint")+'" stroke-dasharray="3 3"/>';
+    s+='<text x="'+(x+w/2)+'" y="'+(y1-5)+'" font-size="12.5" text-anchor="middle" style="fill:'+ink+';font-weight:600">'+fmt(it[1])+'</text>';
+    var lab=String(it[0]).split("|");lab.forEach(function(t,j){s+='<text x="'+(x+w/2)+'" y="'+(H-B+18+j*15)+'" font-size="12" text-anchor="middle">'+esc(t)+'</text>';});});
   return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">'+s+'</svg>';}
 function taccs(accs,newTag){ /* accs: [{n:"Cash",dr:[[label,amt,isNew]],cr:[...]}] */
   return '<div class="taccs">'+accs.map(function(a){var sd=0,sc=0;
@@ -141,7 +151,7 @@ function quizzes(){var Q=window.QUIZ||{};document.querySelectorAll(".quiz").forE
     if(qd.classList.contains("done"))return;var o=+b.getAttribute("data-o");qd.classList.add("done");done++;if(o===q[2])score++;else b.classList.add("wrong");
     qd.querySelectorAll("button")[q[2]].classList.add("right");box.querySelector(".score").textContent="Score: "+score+" / "+done+(done===set.length?(score===set.length?" — perfect!":" — review the explanations above."):"");};});});});}
 
-window.BA={$:$,cssv:cssv,inr:inr,num:num,pct:pct,col:col,bars:bars,split:split,flow:flow,line:line,taccs:taccs,stepper:stepper,sorter:sorter,flips:flips,calc:calc,onRedraw:onRedraw,redraw:redraw};
+window.BA={$:$,cssv:cssv,inr:inr,num:num,pct:pct,col:col,bars:bars,split:split,flow:flow,line:line,waterfall:waterfall,taccs:taccs,stepper:stepper,sorter:sorter,flips:flips,calc:calc,onRedraw:onRedraw,redraw:redraw};
 
 /* ---- init ---- */
 try{var th=localStorage.getItem("fe-theme");if(th)root.setAttribute("data-theme",th);}catch(e){}

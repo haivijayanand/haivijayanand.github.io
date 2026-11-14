@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<!--
+TOOL:    finance-economics/03-gdp.html — Finance & Economics Topic 03: GDP (three levels)
+FAMILY:  finance-economics
+VERSION: 1.0.0
+DATE:    2026-11-14
+CHAT:    Finance & Economics series — three levels (school, working, expert); Topic 03 GDP
+CHANGES: 1.0.0 - third topic: definition, wheat-to-bread value-added animation, three approaches,
+                 reading the release (GVA, demand components), nominal vs real, rankings and PPP,
+                 dollar-size and growth-accounting calculators, measurement debates (2022-23 base,
+                 double deflation), beyond GDP; Nov 2026 snapshot; quiz per level
+STATUS:  working
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GDP — Finance &amp; Economics in Three Levels — K Vijay Anand</title>
+<meta name="description" content="GDP explained at three levels — for school students, for working people and as a review for experts: what it counts, how India measures it, real vs nominal, rankings and PPP, growth accounting and beyond GDP.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* Colour-blind-safe palette: blue / orange / purple / gold — no red-vs-green coding */
+  :root{--bg:#f4f2ed;--bg2:#e9e5dc;--card:#fffdf8;--ink:#1d1b18;--soft:#4f4940;--faint:#857c6f;--rule:#d6cdbd;
+        --acc:#1d5fa6;--l1:#d9730d;--l2:#1d5fa6;--l3:#6a3fa0;--gold:#a87908;--hi:#fff1d6}
+  :root[data-theme="dark"]{--bg:#121316;--bg2:#1a1c21;--card:#1f2228;--ink:#ece9e2;--soft:#c3bdb2;--faint:#8c8578;--rule:#33363d;
+        --acc:#6aa8ee;--l1:#f39a3d;--l2:#6aa8ee;--l3:#b28ae6;--gold:#e5b33c;--hi:#3a2f17}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.65}
+  a{color:var(--acc)}
+  .toolbar{position:fixed;top:10px;right:12px;z-index:30;display:flex;gap:8px;font-size:13px;flex-wrap:wrap;justify-content:flex-end}
+  .toolbar button,.toolbar a{background:var(--card);color:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;text-decoration:none}
+  header{padding:70px 4vw 18px;max-width:1600px;margin:0 auto}
+  .series{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-family:"Playfair Display",serif;font-weight:800;font-size:clamp(46px,7vw,84px);margin:6px 0 4px;line-height:1}
+  .tag{color:var(--soft);max-width:70ch;margin:0}
+  /* level switch */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 0}
+  .levels button{text-align:left;background:var(--card);border:2px solid var(--rule);border-radius:12px;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink)}
+  .levels button b{display:block;font-size:18px}
+  .levels button small{color:var(--faint)}
+  .levels button .k{float:right;font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:0 6px;color:var(--faint)}
+  .levels button[data-l="school"].on{border-color:var(--l1);background:color-mix(in srgb,var(--l1) 10%,var(--card))}
+  .levels button[data-l="working"].on{border-color:var(--l2);background:color-mix(in srgb,var(--l2) 10%,var(--card))}
+  .levels button[data-l="expert"].on{border-color:var(--l3);background:color-mix(in srgb,var(--l3) 10%,var(--card))}
+  /* layout */
+  .wrap{max-width:1600px;margin:0 auto;padding:0 4vw 40px;display:grid;grid-template-columns:250px 1fr;gap:34px}
+  body.nosb .wrap{grid-template-columns:1fr}
+  body.nosb aside{display:none}
+  aside{position:sticky;top:60px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;font-size:14.5px;padding-top:20px}
+  aside .h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  aside a{display:block;padding:5px 10px;border-left:3px solid var(--rule);color:var(--soft);text-decoration:none}
+  aside a:hover{border-left-color:var(--lc);color:var(--ink)}
+  aside .keys{margin-top:18px;color:var(--faint);font-size:12.5px;line-height:1.9}
+  kbd{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--card)}
+  main{min-width:0}
+  .panel{display:none}
+  .panel.on{display:block}
+  #p-school{--lc:var(--l1)} #p-working{--lc:var(--l2)} #p-expert{--lc:var(--l3)}
+  body[data-level="school"]{--lc:var(--l1)} body[data-level="working"]{--lc:var(--l2)} body[data-level="expert"]{--lc:var(--l3)}
+  .lvhead{border-left:6px solid var(--lc);padding:4px 0 4px 16px;margin:24px 0 10px}
+  .lvhead .who{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--lc);font-weight:700}
+  .lvhead p{margin:4px 0 0;color:var(--soft)}
+  section{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:22px 28px;margin:18px 0}
+  h2{font-family:"Playfair Display",serif;font-size:30px;margin:0 0 10px;line-height:1.2}
+  h2 .n{color:var(--lc);margin-right:8px}
+  h3{font-size:18px;margin:20px 0 6px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .box{border:1px solid var(--rule);border-radius:10px;padding:14px 16px;background:var(--bg)}
+  .box b.t{display:block;color:var(--lc);margin-bottom:4px}
+  .def{font-size:20px;border-left:5px solid var(--lc);background:color-mix(in srgb,var(--lc) 8%,transparent);padding:12px 18px;border-radius:0 10px 10px 0;margin:8px 0 14px}
+  .note{background:var(--hi);border-radius:8px;padding:10px 14px;font-size:15.5px}
+  .eq{font-family:"JetBrains Mono",monospace;background:var(--bg2);border-radius:8px;padding:10px 14px;overflow-x:auto;font-size:15px;white-space:pre}
+  table{border-collapse:collapse;width:100%;font-size:15.5px;margin:8px 0}
+  th,td{border-bottom:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:10px}
+  .stat{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--bg)}
+  .stat .v{font-size:28px;white-space:nowrap;font-weight:700;color:var(--acc);line-height:1.1}
+  .stat .l{font-size:13.5px;color:var(--soft)}
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;margin:10px 0}
+  .ctl label{font-size:13.5px;color:var(--soft);display:flex;flex-direction:column;gap:3px}
+  .ctl input[type=number]{width:120px;font:inherit;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)}
+  .ctl input[type=range]{width:200px}
+  .btn{background:var(--lc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--lc);border:1px solid var(--lc)}
+  .out{font-size:18px;margin:8px 0}
+  .out b{color:var(--lc)}
+  svg text{fill:var(--soft);font-family:Inter,sans-serif}
+  /* basket animation */
+  .stage{border:1px dashed var(--rule);border-radius:10px;padding:14px;background:var(--bg);min-height:170px}
+  .stage .yr{font-size:26px;font-weight:700}
+  .stage .yr span{color:var(--l1)}
+  .samosas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:44px}
+  .sam{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:30px solid var(--l1);transition:opacity .3s}
+  .sam.gone{opacity:.15}
+  /* quiz */
+  .q{border:1px solid var(--rule);border-radius:10px;padding:12px 16px;margin:10px 0;background:var(--bg)}
+  .q p{margin:0 0 8px;font-weight:600}
+  .q button{display:block;width:100%;text-align:left;margin:5px 0;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;font:inherit;color:var(--ink);cursor:pointer}
+  .q button.right{border:2px solid var(--l2);background:color-mix(in srgb,var(--l2) 14%,var(--card))}
+  .q button.right::after{content:"  ✔ correct";font-weight:700;color:var(--l2)}
+  .q button.wrong{border:2px dashed var(--l1)}
+  .q button.wrong::after{content:"  ✘ not this one";font-weight:700;color:var(--l1)}
+  .q .why{display:none;font-size:15px;color:var(--soft);margin-top:6px}
+  .q.done .why{display:block}
+  .score{font-weight:700;color:var(--lc)}
+  footer{max-width:1600px;margin:0 auto;padding:20px 4vw 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--faint)}
+  footer a{color:var(--soft)}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}aside{display:none}.levels{grid-template-columns:1fr}section{padding:18px}}
+  @media print{.toolbar,aside,.levels{display:none}.panel{display:block!important}.wrap{display:block}}
+</style>
+</head>
+<body data-level="school">
+<div class="toolbar">
+  <a href="./">← Series</a>
+  <button id="sbBtn" title="Show / hide contents (M)">☰ Contents</button>
+  <button id="themeBtn" title="Light / dark (T)">◐ Theme</button>
+  <button id="fsBtn" title="Full screen (F)">⤢ Full screen</button>
+</div>
+
+<header>
+  <div class="series">Finance &amp; Economics · Topic 03</div>
+  <h1>GDP</h1>
+  <p class="tag">Gross Domestic Product: the single number used to measure an economy. What it counts and what it leaves out, how India measures it, why "big" is not the same as "rich", and what growth means for you. Pick your level.</p>
+  <div class="levels" role="tablist">
+    <button data-l="school" class="on"><span class="k">1</span><b>🎒 School</b><small>From wheat to bread: counting a country's work</small></button>
+    <button data-l="working"><span class="k">2</span><b>💼 Working people</b><small>Reading GDP news, rankings, jobs and your income</small></button>
+    <button data-l="expert"><span class="k">3</span><b>🎓 Experts — review</b><small>National accounts, measurement, growth theory</small></button>
+  </div>
+</header>
+
+<div class="wrap">
+<aside id="toc"></aside>
+<main>
+
+<section id="snapshot" style="border-top:4px solid var(--gold)">
+  <h2>Where things stand — November 2026</h2>
+  <div class="snap">
+    <div class="stat"><div class="v">7.8%</div><div class="l">India's real GDP growth, April–June 2026 (Q1 FY 2026-27), up from 6.9% a year earlier. Nominal GDP grew 10.3% to ₹88.27 lakh crore in the quarter.</div></div>
+    <div class="stat"><div class="v">2022-23</div><div class="l">New base year for India's GDP series, which replaced 2011-12 in February 2026. The new series made nominal GDP about 3–4% smaller.</div></div>
+    <div class="stat"><div class="v">7.0%</div><div class="l">IMF growth forecast for India for FY 2026-27, the fastest among major economies. The RBI projects 7.1%.</div></div>
+    <div class="stat"><div class="v">6th → 4th</div><div class="l">India's rank by nominal GDP in US dollars: 6th in 2026, projected to overtake Japan in 2027 (IMF). India ranks 3rd by purchasing-power parity (PPP).</div></div>
+    <div class="stat"><div class="v">3.1%</div><div class="l">World growth forecast for 2026 (IMF). The forecast for the US is 2.3%.</div></div>
+  </div>
+  <p class="note" style="margin-top:12px">These figures are a dated snapshot. GDP for July–September 2026 is due at the end of November, and every GDP figure is revised several times after it is first published. The concepts below don't change; these numbers will.</p>
+</section>
+
+<!-- ========================= LEVEL 1 : SCHOOL ====================== -->
+<div class="panel on" id="p-school">
+  <div class="lvhead"><div class="who">Level 1 · For school students</div><p>GDP is just a very big sum: how much a whole country makes in a year.</p></div>
+
+  <section id="s1">
+    <h2><span class="n">1</span>What is GDP?</h2>
+    <div class="def"><b>GDP (Gross Domestic Product)</b> is the total value of all the <b>final</b> goods and services produced <b>inside a country</b> in a year (or a quarter).</div>
+    <p>Imagine adding up everything made and done in India in one year: every bag of rice, mobile phone, haircut, bus ride, school class, doctor's visit and software project. Add up their prices and you get India's GDP. It tells us how big the economy is, and whether it is growing or shrinking.</p>
+    <div class="cols">
+      <div class="box"><b class="t">Gross</b>The total, before anything is subtracted.</div>
+      <div class="box"><b class="t">Domestic</b>Made <b>inside</b> the country, whether by Indian or foreign companies.</div>
+      <div class="box"><b class="t">Product</b>Things made (goods) and things done (services).</div>
+    </div>
+  </section>
+
+  <section id="s2">
+    <h2><span class="n">2</span>Watch it happen: from wheat to bread</h2>
+    <p>Why count only <b>final</b> goods? Follow a loaf of bread from the farm to your plate. Press Play, or press S to take one step at a time.</p>
+    <div class="ctl">
+      <button class="btn" id="anPlay">▶ Play (P)</button>
+      <button class="btn ghost" id="anStep">Next step (S)</button>
+      <button class="btn ghost" id="anPause">⏸ Pause (X)</button>
+      <button class="btn ghost" id="anReset">↺ Reset</button>
+    </div>
+    <div class="stage">
+      <svg id="anChart" viewBox="0 0 900 250" style="width:100%;height:auto"></svg>
+      <p id="anMsg" style="margin:6px 0 0;color:var(--soft);font-size:17px">Press Play, or press S to move one step at a time.</p>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="n">3</span>Three ways to count, one answer</h2>
+    <div class="cols">
+      <div class="box"><b class="t">🏭 What we make</b>Add the value each farm, factory and shop adds.</div>
+      <div class="box"><b class="t">🛒 What we spend</b>Add what families, businesses and the government spend on final goods, plus what we sell to other countries, minus what we buy from them.</div>
+      <div class="box"><b class="t">💰 What we earn</b>Add everyone's wages, rents, interest and profits.</div>
+    </div>
+    <p>These should all give the same total, because every rupee one person spends is a rupee someone else earns, for something that someone made.</p>
+  </section>
+
+  <section id="s4">
+    <h2><span class="n">4</span>A growing economy</h2>
+    <p>When this year's GDP is bigger than last year's, the economy is <b>growing</b>. The <b>growth rate</b> tells us by how much. In April–June 2026, India's economy grew <b>7.8%</b> compared with the same months a year earlier. That is one of the fastest rates of any large country.</p>
+    <p class="note">One catch: if prices go up (inflation, Topic 01), GDP measured in rupees also goes up, even if we did not make anything more. So economists remove the effect of rising prices and report <b>real GDP</b>, which counts only the extra things actually produced.</p>
+  </section>
+
+  <section id="s5">
+    <h2><span class="n">5</span>Big is not the same as rich</h2>
+    <div class="cols">
+      <div class="box"><b class="t">Total GDP: how big</b>India has one of the world's largest economies: 6th in 2026, and expected to be 4th in 2027.</div>
+      <div class="box"><b class="t">GDP per person: how rich</b>Divide GDP by the number of people. India has more than 140 crore people, so each person's share is still much smaller than in countries like Japan or Germany, which have far fewer people.</div>
+      <div class="box"><b class="t">An example</b>A class of 40 students with ₹4,000 in total has more money than a class of 10 with ₹2,000. But each student has ₹100 in the first class and ₹200 in the second.</div>
+    </div>
+  </section>
+
+  <section id="s6">
+    <h2><span class="n">6</span>What GDP does not count</h2>
+    <ul>
+      <li><b>Work at home:</b> cooking, cleaning and caring for grandparents are valuable, but nobody pays for them, so they are not in GDP.</li>
+      <li><b>Nature:</b> cutting down a forest adds timber to GDP, but the lost forest is not subtracted.</li>
+      <li><b>Happiness and health:</b> a country can grow richer while people feel more stressed.</li>
+      <li><b>Who gets what:</b> GDP can rise even if most of the gain goes to a few people.</li>
+    </ul>
+    <p>So GDP is a very useful number, but it is not a score for how good life is.</p>
+  </section>
+
+  <section id="s7">
+    <h2><span class="n">7</span>Words to remember</h2>
+    <table>
+      <tr><th>Word</th><th>Meaning</th></tr>
+      <tr><td>GDP</td><td>Value of all final goods and services made in a country in a period</td></tr>
+      <tr><td>Final good</td><td>Something bought by its last user, like bread, not flour sold to a bakery</td></tr>
+      <tr><td>Value added</td><td>What each step adds: the selling price minus the cost of what was bought from others</td></tr>
+      <tr><td>Growth rate</td><td>By what percent GDP rose compared with before</td></tr>
+      <tr><td>Real GDP</td><td>GDP after removing the effect of price rises</td></tr>
+      <tr><td>Per capita</td><td>"Per head": a total divided by the number of people</td></tr>
+      <tr><td>Recession</td><td>A period when the economy shrinks instead of growing</td></tr>
+    </table>
+  </section>
+
+  <section id="s8">
+    <h2><span class="n">8</span>Check yourself</h2>
+    <div class="quiz" data-quiz="school"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 2 : WORKING ===================== -->
+<div class="panel" id="p-working">
+  <div class="lvhead"><div class="who">Level 2 · For working people</div><p>How to read a GDP release, why rankings move with the rupee, and how growth reaches jobs, salaries, taxes and markets.</p></div>
+
+  <section id="w1">
+    <h2><span class="n">1</span>Who measures India's GDP, and when</h2>
+    <ul>
+      <li><b>The National Statistics Office (NSO), under MoSPI,</b> publishes quarterly GDP about two months after each quarter ends, usually on the last working day of February, May, August and November.</li>
+      <li><b>Annual estimates come in stages:</b> first advance estimates (January), second advance (February), provisional (end of May), then first, second and third revised estimates over the following years. Each one uses more complete data.</li>
+      <li><b>A new base year.</b> On 27 February 2026, MoSPI moved the series from base 2011-12 to <b>2022-23</b>, with new producer price indices, a rebased index of industrial production and newer administrative data. The new series changed history: FY 2023-24 growth fell from 9.2% to 7.2%, FY 2024-25 rose from 6.5% to 7.1%, and the economy came out 3–4% smaller in nominal terms.</li>
+    </ul>
+    <p class="note">Takeaway: treat the first GDP print as a draft. Watch the revisions and the trend over several quarters, not one headline.</p>
+  </section>
+
+  <section id="w2">
+    <h2><span class="n">2</span>Reading the release: GVA, GDP and demand</h2>
+    <div class="eq">GDP = GVA (value added by sectors) + product taxes − product subsidies
+GDP = C (private consumption) + G (government consumption) + I (investment) + (X − M) (net exports)</div>
+    <table>
+      <tr><th>Indicator (constant prices)</th><th>Q1 FY27 growth</th><th>Q1 FY26 growth</th><th>What it tells you</th></tr>
+      <tr><td>Real GDP</td><td>7.8%</td><td>6.9%</td><td>The headline</td></tr>
+      <tr><td>Real GVA</td><td>8.2%</td><td>7.0%</td><td>Supply-side activity, before taxes and subsidies</td></tr>
+      <tr><td>Private consumption (C)</td><td>7.1%</td><td>6.8%</td><td>Household spending, the largest component</td></tr>
+      <tr><td>Government consumption (G)</td><td>4.3%</td><td>4.5%</td><td>Salaries and running costs of government</td></tr>
+      <tr><td>Fixed investment (GFCF)</td><td>11.9%</td><td>5.8%</td><td>Factories, roads, machinery and housing: the engine of future growth</td></tr>
+    </table>
+    <p>In Q1 FY27, services grew fastest (about 10% for the tertiary sector), investment had its strongest quarter in four years, and lower imports (partly gold) meant net exports added to growth. Services make up roughly two-thirds of India's output.</p>
+  </section>
+
+  <section id="w3">
+    <h2><span class="n">3</span>Nominal vs real, and the deflator</h2>
+    <div class="eq">Nominal growth ≈ Real growth + GDP deflator inflation          (1.103 / 1.078 − 1 ≈ 2.3% in Q1 FY27)</div>
+    <ul>
+      <li><b>Real GDP</b> measures volume: how much more was produced.</li>
+      <li><b>Nominal GDP</b> measures money: it drives tax revenue, company sales and the ratios the government quotes (fiscal deficit as % of GDP, debt as % of GDP).</li>
+      <li>When the deflator is low, as in Q1 (about 2.3% while CPI was rising), nominal growth is weak even when real growth is strong. That squeezes tax collections and makes debt ratios harder to bring down.</li>
+    </ul>
+  </section>
+
+  <section id="w4">
+    <h2><span class="n">4</span>What GDP growth means for you</h2>
+    <div class="cols">
+      <div class="box"><b class="t">Jobs and salaries</b>Faster growth usually means more hiring and better increments, but India has seen periods of "jobless growth", when output rose faster than employment.</div>
+      <div class="box"><b class="t">Company earnings and markets</b>Corporate profits track nominal GDP over the long run, which is one reason equity markets watch the GDP print.</div>
+      <div class="box"><b class="t">Government budget</b>Tax revenue grows with nominal GDP. Faster growth funds roads, schools and subsidies without raising tax rates.</div>
+      <div class="box"><b class="t">Interest rates</b>Very strong growth plus high inflation can lead the RBI to raise rates (Topic 02). The RBI raised its FY27 growth forecast to 7.1% even as it hiked in October 2026.</div>
+      <div class="box"><b class="t">Your own "GDP"</b>A household's income growth is its own growth rate. The average for the country can hide very different experiences across sectors, states and income groups.</div>
+    </div>
+  </section>
+
+  <section id="w5">
+    <h2><span class="n">5</span>Size and rankings: why the rupee matters</h2>
+    <p>Global rankings convert each country's GDP into US dollars at market exchange rates. So India's rank depends on three things: real growth, inflation, and the rupee.</p>
+    <ul>
+      <li>India slipped to <b>6th</b> by nominal GDP in 2026, behind the UK and Japan, because the rupee weakened and the new base year shrank nominal GDP. The IMF projects India to overtake Japan in <b>2027</b> at about $4.52 trillion.</li>
+      <li>By <b>purchasing-power parity (PPP)</b>, which adjusts for the fact that most things cost less in India, the economy is the world's <b>3rd</b> largest.</li>
+    </ul>
+    <h3>Calculator: how long to reach a dollar target?</h3>
+    <div class="eq">Dollar growth ≈ (1 + real growth)(1 + deflator) / (1 + rupee depreciation) − 1</div>
+    <div class="ctl">
+      <label>Starting GDP ($ trillion)<input type="number" id="szG" value="4.2" step="0.05"></label>
+      <label>Real growth %<input type="number" id="szR" value="7" step="0.1"></label>
+      <label>GDP deflator %<input type="number" id="szP" value="4" step="0.1"></label>
+      <label>Rupee depreciation % per year<input type="number" id="szD" value="3" step="0.1"></label>
+    </div>
+    <div class="out" id="szOut"></div>
+    <svg id="szChart" viewBox="0 0 900 260" style="width:100%;max-width:1000px;height:auto"></svg>
+    <p class="note">The starting value is an illustrative input, not an official figure. Change the assumptions to see how sensitive the "$5 trillion" and "$10 trillion" milestones are to the exchange rate.</p>
+  </section>
+
+  <section id="w6">
+    <h2><span class="n">6</span>Per person and fairness</h2>
+    <ul>
+      <li><b>GDP per capita</b> divides output by population. India's is still a small fraction of advanced economies' levels, which is why a large total can coexist with modest average incomes.</li>
+      <li><b>Distribution</b> matters: the average can rise while the median household sees little change. Indicators of wages, employment and consumption spending complete the picture.</li>
+      <li><b>Regional gaps</b> are large. State GDP (GSDP) per person varies several-fold across Indian states.</li>
+    </ul>
+  </section>
+
+  <section id="w7">
+    <h2><span class="n">7</span>The global picture</h2>
+    <ul>
+      <li>The IMF expects world growth of <b>3.1%</b> in 2026, slower than 2025, as an energy-price shock from the war in the Middle East is partly offset by strong AI-related investment.</li>
+      <li>The US is forecast to grow 2.3%; India about 7% (FY 2026-27), the fastest among major economies.</li>
+      <li><b>Recession</b> is often shorthand for two quarters in a row of falling real GDP. Official bodies, such as the NBER in the US, use a broader judgement based on jobs, incomes and output.</li>
+      <li>Slower growth in India's trading partners hurts exports of goods and IT services; faster growth in India raises demand for imported oil, electronics and machinery.</li>
+    </ul>
+  </section>
+
+  <section id="w8">
+    <h2><span class="n">8</span>How to read GDP news sensibly</h2>
+    <ul>
+      <li>Check whether a figure is <b>year-on-year</b> or quarter-on-quarter, and <b>real</b> or nominal.</li>
+      <li>Look at GVA, investment and consumption, not only the headline.</li>
+      <li>Remember the base effect: a weak quarter last year makes this year's growth look strong.</li>
+      <li>Expect revisions, and compare with high-frequency indicators (GST collections, PMI, power demand, credit growth).</li>
+    </ul>
+  </section>
+
+  <section id="w9">
+    <h2><span class="n">9</span>Check yourself</h2>
+    <div class="quiz" data-quiz="working"></div>
+  </section>
+</div>
+
+<!-- ========================= LEVEL 3 : EXPERT ====================== -->
+<div class="panel" id="p-expert">
+  <div class="lvhead"><div class="who">Level 3 · Review for experts</div><p>National-accounts identities, India's measurement debates, growth accounting, the output gap and the "beyond GDP" agenda.</p></div>
+
+  <section id="e1">
+    <h2><span class="n">1</span>Framework and identities (SNA 2008)</h2>
+    <div class="eq">Production:   GDP = Σ GVA_basic + (product taxes − product subsidies)
+Expenditure:  GDP = C + G + I (GFCF + Δinventories + valuables) + X − M  (+ discrepancies)
+Income:       GDP = compensation of employees + operating surplus / mixed income + CFC + net production taxes
+GNI = GDP + net primary income from abroad;   NNI = GNI − CFC;   NDI = GNI + net current transfers</div>
+    <ul>
+      <li><b>Production boundary.</b> GDP includes market output, own-account goods and imputed owner-occupied rent; it excludes unpaid household services. That choice, rather than measurement error, explains much of the "what GDP misses" critique.</li>
+      <li><b>Discrepancies.</b> In India, GDP is compiled mainly from the production side, and the expenditure side carries a balancing "discrepancies" line. Large swings in this line make demand-side analysis less reliable.</li>
+    </ul>
+  </section>
+
+  <section id="e2">
+    <h2><span class="n">2</span>India's measurement debates</h2>
+    <ul>
+      <li><b>The 2022-23 rebasing (released 27 February 2026)</b> introduced an output Producer Price Index, a Banking Services Price Index, a rebased index of industrial production and a double-deflation framework for manufacturing. The method follows the IMF Quarterly National Accounts Manual (2017).</li>
+      <li><b>Single vs double deflation.</b> The 2011-12 series deflated manufacturing value added with an output price index alone. When input prices (commodities) fall faster than output prices, single deflation overstates real value added, and the opposite happens when they rise. Double deflation, which deflates outputs and inputs separately, removes this bias but is more volatile.</li>
+      <li><b>The informal sector.</b> Unincorporated enterprises are estimated using indicators and benchmark surveys (ASUSE, PLFS). A shock that hits informal units harder than formal firms (demonetisation, GST, COVID) can be missed by formal-sector proxies.</li>
+      <li><b>Revision size.</b> The rebasing cut FY24 growth from 9.2% to 7.2% and raised FY25 from 6.5% to 7.1%, a reminder that confidence bands on Indian growth are wide.</li>
+    </ul>
+  </section>
+
+  <section id="e3">
+    <h2><span class="n">3</span>Real GDP: index-number issues</h2>
+    <ul>
+      <li><b>Fixed-base versus chain-linked volumes.</b> Fixed-base volumes overweight sectors whose relative prices fall (such as electronics) the further you move from the base year, which biases growth upwards. Chain-linking with annually updated weights fixes this, at the cost of making components non-additive. India still uses a fixed base, rebasing periodically.</li>
+      <li><b>The deflator gap.</b> In Q1 FY27 the implicit deflator was about 2.3% (10.3% nominal, 7.8% real) while CPI inflation was rising, because the deflator weights wholesale and producer prices heavily. A low deflator flatters real growth if output prices are measured too low.</li>
+      <li><b>GDP vs GDI.</b> In principle they are equal. Comparing real GDP with real gross domestic income (GDI) adjusted for terms of trade shows how much of the output gain households can actually spend, which matters for an oil importer.</li>
+    </ul>
+  </section>
+
+  <section id="e4">
+    <h2><span class="n">4</span>Growth theory and growth accounting</h2>
+    <div class="eq">Y = A·K^α·L^(1−α)    →    g_Y = g_A + α·g_K + (1−α)·g_L          (Solow residual g_A = TFP growth)</div>
+    <div class="ctl">
+      <label>GDP growth g_Y %<input type="number" id="gaY" value="7.0" step="0.1"></label>
+      <label>Capital growth g_K %<input type="number" id="gaK" value="8.0" step="0.1"></label>
+      <label>Labour growth g_L % (employment × quality)<input type="number" id="gaL" value="1.5" step="0.1"></label>
+      <label>Capital share α<input type="number" id="gaA" value="0.40" step="0.01"></label>
+    </div>
+    <div class="out" id="gaOut"></div>
+    <svg id="gaChart" viewBox="0 0 900 120" style="width:100%;max-width:1000px;height:auto"></svg>
+    <ul>
+      <li><b>Solow (1956)</b>: long-run growth per worker comes from technology. Capital deepening raises the level of output, not its long-run growth rate. This predicts <b>conditional convergence</b>: poorer economies grow faster, other things being equal.</li>
+      <li><b>Endogenous growth</b> (Romer, Lucas, Aghion–Howitt): ideas, human capital and creative destruction make growth depend on policy, institutions and research and development.</li>
+      <li><b>For India:</b> the sustainability of 7%+ growth depends on investment rates, labour-force participation (especially women's), and productivity gains from moving workers out of agriculture.</li>
+    </ul>
+    <p class="note">The inputs are illustrative. Measured capital shares and labour-quality adjustments for India vary widely by study (KLEMS, Penn World Table).</p>
+  </section>
+
+  <section id="e5">
+    <h2><span class="n">5</span>The short run: potential output and the cycle</h2>
+    <div class="eq">Output gap = (Y − Y*) / Y*            Okun:  Δu ≈ −β·(g_Y − g*)</div>
+    <ul>
+      <li>Potential output Y* is unobservable. It is estimated with filters (HP, Hamilton) or with production-function and semi-structural models, all of which are revised heavily at the end of the sample.</li>
+      <li>A positive output gap (Y above Y*) adds to inflation through the Phillips curve (Topic 01). That is why the RBI tightened in October 2026 while also raising its growth forecast.</li>
+      <li>Okun's law is weak in India because of the large informal sector and self-employment. Unemployment does not capture slack well, so underemployment and participation rates matter more.</li>
+      <li><b>Nowcasting:</b> dynamic factor models on high-frequency indicators (GST, e-way bills, electricity, PMI, credit, vehicle sales) bridge the two-month publication lag.</li>
+    </ul>
+  </section>
+
+  <section id="e6">
+    <h2><span class="n">6</span>Beyond GDP</h2>
+    <ul>
+      <li><b>Stiglitz–Sen–Fitoussi Commission (2009):</b> shift the emphasis from production to household income and consumption, include distribution, and measure sustainability separately.</li>
+      <li><b>SEEA</b> (System of Environmental-Economic Accounting): accounts for natural capital and its depletion, including "green GDP" adjustments.</li>
+      <li><b>HDI</b>, multidimensional poverty, time-use surveys (unpaid care work) and wellbeing measures.</li>
+      <li><b>The digital economy:</b> free services (search, maps, messaging) add consumer surplus but little measured GDP. Mismeasurement is real, but studies find it is too small to explain the productivity slowdown.</li>
+    </ul>
+  </section>
+
+  <section id="e7">
+    <h2><span class="n">7</span>International comparison</h2>
+    <ul>
+      <li><b>Market-exchange-rate rankings</b> mix real performance with currency moves. India's slip to 6th in 2026 reflected rupee depreciation and the rebasing, not slower real growth.</li>
+      <li><b>PPP</b> (from the World Bank's International Comparison Program) adjusts for price levels, which is why India ranks 3rd. PPP estimates are better for comparing living standards; market rates are better for external purchasing power, debt service and trade.</li>
+      <li><b>Fiscal year versus calendar year.</b> The IMF reports India's FY 2026-27 forecast as 7.0% and the calendar-2026 forecast as 7.4%, a common source of confusion when comparing countries.</li>
+    </ul>
+  </section>
+
+  <section id="e8">
+    <h2><span class="n">8</span>Review checklist: open questions</h2>
+    <ol>
+      <li>How large is India's growth confidence band once rebasing and the discrepancies line are taken into account?</li>
+      <li>Does double deflation make quarterly manufacturing GVA too volatile to use for policy?</li>
+      <li>How should informal-sector output be measured between benchmark surveys?</li>
+      <li>Is India's potential growth closer to 6.5% or 8%, and what do labour-force participation trends imply?</li>
+      <li>Should India move to chain-linked volume measures?</li>
+      <li>How should environmental depletion and unpaid care work enter headline aggregates?</li>
+    </ol>
+  </section>
+
+  <section id="e9">
+    <h2><span class="n">9</span>Check yourself</h2>
+    <div class="quiz" data-quiz="expert"></div>
+  </section>
+</div>
+
+<section id="sources">
+  <h2>Sources and further reading</h2>
+  <ul>
+    <li>MoSPI / NSO, Quarterly Estimates of GDP, Q1 2026-27 (31 August 2026); PIB, <a href="https://www.pib.gov.in/FactsheetDetails.aspx?id=150991">India's GDP Performance</a> and <a href="https://static.pib.gov.in/WriteReadData/specificdocs/documents/2026/sep/doc_9782_20260902_20424501.pdf">Q1 FAQ</a>.</li>
+    <li>Coverage of the Q1 release and the new series: <a href="https://www.businesstoday.in/india/story/indias-q1-gdp-surges-7-8-as-strong-services-sector-double-digit-capex-boost-economic-momentum-552302-2026-08-31">Business Today</a>, <a href="https://www.outlookbusiness.com/economy-and-policy/indias-growth-engine-roars-back-as-real-gdp-jumps-78-beats-rbis-7-forecast">Outlook Business</a>, <a href="https://www.policyedge.in/p/indias-gdp-growth-accelerates-to-78-in-q1-fy27-as-investment-and-services-strengthen">The Policy Edge</a>, <a href="https://www.thecore.in/economy/india-gdp-growth-deflator-double-deflation-real-gdi-analysis-870021">The Core</a> (revisions), <a href="https://basispointinsight.com/Story/india-s-gdp-numbers-reveal-a-growth-upshift--not-a-statistical-mirage_ec5d64780c31.html">Basis Point Insight</a> (sector shares).</li>
+    <li>IMF, <a href="https://www.imf.org/en/publications/weo/issues/2026/10/13/world-economic-outlook-october-2026">World Economic Outlook, October 2026</a>; on rankings: <a href="https://timesofoman.com/article/178021-india-set-to-overtake-japan-as-worlds-fourth-largest-economy-by-2027-imf">Times of Oman / ANI</a>, <a href="https://www.businesstoday.in/latest/economy/story/bt-explainer-why-indias-economy-slipped-to-the-6th-rank-according-to-imf-526229-2026-04-17">Business Today explainer</a>, <a href="https://thefederal.com/category/business/india-to-grow-7-pc-in-2026-outpace-major-economies-imf-259446">The Federal</a>.</li>
+    <li>United Nations et al., <i>System of National Accounts 2008</i>; IMF, <i>Quarterly National Accounts Manual</i> (2017).</li>
+    <li>Solow, R. (1956, 1957); Romer, P. (1990); Stiglitz, Sen and Fitoussi (2009), <i>Report by the Commission on the Measurement of Economic Performance and Social Progress</i>.</li>
+    <li>Earlier topics in this series: <a href="01-inflation.html">Inflation</a> · <a href="02-interest-rates.html">Interest Rates</a>.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<footer>
+  Finance &amp; Economics in Three Levels · Topic 03 · K Vijay Anand · <a href="02-interest-rates.html">← Topic 02 Interest Rates</a> · <a href="./">All topics</a> · <a href="/">Home</a><br>
+  Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> level · <kbd>M</kbd> contents · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>T</kbd> theme · <kbd>F</kbd> full screen.
+  Educational content, not financial advice. Figures dated November 2026.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var root=document.documentElement, body=document.body;
+  var $=function(id){return document.getElementById(id);};
+  var inr=function(x,d){return "₹"+Number(x).toLocaleString("en-IN",{minimumFractionDigits:d||0,maximumFractionDigits:d||0});};
+  var cssv=function(n){return getComputedStyle(root).getPropertyValue(n).trim();};
+
+  try{var t=localStorage.getItem("fe-theme");if(t)root.setAttribute("data-theme",t);}catch(e){}
+  function redraw(){anRender();drawSize();growthAcc();}
+  function toggleTheme(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("fe-theme",n);}catch(e){}redraw();}
+  function toggleFS(){if(!document.fullscreenElement){(root.requestFullscreen||function(){}).call(root);}else{document.exitFullscreen();}}
+  function toggleSB(){body.classList.toggle("nosb");}
+  $("themeBtn").onclick=toggleTheme; $("fsBtn").onclick=toggleFS; $("sbBtn").onclick=toggleSB;
+
+  var LV=["school","working","expert"];
+  function setLevel(l,noHash){
+    if(LV.indexOf(l)<0)l="school";
+    body.setAttribute("data-level",l);
+    LV.forEach(function(x){$("p-"+x).classList.toggle("on",x===l);});
+    document.querySelectorAll(".levels button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-l")===l);});
+    buildTOC(l);
+    if(!noHash)history.replaceState(null,"","#"+l);
+    redraw();
+  }
+  document.querySelectorAll(".levels button").forEach(function(b){b.onclick=function(){setLevel(b.getAttribute("data-l"));};});
+  function buildTOC(l){
+    var names={school:"School",working:"Working people",expert:"Experts"};
+    var h='<div class="h">Contents · '+names[l]+'</div><a href="#snapshot">Snapshot · Nov 2026</a>';
+    $("p-"+l).querySelectorAll("section").forEach(function(s){
+      var t=s.querySelector("h2").textContent; h+='<a href="#'+s.id+'">'+t.replace(/^(\d+)/,"$1 · ")+'</a>';
+    });
+    h+='<a href="#sources">Sources</a>';
+    h+='<div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> level<br><kbd>M</kbd> hide contents<br><kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause<br><kbd>T</kbd> theme · <kbd>F</kbd> full screen</div>';
+    $("toc").innerHTML=h;
+  }
+
+  /* ---------- Level 1: wheat → flour → bread animation ---------- */
+  var ST=[
+    {who:"🌾 Farmer",what:"grows wheat and sells it to the miller",price:20,cost:0},
+    {who:"⚙️ Miller",what:"grinds the wheat into flour and sells it to the baker",price:35,cost:20},
+    {who:"🥖 Baker",what:"bakes bread and sells it to the shop",price:50,cost:35},
+    {who:"🏪 Shop",what:"sells the bread to your family, the final buyer",price:60,cost:50}
+  ];
+  var anS=0, anTimer=null, MAXS=ST.length+1;
+  function anRender(){
+    var W=900,H=250, svg="", c1=cssv("--l1"), c2=cssv("--l2"), c3=cssv("--l3"), ink=cssv("--ink"), ru=cssv("--rule");
+    var bx=30, bw=180, gap=30, sc=2.6, base=200;
+    for(var i=0;i<ST.length;i++){
+      var x=bx+i*(bw+gap), s=ST[i], shown=i<anS;
+      svg+='<text x="'+(x+bw/2)+'" y="24" font-size="17" text-anchor="middle" style="fill:'+ink+';font-weight:600;opacity:'+(shown?1:.3)+'">'+s.who+'</text>';
+      if(shown){
+        var hc=s.cost*sc, hv=(s.price-s.cost)*sc;
+        if(hc>0)svg+='<rect x="'+(x+40)+'" y="'+(base-hc)+'" width="100" height="'+hc+'" fill="'+ru+'"/><text x="'+(x+90)+'" y="'+(base-hc/2+5)+'" font-size="13" text-anchor="middle">bought ₹'+s.cost+'</text>';
+        svg+='<rect x="'+(x+40)+'" y="'+(base-hc-hv)+'" width="100" height="'+hv+'" fill="'+c1+'"/><text x="'+(x+90)+'" y="'+(base-hc-hv/2+5)+'" font-size="13" text-anchor="middle" style="fill:#fff;font-weight:700">adds ₹'+(s.price-s.cost)+'</text>';
+        svg+='<text x="'+(x+90)+'" y="'+(base+20)+'" font-size="14" text-anchor="middle" style="fill:'+ink+'">sells for ₹'+s.price+'</text>';
+        if(i<ST.length-1)svg+='<text x="'+(x+bw+gap/2)+'" y="'+(base-40)+'" font-size="22" text-anchor="middle" style="fill:'+c2+'">→</text>';
+      }
+    }
+    if(anS>=MAXS){
+      svg+='<text x="450" y="244" font-size="15" text-anchor="middle" style="fill:'+c3+';font-weight:700">Value added: 20 + 15 + 15 + 10 = ₹60 = price of the final bread ✔   (adding all sales: 20+35+50+60 = ₹165 ✘ double counting)</text>';
+    }
+    $("anChart").innerHTML=svg;
+    var m;
+    if(anS===0)m="Press Play, or press S to move one step at a time.";
+    else if(anS<=ST.length){var s=ST[anS-1];m=s.who+" "+s.what+" for ₹"+s.price+". It paid ₹"+s.cost+" to others, so it added ₹"+(s.price-s.cost)+" of new value.";}
+    else m="GDP counts the bread once, at ₹60, which equals the value added by everyone in the chain. Counting the wheat, the flour and the bread separately would count the same wheat again and again.";
+    $("anMsg").textContent=m;
+  }
+  function anStep(){ if(anS<MAXS){anS++;anRender();} else anPause(); }
+  function anPlay(){ if(anTimer)return; if(anS>=MAXS)anS=0; anTimer=setInterval(anStep,1400); }
+  function anPause(){ clearInterval(anTimer); anTimer=null; }
+  $("anPlay").onclick=anPlay; $("anStep").onclick=function(){anPause();anStep();}; $("anPause").onclick=anPause;
+  $("anReset").onclick=function(){anPause();anS=0;anRender();};
+
+  /* ---------- Level 2: dollar size calculator ---------- */
+  function drawSize(){
+    var G=+$("szG").value||0, r=(+$("szR").value||0)/100, p=(+$("szP").value||0)/100, d=(+$("szD").value||0)/100;
+    var g=(1+r)*(1+p)/(1+d)-1, txt;
+    var yrs=function(T){return (G<=0||g<=0)?Infinity:(T<=G?0:Math.log(T/G)/Math.log(1+g));};
+    var y5=yrs(5), y10=yrs(10);
+    txt="Dollar GDP grows about <b>"+(g*100).toFixed(2)+"%</b> a year. ";
+    txt+= isFinite(y5)?"$5 trillion in about <b>"+y5.toFixed(1)+" years</b>; $10 trillion in about <b>"+y10.toFixed(1)+" years</b>.":"With these inputs dollar GDP does not grow.";
+    $("szOut").innerHTML=txt;
+    var N=25, W=900,H=260,L=60,R=20,T=16,B=34, svg="", c1=cssv("--l2"), c2=cssv("--l1"), ru=cssv("--rule");
+    var ymax=Math.max(11,G*Math.pow(1+Math.max(g,0),N))*1.05, x=function(i){return L+(W-L-R)*i/N;}, y=function(v){return T+(H-T-B)*(1-Math.min(v,ymax)/ymax);};
+    for(var k=0;k<=4;k++){var gv=ymax*k/4;svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(gv)+'" y2="'+y(gv)+'" stroke="'+ru+'"/><text x="'+(L-6)+'" y="'+(y(gv)+4)+'" font-size="12" text-anchor="end">$'+gv.toFixed(0)+'T</text>';}
+    [5,10].forEach(function(v){svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="'+c2+'" stroke-dasharray="6 5" stroke-width="2"/><text x="'+(W-R-4)+'" y="'+(y(v)-6)+'" font-size="13" text-anchor="end" style="fill:'+c2+';font-weight:600">$'+v+' trillion</text>';});
+    var path="";for(var i=0;i<=N;i++)path+=(i?"L":"M")+x(i)+","+y(G*Math.pow(1+g,i));
+    svg+='<path d="'+path+'" fill="none" stroke="'+c1+'" stroke-width="3.5"/>';
+    for(i=0;i<=N;i+=5)svg+='<text x="'+x(i)+'" y="'+(H-B+18)+'" font-size="12" text-anchor="middle">+'+i+' y</text>';
+    $("szChart").innerHTML=svg;
+  }
+  ["szG","szR","szP","szD"].forEach(function(id){$(id).oninput=drawSize;});
+
+  /* ---------- Level 3: growth accounting ---------- */
+  function growthAcc(){
+    var gy=+$("gaY").value||0, gk=+$("gaK").value||0, gl=+$("gaL").value||0, a=+$("gaA").value||0;
+    var ck=a*gk, cl=(1-a)*gl, tfp=gy-ck-cl;
+    $("gaOut").innerHTML="Capital contributes <b>"+ck.toFixed(2)+"</b> pp · labour <b>"+cl.toFixed(2)+"</b> pp · TFP (residual) <b>"+tfp.toFixed(2)+"</b> pp of the "+gy.toFixed(1)+"% growth. Output per unit of labour input grows about "+(gy-gl).toFixed(2)+"%.";
+    var W=900,H=120,L=10,R=10, tot=Math.max(Math.abs(ck)+Math.abs(cl)+Math.abs(tfp),0.01), x=L, svg="";
+    [[ck,"capital",cssv("--l2")],[cl,"labour",cssv("--l1")],[tfp,"TFP",cssv("--l3")]].forEach(function(p,i){
+      var w=(W-L-R)*Math.abs(p[0])/tot;
+      svg+='<rect x="'+x+'" y="20" width="'+w+'" height="50" fill="'+p[2]+'"'+(i===1?' fill-opacity=".85"':'')+(p[0]<0?' stroke="#000" stroke-dasharray="5 4"':'')+'/>';
+      if(w>70)svg+='<text x="'+(x+w/2)+'" y="51" font-size="15" text-anchor="middle" style="fill:#fff;font-weight:700">'+p[1]+' '+p[0].toFixed(2)+'</text>';
+      else svg+='<text x="'+(x+w/2)+'" y="92" font-size="13" text-anchor="middle">'+p[1]+' '+p[0].toFixed(2)+'</text>';
+      x+=w;
+    });
+    $("gaChart").innerHTML=svg;
+  }
+  ["gaY","gaK","gaL","gaA"].forEach(function(id){$(id).oninput=growthAcc;});
+
+  /* ---------- quizzes ---------- */
+  var Q={
+    school:[
+      ["GDP measures…",["The number of people in a country","The value of all final goods and services made in a country","The money in the RBI","Only the value of exports"],1,"GDP adds up the value of everything finally produced inside a country in a period."],
+      ["Why don't we add wheat + flour + bread separately?",["Wheat is not important","It would count the same wheat many times","Bread is too cheap","Flour is imported"],1,"That is double counting. Count the final bread, or add each step's value added; both give the same total."],
+      ["A miller buys wheat for ₹20 and sells flour for ₹35. His value added is…",["₹20","₹35","₹15","₹55"],2,"Value added = selling price − what was bought from others = 35 − 20 = ₹15."],
+      ["Which of these is NOT counted in GDP?",["A haircut at a salon","A new car","A mother cooking at home for her family","A bus ticket"],2,"Unpaid work at home is valuable, but it is not bought or sold, so GDP leaves it out."],
+      ["A country with a big total GDP but a huge population may have…",["A high GDP per person","A low GDP per person","No GDP","Negative GDP"],1,"Per-capita GDP = total ÷ people. Many people sharing the total makes each share smaller."]
+    ],
+    working:[
+      ["Nominal GDP grows 10.3% and real GDP 7.8%. The GDP deflator inflation is about…",["18.1%","2.3%","7.8%","10.3%"],1,"1.103 / 1.078 − 1 ≈ 2.3%."],
+      ["GDP = GVA + …",["Imports − exports","Product taxes − product subsidies","Depreciation","Foreign income"],1,"GVA is at basic prices; adding net product taxes gives GDP at market prices."],
+      ["India's nominal GDP rank fell to 6th in 2026 mainly because of…",["A recession","Rupee depreciation and the new base year","Lower population","A war"],1,"Dollar rankings move with the exchange rate; the rebasing also cut nominal GDP by 3–4%."],
+      ["By PPP, India's economy ranks…",["1st","3rd","6th","10th"],1,"Adjusting for lower price levels, India is the world's third-largest economy."],
+      ["Which component of GDP grew fastest in Q1 FY27?",["Government consumption","Private consumption","Fixed investment (GFCF)","Agriculture"],2,"GFCF grew 11.9%, its strongest pace in four years."]
+    ],
+    expert:[
+      ["GNI differs from GDP by…",["Depreciation","Net primary income from abroad","Indirect taxes","Inventories"],1,"GNI = GDP + net primary income (compensation and property income) from abroad."],
+      ["Single deflation of manufacturing GVA tends to overstate real growth when…",["Input prices fall faster than output prices","Output prices fall faster","Both are constant","Wages rise"],0,"Deflating value added with the output price alone ignores the gain from cheaper inputs being treated as volume."],
+      ["With g_Y = 7%, g_K = 8%, g_L = 1.5% and α = 0.4, the TFP growth is…",["0.1%","2.9%","3.8%","5.5%"],1,"7 − 0.4×8 − 0.6×1.5 = 7 − 3.2 − 0.9 = 2.9%."],
+      ["Fixed-base real GDP tends to overstate growth far from the base year because…",["It ignores inflation","Sectors with falling relative prices carry stale, high weights","It uses PPP","It double counts"],1,"Chain-linking updates the weights and removes this bias."],
+      ["The IMF's India forecasts: 7.0% for FY26-27 and 7.4% for…",["FY27-28","Calendar 2026","Calendar 2027","The world"],1,"The IMF reports both fiscal-year and calendar-year figures for India."]
+    ]
+  };
+  document.querySelectorAll(".quiz").forEach(function(box){
+    var set=Q[box.getAttribute("data-quiz")], score=0, done=0, h="";
+    set.forEach(function(q,qi){
+      h+='<div class="q" data-i="'+qi+'"><p>'+(qi+1)+'. '+q[0]+'</p>';
+      q[1].forEach(function(o,oi){h+='<button data-o="'+oi+'">'+o+'</button>';});
+      h+='<div class="why">'+q[3]+'</div></div>';
+    });
+    h+='<p class="score"></p>'; box.innerHTML=h;
+    box.querySelectorAll(".q").forEach(function(qd){
+      var q=set[+qd.getAttribute("data-i")];
+      qd.querySelectorAll("button").forEach(function(b){
+        b.onclick=function(){
+          if(qd.classList.contains("done"))return;
+          var o=+b.getAttribute("data-o"); qd.classList.add("done"); done++;
+          if(o===q[2])score++; else b.classList.add("wrong");
+          qd.querySelectorAll("button")[q[2]].classList.add("right");
+          box.querySelector(".score").textContent="Score: "+score+" / "+done+(done===set.length?(score===set.length?" — perfect!":" — review the explanations above."):"");
+        };
+      });
+    });
+  });
+
+  document.addEventListener("keydown",function(e){
+    if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
+    var k=e.key.toLowerCase();
+    if(k==="1")setLevel("school"); else if(k==="2")setLevel("working"); else if(k==="3")setLevel("expert");
+    else if(k==="m")toggleSB(); else if(k==="t")toggleTheme(); else if(k==="f")toggleFS();
+    else if(body.getAttribute("data-level")==="school"){
+      if(k==="p"){anPlay();} else if(k==="s"){anPause();anStep();} else if(k==="x"){anPause();}
+    }
+  });
+
+  setLevel((location.hash||"#school").slice(1),true);
+  window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(LV.indexOf(h)>=0)setLevel(h,true);});
+})();
+</script>
+</body>
+</html>

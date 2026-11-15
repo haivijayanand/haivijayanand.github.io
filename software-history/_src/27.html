@@ -1,0 +1,186 @@
+title: MATLAB and numerical computing
+years: 1970s → today
+lede: Engineering is full of matrices and differential equations: stiffness matrices, vibration modes, control loops, filters. In the 1970s solving them meant writing Fortran and waiting for the mainframe. A professor's teaching tool — an interactive "matrix laboratory" — became MATLAB, the common language of engineering computation, and spawned a family of rivals and free alternatives.
+desc: History of MATLAB and Simulink, LINPACK and EISPACK, Mathcad, Mathematica and Maple, Scilab, GNU Octave, Julia and Python's NumPy/SciPy, toolboxes and licences, and interactive demos of solving linear systems by elimination and integrating a spring–mass–damper with Euler and Runge–Kutta methods.
+
+<section id="glance" data-toc="At a glance">
+  <div class="stats">
+    <div class="stat"><div class="v">1970s</div><div class="k">LINPACK and EISPACK: tested Fortran libraries for linear algebra</div></div>
+    <div class="stat"><div class="v">~1979</div><div class="k">Cleve Moler writes the first MATLAB for his students</div></div>
+    <div class="stat"><div class="v">1984</div><div class="k">MathWorks founded; commercial MATLAB for the IBM PC</div></div>
+    <div class="stat"><div class="v">1990</div><div class="k">Simulink (first called SIMULAB): block-diagram simulation</div></div>
+    <div class="stat"><div class="v">1994</div><div class="k">Scilab (INRIA) and GNU Octave: free alternatives</div></div>
+    <div class="stat"><div class="v">R2026a</div><div class="k">Current release, with AI copilots</div></div>
+  </div>
+</section>
+
+<section id="need" data-toc="1 · The requirement">
+  <h2><span class="n">01</span>The requirement: mathematics without writing Fortran</h2>
+  <p>By the 1970s numerical analysts had built reliable Fortran libraries: <b>EISPACK</b> for eigenvalues and <b>LINPACK</b> for linear equations, funded by the US National Science Foundation. But using them meant writing a program, compiling, linking, running a batch job and reading a printout. <b>Cleve Moler</b>, a professor at the University of New Mexico who had worked on both libraries, wanted his students to try matrix ideas <i>interactively</i>. Around 1979 he wrote a small Fortran program, <b>MATLAB</b> ("matrix laboratory"), in which you type <code>A = [1 2; 3 4]</code> and <code>eig(A)</code> and see the answer at once. Copies spread among universities for free.</p>
+  <table>
+    <tr><th style="width:28%">Requirement</th><th style="width:34%">Why</th><th>What MATLAB-style tools offered</th></tr>
+    <tr><td>Try ideas quickly</td><td>The compile–run cycle killed exploration</td><td>An interactive command window</td></tr>
+    <tr><td>Trustworthy numerics</td><td>Home-made solvers give wrong answers on hard problems</td><td>Proven algorithms (LINPACK, later LAPACK) inside every command</td></tr>
+    <tr><td>Plot results</td><td>Engineers think in graphs</td><td>One-line plotting</td></tr>
+    <tr><td>Domain-specific functions</td><td>Signal processing, control, statistics, optimisation</td><td>Toolboxes written by experts</td></tr>
+    <tr><td>Simulate dynamic systems</td><td>Controllers and plants are differential equations</td><td>Simulink block diagrams and code generation</td></tr>
+  </table>
+</section>
+
+<section id="history" data-toc="2 · From classroom to industry">
+  <h2><span class="n">02</span>From classroom tool to industry standard</h2>
+  <div class="tl">
+    <div class="ev"><b>1983–84 — MathWorks.</b> Engineer <b>Jack Little</b> saw MATLAB's value for control engineering. With Moler and Steve Bangert he rewrote it in C and founded <b>The MathWorks</b> in California in 1984 (it later moved to Natick, Massachusetts). PC-MATLAB ran on the IBM PC.</div>
+    <div class="ev"><b>1985–1990 — Toolboxes.</b> The Control System and Signal Processing Toolboxes made MATLAB the tool of control and DSP engineers.</div>
+    <div class="ev"><b>1990 — Simulink.</b> First released as SIMULAB, it let engineers draw systems as connected blocks — integrators, gains, transfer functions — and simulate them.</div>
+    <div class="ev"><b>2000 — LAPACK.</b> MATLAB 6 switched to the modern LAPACK library and an integrated desktop with editor and workspace.</div>
+    <div class="ev"><b>2006 → — Twice-yearly releases.</b> Named R2006a, R2006b and so on: "a" in spring, "b" in autumn. Embedded code generation (Embedded Coder) made Simulink the basis of "model-based design" in cars and aircraft.</div>
+    <div class="ev"><b>2016 → — Live scripts and the web.</b> Live Editor notebooks, MATLAB Online, and in R2026a (released spring 2026) AI copilots for MATLAB, Simulink and Polyspace.</div>
+  </div>
+</section>
+
+<section id="try" data-toc="3 · Try: solve Ax = b">
+  <h2><span class="n">03</span>Try it: what <code>x = A\b</code> does</h2>
+  <p>MATLAB's backslash solves linear equations — for example the forces in a frame, or nodal displacements in finite element analysis (Episode 29). Inside, it uses <b>Gaussian elimination with partial pivoting</b> (LU decomposition) from LINPACK/LAPACK. Edit the 3×3 system and step through.</p>
+  <div class="demo">
+    <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center">
+      <div><b>A</b><div id="lsA" style="display:grid;grid-template-columns:repeat(3,70px);gap:4px"></div></div>
+      <div><b>b</b><div id="lsB" style="display:grid;grid-template-columns:70px;gap:4px"></div></div>
+      <div class="chips" style="flex-direction:column"><button id="lsStep">Next step (S)</button><button id="lsRun">Solve</button><button id="lsHard">Nearly singular example</button><button id="lsReset">Reset</button></div>
+    </div>
+    <pre class="term" id="lsOut" style="margin-top:10px;min-height:150px;white-space:pre-wrap"></pre>
+  </div>
+</section>
+
+<section id="rivals" data-toc="4 · Rivals and alternatives">
+  <h2><span class="n">04</span>Contemporaries and rivals</h2>
+  <table>
+    <tr><th>Program</th><th>Year</th><th>Model</th><th>Strength</th></tr>
+    <tr><td><b>Mathcad</b></td><td>1986</td><td>Paid (MathSoft → PTC)</td><td>Equations written as on paper, with <b>units</b> checked automatically — loved for design calculations; now Mathcad Prime with a free Express edition</td></tr>
+    <tr><td><b>Maple</b></td><td>1982 / 1988</td><td>Paid (Waterloo Maple)</td><td>Symbolic algebra: exact integrals and formulas</td></tr>
+    <tr><td><b>Mathematica</b></td><td>1988</td><td>Paid (Wolfram Research)</td><td>Symbolic and numeric computing with notebooks</td></tr>
+    <tr><td><b>MATRIXx, Xmath</b></td><td>1980s</td><td>Paid (Integrated Systems)</td><td>Control-system rival to MATLAB/Simulink; later bought by National Instruments</td></tr>
+    <tr><td><b>IDL</b></td><td>1977</td><td>Paid</td><td>Array language for astronomy and remote sensing</td></tr>
+    <tr><td><b>Scilab + Xcos</b></td><td>1994</td><td>Free, open source (INRIA, France)</td><td>MATLAB-like language with a Simulink-like block editor</td></tr>
+    <tr><td><b>GNU Octave</b></td><td>1993 (1.0 in 1994)</td><td>Free, open source (GPL)</td><td>Highly compatible with MATLAB scripts</td></tr>
+    <tr><td><b>Python: NumPy, SciPy, Matplotlib</b></td><td>2006 →</td><td>Free, open source</td><td>General-purpose language with scientific libraries; now the main alternative</td></tr>
+    <tr><td><b>Julia</b></td><td>2012</td><td>Free, open source (MIT)</td><td>Speed of C with MATLAB-like syntax</td></tr>
+  </table>
+</section>
+
+<section id="ode" data-toc="5 · Try: Simulink idea">
+  <h2><span class="n">05</span>Try it: integrating a dynamic system</h2>
+  <p>A Simulink diagram of a spring–mass–damper is two integrators in a loop. The solver steps time forward. Simple methods (Euler) drift or blow up with large steps; MATLAB's <code>ode45</code> uses an adaptive Runge–Kutta method. Change the step size and compare with the exact answer.</p>
+  <div class="demo">
+    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:14px">
+      <label>Natural frequency <input id="odF" type="range" min="0.5" max="5" step="0.1" value="2"> <b id="odFv"></b> Hz</label>
+      <label>Damping ratio <input id="odZ" type="range" min="0" max="0.6" step="0.01" value="0.05"> <b id="odZv"></b></label>
+      <label>Time step <input id="odH" type="range" min="0.002" max="0.1" step="0.002" value="0.01"> <b id="odHv"></b> s</label>
+    </div>
+    <svg id="odSvg" viewBox="0 0 800 280" style="display:block;width:100%;background:#fff;border:1px solid var(--line);border-radius:8px;margin-top:8px"></svg>
+    <p id="odMsg" style="margin:6px 0 0;font-size:14px"></p>
+  </div>
+</section>
+
+<section id="versions" data-toc="6 · Version explorer">
+  <h2><span class="n">06</span>Version explorer</h2>
+  <p>Blue chips: MATLAB and Simulink. Amber chips: rivals and open alternatives.</p>
+  <div class="vbar" id="vbar"></div>
+  <div class="vpanel" id="vpanel"></div>
+</section>
+
+<section id="today" data-toc="7 · Today and licences">
+  <h2><span class="n">07</span>Today: licences and choices</h2>
+  <ul>
+    <li><b>MATLAB licences</b> are per user or network (concurrent); each toolbox costs extra. Campus-wide licences are common in universities, and a Home licence exists for personal use.</li>
+    <li><b>Free but closed:</b> MATLAB Online basic access, Mathcad Express, Wolfram Engine for developers.</li>
+    <li><b>Open source:</b> Octave runs most MATLAB scripts unchanged; Scilab/Xcos covers basic Simulink-style work; Python covers almost everything except Simulink's code generation and certified toolchains.</li>
+    <li><b>Interoperability:</b> MATLAB can call Python and vice versa; data move via <code>.mat</code> (HDF5-based since v7.3), CSV or HDF5.</li>
+  </ul>
+</section>
+
+<section id="install" data-toc="8 · Getting the tools">
+  <h2><span class="n">08</span>Getting the tools safely</h2>
+  <table>
+    <tr><th>Program</th><th>Official site</th><th>winget command</th></tr>
+    <tr><td>GNU Octave</td><td><code>octave.org</code></td><td><code>winget install GNU.Octave</code></td></tr>
+    <tr><td>Scilab</td><td><code>scilab.org</code></td><td><code>winget install Scilab.Scilab</code></td></tr>
+    <tr><td>Python + Spyder</td><td><code>python.org</code>, <code>spyder-ide.org</code></td><td><code>winget install Python.Python.3.13</code>; <code>pip install numpy scipy matplotlib</code></td></tr>
+    <tr><td>MATLAB</td><td><code>mathworks.com</code></td><td>Through your organisation's licence</td></tr>
+  </table>
+  <p style="font-size:14px;color:var(--muted)">"Free MATLAB" downloads on other sites are cracked copies and a common route for malware. Confirm winget IDs with <code>winget search</code>.</p>
+</section>
+
+<section id="lessons" data-toc="9 · Lessons">
+  <h2><span class="n">09</span>Lessons for engineers</h2>
+  <ol>
+    <li><b>Use proven numerical libraries.</b> Never write your own matrix inverse for real work.</li>
+    <li><b>Watch the condition number.</b> A nearly singular system gives answers that look precise but are not.</li>
+    <li><b>Check the solver step.</b> A simulation that "works" may be the numerical method, not the physics.</li>
+    <li><b>Keep scripts, not screenshots.</b> A script is the record of how a result was obtained.</li>
+  </ol>
+</section>
+
+<section id="sources">
+  <h2>Sources &amp; further reading</h2>
+  <ol class="src">
+    <li>C. Moler and J. Little, "A history of MATLAB", <i>Proc. ACM on Programming Languages</i> 4 (HOPL), 2020.</li>
+    <li><a href="https://www.mathworks.com/products/new_products/latest_features.html">MathWorks — R2026a release highlights</a></li>
+    <li><a href="https://en.wikipedia.org/wiki/MATLAB">Wikipedia — MATLAB</a> · <a href="https://en.wikipedia.org/wiki/Simulink">Simulink</a> · <a href="https://en.wikipedia.org/wiki/LINPACK">LINPACK</a></li>
+    <li><a href="https://octave.org/">GNU Octave</a> · <a href="https://www.scilab.org/">Scilab</a> · <a href="https://numpy.org/">NumPy</a> · <a href="https://julialang.org/">Julia</a></li>
+    <li><a href="https://en.wikipedia.org/wiki/PTC_Mathcad">Wikipedia — PTC Mathcad</a> · <a href="https://en.wikipedia.org/wiki/Wolfram_Mathematica">Wolfram Mathematica</a></li>
+  </ol>
+</section>
+<!--SCRIPT-->
+const V=[
+ {v:'Fortran MATLAB',d:'~1979',hw:'Mainframes and minicomputers',n:['Cleve Moler\'s teaching tool','About 80 commands, built on LINPACK and EISPACK','Distributed free to universities']},
+ {v:'PC-MATLAB / Pro-MATLAB',d:'1984–1990',hw:'IBM PC, Unix workstations',n:['Rewritten in C by Jack Little and Steve Bangert','M-files and toolboxes','MathWorks founded 1984']},
+ {v:'MATLAB 4 + Simulink',d:'1990–1992',hw:'Windows 3.x, Unix',n:['Simulink (SIMULAB) block diagrams','Handle Graphics']},
+ {v:'MATLAB 5–7',d:'1996–2004',hw:'Windows 95–XP',n:['Cell arrays and structures','MATLAB 6: LAPACK and the desktop','JIT acceleration']},
+ {v:'R2006a → R2026a',d:'2006 → today',hw:'Windows, Linux, macOS, browser',n:['Two releases a year','Live Editor (2016), MATLAB Online','R2026a: Simulink Copilot and Polyspace Copilot']},
+ {v:'Mathcad / Maple / Mathematica',d:'1986 / 1988 / 1988',e:2,hw:'PC and Mac',n:['Mathcad: units-aware worksheets','Maple and Mathematica: symbolic algebra']},
+ {v:'Scilab / Octave',d:'1994 → today',e:2,hw:'Windows, Linux, Mac',n:['Free and open source','Octave: MATLAB-compatible syntax','Scilab: Xcos block simulation']},
+ {v:'Python / Julia',d:'2006 / 2012 → today',e:2,hw:'Any platform',n:['NumPy, SciPy, Matplotlib, Jupyter','Julia: fast just-in-time compiled language']}
+];
+SH.explorer(V,'',['MATLAB family','Rivals and open alternatives']);
+const q=id=>document.getElementById(id);
+const A0=[[4,-2,1],[-2,4,-2],[1,-2,4]],b0=[11,-16,17];
+let M,step,log;
+function grid(A,b){q('lsA').innerHTML=A.flat().map((v,i)=>'<input data-i="'+i+'" value="'+v+'" style="width:70px;padding:4px;border:1.5px solid var(--grey);border-radius:5px;font:14px var(--mono);text-align:right">').join('');
+ q('lsB').innerHTML=b.map((v,i)=>'<input data-b="'+i+'" value="'+v+'" style="width:70px;padding:4px;border:1.5px solid var(--amber);border-radius:5px;font:14px var(--mono);text-align:right">').join('');
+ document.querySelectorAll('#lsA input,#lsB input').forEach(e=>e.oninput=init);}
+const r=x=>(Math.abs(x)<1e-12?0:x).toFixed(4).padStart(10);
+const show=()=>M.map(row=>row.slice(0,3).map(r).join('')+'  |'+r(row[3])).join('\n');
+function init(){const a=[...document.querySelectorAll('#lsA input')].map(e=>+e.value||0),b=[...document.querySelectorAll('#lsB input')].map(e=>+e.value||0);
+ M=[0,1,2].map(i=>[a[i*3],a[i*3+1],a[i*3+2],b[i]]);step=0;log='Augmented matrix [A | b]:\n'+show();q('lsOut').textContent=log;}
+function cond(){const a=[...document.querySelectorAll('#lsA input')].map(e=>+e.value||0);const A=[[a[0],a[1],a[2]],[a[3],a[4],a[5]],[a[6],a[7],a[8]]];
+ const det=A[0][0]*(A[1][1]*A[2][2]-A[1][2]*A[2][1])-A[0][1]*(A[1][0]*A[2][2]-A[1][2]*A[2][0])+A[0][2]*(A[1][0]*A[2][1]-A[1][1]*A[2][0]);
+ if(Math.abs(det)<1e-14)return Infinity;const inv=[[0,0,0],[0,0,0],[0,0,0]];for(let i=0;i<3;i++)for(let j=0;j<3;j++){const m=A.filter((_,k)=>k!==j).map(row=>row.filter((_,l)=>l!==i));inv[i][j]=((i+j)%2?-1:1)*(m[0][0]*m[1][1]-m[0][1]*m[1][0])/det;}
+ const n1=X=>Math.max(...[0,1,2].map(j=>X.reduce((s,row)=>s+Math.abs(row[j]),0)));return n1(A)*n1(inv);}
+function next(){if(step<2){const k=step;let p=k;for(let i=k+1;i<3;i++)if(Math.abs(M[i][k])>Math.abs(M[p][k]))p=i;
+  if(p!==k){[M[k],M[p]]=[M[p],M[k]];log+='\n\nPivot: swap rows '+(k+1)+' and '+(p+1)+' so the largest value in column '+(k+1)+' is on the diagonal.';}
+  if(Math.abs(M[k][k])<1e-14){log+='\n\nZero pivot — the matrix is singular; no unique solution.';step=9;q('lsOut').textContent=log;return;}
+  for(let i=k+1;i<3;i++){const f=M[i][k]/M[k][k];for(let j=k;j<4;j++)M[i][j]-=f*M[k][j];log+='\nRow '+(i+1)+' ← row '+(i+1)+' − ('+f.toFixed(4)+') × row '+(k+1);}
+  log+='\n'+show();step++;}
+ else if(step===2){if(Math.abs(M[2][2])<1e-14){log+='\n\nZero pivot — singular.';step=9;}else{const x=[0,0,0];for(let i=2;i>=0;i--){let s=M[i][3];for(let j=i+1;j<3;j++)s-=M[i][j]*x[j];x[i]=s/M[i][i];}
+  const c=cond();log+='\n\nBack substitution:\nx = ['+x.map(v=>(Math.abs(v)<5e-7?0:v).toFixed(6)).join(', ')+']\nCondition number (1-norm) ≈ '+(isFinite(c)?c.toExponential(2):'∞')+(c>1e4?'\n⚠ Ill-conditioned: small changes in A or b change x a lot. Try changing one entry in the last digit.':'\nWell-conditioned: the answer is trustworthy.');step=3;}}
+ q('lsOut').textContent=log;}
+q('lsStep').onclick=next;q('lsRun').onclick=()=>{while(step<3)next();};
+q('lsHard').onclick=()=>{grid([[1,1,1],[1,1.0001,1],[1,1,1.0001]],[3,3.0001,3.0002]);init();};
+q('lsReset').onclick=()=>{grid(A0,b0);init();};
+document.addEventListener('keydown',e=>{if((e.key==='s'||e.key==='S')&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))next();});
+grid(A0,b0);init();
+function ode(){const f=+q('odF').value,z=+q('odZ').value,h=+q('odH').value;q('odFv').textContent=f;q('odZv').textContent=z;q('odHv').textContent=h;
+ const w=2*Math.PI*f,T=3,F=(x,v)=>[v,-2*z*w*v-w*w*x];
+ const exact=t=>{const wd=w*Math.sqrt(Math.max(1-z*z,1e-9));return Math.exp(-z*w*t)*(Math.cos(wd*t)+z*w/wd*Math.sin(wd*t));};
+ const eu=[[0,1]],rk=[[0,1]];let x=1,v=0,X=1,Vv=0;
+ for(let t=0;t<T-1e-9;t+=h){const d=F(x,v);x+=h*d[0];v+=h*d[1];eu.push([t+h,x]);
+  const k1=F(X,Vv),k2=F(X+h/2*k1[0],Vv+h/2*k1[1]),k3=F(X+h/2*k2[0],Vv+h/2*k2[1]),k4=F(X+h*k3[0],Vv+h*k3[1]);X+=h/6*(k1[0]+2*k2[0]+2*k3[0]+k4[0]);Vv+=h/6*(k1[1]+2*k2[1]+2*k3[1]+k4[1]);rk.push([t+h,X]);}
+ const sx=t=>40+t/T*750,sy=y=>140-Math.max(-1.6,Math.min(1.6,y))*80;const path=p=>'M'+p.map(a=>sx(a[0]).toFixed(1)+','+sy(a[1]).toFixed(1)).join(' L');
+ let ex=[];for(let i=0;i<=600;i++){const t=i/600*T;ex.push([t,exact(t)]);}
+ q('odSvg').innerHTML='<line x1="40" y1="140" x2="790" y2="140" stroke="#c9ced5"/><line x1="40" y1="10" x2="40" y2="270" stroke="#c9ced5"/><text x="790" y="158" text-anchor="end" font-size="12" fill="#5b6672">time 3 s</text>'
+  +'<path d="'+path(ex)+'" fill="none" stroke="#8a939e" stroke-width="5" opacity=".5"/><path d="'+path(eu)+'" fill="none" stroke="#d98a00" stroke-width="2" stroke-dasharray="6 3"/><path d="'+path(rk)+'" fill="none" stroke="#1f3b5c" stroke-width="2"/>'
+  +'<g font-size="13"><rect x="560" y="14" width="225" height="62" fill="#fff" stroke="#e1e5ea"/><line x1="570" y1="28" x2="600" y2="28" stroke="#8a939e" stroke-width="5" opacity=".5"/><text x="606" y="32">Exact solution</text><line x1="570" y1="47" x2="600" y2="47" stroke="#d98a00" stroke-width="2" stroke-dasharray="6 3"/><text x="606" y="51">Euler (1st order)</text><line x1="570" y1="66" x2="600" y2="66" stroke="#1f3b5c" stroke-width="2"/><text x="606" y="70">Runge–Kutta 4</text></g>';
+ const err=(p)=>Math.max(...p.map(a=>Math.abs(a[1]-exact(a[0]))));const ee=err(eu),er=err(rk);
+ q('odMsg').innerHTML='Largest error — Euler: <b>'+(ee>10?'unstable (grows without limit)':ee.toFixed(3))+'</b>; RK4: <b>'+(er>10?'unstable':er.toExponential(1))+'</b>. Steps per vibration period: '+(1/f/h).toFixed(0)+'. Simple Euler adds energy every step, so a lightly damped system grows even with small steps; RK4 is accurate with about 20 steps per period, and adaptive solvers like ode45 choose the step for you.';}
+['odF','odZ','odH'].forEach(i=>q(i).oninput=ode);ode();

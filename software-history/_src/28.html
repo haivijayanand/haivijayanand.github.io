@@ -1,0 +1,181 @@
+title: LabVIEW and data acquisition
+years: 1976 → today
+lede: A test rig produces signals — temperature, pressure, torque, speed, vibration — and an engineer must capture them, check them live, and store them for analysis. Before the PC this meant chart recorders and meters read by hand. Data-acquisition software, led by National Instruments' graphical LabVIEW, turned the PC into an instrument; today it runs everything from school labs to aircraft test facilities.
+desc: History of instrument control and data acquisition: GPIB, National Instruments and LabVIEW's graphical dataflow, LabWindows/CVI and TestStand, HP VEE, DASYLab, DEWESoft, catman and imc, the move to Python, Emerson's ownership and AI features, and interactive demos of a dataflow block diagram and ADC resolution.
+
+<section id="glance" data-toc="At a glance">
+  <div class="stats">
+    <div class="stat"><div class="v">1976</div><div class="k">National Instruments founded in Austin, Texas</div></div>
+    <div class="stat"><div class="v">1986</div><div class="k">LabVIEW 1.0 on the Apple Macintosh</div></div>
+    <div class="stat"><div class="v">1992</div><div class="k">LabVIEW for Windows</div></div>
+    <div class="stat"><div class="v">2003</div><div class="k">NI-DAQmx driver; CompactDAQ follows in 2005</div></div>
+    <div class="stat"><div class="v">2023</div><div class="k">Emerson completes the purchase of NI</div></div>
+    <div class="stat"><div class="v">2026</div><div class="k">LabVIEW turns 40; AI code generation added</div></div>
+  </div>
+</section>
+
+<section id="need" data-toc="1 · The requirement">
+  <h2><span class="n">01</span>The requirement: make the computer an instrument</h2>
+  <p>In the 1960s Hewlett-Packard created a bus to connect instruments to computers — HP-IB, standardised in 1975 as <b>IEEE 488</b> or <b>GPIB</b>. In 1976 <b>James Truchard, Jeff Kodosky and Bill Nowlin</b>, engineers at the University of Texas, founded National Instruments to make GPIB interface boards. Their customers then faced the hard part: writing programs, in BASIC or C, to control instruments, collect readings and display them. Most test engineers were not programmers.</p>
+  <table>
+    <tr><th style="width:28%">Requirement</th><th style="width:34%">Why</th><th>What DAQ software offered</th></tr>
+    <tr><td>Control instruments</td><td>Set ranges, trigger readings, collect results</td><td>Instrument drivers and VISA libraries</td></tr>
+    <tr><td>Acquire many channels fast</td><td>Vibration needs thousands of samples per second per channel</td><td>Buffered, hardware-timed acquisition</td></tr>
+    <tr><td>See the test live</td><td>Problems must be caught before damage</td><td>Front panels with graphs, meters and alarms</td></tr>
+    <tr><td>Program without being a programmer</td><td>Test engineers know physics, not software</td><td>Graphical programming or configuration-based tools</td></tr>
+    <tr><td>Store and report</td><td>Long tests generate huge files</td><td>Efficient file formats (TDMS, DXD, HDF5) and reports</td></tr>
+  </table>
+</section>
+
+<section id="labview" data-toc="2 · LabVIEW">
+  <h2><span class="n">02</span>LabVIEW: programs drawn as wiring diagrams</h2>
+  <p><b>Jeff Kodosky</b> wanted engineers to program the way they draw block diagrams. In LabVIEW (Laboratory Virtual Instrument Engineering Workbench) every program is a <b>virtual instrument (VI)</b> with a <b>front panel</b> (knobs, switches, graphs) and a <b>block diagram</b> where functions are joined by wires. Execution follows <b>dataflow</b>: a block runs as soon as all its inputs have data, so parallel loops come naturally. The Macintosh's graphics made it possible; LabVIEW 1.0 appeared in October 1986.</p>
+  <div class="tl">
+    <div class="ev"><b>1986 — LabVIEW 1.0 (Mac).</b> Interpreted; slow but revolutionary.</div>
+    <div class="ev"><b>1990 — LabVIEW 2.</b> A compiler made VIs run at near-C speed.</div>
+    <div class="ev"><b>1992 — Windows and Sun.</b> LabVIEW 3 reached PCs and workstations. NI also offered <b>LabWindows/CVI</b> for engineers who preferred C.</div>
+    <div class="ev"><b>1998 — TestStand.</b> A sequencer for production test, calling LabVIEW, C or Python steps.</div>
+    <div class="ev"><b>2000s — Real-time and FPGA.</b> LabVIEW Real-Time and FPGA modules programmed CompactRIO controllers (2004) for embedded control and monitoring.</div>
+    <div class="ev"><b>2017–2021 — NXG.</b> A rewritten "LabVIEW NXG" was tried and then discontinued; NI returned to developing classic LabVIEW.</div>
+    <div class="ev"><b>2020 — Community Edition.</b> Free for non-commercial use.</div>
+    <div class="ev"><b>2023 → — Emerson.</b> Emerson completed its purchase of NI in October 2023. LabVIEW now releases quarterly; the NI Nigel AI assistant arrived in 2025, and LabVIEW 2026 Q3 (July 2026) added prompt-based generation of VIs.</div>
+  </div>
+</section>
+
+<section id="try" data-toc="3 · Try: a dataflow diagram">
+  <h2><span class="n">03</span>Try it: a LabVIEW-style monitoring VI</h2>
+  <p>A typical rig-monitoring VI: acquire a vibration signal, filter it, compute RMS and peak, compare with a limit, and log. Change the controls on the "front panel" and watch values flow along the wires of the "block diagram" each time the loop runs. Raise the bearing defect, then switch the filter off: the impacts are high-frequency, so a low-pass filter hides them — a common monitoring mistake.</p>
+  <div class="demo">
+    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:14px;background:#eef1f4;padding:8px;border-radius:8px">
+      <b>Front panel</b>
+      <label>Running speed <input id="dfS" type="range" min="10" max="100" step="1" value="50"> <b id="dfSv"></b> Hz</label>
+      <label>Bearing defect <input id="dfD" type="range" min="0" max="1" step="0.05" value="0"> <b id="dfDv"></b></label>
+      <label>Low-pass filter <select id="dfF"><option value="0">Off</option><option value="1" selected>On</option></select></label>
+      <label>RMS limit <input id="dfL" type="number" value="2.6" step="0.1" style="width:60px"> mm/s</label>
+      <button id="dfRun" style="padding:4px 10px;border:1.5px solid var(--navy);border-radius:6px;background:#fff;cursor:pointer">Pause loop</button>
+    </div>
+    <svg id="dfSvg" viewBox="0 0 900 330" style="display:block;width:100%;background:#fff;border:1px solid var(--line);border-radius:8px;margin-top:8px"></svg>
+  </div>
+</section>
+
+<section id="others" data-toc="4 · Other DAQ software">
+  <h2><span class="n">04</span>Contemporaries and other DAQ software</h2>
+  <table>
+    <tr><th>Software</th><th>Origin</th><th>Approach</th></tr>
+    <tr><td><b>HP VEE</b> (now Keysight VEE)</td><td>Hewlett-Packard, 1991</td><td>Graphical programming for HP instruments — LabVIEW's main early rival</td></tr>
+    <tr><td><b>LabWindows/CVI</b></td><td>National Instruments, 1989–91</td><td>C language with instrument libraries and GUI builder</td></tr>
+    <tr><td><b>Agilent / Keysight BenchVue</b>, <b>Tektronix</b> tools</td><td>Instrument makers</td><td>Configuration tools for their own instruments</td></tr>
+    <tr><td><b>DASYLab</b></td><td>datalog GmbH (Germany), 1993</td><td>Block-diagram DAQ without programming; later in the NI/Measurement Computing family</td></tr>
+    <tr><td><b>DEWESoft</b></td><td>Dewesoft, Slovenia</td><td>Configuration-based DAQ with strong vibration, power and combustion analysis; DXD/D7D files</td></tr>
+    <tr><td><b>catman</b></td><td>HBM (now HBK), Germany</td><td>Strain and force measurement with HBM amplifiers</td></tr>
+    <tr><td><b>imc STUDIO / FAMOS</b></td><td>imc, Germany</td><td>Vehicle and machine testing; FAMOS for analysis</td></tr>
+    <tr><td><b>Siemens Simcenter Testlab</b> (formerly LMS Test.Lab)</td><td>LMS, Belgium</td><td>Noise, vibration and modal testing</td></tr>
+    <tr><td><b>NI FlexLogger, DIAdem</b></td><td>National Instruments</td><td>Configuration-based logging; DIAdem for analysing large data sets</td></tr>
+    <tr><td><b>Python</b> (nidaqmx, PyVISA, pySerial)</td><td>Open source</td><td>Scripts controlling the same hardware — popular for automation and analysis</td></tr>
+  </table>
+  <div class="callout">The trend since 2010: <b>configuration over programming</b> for standard tests (DEWESoft, FlexLogger), <b>text programming</b> (Python, C#) for automation, and LabVIEW for custom systems and production test — often all three in one lab.</div>
+</section>
+
+<section id="adc" data-toc="5 · Try: ADC resolution">
+  <h2><span class="n">05</span>Try it: bits, range and resolution</h2>
+  <p>A DAQ card converts voltage to numbers with an analogue-to-digital converter (ADC). The smallest step is range ÷ 2<sup>bits</sup>. A small signal on a large range wastes resolution — which is why choosing the input range matters.</p>
+  <div class="demo">
+    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:14px">
+      <label>ADC bits <select id="adB"><option>8</option><option selected>12</option><option>16</option><option>24</option></select></label>
+      <label>Input range ± <select id="adR"><option>0.1</option><option>1</option><option selected>10</option></select> V</label>
+      <label>Signal amplitude <input id="adA" type="range" min="0.001" max="0.2" step="0.001" value="0.02"> <b id="adAv"></b> V</label>
+    </div>
+    <svg id="adSvg" viewBox="0 0 800 220" style="display:block;width:100%;background:#fff;border:1px solid var(--line);border-radius:8px;margin-top:8px"></svg>
+    <p id="adMsg" style="margin:6px 0 0;font-size:14px"></p>
+  </div>
+</section>
+
+<section id="versions" data-toc="6 · Version explorer">
+  <h2><span class="n">06</span>Version explorer</h2>
+  <p>Blue chips: NI and LabVIEW. Amber chips: other DAQ software.</p>
+  <div class="vbar" id="vbar"></div>
+  <div class="vpanel" id="vpanel"></div>
+</section>
+
+<section id="data" data-toc="7 · Files and data">
+  <h2><span class="n">07</span>Data files and long-term access</h2>
+  <ul>
+    <li><b>TDMS</b> (NI) and <b>DXD</b> (DEWESoft) are binary formats with channel metadata; both have free readers and Python libraries (<code>npTDMS</code>, DEWESoft's data reader library).</li>
+    <li><b>HDF5</b> and <b>CSV</b> are vendor-neutral; export key results to them for archiving.</li>
+    <li>Record the <b>configuration</b> — sensor sensitivities, ranges, filters, sample rates — with the data; a file without it cannot be trusted years later.</li>
+    <li>Check licence terms before upgrading: test rigs are often kept on a validated software version for years.</li>
+  </ul>
+</section>
+
+<section id="install" data-toc="8 · Getting the tools">
+  <h2><span class="n">08</span>Getting the tools safely</h2>
+  <table>
+    <tr><th>Software</th><th>Where</th><th>Notes</th></tr>
+    <tr><td>LabVIEW Community Edition</td><td><code>ni.com</code> (NI Package Manager)</td><td>Free for non-commercial use</td></tr>
+    <tr><td>NI-DAQmx, NI-VISA</td><td><code>ni.com</code></td><td>Drivers needed by LabVIEW and by Python's <code>nidaqmx</code></td></tr>
+    <tr><td>Python DAQ libraries</td><td><code>pypi.org</code></td><td><code>pip install nidaqmx pyvisa npTDMS</code></td></tr>
+    <tr><td>DEWESoft</td><td><code>dewesoft.com</code></td><td>Free download runs in analysis/demo mode without hardware</td></tr>
+  </table>
+</section>
+
+<section id="lessons" data-toc="9 · Lessons">
+  <h2><span class="n">09</span>Lessons for engineers</h2>
+  <ol>
+    <li><b>Choose sample rate and range before the test.</b> Neither can be fixed afterwards.</li>
+    <li><b>Separate acquisition from analysis.</b> Log raw data reliably; analyse in a different program or loop.</li>
+    <li><b>Document the chain.</b> Sensor → conditioner → DAQ → software settings, with calibration dates.</li>
+    <li><b>Graphical or text, structure matters.</b> A messy block diagram is as hard to maintain as messy code.</li>
+  </ol>
+</section>
+
+<section id="sources">
+  <h2>Sources &amp; further reading</h2>
+  <ol class="src">
+    <li><a href="https://en.wikipedia.org/wiki/LabVIEW">Wikipedia — LabVIEW</a> · <a href="https://en.wikipedia.org/wiki/National_Instruments">National Instruments</a> · <a href="https://en.wikipedia.org/wiki/IEEE-488">IEEE-488 (GPIB)</a></li>
+    <li><a href="https://www.ni.com/docs/en-US/bundle/labview/page/labview-changes.html">NI — LabVIEW new features and changes (2026 Q1, Q3)</a></li>
+    <li><a href="https://www.ni.com/en/about-ni/newsroom/news-releases/emerson-advances-ai-across-software-portfolio--accelerating-test.html">NI / Emerson — Nigel AI code generation (July 2026)</a></li>
+    <li><a href="https://www.dewesoft.com/">DEWESoft</a> · <a href="https://www.keysight.com/">Keysight (VEE)</a> · <a href="https://www.hbkworld.com/">HBK (catman)</a></li>
+    <li><a href="https://nidaqmx-python.readthedocs.io/">nidaqmx Python documentation</a> · <a href="https://pyvisa.readthedocs.io/">PyVISA</a></li>
+  </ol>
+</section>
+<!--SCRIPT-->
+const V=[
+ {v:'GPIB boards',d:'1976–1985',hw:'Minicomputers, IBM PC',n:['NI\'s first products','Instrument control from BASIC and C']},
+ {v:'LabVIEW 1–2',d:'1986–1990',hw:'Apple Macintosh',n:['Graphical dataflow programming','LabVIEW 2 added a compiler']},
+ {v:'LabVIEW 3–8',d:'1992–2005',hw:'Windows, Sun, Linux',n:['Windows support','LabWindows/CVI, TestStand (1998)','NI-DAQmx (2003)']},
+ {v:'LabVIEW 2009–2023',d:'2009–2023',hw:'Windows, Linux, CompactRIO, FPGA',n:['Year-named versions','Real-Time and FPGA modules','Community Edition (2020); NXG ended 2021']},
+ {v:'LabVIEW 2024 Q1 → 2026 Q3',d:'2024 → today',hw:'Windows, Linux, Docker',n:['Emerson ownership','Quarterly releases','Nigel AI: advisor (2025), code author (2026)']},
+ {v:'HP VEE / Keysight VEE',d:'1991 → today',e:2,hw:'Windows',n:['Graphical instrument programming from HP']},
+ {v:'DASYLab',d:'1993 → today',e:2,hw:'Windows',n:['Block-diagram DAQ without programming']},
+ {v:'DEWESoft / catman / imc',d:'1990s → today',e:2,hw:'Windows with their own hardware',n:['Configuration-based test software','Strong analysis modules']},
+ {v:'Python DAQ',d:'2010s → today',e:2,hw:'Any PC',n:['nidaqmx, PyVISA, npTDMS','Automation and analysis scripts']}
+];
+SH.explorer(V,'',['NI and LabVIEW','Other DAQ software']);
+const q=id=>document.getElementById(id);let run=true,t0=0,hist=[];
+function frame(){const S=+q('dfS').value,D=+q('dfD').value,flt=+q('dfF').value,L=+q('dfL').value;q('dfSv').textContent=S;q('dfDv').textContent=D.toFixed(2);
+ const fs=5000,N=500,sig=[];for(let i=0;i<N;i++){const t=(t0+i)/fs;let v=3*Math.sin(2*Math.PI*S*t)+0.8*Math.sin(2*Math.PI*2*S*t)+(Math.random()-0.5)*2.5;
+  const bp=3.6*S;const ph=(t*bp)%1;v+=D*9*Math.exp(-ph*6)*Math.sin(2*Math.PI*1200*t);sig.push(v);}
+ let out=sig;if(flt){const k=5;out=sig.map((_,i)=>{let s=0,c=0;for(let j=Math.max(0,i-k);j<=i;j++){s+=sig[j];c++;}return s/c;});}
+ const rms=Math.sqrt(out.reduce((a,b)=>a+b*b,0)/N),pk=Math.max(...out.map(Math.abs)),alarm=rms>L;hist.push(rms);if(hist.length>60)hist.shift();
+ const wave=(arr,x,y,w,h,sc)=>'<polyline fill="none" stroke="#2c6fb0" stroke-width="1.2" points="'+arr.filter((_,i)=>i%2===0).map((v,i)=>(x+i*w/(arr.length/2)).toFixed(1)+','+(y+h/2-v*sc).toFixed(1)).join(' ')+'"/>';
+ const box=(x,y,w,h,title,col)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="#fff" stroke="'+col+'" stroke-width="2"/><rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" rx="6" fill="'+col+'"/><text x="'+(x+8)+'" y="'+(y+14)+'" font-size="12" font-weight="700" fill="#fff">'+title+'</text>';
+ const wire=(x1,y1,x2,y2,c)=>'<path d="M'+x1+','+y1+' H'+((x1+x2)/2)+' V'+y2+' H'+x2+'" fill="none" stroke="'+c+'" stroke-width="3"/>';
+ let s='<rect x="10" y="10" width="880" height="310" rx="8" fill="#f6f8fa" stroke="#e1e5ea"/><text x="20" y="30" font-size="13" fill="#5b6672">Block diagram — While loop, iteration '+Math.round(t0/N)+'</text>';
+ s+=wire(190,120,250,120,'#d98a00')+wire(430,120,490,90,'#d98a00')+wire(430,120,490,180,'#d98a00')+wire(610,90,680,140,'#d98a00')+wire(610,180,680,140,'#d98a00')+wire(610,90,680,255,'#d98a00');
+ s+=box(30,60,160,120,'DAQmx Read','#1f3b5c')+wave(sig,38,85,145,90,3.5)+'<text x="38" y="195" font-size="11" fill="#5b6672">'+N+' samples @ 5 kS/s</text>';
+ s+=box(250,60,180,120,flt?'Low-pass filter':'Filter (bypassed)','#1f3b5c')+wave(out,258,85,165,90,3.5);
+ s+=box(490,60,120,60,'RMS','#1f3b5c')+'<text x="550" y="108" text-anchor="middle" font-size="18" font-weight="700" fill="#1b2430">'+rms.toFixed(2)+'</text>';
+ s+=box(490,150,120,60,'Peak','#1f3b5c')+'<text x="550" y="198" text-anchor="middle" font-size="18" font-weight="700" fill="#1b2430">'+pk.toFixed(2)+'</text>';
+ s+=box(680,100,190,90,'Compare > limit','#1f3b5c')+'<circle cx="715" cy="155" r="16" fill="'+(alarm?'#d98a00':'#c9ced5')+'" stroke="#1f3b5c" stroke-width="2"/><text x="740" y="152" font-size="14" font-weight="700" fill="'+(alarm?'#b06e00':'#5b6672')+'">'+(alarm?'ALARM':'Normal')+'</text><text x="740" y="170" font-size="11" fill="#5b6672">limit '+L+'</text>';
+ s+=box(680,215,190,90,'Write to TDMS','#1f3b5c')+'<polyline fill="none" stroke="#d98a00" stroke-width="2" points="'+hist.map((v,i)=>(690+i*170/60).toFixed(1)+','+(295-Math.min(60,v*8)).toFixed(1)).join(' ')+'"/><line x1="690" y1="'+(295-L*8)+'" x2="860" y2="'+(295-L*8)+'" stroke="#8a939e" stroke-dasharray="4 3"/>';
+ s+='<text x="30" y="240" font-size="12" fill="#5b6672">Orange wires carry arrays of numbers (DBL). Each block runs when its input data arrives —</text><text x="30" y="256" font-size="12" fill="#5b6672">RMS and Peak run in parallel, exactly as in LabVIEW dataflow.</text>';
+ q('dfSvg').innerHTML=s;t0+=N;}
+setInterval(()=>{if(run)frame();},400);['dfS','dfD','dfF','dfL'].forEach(i=>q(i).oninput=frame);
+q('dfRun').onclick=()=>{run=!run;q('dfRun').textContent=run?'Pause loop':'Run loop';};frame();
+function adc(){const bits=+q('adB').value,R=+q('adR').value,A=+q('adA').value;q('adAv').textContent=A.toFixed(3);
+ const lsb=2*R/2**bits,qz=v=>Math.max(-R,Math.min(R-lsb,Math.round(v/lsb)*lsb));const N=400;let pa='',pq='';let err=0;
+ for(let i=0;i<=N;i++){const v=A*Math.sin(2*Math.PI*2*i/N),w=qz(v);err+=(v-w)**2;const x=30+i*740/N;pa+=x.toFixed(1)+','+(110-v/A*80).toFixed(1)+' ';pq+=x.toFixed(1)+','+(110-Math.max(-1.3,Math.min(1.3,w/A))*80).toFixed(1)+' ';}
+ const rmsE=Math.sqrt(err/(N+1)),snr=20*Math.log10((A/Math.SQRT2)/(rmsE||lsb/Math.sqrt(12)));
+ q('adSvg').innerHTML='<line x1="30" y1="110" x2="770" y2="110" stroke="#e1e5ea"/><polyline fill="none" stroke="#8a939e" stroke-width="4" opacity=".5" points="'+pa+'"/><polyline fill="none" stroke="#1f3b5c" stroke-width="1.6" points="'+pq+'"/><text x="770" y="20" text-anchor="end" font-size="12" fill="#5b6672">grey: true signal · navy: digitised</text>';
+ const steps=2*A/lsb;q('adMsg').innerHTML='Step size (1 LSB) = <b>'+(lsb*1000<1?(lsb*1e6).toFixed(2)+' µV':(lsb*1000).toFixed(3)+' mV')+'</b>. The signal spans about <b>'+(steps<1?'less than one':steps.toFixed(0))+'</b> steps; signal-to-quantisation-noise ≈ <b>'+(isFinite(snr)?snr.toFixed(0):'—')+' dB</b>. '+(steps<50?'Too coarse — choose a smaller range or more bits.':'Resolution is adequate.');}
+['adB','adR','adA'].forEach(i=>q(i).oninput=adc);adc();

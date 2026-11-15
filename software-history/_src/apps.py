@@ -1,13 +1,13 @@
 """
 TOOL:    software-history/_src/apps.py — A–Z application index generator for the series hub
 FAMILY:  software-history
-VERSION: 1.0.0
+VERSION: 1.1.0
 DATE:    2026-11-15
 CHAT:    Software history series — reorder into topic groups and index hidden applications
-CHANGES: 1.0.0 — First release: finds the section of each episode that discusses each application and writes assets/apps.js
+CHANGES: 1.1.0 — Season 7 applications and the automation topic group; 1.0.0 — First release: finds the section of each episode that discusses each application and writes assets/apps.js
 STATUS:  working
 """
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 import re, json, glob
 from pathlib import Path
 
@@ -206,6 +206,48 @@ Avast and AVG|1988|C||32|Avast
 Quick Heal|1993|C||32|Quick Heal
 K7 Security|1991|C||32|K7
 Microsoft Defender|2006|C||32|Defender
+MS-DOS batch files|1981|C||35@history|.BAT
+REXX|1979|C||35|REXX
+4DOS|1989|R||35|4DOS
+CMD.EXE|1993|C||35|CMD.EXE
+VBScript / Windows Script Host|1996|M|Being removed from Windows; PowerShell|35|VBScript
+PowerShell|2006|C||35|PowerShell
+Task Scheduler|1998|C||35@sched|Task Scheduler
+cron|1975|C||35|cron
+Lotus 1-2-3 macros|1983|R||36|Lotus 1-2-3 macros
+WordBasic|1989|M|VBA|36|WordBasic
+Excel 4.0 macros (XLM)|1992|R|Restricted by default 2022|36|XLM
+VBA (Visual Basic for Applications)|1993|C||36,38|VBA
+Google Apps Script|2009|C||36|Apps Script
+Office Scripts|2020|C||36|Office Scripts
+Python in Excel|2023|C||36|Python in Excel
+Tally TDL||C||36@tdl|TDL
+SuperKey / ProKey|1985|R||37|SuperKey
+Windows Recorder|1990|R||37|Recorder
+AutoIt|1999|C||37|AutoIt
+AutoHotkey|2003|C||37|AutoHotkey
+Espanso|2019|C||37|Espanso
+PhraseExpress||C||37|PhraseExpress
+Selenium|2004|C||37|Selenium
+Puppeteer|2017|C||37|Puppeteer
+Playwright|2020|C||37|Playwright
+PyAutoGUI|2014|C||37|PyAutoGUI
+AutoLISP|1986|C||38@cad|AutoLISP
+ObjectARX|1996|C||38|ObjectARX
+ANSYS APDL||C||38@cae|APDL
+SCPI|1990|C||38@test|SCPI
+VISA / PyVISA|1995|C||38|PyVISA
+TestStand|1998|C||38|TestStand
+ezdxf||C||38|ezdxf
+Blue Prism|2001|C||39@rpa|Blue Prism
+UiPath|2005|C||39@rpa|UiPath
+Automation Anywhere|2003|C||39@rpa|Automation Anywhere
+Power Automate|2016|C||39|Power Automate
+IFTTT|2010|C||39@nocode|IFTTT
+Zapier|2011|C||39@nocode|Zapier
+Make (Integromat)|2012|C||39@nocode|Integromat
+n8n|2019|C||39@nocode|n8n
+Robot Framework||C||39|Robot Framework
 """
 
 TOPICS = [

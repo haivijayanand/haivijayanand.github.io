@@ -1,12 +1,12 @@
 """
 TOOL:    software-history/_src/build.py — builds episode pages from _src/NN.html fragments
 FAMILY:  software-history
-VERSION: 1.4.0
+VERSION: 1.5.0
 DATE:    2026-11-15
 CHAT:    Software history series — start with MS-DOS, publish all episodes
-CHANGES: 1.4.0 — Season 5 episodes 27–30 (engineering and test software) and Season 6 episodes 31–34 (PC-era extras); 1.3.0 — Season 4 episodes 21–26 (thinking, research and office tools); 1.2.0 — Season 3 episodes 15–20 (open source on Windows); 1.1.0 — Season 2 episodes 11–14 (DTP, graphics, prepress, packaging prepress); last-episode nav computed; 1.0.0 — fragment (meta lines + body + optional script) to full page with header block, TOC, nav
+CHANGES: 1.5.0 — keeps earlier CHANGES entries of an existing page when rebuilding; 1.4.0 — Season 5 episodes 27–30 (engineering and test software) and Season 6 episodes 31–34 (PC-era extras); 1.3.0 — Season 4 episodes 21–26 (thinking, research and office tools); 1.2.0 — Season 3 episodes 15–20 (open source on Windows); 1.1.0 — Season 2 episodes 11–14 (DTP, graphics, prepress, packaging prepress); last-episode nav computed; 1.0.0 — fragment (meta lines + body + optional script) to full page with header block, TOC, nav
 """
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 import re, sys, pathlib, html
 SRC = pathlib.Path(__file__).parent
 OUT = SRC.parent
@@ -37,6 +37,13 @@ def build(n, version='1.0.0', date='2026-11-15', changes='First release'):
     toc = ''.join(f'<a href="#{i}">{t}</a>\n' for i, t in re.findall(r'<section id="([^"]+)" data-toc="([^"]+)"', body))
     prev = f'<a href="{SLUGS[n-1]}.html"><small>← Episode {n-1:02d}</small>{NAMES[n-1]}</a>' if n > 1 else '<a href="./"><small>Series</small>All episodes</a>'
     nxt = f'<a class="nx" href="{SLUGS[n+1]}.html"><small>Next · Episode {n+1:02d}</small>{NAMES[n+1]} →</a>' if n < max(SLUGS) else '<a class="nx" href="./"><small>Series</small>All episodes →</a>'
+    old = OUT / f'{SLUGS[n]}.html'
+    hist = ''
+    if old.exists():
+        m = re.search(r'^CHANGES: (.*)$', old.read_text(), re.M)
+        if m and not m.group(1).startswith(version + ' '):
+            hist = '; ' + m.group(1)
+    changes = changes + hist
     page = f'''<!DOCTYPE html>
 <!--
 TOOL:    software-history/{SLUGS[n]}.html — Software Through the Ages · Episode {n:02d}: {NAMES[n]}

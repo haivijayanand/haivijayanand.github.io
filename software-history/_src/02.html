@@ -1,0 +1,192 @@
+title: Windows 1.0 to 3.11: the graphical layer on DOS
+years: 1985 – 2001
+lede: Windows began not as an operating system but as a program you started from the DOS prompt. Over eight years it grew from tiled windows that few people used into Windows 3.x, the interface that put a mouse on almost every office desk.
+desc: Why Microsoft built Windows, how it ran on top of DOS, every version from 1.0 to Windows for Workgroups 3.11, the Apple lawsuit, its rivals, and its retirement.
+
+<section id="glance" data-toc="At a glance">
+  <div class="stats">
+    <div class="stat"><div class="v">20 Nov 1985</div><div class="k">Windows 1.0 released</div></div>
+    <div class="stat"><div class="v">9 Dec 1987</div><div class="k">Windows 2.0: overlapping windows</div></div>
+    <div class="stat"><div class="v">22 May 1990</div><div class="k">Windows 3.0: the breakthrough</div></div>
+    <div class="stat"><div class="v">6 Apr 1992</div><div class="k">Windows 3.1: TrueType, OLE, multimedia</div></div>
+    <div class="stat"><div class="v">8 Nov 1993</div><div class="k">Windows for Workgroups 3.11</div></div>
+    <div class="stat"><div class="v">31 Dec 2001</div><div class="k">Support for Windows 1.0 – 3.x ended</div></div>
+  </div>
+</section>
+
+<section id="need" data-toc="1 · The requirement">
+  <h2><span class="n">01</span>The requirement: computers for people who would not learn commands</h2>
+  <p>By 1983 the IBM PC had conquered offices, but using it meant memorising commands such as <code>COPY A:*.WK1 C:\LOTUS</code>. Meanwhile Xerox PARC had shown a different idea: the <b>Alto</b> (1973) and the commercial <b>Xerox Star</b> (1981) with windows, icons, a mouse and "what you see is what you get" documents. Apple turned that into the <b>Lisa</b> (1983) and the <b>Macintosh</b> (January 1984). On the PC side, VisiCorp shipped <b>VisiOn</b> in late 1983.</p>
+  <p>Microsoft, which also wrote applications for the Mac, announced "Interface Manager" — renamed <b>Windows</b> — in November 1983. Its brief was shaped by the installed base of DOS PCs:</p>
+  <table>
+    <tr><th style="width:28%">Requirement</th><th style="width:34%">Why</th><th>How Windows answered it</th></tr>
+    <tr><td>Run on existing PCs</td><td>Millions of 8088 machines with 256–640 KB and floppy disks</td><td>Ran as a program on top of MS-DOS; no new hardware or OS needed</td></tr>
+    <tr><td>Keep running DOS programs</td><td>Lotus 1-2-3 and WordPerfect users would not give them up</td><td>DOS applications launched from Windows, later in their own windows (386 mode)</td></tr>
+    <tr><td>One look for all applications</td><td>Every DOS program had its own keys and menus</td><td>Shared menus, dialog boxes, scroll bars and later IBM's CUA keyboard rules</td></tr>
+    <tr><td>Device independence</td><td>Each DOS program shipped its own printer and screen drivers</td><td><b>GDI</b> (Graphics Device Interface): applications draw once, Windows drivers render on any screen or printer</td></tr>
+    <tr><td>Several programs at once</td><td>Copy figures from a spreadsheet into a letter</td><td>Cooperative multitasking and a shared Clipboard</td></tr>
+  </table>
+</section>
+
+<section id="inside" data-toc="2 · Technology inside">
+  <h2><span class="n">02</span>Technology inside</h2>
+  <div class="two">
+  <div>
+    <h3>A program on a program</h3>
+    <div class="stack">
+      <div class="layer l1">Windows applications <small>Excel, Word, Paint, Write</small></div>
+      <div class="layer l2">USER <small>windows, menus, messages</small></div>
+      <div class="layer l3">GDI <small>drawing, fonts, printers</small></div>
+      <div class="layer l4">KERNEL <small>memory, tasks, loading DLLs</small></div>
+      <div class="layer l5">MS-DOS <small>files and disks (INT 21h)</small></div>
+      <div class="layer l6">BIOS and hardware</div>
+    </div>
+    <p style="margin-top:10px;font-size:15px;color:var(--muted)">You typed <code>WIN</code> at the DOS prompt. Windows took over the screen, keyboard and mouse, but still asked DOS to read and write files.</p>
+  </div>
+  <div>
+    <h3>Key technologies</h3>
+    <table>
+      <tr><th>Element</th><th>What it was</th></tr>
+      <tr><td>Programming model</td><td>Event-driven: every program runs a <i>message loop</i> (GetMessage → DispatchMessage) and reacts to clicks, keys and redraw requests</td></tr>
+      <tr><td>Multitasking</td><td><b>Cooperative</b>: a program keeps the CPU until it returns to its message loop</td></tr>
+      <tr><td>API</td><td>Win16, written for C and Pascal calling conventions</td></tr>
+      <tr><td>Files</td><td>"New Executable" (NE) <code>.EXE</code> and <code>.DLL</code>; resources (icons, menus, dialogs) packed inside</td></tr>
+      <tr><td>Memory modes (3.0)</td><td>Real mode (8088), Standard mode (286 protected mode, up to 16 MB), 386 Enhanced (virtual memory, DOS programs in virtual 8086 machines)</td></tr>
+      <tr><td>Settings</td><td><code>WIN.INI</code>, <code>SYSTEM.INI</code>; a small registry appeared in 3.1 for OLE</td></tr>
+      <tr><td>Data sharing</td><td>Clipboard, DDE (1987), OLE 1.0 (1992)</td></tr>
+    </table>
+  </div>
+  </div>
+</section>
+
+<section id="coop" data-toc="3 · Cooperative multitasking">
+  <h2><span class="n">03</span>See it: cooperative multitasking</h2>
+  <p>In Windows 3.x the operating system did not take the CPU away from a program; each program had to hand it back. One misbehaving program froze everything — the famous hourglass. Press <b>Run</b>, then make one program misbehave.</p>
+  <div class="demo">
+    <div class="chips"><button id="cRun">▶ Run</button><button id="cHang">Make Excel stop yielding</button><button id="cFix">Ctrl+Alt+Del (end task)</button></div>
+    <div class="bars" id="cBars"></div>
+    <p id="cMsg" style="margin:8px 0 0;color:var(--muted)">Each bar counts the time slices a program has received.</p>
+  </div>
+  <div class="callout">Windows 95 (for 32-bit programs) and Windows NT replaced this with <b>pre-emptive multitasking</b>: a hardware timer lets the operating system interrupt any program. Episode 06 and Episode 08 cover that change.</div>
+</section>
+
+<section id="versions" data-toc="4 · Version explorer">
+  <h2><span class="n">04</span>Version explorer</h2>
+  <p>Blue chips: Windows 1.x and 2.x. Amber chips: the 3.x family that succeeded.</p>
+  <div class="vbar" id="vbar"></div>
+  <div class="vpanel" id="vpanel"></div>
+  <div class="callout amber"><b>Why 3.0 succeeded when 1.0 and 2.0 did not:</b> the hardware caught up. The 386 and VGA displays let Windows use megabytes of memory and 16 colours, and Microsoft's own Excel and Word for Windows gave people a reason to switch.</div>
+</section>
+
+<section id="apple" data-toc="5 · Apple v. Microsoft">
+  <h2><span class="n">05</span>Apple v. Microsoft</h2>
+  <p>In 1985 Microsoft signed an agreement with Apple licensing some Macintosh visual elements for Windows 1.0. When Windows 2.0 added overlapping windows, Apple sued in March 1988, claiming the "look and feel" of the Mac. The courts found that most of the disputed elements were covered by the 1985 licence or were not protectable ideas; Apple lost at trial and on appeal (1994), and the US Supreme Court declined to hear the case in 1995. Xerox's own suit against Apple was also dismissed. The result: graphical interface ideas became common property of the industry.</p>
+</section>
+
+<section id="apps" data-toc="6 · Applications">
+  <h2><span class="n">06</span>Applications that made Windows</h2>
+  <table>
+    <tr><th>Program</th><th>Year on Windows</th><th>Why it mattered</th></tr>
+    <tr><td>Aldus PageMaker</td><td>1987</td><td>Desktop publishing on the PC; one of the first serious Windows programs</td></tr>
+    <tr><td>Microsoft Excel 2.0</td><td>1987</td><td>Shipped with a "run-time" Windows; a spreadsheet Lotus could not match on Windows</td></tr>
+    <tr><td>Word for Windows</td><td>1989</td><td>WYSIWYG word processing on the PC</td></tr>
+    <tr><td>CorelDRAW</td><td>1989</td><td>Vector illustration for signs, packaging and print</td></tr>
+    <tr><td>Microsoft Office</td><td>1990</td><td>Bundled Word, Excel and PowerPoint at one price</td></tr>
+    <tr><td>Visual Basic</td><td>1991</td><td>Let ordinary programmers build Windows applications (Episode 10)</td></tr>
+    <tr><td>Solitaire, Minesweeper</td><td>1990, 1992</td><td>Quietly taught millions to drag, drop and right-click</td></tr>
+  </table>
+</section>
+
+<section id="rivals" data-toc="7 · Contemporaries">
+  <h2><span class="n">07</span>Contemporaries</h2>
+  <table>
+    <tr><th>System</th><th>Maker · year</th><th>Strength</th><th>Fate</th></tr>
+    <tr><td><b>Mac OS (System 1–7)</b></td><td>Apple · 1984</td><td>The polished original GUI, integrated with Apple hardware</td><td>Continued; now macOS</td></tr>
+    <tr><td><b>VisiOn</b></td><td>VisiCorp · 1983</td><td>First GUI for the IBM PC</td><td>Needed a hard disk and expensive hardware; failed quickly</td></tr>
+    <tr><td><b>GEM</b></td><td>Digital Research · 1985</td><td>Fast and light; ran on 8088s</td><td>Apple's suit forced changes; lived on in Atari ST and Ventura Publisher</td></tr>
+    <tr><td><b>TopView, DESQview</b></td><td>IBM, Quarterdeck · 1985</td><td>Text-mode multitasking of DOS programs</td><td>DESQview loved by power users; faded with Windows 95</td></tr>
+    <tr><td><b>AmigaOS, Atari TOS</b></td><td>Commodore, Atari · 1985</td><td>Colour GUI and (Amiga) pre-emptive multitasking</td><td>Ended with their hardware</td></tr>
+    <tr><td><b>OS/2 Presentation Manager</b></td><td>IBM + Microsoft · 1988</td><td>Protected-mode OS with a GUI</td><td>Lost to Windows (Episode 06)</td></tr>
+    <tr><td><b>GEOS / GeoWorks</b></td><td>Berkeley Softworks · 1986/1990</td><td>Full GUI on very small machines</td><td>Niche; later in handhelds</td></tr>
+    <tr><td><b>X Window System, NeXTSTEP</b></td><td>MIT 1984, NeXT 1989</td><td>Networked graphics on Unix; object-oriented desktop</td><td>X lives on in Linux; NeXTSTEP became the core of macOS</td></tr>
+  </table>
+</section>
+
+<section id="retire" data-toc="8 · Retirement">
+  <h2><span class="n">08</span>Decline and retirement</h2>
+  <ul>
+    <li><b>August 1995:</b> Windows 95 merged DOS and Windows into one product with the Start button, long file names and 32-bit programs. Windows 3.x sales collapsed within two years.</li>
+    <li><b>31 December 2001:</b> Microsoft ended support for Windows 1.0, 2.x and 3.x together with MS-DOS.</li>
+    <li><b>November 2008:</b> Microsoft stopped licensing Windows 3.11 to makers of embedded systems — some cash registers and industrial controllers were still shipping with it.</li>
+    <li><b>Long tail:</b> 16-bit Windows programs ran on 32-bit Windows NT through Windows 10 using the "WOW" layer; 64-bit Windows cannot run them.</li>
+  </ul>
+</section>
+
+<section id="replace" data-toc="9 · Replacements">
+  <h2><span class="n">09</span>Replacements</h2>
+  <table>
+    <tr><th>Windows 3.x part</th><th>Replaced by</th></tr>
+    <tr><td>Program Manager</td><td>Start menu and taskbar (Windows 95)</td></tr>
+    <tr><td>File Manager</td><td>Windows Explorer → File Explorer (Microsoft published File Manager's source on GitHub in 2018)</td></tr>
+    <tr><td>Win16 API, cooperative multitasking</td><td>Win32 API, pre-emptive multitasking, protected memory</td></tr>
+    <tr><td>WIN.INI / SYSTEM.INI</td><td>The Windows Registry</td></tr>
+    <tr><td>Windows on DOS</td><td>Windows 95/98/ME (transition), then Windows NT → XP → 11</td></tr>
+  </table>
+</section>
+
+<section id="legacy" data-toc="10 · Legacy">
+  <h2><span class="n">10</span>Legacy</h2>
+  <ul>
+    <li>The <b>message loop</b> and window procedure of 1985 are still the core of every Win32 program today.</li>
+    <li><b>Ctrl+X / C / V</b>, menus with underlined access keys, Alt+Tab and dialog box conventions became universal.</li>
+    <li><b>TrueType fonts</b> (3.1) and device-independent printing ended the era of per-application printer drivers.</li>
+    <li><b>DLLs</b> brought code sharing — and "DLL hell" when programs overwrote each other's versions.</li>
+  </ul>
+</section>
+
+<section id="lessons" data-toc="11 · Lessons">
+  <h2><span class="n">11</span>Lessons for engineers</h2>
+  <ol>
+    <li><b>Launch on the installed base.</b> Running on top of DOS meant no one had to throw anything away.</li>
+    <li><b>Version 3 is often the real version 1.</b> The idea was right in 1985; the hardware arrived in 1990.</li>
+    <li><b>Platforms win through their own killer applications.</b> Excel and Word gave Windows reasons to exist.</li>
+    <li><b>Trusting every program to behave does not scale.</b> Cooperative multitasking worked until one program misbehaved.</li>
+  </ol>
+</section>
+
+<section id="sources">
+  <h2>Sources &amp; further reading</h2>
+  <ol class="src">
+    <li><a href="https://en.wikipedia.org/wiki/Windows_1.0">Wikipedia — Windows 1.0</a> · <a href="https://en.wikipedia.org/wiki/Windows_3.0">Windows 3.0</a> · <a href="https://en.wikipedia.org/wiki/Windows_3.1">Windows 3.1</a></li>
+    <li><a href="https://en.wikipedia.org/wiki/Timeline_of_Microsoft_Windows">Wikipedia — Timeline of Microsoft Windows (release and end-of-support dates)</a></li>
+    <li><a href="https://en.wikipedia.org/wiki/Apple_Computer,_Inc._v._Microsoft_Corp.">Wikipedia — Apple Computer, Inc. v. Microsoft Corp.</a></li>
+    <li><a href="https://github.com/microsoft/winfile">GitHub — microsoft/winfile (Windows File Manager source)</a></li>
+    <li><a href="https://www.computerhistory.org/revolution/">Computer History Museum — Revolution exhibition</a></li>
+  </ol>
+</section>
+<!--SCRIPT-->
+const V=[
+ {v:'1.01',d:'Nov 1985',hw:'8088 PCs, 256 KB, two floppies, CGA/Hercules',n:['Tiled windows only (no overlapping)','MS-DOS Executive file manager; Paint, Write, Notepad, Calculator, Clock, Reversi','GDI device-independent graphics','Little application support; mostly ignored']},
+ {v:'2.03',d:'Dec 1987',hw:'286 PCs, EGA',n:['Overlapping, resizable windows','Keyboard shortcuts and desktop icons','DDE data exchange between programs','First home of Excel and Word for Windows','Triggered Apple\'s lawsuit (March 1988)']},
+ {v:'2.1 /286 /386',d:'May 1988',hw:'286 and 386 processors',n:['Windows/286 used the HMA for more memory','Windows/386 ran several DOS programs in virtual 8086 machines with pre-emptive switching between them','First taste of the 386 Enhanced mode that 3.0 made standard']},
+ {v:'3.0',d:'22 May 1990',e:2,hw:'386 PCs, VGA 16 colours, megabytes of RAM',n:['Program Manager and File Manager','Protected mode: up to 16 MB in Standard mode, virtual memory in 386 Enhanced mode','Proportional system font, 3-D look, Solitaire','Sold millions of copies within its first year; the first truly successful Windows']},
+ {v:'3.0 MME',d:'Oct 1991',e:2,hw:'Sound cards and CD-ROM drives',n:['Multimedia Extensions sold with "Multimedia PC" hardware','Media Player and Sound Recorder — later folded into 3.1']},
+ {v:'3.1',d:'6 Apr 1992',e:2,hw:'386SX/486 PCs, SVGA',n:['TrueType scalable fonts','OLE 1.0 object linking and embedding; drag and drop','Multimedia built in; Minesweeper replaced Reversi','Real mode dropped: now needs a 286 or better','Better stability ("Unrecoverable Application Error" became "General Protection Fault")']},
+ {v:'WfW 3.1',d:'Oct 1992',e:2,hw:'Office local area networks',n:['Windows for Workgroups: built-in peer-to-peer file and printer sharing','Microsoft Mail and Schedule+','Network-aware File Manager']},
+ {v:'WfW 3.11',d:'8 Nov 1993',e:2,hw:'Corporate networks, faster hard disks',n:['32-bit file access bypassing DOS for disk I/O','TCP/IP add-on for the coming internet era','The most widely used 16-bit Windows in offices']},
+ {v:'Win32s',d:'1992–1994',e:2,hw:'Programs written for Windows NT',n:['Add-on that let some 32-bit programs run on Windows 3.1','A bridge to Windows 95 and NT']}
+];
+SH.explorer(V,'Windows ',['Windows 1.x / 2.x','Windows 3.x family']);
+// cooperative multitasking demo
+const apps=[['Excel',0],['Word',0],['Clock',0],['Paint',0]];let hang=false,timer=null,turn=0;
+const bars=document.getElementById('cBars'),msg=document.getElementById('cMsg');
+const draw=()=>SH.bars(bars,apps.map((a,i)=>[a[0]+(hang&&i===0?' (busy)':''),a[1],hang&&i===0]),Math.max(40,...apps.map(a=>a[1])));
+function tick(){
+  if(hang&&turn===0){apps[0][1]++;msg.textContent='⏳ Excel is recalculating and never returns to its message loop. Every other program is frozen, even the clock.';draw();return;}
+  apps[turn][1]++;turn=(turn+1)%apps.length;
+  if(!hang)msg.textContent='Each program does a little work, then yields. Windows passes control to the next one.';draw();
+}
+document.getElementById('cRun').onclick=()=>{if(!timer)timer=setInterval(tick,120);};
+document.getElementById('cHang').onclick=()=>{hang=true;if(!timer)timer=setInterval(tick,120);};
+document.getElementById('cFix').onclick=()=>{hang=false;apps[0][1]=0;turn=1;msg.textContent='Excel ended. The others start running again — and Excel\'s unsaved work is lost.';draw();};
+draw();

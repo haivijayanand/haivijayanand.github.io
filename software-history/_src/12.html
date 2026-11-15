@@ -1,0 +1,241 @@
+title: Graphics software: vectors, pixels and plugins
+years: 1987 → today
+lede: Every printed carton, poster, logo and magazine photo passes through two kinds of program: a vector drawing program that describes shapes as mathematics, and an image editor that works on pixels. Illustrator, FreeHand and CorelDRAW fought over the first; Photoshop won the second so completely that its name became a verb. Around them grew an industry of plugins — and, in 2013, a switch from boxed software to subscriptions.
+desc: Why vector and raster graphics programs were needed, the history of Illustrator, FreeHand, CorelDRAW, Photoshop, PHOTO-PAINT, Paint Shop Pro and GIMP, the plugin era, Creative Cloud, Affinity, Figma and AI tools — with interactive demos.
+
+<section id="glance" data-toc="At a glance">
+  <div class="stats">
+    <div class="stat"><div class="v">1987</div><div class="k">Adobe Illustrator 1.0 for the Macintosh</div></div>
+    <div class="stat"><div class="v">Jan 1989</div><div class="k">CorelDRAW 1.0 for Windows</div></div>
+    <div class="stat"><div class="v">Feb 1990</div><div class="k">Adobe Photoshop 1.0</div></div>
+    <div class="stat"><div class="v">2013</div><div class="k">Creative Cloud: Adobe moves to subscription only</div></div>
+    <div class="stat"><div class="v">2023</div><div class="k">Generative Fill brings AI into Photoshop</div></div>
+    <div class="stat"><div class="v">Oct 2025</div><div class="k">Affinity becomes one free app under Canva</div></div>
+  </div>
+</section>
+
+<section id="need" data-toc="1 · The requirement">
+  <h2><span class="n">01</span>The requirement: artwork without the drawing board and darkroom</h2>
+  <p>Before these programs, commercial art had two separate crafts. <b>Line art</b> — logos, maps, technical illustrations, packaging artwork — was drawn in ink with technical pens, French curves, ruling pens and rub-down Letraset type, then photographed. <b>Photographs</b> were retouched with airbrushes and dyes on prints, combined by stripping film in the darkroom, and colour-separated on drum scanners costing as much as a building. Every change meant redrawing, rephotographing or re-scanning.</p>
+  <table>
+    <tr><th style="width:28%">Requirement</th><th style="width:34%">Why</th><th>How graphics software answered it</th></tr>
+    <tr><td>Smooth, exact curves at any size</td><td>A logo must print on a visiting card and a hoarding</td><td><b>Vector</b> paths using Bézier curves — PostScript's native way of describing shapes</td></tr>
+    <tr><td>Edit photographs without film</td><td>Retouching, colour correction and montage were slow darkroom crafts</td><td><b>Raster</b> editing: every pixel can be selected, painted and adjusted</td></tr>
+    <tr><td>Print-ready colour</td><td>Presses print cyan, magenta, yellow and black, not screen RGB</td><td>CMYK modes, separations and spot colours (Pantone)</td></tr>
+    <tr><td>Non-destructive changes</td><td>Clients change their minds</td><td>Layers (1994), adjustment layers, masks, history, editable effects</td></tr>
+    <tr><td>Extend the tool</td><td>Special effects, filters and industry tasks vary widely</td><td>Plugin interfaces (Photoshop's .8BF filters, Illustrator plug-ins)</td></tr>
+  </table>
+</section>
+
+<section id="vr" data-toc="2 · Vector vs raster">
+  <h2><span class="n">02</span>See it: vector vs raster</h2>
+  <p>Both images below started at the same size. The left one is stored as pixels (a 64 × 64 bitmap); the right one as vector instructions (a circle, a path and a letter). Zoom in.</p>
+  <div class="demo">
+    <label>Zoom <input type="range" id="vrZ" min="1" max="10" step="0.5" value="1"> <b id="vrZv">1×</b></label>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:10px">
+      <div><b style="color:var(--navy)">Raster (pixels)</b><div style="width:300px;height:300px;overflow:hidden;border:1px solid var(--line);background:#fff;position:relative"><canvas id="vrR" width="64" height="64" style="position:absolute;left:0;top:0;image-rendering:pixelated"></canvas></div></div>
+      <div><b style="color:var(--navy)">Vector (mathematics)</b><div style="width:300px;height:300px;overflow:hidden;border:1px solid var(--line);background:#fff;position:relative"><svg id="vrV" viewBox="0 0 64 64" style="position:absolute;left:0;top:0"><circle cx="32" cy="32" r="26" fill="#2c6fb0"/><path d="M14 44 C 24 18, 40 18, 50 44" fill="none" stroke="#d98a00" stroke-width="4"/><text x="32" y="40" font-size="22" font-family="Georgia,serif" font-weight="bold" fill="#fff" text-anchor="middle">V</text></svg></div></div>
+    </div>
+    <p id="vrNote" style="margin:8px 0 0;color:var(--muted)"></p>
+  </div>
+</section>
+
+<section id="bez" data-toc="3 · Bézier curves">
+  <h2><span class="n">03</span>Try it: the Bézier curve</h2>
+  <p>Pierre Bézier developed these curves at Renault in the 1960s to describe car body panels; Paul de Casteljau did similar work at Citroën. PostScript, Illustrator, CorelDRAW, fonts and SVG all use them. Drag the four points: the two <b>anchors</b> (squares) fix the ends; the two <b>handles</b> (circles) pull the curve.</p>
+  <div class="demo">
+    <svg id="bzSvg" viewBox="0 0 600 320" style="width:100%;max-width:720px;background:#fff;border:1px solid var(--line);border-radius:8px;touch-action:none"></svg>
+    <p id="bzTxt" style="font:14px var(--mono);color:var(--muted);margin:6px 0 0"></p>
+  </div>
+</section>
+
+<section id="inside" data-toc="4 · Technology inside">
+  <h2><span class="n">04</span>Technology inside</h2>
+  <div class="two">
+  <div>
+    <h3>Vector programs</h3>
+    <table>
+      <tr><td>Geometry</td><td>Paths of cubic Bézier segments (Illustrator, FreeHand); CorelDRAW also uses its own curve objects; fills, strokes, gradients and meshes</td></tr>
+      <tr><td>Text</td><td>Outline fonts converted to paths when needed — "create outlines" before sending artwork to a printer</td></tr>
+      <tr><td>Output</td><td>PostScript/EPS, then PDF; Illustrator's .AI is PDF-based since version 9 (2000)</td></tr>
+      <tr><td>Formats</td><td>.AI, .CDR, .FH, .EPS, .SVG (W3C, 2001), .PDF</td></tr>
+    </table>
+  </div>
+  <div>
+    <h3>Raster programs</h3>
+    <table>
+      <tr><td>Data</td><td>Grids of pixels in channels (RGB, CMYK, Lab, spot channels) at 8, 16 or 32 bits per channel</td></tr>
+      <tr><td>Editing</td><td>Selections and masks, layers with blend modes, adjustment layers, filters</td></tr>
+      <tr><td>Colour</td><td>ICC profiles convert screen RGB to the printer's CMYK (Episode 13)</td></tr>
+      <tr><td>Formats</td><td>.PSD, TIFF, JPEG (1992), PNG (1996), camera RAW files</td></tr>
+    </table>
+  </div>
+  </div>
+</section>
+
+<section id="layers" data-toc="5 · Layers and blend modes">
+  <h2><span class="n">05</span>See it: layers and blend modes</h2>
+  <p>Photoshop 3.0 (1994) introduced layers: pictures stacked like transparent sheets, each with its own opacity and <b>blend mode</b> — the arithmetic used to combine it with what lies below.</p>
+  <div class="demo">
+    <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
+      <div id="lyStage" style="position:relative;width:320px;height:240px;border:1px solid var(--line);border-radius:8px;overflow:hidden;isolation:isolate;background:#fff">
+        <div id="ly0" style="position:absolute;inset:0;background:linear-gradient(90deg,#ffffff,#1f3b5c)"></div>
+        <div id="ly1" style="position:absolute;left:30px;top:40px;width:170px;height:150px;border-radius:50%;background:#d98a00"></div>
+        <div id="ly2" style="position:absolute;left:130px;top:70px;width:160px;height:120px;background:#2c6fb0;transform:rotate(-12deg)"></div>
+      </div>
+      <div style="flex:1;min-width:260px">
+        <table id="lyTbl"><tr><th>Layer</th><th>Visible</th><th>Blend mode</th><th>Opacity</th></tr></table>
+        <p style="font-size:14px;color:var(--muted);margin:4px 0 0"><b>Multiply</b> darkens like overprinted inks — the basis of how printers think about overprint. <b>Screen</b> lightens like projected light.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sep" data-toc="6 · RGB to CMYK">
+  <h2><span class="n">06</span>See it: separating an image for print</h2>
+  <p>A screen mixes red, green and blue light; a press lays down cyan, magenta, yellow and black ink. Separation computes how much of each ink goes on each spot. The four plates are shown below as grey density — dark means more ink. (This is the simple textbook formula; real separations use ICC profiles, Episode 13.)</p>
+  <div class="demo">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+      <div><canvas id="spSrc" width="160" height="120" style="border:1px solid var(--line)"></canvas><br><small>Original (RGB)</small></div>
+      <div><canvas id="spC" width="160" height="120" style="border:1px solid var(--line)"></canvas><br><small>Cyan plate</small></div>
+      <div><canvas id="spM" width="160" height="120" style="border:1px solid var(--line)"></canvas><br><small>Magenta plate</small></div>
+      <div><canvas id="spY" width="160" height="120" style="border:1px solid var(--line)"></canvas><br><small>Yellow plate</small></div>
+      <div><canvas id="spK" width="160" height="120" style="border:1px solid var(--line)"></canvas><br><small>Black (K) plate</small></div>
+    </div>
+    <label style="display:block;margin-top:10px">Grey component replacement (how much grey is moved into black ink) <input type="range" id="spG" min="0" max="100" value="100"> <b id="spGv"></b> %</label>
+    <p id="spInk" style="margin:6px 0 0;color:var(--muted)"></p>
+  </div>
+</section>
+
+<section id="versions" data-toc="7 · Version explorer">
+  <h2><span class="n">07</span>Version explorer</h2>
+  <p>Blue chips: vector programs. Amber chips: image editors.</p>
+  <div class="vbar" id="vbar"></div>
+  <div class="vpanel" id="vpanel"></div>
+  <div class="callout amber"><b>The FreeHand story:</b> when Adobe bought Aldus in 1994, competition regulators made FreeHand go back to its developer Altsys, and Macromedia took it over. In 2005 Adobe bought Macromedia anyway — and stopped developing FreeHand in 2007. Its loyal users never quite forgave Adobe.</div>
+</section>
+
+<section id="corel" data-toc="8 · CorelDRAW in India">
+  <h2><span class="n">08</span>Why CorelDRAW ruled the Indian print shop</h2>
+  <p>In the West, the Mac and Adobe dominated design studios. In India, the print trade — sign makers, screen printers, offset and flexo shops, visiting-card and wedding-card printers, sticker and label makers — grew up on <b>Windows PCs with CorelDRAW</b>. The reasons were practical:</p>
+  <ul>
+    <li><b>It ran on the cheaper Windows PCs</b> that small shops could afford, from the early 1990s.</li>
+    <li><b>One program did almost everything:</b> drawing, page layout of a card or a carton face, text with Indian-language fonts, and bitmap tracing, plus PHOTO-PAINT in the same box.</li>
+    <li><b>Cutting plotters and vinyl sign machines</b> worked directly from CorelDRAW files.</li>
+    <li>A self-taught operator could become productive quickly, and the .CDR file became the common language between customer, designer and printer.</li>
+  </ul>
+  <p>CorelDRAW is still sold — Corel renamed itself <b>Alludo</b> in 2022 — with a browser version (CorelDRAW Web, 2025) and AI vector generation in CorelDRAW Graphics Suite 2026, available both as a subscription and as a one-time purchase.</p>
+</section>
+
+<section id="plugins" data-toc="9 · The plugin era">
+  <h2><span class="n">09</span>The plugin era</h2>
+  <p>Photoshop shipped with a published plugin interface. Third-party filters (files ending in <code>.8BF</code>) appeared in the <i>Filter</i> menu, and many other programs — Corel PHOTO-PAINT, Paint Shop Pro, later Affinity Photo — learned to load the same plugins.</p>
+  <table>
+    <tr><th>Plugin</th><th>Era</th><th>What it did</th></tr>
+    <tr><td><b>Kai's Power Tools</b></td><td>1992 →</td><td>Fractal textures, gradients, spheroids and an unusual organic interface by Kai Krause; defined the "1990s graphics" look</td></tr>
+    <tr><td><b>Eye Candy (Alien Skin)</b></td><td>1990s →</td><td>Bevels, glows, fire, chrome and shadows — before Photoshop had layer styles</td></tr>
+    <tr><td><b>Andromeda, Xaos Tools, Extensis</b></td><td>1990s</td><td>Lens effects, painterly filters, productivity panels</td></tr>
+    <tr><td><b>Nik Collection</b></td><td>2000s →</td><td>Photographic colour and black-and-white tools; bought by Google (2012), made free (2016), then sold to DxO (2017)</td></tr>
+    <tr><td><b>Topaz Labs</b></td><td>2000s →</td><td>Noise reduction and sharpening, now AI-based upscaling</td></tr>
+    <tr><td><b>Illustrator plug-ins</b></td><td>1990s →</td><td>Astute Graphics tools for designers; Esko DeskPack for packaging prepress (Episode 14)</td></tr>
+  </table>
+  <p>Many plugin effects were later absorbed into the host programs (layer styles, smart filters, content-aware fill). Adobe's plugin technology moved from C++ filters to HTML-based CEP panels (2013) and to the JavaScript-based UXP platform (2021).</p>
+</section>
+
+<section id="rivals" data-toc="10 · Contemporaries">
+  <h2><span class="n">10</span>Contemporaries and challengers</h2>
+  <table>
+    <tr><th>Program</th><th>Maker · year</th><th>Note</th><th>Today</th></tr>
+    <tr><td><b>MacPaint, MacDraw</b></td><td>Apple · 1984</td><td>The first bitmap and object drawing programs most people saw</td><td>Retired</td></tr>
+    <tr><td><b>Aldus PhotoStyler</b></td><td>Ulead / Aldus · 1990</td><td>Early serious photo editor for Windows</td><td>Ended after the Adobe–Aldus merger</td></tr>
+    <tr><td><b>Corel PHOTO-PAINT</b></td><td>Corel · 1992</td><td>Bundled with CorelDRAW</td><td>Still in the suite</td></tr>
+    <tr><td><b>Paint Shop Pro</b></td><td>Jasc · 1990</td><td>Affordable shareware editor; bought by Corel (2004)</td><td>Corel PaintShop Pro</td></tr>
+    <tr><td><b>GIMP</b></td><td>Open source · 1996</td><td>Free image editor; GIMP 3.0 released in 2025</td><td>Active</td></tr>
+    <tr><td><b>Inkscape</b></td><td>Open source · 2003</td><td>Free SVG vector editor; version 1.0 in 2020</td><td>Active</td></tr>
+    <tr><td><b>Affinity Designer / Photo</b></td><td>Serif · 2014 / 2015</td><td>One-time-purchase rivals to Illustrator and Photoshop</td><td>Merged into the free Affinity app (2025)</td></tr>
+    <tr><td><b>Sketch, Figma</b></td><td>2010 · 2016</td><td>Interface design; Figma runs in the browser with live collaboration. Adobe's US$ 20 billion bid for Figma was abandoned in December 2023 after regulators objected</td><td>Figma leads UI design</td></tr>
+    <tr><td><b>Photopea</b></td><td>Ivan Kutskir · 2013</td><td>Photoshop-like editor in the browser that opens PSD files</td><td>Popular free option</td></tr>
+  </table>
+</section>
+
+<section id="cloud" data-toc="11 · Subscription and AI">
+  <h2><span class="n">11</span>From boxes to subscriptions, and AI</h2>
+  <ul>
+    <li><b>Creative Suite (2003):</b> Photoshop, Illustrator, InDesign and Acrobat sold together, one upgrade cycle every 18–24 months.</li>
+    <li><b>CS6 (2012)</b> was the last version sold as a perpetual licence. In May 2013 Adobe announced that its tools would be available only through the <b>Creative Cloud</b> subscription. Many users protested; the company's revenue grew strongly anyway.</li>
+    <li>The move pushed price-sensitive users — including many small Indian studios — to CorelDRAW's one-time licence, Affinity, GIMP, Inkscape and Photopea.</li>
+    <li><b>AI (2023 →):</b> Adobe Firefly and Photoshop's Generative Fill, CorelDRAW's AI vectors, Canva's Magic tools. The questions now are about training data, licensing of generated images, and authenticity labels (Content Credentials).</li>
+  </ul>
+</section>
+
+<section id="lessons" data-toc="12 · Lessons">
+  <h2><span class="n">12</span>Lessons for engineers</h2>
+  <ol>
+    <li><b>Store geometry, not pixels, when you can.</b> A vector drawing — like a CAD model — never loses resolution.</li>
+    <li><b>Non-destructive editing pays off.</b> Layers, masks and history let you change your mind without starting again.</li>
+    <li><b>An open extension interface multiplies a product.</b> Photoshop's plugin ecosystem helped make it the standard.</li>
+    <li><b>Price model is a feature.</b> Subscription, one-time and free licences each create their own user base.</li>
+  </ol>
+</section>
+
+<section id="sources">
+  <h2>Sources &amp; further reading</h2>
+  <ol class="src">
+    <li><a href="https://en.wikipedia.org/wiki/Adobe_Illustrator">Wikipedia — Adobe Illustrator</a> · <a href="https://en.wikipedia.org/wiki/Adobe_Photoshop">Adobe Photoshop</a> · <a href="https://en.wikipedia.org/wiki/CorelDRAW">CorelDRAW</a> · <a href="https://en.wikipedia.org/wiki/Adobe_FreeHand">Adobe FreeHand</a></li>
+    <li><a href="https://coreldraw.com/en/pages/upgrade">CorelDRAW — Graphics Suite 2026</a> · <a href="https://alludo.com/en/newsroom/press-releases/20250304-introducing-new-cloud-based-coreldraw-go">Alludo — CorelDRAW Web and Graphics Suite 2025</a></li>
+    <li><a href="https://www.techradar.com/computing/affinity-says-its-new-adobe-rivaling-creative-app-is-free-forever-heres-how-that-really-works">TechRadar — Affinity's free all-in-one app (2025)</a></li>
+    <li><a href="https://en.wikipedia.org/wiki/B%C3%A9zier_curve">Wikipedia — Bézier curve</a></li>
+    <li>Jeff Schewe, "Thomas & John Knoll", <i>PhotoshopNews</i>, 2000 — the origin of Photoshop.</li>
+  </ol>
+</section>
+<!--SCRIPT-->
+const V=[
+ {v:'Illustrator 1–88',d:'1987–1988',hw:'Macintosh with PostScript LaserWriter',n:['Bézier pen tool brought PostScript drawing to designers','Illustrator 88 added colour and blends','The pen tool is still the core of vector drawing']},
+ {v:'FreeHand',d:'1988–2007',hw:'Mac; later Windows',n:['Developed by Altsys, sold by Aldus, then Macromedia','Multiple pages and strong text handling — loved in print and packaging','Adobe bought Macromedia (2005) and ended FreeHand (2007)']},
+ {v:'CorelDRAW 1–3',d:'1989–1992',hw:'Windows 2/3 PCs',n:['Vector drawing for Windows when Adobe focused on the Mac','CorelDRAW 3 (1992) became a suite with PHOTO-PAINT and more','Huge clip-art and font collections on CD-ROM']},
+ {v:'Illustrator CS → CC',d:'2003 → today',hw:'Creative Suite, then Creative Cloud',n:['PDF-based .AI files (from version 9)','Live Trace, Live Paint, artboards, Image Trace','Generative AI vectors in recent versions']},
+ {v:'CorelDRAW 2018 → 2026',d:'2018 → 2026',hw:'Windows, Mac, web',n:['Mac version returned (2019)','CorelDRAW Web in the browser (2025)','Graphics Suite 2026 with AI vector generation; subscription or one-time purchase']},
+ {v:'Photoshop 1–2.5',d:'1990–1993',e:2,hw:'Macintosh II with colour; then Windows',n:['Grew from Thomas Knoll\'s 1987 program "Display", developed with his brother John at ILM','Adobe licensed it in 1988; version 1.0 in February 1990 (Mac only)','2.0 added paths and CMYK; 2.5 the first Windows version']},
+ {v:'Photoshop 3–7',d:'1994–2002',e:2,hw:'Pentium PCs and Power Macs; digital cameras',n:['Layers (3.0, 1994); adjustment layers and actions (4.0)','History palette and colour management (5.0)','Healing brush (7.0) — retouching revolution']},
+ {v:'Photoshop CS → CC',d:'2003 → today',e:2,hw:'Digital SLRs, 64-bit, cloud',n:['Camera Raw, Smart Objects, content-aware fill','Creative Cloud only from 2013','Generative Fill with Adobe Firefly (2023); Photoshop on iPad and web']},
+ {v:'GIMP',d:'1996 → today',e:2,hw:'Linux, Windows, Mac',n:['GNU Image Manipulation Program, started by students Spencer Kimball and Peter Mattis','Free and open source; its GTK toolkit became the basis of GNOME','GIMP 3.0 released in 2025']},
+ {v:'Affinity',d:'2014 → today',e:2,hw:'Mac, Windows, iPad',n:['Designer (2014) and Photo (2015) by Serif, one-time purchase','Canva bought Serif in 2024','Single free Affinity app since October 2025']}
+];
+SH.explorer(V,'',['Vector drawing','Image editing']);
+// vector vs raster
+(function(){const r=document.getElementById('vrR'),c=r.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,64,64);c.fillStyle='#2c6fb0';c.beginPath();c.arc(32,32,26,0,7);c.fill();c.strokeStyle='#d98a00';c.lineWidth=4;c.beginPath();c.moveTo(14,44);c.bezierCurveTo(24,18,40,18,50,44);c.stroke();c.fillStyle='#fff';c.font='bold 22px Georgia';c.textAlign='center';c.fillText('V',32,40);
+ const v=document.getElementById('vrV'),z=document.getElementById('vrZ'),n=document.getElementById('vrNote');
+ function u(){const k=+z.value,s=64*k*4.6875/1;const px=Math.round(300*k);r.style.width=v.style.width=px+'px';r.style.height=v.style.height=px+'px';const off=-(px-300)/2;[r,v].forEach(e=>{e.style.left=off+'px';e.style.top=off+'px';});document.getElementById('vrZv').textContent=k+'×';
+  n.textContent=k<2?'At normal size both look the same.':'The bitmap shows its square pixels ("jaggies"); the vector is recalculated sharply at every size — which is why logos, type and packaging line work are kept as vectors.';}
+ z.oninput=u;u();})();
+// Bezier
+(function(){const svg=document.getElementById('bzSvg'),t=document.getElementById('bzTxt');let P=[[80,260],[150,40],[450,40],[520,260]],drag=-1;
+ function d(){const [a,b,c,e]=P;svg.innerHTML='<path d="M'+a+' C'+b+' '+c+' '+e+'" fill="none" stroke="#1f3b5c" stroke-width="5"/>'+
+  '<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="#8a939e" stroke-dasharray="6 4" stroke-width="2"/><line x1="'+e[0]+'" y1="'+e[1]+'" x2="'+c[0]+'" y2="'+c[1]+'" stroke="#8a939e" stroke-dasharray="6 4" stroke-width="2"/>'+
+  P.map((p,i)=>(i===0||i===3)?'<rect data-i="'+i+'" x="'+(p[0]-9)+'" y="'+(p[1]-9)+'" width="18" height="18" fill="#fff" stroke="#1f3b5c" stroke-width="3" style="cursor:move"/>':'<circle data-i="'+i+'" cx="'+p[0]+'" cy="'+p[1]+'" r="10" fill="#d98a00" stroke="#1f3b5c" stroke-width="2" style="cursor:move"/>').join('');
+  t.textContent='PostScript: '+a[0]+' '+(320-a[1])+' moveto  '+[b,c,e].map(p=>p[0]+' '+(320-p[1])).join('  ')+' curveto';}
+ const pt=ev=>{const r=svg.getBoundingClientRect();return [Math.round((ev.clientX-r.left)*600/r.width),Math.round((ev.clientY-r.top)*320/r.height)];};
+ svg.addEventListener('pointerdown',ev=>{const i=ev.target.dataset&&ev.target.dataset.i;if(i!==undefined){drag=+i;svg.setPointerCapture(ev.pointerId);}});
+ svg.addEventListener('pointermove',ev=>{if(drag<0)return;const p=pt(ev);P[drag]=[Math.max(5,Math.min(595,p[0])),Math.max(5,Math.min(315,p[1]))];d();});
+ svg.addEventListener('pointerup',()=>drag=-1);d();})();
+// layers
+(function(){const L=[['Rectangle (top)','ly2','multiply'],['Circle','ly1','normal'],['Background gradient','ly0','normal']];const M=['normal','multiply','screen','overlay','darken','lighten','difference'];
+ const tb=document.getElementById('lyTbl');
+ L.forEach(l=>{const el=document.getElementById(l[1]);el.style.mixBlendMode=l[2];
+  const tr=document.createElement('tr');tr.innerHTML='<td>'+l[0]+'</td><td><input type="checkbox" checked></td><td>'+(l[1]==='ly0'?'—':'<select>'+M.map(m=>'<option'+(m===l[2]?' selected':'')+'>'+m+'</option>').join('')+'</select>')+'</td><td><input type="range" min="0" max="100" value="100" style="width:90px"></td>';
+  tb.appendChild(tr);const [cb,sel,rg]=[tr.querySelector('input[type=checkbox]'),tr.querySelector('select'),tr.querySelector('input[type=range]')];
+  cb.onchange=()=>el.style.display=cb.checked?'':'none';if(sel)sel.onchange=()=>el.style.mixBlendMode=sel.value;rg.oninput=()=>el.style.opacity=rg.value/100;});})();
+// separation
+(function(){const W=160,H=120,s=document.getElementById('spSrc').getContext('2d');
+ const g=s.createLinearGradient(0,0,W,0);g.addColorStop(0,'#ffffff');g.addColorStop(.5,'#2c6fb0');g.addColorStop(1,'#1b2430');s.fillStyle=g;s.fillRect(0,0,W,H);
+ s.fillStyle='#d98a00';s.beginPath();s.arc(50,60,32,0,7);s.fill();s.fillStyle='#7b5ea7';s.fillRect(95,20,50,45);s.fillStyle='#8a939e';s.fillRect(95,75,50,30);
+ s.fillStyle='#000';s.font='bold 18px Arial';s.fillText('CMYK',22,112);
+ const src=s.getImageData(0,0,W,H).data,gs=document.getElementById('spG');
+ function run(){const gcr=gs.value/100;document.getElementById('spGv').textContent=gs.value;let tot=0,max=0;
+  const out={C:[],M:[],Y:[],K:[]};
+  for(let i=0;i<src.length;i+=4){const r=src[i]/255,g=src[i+1]/255,b=src[i+2]/255;let c=1-r,m=1-g,y=1-b;const k=Math.min(c,m,y)*gcr;
+   if(k<1){c=(c-k)/(1-k)*(1-k);m=(m-k)/(1-k)*(1-k);y=(y-k)/(1-k)*(1-k);}else{c=m=y=0;}
+   out.C.push(c);out.M.push(m);out.Y.push(y);out.K.push(k);const t=c+m+y+k;tot+=t;if(t>max)max=t;}
+  for(const p of 'CMYK'){const cv=document.getElementById('sp'+p).getContext('2d'),im=cv.createImageData(W,H);out[p].forEach((v,j)=>{const q=Math.round(255*(1-v));im.data[j*4]=im.data[j*4+1]=im.data[j*4+2]=q;im.data[j*4+3]=255;});cv.putImageData(im,0,0);}
+  document.getElementById('spInk').textContent='Maximum total ink: '+Math.round(max*100)+' % · average coverage: '+Math.round(tot/(W*H)*100)+' %. Moving grey into black (GCR) lowers total ink, which dries faster and holds colour steadier on press; printers usually cap total ink at about 280–340 %.';}
+ gs.oninput=run;run();})();

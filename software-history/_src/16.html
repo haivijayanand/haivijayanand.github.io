@@ -1,0 +1,182 @@
+title: Editors and developer tools: Notepad++ and beyond
+years: 1991 → today
+lede: Windows Notepad could open a text file — and little else. Engineers, programmers and system administrators needed tabs, syntax colouring, search across files, huge log files and the right line endings. Open-source editors and tools filled the gap: Notepad++, Vim, VS Code's open core, Git, PuTTY, WinSCP and FileZilla. In 2025 Notepad++ also became a case study in how even a text editor's updater can be attacked.
+desc: Why open-source editors and developer tools were needed on Windows, the history of Notepad++, Vim, Notepad2, Geany, VS Code, Git for Windows, PuTTY, WinSCP and FileZilla, the 2025 Notepad++ updater hijack, free-but-closed alternatives, safe installation, and interactive regex and line-ending demos.
+
+<section id="glance" data-toc="At a glance">
+  <div class="stats">
+    <div class="stat"><div class="v">1991</div><div class="k">Bram Moolenaar releases Vim</div></div>
+    <div class="stat"><div class="v">1999</div><div class="k">Simon Tatham's PuTTY SSH client</div></div>
+    <div class="stat"><div class="v">Nov 2003</div><div class="k">Don Ho releases Notepad++</div></div>
+    <div class="stat"><div class="v">2015</div><div class="k">Visual Studio Code, with an MIT-licensed open core</div></div>
+    <div class="stat"><div class="v">Jun–Dec 2025</div><div class="k">Notepad++ update traffic hijacked for selected targets</div></div>
+    <div class="stat"><div class="v">2025</div><div class="k">Microsoft releases its own open-source command-line editor, Edit</div></div>
+  </div>
+</section>
+
+<section id="need" data-toc="1 · The requirement">
+  <h2><span class="n">01</span>The requirement: more than Notepad</h2>
+  <p>Windows Notepad (with Windows since 1985) was deliberately tiny. For decades it could not handle Unix line endings (fixed in 2018), opened large files slowly, and had no tabs (added in 2023). Engineers work with exactly the files Notepad handled badly: configuration files, scripts, CSV exports, data-acquisition logs, G-code, XML and JSON.</p>
+  <table>
+    <tr><th style="width:28%">Requirement</th><th style="width:34%">Why</th><th>What open-source tools offered</th></tr>
+    <tr><td>Syntax colouring and folding</td><td>Reading code and config files without mistakes</td><td>Scintilla editing component (1999) used by Notepad++, Notepad2, SciTE, Geany</td></tr>
+    <tr><td>Search and replace with patterns</td><td>Cleaning logs, renaming channels, reformatting CSV</td><td>Regular expressions, search in all files of a folder</td></tr>
+    <tr><td>Big files, many files</td><td>Data logs of hundreds of MB; dozens of open scripts</td><td>Tabs, sessions, efficient loading</td></tr>
+    <tr><td>Line endings and encodings</td><td>Files move between Windows, Linux and instruments</td><td>Show and convert CRLF/LF, ANSI/UTF-8/UTF-16</td></tr>
+    <tr><td>Remote machines</td><td>Servers, Linux boxes, embedded controllers</td><td>SSH (PuTTY), file transfer (WinSCP, FileZilla)</td></tr>
+    <tr><td>Version control</td><td>Track changes to scripts and documents</td><td>Git for Windows, TortoiseSVN/TortoiseGit</td></tr>
+  </table>
+</section>
+
+<section id="npp" data-toc="2 · Notepad++">
+  <h2><span class="n">02</span>Notepad++</h2>
+  <p>Don Ho wrote Notepad++ in C++ for his own use and released it on SourceForge in November 2003 under the GPL. It is built on <b>Scintilla</b>, Neil Hodgson's open-source editing component, and uses the plain Win32 interface, so it starts instantly and runs on old PCs. A plugin system (Compare, NppFTP, JSON Viewer, XML Tools and hundreds more) let users add what they needed. It became one of the most-used editors among programmers on Windows, regularly near the top of developer surveys in the 2010s. Don Ho is known for naming releases after political causes, which has brought both support and boycotts.</p>
+  <h3>The 2025 updater hijack</h3>
+  <p>Notepad++ checks for updates with a small helper program, <b>WinGUp</b>, which downloads a short XML file naming the latest installer. Until version 8.8.9, WinGUp did not strictly verify the installer's digital signature. Attackers compromised the project's shared hosting provider and, from about June 2025 until early December 2025, redirected update requests from carefully chosen targets to malicious servers that delivered a backdoored installer. Users who downloaded installers directly from the official website were not affected.</p>
+  <ul>
+    <li><b>Version 8.8.9</b> (9 December 2025) made signature and certificate checks mandatory; the website moved to a provider with stronger security.</li>
+    <li>The issue was tracked as <b>CVE-2025-15556</b> and attributed by researchers to a China-linked group.</li>
+    <li>The project advised installing 8.9.1 or later manually so that the hardened updater replaced the old one; 8.9.2 fixed a further search-path flaw.</li>
+  </ul>
+  <div class="callout"><b>Lesson:</b> an update mechanism is part of the product's security. Signed installers, verified downloads and secure hosting matter as much as the code itself — true for an engineering data tool as much as for a text editor.</div>
+</section>
+
+<section id="regex" data-toc="3 · Try regular expressions">
+  <h2><span class="n">03</span>Try it: find and replace with regular expressions</h2>
+  <p>Regular expressions ("regex") describe text patterns. Notepad++, VS Code, Vim and Python all use them. Pick an example or write your own pattern. Matches are outlined; the replaced text appears below.</p>
+  <div class="demo">
+    <div class="chips" id="rxEx"></div>
+    <div style="display:grid;grid-template-columns:2fr 2fr 1fr;gap:8px;font-size:15px">
+      <label>Find (regex) <input id="rxF" style="width:100%;font-family:var(--mono)"></label>
+      <label>Replace with <input id="rxR" style="width:100%;font-family:var(--mono)"></label>
+      <label>Flags <input id="rxG" value="gm" style="width:60px;font-family:var(--mono)"></label>
+    </div>
+    <textarea id="rxT" spellcheck="false" style="width:100%;height:120px;font:14px/1.45 var(--mono);margin-top:8px;padding:8px;border:1.5px solid var(--grey);border-radius:6px"></textarea>
+    <div id="rxHi" style="font:14px/1.45 var(--mono);white-space:pre-wrap;background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px;margin-top:6px"></div>
+    <div id="rxOut" style="font:14px/1.45 var(--mono);white-space:pre-wrap;background:var(--greySoft);border-radius:6px;padding:8px;margin-top:6px"></div>
+    <p id="rxMsg" style="margin:6px 0 0;color:var(--muted)"></p>
+  </div>
+</section>
+
+<section id="eol" data-toc="4 · Line endings and encodings">
+  <h2><span class="n">04</span>See it: line endings and encodings, byte by byte</h2>
+  <p>The same text can be stored in different bytes. Windows ends lines with CR LF (<code>0D 0A</code>), Linux and macOS with LF (<code>0A</code>) — a legacy of teleprinters and of CP/M and MS-DOS (Episode 01). Encodings decide how letters such as "°" or Tamil characters become bytes. Mismatches are why a script fails on Linux with <code>^M</code> errors, or a CSV shows "Â°C".</p>
+  <div class="demo">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 18px;font-size:15px">
+      <label>Line ending <select id="eoE"><option value="crlf">Windows (CR LF)</option><option value="lf">Unix (LF)</option></select></label>
+      <label>Encoding <select id="eoC"><option value="u8">UTF-8</option><option value="u8b">UTF-8 with BOM</option><option value="u16">UTF-16 LE (Windows "Unicode")</option><option value="lat">Windows-1252 ("ANSI")</option></select></label>
+    </div>
+    <textarea id="eoT" spellcheck="false" style="width:100%;height:70px;font:15px var(--mono);margin-top:8px;padding:8px;border:1.5px solid var(--grey);border-radius:6px">Temp,25°C
+தமிழ்</textarea>
+    <div id="eoHex" style="font:13px/1.7 var(--mono);background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px;margin-top:6px;word-break:break-all"></div>
+    <p id="eoMsg" style="margin:6px 0 0;color:var(--muted)"></p>
+  </div>
+</section>
+
+<section id="others" data-toc="5 · The other tools">
+  <h2><span class="n">05</span>The other open-source editors and tools</h2>
+  <table>
+    <tr><th>Tool</th><th>Origin</th><th>Role on Windows</th><th>Licence · notes</th></tr>
+    <tr><td><b>Vim / gVim</b></td><td>Bram Moolenaar, 1991 (from vi, 1976)</td><td>Keyboard-driven modal editor; gVim for Windows; Neovim fork (2014)</td><td>Vim licence (charityware for Uganda); Moolenaar died in 2023 and the community continues it</td></tr>
+    <tr><td><b>Notepad2 / Notepad3</b></td><td>Florian Balmer, 2004</td><td>Scintilla-based Notepad replacement</td><td>BSD; Notepad3 continues it</td></tr>
+    <tr><td><b>Geany</b></td><td>2005</td><td>Small, fast IDE-like editor</td><td>GPL</td></tr>
+    <tr><td><b>Visual Studio Code</b></td><td>Microsoft, 2015</td><td>Most popular code editor; huge extension marketplace; Python, Jupyter, C/C++, Arduino</td><td>Source "Code – OSS" is MIT; Microsoft's binary has its own licence and telemetry; VSCodium is a fully open build</td></tr>
+    <tr><td><b>Git for Windows</b></td><td>Git by Linus Torvalds (2005); msysGit → Git for Windows (2015)</td><td>Version control, Git Bash shell</td><td>GPLv2</td></tr>
+    <tr><td><b>TortoiseSVN / TortoiseGit</b></td><td>2002 / 2008</td><td>Version control from right-click menus in Explorer</td><td>GPL</td></tr>
+    <tr><td><b>PuTTY</b></td><td>Simon Tatham, 1999</td><td>SSH and serial terminal — still used for routers, Linux boxes and serial consoles of instruments</td><td>MIT. A 2024 flaw (CVE-2024-31497) exposed NIST P-521 keys; fixed in 0.81. Windows has included an OpenSSH client since 2018</td></tr>
+    <tr><td><b>WinSCP</b></td><td>Martin Přikryl, 2000</td><td>SFTP/SCP/FTP file transfer with Explorer-like panes and scripting</td><td>GPL; fake WinSCP downloads have been used in malvertising campaigns</td></tr>
+    <tr><td><b>FileZilla</b></td><td>Tim Kosse, 2001</td><td>FTP/SFTP client and server</td><td>GPL; the default Windows download page offers a bundled installer, so take care to choose the plain one</td></tr>
+    <tr><td><b>MSYS2 / Cygwin</b></td><td>2013 / 1995</td><td>Unix shells and compilers on Windows (Episode 20)</td><td>Open source</td></tr>
+  </table>
+</section>
+
+<section id="versions" data-toc="6 · Version explorer">
+  <h2><span class="n">06</span>Version explorer</h2>
+  <p>Blue chips: editors. Amber chips: developer tools.</p>
+  <div class="vbar" id="vbar"></div>
+  <div class="vpanel" id="vpanel"></div>
+</section>
+
+<section id="closed" data-toc="7 · Free but not open">
+  <h2><span class="n">07</span>Free, or paid, but not open source</h2>
+  <table>
+    <tr><th>Program</th><th>Model</th><th>Notes</th></tr>
+    <tr><td><b>Windows Notepad</b></td><td>Bundled, closed</td><td>Rewritten as a Store app; tabs (2023), spell check, and later AI and Markdown features</td></tr>
+    <tr><td><b>Sublime Text</b></td><td>Paid licence with unlimited evaluation</td><td>Very fast; multiple cursors (2008) influenced every later editor</td></tr>
+    <tr><td><b>UltraEdit, EditPlus, TextPad</b></td><td>Paid / shareware (1990s)</td><td>The classic Windows programmer's editors before Notepad++</td></tr>
+    <tr><td><b>MobaXterm</b></td><td>Free "home" edition, closed</td><td>SSH, X server and tools in one window</td></tr>
+    <tr><td><b>Total Commander</b></td><td>Shareware since 1993</td><td>Two-pane file manager with FTP and archive handling</td></tr>
+  </table>
+</section>
+
+<section id="install" data-toc="8 · Installing safely">
+  <h2><span class="n">08</span>Installing safely</h2>
+  <table>
+    <tr><th>Program</th><th>Official site</th><th>winget command</th></tr>
+    <tr><td>Notepad++</td><td><code>notepad-plus-plus.org</code></td><td><code>winget install Notepad++.Notepad++</code></td></tr>
+    <tr><td>Visual Studio Code</td><td><code>code.visualstudio.com</code></td><td><code>winget install Microsoft.VisualStudioCode</code></td></tr>
+    <tr><td>Vim</td><td><code>vim.org</code></td><td><code>winget install vim.vim</code></td></tr>
+    <tr><td>Git for Windows</td><td><code>git-scm.com</code></td><td><code>winget install Git.Git</code></td></tr>
+    <tr><td>PuTTY</td><td><code>chiark.greenend.org.uk/~sgtatham/putty</code></td><td><code>winget install PuTTY.PuTTY</code></td></tr>
+    <tr><td>WinSCP</td><td><code>winscp.net</code></td><td><code>winget install WinSCP.WinSCP</code></td></tr>
+    <tr><td>FileZilla</td><td><code>filezilla-project.org</code></td><td><code>winget install TimKosse.FileZilla.Client</code></td></tr>
+  </table>
+  <p style="font-size:14px;color:var(--muted)">PuTTY's real home page is on Simon Tatham's personal domain, not "putty.org"-style look-alikes. After the Notepad++ incident, check that installers are digitally signed: right-click → Properties → Digital Signatures. Confirm IDs with <code>winget search</code>.</p>
+</section>
+
+<section id="lessons" data-toc="9 · Lessons">
+  <h2><span class="n">09</span>Lessons for engineers</h2>
+  <ol>
+    <li><b>Small, fast tools get used.</b> Notepad++ won by starting instantly and doing the common jobs well.</li>
+    <li><b>Reuse a good component.</b> Scintilla powers many editors; nobody had to write syntax colouring from scratch.</li>
+    <li><b>Learn regular expressions.</b> One pattern can clean a thousand lines of test data.</li>
+    <li><b>Secure the update path.</b> Verify signatures; prefer package managers and official sites.</li>
+  </ol>
+</section>
+
+<section id="sources">
+  <h2>Sources &amp; further reading</h2>
+  <ol class="src">
+    <li><a href="https://www.theregister.com/2026/02/02/notepad_plusplus_intrusion/">The Register — Notepad++ update service hijacked (2026)</a></li>
+    <li><a href="https://thehackernews.com/2026/02/notepad-fixes-hijacked-update-mechanism.html">The Hacker News — Notepad++ fixes hijacked update mechanism</a></li>
+    <li><a href="https://www.tomshardware.com/tech-industry/cyber-security/notepad-update-server-hijacked-in-targeted-attacks">Tom's Hardware — Notepad++ update server hijacked in targeted attacks</a></li>
+    <li><a href="https://en.wikipedia.org/wiki/Notepad%2B%2B">Wikipedia — Notepad++</a> · <a href="https://en.wikipedia.org/wiki/Vim_(text_editor)">Vim</a> · <a href="https://en.wikipedia.org/wiki/PuTTY">PuTTY</a></li>
+    <li><a href="https://www.scintilla.org/">Scintilla</a></li>
+  </ol>
+</section>
+<!--SCRIPT-->
+const V=[
+ {v:'Vim',d:'1991 → today',hw:'Terminals, then gVim on Windows',n:['Vi IMproved by Bram Moolenaar on the Amiga','Modal editing: commands vs insert mode','Neovim fork (2014) modernised plugins']},
+ {v:'Scintilla',d:'1999 → today',hw:'Editing component for Windows and GTK',n:['Neil Hodgson\'s open-source edit control','Syntax colouring, folding, multiple selections','Basis of Notepad++, Notepad2, SciTE, Geany']},
+ {v:'Notepad++',d:'2003 → today',hw:'Windows XP to 11',n:['Don Ho, GPL, SourceForge then GitHub','Plugins, tabs, sessions, regex, macros','8.8.9 (Dec 2025) enforced signed updates after the hijack']},
+ {v:'Notepad2 / Geany',d:'2004 / 2005',hw:'Lightweight Windows PCs',n:['Notepad2: a drop-in Notepad replacement (BSD)','Geany: small IDE for many languages (GPL)']},
+ {v:'VS Code',d:'2015 → today',hw:'Electron, cross-platform, cloud',n:['Open-source core (MIT) with Microsoft\'s branded build','Language Server Protocol made language support portable','Copilot Chat extension open-sourced in 2025']},
+ {v:'PuTTY',d:'1999 → today',e:2,hw:'SSH servers, serial consoles',n:['Simon Tatham, MIT licence','PuTTYgen keys, Plink scripting, pscp/psftp','0.81 (2024) fixed the P-521 key flaw']},
+ {v:'WinSCP / FileZilla',d:'2000 / 2001',e:2,hw:'Web servers, Linux machines',n:['WinSCP: SFTP/SCP with scripting and sync','FileZilla: FTP/SFTP client and server','Both GPL; beware look-alike download sites']},
+ {v:'Git for Windows',d:'2005 / 2015',e:2,hw:'GitHub, GitLab, local repos',n:['Git created by Linus Torvalds for the Linux kernel','Git for Windows brings Git Bash and credential manager','Underpins GitHub Pages sites like this one']},
+ {v:'Microsoft Edit',d:'2025',e:2,hw:'Windows Terminal',n:['Open-source command-line editor announced at Build 2025','A modern successor to the MS-DOS EDIT of Episode 01']}
+];
+SH.explorer(V,'',['Editors','Developer tools']);
+const q=id=>document.getElementById(id);
+const RX=[
+ ['Dates to ISO','(\\d{2})/(\\d{2})/(\\d{4})','$3-$2-$1','gm','Test run 12/03/2026 started\nStopped 13/03/2026 for oil check\nResumed 14/03/2026'],
+ ['Trailing spaces','[ \\t]+$','','gm','Speed_rpm   \nTorque_Nm\t\nTemp_C  '],
+ ['Swap CSV columns','^([^,]+),([^,]+)','$2,$1','gm','time,channel1\n0.00,12.4\n0.04,12.6'],
+ ['Channel rename','\\bCH(\\d+)\\b','Accel_$1','gm','CH1 CH2 CH12 CHANNEL3'],
+ ['Find warnings','^.*\\b(WARN|ERROR)\\b.*$','>> $&','gm','10:01 INFO start\n10:05 WARN oil temp high\n10:07 INFO ok\n10:09 ERROR torque limit'],
+ ['Numbers only','[^\\d.\\-\\n]','','gm','Vib = 4.25 mm/s\nTemp = -12.5 C']
+];
+const ex=q('rxEx');RX.forEach(r=>{const b=document.createElement('button');b.textContent=r[0];b.onclick=()=>{q('rxF').value=r[1];q('rxR').value=r[2];q('rxG').value=r[3];q('rxT').value=r[4];rx();};ex.appendChild(b);});
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+function rx(){let re;try{re=new RegExp(q('rxF').value,q('rxG').value.includes('g')?q('rxG').value:q('rxG').value+'g');}catch(e){q('rxMsg').textContent='Pattern error: '+e.message;return;}
+ const t=q('rxT').value;let out='',last=0,n=0;for(const m of t.matchAll(re)){if(m[0]==='')continue;n++;out+=esc(t.slice(last,m.index))+'<span style="outline:2px solid var(--amber);background:var(--amberSoft)">'+esc(m[0])+'</span>';last=m.index+m[0].length;}
+ out+=esc(t.slice(last));q('rxHi').innerHTML=out||'&nbsp;';q('rxOut').textContent=t.replace(re,q('rxR').value);q('rxMsg').textContent=n+' match(es). Top box: matches outlined. Grey box: text after Replace All. In Notepad++ choose Search mode "Regular expression" (Notepad++ also writes $1 as \\1).';}
+['rxF','rxR','rxG','rxT'].forEach(i=>q(i).oninput=rx);ex.children[0].click();
+// line endings
+function eo(){let t=q('eoT').value.replace(/\r\n/g,'\n');if(q('eoE').value==='crlf')t=t.replace(/\n/g,'\r\n');const C=q('eoC').value;let bytes=[],lost=false;
+ if(C==='u8'||C==='u8b'){bytes=[...new TextEncoder().encode(t)];if(C==='u8b')bytes=[0xEF,0xBB,0xBF,...bytes];}
+ else if(C==='u16'){bytes=[0xFF,0xFE];for(const ch of t){const c=ch.codePointAt(0);const u=c>0xFFFF?[0xD800+((c-0x10000)>>10),0xDC00+((c-0x10000)&0x3FF)]:[c];u.forEach(x=>bytes.push(x&255,x>>8));}}
+ else{for(const ch of t){const c=ch.codePointAt(0);if(c<256)bytes.push(c);else{bytes.push(0x3F);lost=true;}}}
+ q('eoHex').innerHTML=bytes.map((b,i)=>{const h=b.toString(16).toUpperCase().padStart(2,'0');const sp=(b===0x0D||b===0x0A)?'background:var(--amber);color:#fff;font-weight:700':(i<3&&C==='u8b')||(i<2&&C==='u16')?'background:var(--navy);color:#fff':'';return '<span style="padding:1px 3px;border-radius:3px;'+sp+'">'+h+'</span>';}).join(' ');
+ q('eoMsg').textContent=bytes.length+' bytes. Amber = line-ending bytes (0D = CR, 0A = LF). Navy = byte-order mark (BOM).'+(lost?' Windows-1252 cannot store Tamil — those letters became "?" (3F): data lost.':'')+(C==='u8b'?' Some Linux tools and CSV readers show the BOM as stray characters "ï»¿".':'')+(C==='u16'?' UTF-16 uses at least two bytes per character; English text doubles in size.':'');}
+['eoE','eoC','eoT'].forEach(i=>q(i).oninput=eo);eo();

@@ -1,0 +1,267 @@
+title: Batch files to PowerShell: scripting Windows
+years: 1981 → today
+lede: Every computer user eventually types the same commands again and again: copy the day's data, rename files, clean old logs, back up a folder. A script — a text file of commands — lets the computer do it. On the PC that began with humble DOS batch files in 1981 and grew through REXX and Windows Script Host to PowerShell, with Python now the universal glue. This episode opens Season 7 on macros and automation.
+desc: History of scripting on DOS and Windows: batch files and AUTOEXEC.BAT, 4DOS, REXX, Windows Script Host with VBScript and JScript, PowerShell from Monad to PowerShell 7, Task Scheduler and cron, Python as glue, VBScript's retirement, script security, and a task translator with ready-to-use batch, PowerShell and Python examples.
+
+<section id="glance" data-toc="At a glance">
+  <div class="stats">
+    <div class="stat"><div class="v">1981</div><div class="k">MS-DOS 1.0 runs .BAT batch files and AUTOEXEC.BAT</div></div>
+    <div class="stat"><div class="v">1979</div><div class="k">IBM's REXX scripting language (later in OS/2)</div></div>
+    <div class="stat"><div class="v">1998</div><div class="k">Windows Script Host: VBScript and JScript</div></div>
+    <div class="stat"><div class="v">2006</div><div class="k">PowerShell 1.0 — commands that pass objects, not text</div></div>
+    <div class="stat"><div class="v">2018</div><div class="k">PowerShell becomes open source and cross-platform</div></div>
+    <div class="stat"><div class="v">~2027</div><div class="k">VBScript disabled by default on its way out of Windows</div></div>
+  </div>
+</section>
+
+<section id="need" data-toc="1 · The requirement">
+  <h2><span class="n">01</span>The requirement: let the computer repeat the work</h2>
+  <table>
+    <tr><th style="width:28%">Requirement</th><th style="width:34%">Why</th><th>What scripting offered</th></tr>
+    <tr><td>Start-up configuration</td><td>Drivers, paths and settings had to be loaded at every boot</td><td>CONFIG.SYS and AUTOEXEC.BAT</td></tr>
+    <tr><td>Repeat routine jobs</td><td>Copying, renaming, cleaning and backing up by hand wastes time and invites mistakes</td><td>Batch files and scripts</td></tr>
+    <tr><td>Run unattended</td><td>Jobs should run at night or when data arrives</td><td>Task Scheduler, cron</td></tr>
+    <tr><td>Manage many computers</td><td>Offices grew from five PCs to five thousand</td><td>Logon scripts, VBScript, then PowerShell remoting</td></tr>
+    <tr><td>Glue programs together</td><td>Data must pass from a logger to analysis to a report</td><td>Pipes, file handling, Python</td></tr>
+  </table>
+</section>
+
+<section id="history" data-toc="2 · Fifty years of scripts">
+  <h2><span class="n">02</span>Fifty years of scripts</h2>
+  <div class="tl">
+    <div class="ev"><b>1960s–70s — Job control and the shell.</b> Mainframes used job control language (JCL) to run batches of programs — hence "batch file". Unix shells (1971 onward; the Bourne shell 1979) made scripting a normal part of computing, and <b>cron</b> ran jobs on a timetable.</div>
+    <div class="ev"><b>1979 — REXX.</b> Mike Cowlishaw at IBM created REXX, a readable scripting language for mainframes. It became the scripting language of OS/2 (Episode 06) and the Amiga (ARexx).</div>
+    <div class="ev"><b>1981 — DOS batch files.</b> COMMAND.COM ran <code>.BAT</code> files: lists of commands with <code>IF</code>, <code>GOTO</code>, <code>FOR</code> and <code>%1</code> parameters. <code>AUTOEXEC.BAT</code> ran at every start-up — the first thing many PC users ever edited. MS-DOS 3.3 (1987) added <code>CALL</code> and <code>@ECHO OFF</code>.</div>
+    <div class="ev"><b>1989 — 4DOS.</b> JP Software's replacement command processor added better variables, loops and command history; many power users switched.</div>
+    <div class="ev"><b>1993 — CMD.EXE.</b> Windows NT's command processor extended batch language with <code>FOR /F</code>, <code>SET /A</code> arithmetic and delayed expansion. The same CMD runs today.</div>
+    <div class="ev"><b>1996–1998 — Windows Script Host.</b> VBScript (1996) and JScript, run by Windows Script Host (Windows 98, 1998), could control Windows and Office through COM objects. Network administrators wrote logon scripts; virus writers wrote ILOVEYOU (Episode 32).</div>
+    <div class="ev"><b>2002–2006 — Monad becomes PowerShell.</b> Jeffrey Snover's "Monad Manifesto" (2002) proposed a shell whose commands pass <b>.NET objects</b> rather than text. PowerShell 1.0 shipped in November 2006; Windows 7 included version 2.0 with remoting.</div>
+    <div class="ev"><b>2016–2020 — Open and cross-platform.</b> PowerShell was open-sourced in 2016; PowerShell Core 6 (2018) and PowerShell 7 (2020) run on Windows, Linux and macOS. Windows Terminal (2019) and winget (2020) modernised the command line.</div>
+    <div class="ev"><b>2023 → — VBScript retired.</b> Microsoft deprecated VBScript in October 2023. In Windows 11 24H2 it became an optional feature, still on by default; around 2027 it is to be disabled by default, and later removed.</div>
+  </div>
+</section>
+
+<section id="try" data-toc="3 · Try: one job, three languages">
+  <h2><span class="n">03</span>Try it: one job, three languages</h2>
+  <p>Pick a routine job. The demo shows the same task as a <b>batch file</b>, a <b>PowerShell</b> script and a <b>Python</b> script, and runs it on a sample test-data folder. Notice how PowerShell and Python work with file <i>objects</i> (name, size, date) while batch mostly juggles text.</p>
+  <div class="demo">
+    <div class="toggle" id="jbT"><button class="on">Add date to file names</button><button>Delete logs older than 30 days</button><button>Zip a folder as a backup</button><button>Find files larger than 100 MB</button></div>
+    <div class="toggle" id="jbL" style="margin-top:8px"><button class="on">Batch (.bat)</button><button>PowerShell (.ps1)</button><button>Python (.py)</button></div>
+    <div style="position:relative;margin-top:8px"><pre class="term" id="jbCode" style="margin:0;white-space:pre-wrap;height:auto;min-height:150px"></pre><button class="cpy" data-for="jbCode">Copy</button></div>
+    <p style="margin:10px 0 4px"><b>Dry run on a sample folder</b> <span style="color:var(--muted);font-size:14px">(today = 2026-11-15)</span></p>
+    <div id="jbRun" style="font-size:14px"></div>
+  </div>
+</section>
+
+<section id="ps" data-toc="4 · Why PowerShell is different">
+  <h2><span class="n">04</span>Why PowerShell is different</h2>
+  <div class="two">
+    <div><h3>Text pipelines (batch, Unix shells)</h3><p>Each command prints text; the next command must cut that text apart to find the size or date column. Change the output format or the language of Windows, and scripts break.</p>
+      <pre class="term">dir /s *.log | find "11/2026"</pre></div>
+    <div><h3>Object pipelines (PowerShell)</h3><p>Each command passes objects with named properties. The next command asks for <code>.Length</code> or <code>.LastWriteTime</code> directly. Commands are named <i>Verb-Noun</i>: <code>Get-ChildItem</code>, <code>Sort-Object</code>, <code>Export-Csv</code>.</p>
+      <pre class="term">Get-ChildItem -Recurse *.log |
+  Where-Object LastWriteTime -gt (Get-Date).AddDays(-7) |
+  Export-Csv recent_logs.csv</pre></div>
+  </div>
+  <div class="callout">PowerShell also manages Windows itself: services, event logs, registry, Active Directory (Episode 34), Exchange and Microsoft 365. <code>-WhatIf</code> on most commands shows what <i>would</i> happen without doing it — use it on every delete.</div>
+</section>
+
+<section id="sched" data-toc="5 · Running scripts on a schedule">
+  <h2><span class="n">05</span>Running scripts on a schedule</h2>
+  <p>Windows 95's Plus! pack introduced System Agent; Windows 98 renamed it <b>Task Scheduler</b>, which today can start scripts at a time, at log-on, at start-up or on an event. Unix systems use <b>cron</b>. The command-line <code>schtasks</code> creates a task in one line:</p>
+  <div style="position:relative"><pre class="term" id="exSched">schtasks /create /tn "Clean old logs" /sc daily /st 18:00 ^
+  /tr "powershell -NoProfile -ExecutionPolicy Bypass -File D:\Scripts\clean_logs.ps1"</pre><button class="cpy" data-for="exSched">Copy</button></div>
+  <p style="font-size:14px;color:var(--muted)">The <code>^</code> continues the line in CMD. Run the task once by hand (<code>schtasks /run /tn "Clean old logs"</code>) before trusting it.</p>
+</section>
+
+<section id="examples" data-toc="6 · Ready-to-use examples">
+  <h2><span class="n">06</span>Ready-to-use examples</h2>
+  <p>Copy, save with the extension shown, change the folder paths, and test on a copy of your data first.</p>
+  <h3>A. Daily test-data copy with log (batch, <code>daily_copy.bat</code>)</h3>
+  <div style="position:relative"><pre class="term" id="exA">@echo off
+rem Copy new and changed test files from the logger PC share to the archive.
+rem ROBOCOPY only copies what has changed and writes a log.
+set SRC=\\LOGGER-PC\Data
+set DST=D:\Archive\Data
+robocopy "%SRC%" "%DST%" *.csv *.dxd /E /XO /R:2 /W:5 /LOG+:"%DST%\copy_log.txt" /NP
+if %ERRORLEVEL% GEQ 8 (echo Copy FAILED - check the log & exit /b 1)
+echo Copy finished OK.</pre><button class="cpy" data-for="exA">Copy</button></div>
+  <p style="font-size:14px;color:var(--muted)">ROBOCOPY exit codes below 8 mean success (0 = nothing new, 1 = files copied).</p>
+
+  <h3>B. Summary of today's CSV files (PowerShell, <code>csv_summary.ps1</code>)</h3>
+  <div style="position:relative"><pre class="term" id="exB"># For each CSV written today, report the number of rows and the
+# maximum of a chosen column, then save the summary as a new CSV.
+param(
+  [string]$Folder = 'D:\Archive\Data',
+  [string]$Column = 'Oil_Temp_C'
+)
+$today = (Get-Date).Date
+Get-ChildItem $Folder -Filter *.csv -File |
+  Where-Object LastWriteTime -ge $today |
+  ForEach-Object {
+    $rows = Import-Csv $_.FullName
+    [pscustomobject]@{
+      File = $_.Name
+      Rows = $rows.Count
+      Max  = ($rows | Measure-Object -Property $Column -Maximum).Maximum
+    }
+  } |
+  Export-Csv (Join-Path $Folder "summary_$(Get-Date -Format yyyy-MM-dd).csv") -NoTypeInformation</pre><button class="cpy" data-for="exB">Copy</button></div>
+  <p style="font-size:14px;color:var(--muted)">Run with <code>.\csv_summary.ps1 -Column Vib_RMS</code>. If scripts are blocked, allow your own with <code>Set-ExecutionPolicy -Scope CurrentUser RemoteSigned</code>.</p>
+
+  <h3>C. Watch a folder and process new files (Python, <code>watch_folder.py</code>)</h3>
+  <div style="position:relative"><pre class="term" id="exC">"""Check a folder every 30 s; when a new CSV appears, print its size and
+row count, then move it to a 'done' sub-folder. Standard library only."""
+import csv, shutil, time
+from pathlib import Path
+
+INBOX = Path(r"D:\Archive\Inbox")
+DONE = INBOX / "done"
+DONE.mkdir(exist_ok=True)
+
+while True:
+    for f in sorted(INBOX.glob("*.csv")):
+        try:
+            with f.open(newline="") as fh:
+                rows = sum(1 for _ in csv.reader(fh)) - 1   # minus header
+        except PermissionError:
+            continue            # still being written; try next time
+        print(f"{f.name}: {f.stat().st_size/1e6:.1f} MB, {rows} rows")
+        shutil.move(str(f), DONE / f.name)
+    time.sleep(30)</pre><button class="cpy" data-for="exC">Copy</button></div>
+</section>
+
+<section id="security" data-toc="7 · Script security">
+  <h2><span class="n">07</span>Script security</h2>
+  <ul>
+    <li><b>Scripts are a favourite malware vehicle.</b> VBScript, JScript and PowerShell attachments are blocked by most mail systems; never run a script you did not write or check.</li>
+    <li><b>PowerShell execution policy</b> (Restricted, RemoteSigned, AllSigned) prevents accidental running of downloaded scripts; it is a safety catch, not a security boundary.</li>
+    <li><b>Test destructive commands</b> with <code>-WhatIf</code>, <code>echo</code> instead of <code>del</code>, or on a copy of the folder.</li>
+    <li><b>Keep scripts in Git</b> (Episode 16) with comments and a header block saying what, why and who.</li>
+  </ul>
+</section>
+
+<section id="versions" data-toc="8 · Version explorer">
+  <h2><span class="n">08</span>Version explorer</h2>
+  <p>Blue chips: DOS and CMD batch. Amber chips: scripting languages and PowerShell.</p>
+  <div class="vbar" id="vbar"></div>
+  <div class="vpanel" id="vpanel"></div>
+</section>
+
+<section id="install" data-toc="9 · Getting the tools">
+  <h2><span class="n">09</span>Getting the tools</h2>
+  <table>
+    <tr><th>Tool</th><th>Where</th><th>Notes</th></tr>
+    <tr><td>PowerShell 7</td><td><code>github.com/PowerShell/PowerShell</code></td><td><code>winget install Microsoft.PowerShell</code> (Windows PowerShell 5.1 is already built in)</td></tr>
+    <tr><td>Windows Terminal</td><td>Microsoft Store</td><td><code>winget install Microsoft.WindowsTerminal</code></td></tr>
+    <tr><td>Python</td><td><code>python.org</code></td><td><code>winget install Python.Python.3.13</code></td></tr>
+    <tr><td>VS Code + PowerShell extension</td><td><code>code.visualstudio.com</code></td><td>Editing, debugging and running scripts</td></tr>
+  </table>
+</section>
+
+<section id="lessons" data-toc="10 · Lessons">
+  <h2><span class="n">10</span>Lessons for engineers</h2>
+  <ol>
+    <li><b>Automate the second time, not the tenth.</b> A ten-line script repays itself within a week of test-data handling.</li>
+    <li><b>Prefer objects to text.</b> PowerShell and Python survive changes in output format; text-parsing batch files do not.</li>
+    <li><b>Log what the script did.</b> An unattended job with no log is a mystery when it fails.</li>
+    <li><b>Plan for retirement.</b> VBScript is leaving Windows; move old .vbs scripts to PowerShell or Python now.</li>
+  </ol>
+</section>
+
+<section id="sources">
+  <h2>Sources &amp; further reading</h2>
+  <ol class="src">
+    <li><a href="https://techcommunity.microsoft.com/blog/windows-itpro-blog/vbscript-deprecation-timelines-and-next-steps/4148301">Microsoft — VBScript deprecation: timelines and next steps (May 2024)</a></li>
+    <li><a href="https://en.wikipedia.org/wiki/Batch_file">Wikipedia — Batch file</a> · <a href="https://en.wikipedia.org/wiki/REXX">REXX</a> · <a href="https://en.wikipedia.org/wiki/Windows_Script_Host">Windows Script Host</a></li>
+    <li><a href="https://en.wikipedia.org/wiki/PowerShell">Wikipedia — PowerShell</a> · Jeffrey Snover, <i>Monad Manifesto</i>, 2002</li>
+    <li><a href="https://learn.microsoft.com/powershell/">Microsoft Learn — PowerShell documentation</a> · <a href="https://learn.microsoft.com/windows-server/administration/windows-commands/robocopy">robocopy reference</a></li>
+  </ol>
+</section>
+<!--SCRIPT-->
+const V=[
+ {v:'MS-DOS batch',d:'1981–1994',hw:'IBM PC',n:['.BAT files, AUTOEXEC.BAT','IF, GOTO, FOR, %1 parameters','CALL and @ECHO OFF in DOS 3.3 (1987)']},
+ {v:'4DOS',d:'1989 → 2000s',hw:'DOS',n:['Enhanced command processor by JP Software']},
+ {v:'CMD.EXE',d:'1993 → today',hw:'Windows NT to 11',n:['FOR /F, SET /A, delayed expansion','robocopy, forfiles, schtasks']},
+ {v:'REXX',d:'1979 → today',e:2,hw:'IBM mainframes, OS/2, Amiga',n:['Mike Cowlishaw, IBM','OS/2 system scripting']},
+ {v:'WSH: VBScript / JScript',d:'1996–1998 → ~2027',e:2,hw:'Windows 98 onward',n:['COM automation of Windows and Office','Deprecated 2023; optional in 24H2','Disabled by default around 2027']},
+ {v:'Windows PowerShell 1–5.1',d:'2006–2016',e:2,hw:'Windows XP to 11',n:['Object pipeline on .NET','Remoting (2.0, 2009)','5.1 still built into Windows']},
+ {v:'PowerShell 6–7',d:'2018 → today',e:2,hw:'Windows, Linux, macOS',n:['Open source, cross-platform','PowerShell 7 (2020) and later']},
+ {v:'Python as glue',d:'1991 → today',e:2,hw:'Any platform',n:['Standard library for files, CSV, e-mail, web','Widely used for test-data automation']}
+];
+SH.explorer(V,'',['Batch','Scripting languages']);
+const q=id=>document.getElementById(id);
+document.querySelectorAll('.cpy').forEach(b=>{b.style.cssText='position:absolute;top:6px;right:6px;padding:3px 10px;border-radius:5px;border:1px solid #8a939e;background:#fff;cursor:pointer;font-size:13px';
+ b.onclick=()=>{const t=q(b.dataset.for).innerText;const ok=()=>{b.textContent='Copied ✓';setTimeout(()=>b.textContent='Copy',1500);};
+  if(navigator.clipboard)navigator.clipboard.writeText(t).then(ok,()=>{});else{const r=document.createRange();r.selectNodeContents(q(b.dataset.for));getSelection().removeAllRanges();getSelection().addRange(r);document.execCommand('copy');ok();}};});
+const J=[
+ {bat:`@echo off
+rem Put today's date (YYYY-MM-DD) in front of every .csv file in this folder
+for /f %%d in ('powershell -NoProfile -Command "Get-Date -Format yyyy-MM-dd"') do set TODAY=%%d
+rem 'dir /b' takes a snapshot so renamed files are not processed twice
+for /f "delims=" %%f in ('dir /b *.csv') do ren "%%f" "%TODAY%_%%f"`,
+  ps:`$today = Get-Date -Format 'yyyy-MM-dd'
+Get-ChildItem -Filter *.csv -File |
+  Rename-Item -NewName { "\${today}_$($_.Name)" } -WhatIf   # remove -WhatIf to do it`,
+  py:`from datetime import date
+from pathlib import Path
+
+today = date.today().isoformat()
+for f in list(Path(".").glob("*.csv")):   # list() = snapshot first
+    f.rename(f.with_name(f"{today}_{f.name}"))`},
+ {bat:`@echo off
+rem Delete .log files not modified in the last 30 days (use echo first to test)
+forfiles /p "D:\\Logs" /m *.log /d -30 /c "cmd /c echo Deleting @file & del @path"`,
+  ps:`Get-ChildItem 'D:\\Logs' -Filter *.log -File |
+  Where-Object LastWriteTime -lt (Get-Date).AddDays(-30) |
+  Remove-Item -WhatIf          # remove -WhatIf to really delete`,
+  py:`import time
+from pathlib import Path
+
+cutoff = time.time() - 30 * 86400
+for f in Path(r"D:\\Logs").glob("*.log"):
+    if f.stat().st_mtime < cutoff:
+        print("deleting", f.name)
+        f.unlink()`},
+ {bat:`@echo off
+rem tar.exe is built into Windows 10 (1803) and later; -a picks ZIP from the name
+for /f %%d in ('powershell -NoProfile -Command "Get-Date -Format yyyy-MM-dd"') do set TODAY=%%d
+tar -a -c -f "D:\\Backup\\Data_%TODAY%.zip" -C D:\\ Data`,
+  ps:`$stamp = Get-Date -Format 'yyyy-MM-dd'
+Compress-Archive -Path 'D:\\Data\\*' -DestinationPath "D:\\Backup\\Data_$stamp.zip"`,
+  py:`import shutil
+from datetime import date
+
+shutil.make_archive(rf"D:\\Backup\\Data_{date.today()}", "zip", r"D:\\Data")`},
+ {bat:`@echo off
+rem List files over 100 MB under the current folder (sizes in bytes)
+forfiles /s /c "cmd /c if @fsize GTR 104857600 echo @path  @fsize"`,
+  ps:`Get-ChildItem 'D:\\' -Recurse -File -ErrorAction SilentlyContinue |
+  Where-Object Length -gt 100MB |
+  Sort-Object Length -Descending |
+  Select-Object -First 20 FullName, @{n='MB'; e={[math]::Round($_.Length / 1MB)}}`,
+  py:`import os
+
+big = []
+for root, dirs, files in os.walk("D:\\\\"):
+    for name in files:
+        p = os.path.join(root, name)
+        try:
+            size = os.path.getsize(p)
+        except OSError:
+            continue
+        if size > 100 * 2**20:
+            big.append((size, p))
+for size, p in sorted(big, reverse=True)[:20]:
+    print(f"{size / 2**20:8.0f} MB  {p}")`}];
+const FILES=[['run14_etr.csv',38,'2026-11-14'],['run15_etr.csv',41,'2026-11-15'],['vib_run14.dxd',2400,'2026-11-14'],['logger_0901.log',2,'2026-09-01'],['logger_1012.log',3,'2026-10-12'],['logger_1110.log',3,'2026-11-10'],['report_draft.docx',1,'2026-11-13'],['raw_dump.bin',380,'2026-08-20']];
+let jt=0,jl=0;
+function jb(){const k=['bat','ps','py'][jl];q('jbCode').textContent=J[jt][k];
+ const days=d=>(new Date('2026-11-15')-new Date(d))/86400000;let rows;
+ if(jt===0)rows=FILES.map(f=>[f[0],f[0].endsWith('.csv')?'→ 2026-11-15_'+f[0]:'unchanged',f[0].endsWith('.csv')]);
+ else if(jt===1)rows=FILES.map(f=>[f[0]+' ('+f[2]+')',f[0].endsWith('.log')&&days(f[2])>30?'deleted ('+days(f[2])+' days old)':'kept',f[0].endsWith('.log')&&days(f[2])>30]);
+ else if(jt===2){const tot=FILES.reduce((a,f)=>a+f[1],0);rows=[['Data_2026-11-15.zip','created from '+FILES.length+' files, '+tot+' MB in; text files shrink a lot, .dxd and .bin much less',true]];}
+ else rows=FILES.map(f=>[f[0],f[1]+' MB'+(f[1]>100?'  ← listed':''),f[1]>100]).sort((a,b)=>parseFloat(b[1])-parseFloat(a[1]));
+ q('jbRun').innerHTML='<table style="width:100%">'+rows.map(r=>'<tr><td><code>'+r[0]+'</code></td><td style="'+(r[2]?'font-weight:700;color:#1f3b5c':'color:#5b6672')+'">'+r[1]+'</td></tr>').join('')+'</table>';}
+const tg=(id,fn)=>document.querySelectorAll('#'+id+' button').forEach((b,i)=>b.onclick=()=>{document.querySelectorAll('#'+id+' button').forEach((x,j)=>x.classList.toggle('on',i===j));fn(i);jb();});
+tg('jbT',i=>jt=i);tg('jbL',i=>jl=i);jb();

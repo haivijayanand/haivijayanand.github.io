@@ -217,6 +217,7 @@ TOPICS = [
  ('design', 'Design, print and media', ['11', '12', '13', '14', '15', '20']),
  ('think', 'Thinking, research and data', ['21', '22', '23', '24', '25']),
  ('util', 'Utilities and security', ['33', '17', '32']),
+ ('auto', 'Macros and automation', ['35', '36', '37', '38', '39']),
 ]
 
 

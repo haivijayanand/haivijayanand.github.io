@@ -1,12 +1,12 @@
 """
 TOOL:    software-history/_src/build.py — builds episode pages from _src/NN.html fragments
 FAMILY:  software-history
-VERSION: 1.5.0
+VERSION: 1.6.0
 DATE:    2026-11-15
 CHAT:    Software history series — start with MS-DOS, publish all episodes
-CHANGES: 1.5.0 — keeps earlier CHANGES entries of an existing page when rebuilding; 1.4.0 — Season 5 episodes 27–30 (engineering and test software) and Season 6 episodes 31–34 (PC-era extras); 1.3.0 — Season 4 episodes 21–26 (thinking, research and office tools); 1.2.0 — Season 3 episodes 15–20 (open source on Windows); 1.1.0 — Season 2 episodes 11–14 (DTP, graphics, prepress, packaging prepress); last-episode nav computed; 1.0.0 — fragment (meta lines + body + optional script) to full page with header block, TOC, nav
+CHANGES: 1.6.0 — Season 7 episodes 35–39 (macros and automation); 1.5.0 — keeps earlier CHANGES entries of an existing page when rebuilding; 1.4.0 — Season 5 episodes 27–30 (engineering and test software) and Season 6 episodes 31–34 (PC-era extras); 1.3.0 — Season 4 episodes 21–26 (thinking, research and office tools); 1.2.0 — Season 3 episodes 15–20 (open source on Windows); 1.1.0 — Season 2 episodes 11–14 (DTP, graphics, prepress, packaging prepress); last-episode nav computed; 1.0.0 — fragment (meta lines + body + optional script) to full page with header block, TOC, nav
 """
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 import re, sys, pathlib, html
 SRC = pathlib.Path(__file__).parent
 OUT = SRC.parent
@@ -16,7 +16,8 @@ SLUGS = {1:'01-ms-dos',2:'02-windows-1-to-3',3:'03-spreadsheets',4:'04-word-proc
          15:'15-open-source-media',16:'16-editors-dev-tools',17:'17-open-source-utilities',18:'18-office-and-internet',19:'19-engineering-science',20:'20-creative-and-linux-on-windows',
          21:'21-mind-maps-outliners',22:'22-notes-knowledge',23:'23-references-literature-search',24:'24-diagrams-project-planning',25:'25-statistics-research-data',26:'26-office-communication',
          27:'27-matlab-numerical-computing',28:'28-labview-data-acquisition',29:'29-finite-element-analysis',30:'30-3d-cad',
-         31:'31-tally-business-software',32:'32-antivirus-pc-security',33:'33-dos-utilities-compression',34:'34-netware-office-networks'}
+         31:'31-tally-business-software',32:'32-antivirus-pc-security',33:'33-dos-utilities-compression',34:'34-netware-office-networks',
+         35:'35-batch-to-powershell',36:'36-office-macros-vba',37:'37-keyboard-desktop-automation',38:'38-engineering-automation',39:'39-rpa-no-code-ai-agents'}
 NAMES = {1:'MS-DOS',2:'Windows 1.0 to 3.11',3:'VisiCalc, Lotus 1-2-3 and Excel',4:'WordStar, WordPerfect and Word',
          5:'dBase, FoxPro and Access',6:'OS/2 vs Windows NT',7:'Netscape vs Internet Explorer',8:'Windows 95 to XP',
          9:'AutoCAD and engineering CAD',10:'Turbo Pascal, Delphi and Visual Basic',
@@ -24,7 +25,8 @@ NAMES = {1:'MS-DOS',2:'Windows 1.0 to 3.11',3:'VisiCalc, Lotus 1-2-3 and Excel',
          15:'Open-source media: VLC, FFmpeg and friends',16:'Editors and developer tools: Notepad++ and beyond',17:'Utilities: 7-Zip, KeePass, PowerToys and more',18:'Office and internet: LibreOffice, Firefox, Thunderbird',19:'Engineering and science on Windows',20:'Creative tools and Linux on Windows: Blender, Krita, OBS, WSL',
          21:'Mind maps and outliners',22:'Notes and personal knowledge',23:'Reference managers and literature search',24:'Diagrams and project planning',25:'Statistics and research data',26:'Office communication: e-mail to Teams',
          27:'MATLAB and numerical computing',28:'LabVIEW and data acquisition',29:'Finite element analysis',30:'3D CAD: CATIA to SolidWorks',
-         31:'Tally and business accounting',32:'Antivirus and PC security',33:'DOS utilities and compression',34:'NetWare and office networks'}
+         31:'Tally and business accounting',32:'Antivirus and PC security',33:'DOS utilities and compression',34:'NetWare and office networks',
+         35:'Batch files to PowerShell',36:'Office macros: Lotus 1-2-3 to VBA',37:'Keyboard and desktop automation',38:'Engineering automation',39:'RPA, no-code and AI agents'}
 
 def build(n, version='1.0.0', date='2026-11-15', changes='First release'):
     raw = (SRC / f'{n:02d}.html').read_text()

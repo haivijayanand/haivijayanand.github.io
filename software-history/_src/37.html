@@ -1,0 +1,246 @@
+title: Keyboard and desktop automation: from SuperKey to AutoHotkey and Playwright
+years: 1982 → today
+lede: Some repetition lives outside any one program: typing the same phrases, pressing the same key sequence in an old application, filling the same web form, clicking through the same dialog every morning. Keyboard enhancers, desktop automation tools and browser robots handle this layer — from DOS memory-resident programs to AutoHotkey and the test tools that drive web browsers.
+desc: History of keyboard and desktop automation: ProKey and Borland SuperKey, the Windows 3.x Recorder, AutoIt and AutoHotkey, text expanders (PhraseExpress, Espanso), Windows UI Automation, PyAutoGUI, and browser automation from Selenium and WebDriver to Puppeteer and Playwright, with a text expander demo, a coordinates-versus-elements demo and ready-to-use AutoHotkey, Espanso and Python scripts.
+
+<section id="glance" data-toc="At a glance">
+  <div class="stats">
+    <div class="stat"><div class="v">1985</div><div class="k">Borland SuperKey: keyboard macros for DOS</div></div>
+    <div class="stat"><div class="v">1990</div><div class="k">Windows 3.0 Recorder</div></div>
+    <div class="stat"><div class="v">1999</div><div class="k">AutoIt</div></div>
+    <div class="stat"><div class="v">2003</div><div class="k">AutoHotkey; v2.0 in 2022</div></div>
+    <div class="stat"><div class="v">2004</div><div class="k">Selenium automates web browsers</div></div>
+    <div class="stat"><div class="v">2020</div><div class="k">Microsoft Playwright</div></div>
+  </div>
+</section>
+
+<section id="need" data-toc="1 · The requirement">
+  <h2><span class="n">01</span>The requirement: automate programs that were never meant to be automated</h2>
+  <table>
+    <tr><th style="width:28%">Requirement</th><th style="width:34%">Why</th><th>What these tools offered</th></tr>
+    <tr><td>Type less</td><td>Addresses, signatures, standard remarks and part numbers are typed hundreds of times</td><td>Keyboard macros and text expansion</td></tr>
+    <tr><td>Add shortcuts to any program</td><td>Old software has no macro language</td><td>Global hotkeys that send keystrokes and clicks</td></tr>
+    <tr><td>Glue several programs together</td><td>Copy from one window, paste into another, save, repeat</td><td>Desktop automation scripts</td></tr>
+    <tr><td>Test software repeatedly</td><td>Every release needs the same screens checked</td><td>GUI and browser test automation</td></tr>
+    <tr><td>Fill web forms and fetch reports</td><td>Portals offer no download API</td><td>Browser robots (with permission)</td></tr>
+  </table>
+</section>
+
+<section id="history" data-toc="2 · History">
+  <h2><span class="n">02</span>History</h2>
+  <div class="tl">
+    <div class="ev"><b>1982–1985 — Keyboard enhancers for DOS.</b> Memory-resident (TSR) programs such as RoseSoft's <b>ProKey</b> and Borland's <b>SuperKey</b> (1985) intercepted the keyboard: one key could type a paragraph or a long command sequence in any program. Used for WordStar, dBase and 1-2-3 work.</div>
+    <div class="ev"><b>1990 — Windows Recorder.</b> Windows 3.0 and 3.1 included Recorder, which played back mouse and keyboard actions. It was dropped in Windows 95, and third-party tools such as Macro Express filled the gap.</div>
+    <div class="ev"><b>1997–2005 — Accessibility APIs.</b> Microsoft Active Accessibility (1997) and UI Automation (2005) let screen readers — and automation tools — find buttons and text boxes by name rather than by screen position.</div>
+    <div class="ev"><b>1999 — AutoIt.</b> Jonathan Bennett wrote AutoIt to automate software installation on many PCs; AutoIt v3 (2004) became a full BASIC-like scripting language.</div>
+    <div class="ev"><b>2003 — AutoHotkey.</b> Chris Mallett created AutoHotkey, focused on hotkeys and "hotstrings" (text expansion). It became one of the most popular free Windows utilities; AutoHotkey v2.0, a cleaner language, was released in December 2022.</div>
+    <div class="ev"><b>2000s — Text expanders.</b> PhraseExpress, Breevy and others managed libraries of snippets; the open-source <b>Espanso</b> (2019) works on Windows, Linux and macOS with simple text configuration files.</div>
+    <div class="ev"><b>2004–2018 — Selenium and WebDriver.</b> Jason Huggins at ThoughtWorks wrote Selenium to test web applications; it merged with Simon Stewart's WebDriver in Selenium 2 (2011), and WebDriver became a W3C standard in 2018.</div>
+    <div class="ev"><b>2009–2014 — Image-based automation.</b> Sikuli (MIT, 2009) clicked on screenshots of buttons; PyAutoGUI (2014) gave Python simple mouse and keyboard control.</div>
+    <div class="ev"><b>2017–2020 — Modern browser robots.</b> Google's Puppeteer (2017) controlled Chrome directly; Microsoft's <b>Playwright</b> (2020) drives Chromium, Firefox and WebKit with automatic waiting, and became widely used for testing and automation.</div>
+  </div>
+</section>
+
+<section id="try" data-toc="3 · Try: a text expander">
+  <h2><span class="n">03</span>Try it: text expansion</h2>
+  <p>Edit the abbreviations, then type in the box. An abbreviation followed by a space or Enter expands — the way AutoHotkey hotstrings and Espanso work. The matching configuration for each tool is written for you.</p>
+  <div class="demo">
+    <div class="two">
+      <div><b>Abbreviations</b> <span style="font-size:13px;color:var(--muted)">(one per line: abbreviation = text; {date} inserts today)</span>
+        <textarea id="txRules" spellcheck="false" style="width:100%;height:150px;font:14px/1.5 var(--mono);padding:8px">;etr = Endurance Test Rig
+;atr = Attitude Test Rig
+;ok = Checked and found satisfactory.
+;dt = {date}
+;nc = Non-conformance observed; reported for review.</textarea></div>
+      <div><b>Type here</b> <span style="font-size:13px;color:var(--muted)">(try ";etr " or ";dt ")</span>
+        <textarea id="txBox" spellcheck="false" style="width:100%;height:150px;font:15px/1.5 inherit;padding:8px;font-family:inherit">Run 16 on the </textarea>
+        <p id="txMsg" style="margin:4px 0 0;font-size:14px;color:var(--muted)"></p></div>
+    </div>
+    <div class="toggle" id="txL" style="margin-top:8px"><button class="on">AutoHotkey v2</button><button>Espanso (YAML)</button></div>
+    <div style="position:relative;margin-top:6px"><pre class="term" id="txCode" style="margin:0;white-space:pre-wrap;height:auto;min-height:120px"></pre><button class="cpy" data-for="txCode">Copy</button></div>
+  </div>
+</section>
+
+<section id="coords" data-toc="4 · Try: coordinates vs elements">
+  <h2><span class="n">04</span>Try it: why recorded clicks break</h2>
+  <p>A recorded macro that clicks at screen position (x, y) works only if every window is exactly where it was. Tools that find controls through <b>UI Automation</b> (by name or ID) survive moved windows, different screens and larger fonts. Move the window and run both macros.</p>
+  <div class="demo">
+    <div class="chips"><button id="crMove">Move window</button><button id="crScale">Change display scaling</button><button id="crReset">Reset</button><button id="crRun1">Run "click at (x, y)"</button><button id="crRun2">Run "click button named Save"</button></div>
+    <svg id="crSvg" viewBox="0 0 640 260" style="display:block;width:100%;background:#eef1f4;border:1px solid var(--line);border-radius:8px;margin-top:8px"></svg>
+    <p id="crMsg" style="margin:6px 0 0;font-weight:600;color:var(--navy)"></p>
+  </div>
+</section>
+
+<section id="browser" data-toc="5 · Browser automation">
+  <h2><span class="n">05</span>Browser automation</h2>
+  <table>
+    <tr><th>Tool</th><th>Year</th><th>Approach</th></tr>
+    <tr><td><b>Selenium / WebDriver</b></td><td>2004 / 2011</td><td>Standard protocol to drive any browser; bindings for Java, Python, C#; W3C Recommendation 2018</td></tr>
+    <tr><td><b>iMacros</b></td><td>2001</td><td>Browser add-on that recorded web form filling; discontinued</td></tr>
+    <tr><td><b>Puppeteer</b></td><td>2017</td><td>Node.js library controlling Chrome through its DevTools protocol</td></tr>
+    <tr><td><b>Cypress</b></td><td>2017</td><td>Testing framework running inside the browser</td></tr>
+    <tr><td><b>Playwright</b></td><td>2020</td><td>Microsoft; Chromium, Firefox and WebKit; Python, JavaScript, Java, .NET; records scripts with <code>playwright codegen</code></td></tr>
+  </table>
+  <div class="callout amber">Automating someone else's website may break its terms of use and can overload the server. Use official downloads or APIs where they exist, keep a polite delay between requests, and never automate log-ins to systems you are not authorised to use.</div>
+</section>
+
+<section id="examples" data-toc="6 · Ready-to-use scripts">
+  <h2><span class="n">06</span>Ready-to-use scripts</h2>
+  <h3>A. Everyday hotkeys (AutoHotkey v2, <code>my_hotkeys.ahk</code>)</h3>
+  <div style="position:relative"><pre class="term" id="exA">#Requires AutoHotkey v2.0
+#SingleInstance Force
+
+; Ctrl+Alt+D types today's date, e.g. 2026-11-15
+^!d::SendText FormatTime(, "yyyy-MM-dd")
+
+; Ctrl+Alt+V pastes clipboard as plain text (drops fonts and colours)
+^!v::
+{
+    A_Clipboard := A_Clipboard     ; re-assigning keeps only the text
+    Send "^v"
+}
+
+; Ctrl+Alt+N opens Notepad, or switches to it if already open
+^!n::
+{
+    if WinExist("ahk_exe notepad.exe")
+        WinActivate
+    else
+        Run "notepad.exe"
+}
+
+; Only in Excel: F9 saves the workbook and shows a tooltip
+#HotIf WinActive("ahk_exe EXCEL.EXE")
+F9::
+{
+    Send "^s"
+    ToolTip "Saved"
+    SetTimer () =&gt; ToolTip(), -1000
+}
+#HotIf</pre><button class="cpy" data-for="exA">Copy</button></div>
+  <p style="font-size:14px;color:var(--muted)">Save as UTF-8 text with the <code>.ahk</code> extension and double-click to run; put a shortcut in <code>shell:startup</code> to start it with Windows.</p>
+
+  <h3>B. Snippets with a date (Espanso, <code>match/base.yml</code>)</h3>
+  <div style="position:relative"><pre class="term" id="exB">matches:
+  - trigger: ";etr"
+    replace: "Endurance Test Rig"
+
+  - trigger: ";dt"
+    replace: "{{today}}"
+    vars:
+      - name: today
+        type: date
+        params:
+          format: "%Y-%m-%d"
+
+  - trigger: ";obs"
+    replace: |
+      Observation:
+      Action taken:
+      Status: Open</pre><button class="cpy" data-for="exB">Copy</button></div>
+
+  <h3>C. Open a web page, check it and save a screenshot (Python + Playwright)</h3>
+  <div style="position:relative"><pre class="term" id="exC"># pip install playwright   then   playwright install chromium
+from datetime import date
+from playwright.sync_api import sync_playwright
+
+URL = "https://www.example.com"          # e.g. your intranet status page
+
+with sync_playwright() as p:
+    browser = p.chromium.launch()        # headless; use launch(headless=False) to watch
+    page = browser.new_page()
+    page.goto(URL)
+    print("Title:", page.title())
+    page.screenshot(path=f"status_{date.today()}.png", full_page=True)
+    browser.close()</pre><button class="cpy" data-for="exC">Copy</button></div>
+
+  <h3>D. Simple mouse and keyboard control (Python + PyAutoGUI)</h3>
+  <div style="position:relative"><pre class="term" id="exD"># pip install pyautogui  — moving the mouse to a screen corner aborts (fail-safe)
+import time
+import pyautogui
+
+pyautogui.PAUSE = 0.3          # pause after every action
+time.sleep(3)                  # 3 s to click into the target window
+for run in range(14, 19):
+    pyautogui.write(f"Run {run}")
+    pyautogui.press("tab")
+    pyautogui.write("Checked")
+    pyautogui.press("enter")</pre><button class="cpy" data-for="exD">Copy</button></div>
+</section>
+
+<section id="versions" data-toc="7 · Version explorer">
+  <h2><span class="n">07</span>Version explorer</h2>
+  <p>Blue chips: keyboard and desktop tools. Amber chips: browser automation.</p>
+  <div class="vbar" id="vbar"></div>
+  <div class="vpanel" id="vpanel"></div>
+</section>
+
+<section id="install" data-toc="8 · Getting the tools">
+  <h2><span class="n">08</span>Getting the tools safely</h2>
+  <table>
+    <tr><th>Tool</th><th>Official site</th><th>winget / pip</th></tr>
+    <tr><td>AutoHotkey v2</td><td><code>autohotkey.com</code></td><td><code>winget install AutoHotkey.AutoHotkey</code></td></tr>
+    <tr><td>AutoIt</td><td><code>autoitscript.com</code></td><td>Installer from the site</td></tr>
+    <tr><td>Espanso</td><td><code>espanso.org</code></td><td><code>winget install Espanso.Espanso</code></td></tr>
+    <tr><td>PowerToys (Keyboard Manager)</td><td><code>github.com/microsoft/PowerToys</code></td><td><code>winget install Microsoft.PowerToys</code></td></tr>
+    <tr><td>Playwright, PyAutoGUI</td><td><code>playwright.dev</code>, <code>pyautogui.readthedocs.io</code></td><td><code>pip install playwright pyautogui</code></td></tr>
+  </table>
+  <p style="font-size:14px;color:var(--muted)">AutoHotkey and AutoIt scripts compiled to .exe are often flagged by antivirus because malware authors use them too; run scripts, not unknown compiled files. Many offices restrict these tools — check IT policy first.</p>
+</section>
+
+<section id="lessons" data-toc="9 · Lessons">
+  <h2><span class="n">09</span>Lessons for engineers</h2>
+  <ol>
+    <li><b>Automate at the highest level available.</b> API or file first, browser automation second, screen clicks last.</li>
+    <li><b>Find controls by name, not position.</b> Coordinate macros break with every screen change.</li>
+    <li><b>Add waits and checks.</b> Programs are slower some days; a robot that types into the wrong window is worse than none.</li>
+    <li><b>Text expansion is the safest win.</b> Standard phrases, part numbers and remarks become consistent as well as faster.</li>
+  </ol>
+</section>
+
+<section id="sources">
+  <h2>Sources &amp; further reading</h2>
+  <ol class="src">
+    <li><a href="https://en.wikipedia.org/wiki/AutoHotkey">Wikipedia — AutoHotkey</a> · <a href="https://www.autohotkey.com/docs/v2/">AutoHotkey v2 documentation</a> · <a href="https://en.wikipedia.org/wiki/AutoIt">AutoIt</a></li>
+    <li><a href="https://espanso.org/docs/">Espanso documentation</a></li>
+    <li><a href="https://en.wikipedia.org/wiki/Selenium_(software)">Wikipedia — Selenium</a> · <a href="https://www.w3.org/TR/webdriver/">W3C WebDriver</a> · <a href="https://playwright.dev/python/">Playwright for Python</a></li>
+    <li><a href="https://learn.microsoft.com/windows/win32/winauto/entry-uiauto-win32">Microsoft — UI Automation</a> · <a href="https://pyautogui.readthedocs.io/">PyAutoGUI</a></li>
+  </ol>
+</section>
+<!--SCRIPT-->
+const V=[
+ {v:'ProKey / SuperKey',d:'1982–1990s',hw:'DOS (TSR)',n:['Keyboard macros in any program','Borland SuperKey 1985']},
+ {v:'Windows Recorder',d:'1990–1995',hw:'Windows 3.x',n:['Recorded mouse and keys','Removed in Windows 95']},
+ {v:'AutoIt',d:'1999 → today',hw:'Windows',n:['Install automation','v3 (2004): full scripting language']},
+ {v:'AutoHotkey',d:'2003 → today',hw:'Windows',n:['Hotkeys and hotstrings','v1.1 widely used; v2.0 December 2022']},
+ {v:'Text expanders',d:'2000s → today',hw:'Windows, Mac, Linux',n:['PhraseExpress, Breevy','Espanso (2019), open source']},
+ {v:'Selenium / WebDriver',d:'2004 → today',e:2,hw:'Any browser',n:['Web testing standard','W3C Recommendation 2018']},
+ {v:'Puppeteer / Cypress',d:'2017 → today',e:2,hw:'Chrome, Node.js',n:['DevTools protocol automation']},
+ {v:'Playwright',d:'2020 → today',e:2,hw:'Chromium, Firefox, WebKit',n:['Auto-waiting, code generator','Python, JS, Java, .NET']}
+];
+SH.explorer(V,'',['Keyboard and desktop','Browser automation']);
+const q=id=>document.getElementById(id);
+document.querySelectorAll('.cpy').forEach(b=>{b.style.cssText='position:absolute;top:6px;right:6px;padding:3px 10px;border-radius:5px;border:1px solid #8a939e;background:#fff;cursor:pointer;font-size:13px';
+ b.onclick=()=>{const t=q(b.dataset.for).innerText;const ok=()=>{b.textContent='Copied ✓';setTimeout(()=>b.textContent='Copy',1500);};
+  if(navigator.clipboard)navigator.clipboard.writeText(t).then(ok,()=>{});else{const r=document.createRange();r.selectNodeContents(q(b.dataset.for));getSelection().removeAllRanges();getSelection().addRange(r);document.execCommand('copy');ok();}};});
+let txl=0,count=0;const today=new Date().toISOString().slice(0,10);
+function rules(){return q('txRules').value.split('\n').map(l=>{const i=l.indexOf('=');return i>0?[l.slice(0,i).trim(),l.slice(i+1).trim()]:null;}).filter(r=>r&&r[0]);}
+function txcode(){const R=rules();
+ if(txl===0)q('txCode').textContent='#Requires AutoHotkey v2.0\n; Type the abbreviation, then Space or Enter\n'+R.map(([a,t])=>t==='{date}'?':*:'+a+'::\n{\n    SendText FormatTime(, "yyyy-MM-dd")\n}':'::'+a+'::'+t.replace(/`/g,'``').replace(/;/g,'`;')).join('\n');
+ else q('txCode').textContent='matches:\n'+R.map(([a,t])=>t==='{date}'?'  - trigger: "'+a+'"\n    replace: "{{today}}"\n    vars:\n      - name: today\n        type: date\n        params:\n          format: "%Y-%m-%d"':'  - trigger: "'+a+'"\n    replace: "'+t.replace(/"/g,'\\"')+'"').join('\n\n');}
+q('txBox').addEventListener('input',e=>{const box=q('txBox');const v=box.value,pos=box.selectionStart;const last=v[pos-1];if(last!==' '&&last!=='\n')return;
+ const before=v.slice(0,pos-1);for(const [a,t] of rules()){if(before.endsWith(a)){const rep=t==='{date}'?today:t;box.value=before.slice(0,-a.length)+rep+last+v.slice(pos);const np=before.length-a.length+rep.length+1;box.setSelectionRange(np,np);count+=a.length-rep.length;q('txMsg').textContent='Expanded '+a+' → '+(rep.length>40?rep.slice(0,40)+'…':rep)+'. Keystrokes saved so far: '+(-count);break;}}});
+q('txRules').oninput=txcode;document.querySelectorAll('#txL button').forEach((b,i)=>b.onclick=()=>{txl=i;document.querySelectorAll('#txL button').forEach((x,j)=>x.classList.toggle('on',i===j));txcode();});txcode();
+let W={x:120,y:40,s:1};const REC={x:120+250,y:40+150};
+function cr(msg,hit){const w=W,bw=320*w.s,bh=180*w.s;const sx=w.x+250*w.s,sy=w.y+150*w.s;
+ let s='<rect x="'+w.x+'" y="'+w.y+'" width="'+bw+'" height="'+bh+'" rx="6" fill="#fff" stroke="#1f3b5c" stroke-width="2"/><rect x="'+w.x+'" y="'+w.y+'" width="'+bw+'" height="'+(26*w.s)+'" rx="6" fill="#1f3b5c"/><text x="'+(w.x+10)+'" y="'+(w.y+18*w.s)+'" font-size="'+(13*w.s)+'" fill="#fff">Test report — data entry</text>';
+ s+='<text x="'+(w.x+14)+'" y="'+(w.y+60*w.s)+'" font-size="'+(13*w.s)+'" fill="#1b2430">Run number: 16</text><text x="'+(w.x+14)+'" y="'+(w.y+85*w.s)+'" font-size="'+(13*w.s)+'" fill="#1b2430">Remarks: Checked</text>';
+ s+='<rect x="'+(sx-40*w.s)+'" y="'+(sy-14*w.s)+'" width="'+(80*w.s)+'" height="'+(28*w.s)+'" rx="5" fill="#2c6fb0"/><text x="'+sx+'" y="'+(sy+5*w.s)+'" text-anchor="middle" font-size="'+(13*w.s)+'" fill="#fff">Save</text>';
+ s+='<rect x="'+(sx-120*w.s)+'" y="'+(sy-14*w.s)+'" width="'+(70*w.s)+'" height="'+(28*w.s)+'" rx="5" fill="#fff" stroke="#8a939e"/><text x="'+(sx-85*w.s)+'" y="'+(sy+5*w.s)+'" text-anchor="middle" font-size="'+(13*w.s)+'" fill="#1b2430">Delete</text>';
+ if(hit)s+='<circle cx="'+hit[0]+'" cy="'+hit[1]+'" r="10" fill="none" stroke="#d98a00" stroke-width="3"/><line x1="'+(hit[0]-14)+'" y1="'+hit[1]+'" x2="'+(hit[0]+14)+'" y2="'+hit[1]+'" stroke="#d98a00" stroke-width="2"/><line x1="'+hit[0]+'" y1="'+(hit[1]-14)+'" x2="'+hit[0]+'" y2="'+(hit[1]+14)+'" stroke="#d98a00" stroke-width="2"/>';
+ q('crSvg').innerHTML=s;q('crMsg').textContent=msg||'The recorded macro clicks at ('+REC.x+', '+REC.y+') — where Save was when it was recorded.';}
+function what(x,y){const w=W,sx=w.x+250*w.s,sy=w.y+150*w.s;if(Math.abs(x-sx)<=40*w.s&&Math.abs(y-sy)<=14*w.s)return 'Save';if(Math.abs(x-(sx-85*w.s))<=35*w.s&&Math.abs(y-sy)<=14*w.s)return 'Delete';if(x>=w.x&&x<=w.x+320*w.s&&y>=w.y&&y<=w.y+180*w.s)return 'empty part of the window';return 'the desktop behind the window';}
+q('crMove').onclick=()=>{W.x=W.x===120?40:120;W.y=W.y===40?60:40;cr();};q('crScale').onclick=()=>{W.s=W.s===1?1.25:1;cr();};q('crReset').onclick=()=>{W={x:120,y:40,s:1};cr();};
+q('crRun1').onclick=()=>{const t=what(REC.x,REC.y);cr('Clicked at ('+REC.x+', '+REC.y+') → hit '+t+(t==='Save'?' ✓':' ✗ — the macro does not know the screen changed.'),[REC.x,REC.y]);};
+q('crRun2').onclick=()=>{const sx=W.x+250*W.s,sy=W.y+150*W.s;cr('UI Automation found the button named "Save" at ('+Math.round(sx)+', '+Math.round(sy)+') and clicked it ✓',[sx,sy]);};
+cr();

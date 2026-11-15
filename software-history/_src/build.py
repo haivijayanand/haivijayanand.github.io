@@ -1,22 +1,24 @@
 """
 TOOL:    software-history/_src/build.py — builds episode pages from _src/NN.html fragments
 FAMILY:  software-history
-VERSION: 1.1.0
+VERSION: 1.2.0
 DATE:    2026-11-15
 CHAT:    Software history series — start with MS-DOS, publish all episodes
-CHANGES: 1.1.0 — Season 2 episodes 11–14 (DTP, graphics, prepress, packaging prepress); last-episode nav computed; 1.0.0 — fragment (meta lines + body + optional script) to full page with header block, TOC, nav
+CHANGES: 1.2.0 — Season 3 episodes 15–20 (open source on Windows); 1.1.0 — Season 2 episodes 11–14 (DTP, graphics, prepress, packaging prepress); last-episode nav computed; 1.0.0 — fragment (meta lines + body + optional script) to full page with header block, TOC, nav
 """
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 import re, sys, pathlib, html
 SRC = pathlib.Path(__file__).parent
 OUT = SRC.parent
 SLUGS = {1:'01-ms-dos',2:'02-windows-1-to-3',3:'03-spreadsheets',4:'04-word-processors',5:'05-dbase-foxpro-access',
          6:'06-os2-vs-windows-nt',7:'07-browser-wars',8:'08-windows-95-to-xp',9:'09-autocad-and-cad',10:'10-turbo-pascal-delphi-vb',
-         11:'11-desktop-publishing',12:'12-graphics-software',13:'13-prepress',14:'14-packaging-prepress'}
+         11:'11-desktop-publishing',12:'12-graphics-software',13:'13-prepress',14:'14-packaging-prepress',
+         15:'15-open-source-media',16:'16-editors-dev-tools',17:'17-open-source-utilities',18:'18-office-and-internet',19:'19-engineering-science',20:'20-creative-and-linux-on-windows'}
 NAMES = {1:'MS-DOS',2:'Windows 1.0 to 3.11',3:'VisiCalc, Lotus 1-2-3 and Excel',4:'WordStar, WordPerfect and Word',
          5:'dBase, FoxPro and Access',6:'OS/2 vs Windows NT',7:'Netscape vs Internet Explorer',8:'Windows 95 to XP',
          9:'AutoCAD and engineering CAD',10:'Turbo Pascal, Delphi and Visual Basic',
-         11:'Desktop publishing',12:'Graphics software: vectors, pixels and plugins',13:'Prepress: from film to PDF',14:'Packaging prepress'}
+         11:'Desktop publishing',12:'Graphics software: vectors, pixels and plugins',13:'Prepress: from film to PDF',14:'Packaging prepress',
+         15:'Open-source media: VLC, FFmpeg and friends',16:'Editors and developer tools: Notepad++ and beyond',17:'Utilities: 7-Zip, KeePass, PowerToys and more',18:'Office and internet: LibreOffice, Firefox, Thunderbird',19:'Engineering and science on Windows',20:'Creative tools and Linux on Windows: Blender, Krita, OBS, WSL'}
 
 def build(n, version='1.0.0', date='2026-11-15', changes='First release'):
     raw = (SRC / f'{n:02d}.html').read_text()

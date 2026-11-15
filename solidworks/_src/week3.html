@@ -1,0 +1,376 @@
+<!--
+TOOL:    solidworks/_src/week3.html — 28-Day SolidWorks Course content source, Week 3 (Days 15–21)
+FAMILY:  solidworks
+VERSION: 1.0.0
+DATE:    2026-11-15
+CHAT:    28-day SolidWorks course with interactive HTML on GitHub Pages
+CHANGES: 1.0.0 - first version: draft/ribs, assembly mates, mechanical mates, Toolbox, top-down, exploded/motion, sheet metal
+STATUS:  working
+-->
+
+<day n="15">
+<summary>Cast, moulded and forged parts must come out of their tool. Learn draft, draft analysis, ribs and the rules for even walls.</summary>
+<goals><li>Apply draft with neutral plane, parting line and step draft</li><li>Read Draft Analysis results</li><li>Add ribs with the right thickness and draft</li><li>Check wall thickness</li></goals>
+<content>
+<section><h2>Why draft</h2>
+<p>A wall exactly parallel to the direction the mould opens scrapes and sticks. A small taper — <b>draft</b> — lets it release. Typical values: 0.5–1° per side for plastics, 1–3° for sand castings, more for textured surfaces (about 1° extra per 0.025 mm of texture depth is a common guideline).</p>
+<table><tr><th>Draft type</th><th>How it works</th></tr>
+<tr><td>Neutral plane</td><td>Faces tilt about where they meet a chosen plane or face</td></tr>
+<tr><td>Parting line</td><td>Faces tilt from a parting line edge (core one way, cavity the other)</td></tr>
+<tr><td>Step draft</td><td>Parting line draft with a step, for non-planar parting lines</td></tr>
+<tr><td>DraftXpert</td><td>Add/Change tabs: applies and edits drafts with automatic ordering</td></tr></table>
+<p><b>Draft Analysis</b> (<span class="path">Evaluate ▸ Draft Analysis</span>): pick the direction of pull and a required angle. Faces are coloured <b>positive draft</b> (green by default), <b>negative draft</b> (red), <b>requires draft</b> (yellow) and <b>straddle faces</b>. These colours can be changed in the PropertyManager — choose high-contrast ones if red/green is hard to see.</p>
+<h3>Ribs and walls</h3>
+<ul><li><b>Rib</b> feature (<span class="path">Features ▸ Rib</span>): sketch a single open line; SolidWorks extends it to the walls, adds thickness (one side or both) and optional draft.</li>
+<li>Keep walls <b>uniform</b>. Ribs about 50–60 % of the wall they join, height ≤ 3 × wall, root radius 0.25–0.5 × wall — thicker ribs cause sink marks.</li>
+<li><span class="path">Evaluate ▸ Thickness Analysis</span> shows thin and thick regions (available in the higher SolidWorks editions).</li></ul>
+</section>
+<section><h2>Do it in SolidWorks: moulded cover</h2>
+<ol class="steps">
+<li>Base: 120 × 80 × 30 block, Top Plane sketch. Draft the four side walls: <span class="path">Features ▸ Draft ▸ Neutral Plane</span>, neutral plane = bottom face, faces = 4 sides, <b>1°</b>.</li>
+<li>Fillet vertical edges R6, then <b>Shell</b> 2.5 removing the bottom face (the open side).</li>
+<li>Rib: sketch a line across the inside on a plane through the middle → <b>Rib</b> thickness 1.5 both sides, draft 0.5°.</li>
+<li>Screw boss: Ø7 boss, Ø3.5 hole, 1° draft, joined to the wall by a small rib.</li>
+<li><span class="path">Evaluate ▸ Draft Analysis</span>, direction = bottom face normal, 1°. Fix any "requires draft" faces.</li>
+<li>Small fillets R0.5 on rib roots last.</li>
+</ol>
+</section>
+<section><h2>Lab: draft analysis and rib ratio</h2>
+<p>Lower the draft angle below the required value and watch the walls turn to "requires draft". Notice that relative to one pull direction the inside (core) walls show positive draft and the outside (cavity) walls negative — exactly what SolidWorks shows. Then check the rib ratio.</p>
+<div class="widget" data-w="draft"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Draft <b>before</b> shell and fillets so the inside follows the outside automatically.</li>
+<li>Draft every face parallel to the pull — including holes and bosses (cores need it too).</li>
+<li>Avoid sharp inside corners; they concentrate stress and block flow. Fillet ≥ 0.5 × wall inside.</li>
+<li>The <b>Mold Tools</b> tab (Parting Lines, Shut-off Surfaces, Parting Surface, Tooling Split) takes the part on to core and cavity design.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>A pump volute cover casting: Ø160 dome-shaped cover, 6 wall, 2° draft from the parting line, four Ø12 bolt bosses with 2° draft, and a stiffening rib cross 4 thick. Run Draft Analysis at 2° and fix every yellow face.</p>
+</section>
+</content>
+<quiz>[
+{"q":"Draft is needed because…","o":["It looks nicer","Walls parallel to the pull direction stick in the tool","It reduces mass","It is required by ISO"],"a":1,"e":"The taper lets the part release from the mould or pattern."},
+{"q":"Good rib thickness for a 3 mm wall?","o":["1.5–1.8 mm","3 mm","4.5 mm","6 mm"],"a":0,"e":"About 50–60 % of the wall avoids sink marks."},
+{"q":"Draft Analysis shows a face as 'requires draft'. Meaning?","o":["Draft is negative","Its draft is below the required angle","It is a straddle face","It is a fillet"],"a":1,"e":"Angle to the pull direction is less than the required value."},
+{"q":"Best order for a moulded part?","o":["Fillet, draft, shell","Draft, shell, fillets","Shell, fillets, draft","Any order"],"a":1,"e":"Draft first so shell and fillets follow it."},
+{"q":"The Rib feature needs…","o":["A closed sketch","An open sketch line","A 3D sketch","A face"],"a":1,"e":"An open line is extended to the walls and thickened."}
+]</quiz>
+</day>
+
+<day n="16">
+<summary>An assembly puts parts together with mates, the rules that remove degrees of freedom. Learn bottom-up assembly, the standard mates and how to read the tree.</summary>
+<goals><li>Insert components, fix the first, float the rest</li><li>Apply standard mates and SmartMates</li><li>Read (f), (-), (+) and mate errors</li><li>Use rigid and flexible sub-assemblies</li></goals>
+<content>
+<section><h2>Six degrees of freedom</h2>
+<p>A free part in space can move along X, Y, Z (Tx, Ty, Tz) and rotate about them (Rx, Ry, Rz). Mates remove these.</p>
+<table><tr><th>Standard mate</th><th>Typical selection</th><th>Removes</th></tr>
+<tr><td>Coincident</td><td>face–face (planar)</td><td>1 translation + 2 rotations</td></tr>
+<tr><td>Concentric</td><td>cylinder–cylinder</td><td>2 translations + 2 rotations (leaves slide + spin)</td></tr>
+<tr><td>Parallel / Perpendicular</td><td>faces, planes, axes</td><td>rotations only</td></tr>
+<tr><td>Distance / Angle</td><td>faces, planes</td><td>like Coincident / Parallel, with a value</td></tr>
+<tr><td>Tangent</td><td>cylinder–plane, etc.</td><td>1 translation (contact)</td></tr>
+<tr><td>Lock</td><td>two components</td><td>all six</td></tr></table>
+<div class="cols">
+<div class="box"><b class="t">(f) fixed</b>The first component is fixed at the assembly origin. Usually the frame, base or housing.</div>
+<div class="box"><b class="t">(-) under defined</b>Can still move — fine for parts meant to move (shafts, slides).</div>
+<div class="box"><b class="t">(+) over defined</b>Conflicting mates. Fix immediately.</div>
+<div class="box"><b class="t">Mate alignment</b>Aligned / Anti-aligned flips which way the faces point.</div>
+</div>
+<p><b>SmartMates</b>: <kbd>Alt</kbd>-drag a face or edge onto another part — SolidWorks proposes Coincident or Concentric. <b>Quick mates</b>: select two faces with <kbd>Ctrl</kbd>, the context toolbar offers mates directly.</p>
+</section>
+<section><h2>Do it in SolidWorks: machine vice</h2>
+<ol class="steps">
+<li><span class="path">File ▸ New ▸ Assembly</span>. Insert Component: the vice body — click the green tick to place it at the origin. It shows <b>(f)</b>.</li>
+<li>Insert the moving jaw. <b>Coincident</b> its bottom face to the body's slide face.</li>
+<li><b>Coincident</b> (or Parallel) its side face to the body's side face. The jaw now only slides — test by dragging.</li>
+<li>Insert the screw. <b>Concentric</b> with the body's threaded hole, <b>Coincident</b> its collar face to the jaw's face.</li>
+<li>Add a <b>Distance</b> mate jaw-to-jaw 20 mm; later replace it with a Limit Distance (Day 17).</li>
+<li>Expand the <b>Mates</b> folder. Right-click a component ▸ <b>View Mates</b> to see only its mates.</li>
+<li>Make a deliberate conflict (a second Distance of 30 mm) and read the error. Use <b>MateXpert</b> (Tools ▸ Evaluate) to diagnose, then delete it.</li>
+</ol>
+</section>
+<section><h2>Lab: mates and degrees of freedom</h2>
+<p>A bracket is placed on a base with a pin. Tick mates and press <kbd>P</kbd> to drag the bracket — it moves only in the directions still free. Find the smallest set that makes it fully defined, then try the conflicting combination.</p>
+<div class="widget" data-w="mates"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Mate to <b>planes and axes</b> of parts when you can — they never disappear. Faces get renamed or split when the part changes.</li>
+<li>Leave moving parts under defined on purpose so you can test motion.</li>
+<li>Sub-assemblies solve as <b>rigid</b> by default; right-click ▸ <b>Make sub-assembly flexible</b> to see their internal motion.</li>
+<li>Large assembly slow? Use Lightweight mode, Large Design Review, or SpeedPak configurations.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Assemble a simple universal coupling or pin joint: fork, block, two pins, two circlips. Use Concentric + Coincident for pins; leave rotation free. Count remaining DOF of each component in the tree.</p>
+</section>
+</content>
+<quiz>[
+{"q":"What does (-) before a component name mean?","o":["Fixed","Under defined","Over defined","Suppressed"],"a":1,"e":"It can still move."},
+{"q":"A Concentric mate between a shaft and a hole leaves which motions?","o":["None","Slide along and rotate about the axis","Only rotate","Only slide"],"a":1,"e":"Two DOF remain: axial translation and rotation."},
+{"q":"Which key do you hold to drag a SmartMate?","o":["Ctrl","Shift","Alt","Tab"],"a":2,"e":"Alt-drag a face, edge or vertex onto another component."},
+{"q":"Best references to mate to, for robustness?","o":["Fillet faces","Planes and axes of the parts","Random edges","Cosmetic threads"],"a":1,"e":"Planes and axes do not change when geometry is edited."},
+{"q":"By default a sub-assembly inside an assembly is…","o":["Flexible","Rigid","Suppressed","Lightweight"],"a":1,"e":"Set it to flexible to allow internal motion."}
+]</quiz>
+</day>
+
+<day n="17">
+<summary>Beyond flat-on-flat: advanced mates limit and centre, mechanical mates make gears turn, cams follow and screws advance.</summary>
+<goals><li>Use Profile Center, Symmetric, Width, Path and Limit mates</li><li>Use Gear, Rack Pinion, Screw, Cam, Slot, Hinge and Universal Joint mates</li><li>Set gear ratios correctly</li><li>Test motion by dragging</li></goals>
+<content>
+<section><h2>Advanced mates</h2>
+<table><tr><th>Mate</th><th>Does</th></tr>
+<tr><td>Profile Center</td><td>Centres one profile on another (rectangle on rectangle, circle on circle) with optional offset</td></tr>
+<tr><td>Symmetric</td><td>Two entities symmetric about a plane</td></tr>
+<tr><td>Width</td><td>Centres a tab between two faces (free, dimension, percent or centred)</td></tr>
+<tr><td>Path</td><td>A point follows a curve (with pitch/yaw/roll control)</td></tr>
+<tr><td>Linear/Linear Coupler</td><td>Translation of one component drives another by a ratio</td></tr>
+<tr><td>Limit Distance / Limit Angle</td><td>Motion allowed between a minimum and maximum</td></tr></table>
+<h3>Mechanical mates</h3>
+<table><tr><th>Mate</th><th>Typical selection</th><th>Ratio</th></tr>
+<tr><td>Gear</td><td>Cylindrical faces or axes of two gears</td><td>Pitch diameters (or tooth counts); <b>Reverse</b> for internal gears</td></tr>
+<tr><td>Rack Pinion</td><td>Rack edge + pinion face/axis</td><td>Pinion pitch Ø or rack travel per revolution</td></tr>
+<tr><td>Screw</td><td>Two cylindrical faces</td><td>Distance per revolution (lead)</td></tr>
+<tr><td>Cam</td><td>Tangent-continuous cam faces + follower</td><td>—</td></tr>
+<tr><td>Slot</td><td>Slot face + pin/axis</td><td>Free, centred, distance or percent along slot</td></tr>
+<tr><td>Hinge</td><td>Concentric + coincident in one mate, with angle limits</td><td>—</td></tr>
+<tr><td>Universal Joint</td><td>Two shafts' axes</td><td>—</td></tr></table>
+<div class="note">Mechanical mates move parts <b>kinematically</b>; they do not check tooth contact. Gears in a gear mate may pass through each other if they are not first aligned — rotate one gear to mesh before adding the mate.</div>
+</section>
+<section><h2>Do it in SolidWorks: gear pair</h2>
+<ol class="steps">
+<li>Make two simple gears (or use Toolbox ▸ ISO ▸ Power Transmission ▸ Gears ▸ Spur Gear): module 2, 17 and 42 teeth, face width 20, bores Ø15 and Ø25.</li>
+<li>Assembly: a plate with two shafts 59 mm apart (a = m(N1+N2)/2 = 2 × 59 / 2 = 59).</li>
+<li>Concentric + Coincident each gear on its shaft (leave rotation free).</li>
+<li>Rotate one gear until the teeth mesh visually (Rotate Component).</li>
+<li><span class="path">Mate ▸ Mechanical Mates ▸ Gear</span>: select both bore faces; Ratio <b>34 mm : 84 mm</b> (pitch diameters).</li>
+<li>Drag the pinion: the gear turns 17/42 as fast, in the opposite direction.</li>
+<li>Add a <b>Screw</b> mate to the vice from Day 16 (lead 4 mm/rev) and a <b>Limit Distance</b> 0–60 on the jaw.</li>
+</ol>
+</section>
+<section><h2>Lab: gear mate</h2>
+<p>Change tooth counts and module; the centre distance and ratio are computed for you. Press <kbd>P</kbd> to run, <kbd>S</kbd> to step one pinion tooth at a time — watch how many teeth the gear advances.</p>
+<div class="widget" data-w="gears"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Gear ratio in SolidWorks is entered as the pitch diameters, so <b>check the direction</b> — tick Reverse for an internal gear or for a belt/pulley where both turn the same way.</li>
+<li>Limit mates can make solving slower; use them only where travel really matters.</li>
+<li>For a cam, the cam faces must form a tangent-continuous loop (extrude a closed sketch of tangent arcs/splines).</li>
+<li>To check real contact and forces, use a Motion Analysis study (Day 20) with contact — not mates alone.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Build a rack and pinion: pinion module 2, 20 teeth; rack length 200. Rack Pinion mate with pinion pitch Ø 40 → rack travels π × 40 ≈ 125.7 mm per pinion revolution. Add Limit Distance so the rack cannot run off the pinion.</p>
+</section>
+</content>
+<quiz>[
+{"q":"Centre distance of module-3 gears with 20 and 40 teeth?","o":["60 mm","90 mm","120 mm","180 mm"],"a":1,"e":"a = m(N1 + N2)/2 = 3 × 60 / 2 = 90 mm."},
+{"q":"Which mate makes one part advance as another rotates, like a lead screw?","o":["Gear","Screw","Cam","Path"],"a":1,"e":"Screw mate: distance per revolution."},
+{"q":"Which mate centres a tab between two faces?","o":["Width","Symmetric","Profile Center","Concentric"],"a":0,"e":"Width mate centres (or offsets) a tab in a slot."},
+{"q":"Do mechanical mates detect tooth collisions?","o":["Yes","No — they are kinematic relationships","Only with Toolbox gears","Only in drawings"],"a":1,"e":"Use Interference Detection or Motion Analysis with contact to check."},
+{"q":"Pinion pitch Ø 40 in a Rack Pinion mate. Rack travel per revolution?","o":["40 mm","80 mm","≈125.7 mm","≈251 mm"],"a":2,"e":"π × d = π × 40."}
+]</quiz>
+</day>
+
+<day n="18">
+<summary>Never model a standard bolt again. Toolbox supplies ISO and other standard hardware; Smart Fasteners fills Hole Wizard holes with the right screws automatically.</summary>
+<goals><li>Activate and use SOLIDWORKS Toolbox</li><li>Insert bolts, nuts, washers, bearings and pins</li><li>Use Smart Fasteners with Hole Wizard holes</li><li>Choose bolt length and thread engagement correctly</li></goals>
+<content>
+<section><h2>Toolbox and Smart Fasteners</h2>
+<p><b>Toolbox</b> is a library of standard parts (ISO, DIN, ANSI, JIS, GB…): bolts and screws, nuts, washers, pins, bearings, retaining rings, keys, gears, structural shapes. Turn it on with <span class="path">Tools ▸ Add-Ins ▸ SOLIDWORKS Toolbox Library</span> (and Toolbox Utilities). Parts are dragged from <span class="path">Task Pane ▸ Design Library ▸ Toolbox</span>.</p>
+<p>A Toolbox part is created on demand as a <b>configuration</b> of a master file (or as a copied part, depending on settings in <b>Toolbox Settings</b>). The Toolbox folder is usually shared on the network so everyone uses the same parts and part numbers.</p>
+<p><b>Smart Fasteners</b> (<span class="path">Insert ▸ Smart Fasteners</span> in an assembly) reads Hole Wizard holes and Hole Series and inserts the matching fastener with the length set automatically — with washers and nuts if you add them to the stack.</p>
+<div class="def"><b>Bolt length rule of thumb.</b> Through bolt: clamped thickness + washers + nut + at least 2 thread pitches showing. Screw into a tapped hole: engagement about 1 × d in steel, 1.5 × d in cast iron, 2 × d in aluminium, then choose the next standard length; tapped depth should exceed the screw end by about 2 pitches.</div>
+</section>
+<section><h2>Do it in SolidWorks</h2>
+<ol class="steps">
+<li><span class="path">Tools ▸ Add-Ins</span>: tick SOLIDWORKS Toolbox Library (Active and Start Up).</li>
+<li>Design Library ▸ Toolbox ▸ ISO ▸ Bolts and Screws ▸ Hex Head ▸ <b>Hexagon Bolt ISO 4014</b> (or 4017). Drag it onto a hole edge — it snaps concentric and coincident.</li>
+<li>In the PropertyManager set size M10, length 45, thread display <b>Schematic</b> or <b>Cosmetic</b>.</li>
+<li>Add a <b>washer ISO 7089</b> under the head and a <b>nut ISO 4032</b> on the other side.</li>
+<li>Smart Fasteners: open the Day 11 plate bolted to a base with M8 counterbores. <span class="path">Insert ▸ Smart Fasteners</span> → Populate All. Check the length chosen.</li>
+<li>Insert a bearing: Design Library ▸ Toolbox ▸ ISO ▸ Bearings ▸ Ball Bearings ▸ <b>Deep Groove Ball Bearing</b> → 6205 (25 × 52 × 15).</li>
+<li>Right-click a Toolbox part ▸ <b>Edit Toolbox Definition</b> to change size later.</li>
+</ol>
+</section>
+<section><h2>Lab: bolt length</h2>
+<p>Choose a joint and size; the lab adds up clamp, washers, nut (ISO 4032) and two pitches, then picks the next standard length. Switch to a tapped hole and change the material to see engagement change.</p>
+<div class="widget" data-w="boltlen"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Do not edit Toolbox parts directly — they regenerate. Copy them if you need a special (e.g. a drilled bolt).</li>
+<li>Set Toolbox to write <b>part numbers and descriptions</b> as custom properties so BOMs (Day 24) are correct automatically.</li>
+<li>Show threads as cosmetic or simplified in large assemblies — real helical threads are very heavy.</li>
+<li>Hide all fasteners quickly: right-click the assembly ▸ Hide/Show ▸ Toolbox components (or use a display state).</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Bolt a 12 mm cover to a 20 mm housing flange with 6 × M8. Through-bolt version with washers and nuts — what length? Tapped-into-cast-iron version — what length and tapped depth? Insert both with Toolbox and compare with the lab.</p>
+</section>
+</content>
+<quiz>[
+{"q":"Smart Fasteners needs holes made with…","o":["Extruded Cut","Hole Wizard or Hole Series","Revolve","Any cut"],"a":1,"e":"It reads the hole data from Hole Wizard/Hole Series."},
+{"q":"M10 through bolt, clamp 24, two 2 mm washers, nut 8.4, pitch 1.5. Minimum length?","o":["≈ 36.4 mm","≈ 39.4 mm","≈ 45 mm","≈ 30 mm"],"a":1,"e":"24 + 4 + 8.4 + 3 = 39.4 → choose M10 × 40."},
+{"q":"Suggested thread engagement in aluminium?","o":["0.5 d","1 d","2 d","4 d"],"a":2,"e":"Softer material needs more engagement (about 2 d)."},
+{"q":"Where is Toolbox found in the interface?","o":["Task Pane ▸ Design Library","Tools ▸ Equations","Insert ▸ Features","View ▸ Toolbars"],"a":0,"e":"Design Library ▸ Toolbox, after the add-in is active."},
+{"q":"Why not edit a Toolbox part directly?","o":["It is read-only and regenerates from the master","It deletes the assembly","It changes units","It cannot be opened"],"a":0,"e":"Copy it to a new file for special versions."}
+]</quiz>
+</day>
+
+<day n="19">
+<summary>Design parts inside the assembly so they fit by construction. In-context references, layouts and skeletons — and how to keep them under control.</summary>
+<goals><li>Create a new part in the context of an assembly</li><li>Read external reference symbols -> ->? ->* ->x</li><li>Drive parts from a layout sketch or skeleton part</li><li>Lock, break and list external references</li></goals>
+<content>
+<section><h2>Bottom-up vs top-down</h2>
+<div class="cols"><div class="box"><b class="t">Bottom-up</b>Model each part alone, then assemble. Simple, robust, best for standard and re-used parts.</div><div class="box"><b class="t">Top-down (in-context)</b>Model a part while inside the assembly, referencing other parts' geometry. It fits by construction and updates when the others change.</div></div>
+<p>Tools: <span class="path">Insert ▸ Component ▸ New Part</span> (pick a face/plane to sketch on), <b>Edit Component</b> on existing parts, <b>Layout</b> (Assembly tab ▸ Layout: blocks and a master sketch), and a <b>skeleton part</b> holding only key sketches and planes that every part references.</p>
+<table><tr><th>Symbol after a name</th><th>Meaning</th></tr>
+<tr><td><code>-&gt;</code></td><td>Has in-context (external) references, all found</td></tr>
+<tr><td><code>-&gt;?</code></td><td>Out of context — the referenced assembly is not open</td></tr>
+<tr><td><code>-&gt;*</code></td><td>References locked (frozen)</td></tr>
+<tr><td><code>-&gt;x</code></td><td>References broken</td></tr></table>
+<p>Right-click a part ▸ <b>List External Refs</b> → Lock All / Break All. Control behaviour in <span class="path">System Options ▸ External References</span> (for example "Do not create references external to the model" while you want independent parts).</p>
+</section>
+<section><h2>Do it in SolidWorks: cover in context</h2>
+<ol class="steps">
+<li>Open the gearbox housing assembly. <span class="path">Insert ▸ Component ▸ New Part</span>, click the housing's top face.</li>
+<li>You are now editing the new part (the assembly goes transparent). <b>Convert Entities</b> the housing's outer edge and bolt holes.</li>
+<li>Extrude 10 mm. Exit editing (Confirmation Corner). Save the virtual part as an external file (right-click ▸ Save Part (in External File)).</li>
+<li>Note <code>Cover^Gearbox -&gt;</code>. Change the housing's length — the cover follows.</li>
+<li>Close the assembly and open the cover alone: <code>-&gt;?</code>.</li>
+<li>Back in the assembly: <b>List External Refs ▸ Lock All</b>. Change the housing again — the cover stays (<code>-&gt;*</code>).</li>
+<li>Skeleton exercise: a part <b>Skeleton</b> with a sketch of the two shaft centres; housing and cover reference it, not each other.</li>
+</ol>
+</section>
+<section><h2>Lab: skeleton-driven parts</h2>
+<p>The skeleton sets the shaft centre distance and bearing size. In top-down mode the housing and cover follow it. Switch to bottom-up, or lock the references, then move the skeleton and see the mismatch you would only find at assembly.</p>
+<div class="widget" data-w="topdown"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Reference <b>one</b> master (skeleton or layout), not a web of parts referencing each other — circular references are slow and fragile.</li>
+<li>Lock references when a design is released; parts used in other assemblies should not move because one assembly changed.</li>
+<li>In-context parts used in two assemblies: references point to only one of them. Avoid, or break references after the design is frozen.</li>
+<li>Mates on in-context parts: the part is already placed by the references — add only an <b>InPlace</b> mate (automatic) and nothing else.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Create a gasket in context between the housing and cover: Convert Entities of the flange face and holes, extrude 1 mm. Then change the bolt count in the housing and check the gasket updates.</p>
+</section>
+</content>
+<quiz>[
+{"q":"What does ->? after a part name mean?","o":["Broken reference","Locked reference","Out of context — the referenced assembly is not open","No references"],"a":2,"e":"The part cannot see the assembly it was built in."},
+{"q":"Why use a skeleton part?","o":["It renders faster","All parts reference one master, not each other","It is required for drawings","It replaces mates"],"a":1,"e":"One source of key geometry keeps references clean."},
+{"q":"Which command creates a new part inside an assembly?","o":["Insert ▸ Component ▸ New Part","File ▸ New","Insert ▸ Mirror Part","Tools ▸ Make Part"],"a":0,"e":"Pick a face or plane to start sketching on."},
+{"q":"After release, in-context parts should usually be…","o":["Deleted","Locked or broken references","Made flexible","Converted to surfaces"],"a":1,"e":"So they don't change unexpectedly."},
+{"q":"Bottom-up modelling is best for…","o":["Standard and re-used parts","Parts that must exactly fit unknown geometry","Gaskets","Covers"],"a":0,"e":"Independent parts are robust and re-usable."}
+]</quiz>
+</day>
+
+<day n="20">
+<summary>Check that it fits, show how it goes together, and see it move: interference detection, exploded views and motion studies.</summary>
+<goals><li>Run Interference Detection and Clearance Verification</li><li>Create exploded views with explode lines</li><li>Make Animation and Basic Motion studies</li><li>Know what Motion Analysis adds</li></goals>
+<content>
+<section><h2>Evaluate, explode, move</h2>
+<table><tr><th>Tool</th><th>Where</th><th>Use</th></tr>
+<tr><td>Interference Detection</td><td>Evaluate tab</td><td>Finds overlapping volumes. Options: treat coincidence as interference, ignore hidden bodies, include multibody parts, create fasteners and matching cosmetic-thread folders</td></tr>
+<tr><td>Clearance Verification</td><td>Evaluate tab</td><td>Lists gaps smaller than a value you set</td></tr>
+<tr><td>Hole Alignment</td><td>Evaluate tab</td><td>Finds holes that don't line up across parts</td></tr>
+<tr><td>Collision Detection</td><td>Move Component ▸ Collision Detection</td><td>Stops a dragged part at contact</td></tr>
+<tr><td>Exploded View</td><td>Assembly tab / ConfigurationManager</td><td>Steps that move parts apart; regular and radial steps; explode lines</td></tr></table>
+<h3>Motion studies (tab at the bottom)</h3>
+<div class="cols"><div class="box"><b class="t">Animation</b>Keyframes and the Animation Wizard (rotate model, explode/collapse). Motors drive at constant speed. No physics.</div><div class="box"><b class="t">Basic Motion</b>Adds gravity, springs, contact and motors with approximate physics. Good for presentations.</div><div class="box"><b class="t">Motion Analysis</b>Needs the SOLIDWORKS Motion add-in (Premium): forces, torques, velocities, accelerations, plots, results exported to Simulation.</div></div>
+</section>
+<section><h2>Do it in SolidWorks: bearing housing</h2>
+<ol class="steps">
+<li>Assemble housing, bearing 6204, shaft, cover and 4 cap screws (or open your gearbox).</li>
+<li><span class="path">Evaluate ▸ Interference Detection ▸ Calculate</span>. Expect the bearing/housing press fit and the screw threads; tick <b>Create fasteners folder</b> and <b>Create matching cosmetic threads folder</b> so those are grouped apart from real problems.</li>
+<li><span class="path">Assembly ▸ Exploded View</span>: select the cover, drag the triad arrow up 120 → Done. Then the screws 190, the bearing 70, the shaft down 110.</li>
+<li>Add <b>Explode Line Sketch</b> (Smart Lines) to show paths.</li>
+<li>Right-click the exploded view in the ConfigurationManager ▸ <b>Animate collapse</b>.</li>
+<li>Motion Study 1 ▸ <b>Animation Wizard ▸ Collapse</b>, 4 s. Add a <b>Rotary Motor</b> on the shaft at 60 rpm. Calculate and play; save as AVI/MP4.</li>
+</ol>
+</section>
+<section><h2>Lab: exploded view</h2>
+<p>Drag the explode slider or press <kbd>P</kbd> to animate explode/collapse, <kbd>S</kbd> to step in quarters. Rotate the view while it runs.</p>
+<div class="widget" data-w="explode"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Every interference must be explained: press fit (intended), thread (cosmetic), or a design error. Record intended ones in a note.</li>
+<li>Exploded views belong to a configuration — make them in the configuration you will draw.</li>
+<li>Explode steps in the order the fitter would remove parts — your view becomes the assembly instruction.</li>
+<li>Animation ignores physics; if parts pass through each other in a Basic Motion study, add Contact.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Explode the Day 16 vice in assembly order, add explode lines, make a 6-second collapse animation and a screw-turning animation (rotary motor on the screw + screw mate) and export both videos.</p>
+</section>
+</content>
+<quiz>[
+{"q":"Which study type needs the Motion add-in?","o":["Animation","Basic Motion","Motion Analysis","Exploded view"],"a":2,"e":"Motion Analysis is part of SOLIDWORKS Motion (Premium)."},
+{"q":"Interference Detection reports a bearing in its housing bore. Probably…","o":["An error","An intended press fit","A cosmetic thread","A mate problem"],"a":1,"e":"Press fits show as interference — document them."},
+{"q":"Exploded views are stored per…","o":["Part","Configuration of the assembly","Drawing sheet","Display state"],"a":1,"e":"Each configuration can have its own explode."},
+{"q":"Basic Motion adds over Animation…","o":["Keyframes","Gravity, springs, contact","Rendering","Explode lines"],"a":1,"e":"Simple physics for presentations."},
+{"q":"To stop a part when it touches another while dragging, use…","o":["Collision Detection in Move Component","Interference Detection","Clearance Verification","Lock mate"],"a":0,"e":"Collision Detection stops at contact."}
+]</quiz>
+</day>
+
+<day n="21">
+<summary>Brackets, enclosures, chutes and guards are bent from flat sheet. SolidWorks models them folded and unfolds them exactly — if you understand K-factor and bend allowance.</summary>
+<goals><li>Create Base Flange, Edge Flange, Miter Flange, Hem, Jog, Sketched Bend</li><li>Set thickness, bend radius and K-factor (or gauge tables)</li><li>Flatten and make a flat-pattern drawing</li><li>Calculate bend allowance, setback and bend deduction</li></goals>
+<content>
+<section><h2>Sheet metal logic</h2>
+<p>The first sheet-metal feature (<b>Base Flange/Tab</b>) creates three tree items: <b>Sheet-Metal</b> (default thickness, bend radius, bend allowance, relief), the flange, and <b>Flat-Pattern</b> (suppressed until you flatten). Everything after knows it is sheet.</p>
+<table><tr><th>Feature</th><th>Use</th></tr>
+<tr><td>Base Flange/Tab</td><td>First wall from a closed or open sketch</td></tr>
+<tr><td>Edge Flange</td><td>Wall on an edge, with length to outer/inner virtual sharp or tangent</td></tr>
+<tr><td>Miter Flange</td><td>Flanges along several edges with mitred corners</td></tr>
+<tr><td>Hem</td><td>Folded-back edge (closed, open, teardrop, rolled)</td></tr>
+<tr><td>Jog</td><td>Z-offset bend pair from a line</td></tr>
+<tr><td>Sketched Bend</td><td>Bend along a sketch line</td></tr>
+<tr><td>Closed Corner / Corner Relief</td><td>Close gaps or add relief at corners</td></tr>
+<tr><td>Forming Tools</td><td>Louvres, lances, dimples from the Design Library</td></tr>
+<tr><td>Convert to Sheet Metal / Insert Bends</td><td>Turn a shelled solid into sheet metal</td></tr></table>
+<div class="def"><b>Flat length.</b> The neutral axis stretches neither way; it sits at K × T from the inside. <b>BA</b> = θ(R + K·T) (θ in radians). <b>OSSB</b> = tan(θ/2)(R + T). <b>BD</b> = 2·OSSB − BA. Flat = L1 + L2 − BD, with L1 and L2 measured to the outside virtual sharp. Typical K: 0.33 for tight bends to 0.5 for large radii; your press shop's tested value beats any table.</div>
+</section>
+<section><h2>Do it in SolidWorks: L-bracket and enclosure</h2>
+<ol class="steps">
+<li>Right Plane: open sketch, a line 50 then 30 at 90° (an L). <span class="path">Sheet Metal ▸ Base Flange/Tab</span>: Mid Plane 60, thickness 2, bend radius 2, K-factor 0.44.</li>
+<li><b>Flatten</b> (Sheet Metal tab). Measure the flat length; compare with the lab.</li>
+<li>Unflatten. Add Hole Wizard holes on each flange.</li>
+<li>Enclosure: rectangle 200 × 120 → Base Flange (2 mm). <b>Edge Flange</b> on all four edges, 40 high, length to outer virtual sharp.</li>
+<li><b>Closed Corner</b> on the four corners, gap 0.2.</li>
+<li>Add a <b>louvre</b> from Design Library ▸ forming tools ▸ louvers.</li>
+<li>Drawing (Day 22): View Palette ▸ <b>Flat pattern</b> view, with bend lines and bend notes.</li>
+</ol>
+</section>
+<section><h2>Lab: flat length calculator</h2>
+<p>Change thickness, radius, angle and K-factor and see BA, setback, BD and the flat pattern update. A 90° bend: OSSB = R + T.</p>
+<div class="widget" data-w="sheet"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Use <b>gauge tables</b> (Excel) holding thickness, radius and K-factor per material so everyone uses shop values.</li>
+<li>Holes too close to a bend distort: keep at least 2.5 T + R from the bend.</li>
+<li>Model in one direction consistently (inside or outside dimensions) — drawings follow.</li>
+<li>Flat pattern export: right-click Flat-Pattern ▸ <b>Export to DXF/DWG</b> for laser cutting.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>A motor mounting bracket from 3 mm mild steel, inside radius 3, K = 0.4: base 120 × 80 with a 90° flange 60 high and a slot pattern for a NEMA 23 motor. Compute the flat length by hand, then check with Flatten. Export a DXF.</p>
+</section>
+</content>
+<quiz>[
+{"q":"For a 90° bend, the outside setback equals…","o":["R","T","R + T","2R"],"a":2,"e":"tan(45°) = 1 so OSSB = R + T."},
+{"q":"T = 2, R = 2, K = 0.5, 90°. Bend allowance ≈","o":["3.14 mm","4.71 mm","6.28 mm","2.00 mm"],"a":1,"e":"BA = π/2 × (2 + 1) = 4.71 mm."},
+{"q":"What does the K-factor locate?","o":["The bend line","The neutral axis as a fraction of thickness from the inside","The relief cut","The flange length"],"a":1,"e":"Neutral axis at K × T from the inside face."},
+{"q":"Which feature folds an edge back on itself?","o":["Jog","Hem","Miter Flange","Sketched Bend"],"a":1,"e":"Hems: closed, open, teardrop, rolled."},
+{"q":"How do you get a DXF for laser cutting?","o":["Save as STL","Right-click Flat-Pattern ▸ Export to DXF/DWG","Print to PDF","Pack and Go"],"a":1,"e":"Export the flat pattern directly."}
+]</quiz>
+</day>

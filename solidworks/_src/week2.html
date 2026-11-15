@@ -1,0 +1,376 @@
+<!--
+TOOL:    solidworks/_src/week2.html — 28-Day SolidWorks Course content source, Week 2 (Days 8–14)
+FAMILY:  solidworks
+VERSION: 1.0.0
+DATE:    2026-11-15
+CHAT:    28-day SolidWorks course with interactive HTML on GitHub Pages
+CHANGES: 1.0.0 - first version: reference geometry, sweep, loft, Hole Wizard, equations, configurations, mass properties
+STATUS:  working
+-->
+
+<day n="8">
+<summary>When no face is where you need it, make one. Reference planes, axes, points and coordinate systems are invisible scaffolding that hold design intent.</summary>
+<goals><li>Create planes: offset, at angle, mid plane, tangent, normal to curve, through points</li><li>Create axes and use temporary axes</li><li>Create reference points and coordinate systems</li><li>Choose stable references</li></goals>
+<content>
+<section><h2>The scaffolding</h2>
+<p>All reference geometry lives under <span class="path">Insert ▸ Reference Geometry</span> (or the Features tab ▸ Reference Geometry drop-down). A plane is defined by up to three references; SolidWorks shows in the PropertyManager whether the plane is <b>fully defined</b>.</p>
+<table><tr><th>Plane type</th><th>References</th></tr>
+<tr><td>Offset distance</td><td>A plane or flat face + distance (Flip offset to go the other way; set number of planes for a stack)</td></tr>
+<tr><td>At angle</td><td>A plane/face + an edge or axis (the hinge) + angle</td></tr>
+<tr><td>Mid Plane</td><td>Two parallel faces or planes</td></tr>
+<tr><td>Parallel through a point</td><td>A plane + a vertex or point</td></tr>
+<tr><td>Normal to curve</td><td>An edge/curve + a point on it — essential for sweep profiles</td></tr>
+<tr><td>Tangent</td><td>A cylindrical/conical face + a plane or point</td></tr>
+<tr><td>Through 3 points</td><td>Three vertices or points</td></tr></table>
+<div class="cols">
+<div class="box"><b class="t">Axis</b>Two planes, a cylindrical face, two points, an edge, or a point + face. Or turn on <b>Temporary Axes</b> (View ▸ Hide/Show) — every cylinder already has one.</div>
+<div class="box"><b class="t">Point</b>Arc centre, face centre, intersection, projection, on edge at distance… Good for mates and measurement.</div>
+<div class="box"><b class="t">Coordinate System</b>Origin + axis directions. Used by mass properties, table-driven patterns, export (STEP/STL) and simulation results.</div>
+<div class="box"><b class="t">Mate Reference</b>Pre-defines how a part mates (Day 16) — e.g. a bolt "knows" its axis and under-head face.</div>
+</div>
+</section>
+<section><h2>Do it in SolidWorks: angled boss</h2>
+<ol class="steps">
+<li>Block 100 × 60 × 40, centred on the origin in X and Z.</li>
+<li><span class="path">Reference Geometry ▸ Plane</span>: first reference the top face, second reference the top-front edge, <b>At angle 35°</b>.</li>
+<li>Sketch a Ø30 circle on the new plane, centred on the edge midpoint offset 20 up the plane → <b>Extruded Boss</b>, Blind 25, growing away from the block.</li>
+<li>Create a <b>Mid Plane</b> between the left and right faces. Rename it <b>Symmetry</b>.</li>
+<li>Show <b>Temporary Axes</b>; create an <b>Axis</b> from the boss's cylindrical face.</li>
+<li>Insert a <b>Coordinate System</b> at the top-front-left vertex with X along the long edge — you will use it on Day 14.</li>
+<li>Edit the block height to 50 and check that the angled plane, boss and mid plane all follow.</li>
+</ol>
+</section>
+<section><h2>Lab: four kinds of plane</h2>
+<p>The orange sheet is the reference plane. Rotate the view to see how each plane is anchored to real geometry.</p>
+<div class="widget" data-w="planes"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Base planes on <b>the three default planes or main faces</b>, never on fillets or features likely to change.</li>
+<li>Rename planes (<b>Symmetry</b>, <b>Mounting face</b>, <b>Sweep start</b>) — a tree full of Plane1…Plane9 is unreadable.</li>
+<li>Hide planes after use (select ▸ Hide) and turn all of them off from the Heads-up View ▸ Hide/Show Items.</li>
+<li>For a sketch normal to a path at a point, use <b>Normal to curve</b> — exactly what a sweep profile needs.</li>
+</ul>
+</section>
+<section><h2>Practice: pipe bracket</h2>
+<p>Base plate 120 × 80 × 10 with four Ø11 holes. A pipe clamp boss (OD 50, ID 34, length 40) whose axis is inclined 30° to the plate, rising from the plate centre. Use an angled plane through a reference axis, then a mid plane to keep the boss centred.</p>
+</section>
+</content>
+<quiz>[
+{"q":"To place a sweep profile at the start of a curved path, which plane is best?","o":["Offset","At angle","Normal to curve","Mid Plane"],"a":2,"e":"Normal to curve at the end point gives a plane perpendicular to the path."},
+{"q":"Where do temporary axes come from?","o":["You draw them","Every cylindrical or conical face has one","Only revolves","Only Hole Wizard holes"],"a":1,"e":"Show them with View ▸ Hide/Show ▸ Temporary Axes."},
+{"q":"A plane At angle needs which references?","o":["Two points","A plane/face and an edge or axis to hinge on","Three faces","A cylinder only"],"a":1,"e":"The edge or axis is the hinge line."},
+{"q":"Why rename reference planes?","o":["It is required for rebuilds","It makes design intent readable for you and others","It reduces file size","It fixes errors"],"a":1,"e":"Names like 'Symmetry' explain why the plane exists."},
+{"q":"A coordinate system is used for…","o":["Mass properties output, table patterns and export orientation","Changing units","Adding relations","Only drawings"],"a":0,"e":"It sets the origin and axes for reports and exports."}
+]</quiz>
+</day>
+
+<day n="9">
+<summary>A sweep moves a profile along a path: springs, pipes, handles, gaskets, threads. Two sketches and the right relations are the whole trick.</summary>
+<goals><li>Make sweeps with a sketch profile or the circular profile option</li><li>Use Pierce to tie profile to path</li><li>Create helices and spirals</li><li>Control orientation and twist; add guide curves</li></goals>
+<content>
+<section><h2>Profile, path, guides</h2>
+<div class="cols">
+<div class="box"><b class="t">Profile</b>A closed sketch (solid) or open sketch (thin/surface). Or tick <b>Circular Profile</b> and just type a diameter — no sketch needed.</div>
+<div class="box"><b class="t">Path</b>An open or closed sketch, a 3D sketch, edges or a helix. Must be in a different sketch from the profile.</div>
+<div class="box"><b class="t">Guide curves</b>Optional extra curves that the profile's points follow, so the section can change size along the way.</div>
+</div>
+<p>Tie the profile to the path with a <b>Pierce</b> relation (profile centre ↔ path) and sketch it on a plane <b>normal to the path</b> at its start. <b>Profile orientation</b>: <i>Follow path</i> (section stays at the same angle to the path) or <i>Keep normal constant</i> (section stays parallel to the start). <b>Profile twist</b> rotates the section along the path (constant degrees, or with a specified twist value).</p>
+<p><b>Helix and spiral</b>: <span class="path">Insert ▸ Curve ▸ Helix/Spiral</span> on a circle sketch, defined by Pitch and Revolution, Height and Revolution, Height and Pitch, or Spiral; variable pitch is possible. Sweep a circle along it for a spring.</p>
+<p><b>Swept Cut</b> with a solid body as the tool can model cutters (and with a helix, a modelled thread). For most threads, use cosmetic threads or the Thread feature (Day 11).</p>
+</section>
+<section><h2>Do it in SolidWorks: compression spring</h2>
+<ol class="steps">
+<li>Top Plane: circle Ø40 on the origin (the mean diameter). Exit sketch.</li>
+<li><span class="path">Insert ▸ Curve ▸ Helix/Spiral</span>: <b>Pitch and Revolution</b>, pitch 10, revolutions 8, start angle 0°, clockwise.</li>
+<li>Sketch the wire on the <b>Front Plane</b>: a Ø4 circle with a <b>Pierce</b> relation between its centre and the helix.</li>
+<li><span class="path">Features ▸ Swept Boss/Base</span>: profile = the circle, path = the helix. (Or skip step 3 and use <b>Circular Profile</b> Ø4.)</li>
+<li>Ground ends: Extruded Cut with a rectangle through both ends, so the spring sits flat.</li>
+<li>Change the pitch to 3 and rebuild: the coils intersect and the sweep fails. Change back.</li>
+<li>Handle: 3D sketch or Front Plane sketch of a U-shape (lines + tangent arcs), sweep a Ø12 circle along it.</li>
+</ol>
+</section>
+<section><h2>Lab: sweep</h2>
+<p>Choose a path and profile. Push the wire size up past the pitch to see the self-intersection warning, and use twist with the square profile to see what Profile Twist does.</p>
+<div class="widget" data-w="sweep"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>"Sweep path must be tangent continuous" — corners in the path need sketch fillets.</li>
+<li>Keep the profile <b>smaller than the smallest bend radius</b> of the path, or the sweep folds on itself.</li>
+<li>Use <b>Pierce</b>, not Coincident, when the path is in a different sketch plane.</li>
+<li>For a spring that must also be drawn correctly, make the spring with configurations (free length and fitted length) — Day 13.</li>
+</ul>
+</section>
+<section><h2>Practice: O-ring and hose</h2>
+<ol><li>An O-ring 2.62 cross-section on a 40 mm inside-diameter groove: sweep (or revolve!) — which is better and why?</li>
+<li>A hydraulic hose: path made of a 3D sketch with three straight lines and two R60 bends; tube profile OD 20, ID 14 (two concentric circles).</li></ol>
+</section>
+</content>
+<quiz>[
+{"q":"Which relation ties a sweep profile to a path in another sketch?","o":["Coincident","Pierce","Concentric","Merge"],"a":1,"e":"Pierce places the point where the path crosses the profile's plane."},
+{"q":"A helix pitch 5, wire Ø6. What happens?","o":["Works fine","Coils intersect — sweep error","Becomes a spiral","Becomes a surface"],"a":1,"e":"The wire is larger than the pitch, so neighbouring coils overlap."},
+{"q":"Option that lets you sweep a round section without sketching it?","o":["Thin Feature","Circular Profile","Guide curves","Merge tangent faces"],"a":1,"e":"Circular Profile: just give the diameter."},
+{"q":"A path with sharp corners gives an error. Fix?","o":["Add sketch fillets at the corners","Use a smaller profile","Change to Keep normal constant","Use Mid Plane"],"a":0,"e":"Paths must be tangent continuous for a solid sweep."},
+{"q":"Helix is found under…","o":["Insert ▸ Curve ▸ Helix/Spiral","Tools ▸ Sketch Tools","Features ▸ Wrap","Insert ▸ Reference Geometry"],"a":0,"e":"Helix/Spiral is a curve feature built on a circle sketch."}
+]</quiz>
+</day>
+
+<day n="10">
+<summary>A loft blends between two or more cross-sections: ducts, transitions, bottles, blades. Control it with connectors, start/end constraints and guide curves.</summary>
+<goals><li>Make lofts between profiles on parallel and non-parallel planes</li><li>Control twist with connectors</li><li>Use start/end constraints and guide curves</li><li>Know when to use Boundary instead</li></goals>
+<content>
+<section><h2>Sections in, shape out</h2>
+<p>Each profile is a separate sketch (or a point at the end). SolidWorks joins them in the order you pick, matching points shown by the green <b>connectors</b>. Drag connectors to stop the loft twisting.</p>
+<table><tr><th>Control</th><th>What it does</th></tr>
+<tr><td>Start/End constraints</td><td>Default, Normal to profile, Direction vector, Tangency/Curvature to face — sets how the loft leaves each end</td></tr>
+<tr><td>Guide curves</td><td>Curves the loft must follow between profiles (need Pierce/coincident to each profile)</td></tr>
+<tr><td>Centerline parameters</td><td>A single curve the loft follows through the middle</td></tr>
+<tr><td>Close loft</td><td>Joins the last profile back to the first (ring shapes)</td></tr>
+<tr><td>Thin feature</td><td>Makes a duct wall directly</td></tr></table>
+<p><b>Boundary Boss/Base</b> is the more controllable cousin: curves in two directions, with tangency or curvature influence. Use it when the loft gives lumpy shapes.</p>
+<div class="note">Profiles with different numbers of segments (a square with 4, a circle with 1) can still loft; SolidWorks splits them. For clean results, split the circle into 4 arcs with <b>Split Entities</b> so each corner has a partner.</div>
+</section>
+<section><h2>Do it in SolidWorks: square-to-round duct</h2>
+<ol class="steps">
+<li>Top Plane: Center Rectangle 200 × 200 on the origin.</li>
+<li>Plane offset <b>250</b> above the Top Plane. Sketch a Ø150 circle on it, centred.</li>
+<li>Split the circle into four arcs at 45° (Split Entities, or construction lines to the corners).</li>
+<li><span class="path">Features ▸ Lofted Boss/Base</span>: pick the square near a corner, then the circle near the matching point.</li>
+<li>Right-click in the graphics ▸ <b>Show All Connectors</b>; drag one if the preview twists.</li>
+<li>Tick <b>Thin Feature</b> 2 mm, outward. Both ends open: done.</li>
+<li>Try Start constraint <b>Normal to profile</b> with tangent length 1.5 — the duct leaves the square straight up.</li>
+</ol>
+</section>
+<section><h2>Lab: loft</h2>
+<p>Change bottom and top sections, add twist through the connectors, and add a middle section to see a three-profile loft. The volume is computed by Simpson's rule on 24 slices.</p>
+<div class="widget" data-w="loft"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Pick profiles at <b>corresponding points</b> — where you click sets the first connector.</li>
+<li>Each profile in its own sketch; use 2D sketches on planes where possible (3D sketches lofts are harder to control).</li>
+<li>Lofted Cut is the same in reverse: great for tapered pockets.</li>
+<li>Wavy surface? Too many profiles or uneven spacing. Use fewer profiles plus guide curves.</li>
+</ul>
+</section>
+<section><h2>Practice: bottle</h2>
+<p>Bottle 220 tall: base ellipse 80 × 60, waist circle Ø55 at 100, shoulder circle Ø70 at 160, neck circle Ø28 at 200. Loft solid, add a 22-high neck extrusion, shell 1.2 removing the top face. Try one guide curve on the side to control the shoulder.</p>
+</section>
+</content>
+<quiz>[
+{"q":"The green dots in a loft preview are…","o":["Guide curves","Connectors that match points between profiles","Errors","Pierce points"],"a":1,"e":"Drag connectors to control twist."},
+{"q":"To make a loft leave the first profile at 90°, use…","o":["Close loft","Start constraint: Normal to profile","Thin feature","Merge result"],"a":1,"e":"Normal to profile sets the start direction."},
+{"q":"Better tool when you need curvature continuity to surrounding faces?","o":["Extrude","Boundary Boss/Base","Revolve","Dome"],"a":1,"e":"Boundary offers tangency and curvature influence in two directions."},
+{"q":"A square-to-circle loft twists. Simplest fix?","o":["Split the circle into four arcs and match the connectors","Add a fillet","Use Mid Plane","Change units"],"a":0,"e":"Matching segment counts gives clean corner flow."},
+{"q":"Can a loft end in a single point?","o":["No","Yes — a sketch point can be the last profile","Only in surfaces","Only with guide curves"],"a":1,"e":"A point profile gives a pointed or domed end."}
+]</quiz>
+</day>
+
+<day n="11">
+<summary>Holes are the most common feature on any engineering part. Hole Wizard knows the standards; cosmetic threads keep models light and drawings correct.</summary>
+<goals><li>Make counterbore, countersink, clearance and tapped holes with Hole Wizard</li><li>Position holes with the Positions tab</li><li>Add cosmetic threads and use the Thread feature</li><li>Get correct hole callouts in drawings</li></goals>
+<content>
+<section><h2>Why Hole Wizard</h2>
+<p>A plain Extruded Cut is just a cylinder. A <b>Hole Wizard</b> hole knows it is "M8 socket head counterbore, normal fit" — so drawings get an automatic <b>Hole Callout</b>, Smart Fasteners can insert the right screw (Day 18), and changing the size updates every dimension.</p>
+<table><tr><th>Hole type</th><th>Typical use</th></tr>
+<tr><td>Counterbore</td><td>Socket head cap screws below the surface</td></tr>
+<tr><td>Countersink</td><td>Flat (countersunk) head screws flush with the surface</td></tr>
+<tr><td>Hole</td><td>Clearance, dowel, drilled holes (by fastener size or drill size)</td></tr>
+<tr><td>Straight Tap / Tapered Tap</td><td>Threaded holes (metric, pipe threads)</td></tr>
+<tr><td>Counterbore Slot / Countersink Slot / Slot</td><td>Adjustable fixing</td></tr>
+<tr><td>Advanced Hole</td><td>Stack of near-side and far-side elements (spot face + counterbore + tap…)</td></tr></table>
+<p>Two tabs: <b>Type</b> (standard ISO/ANSI…, fastener type, size, fit, end condition, options like head clearance or near-side countersink) and <b>Positions</b> (click points on a face; this makes a 3D sketch you can dimension). Clearance fits follow ISO 273 close / normal / loose.</p>
+<div class="def"><b>Cosmetic thread</b> (<span class="path">Insert ▸ Annotations ▸ Cosmetic Thread</span>) shows a thread as a texture in the model and as the correct thin line in drawings, without the heavy helical geometry. The <b>Thread</b> feature (<span class="path">Insert ▸ Features ▸ Thread</span>) cuts or extrudes real thread geometry when you need it for 3D printing or rendering.</div>
+</section>
+<section><h2>Do it in SolidWorks: mounting plate</h2>
+<ol class="steps">
+<li>Plate 160 × 100 × 20.</li>
+<li><span class="path">Features ▸ Hole Wizard</span> ▸ <b>Counterbore</b> ▸ ISO ▸ Socket Head Cap Screw ISO 4762 ▸ <b>M8</b> ▸ Normal fit ▸ Through All.</li>
+<li>Positions tab: click four points on the top face; dimension them 15 from the edges. OK.</li>
+<li>Hole Wizard ▸ <b>Straight Tap</b> ▸ ISO ▸ M6 ▸ tap drill depth 16, thread depth 12, <b>Cosmetic thread</b> with thread callout.</li>
+<li>Hole Wizard ▸ <b>Hole</b> ▸ Dowel Hole … or a plain hole Ø6 with tolerance H7 (you will add the fit callout on Day 23).</li>
+<li>Expand the Hole Wizard features in the tree: each has two sketches — the Positions 3D sketch and the profile sketch. Edit the 3D sketch to move the holes.</li>
+<li>Turn on cosmetic thread shading: right-click Annotations ▸ Details ▸ <b>Shaded cosmetic threads</b>.</li>
+</ol>
+</section>
+<section><h2>Lab: hole sizes</h2>
+<p>Pick a type, size and fit to see the cross-section and the callout data Hole Wizard uses. Values follow ISO 273 (clearance), coarse-pitch tap drills, and typical socket-head counterbores and 90° countersinks.</p>
+<div class="widget" data-w="hole"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Positions must be on a <b>face</b> at the start, or on a plane with a separate 3D sketch. If holes "jump", fully define the Positions sketch.</li>
+<li>Thread depth is not drill depth. Keep at least 2–3 pitches between the end of the thread and the drill point.</li>
+<li>Use <b>Hole Series</b> in assemblies to drill matching holes through several parts at once.</li>
+<li>Do not model threads with sweeps unless you need the geometry — they slow everything and drawings still need a cosmetic representation.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Add to the Day 4 pillow block: 2 × M12 counterbores replacing the plain holes, an M8 tapped hole for a grease nipple on top of the boss (thread depth 10), and 2 × Ø8 dowel holes. Check each callout in a drawing view later on Day 23.</p>
+</section>
+</content>
+<quiz>[
+{"q":"Main advantage of Hole Wizard over an extruded cut?","o":["Faster rebuild","The hole carries standard and size data for callouts and fasteners","Smaller file","It can be patterned"],"a":1,"e":"Callouts and Smart Fasteners use the hole's data."},
+{"q":"Normal fit clearance hole for M10 (ISO 273)?","o":["Ø10","Ø10.5","Ø11","Ø12"],"a":2,"e":"Close 10.5, normal 11, loose 12."},
+{"q":"Tap drill for M8 × 1.25 coarse?","o":["Ø6.5","Ø6.8","Ø7.2","Ø8"],"a":1,"e":"Tap drill ≈ d − P = 8 − 1.25 = 6.75 → 6.8."},
+{"q":"How is a thread usually shown in a SolidWorks model?","o":["Swept helix","Cosmetic thread","Decal","Not shown"],"a":1,"e":"Cosmetic threads keep the model light and drawings correct."},
+{"q":"Which tab of Hole Wizard places the holes?","o":["Type","Positions","Options","Favorites"],"a":1,"e":"Positions creates a 3D sketch of hole centres."}
+]</quiz>
+</day>
+
+<day n="12">
+<summary>Make a model that changes the right way. Name dimensions, link them with global variables and equations, and capture design intent so one number drives the part.</summary>
+<goals><li>Explain design intent with examples</li><li>Rename dimensions and features meaningfully</li><li>Create global variables and equations</li><li>Use functions such as sqrt, iif and int; control suppression with equations</li></goals>
+<content>
+<section><h2>Design intent</h2>
+<p>Design intent is <b>how the model should behave when it changes</b>. Two parts can look identical today and behave completely differently tomorrow.</p>
+<div class="cols"><div class="box"><b class="t">Symmetric</b>Sketch about the origin / mirror / Mid Plane, so the part grows equally both sides.</div><div class="box"><b class="t">Related sizes</b>"Bore = OD/2", "PCD = OD − 40": equations.</div><div class="box"><b class="t">Counts</b>"Bolt count = 6 if OD &lt; 200 else 8": equation with iif.</div><div class="box"><b class="t">Standard steps</b>Choose from a list (configurations, design tables): Day 13.</div></div>
+<h3>Names</h3>
+<p>Every dimension has a full name like <code>D1@Sketch1</code>. Click a dimension and rename it in the PropertyManager (<b>Primary Value</b> box) to <code>OD@Sketch1</code>. Rename features too: <i>Base flange</i>, <i>Bolt holes</i>. Turn on <span class="path">View ▸ Hide/Show ▸ Dimension Names</span> to see them.</p>
+<h3>The Equations dialog</h3>
+<p><span class="path">Tools ▸ Equations</span> (or right-click the Equations folder). Three views: <b>Equation View</b>, <b>Sketch Equation View</b> and <b>Ordered View</b> (solve order). Global variables are written in double quotes: <code>"OD" = 160</code>. Dimensions are referenced as <code>"PCD@Sketch2"</code>. Functions include <code>sin cos tan sqrt abs int sgn iif</code>; <code>pi</code> is built in. You can also type <code>=</code> directly in any dimension's Modify box. Equations can live in an external text file and be shared by many parts (<b>Link to external file</b>).</p>
+<div class="warn">A dimension driven by an equation shows a red Σ symbol and cannot be edited directly — edit the equation instead.</div>
+</section>
+<section><h2>Do it in SolidWorks: parametric flange</h2>
+<ol class="steps">
+<li>Open your Day 7 flange. Rename dimensions: <b>OD</b>, <b>Thk</b>, <b>Bore</b>, <b>PCD</b>, <b>BoltD</b>.</li>
+<li><span class="path">Tools ▸ Equations</span> → Global Variables: <code>"OD" = 200</code>, <code>"N" = 8</code>.</li>
+<li>Equations: <code>"OD@Sketch1" = "OD"</code>, <code>"PCD@Sketch2" = "OD" - 40</code>, <code>"Bore@Sketch1" = "OD" / 4</code>.</li>
+<li>Pattern count: <code>"D1@CirPattern1" = "N"</code>.</li>
+<li>Rule: <code>"N" = iif ( "OD" &gt;= 200 , 8 , 6 )</code> — change OD to 160 and see the count drop to 6.</li>
+<li>Rebuild (<kbd>Ctrl</kbd>+<kbd>B</kbd>), then switch to <b>Ordered View</b> to see the solve order.</li>
+<li>Link the flange's mass to a custom property: <code>"SW-Mass@Flange.SLDPRT"</code> (File ▸ Properties).</li>
+</ol>
+</section>
+<section><h2>Lab: equations engine</h2>
+<p>This mini equation editor works like the SolidWorks dialog (in order, with global variables in quotes). Change <code>"OD"</code>, <code>"N"</code> or the PCD rule and watch the flange and the computed mass update — and break it on purpose to see the warnings.</p>
+<div class="widget" data-w="equations"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Keep the <b>drivers</b> few: 3–6 global variables usually describe a part family.</li>
+<li>Avoid circular references (A uses B and B uses A). SolidWorks marks them with errors.</li>
+<li>When you use sin, cos or tan, test the equation with a known angle first so you know which angle unit it expects.</li>
+<li>Equations can suppress features: <code>"Rib1" = iif ( "OD" &gt; 250 , "unsuppressed" , "suppressed" )</code>.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Make a parametric shaft collar: global variables <code>"d"</code> (shaft) and <code>"w"</code> (width). OD = 2·d, width = w, set-screw hole M = <code>iif("d" &lt; 20, 5, 6)</code> tapped at mid-width. Test d = 12, 20, 30.</p>
+</section>
+</content>
+<quiz>[
+{"q":"How is a global variable written in SolidWorks equations?","o":["$OD","'OD'","\"OD\"","[OD]"],"a":2,"e":"Global variables and dimension names are in double quotes."},
+{"q":"A dimension shows Σ. What does it mean?","o":["It is a reference dimension","It is driven by an equation","It is a sum of others","It is suppressed"],"a":1,"e":"Edit the equation, not the dimension."},
+{"q":"Which function picks between two values on a condition?","o":["sgn","int","iif","abs"],"a":2,"e":"iif(condition, true value, false value)."},
+{"q":"Design intent means…","o":["The model looks right","The model changes correctly when edited","The model is fully defined","The drawing is complete"],"a":1,"e":"Intent is about behaviour under change."},
+{"q":"Full name of the first dimension in Sketch1 by default?","o":["Sketch1.D1","D1@Sketch1","Sketch1@D1","Dim1"],"a":1,"e":"Name@Feature, e.g. D1@Sketch1."}
+]</quiz>
+</day>
+
+<day n="13">
+<summary>One file, many versions. Configurations hold sizes and suppression states; a design table drives them all from an Excel sheet.</summary>
+<goals><li>Add configurations and configure dimensions and features</li><li>Build and edit a design table</li><li>Use $STATE, $DESCRIPTION, $PARTNUMBER and $PRP parameters</li><li>Know configurations vs display states</li></goals>
+<content>
+<section><h2>Configurations</h2>
+<p>The <b>ConfigurationManager</b> (third tab above the tree) lists configurations. Each can have different dimension values, suppressed or unsuppressed features, materials, custom properties and a part number. Typical uses: bolt lengths, as-cast vs machined, simplified (no fillets) for big assemblies, flat vs formed sheet metal, spring free vs compressed.</p>
+<ul><li>Right-click a dimension ▸ <b>Configure Dimension</b> → a table of that dimension across all configurations.</li>
+<li>Right-click a feature ▸ <b>Configure Feature</b> → suppress per configuration.</li>
+<li><b>Derived configurations</b> sit under a parent and inherit what they do not override.</li>
+<li><b>Display states</b> change only appearance and visibility — they are lighter than configurations. Use them for colours and hidden parts, not for geometry.</li></ul>
+<h3>Design tables</h3>
+<p><span class="path">Insert ▸ Tables ▸ Design Table</span> → <b>Auto-create</b> → choose dimensions. An Excel sheet opens inside SolidWorks: rows = configurations, columns = parameters.</p>
+<table><tr><th>Column header</th><th>Controls</th></tr>
+<tr><td><code>D1@Sketch1</code></td><td>A dimension value</td></tr>
+<tr><td><code>$STATE@Chamfer1</code></td><td>S = suppressed, U = unsuppressed</td></tr>
+<tr><td><code>$PARTNUMBER</code></td><td>Part number shown in BOMs</td></tr>
+<tr><td><code>$DESCRIPTION</code></td><td>Configuration description</td></tr>
+<tr><td><code>$PRP@Material</code></td><td>Custom property value</td></tr>
+<tr><td><code>$COLOR</code></td><td>Colour (as a number)</td></tr></table>
+<p>Microsoft Excel must be installed for embedded design tables.</p>
+</section>
+<section><h2>Do it in SolidWorks: hex bolt family</h2>
+<ol class="steps">
+<li>Model an M10 × 30 hex bolt: hexagon (Polygon, inscribed) 16 across flats × 6.4 head; shank Ø10 × 30; 1 × 45° chamfer on the end; cosmetic thread.</li>
+<li>Rename dimensions: D (shank Ø), L, S, K.</li>
+<li><span class="path">Insert ▸ Tables ▸ Design Table ▸ Auto-create</span>, select D, L, S, K.</li>
+<li>Fill rows: M6x20, M8x25, M10x30, M12x40, M16x50 with ISO 4017 head sizes (lab table). Add <code>$STATE@Chamfer1</code> and <code>$PARTNUMBER</code>.</li>
+<li>Click outside Excel. SolidWorks creates the configurations. Double-click each in the ConfigurationManager.</li>
+<li>Add a <b>Simplified</b> derived configuration with the cosmetic thread and chamfer suppressed.</li>
+</ol>
+</section>
+<section><h2>Lab: design table</h2>
+<p>This table works like the embedded Excel sheet. Click a row to activate a configuration, edit any cell, set the chamfer to S, or add a row.</p>
+<div class="widget" data-w="config"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Plan configurations before modelling: features that only some sizes need should be separate features you can suppress.</li>
+<li>When editing a dimension with several configurations, the Modify box asks <b>This configuration / All / Specify</b> — read it every time.</li>
+<li>Too many configurations slow a file. For large families, use separate files driven by the same design table, or Toolbox.</li>
+<li>Keep the design table as the single source of truth — don't edit configured values by hand afterwards (or set the table to allow model edits to update it).</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Make a configurable spacer: OD 20/25/30, ID 10.5/13/17, lengths 5, 10, 15 for each — 9 configurations from one design table with part numbers SP-OD-L (e.g. SP-25-10).</p>
+</section>
+</content>
+<quiz>[
+{"q":"Which header suppresses Fillet3 in a design table?","o":["$SUPPRESS@Fillet3","$STATE@Fillet3","Fillet3@$STATE","$HIDE@Fillet3"],"a":1,"e":"$STATE@Feature with S or U."},
+{"q":"Display states differ from configurations because they…","o":["Can change dimensions","Change only appearance and visibility","Need Excel","Can't be used in drawings"],"a":1,"e":"They are light-weight visual states."},
+{"q":"Fastest way to give one dimension a value in each configuration?","o":["Edit each configuration","Right-click ▸ Configure Dimension","Equations","Rename"],"a":1,"e":"It opens a table for that dimension across configurations."},
+{"q":"What do you need installed for embedded design tables?","o":["Toolbox","Microsoft Excel","PDM","Simulation"],"a":1,"e":"Design tables are Excel worksheets embedded in the part."},
+{"q":"A derived configuration…","o":["Is a separate file","Inherits from a parent and overrides some values","Cannot be used in assemblies","Is the same as a display state"],"a":1,"e":"Children inherit what they do not change."}
+]</quiz>
+</day>
+
+<day n="14">
+<summary>A model is only useful if it is the right material and the right weight. Apply materials, read Mass Properties correctly, measure, and link mass into drawings.</summary>
+<goals><li>Apply and edit materials, create custom materials</li><li>Separate appearance from material</li><li>Read Mass Properties: mass, CoG, principal axes and moments</li><li>Use Measure and link mass to custom properties</li></goals>
+<content>
+<section><h2>Material is data, appearance is paint</h2>
+<p>Right-click <b>Material</b> in the tree ▸ <b>Edit Material</b>. The SolidWorks library has steels, irons, aluminium alloys, plastics and more, each with density, elastic modulus, Poisson's ratio, yield strength, thermal properties. Simulation (Day 27) reads these.</p>
+<p>Make your own: copy a material into a <b>Custom Materials</b> library and edit values (e.g. EN8, EN19, IS 2062 E250 with your supplier's data).</p>
+<p>An <b>appearance</b> (colour, texture) does not change mass. Applying a material does give a default appearance — that is all.</p>
+<h3>Mass Properties</h3>
+<p><span class="path">Evaluate ▸ Mass Properties</span> reports density, mass, volume, surface area, <b>centre of mass</b>, <b>principal axes of inertia</b> and <b>principal moments at the centre of mass</b>, plus moments about the output coordinate system. Choose the <b>Output coordinate system</b> (Day 8) to get numbers relative to a mounting face. <b>Override Mass Properties</b> lets you enter the true mass of a bought-out part (e.g. a motor shown as a simple shape).</p>
+<table><tr><th>Shape</th><th>Moment of inertia at centroid</th></tr>
+<tr><td>Block a × b × c, axis along a</td><td>m(b² + c²)/12</td></tr>
+<tr><td>Solid cylinder radius r, about its axis</td><td>m r²/2</td></tr>
+<tr><td>Solid cylinder, transverse axis, length L</td><td>m(3r² + L²)/12</td></tr>
+<tr><td>Tube (ro, ri) about its axis</td><td>m(ro² + ri²)/2</td></tr></table>
+</section>
+<section><h2>Do it in SolidWorks</h2>
+<ol class="steps">
+<li>Open the Day 7 flange. <b>Edit Material</b> ▸ Steel ▸ <b>Plain Carbon Steel</b>. Apply.</li>
+<li><span class="path">Evaluate ▸ Mass Properties</span>. Note the mass, and the centre of mass on the flange axis.</li>
+<li>Change to <b>6061-T6 (SS)</b> aluminium. Mass should fall to about 35 % (2700 / 7800).</li>
+<li>Create a custom material <b>EN8</b> (density 7850, E 205 GPa, yield ≈ 280 MPa) in a new library.</li>
+<li><span class="path">Evaluate ▸ Measure</span>: measure the PCD hole-to-hole distance and the diameter of a hole.</li>
+<li>File ▸ Properties ▸ Custom: add <b>Weight</b> with value <code>"SW-Mass@Flange.SLDPRT"</code>. It updates when the model changes and can appear in the title block.</li>
+</ol>
+</section>
+<section><h2>Lab: mass properties calculator</h2>
+<p>Choose a shape, size and material. Compare these hand-calculated values with what SolidWorks reports for the same shape — they should match to the last digit for simple shapes.</p>
+<div class="widget" data-w="mass"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Check the <b>units</b> in Mass Properties (Options button) — grams vs kilograms catches everyone once.</li>
+<li>Material is per part (or per body); in assemblies, mass is the sum of parts — bought-out parts need overrides.</li>
+<li>Principal moments at the centroid are what you need for dynamics and balancing; moments "taken at the output coordinate system" are for mounting calculations.</li>
+<li>Density in SolidWorks library: plain carbon steel 7800 kg/m³ — not the 7850 many handbooks use. Know which your company standard is.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>For the Day 4 pillow block in grey cast iron, find mass, CoG height above the base and the moment of inertia about the bore axis. Then make a Ti-6Al-4V version as a configuration and compare masses in a short table.</p>
+</section>
+</content>
+<quiz>[
+{"q":"Changing a part's appearance to 'brass' changes its mass?","o":["Yes","No — only the material changes mass","Only in drawings","Only in assemblies"],"a":1,"e":"Appearance is visual only."},
+{"q":"Steel 7800 kg/m³ part of volume 100 000 mm³ weighs…","o":["78 g","780 g","7.8 kg","78 kg"],"a":1,"e":"100 000 mm³ = 1e-4 m³ × 7800 = 0.78 kg."},
+{"q":"Moment of inertia of a solid cylinder about its own axis?","o":["m r²","m r²/2","m r²/12","2 m r²/5"],"a":1,"e":"I = m r²/2."},
+{"q":"How do you report CoG relative to a mounting face?","o":["Move the part","Use an output coordinate system in Mass Properties","Use Measure","Change the origin"],"a":1,"e":"Pick a coordinate system located on the mounting face."},
+{"q":"Bought-out motor modelled as a simple block — mass is wrong. Fix?","o":["Change density until it matches","Override Mass Properties","Delete it","Shell it"],"a":1,"e":"Override mass (and CoG if known)."}
+]</quiz>
+</day>

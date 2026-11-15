@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<!--
+TOOL:    software-history/01-ms-dos.html — Software Through the Ages — Episode 01: MS-DOS
+FAMILY:  software-history (haivijayanand.github.io article series)
+VERSION: 1.1.0
+DATE:    2026-11-15
+CHAT:    Software history series — start with MS-DOS (requirements, technology, versions, retirement, replacements, contemporaries)
+CHANGES: 1.1.0 — moved into /software-history/, shared sh.css/sh.js, series navigation; 1.0.0 — First release: origin story, requirements, architecture, memory map, version explorer, contemporaries, retirement, legacy, DOS prompt simulator
+STATUS:  published
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Software Through the Ages · 01 · MS-DOS</title>
+<meta name="description" content="Why MS-DOS was created, the technology inside it, every major version, its contemporaries, its retirement and what replaced it.">
+<link rel="stylesheet" href="assets/sh.css">
+</head>
+<body>
+<header class="top">
+  <a href="/">← Home</a><a href="./">Series</a><div class="series">Software Through the Ages</div><div class="sp"></div>
+  <button id="btnWidth" title="Toggle wide / reading width">Reading width</button>
+  <button id="btnFs" title="Full screen (F)">⛶ Full screen</button>
+</header>
+
+<div class="wrap">
+<div class="hero">
+  <div class="ep">EPISODE 01 · 1981 – 2001 (and still running)</div>
+  <h1>MS-DOS: the 16-bit doorway</h1>
+  <p class="lede">How a "quick and dirty" operating system written in four months became the foundation of the personal computer industry — what it was asked to do, how it was built, how each version answered new hardware, who it competed with, and what finally replaced it.</p>
+  <div class="byline">K Vijay Anand · Software history series · November 2026</div>
+</div>
+
+<div class="layout">
+<nav class="toc">
+  <b>Contents</b>
+  <a href="#glance">At a glance</a>
+  <a href="#need">1 · The requirement</a>
+  <a href="#birth">2 · Birth: QDOS → MS-DOS</a>
+  <a href="#inside">3 · Technology inside</a>
+  <a href="#memory">4 · The 640 KB problem</a>
+  <a href="#versions">5 · Version explorer</a>
+  <a href="#apps">6 · What people ran on it</a>
+  <a href="#rivals">7 · Contemporaries</a>
+  <a href="#retire">8 · Decline &amp; retirement</a>
+  <a href="#replace">9 · Replacements</a>
+  <a href="#legacy">10 · Legacy today</a>
+  <a href="#try">11 · Try the prompt</a>
+  <a href="#lessons">12 · Lessons</a>
+  <a href="#sources">Sources</a>
+</nav>
+
+<main>
+<section id="glance">
+  <div class="stats">
+    <div class="stat"><div class="v">12 Aug 1981</div><div class="k">Shipped as PC DOS 1.0 with the IBM PC 5150</div></div>
+    <div class="stat"><div class="v">US$ 75,000</div><div class="k">Total Microsoft paid Seattle Computer Products for 86-DOS</div></div>
+    <div class="stat"><div class="v">US$ 40</div><div class="k">IBM price for PC DOS vs US$ 240 for CP/M-86</div></div>
+    <div class="stat"><div class="v">6.22 · 1994</div><div class="k">Last stand-alone retail MS-DOS</div></div>
+    <div class="stat"><div class="v">8.0 · 2000</div><div class="k">Last version, hidden inside Windows ME</div></div>
+    <div class="stat"><div class="v">31 Dec 2001</div><div class="k">Microsoft support for MS-DOS ended</div></div>
+  </div>
+</section>
+
+<section id="need">
+  <h2><span class="n">01</span>The requirement: why DOS had to exist</h2>
+  <p>In 1980 the microcomputer world ran on 8-bit processors (Intel 8080, Zilog Z80) and the dominant operating system was Digital Research's <b>CP/M</b>. Thousands of business programs — WordStar, dBase, SuperCalc — were written for CP/M. Then Intel's 16-bit <b>8086/8088</b> arrived, able to address 1 MB of memory instead of 64 KB. Hardware was ready; the 16-bit operating system was not: Digital Research's CP/M-86 was running late.</p>
+  <p>Two customers felt the gap first. <b>Seattle Computer Products (SCP)</b> was selling an 8086 S-100 board from late 1979 with no operating system to run on it. And in 1980 <b>IBM</b>, in a crash project at Boca Raton ("Project Chess"), set out to build a personal computer in about a year using off-the-shelf parts and outside software — including the operating system.</p>
+  <h3>What the operating system had to do</h3>
+  <table>
+    <tr><th style="width:26%">Requirement</th><th style="width:36%">Why it mattered</th><th>How DOS answered it</th></tr>
+    <tr><td>Run on the Intel 8088 (16-bit, 1 MB address space)</td><td>IBM chose the cheaper 8-bit-bus version of the 8086</td><td>Written in 8086 assembly; ran in the CPU's only mode then, <i>real mode</i></td></tr>
+    <tr><td>Look like CP/M</td><td>Software houses had to port their CP/M programs fast</td><td>CP/M-style system calls, function numbers, the File Control Block and the <code>A&gt;</code> prompt; translators converted 8080 code to 8086 almost mechanically</td></tr>
+    <tr><td>Fit in a tiny machine</td><td>Base IBM PC had 16 KB RAM and single-sided floppies</td><td>Small kernel, loaded from a 160 KB 5.25" floppy</td></tr>
+    <tr><td>Better disk handling than CP/M</td><td>CP/M's allocation and directory scheme was slow and limited</td><td>The <b>File Allocation Table (FAT)</b> borrowed from Microsoft's Stand-alone Disk BASIC</td></tr>
+    <tr><td>Be available <i>now</i> and be cheap</td><td>IBM had a fixed launch date</td><td>Microsoft licensed an existing OS and adapted it; IBM priced it at US$ 40</td></tr>
+    <tr><td>Hide hardware details from programs</td><td>Same software should run on future machines</td><td>Layered design: ROM BIOS → DOS kernel → application programming interface <code>INT 21h</code></td></tr>
+  </table>
+  <div class="callout">The design brief was not "build the best OS". It was <b>"build a CP/M-compatible 16-bit OS, today, small enough for a floppy"</b>. Almost every strength and weakness of DOS traces back to that brief.</div>
+</section>
+
+<section id="birth">
+  <h2><span class="n">02</span>Birth: from QDOS to MS-DOS</h2>
+  <div class="two">
+  <div>
+  <p><b>Tim Paterson</b> at SCP began writing an operating system in April 1980 to sell his company's 8086 board. Internally it was called <b>QDOS</b> — "Quick and Dirty Operating System" — and it was marketed as <b>86-DOS</b>.</p>
+  <p>When IBM came to Microsoft (then a languages company selling BASIC) for an OS, Microsoft licensed 86-DOS, hired Paterson, and adapted it for the IBM PC. Just before the PC launched, Microsoft bought the system outright — and crucially kept the right to license it to <i>other</i> manufacturers. IBM sold its copy as <b>PC DOS</b>; Microsoft licensed <b>MS-DOS</b> to every clone maker. When Compaq and others built IBM-compatible PCs, each one needed MS-DOS. That licence is what made Microsoft.</p>
+  <p>SCP later sued Microsoft, claiming the IBM connection was hidden during the purchase; the case was settled for close to US$ 1 million.</p>
+  </div>
+  <div class="tl">
+    <div class="ev"><b>Nov 1979</b>SCP ships its 8086 board — no OS available</div>
+    <div class="ev"><b>Apr 1980</b>Paterson starts QDOS</div>
+    <div class="ev"><b>Aug 1980</b>QDOS 0.10 working; sold as 86-DOS</div>
+    <div class="ev"><b>Dec 1980</b>Microsoft takes a non-exclusive licence for US$ 25,000</div>
+    <div class="ev"><b>May 1981</b>Paterson joins Microsoft to port it to the IBM PC</div>
+    <div class="ev"><b>27 Jul 1981</b>Microsoft buys all rights for a further US$ 50,000; renamed MS-DOS</div>
+    <div class="ev"><b>12 Aug 1981</b>IBM PC 5150 launched with PC DOS 1.0, CP/M-86 and UCSD p-System offered as options</div>
+  </div>
+  </div>
+</section>
+
+<section id="inside">
+  <h2><span class="n">03</span>Technology inside DOS</h2>
+  <div class="two">
+  <div>
+    <h3>Layered structure</h3>
+    <div class="stack">
+      <div class="layer l1">Application programs <small>Lotus 1-2-3, WordStar, Turbo Pascal…</small></div>
+      <div class="layer l2">COMMAND.COM <small>the shell: prompt, internal commands, batch files</small></div>
+      <div class="layer l3">MSDOS.SYS <small>(IBMDOS.COM) kernel: files, memory, processes · INT 21h</small></div>
+      <div class="layer l4">IO.SYS <small>(IBMBIO.COM) device drivers, boot-time init</small></div>
+      <div class="layer l5">ROM BIOS <small>firmware: keyboard, screen, disk · INT 10h/13h/16h</small></div>
+      <div class="layer l6">Hardware <small>8088 CPU, RAM, floppy/hard disk, CGA/MDA</small></div>
+    </div>
+    <p style="margin-top:10px;font-size:15px;color:var(--muted)">Programs were <i>supposed</i> to call only INT 21h. For speed, many wrote straight to video memory or the hardware ports — which is why "100 % IBM compatible" became the test every clone had to pass.</p>
+  </div>
+  <div>
+    <h3>Key technologies</h3>
+    <table>
+      <tr><th>Element</th><th>What it was</th></tr>
+      <tr><td>Language</td><td>8086 assembly; later versions mixed in C</td></tr>
+      <tr><td>CPU mode</td><td>Real mode only: segment:offset addressing, 1 MB limit, no memory protection, no multitasking</td></tr>
+      <tr><td>API</td><td>Software interrupt <code>INT 21h</code> with function number in register AH</td></tr>
+      <tr><td>File system</td><td>FAT12 → FAT16 (3.0) → large FAT16 (4.0) → VFAT long names (7.0) → FAT32 (7.1); 8.3 file names; drive letters A:, B:, C:</td></tr>
+      <tr><td>Programs</td><td><code>.COM</code> (single 64 KB segment, CP/M heritage) and <code>.EXE</code> (relocatable, "MZ" header after Mark Zbikowski)</td></tr>
+      <tr><td>Configuration</td><td><code>CONFIG.SYS</code> (drivers, buffers) and <code>AUTOEXEC.BAT</code> (start-up script) — from 2.0</td></tr>
+      <tr><td>Extensibility</td><td>Installable device drivers (2.0); TSR "terminate and stay resident" programs for pop-ups, mouse, network</td></tr>
+      <tr><td>Automation</td><td>Batch files: <code>IF</code>, <code>GOTO</code>, <code>FOR</code>, <code>%1</code> parameters, <code>ERRORLEVEL</code></td></tr>
+    </table>
+  </div>
+  </div>
+</section>
+
+<section id="memory">
+  <h2><span class="n">04</span>The 640 KB problem</h2>
+  <p>The 8088 could address 1 MB. IBM reserved the top 384 KB for video memory and ROM, leaving <b>640 KB of "conventional memory"</b> for DOS and programs. In 1981 that was enormous; by 1988 spreadsheets and CAD needed far more. A decade of DOS history is the story of working around this wall. Tap a block to read about it.</p>
+  <div class="mem">
+    <div class="membar" id="membar">
+      <div class="seg s-conv" data-k="conv"><b>Conventional 0–640 KB</b><span class="a">00000–9FFFF</span></div>
+      <div class="seg s-vid" data-k="vid"><b>Video memory</b><span class="a">A0000–BFFFF</span></div>
+      <div class="seg s-umb" data-k="umb"><b>Upper memory blocks</b><span class="a">C0000–EFFFF</span></div>
+      <div class="seg s-rom" data-k="rom"><b>System ROM BIOS</b><span class="a">F0000–FFFFF</span></div>
+      <div class="seg s-hma" data-k="hma"><b>HMA (64 KB − 16 B)</b><span class="a">1 MB +</span></div>
+      <div class="seg s-xms" data-k="xms"><b>Extended memory (XMS)</b><span class="a">286/386 only</span></div>
+    </div>
+    <div class="memtxt" id="memtxt"></div>
+  </div>
+  <table style="margin-top:16px">
+    <tr><th>Workaround</th><th>Year</th><th>Idea</th></tr>
+    <tr><td>EMS (LIM 3.2/4.0)</td><td>1985/87</td><td>Lotus–Intel–Microsoft "bank switching": a 64 KB window in upper memory pages in data from an add-on memory board</td></tr>
+    <tr><td>XMS / HIMEM.SYS</td><td>1988</td><td>Standard way to use memory above 1 MB on 286/386 machines</td></tr>
+    <tr><td>DOS=HIGH, UMB</td><td>1991 (DOS 5)</td><td>Load DOS itself into the HMA and drivers into unused upper-memory gaps with EMM386 — freeing ~600 KB for programs</td></tr>
+    <tr><td>DOS extenders</td><td>late 1980s</td><td>Switch the CPU into protected mode while a program runs (e.g. DOS/4GW used by <i>Doom</i>), return to DOS for file I/O</td></tr>
+    <tr><td>MemMaker</td><td>1993 (DOS 6)</td><td>Automatic tuning of <code>CONFIG.SYS</code> to squeeze conventional memory</td></tr>
+  </table>
+</section>
+
+<section id="versions">
+  <h2><span class="n">05</span>Version explorer — each version answered new hardware</h2>
+  <p>Click a version. Blue chips are stand-alone DOS; amber chips are DOS hidden inside Windows 9x.</p>
+  <div class="vbar" id="vbar"></div>
+  <div class="vpanel" id="vpanel"></div>
+  <div class="callout amber"><b>Pattern to notice:</b> almost every major DOS version was triggered by a new IBM machine or storage medium — XT hard disk (2.0), AT high-density floppy (3.0), PS/2 3.5" disk (3.3), large hard disks (4.0). Only 5.0 and 6.0 were driven by software competition, mainly from DR-DOS.</div>
+</section>
+
+<section id="apps">
+  <h2><span class="n">06</span>What people actually ran on DOS</h2>
+  <p>An operating system succeeds through its applications. DOS's "killer apps" made the IBM PC a business tool:</p>
+  <table>
+    <tr><th>Category</th><th>Key programs (first DOS release)</th><th>Why it mattered</th></tr>
+    <tr><td>Spreadsheet</td><td>VisiCalc port (1981), <b>Lotus 1-2-3</b> (1983), Quattro (1987)</td><td>1-2-3 alone sold PCs; it wrote straight to hardware for speed</td></tr>
+    <tr><td>Word processing</td><td>WordStar (CP/M port), <b>WordPerfect</b> 4.2/5.1 (1986/89), MS Word for DOS (1983)</td><td>WordPerfect 5.1 became the office standard of its time</td></tr>
+    <tr><td>Database</td><td>dBase II/III (1983/84), Clipper, FoxPro</td><td>The first generation of small-business accounting and inventory systems</td></tr>
+    <tr><td>Programming</td><td>BASICA/GW-BASIC, <b>Turbo Pascal</b> (1983), Turbo C, MASM, QuickBASIC</td><td>Cheap fast compilers created a generation of PC programmers</td></tr>
+    <tr><td>Engineering</td><td><b>AutoCAD</b> (1982), early FEA and data-acquisition packages</td><td>CAD moved from mainframes to the desk</td></tr>
+    <tr><td>Utilities</td><td>Norton Utilities (1982), Norton Commander (1986), PKZIP (1989)</td><td>Filled gaps DOS itself left open</td></tr>
+    <tr><td>Games</td><td>Flight Simulator (1982), King's Quest, Prince of Persia, <b>Doom</b> (1993)</td><td>Pushed sound cards, VGA and DOS extenders</td></tr>
+  </table>
+</section>
+
+<section id="rivals">
+  <h2><span class="n">07</span>Contemporaries — who else was on the field</h2>
+  <table>
+    <tr><th>System</th><th>Maker</th><th>Years</th><th>Relation to DOS</th><th>Fate</th></tr>
+    <tr><td><b>CP/M-86</b></td><td>Digital Research</td><td>1981–mid 80s</td><td>The OS IBM originally wanted; offered with the PC at US$ 240</td><td>Lost on price and timing; evolved into Concurrent DOS</td></tr>
+    <tr><td><b>UCSD p-System</b></td><td>SofTech</td><td>1981–mid 80s</td><td>Third launch option: portable "p-code" virtual machine</td><td>Too slow and costly; faded</td></tr>
+    <tr><td><b>PC DOS</b></td><td>IBM</td><td>1981–1998</td><td>IBM's own branded DOS; split from MS-DOS after 5.0</td><td>PC DOS 6.1, 6.3, 7.0, PC DOS 2000; ended</td></tr>
+    <tr><td><b>DR-DOS</b></td><td>Digital Research → Novell → Caldera</td><td>1988–late 90s</td><td>Clone that often led: memory management, task switching, compression before MS-DOS</td><td>Squeezed by Windows bundling; antitrust case settled in 2000</td></tr>
+    <tr><td><b>Xenix / Unix</b></td><td>Microsoft, SCO, AT&amp;T</td><td>1980 →</td><td>Microsoft's own multi-user OS; DOS 2.0 borrowed its directory tree and file handles</td><td>Unix ideas live on in Linux and macOS</td></tr>
+    <tr><td><b>Apple ProDOS / Mac OS</b></td><td>Apple</td><td>1983/1984 →</td><td>Mac (1984) showed a graphical desktop while DOS had a prompt</td><td>Mac OS evolved into macOS</td></tr>
+    <tr><td><b>AmigaOS, Atari TOS</b></td><td>Commodore, Atari</td><td>1985–1990s</td><td>Pre-emptive multitasking (Amiga) and GUI on cheap hardware</td><td>Died with their hardware platforms</td></tr>
+    <tr><td><b>DESQview, GEM, Windows 1–3.x</b></td><td>Quarterdeck, DR, Microsoft</td><td>1984–1995</td><td>Ran <i>on top of</i> DOS adding windows and multitasking</td><td>Windows 3.x won; became the main way DOS PCs were used</td></tr>
+    <tr><td><b>OS/2</b></td><td>IBM + Microsoft</td><td>1987–2006</td><td>Planned protected-mode successor to DOS</td><td>Microsoft left for Windows NT; IBM continued then ended it</td></tr>
+  </table>
+</section>
+
+<section id="retire">
+  <h2><span class="n">08</span>Decline and retirement</h2>
+  <p>DOS's weaknesses were built into its brief: single user, single task, no memory protection, 640 KB, 8.3 file names, real mode. The 386 processor (1985) could do protected mode, virtual memory and multitasking — DOS could not use any of it without bolt-ons.</p>
+  <div class="ladder">
+    <span class="rung">DOS alone</span><span class="arrow">→</span>
+    <span class="rung">Windows 3.x on DOS<br><small>1990–92</small></span><span class="arrow">→</span>
+    <span class="rung">Windows 95/98/ME<br><small>DOS 7–8 hidden as boot loader</small></span><span class="arrow">→</span>
+    <span class="rung">Windows XP (NT kernel)<br><small>Oct 2001 — no DOS underneath</small></span>
+  </div>
+  <ul>
+    <li><b>1994:</b> MS-DOS 6.22 — last version sold on its own.</li>
+    <li><b>1995–2000:</b> DOS 7.0, 7.1 and 8.0 exist only inside Windows 95, 98 and ME, mainly to boot Windows and run old programs.</li>
+    <li><b>31 Dec 2001:</b> Microsoft ends support for MS-DOS (with Windows 3.x and Windows 95). The DOS components of Windows 98/ME were supported until July 2006.</li>
+    <li><b>Windows NT/2000/XP and later:</b> DOS programs run in an emulated "NT Virtual DOS Machine" (NTVDM) — present only in 32-bit Windows, up to 32-bit Windows 10. 64-bit Windows and Windows 11 cannot run DOS programs natively.</li>
+  </ul>
+</section>
+
+<section id="replace">
+  <h2><span class="n">09</span>Replacements and successors</h2>
+  <table>
+    <tr><th>DOS role</th><th>Replaced by</th></tr>
+    <tr><td>Operating system for PCs</td><td>Windows 95/98/ME (transition) → Windows NT, 2000, XP … Windows 11; Linux on the same hardware</td></tr>
+    <tr><td>The command prompt <code>COMMAND.COM</code></td><td><code>cmd.exe</code> (Windows NT, 1993) → PowerShell (2006) → Windows Terminal (2019)</td></tr>
+    <tr><td>Batch files</td><td><code>.cmd</code> scripts, PowerShell, Python</td></tr>
+    <tr><td>FAT on hard disks</td><td>NTFS (Windows), ext4 (Linux); FAT32/exFAT survive on USB sticks and SD cards</td></tr>
+    <tr><td>Running old DOS software</td><td>DOSBox (2002 →), PCem/86Box, virtual machines</td></tr>
+    <tr><td>A real DOS for new work</td><td><b>FreeDOS</b> — free, open-source, MS-DOS compatible; started 1994, version 1.4 released April 2025</td></tr>
+  </table>
+</section>
+
+<section id="legacy">
+  <h2><span class="n">10</span>Legacy you still use every day</h2>
+  <div class="two">
+  <ul>
+    <li><b>Drive letters</b> — your Windows disk is <code>C:</code> because A: and B: were floppies.</li>
+    <li><b>Backslash paths</b> — <code>\</code> because <code>/</code> was already taken for command switches in DOS 1.</li>
+    <li><b>Reserved names</b> — you still cannot name a Windows file <code>CON</code>, <code>PRN</code>, <code>AUX</code> or <code>NUL</code>.</li>
+    <li><b>CR+LF line endings</b> in Windows text files (inherited via CP/M).</li>
+    <li><b>FAT32 / exFAT</b> on every camera card and USB stick.</li>
+    <li><b>Commands</b> <code>dir</code>, <code>copy</code>, <code>cd</code>, <code>del</code>, <code>ren</code> still work in cmd.exe.</li>
+  </ul>
+  <div>
+    <p><b>Source code is public.</b> Microsoft gave MS-DOS 1.25 and 2.0 source to the Computer History Museum in 2014, put them on GitHub in 2018, and in April 2024, together with IBM, released MS-DOS 4.00 under the MIT licence.</p>
+    <p><b>Still at work.</b> DOS and FreeDOS still run embedded controllers, legacy test-rig PCs, CNC machines and BIOS-flashing tools, because a single-tasking OS gives a program complete, predictable control of the hardware — useful for timing-critical data acquisition.</p>
+  </div>
+  </div>
+</section>
+
+<section id="try">
+  <h2><span class="n">11</span>Try the prompt</h2>
+  <p>A small simulation of a DOS 6.22 session. Type a command and press Enter, or tap a chip.</p>
+  <div class="chips" id="chips"></div>
+  <div class="term" id="term"><div id="out"></div><div class="in"><span id="pr">C:\&gt;</span>&nbsp;<input id="cmd" autocomplete="off" spellcheck="false" aria-label="DOS command"></div></div>
+</section>
+
+<section id="lessons">
+  <h2><span class="n">12</span>Lessons for engineers</h2>
+  <ol>
+    <li><b>"Good enough and available" beats "best but late".</b> CP/M-86 was arguably the better product; it arrived later and cost six times more.</li>
+    <li><b>Compatibility is a moat — and a cage.</b> CP/M-likeness brought software quickly; the same backward compatibility chained DOS to real mode for 20 years.</li>
+    <li><b>Own the licence, not the hardware.</b> IBM owned the PC design; Microsoft owned the software every clone needed.</li>
+    <li><b>Abstractions leak under performance pressure.</b> Programs bypassed INT 21h for speed, which froze the hardware design of the PC.</li>
+    <li><b>Successors arrive as layers first.</b> Windows began as a program on DOS before replacing it — a pattern we will see again in this series.</li>
+  </ol>
+  <div class="callout"><b>Next in the series:</b> Episode 02 — Windows 1.0 to 3.11, the graphical layer that grew on top of DOS.</div>
+</section>
+
+<section id="sources">
+  <h2>Sources &amp; further reading</h2>
+  <ol class="src">
+    <li><a href="https://computerhistory.org/blog/microsoft-ms-dos-early-source-code/">Computer History Museum — Microsoft MS-DOS early source code (2014)</a></li>
+    <li><a href="https://opensource.microsoft.com/blog/2024/04/25/open-sourcing-ms-dos-4-0/">Microsoft Open Source Blog — Open sourcing MS-DOS 4.0 (2024)</a></li>
+    <li><a href="https://github.com/microsoft/MS-DOS">GitHub — microsoft/MS-DOS (sources of 1.25, 2.0, 4.0)</a></li>
+    <li><a href="https://en.wikipedia.org/wiki/86-DOS">Wikipedia — 86-DOS</a> · <a href="https://en.wikipedia.org/wiki/MS-DOS">MS-DOS</a></li>
+    <li><a href="https://www.theregister.com/2011/07/27/ms_dos_turns_30/">The Register — MS-DOS turns 30 (2011)</a></li>
+    <li><a href="https://freedos.org/download/announce.html">FreeDOS — FreeDOS 1.4 release announcement (2025)</a></li>
+    <li>Tim Paterson, interview in <i>Softalk</i> (1983); Microsoft Support Lifecycle records.</li>
+  </ol>
+</section>
+
+<div class="epnav"><a href="./"><small>Series</small>All episodes</a><a class="nx" href="02-windows-1-to-3.html"><small>Next · Episode 02</small>Windows 1.0 to 3.11 →</a></div>
+<footer>Software Through the Ages · Episode 01 · v1.1.0 · haivijayanand.github.io</footer>
+</main>
+</div>
+</div>
+
+<script src="assets/sh.js"></script>
+<script>
+// ---------- memory map ----------
+const MEM={
+ conv:['Conventional memory (0–640 KB)','Where DOS, device drivers, TSRs and your program all had to live. Every driver loaded here (mouse, network, CD-ROM) reduced what was left for the application — "Not enough memory" was the classic DOS error even on machines with 4 MB installed.'],
+ vid:['Video memory (640–768 KB)','Reserved by IBM for display adapters (MDA, CGA, EGA, VGA). Programs that wrote directly to B8000h for fast text output are the reason this layout could never move.'],
+ umb:['Upper memory blocks','Gaps between adapter ROMs. On a 386, EMM386 could map RAM into these holes so drivers could be loaded with DEVICEHIGH / LOADHIGH, a trick that arrived in MS-DOS 5.0 (and earlier in DR-DOS and QEMM).'],
+ rom:['System ROM BIOS','The firmware that started the machine and provided keyboard, screen and disk services through interrupts 10h, 13h and 16h.'],
+ hma:['High Memory Area','A quirk: with the 286\'s A20 address line enabled, segment FFFF could reach almost 64 KB above 1 MB while still in real mode. DOS=HIGH in DOS 5 moved most of DOS into it.'],
+ xms:['Extended memory (XMS)','Everything above 1 MB on 286/386 PCs. DOS could not use it directly; HIMEM.SYS, RAM disks, disk caches (SMARTDRV) and DOS extenders could.']
+};
+const memtxt=document.getElementById('memtxt');
+function showMem(k){memtxt.innerHTML='<h3 style="margin-top:0">'+MEM[k][0]+'</h3><p>'+MEM[k][1]+'</p>';}
+document.querySelectorAll('.seg').forEach(s=>s.onclick=()=>showMem(s.dataset.k));
+showMem('conv');
+
+// ---------- version explorer ----------
+const V=[
+ {v:'1.0',d:'Aug 1981',hw:'IBM PC 5150, 16–64 KB RAM, 160 KB single-sided 5.25" floppy',e:1,
+  n:['Released as PC DOS 1.0 with the IBM PC','FAT12 file system, single flat directory (no folders)','COMMAND.COM shell, batch files, CP/M-compatible API','IBM price US$ 40']},
+ {v:'1.25',d:'1982',hw:'Double-sided 320 KB floppies; first clone makers',e:1,
+  n:['PC DOS 1.1 / MS-DOS 1.25 added double-sided disks','First version licensed generically to OEMs — Compaq, Zenith (Z-DOS) and others','The start of the "IBM compatible" industry']},
+ {v:'2.0',d:'Mar 1983',hw:'IBM PC XT with 10 MB hard disk; 360 KB floppy',e:1,
+  n:['Hierarchical directories (folders) — borrowed from Unix/Xenix','Hard-disk support and FDISK partitioning','Unix-style file handles, I/O redirection and pipes','Installable device drivers through CONFIG.SYS','Effectively a rewrite; far more code than 1.x']},
+ {v:'3.0–3.1',d:'Aug–Nov 1984',hw:'IBM PC AT (80286), 1.2 MB floppy, bigger hard disks',e:1,
+  n:['FAT16 for hard disks (32 MB partition limit)','1.2 MB high-density floppies','3.1: network redirector for Microsoft Networks / IBM PC Network','RAM disk (VDISK) support']},
+ {v:'3.2–3.3',d:'1986–1987',hw:'3.5" floppies (720 KB, 1.44 MB); IBM PS/2',e:1,
+  n:['3.2: 720 KB 3.5" drives, XCOPY','3.3: 1.44 MB floppies, extended partitions with multiple logical drives, code pages for international use','3.3 became the long-lived "standard" DOS of the late 1980s']},
+ {v:'4.0',d:'Jun–Nov 1988',hw:'Hard disks larger than 32 MB',e:1,
+  n:['Partitions up to 2 GB','DOS Shell — a menu/file-manager front end','EMS support','Developed largely by IBM; reputation for bugs and memory use (4.01 fixes)','Source released under MIT licence in April 2024']},
+ {v:'5.0',d:'Jun 1991',hw:'386 PCs with megabytes of RAM',e:1,
+  n:['DOS=HIGH and UMBs with HIMEM.SYS and EMM386 — big memory savings','Full-screen EDIT editor and QBasic (replacing GW-BASIC)','DOSKEY command history, UNDELETE, UNFORMAT, on-line HELP','First big retail upgrade box — a commercial hit, driven by competition from DR-DOS 5.0']},
+ {v:'6.0–6.22',d:'1993–1994',hw:'Small hard disks filling up; viruses spreading by floppy',e:1,
+  n:['6.0: DoubleSpace disk compression, MemMaker, DEFRAG, MSBACKUP, anti-virus (MSAV), boot menus','6.2: ScanDisk','6.21: DoubleSpace removed after Stac Electronics won its patent case','6.22: DriveSpace compression — the last stand-alone MS-DOS']},
+ {v:'7.0',d:'Aug 1995',hw:'Windows 95',e:2,
+  n:['DOS becomes the boot loader of Windows 95','Long file names through VFAT','No separate retail product']},
+ {v:'7.1',d:'1996',hw:'Windows 95 OSR2 / Windows 98; disks above 2 GB',e:2,
+  n:['FAT32 — volumes far beyond the 2 GB FAT16 limit','Large-disk support']},
+ {v:'8.0',d:'Sep 2000',hw:'Windows ME',e:2,
+  n:['Last MS-DOS ever','Real-mode DOS boot hidden from users','Support for the DOS parts of 98/ME ended July 2006']}
+];
+SH.explorer(V,'MS-DOS ',['Stand-alone DOS','Inside Windows 9x']);
+
+// ---------- DOS prompt ----------
+const out=document.getElementById('out'),cmd=document.getElementById('cmd'),term=document.getElementById('term'),pr=document.getElementById('pr');
+let cwd='C:\\';
+const FILES={'C:\\':[['DOS','<DIR>'],['WINDOWS','<DIR>'],['GAMES','<DIR>'],['COMMAND.COM','54,645'],['AUTOEXEC.BAT','128'],['CONFIG.SYS','164']],
+ 'C:\\DOS':[['EDIT.COM','413'],['QBASIC.EXE','194,309'],['MEM.EXE','32,150'],['SCANDISK.EXE','124,262'],['FORMAT.COM','22,916']],
+ 'C:\\WINDOWS':[['WIN.COM','44,170'],['SYSTEM','<DIR>']],'C:\\GAMES':[['PRINCE.EXE','103,040']]};
+const TXT={'AUTOEXEC.BAT':'@ECHO OFF\nPROMPT $P$G\nPATH C:\\DOS;C:\\WINDOWS\nLH C:\\DOS\\MOUSE.COM\nLH C:\\DOS\\SMARTDRV.EXE\nSET TEMP=C:\\DOS',
+ 'CONFIG.SYS':'DEVICE=C:\\DOS\\HIMEM.SYS\nDEVICE=C:\\DOS\\EMM386.EXE NOEMS\nDOS=HIGH,UMB\nFILES=40\nBUFFERS=20\nDEVICEHIGH=C:\\DOS\\ANSI.SYS'};
+function p(s,c){const d=document.createElement('div');if(c)d.className=c;d.textContent=s;out.appendChild(d);term.scrollTop=term.scrollHeight;}
+function run(raw){
+  const line=raw.trim();p(cwd+'> '+raw);if(!line)return;
+  const [c,...a]=line.split(/\s+/);const arg=a.join(' ').toUpperCase();
+  switch(c.toUpperCase()){
+   case 'HELP':p('Commands in this simulation: DIR  CD  TYPE  VER  MEM  DATE  CLS  ECHO  WIN  HELP','hl');break;
+   case 'VER':p('MS-DOS Version 6.22');break;
+   case 'CLS':out.innerHTML='';break;
+   case 'DATE':{const t=new Date();p('Current date is '+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][t.getDay()]+' '+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')+'-'+t.getFullYear());break;}
+   case 'ECHO':p(a.join(' ')||'ECHO is on');break;
+   case 'MEM':p('Memory Type        Total  =   Used  +   Free\n----------------  -------   -------   -------\nConventional         640K       42K      598K\nUpper                155K       61K       94K\nExtended (XMS)     7,424K    2,240K    5,184K\n\nLargest executable program size   598K (612,336 bytes)\nMS-DOS is resident in the high memory area.');break;
+   case 'DIR':{const L=FILES[cwd]||[];p(' Volume in drive C is VIJAY_PC\n Directory of '+cwd+'\n');L.forEach(f=>{const [n,e]=f[0].includes('.')?f[0].split('.'):[f[0],''];p(n.padEnd(9)+e.padEnd(4)+f[1].padStart(10)+'  11-15-26  6:41a');});p('        '+L.length+' file(s)');break;}
+   case 'CD':case 'CHDIR':{if(!arg){p(cwd);break;}if(arg==='..'||arg==='\\'){cwd='C:\\';}else{const t=(cwd==='C:\\'?'C:\\':cwd+'\\')+arg.replace(/^\\/,'');if(FILES[t])cwd=t;else p('Invalid directory');}pr.textContent=cwd+'>';break;}
+   case 'TYPE':{const f=arg.split('\\').pop();if(TXT[f]&&cwd==='C:\\')p(TXT[f]);else p('File not found - '+arg);break;}
+   case 'WIN':p('Windows 3.1 would start here… (see Episode 02)','hl');break;
+   case 'FORMAT':p('WARNING, ALL DATA ON NON-REMOVABLE DISK DRIVE C: WILL BE LOST!\nProceed with Format (Y/N)? N\n(This simulation keeps your drive safe.)','hl');break;
+   case 'EXIT':p('There is nowhere to exit to — DOS is the whole computer.');break;
+   default:p('Bad command or file name');
+  }
+}
+cmd.addEventListener('keydown',e=>{if(e.key==='Enter'){run(cmd.value);cmd.value='';}});
+term.addEventListener('click',()=>cmd.focus());
+['VER','DIR','MEM','TYPE CONFIG.SYS','TYPE AUTOEXEC.BAT','CD DOS','CD ..','FORMAT C:','HELP'].forEach(c=>{const b=document.createElement('button');b.textContent=c;b.onclick=()=>{run(c);};document.getElementById('chips').appendChild(b);});
+p('Starting MS-DOS...\n\nHIMEM is testing extended memory...done.\n\nC:\\>ver\n\nMS-DOS Version 6.22\n\nType HELP for the commands in this simulation.');
+</script>
+</body>
+</html>

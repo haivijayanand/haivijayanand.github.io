@@ -1,0 +1,156 @@
+title: dBase, FoxPro and Access: databases on the desk
+years: 1980 – 2015 (and still running)
+lede: Before cloud apps and ERP, small businesses ran on database programs built by one clever person with dBase, Clipper or FoxPro — stock registers, billing, payroll, member lists. Then the world moved to SQL servers, and the desktop database quietly retired.
+desc: Why desktop databases were created, how dBase, Clipper, FoxPro, Paradox and Access worked, their versions, rivals, retirement and today's replacements.
+
+<section id="glance" data-toc="At a glance">
+  <div class="stats">
+    <div class="stat"><div class="v">1970</div><div class="k">E. F. Codd publishes the relational model at IBM</div></div>
+    <div class="stat"><div class="v">1980</div><div class="k">dBase II released by Ashton-Tate (there was never a dBase I)</div></div>
+    <div class="stat"><div class="v">1992</div><div class="k">Microsoft buys Fox Software and launches Access</div></div>
+    <div class="stat"><div class="v">Dec 2004</div><div class="k">Visual FoxPro 9.0 — the final version</div></div>
+    <div class="stat"><div class="v">13 Jan 2015</div><div class="k">Extended support for Visual FoxPro 9 ended</div></div>
+    <div class="stat"><div class="v">.DBF</div><div class="k">dBase file format still inside every GIS shapefile</div></div>
+  </div>
+</section>
+
+<section id="need" data-toc="1 · The requirement">
+  <h2><span class="n">01</span>The requirement: records, not just numbers</h2>
+  <p>Spreadsheets handled numbers, but a business also keeps <b>records</b>: thousands of customers, invoices, spare parts, employees. On paper these were card indexes and registers; on mainframes they were COBOL files maintained by a data-processing department. Small firms had neither the money nor the staff.</p>
+  <p>In 1978 Wayne Ratliff, a contractor at NASA's Jet Propulsion Laboratory, wrote <b>Vulcan</b> for CP/M, modelled on JPL's mainframe program JPLDIS, to manage his football-pool data. Ashton-Tate bought marketing rights and sold it in 1980 as <b>dBase II</b> — "II" because a version 2 sounded more mature.</p>
+  <table>
+    <tr><th style="width:28%">Requirement</th><th style="width:34%">Why</th><th>How desktop databases answered it</th></tr>
+    <tr><td>Store thousands of records on floppy and hard disk</td><td>Too many for memory or a spreadsheet</td><td>Fixed-length records in <code>.DBF</code> files, read one at a time</td></tr>
+    <tr><td>Find records fast</td><td>Lookups by code, name or date</td><td>Index files (<code>.NDX</code>, <code>.CDX</code>), later Rushmore query optimisation</td></tr>
+    <tr><td>Interactive use</td><td>Clerks needed answers immediately</td><td>The "dot prompt": type <code>LIST FOR qty &lt; 10</code> and see the result</td></tr>
+    <tr><td>Build complete applications</td><td>Menus, data-entry screens, reports</td><td>A programming language (xBase) with <code>@ SAY ... GET</code> screens and report writers</td></tr>
+    <tr><td>Sell the application</td><td>Consultants wanted to distribute their programs</td><td>Run-time versions and compilers (Clipper, FoxPro) producing stand-alone <code>.EXE</code> files</td></tr>
+  </table>
+</section>
+
+<section id="try" data-toc="2 · Try a query">
+  <h2><span class="n">02</span>Try it: the same question in xBase and SQL</h2>
+  <p>A small spares register. Pick a question to see the dBase/FoxPro dot-prompt command, the SQL that replaced it, and the answer.</p>
+  <div class="demo">
+    <div class="chips" id="qChips"></div>
+    <div class="two" style="gap:14px">
+      <div><b style="color:var(--navy)">dBase / FoxPro dot prompt</b><pre id="qX" class="term" style="height:auto;min-height:70px;margin:6px 0"></pre></div>
+      <div><b style="color:var(--navy)">SQL (Access, SQL Server, SQLite)</b><pre id="qS" class="term" style="height:auto;min-height:70px;margin:6px 0"></pre></div>
+    </div>
+    <table id="qT" style="max-width:760px"></table>
+  </div>
+</section>
+
+<section id="inside" data-toc="3 · Technology inside">
+  <h2><span class="n">03</span>Technology inside</h2>
+  <table>
+    <tr><th>Element</th><th>What it was</th></tr>
+    <tr><td>Data file</td><td><code>.DBF</code>: header describing fields (C character, N numeric, D date, L logical, M memo) followed by fixed-length records; a deletion flag byte per record (<code>PACK</code> removed them)</td></tr>
+    <tr><td>Navigation model</td><td>Record-at-a-time: <code>USE</code>, <code>GO TOP</code>, <code>SKIP</code>, <code>SEEK</code>, <code>DO WHILE .NOT. EOF()</code> — very different from SQL's set-at-a-time thinking</td></tr>
+    <tr><td>Indexes</td><td>B-tree index files; FoxPro's compound <code>.CDX</code> and <b>Rushmore</b> technology combined several indexes to answer queries very fast</td></tr>
+    <tr><td>Language</td><td>"xBase": interpreted in dBase; compiled by Clipper; pseudo-compiled and very fast in FoxPro; object-oriented in Visual FoxPro</td></tr>
+    <tr><td>Multi-user</td><td>Files shared over Novell NetWare with record locking (<code>RLOCK()</code>) — fragile when a PC crashed mid-write</td></tr>
+    <tr><td>Access</td><td>Jet database engine, a single <code>.MDB</code> file holding tables, queries, forms, reports and VBA; SQL and visual query design</td></tr>
+  </table>
+</section>
+
+<section id="versions" data-toc="4 · Version explorer">
+  <h2><span class="n">04</span>Version explorer</h2>
+  <p>Blue chips: dBase and Clipper. Amber chips: FoxPro and Access (Microsoft).</p>
+  <div class="vbar" id="vbar"></div>
+  <div class="vpanel" id="vpanel"></div>
+  <div class="callout amber"><b>The turning point was dBase IV (1988):</b> late, slow and buggy. Users and developers moved to the faster compatible products — FoxBASE/FoxPro and Clipper — and Ashton-Tate never recovered. It was bought by Borland in 1991.</div>
+</section>
+
+<section id="rivals" data-toc="5 · Contemporaries">
+  <h2><span class="n">05</span>Contemporaries</h2>
+  <table>
+    <tr><th>Product</th><th>Maker · year</th><th>Strength</th><th>Fate</th></tr>
+    <tr><td><b>Clipper</b></td><td>Nantucket · 1985</td><td>Compiled dBase code into royalty-free .EXEs</td><td>Sold to Computer Associates (1992); lives on as open-source Harbour</td></tr>
+    <tr><td><b>Paradox</b></td><td>Ansa → Borland · 1985</td><td>Query By Example (QBE): fill in a grid to ask a question</td><td>Passed to Corel; faded</td></tr>
+    <tr><td><b>R:BASE</b></td><td>Microrim · 1981</td><td>Early relational, SQL-like database for PCs</td><td>Niche, still sold</td></tr>
+    <tr><td><b>DataEase, Clarion</b></td><td>1980s</td><td>Form-based application builders</td><td>Niche</td></tr>
+    <tr><td><b>Oracle, DB2, Sybase/SQL Server</b></td><td>1979 · 1983 · 1987/1989</td><td>Server databases with SQL, transactions and crash recovery</td><td>The architecture that won</td></tr>
+    <tr><td><b>FileMaker</b></td><td>Nashoba → Claris · 1985</td><td>Friendly database for the Mac</td><td>Still sold by Apple's Claris</td></tr>
+  </table>
+</section>
+
+<section id="retire" data-toc="6 · Retirement">
+  <h2><span class="n">06</span>Decline and retirement</h2>
+  <p>Three forces ended the desktop database era: <b>networks and the internet</b> (shared data needs a server, not a file on a shared drive), <b>SQL</b> as the universal language, and <b>packaged software</b> (accounting, ERP and later cloud apps) replacing custom-built programs.</p>
+  <ul>
+    <li><b>dBase:</b> Ashton-Tate was bought by Borland in 1991; the brand passed through several owners afterwards and survives only as a niche product.</li>
+    <li><b>Visual FoxPro:</b> Microsoft announced in March 2007 that 9.0 would be the last version; mainstream support ended January 2010 and extended support on 13 January 2015. It was 32-bit only.</li>
+    <li><b>Access:</b> still part of Microsoft 365 for Windows, used for departmental tools; Access web apps were withdrawn in 2018.</li>
+  </ul>
+</section>
+
+<section id="replace" data-toc="7 · Replacements">
+  <h2><span class="n">07</span>Replacements</h2>
+  <table>
+    <tr><th>Old job</th><th>Today</th></tr>
+    <tr><td>Custom billing / stock programs</td><td>Packaged accounting and ERP software; cloud SaaS</td></tr>
+    <tr><td>Shared data on a file server</td><td>SQL Server, PostgreSQL, MySQL/MariaDB; cloud databases</td></tr>
+    <tr><td>A single-file database inside an application</td><td><b>SQLite</b> (2000) — the most widely deployed database engine</td></tr>
+    <tr><td>Quick departmental apps</td><td>Access, Power Apps, Airtable, Google AppSheet and other low-code tools</td></tr>
+    <tr><td>Ad-hoc questions about data</td><td>Excel Power Query, Power BI, Python with pandas</td></tr>
+  </table>
+</section>
+
+<section id="legacy" data-toc="8 · Legacy">
+  <h2><span class="n">08</span>Legacy</h2>
+  <ul>
+    <li><b>The .DBF format</b> still carries the attribute table of every Esri shapefile used in GIS mapping.</li>
+    <li>Thousands of FoxPro and Clipper applications still run in small firms and offices, kept alive in virtual machines and DOSBox.</li>
+    <li>xBase made millions of non-programmers into application builders — the spirit of today's low-code tools.</li>
+    <li>Rushmore-style index combination influenced query optimisation in later Microsoft products.</li>
+  </ul>
+</section>
+
+<section id="lessons" data-toc="9 · Lessons">
+  <h2><span class="n">09</span>Lessons for engineers</h2>
+  <ol>
+    <li><b>A data format can outlive every program that wrote it.</b> Choose formats with long lives.</li>
+    <li><b>Record-at-a-time code does not scale to networks;</b> set-based SQL and transactions do.</li>
+    <li><b>A late, buggy release can sink a market leader</b> when compatible competitors exist.</li>
+    <li><b>Plan the migration before end of support,</b> not after — unsupported data systems become risks.</li>
+  </ol>
+</section>
+
+<section id="sources">
+  <h2>Sources &amp; further reading</h2>
+  <ol class="src">
+    <li><a href="https://en.wikipedia.org/wiki/DBase">Wikipedia — dBase</a> · <a href="https://en.wikipedia.org/wiki/FoxPro">FoxPro</a> · <a href="https://en.wikipedia.org/wiki/Clipper_(programming_language)">Clipper</a></li>
+    <li><a href="https://en.wikipedia.org/wiki/Visual_FoxPro">Wikipedia — Visual FoxPro</a></li>
+    <li><a href="https://learn.microsoft.com/en-us/lifecycle/end-of-support/end-of-support-2015">Microsoft Learn — products ending support in 2015 (Visual FoxPro 9.0)</a></li>
+    <li><a href="https://en.wikipedia.org/wiki/Microsoft_Access">Wikipedia — Microsoft Access</a></li>
+    <li>E. F. Codd, "A Relational Model of Data for Large Shared Data Banks", <i>Communications of the ACM</i>, 1970.</li>
+  </ol>
+</section>
+<!--SCRIPT-->
+const V=[
+ {v:'dBase II',d:'1980',hw:'CP/M machines, then the IBM PC',n:['Based on Wayne Ratliff\'s Vulcan','Dot prompt plus a programming language','Up to 32 fields per record','Made Ashton-Tate a top-three software company']},
+ {v:'dBase III / III+',d:'1984 / 1986',hw:'IBM PC/XT/AT with hard disk',n:['Rewritten in C for the PC','III Plus added the menu-driven "Assistant" and networking','The peak of dBase; the language became the "xBase" standard']},
+ {v:'dBase IV',d:'1988',hw:'286/386 PCs',n:['Added SQL and a Control Center','Late, slow and buggy','Customers moved to FoxPro and Clipper; Borland bought Ashton-Tate (1991)']},
+ {v:'Clipper',d:'1985–1997',hw:'DOS PCs on Novell networks',n:['Compiler for dBase programs: fast stand-alone .EXE files, no run-time fee','Clipper 5 (1990) added code blocks and more','Successor projects: CA-Visual Objects; open-source Harbour today']},
+ {v:'FoxBASE / FoxPro 1–2',d:'1984–1991',e:2,hw:'DOS PCs',n:['Fox Software\'s dBase-compatible product — much faster','FoxPro 2.0 (1991): Rushmore optimisation and SQL SELECT','Microsoft bought Fox Software in 1992']},
+ {v:'FoxPro 2.6',d:'1994',e:2,hw:'DOS, Windows, Mac, Unix',n:['Same language across four platforms','Huge base of business applications through the 1990s']},
+ {v:'Visual FoxPro 3–9',d:'1995–2004',e:2,hw:'Windows 95 to XP',n:['Object-oriented, visual form designer, client-server features','VFP 9.0: December 2004; SP2 (2007) was the last update','Extended support ended 13 January 2015']},
+ {v:'Access 1.0–97',d:'1992–1997',e:2,hw:'Windows 3.1 / 95',n:['Jet engine, single .MDB file, visual query designer','Access Basic → VBA (Access 95)','Bundled in Office Professional: a database on every office PC']},
+ {v:'Access 2007 → 365',d:'2007 → today',e:2,hw:'Windows; links to SQL Server and SharePoint',n:['.ACCDB format','Front end for SQL Server data','Still sold in Microsoft 365 for Windows']}
+];
+SH.explorer(V,'',['dBase family','Microsoft (FoxPro, Access)']);
+// xBase vs SQL demo
+const T=[['B6204','Ball bearing 6204',42,20,'Store A'],['S3550','Oil seal 35x50',8,15,'Store A'],['G1210','Gasket 12 mm',150,50,'Store B'],['B6305','Ball bearing 6305',6,10,'Store B'],['O0220','O-ring 22x2',30,40,'Store A'],['C0812','Coupling 8/12',3,4,'Store C']];
+const Q=[
+ ['Items below reorder level','USE SPARES\nLIST code, name, qty FOR qty < reorder','SELECT code, name, qty\nFROM spares\nWHERE qty < reorder;',()=>T.filter(r=>r[2]<r[3]).map(r=>[r[0],r[1],r[2]]),['code','name','qty']],
+ ['Sorted by quantity','USE SPARES\nINDEX ON qty TO byqty\nLIST code, name, qty','SELECT code, name, qty\nFROM spares\nORDER BY qty;',()=>[...T].sort((a,b)=>a[2]-b[2]).map(r=>[r[0],r[1],r[2]]),['code','name','qty']],
+ ['Find one part','USE SPARES INDEX bycode\nSEEK "B6305"\nDISPLAY','SELECT *\nFROM spares\nWHERE code = \'B6305\';',()=>T.filter(r=>r[0]==='B6305'),['code','name','qty','reorder','store']],
+ ['Stock per store','USE SPARES\nINDEX ON store TO bystidx\nTOTAL ON store TO bystore FIELDS qty\nUSE bystore\nLIST store, qty','SELECT store, SUM(qty) AS qty\nFROM spares\nGROUP BY store;',()=>{const m={};T.forEach(r=>m[r[4]]=(m[r[4]]||0)+r[2]);return Object.entries(m);},['store','qty']]
+];
+const qc=document.getElementById('qChips');
+function runQ(i){const q=Q[i];document.getElementById('qX').textContent='. '+q[1].replace(/\n/g,'\n. ');document.getElementById('qS').textContent=q[2];
+ document.getElementById('qT').innerHTML='<tr>'+q[4].map(h=>'<th>'+h+'</th>').join('')+'</tr>'+q[3]().map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('');
+ [...qc.children].forEach((b,j)=>b.style.background=j===i?'var(--sky)':'#fff');}
+Q.forEach((q,i)=>{const b=document.createElement('button');b.textContent=q[0];b.onclick=()=>runQ(i);qc.appendChild(b);});
+runQ(0);

@@ -1,0 +1,171 @@
+title: Finite element analysis: from Boeing wings to ANSYS
+years: 1956 → today
+lede: Will this bracket crack? How hot will this casing get? What are this gearbox housing's natural frequencies? Hand formulas cover only simple shapes. The finite element method cuts a complex part into thousands of small pieces with simple behaviour and solves them together — a job that only computers can do. FEA grew up with the computer, from aircraft companies and NASA to every engineer's desktop.
+desc: History of the finite element method and its software: Boeing and Clough, NASTRAN, ANSYS, MARC, ABAQUS, ADINA, LS-DYNA, HyperMesh, COMSOL and CFD codes, open solvers (Code_Aster, CalculiX, Elmer, OpenFOAM), recent mergers, verification, and an interactive bar-element solver showing stiffness assembly and mesh convergence.
+
+<section id="glance" data-toc="At a glance">
+  <div class="stats">
+    <div class="stat"><div class="v">1956</div><div class="k">Turner, Clough, Martin and Topp (Boeing) publish the stiffness method for wings</div></div>
+    <div class="stat"><div class="v">1960</div><div class="k">Ray Clough names it the "finite element method"</div></div>
+    <div class="stat"><div class="v">1968</div><div class="k">NASA's NASTRAN structural analysis program</div></div>
+    <div class="stat"><div class="v">1970</div><div class="k">John Swanson releases ANSYS</div></div>
+    <div class="stat"><div class="v">1978</div><div class="k">ABAQUS for nonlinear analysis</div></div>
+    <div class="stat"><div class="v">2025</div><div class="k">Synopsys completes its purchase of Ansys</div></div>
+  </div>
+</section>
+
+<section id="need" data-toc="1 · The requirement">
+  <h2><span class="n">01</span>The requirement: analyse shapes that formulas cannot</h2>
+  <p>Beam, plate and shell formulas work for idealised shapes. Real parts — a swept aircraft wing, a cast housing, a nuclear pressure vessel — needed either rough approximations, large safety factors or expensive physical tests. In the 1940s mathematicians (Hrennikoff in 1941, <b>Richard Courant</b> in 1943) suggested splitting a continuum into small pieces. In 1956 <b>M. J. Turner, R. W. Clough, H. C. Martin and L. J. Topp</b> at Boeing published a method to compute the stiffness of delta wings from small triangular panels. John Argyris in Germany and the UK developed matrix methods at the same time. In 1960 Clough coined the name "finite element method"; <b>O. C. Zienkiewicz</b>'s 1967 textbook spread it worldwide.</p>
+  <table>
+    <tr><th style="width:28%">Requirement</th><th style="width:34%">Why</th><th>What FEA software offered</th></tr>
+    <tr><td>Stress in complex shapes</td><td>Weight-critical aircraft and spacecraft</td><td>Meshes of beams, shells and solids</td></tr>
+    <tr><td>Natural frequencies and modes</td><td>Resonance destroys rotating machinery and structures</td><td>Eigenvalue (modal) analysis</td></tr>
+    <tr><td>Heat flow, fluids, electromagnetics</td><td>The same mathematics applies to many physics</td><td>Thermal, CFD and multiphysics solvers</td></tr>
+    <tr><td>Nonlinear behaviour</td><td>Plasticity, contact, large deformation, crashes</td><td>Incremental and explicit solvers</td></tr>
+    <tr><td>Fewer prototypes</td><td>Tests are slow and costly</td><td>Virtual testing before metal is cut</td></tr>
+  </table>
+</section>
+
+<section id="how" data-toc="2 · How FEA works">
+  <h2><span class="n">02</span>How FEA works, in four steps</h2>
+  <div class="stack">
+    <div class="layer l1"><b>1. Pre-processing</b> — geometry from CAD (Episode 30), simplified; a <b>mesh</b> of elements (beams, shells, tetrahedra, hexahedra); material properties; loads and supports.</div>
+    <div class="layer l2"><b>2. Element equations</b> — each element's stiffness matrix links its node forces to node displacements.</div>
+    <div class="layer l3"><b>3. Assembly and solution</b> — element matrices are added into one large global system <b>K u = F</b>, often millions of equations, solved by sparse direct or iterative solvers (Episode 27's linear algebra on a huge scale).</div>
+    <div class="layer l4"><b>4. Post-processing</b> — stresses, strains and mode shapes computed from displacements and shown as colour contour plots.</div>
+  </div>
+</section>
+
+<section id="try" data-toc="3 · Try: a bar in elements">
+  <h2><span class="n">03</span>Try it: a tapered bar, element by element</h2>
+  <p>A steel bar fixed at the left, tapering from area A₁ to A₂, pulled by force P at the right. Each element is a uniform bar with stiffness k = EA/L. Increase the number of elements and watch the answer approach the exact solution — the essence of <b>mesh convergence</b>.</p>
+  <div class="demo">
+    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:14px">
+      <label>Elements <input id="feN" type="range" min="1" max="40" value="3"> <b id="feNv"></b></label>
+      <label>Taper A₁/A₂ <input id="feT" type="range" min="1" max="8" step="0.5" value="4"> <b id="feTv"></b></label>
+      <span>L = 1 m, A₂ = 100 mm², E = 200 GPa, P = 10 kN</span>
+    </div>
+    <svg id="feSvg" viewBox="0 0 800 300" style="display:block;width:100%;background:#fff;border:1px solid var(--line);border-radius:8px;margin-top:8px"></svg>
+    <div class="two" style="margin-top:8px"><pre class="term" id="feK" style="margin:0;white-space:pre;overflow-x:auto;font-size:12px"></pre><div id="feRes"></div></div>
+  </div>
+</section>
+
+<section id="codes" data-toc="4 · The big codes">
+  <h2><span class="n">04</span>The big codes</h2>
+  <table>
+    <tr><th>Code</th><th>Year</th><th>Origin</th><th>Known for</th></tr>
+    <tr><td><b>NASTRAN</b></td><td>1968</td><td>NASA (with MSC, Computer Sciences Corp. and others)</td><td>Linear structural, modal and buckling analysis for aerospace; MSC Nastran (now Hexagon) and other versions still dominate aircraft work</td></tr>
+    <tr><td><b>ANSYS</b></td><td>1970</td><td>John Swanson, Swanson Analysis Systems, Pittsburgh</td><td>General-purpose; nuclear industry origins; Workbench environment; acquired Fluent (CFD) in 2006 and LS-DYNA in 2019. Part of Synopsys since July 2025</td></tr>
+    <tr><td><b>MARC</b></td><td>1971</td><td>Pedro Marcal, Brown University</td><td>First commercial nonlinear FEA; now Hexagon</td></tr>
+    <tr><td><b>ADINA</b></td><td>1975</td><td>K. J. Bathe, MIT</td><td>Nonlinear and fluid–structure interaction; acquired by Bentley Systems in 2022</td></tr>
+    <tr><td><b>DYNA3D / LS-DYNA</b></td><td>1976 / 1987</td><td>John Hallquist, Lawrence Livermore Lab</td><td>Explicit dynamics: crash, impact, explosions</td></tr>
+    <tr><td><b>ABAQUS</b></td><td>1978</td><td>Hibbitt, Karlsson &amp; Sorensen</td><td>Nonlinear, contact, materials; bought by Dassault Systèmes in 2005 (SIMULIA)</td></tr>
+    <tr><td><b>I-DEAS, COSMOS</b></td><td>1980s</td><td>SDRC; SRAC</td><td>Integrated CAD/FEA; COSMOS became SolidWorks Simulation</td></tr>
+    <tr><td><b>HyperMesh / OptiStruct</b></td><td>1990 / 1994</td><td>Altair</td><td>Meshing and topology optimisation; Altair acquired by Siemens in 2025</td></tr>
+    <tr><td><b>COMSOL Multiphysics</b></td><td>1998</td><td>Sweden (first called FEMLAB, on MATLAB)</td><td>Coupled physics: thermal–structural, electromagnetic, acoustic</td></tr>
+  </table>
+  <div class="callout">CFD grew alongside: <b>PHOENICS</b> (1981, Brian Spalding), <b>Fluent</b> (1983), <b>STAR-CD</b> (1987) and the open-source <b>OpenFOAM</b> (released 2004).</div>
+</section>
+
+<section id="open" data-toc="5 · Open-source solvers">
+  <h2><span class="n">05</span>Open-source and free solvers</h2>
+  <table>
+    <tr><th>Software</th><th>Origin</th><th>Notes</th></tr>
+    <tr><td><b>Code_Aster</b> + <b>Salome-Meca</b></td><td>EDF (French electricity utility), open since 2001</td><td>Industrial-strength structural and thermal analysis, verified for nuclear plant work</td></tr>
+    <tr><td><b>CalculiX</b></td><td>Guido Dhondt and Klaus Wittig (MTU Aero Engines staff)</td><td>Abaqus-like input; used through <b>PrePoMax</b> (Windows GUI) and FreeCAD's FEM workbench</td></tr>
+    <tr><td><b>Elmer</b></td><td>CSC, Finland</td><td>Multiphysics</td></tr>
+    <tr><td><b>OpenFOAM</b></td><td>2004</td><td>CFD toolbox</td></tr>
+    <tr><td><b>FreeFEM, FEniCS</b></td><td>Academic</td><td>Write equations directly in code</td></tr>
+    <tr><td><b>Ansys Student</b>, <b>Abaqus Learning Edition</b></td><td>Free but closed</td><td>Limited node counts; for learning only</td></tr>
+  </table>
+</section>
+
+<section id="versions" data-toc="6 · Version explorer">
+  <h2><span class="n">06</span>Version explorer</h2>
+  <p>Blue chips: commercial codes. Amber chips: open-source solvers.</p>
+  <div class="vbar" id="vbar"></div>
+  <div class="vpanel" id="vpanel"></div>
+</section>
+
+<section id="trust" data-toc="7 · Trusting the results">
+  <h2><span class="n">07</span>Trusting the results: verification and validation</h2>
+  <ul>
+    <li><b>Mesh convergence.</b> Refine until the answer stops changing — as in the demo above. Stresses converge more slowly than displacements.</li>
+    <li><b>Hand check.</b> Compare with a simple formula (beam, pressure vessel) before believing a contour plot.</li>
+    <li><b>Singularities.</b> Sharp corners and point loads give stresses that keep rising with refinement; they are not real.</li>
+    <li><b>Validation.</b> Compare with strain-gauge and modal test results (Episode 28) — the most convincing evidence.</li>
+    <li><b>Standards.</b> NAFEMS benchmarks and industry codes (ASME, aerospace standards) define acceptable practice.</li>
+  </ul>
+</section>
+
+<section id="install" data-toc="8 · Getting the tools">
+  <h2><span class="n">08</span>Getting the tools safely</h2>
+  <table>
+    <tr><th>Software</th><th>Official site</th><th>Notes</th></tr>
+    <tr><td>PrePoMax (CalculiX)</td><td><code>prepomax.fs.um.si</code></td><td>Windows, unzip and run</td></tr>
+    <tr><td>Salome-Meca / Code_Aster</td><td><code>code-aster.org</code></td><td>Windows build or Linux container (WSL, Episode 20)</td></tr>
+    <tr><td>FreeCAD FEM</td><td><code>freecad.org</code></td><td><code>winget install FreeCAD.FreeCAD</code></td></tr>
+    <tr><td>Ansys Student</td><td><code>ansys.com</code></td><td>Free, limited problem size</td></tr>
+  </table>
+</section>
+
+<section id="lessons" data-toc="9 · Lessons">
+  <h2><span class="n">09</span>Lessons for engineers</h2>
+  <ol>
+    <li><b>Garbage in, colourful garbage out.</b> Boundary conditions decide the answer more than the solver does.</li>
+    <li><b>Know the element.</b> Linear tetrahedra are too stiff in bending; use quadratic elements or more of them.</li>
+    <li><b>Report the convergence.</b> A result without mesh study and hand check is an opinion.</li>
+    <li><b>Test and analysis together.</b> Modal tests on the rig and FEA of the housing should agree — or tell you which one is wrong.</li>
+  </ol>
+</section>
+
+<section id="sources">
+  <h2>Sources &amp; further reading</h2>
+  <ol class="src">
+    <li>M. J. Turner, R. W. Clough, H. C. Martin, L. J. Topp, "Stiffness and deflection analysis of complex structures", <i>J. Aeronautical Sciences</i> 23 (1956) 805–823.</li>
+    <li><a href="https://en.wikipedia.org/wiki/Finite_element_method">Wikipedia — Finite element method</a> · <a href="https://en.wikipedia.org/wiki/Nastran">Nastran</a> · <a href="https://en.wikipedia.org/wiki/Ansys">Ansys</a> · <a href="https://en.wikipedia.org/wiki/Abaqus">Abaqus</a></li>
+    <li><a href="https://news.synopsys.com/2025-07-17-Synopsys-Completes-Acquisition-of-Ansys">Synopsys — completes acquisition of Ansys (17 July 2025)</a></li>
+    <li><a href="https://www.code-aster.org/">Code_Aster</a> · <a href="http://www.calculix.de/">CalculiX</a> · <a href="https://www.openfoam.com/">OpenFOAM</a> · <a href="https://www.nafems.org/">NAFEMS</a></li>
+    <li>O. C. Zienkiewicz, <i>The Finite Element Method in Structural and Continuum Mechanics</i>, McGraw-Hill, 1967.</li>
+  </ol>
+</section>
+<!--SCRIPT-->
+const V=[
+ {v:'Boeing stiffness method',d:'1956',hw:'IBM 701 / 704',n:['Triangular panels for delta wings','Matrix structural analysis']},
+ {v:'NASTRAN',d:'1968 → today',hw:'Mainframes, then workstations and PCs',n:['NASA structural analysis','MSC Nastran (Hexagon), NX Nastran (Siemens)']},
+ {v:'ANSYS',d:'1970 → today',hw:'Mainframes to HPC clusters',n:['John Swanson','Workbench, Fluent, LS-DYNA joined','Synopsys since July 2025']},
+ {v:'MARC / ADINA / ABAQUS',d:'1971 / 1975 / 1978',hw:'Mainframes to PCs',n:['Nonlinear FEA pioneers','ABAQUS now Dassault SIMULIA']},
+ {v:'LS-DYNA',d:'1976 → today',hw:'Supercomputers to clusters',n:['Explicit crash and impact','Ansys since 2019']},
+ {v:'COMSOL',d:'1998 → today',hw:'Windows, Linux, Mac',n:['Began as FEMLAB on MATLAB','Multiphysics coupling']},
+ {v:'Code_Aster',d:'1989 / open 2001',e:2,hw:'Linux, Windows',n:['EDF in-house code','Salome-Meca platform']},
+ {v:'CalculiX / Elmer',d:'1990s–2000s',e:2,hw:'Windows, Linux',n:['Free structural and multiphysics solvers','PrePoMax GUI for CalculiX']},
+ {v:'OpenFOAM',d:'2004 → today',e:2,hw:'Linux, WSL',n:['Open-source CFD toolbox']}
+];
+SH.explorer(V,'',['Commercial codes','Open-source solvers']);
+const q=id=>document.getElementById(id);
+function fe(){const N=+q('feN').value,tr=+q('feT').value;q('feNv').textContent=N;q('feTv').textContent=tr;
+ const L=1,E=200e9,A2=100e-6,A1=A2*tr,P=1e4,le=L/N,A=x=>A1+(A2-A1)*x/L;
+ const k=[...Array(N)].map((_,i)=>E*A((i+0.5)*le)/le);
+ // tip displacement: springs in series
+ const u=[0];k.forEach(ki=>u.push(u[u.length-1]+P/ki));const tip=u[N];
+ const exact=tr===1?P*L/(E*A2):P*L*Math.log(A1/A2)/(E*(A1-A2));const err=(tip-exact)/exact*100;
+ const sx=x=>60+x/L*660;let s='';
+ // bar drawing
+ for(let i=0;i<N;i++){const x0=i*le,x1=(i+1)*le,h=Math.sqrt(A((i+0.5)*le)/A1)*70;s+='<rect x="'+sx(x0)+'" y="'+(90-h/2)+'" width="'+(sx(x1)-sx(x0))+'" height="'+h+'" fill="'+(i%2?'#cfe0f2':'#9cc0e4')+'" stroke="#1f3b5c"/>';}
+ const hx=x=>Math.sqrt(A(x)/A1)*35;s+='<path d="M'+sx(0)+','+(90-hx(0))+' L'+sx(L)+','+(90-hx(L))+' M'+sx(0)+','+(90+hx(0))+' L'+sx(L)+','+(90+hx(L))+'" stroke="#d98a00" stroke-dasharray="5 3" fill="none"/>';
+ for(let i=0;i<=N;i++)s+='<circle cx="'+sx(i*le)+'" cy="90" r="'+(N>20?2:4)+'" fill="#1f3b5c"/>';
+ s+='<rect x="40" y="40" width="20" height="100" fill="url(#hatch)"/><defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#5b6672" stroke-width="2"/></pattern></defs>';
+ s+='<line x1="'+sx(L)+'" y1="90" x2="'+(sx(L)+60)+'" y2="90" stroke="#d98a00" stroke-width="3"/><path d="M'+(sx(L)+60)+',90 l-10,-6 v12z" fill="#d98a00"/><text x="'+(sx(L)+62)+'" y="80" font-size="13" fill="#b06e00">P</text>';
+ // stress plot
+ const sy=v=>285-v/(P/A2)*120;s+='<line x1="60" y1="285" x2="720" y2="285" stroke="#c9ced5"/><text x="60" y="152" font-size="12" fill="#5b6672">Axial stress along the bar (max '+(P/A2/1e6).toFixed(0)+' MPa)</text>';
+ let ex='';for(let i=0;i<=100;i++){const x=i/100*L;ex+=(i?'L':'M')+sx(x)+','+sy(P/A(x));}s+='<path d="'+ex+'" fill="none" stroke="#8a939e" stroke-width="4" opacity=".6"/>';
+ let st='';for(let i=0;i<N;i++){const sg=P/A((i+0.5)*le);st+=(i?'L':'M')+sx(i*le)+','+sy(sg)+' L'+sx((i+1)*le)+','+sy(sg);}s+='<path d="'+st+'" fill="none" stroke="#1f3b5c" stroke-width="2"/>';
+ s+='<g font-size="12"><line x1="540" y1="148" x2="565" y2="148" stroke="#8a939e" stroke-width="4" opacity=".6"/><text x="570" y="152">exact</text><line x1="620" y1="148" x2="645" y2="148" stroke="#1f3b5c" stroke-width="2"/><text x="650" y="152">FE (constant per element)</text></g>';
+ q('feSvg').innerHTML=s;
+ // global stiffness matrix
+ if(N<=6){const n=N+1,K=[...Array(n)].map(()=>Array(n).fill(0));k.forEach((ki,i)=>{K[i][i]+=ki;K[i+1][i+1]+=ki;K[i][i+1]-=ki;K[i+1][i]-=ki;});
+  q('feK').textContent='Global stiffness K (MN/m), nodes 1–'+n+':\n'+K.map(r=>r.map(v=>(v/1e6).toFixed(0).padStart(7)).join('')).join('\n')+'\n\nNode 1 is fixed: remove its row and column,\nthen solve K u = F with F = P at node '+n+'.';}
+ else q('feK').textContent='Global stiffness matrix is '+(N+1)+' × '+(N+1)+' — banded (tridiagonal):\neach node connects only to its neighbours.\nReal FE models have millions of rows, almost all zero,\nso solvers store only the non-zero entries (sparse).';
+ q('feRes').innerHTML='<div class="stats"><div class="stat"><div class="v">'+(tip*1000).toFixed(4)+' mm</div><div class="k">FE tip displacement</div></div><div class="stat"><div class="v">'+(exact*1000).toFixed(4)+' mm</div><div class="k">Exact: PL·ln(A₁/A₂) / E(A₁−A₂)</div></div><div class="stat"><div class="v">'+(err>=0?'+':'')+err.toFixed(2)+'%</div><div class="k">Error with '+N+' element'+(N>1?'s':'')+'</div></div></div><p style="margin:6px 0 0;font-size:14px">'+(tr===1?'A uniform bar is exact with one element — the element matches the physics.':'The stepped approximation makes stress jump between elements; refining the mesh smooths it and shrinks the error roughly as 1/N².')+'</p>';}
+['feN','feT'].forEach(i=>q(i).oninput=fe);fe();

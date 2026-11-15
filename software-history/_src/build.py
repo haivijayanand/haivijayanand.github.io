@@ -1,20 +1,22 @@
 """
 TOOL:    software-history/_src/build.py — builds episode pages from _src/NN.html fragments
 FAMILY:  software-history
-VERSION: 1.0.0
+VERSION: 1.1.0
 DATE:    2026-11-15
 CHAT:    Software history series — start with MS-DOS, publish all episodes
-CHANGES: 1.0.0 — fragment (meta lines + body + optional script) to full page with header block, TOC, nav
+CHANGES: 1.1.0 — Season 2 episodes 11–14 (DTP, graphics, prepress, packaging prepress); last-episode nav computed; 1.0.0 — fragment (meta lines + body + optional script) to full page with header block, TOC, nav
 """
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 import re, sys, pathlib, html
 SRC = pathlib.Path(__file__).parent
 OUT = SRC.parent
 SLUGS = {1:'01-ms-dos',2:'02-windows-1-to-3',3:'03-spreadsheets',4:'04-word-processors',5:'05-dbase-foxpro-access',
-         6:'06-os2-vs-windows-nt',7:'07-browser-wars',8:'08-windows-95-to-xp',9:'09-autocad-and-cad',10:'10-turbo-pascal-delphi-vb'}
+         6:'06-os2-vs-windows-nt',7:'07-browser-wars',8:'08-windows-95-to-xp',9:'09-autocad-and-cad',10:'10-turbo-pascal-delphi-vb',
+         11:'11-desktop-publishing',12:'12-graphics-software',13:'13-prepress',14:'14-packaging-prepress'}
 NAMES = {1:'MS-DOS',2:'Windows 1.0 to 3.11',3:'VisiCalc, Lotus 1-2-3 and Excel',4:'WordStar, WordPerfect and Word',
          5:'dBase, FoxPro and Access',6:'OS/2 vs Windows NT',7:'Netscape vs Internet Explorer',8:'Windows 95 to XP',
-         9:'AutoCAD and engineering CAD',10:'Turbo Pascal, Delphi and Visual Basic'}
+         9:'AutoCAD and engineering CAD',10:'Turbo Pascal, Delphi and Visual Basic',
+         11:'Desktop publishing',12:'Graphics software: vectors, pixels and plugins',13:'Prepress: from film to PDF',14:'Packaging prepress'}
 
 def build(n, version='1.0.0', date='2026-11-15', changes='First release'):
     raw = (SRC / f'{n:02d}.html').read_text()
@@ -26,7 +28,7 @@ def build(n, version='1.0.0', date='2026-11-15', changes='First release'):
         body, script = body.split('<!--SCRIPT-->', 1)
     toc = ''.join(f'<a href="#{i}">{t}</a>\n' for i, t in re.findall(r'<section id="([^"]+)" data-toc="([^"]+)"', body))
     prev = f'<a href="{SLUGS[n-1]}.html"><small>← Episode {n-1:02d}</small>{NAMES[n-1]}</a>' if n > 1 else '<a href="./"><small>Series</small>All episodes</a>'
-    nxt = f'<a class="nx" href="{SLUGS[n+1]}.html"><small>Next · Episode {n+1:02d}</small>{NAMES[n+1]} →</a>' if n < 10 else '<a class="nx" href="./"><small>Series</small>All episodes →</a>'
+    nxt = f'<a class="nx" href="{SLUGS[n+1]}.html"><small>Next · Episode {n+1:02d}</small>{NAMES[n+1]} →</a>' if n < max(SLUGS) else '<a class="nx" href="./"><small>Series</small>All episodes →</a>'
     page = f'''<!DOCTYPE html>
 <!--
 TOOL:    software-history/{SLUGS[n]}.html — Software Through the Ages · Episode {n:02d}: {NAMES[n]}

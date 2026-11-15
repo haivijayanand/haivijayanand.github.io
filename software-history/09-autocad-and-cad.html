@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!--
+TOOL:    software-history/09-autocad-and-cad.html — Software Through the Ages · Episode 09: AutoCAD and engineering CAD
+FAMILY:  software-history
+VERSION: 1.0.0
+DATE:    2026-11-15
+CHAT:    Software history series — start with MS-DOS, publish all episodes
+CHANGES: 1.0.0 — First release
+STATUS:  published
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Software Through the Ages · 09 · AutoCAD and engineering CAD: from drawing board to digital model</title>
+<meta name="description" content="Why CAD was created, how AutoCAD brought it to the PC, the move from 2D drafting to parametric 3D modelling, major versions and rivals, retirements and today&#x27;s cloud CAD.">
+<link rel="stylesheet" href="assets/sh.css">
+</head>
+<body>
+<header class="top">
+  <a href="/">← Home</a><a href="./">Series</a><div class="series">Software Through the Ages</div><div class="sp"></div>
+  <button id="btnWidth" title="Toggle wide / reading width">Reading width</button>
+  <button id="btnFs" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<div class="wrap">
+<div class="hero">
+  <div class="ep">EPISODE 09 · 1982 → today</div>
+  <h1>AutoCAD and engineering CAD: from drawing board to digital model</h1>
+  <p class="lede">Engineering drawings were once made with drafting machines, pencils and ink on tracing film. Computer-aided design moved from million-dollar mainframe terminals to the ordinary PC with AutoCAD in 1982, and then from lines to intelligent 3D models with parametric tools such as Pro/ENGINEER, SolidWorks and CATIA.</p>
+  <div class="byline">K Vijay Anand · Software history series · November 2026</div>
+</div>
+<div class="layout">
+<nav class="toc">
+<b>Contents</b>
+<a href="#glance">At a glance</a>
+<a href="#need">1 · The requirement</a>
+<a href="#param">2 · Explicit vs parametric</a>
+<a href="#inside">3 · Technology inside</a>
+<a href="#versions">4 · Version explorer</a>
+<a href="#rivals">5 · Contemporaries</a>
+<a href="#retire">6 · Retirements</a>
+<a href="#replace">7 · Today</a>
+<a href="#lessons">8 · Lessons</a>
+<a href="#sources">Sources</a>
+</nav>
+<main>
+<section id="glance" data-toc="At a glance">
+  <div class="stats">
+    <div class="stat"><div class="v">1963</div><div class="k">Ivan Sutherland's Sketchpad at MIT</div></div>
+    <div class="stat"><div class="v">Dec 1982</div><div class="k">AutoCAD 1.0 for the IBM PC</div></div>
+    <div class="stat"><div class="v">1988</div><div class="k">Pro/ENGINEER: parametric, feature-based solids</div></div>
+    <div class="stat"><div class="v">Nov 1994</div><div class="k">AutoCAD R13 — last release for DOS and Unix</div></div>
+    <div class="stat"><div class="v">1995</div><div class="k">SolidWorks brings parametric 3D to Windows PCs</div></div>
+    <div class="stat"><div class="v">.DWG</div><div class="k">AutoCAD's format: still the 2D drawing standard</div></div>
+  </div>
+</section>
+
+<section id="need" data-toc="1 · The requirement">
+  <h2><span class="n">01</span>The requirement: draw once, change many times</h2>
+  <p>A mechanical drawing on a drafting board took days. Changing a dimension meant erasing and redrawing every view, the dimensions and often several related drawings. Copies were blueprints; storage was plan cabinets. Aerospace and automotive companies built mainframe CAD in the 1960s–70s — <b>CADAM</b> at Lockheed, <b>CATIA</b> at Dassault Aviation, <b>Unigraphics</b> at McDonnell Douglas, Computervision and Intergraph systems — but a single seat cost as much as a house.</p>
+  <table>
+    <tr><th style="width:28%">Requirement</th><th style="width:34%">Why</th><th>How CAD answered it</th></tr>
+    <tr><td>Precise geometry</td><td>Manufacturing needs exact sizes, not drawn approximations</td><td>Coordinates stored as floating-point numbers; snaps to ends, centres, intersections</td></tr>
+    <tr><td>Easy revision</td><td>Designs change constantly</td><td>Move, copy, stretch, trim; layers to show or hide information</td></tr>
+    <tr><td>Reuse</td><td>Standard parts, title blocks, symbols</td><td>Blocks and libraries (bolts, bearings, welding symbols)</td></tr>
+    <tr><td>Affordable seats</td><td>Small firms and every draughtsman, not just aerospace</td><td>AutoCAD on a US$ 5,000 IBM PC instead of a mainframe terminal</td></tr>
+    <tr><td>One model for drawing, analysis and machining</td><td>Avoid re-entering geometry for FEA and CNC</td><td>3D solids feeding FEA, CAM toolpaths and later 3D printing</td></tr>
+  </table>
+</section>
+
+<section id="param" data-toc="2 · Explicit vs parametric">
+  <h2><span class="n">02</span>See it: explicit lines vs parametric features</h2>
+  <p>A plate with a hole that must stay in the centre. Drag the width slider. In a classic 2D drawing the hole stays at its old coordinates; in a parametric model it follows its design rule.</p>
+  <div class="demo">
+    <div class="toggle" id="pmTog"><button data-m="0" class="on">AutoCAD-style 2D lines</button><button data-m="1">Parametric model</button></div>
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+      <label>Plate width <input type="range" id="pmW" min="120" max="320" value="200"> <b id="pmWv">200</b> mm</label>
+    </div>
+    <svg id="pmSvg" viewBox="0 0 420 220" style="width:100%;max-width:640px;background:#fff;border:1px solid var(--line);border-radius:8px;margin-top:8px"></svg>
+    <p id="pmNote" style="margin:6px 0 0;color:var(--muted)"></p>
+  </div>
+</section>
+
+<section id="inside" data-toc="3 · Technology inside">
+  <h2><span class="n">03</span>Technology inside</h2>
+  <table>
+    <tr><th>Element</th><th>What it was</th></tr>
+    <tr><td>Entities</td><td>AutoCAD stores lines, arcs, circles, polylines, text, dimensions and blocks with exact coordinates — an "electronic drafting board"</td></tr>
+    <tr><td>File formats</td><td><b>DWG</b> (binary, changed every few releases) and <b>DXF</b> (open text exchange format, 1982); the Open Design Alliance (1998) produced compatible DWG libraries</td></tr>
+    <tr><td>Customisation</td><td>AutoLISP (1986) let firms automate their own standards; later ADS, ObjectARX (C++), VBA and .NET</td></tr>
+    <tr><td>Hardware</td><td>8087 maths co-processor (required from 1987), digitising tablets with menu overlays, pen plotters, then graphics cards and 3D mice</td></tr>
+    <tr><td>Solid kernels</td><td>Geometry engines shared across products: <b>Parasolid</b> (1988; NX, SolidWorks, Solid Edge) and <b>ACIS</b> (1989; AutoCAD's solids from R13), CATIA's CGM</td></tr>
+    <tr><td>Parametric modelling</td><td>Pro/ENGINEER (1988): sketches with dimensions and constraints, features (extrude, hole, fillet) stored in a history tree; change a number and the model rebuilds</td></tr>
+  </table>
+</section>
+
+<section id="versions" data-toc="4 · Version explorer">
+  <h2><span class="n">04</span>Version explorer</h2>
+  <p>Blue chips: AutoCAD. Amber chips: the 3D parametric generation.</p>
+  <div class="vbar" id="vbar"></div>
+  <div class="vpanel" id="vpanel"></div>
+  <div class="callout amber"><b>Two revolutions:</b> AutoCAD moved CAD from the mainframe to the PC (cost). Pro/ENGINEER and then SolidWorks moved it from drawings to intelligent 3D models (method). AutoCAD led the first and stayed dominant in 2D; it never led the second.</div>
+</section>
+
+<section id="rivals" data-toc="5 · Contemporaries">
+  <h2><span class="n">05</span>Contemporaries</h2>
+  <table>
+    <tr><th>System</th><th>Maker · year</th><th>Strength</th><th>Today</th></tr>
+    <tr><td><b>CADAM</b></td><td>Lockheed / IBM · 1970s</td><td>2D drafting on IBM mainframes for aerospace</td><td>Absorbed into Dassault's CATIA</td></tr>
+    <tr><td><b>CATIA</b></td><td>Dassault Systèmes · 1981</td><td>Surfaces and huge assemblies: aircraft and cars</td><td>Industry standard in aerospace and automotive</td></tr>
+    <tr><td><b>Unigraphics → NX</b></td><td>McDonnell Douglas → Siemens</td><td>CAD/CAM/CAE in one; Parasolid kernel</td><td>Siemens NX</td></tr>
+    <tr><td><b>I-DEAS</b></td><td>SDRC · 1982</td><td>Design with built-in simulation</td><td>Merged into NX</td></tr>
+    <tr><td><b>MicroStation</b></td><td>Intergraph / Bentley · 1980s</td><td>Civil, plant and infrastructure drawings (DGN format)</td><td>Bentley MicroStation</td></tr>
+    <tr><td><b>Pro/ENGINEER → Creo</b></td><td>PTC · 1988</td><td>First commercial parametric feature-based solid modeller</td><td>Renamed Creo (2011)</td></tr>
+    <tr><td><b>SolidWorks, Solid Edge, Inventor</b></td><td>1995 · 1996 · 1999</td><td>Parametric 3D on Windows at mid-range prices</td><td>Widely used in machine design</td></tr>
+    <tr><td><b>Onshape, Fusion</b></td><td>2015 · 2013</td><td>Cloud-based, browser or connected CAD</td><td>Growing, especially in education and start-ups</td></tr>
+  </table>
+</section>
+
+<section id="retire" data-toc="6 · Retirements">
+  <h2><span class="n">06</span>What retired — and what did not</h2>
+  <ul>
+    <li><b>The drafting board:</b> largely gone from design offices by the late 1990s.</li>
+    <li><b>AutoCAD for DOS and Unix:</b> R13 (November 1994) was the last; from R14 (1997) AutoCAD was Windows-only until the Mac version returned in 2010.</li>
+    <li><b>Perpetual licences:</b> Autodesk stopped selling them in 2016; AutoCAD is now a subscription.</li>
+    <li><b>Pen plotters and digitising tablets:</b> replaced by large-format inkjets and on-screen tools.</li>
+    <li><b>Product names:</b> Pro/ENGINEER became Creo, I-DEAS merged into NX, CADAM into CATIA. The geometry kernels underneath continued.</li>
+    <li><b>Not retired:</b> AutoCAD itself and the 2D drawing — still required for many contracts, approvals and shop floors.</li>
+  </ul>
+</section>
+
+<section id="replace" data-toc="7 · Today">
+  <h2><span class="n">07</span>Today's engineering software</h2>
+  <table>
+    <tr><th>Need</th><th>Today's tools</th></tr>
+    <tr><td>2D drafting and layouts</td><td>AutoCAD, AutoCAD LT, BricsCAD, DraftSight, LibreCAD</td></tr>
+    <tr><td>Mechanical 3D design</td><td>SolidWorks, Creo, NX, CATIA, Inventor, Solid Edge, Fusion, Onshape, FreeCAD</td></tr>
+    <tr><td>Analysis</td><td>ANSYS, Abaqus, NASTRAN, COMSOL — fed directly from the 3D model</td></tr>
+    <tr><td>Product data</td><td>PLM systems (Teamcenter, Windchill, 3DEXPERIENCE) managing models, revisions and approvals</td></tr>
+    <tr><td>Model-based definition</td><td>Dimensions and tolerances (GD&amp;T) carried on the 3D model itself, reducing the role of the 2D drawing</td></tr>
+  </table>
+</section>
+
+<section id="lessons" data-toc="8 · Lessons">
+  <h2><span class="n">08</span>Lessons for engineers</h2>
+  <ol>
+    <li><b>Price and platform open markets.</b> AutoCAD did not invent CAD; it made it affordable on the PC.</li>
+    <li><b>Capture intent, not just geometry.</b> Parametric models record why a feature is where it is.</li>
+    <li><b>File formats are power.</b> DWG's dominance has kept AutoCAD central for four decades.</li>
+    <li><b>Archive with neutral formats.</b> Keep STEP, IGES, DXF or PDF copies of long-life designs; native formats change.</li>
+  </ol>
+</section>
+
+<section id="sources">
+  <h2>Sources &amp; further reading</h2>
+  <ol class="src">
+    <li><a href="https://en.wikipedia.org/wiki/AutoCAD_version_history">Wikipedia — AutoCAD version history</a></li>
+    <li><a href="https://www.computerhistory.org/revolution/computer-graphics-music-and-art/15/216/598">Computer History Museum — AutoCAD release 13</a></li>
+    <li>John Walker (ed.), <i>The Autodesk File</i>, 1989 (free online history of Autodesk's founding).</li>
+    <li><a href="https://en.wikipedia.org/wiki/PTC_Creo_Elements/Pro">Wikipedia — Pro/ENGINEER (Creo Elements/Pro)</a> · <a href="https://en.wikipedia.org/wiki/CATIA">CATIA</a> · <a href="https://en.wikipedia.org/wiki/SolidWorks">SolidWorks</a></li>
+    <li><a href="https://en.wikipedia.org/wiki/Sketchpad">Wikipedia — Sketchpad</a></li>
+  </ol>
+</section>
+<div class="epnav"><a href="08-windows-95-to-xp.html"><small>← Episode 08</small>Windows 95 to XP</a><a class="nx" href="10-turbo-pascal-delphi-vb.html"><small>Next · Episode 10</small>Turbo Pascal, Delphi and Visual Basic →</a></div>
+<footer>Software Through the Ages · Episode 09 · v1.0.0 · haivijayanand.github.io</footer>
+</main>
+</div>
+</div>
+<script src="assets/sh.js"></script>
+<script>
+const V=[
+ {v:'1.0–2.6',d:'1982–1987',hw:'IBM PC/XT/AT with 8087',n:['Shown at COMDEX in November 1982; released December 1982','Lines, arcs, circles, layers, blocks; DXF exchange format','AutoLISP programming (1986)','2.6 was the last version that ran without a maths co-processor']},
+ {v:'R9–R11',d:'1987–1990',hw:'386 PCs, EGA/VGA, Unix workstations',n:['R10 (1988): true 3D coordinates and user coordinate systems','R11 (1990): paper space for layouts; first solids through AME','Became the world\'s most-used CAD program']},
+ {v:'R12',d:'Jun 1992',hw:'DOS 386 PCs; R12 for Windows (1993)',n:['Dialog boxes, better plotting, faster regeneration','Last release for the Macintosh until 2010','Many offices stayed on R12 DOS for years']},
+ {v:'R13',d:'Nov 1994',hw:'DOS, Windows 3.1, Unix',n:['ACIS solid-modelling kernel','Last release for DOS, Unix and Windows 3.11','Remembered as slow and unstable']},
+ {v:'R14 – 2000',d:'1997–1999',hw:'Windows 95/NT',n:['Windows-only, much faster and stable (R14)','AutoCAD 2000: several drawings open at once','Year-named releases begin']},
+ {v:'2009 → today',d:'2008 → today',hw:'64-bit Windows, Mac, web, mobile',n:['Ribbon interface (2009); Mac version returns (2010)','Subscription only from 2016','AutoCAD web and mobile apps; cloud DWG sharing']},
+ {v:'Pro/ENGINEER',d:'1988',e:2,hw:'Unix engineering workstations',n:['Parametric, feature-based, history-driven solid modelling','Changed how mechanical design was done','Renamed Creo in 2011']},
+ {v:'SolidWorks',d:'1995',e:2,hw:'Windows NT/95 PCs',n:['Parametric 3D at a mid-range price on Windows','Parasolid kernel; bought by Dassault Systèmes (1997)','Became the most common machine-design tool']},
+ {v:'Inventor / Fusion',d:'1999 / 2013',e:2,hw:'Windows; cloud',n:['Autodesk\'s parametric answers','Fusion combines CAD, CAM and simulation with cloud storage']},
+ {v:'Cloud CAD',d:'2015 → today',e:2,hw:'Browsers, tablets',n:['Onshape: full CAD in a browser with built-in version control','Real-time collaboration on one model']}
+];
+SH.explorer(V,'',['AutoCAD','Parametric 3D CAD']);
+// parametric demo
+let mode=0;const svg=document.getElementById('pmSvg'),W=document.getElementById('pmW'),note=document.getElementById('pmNote');
+function pm(){const w=+W.value;document.getElementById('pmWv').textContent=w;const s=1.1,x0=20,y0=40,h=120;const pw=w*s/1.0*0.9;
+ const hx= mode? x0+pw/2 : x0+200*s*0.9/2; const hy=y0+h/2;
+ const inside=hx+22<x0+pw;
+ svg.innerHTML='<rect x="'+x0+'" y="'+y0+'" width="'+pw+'" height="'+h+'" fill="#dbe9f6" stroke="#1f3b5c" stroke-width="3"/>'+
+ '<circle cx="'+hx+'" cy="'+hy+'" r="22" fill="#fff" stroke="'+(inside?'#1f3b5c':'#d98a00')+'" stroke-width="3" '+(inside?'':'stroke-dasharray="6 4"')+'/>'+
+ '<line x1="'+hx+'" y1="'+(y0-10)+'" x2="'+hx+'" y2="'+(y0+h+10)+'" stroke="#8a939e" stroke-dasharray="8 4"/>'+
+ '<text x="'+x0+'" y="'+(y0+h+40)+'" font-size="14" fill="#1b2430">width '+w+' mm · hole at '+(mode?'W/2 = '+(w/2):'x = 100')+' mm</text>';
+ note.textContent=mode?'Parametric: the hole is defined as "centred on the width" — the model rebuilds, the design intent holds.':(inside?(w===200?'2D lines: the hole is at x = 100 mm, drawn when the plate was 200 mm wide.':'2D lines: the plate changed but the hole did not — the drafter must move it by hand.'):'2D lines: the hole is now outside the plate — an error that has to be caught in checking.');}
+document.querySelectorAll('#pmTog button').forEach(b=>b.onclick=()=>{mode=+b.dataset.m;document.querySelectorAll('#pmTog button').forEach(x=>x.classList.toggle('on',x===b));pm();});
+W.oninput=pm;pm();
+</script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<!--
+TOOL:    software-history/38-engineering-automation.html — Software Through the Ages · Episode 38: Engineering automation
+FAMILY:  software-history
+VERSION: 1.0.0
+DATE:    2026-11-15
+CHAT:    Software history series — start with MS-DOS, publish all episodes
+CHANGES: 1.0.0 — First release
+STATUS:  published
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Software Through the Ages · 38 · Engineering automation: AutoLISP, CAD macros and test sequencers</title>
+<meta name="description" content="History of engineering automation: AutoCAD scripts, AutoLISP, ADS, ObjectARX, VBA and .NET; SolidWorks, CATIA, NX and Creo APIs; ANSYS APDL, Abaqus and FreeCAD Python; MATLAB batch runs; instrument control from HP BASIC and GPIB to SCPI, VISA and PyVISA; TestStand and test sequencing; with a parametric drawing generator and a test-sequence runner, plus ready-to-use scripts.">
+<link rel="stylesheet" href="assets/sh.css">
+</head>
+<body>
+<header class="top">
+  <a href="/">← Home</a><a href="./">Series</a><div class="series">Software Through the Ages</div><div class="sp"></div>
+  <button id="btnWidth" title="Toggle wide / reading width">Reading width</button>
+  <button id="btnFs" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<div class="wrap">
+<div class="hero">
+  <div class="ep">EPISODE 38 · 1986 → today</div>
+  <h1>Engineering automation: AutoLISP, CAD macros and test sequencers</h1>
+  <p class="lede">Engineers repeat work too: drawing the same flange in twenty sizes, re-running an analysis for every load case, stepping a rig through the same test sequence for a thousand hours. Engineering software grew its own automation layers — AutoLISP inside AutoCAD, VBA and APIs in 3D CAD, command languages and Python in analysis codes, and test sequencers that run rigs unattended.</p>
+  <div class="byline">K Vijay Anand · Software history series · November 2026</div>
+</div>
+<div class="layout">
+<nav class="toc">
+<b>Contents</b>
+<a href="#glance">At a glance</a>
+<a href="#need">1 · The requirement</a>
+<a href="#cad">2 · Automating CAD</a>
+<a href="#try">3 · Try: a parametric drawing program</a>
+<a href="#cae">4 · Automating analysis</a>
+<a href="#test">5 · Automating test rigs</a>
+<a href="#seq">6 · Try: a test sequence</a>
+<a href="#examples">7 · Ready-to-use scripts</a>
+<a href="#versions">8 · Version explorer</a>
+<a href="#lessons">9 · Lessons</a>
+<a href="#sources">Sources</a>
+</nav>
+<main>
+<section id="glance" data-toc="At a glance">
+  <div class="stats">
+    <div class="stat"><div class="v">1986</div><div class="k">AutoLISP in AutoCAD 2.18</div></div>
+    <div class="stat"><div class="v">1990</div><div class="k">SCPI: standard commands for instruments</div></div>
+    <div class="stat"><div class="v">1996</div><div class="k">ObjectARX (C++) for AutoCAD R13</div></div>
+    <div class="stat"><div class="v">1998</div><div class="k">NI TestStand test sequencer</div></div>
+    <div class="stat"><div class="v">2000s</div><div class="k">Python scripting in Abaqus, FreeCAD and more</div></div>
+    <div class="stat"><div class="v">2020s</div><div class="k">PyAnsys and Python everywhere in CAE</div></div>
+  </div>
+</section>
+
+<section id="need" data-toc="1 · The requirement">
+  <h2><span class="n">01</span>The requirement: design and test families, not single items</h2>
+  <table>
+    <tr><th style="width:28%">Requirement</th><th style="width:34%">Why</th><th>What automation offered</th></tr>
+    <tr><td>Standard parts in many sizes</td><td>Flanges, brackets, gears and fasteners follow rules</td><td>Parametric programs that draw from a table of dimensions</td></tr>
+    <tr><td>Company drawing standards</td><td>Title blocks, layers and text styles must be consistent</td><td>Start-up routines and checking macros</td></tr>
+    <tr><td>Many analysis cases</td><td>Load cases, temperatures and design variants</td><td>Batch runs from command files and scripts</td></tr>
+    <tr><td>Long unattended tests</td><td>Endurance tests run day and night for weeks</td><td>Test sequencers with limits, alarms and logs</td></tr>
+    <tr><td>Instrument control</td><td>Meters, supplies and analysers must be set and read the same way every time</td><td>GPIB, SCPI, VISA and drivers called from scripts</td></tr>
+  </table>
+</section>
+
+<section id="cad" data-toc="2 · Automating CAD">
+  <h2><span class="n">02</span>Automating CAD</h2>
+  <div class="tl">
+    <div class="ev"><b>1980s — Script files.</b> AutoCAD could replay a <code>.scr</code> file of typed commands — still useful for batch plotting and simple drawings.</div>
+    <div class="ev"><b>1986 — AutoLISP.</b> AutoCAD 2.18 embedded a dialect of LISP. Draughtsmen and CAD managers wrote thousands of routines — parametric parts, title blocks, layer tools — and shared them in magazines and later on CAD forums. Visual LISP (AutoCAD 2000) added an editor and debugger. AutoLISP still runs in AutoCAD and in compatible programs such as BricsCAD and ZWCAD.</div>
+    <div class="ev"><b>1990–1996 — ADS and ObjectARX.</b> C and then C++ interfaces (ObjectARX, AutoCAD R13) let software houses build vertical products for architecture, piping and mechanical design on AutoCAD.</div>
+    <div class="ev"><b>Late 1990s — VBA everywhere.</b> Microsoft licensed VBA (Episode 36) to CAD vendors. AutoCAD, SolidWorks, CATIA V5 and others gained VBA macros; SolidWorks' macro recorder writes VBA that changes dimensions, rebuilds and exports drawings.</div>
+    <div class="ev"><b>2000s — Full APIs.</b> .NET APIs in AutoCAD and SolidWorks; NX Open (C++, Java, .NET, Python) in Siemens NX; Toolkit and J-Link for Creo; CAA for CATIA. Knowledge-based engineering tools (CATIA Knowledgeware, NX Knowledge Fusion) captured design rules.</div>
+    <div class="ev"><b>2010s → — Python and the cloud.</b> FreeCAD (Episode 30) is scripted entirely in Python; the open-source <b>ezdxf</b> library writes DXF drawings without any CAD program; Onshape uses FeatureScript for custom features.</div>
+  </div>
+</section>
+
+<section id="try" data-toc="3 · Try: a parametric drawing program">
+  <h2><span class="n">03</span>Try it: one program, any flange</h2>
+  <p>Set the dimensions. The generator writes the same drawing three ways: an <b>AutoLISP</b> command, an AutoCAD <b>script file</b>, and a <b>Python ezdxf</b> program that writes a DXF without AutoCAD.</p>
+  <div class="demo">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:14px" id="flP"></div>
+    <div class="two" style="margin-top:10px">
+      <svg id="flSvg" viewBox="-130 -130 260 260" style="display:block;width:100%;max-width:360px;background:#fff;border:1px solid var(--line);border-radius:8px"></svg>
+      <div><div class="toggle" id="flL"><button class="on">AutoLISP</button><button>Script (.scr)</button><button>Python ezdxf</button></div>
+        <div style="position:relative;margin-top:6px"><pre class="term" id="flCode" style="margin:0;white-space:pre-wrap;height:auto;min-height:260px;font-size:13px"></pre><button class="cpy" data-for="flCode">Copy</button></div></div>
+    </div>
+    <p id="flMsg" style="margin:6px 0 0;font-size:14px"></p>
+  </div>
+</section>
+
+<section id="cae" data-toc="4 · Automating analysis">
+  <h2><span class="n">04</span>Automating analysis</h2>
+  <table>
+    <tr><th>Software</th><th>Automation layer</th><th>Typical use</th></tr>
+    <tr><td><b>ANSYS Mechanical APDL</b></td><td>ANSYS Parametric Design Language — command files with variables, loops and macros; PyAnsys (Python) since the 2020s</td><td>Parametric models, many load cases, design optimisation</td></tr>
+    <tr><td><b>NASTRAN</b></td><td>Text input decks (bulk data cards)</td><td>Generated by pre-processors or scripts; run in batch</td></tr>
+    <tr><td><b>Abaqus</b></td><td>Python scripting of Abaqus/CAE; every GUI action is journalled as Python</td><td>Model generation, result extraction</td></tr>
+    <tr><td><b>COMSOL</b></td><td>LiveLink for MATLAB, Java API, applications built in the Application Builder</td><td>Packaging simulations as simple apps for non-specialists</td></tr>
+    <tr><td><b>MATLAB / Octave</b></td><td>Scripts and functions; <code>matlab -batch</code> (R2019a and later) runs without the desktop</td><td>Post-processing test data overnight (Episode 27)</td></tr>
+    <tr><td><b>FreeCAD, CalculiX, Code_Aster</b></td><td>Python and text input files</td><td>Fully scripted open-source workflows (Episodes 19, 29)</td></tr>
+  </table>
+</section>
+
+<section id="test" data-toc="5 · Automating test rigs">
+  <h2><span class="n">05</span>Automating test rigs</h2>
+  <div class="tl">
+    <div class="ev"><b>1970s–80s — HP BASIC and GPIB.</b> Hewlett-Packard's desktop computers ran "Rocky Mountain BASIC" with built-in commands for HP-IB (GPIB, Episode 28) instruments; it was the standard for automated test for a decade.</div>
+    <div class="ev"><b>1990 — SCPI.</b> The Standard Commands for Programmable Instruments gave meters and sources common text commands such as <code>*IDN?</code>, <code>MEAS:VOLT:DC?</code> and <code>*RST</code>.</div>
+    <div class="ev"><b>1995–1998 — VISA and IVI.</b> The VISA library hid the difference between GPIB, serial, USB and Ethernet connections; IVI drivers made instruments of the same class interchangeable.</div>
+    <div class="ev"><b>1998 — TestStand.</b> National Instruments' sequencer separated the <i>sequence</i> (steps, limits, loops, reporting) from the <i>code modules</i> (LabVIEW, C, .NET, Python). Production lines and qualification labs adopted it widely; other sequencers include ATEasy and in-house frameworks.</div>
+    <div class="ev"><b>2000s → — Python.</b> PyVISA, pySerial, Modbus and OPC UA libraries, and vendor packages (nidaqmx) made Python a common choice for rig control and data handling, often beside LabVIEW or DEWESoft.</div>
+  </div>
+</section>
+
+<section id="seq" data-toc="6 · Try: a test sequence">
+  <h2><span class="n">06</span>Try it: run a test sequence</h2>
+  <p>A sequencer runs steps in order, compares each measurement with its limits, and writes a report. Inject a fault and run again: the sequence stops safely at the first critical failure.</p>
+  <div class="demo">
+    <div class="chips"><button id="sqRun">Run sequence</button><label style="display:flex;align-items:center;gap:6px;font-size:14px"><input type="checkbox" id="sqF1"> Low oil pressure</label><label style="display:flex;align-items:center;gap:6px;font-size:14px"><input type="checkbox" id="sqF2"> Bearing vibration high</label><label style="display:flex;align-items:center;gap:6px;font-size:14px"><input type="checkbox" id="sqF3"> Thermocouple open circuit</label></div>
+    <div id="sqOut" style="margin-top:10px;font-size:14px"></div>
+    <p id="sqSum" style="margin:6px 0 0;font-weight:700"></p>
+  </div>
+</section>
+
+<section id="examples" data-toc="7 · Ready-to-use scripts">
+  <h2><span class="n">07</span>Ready-to-use scripts</h2>
+  <h3>A. Change a dimension and rebuild (SolidWorks VBA macro)</h3>
+  <div style="position:relative"><pre class="term" id="exA">' Tools → Macro → New; set the dimension name to one in your model
+' (right-click a dimension → Properties shows names like D1@Sketch1).
+Dim swApp As Object
+
+Sub main()
+    Dim part As Object
+    Set swApp = Application.SldWorks
+    Set part = swApp.ActiveDoc
+    If part Is Nothing Then MsgBox "Open a part first": Exit Sub
+    part.Parameter("D1@Sketch1").SystemValue = 0.2   ' API units are metres: 200 mm
+    part.EditRebuild3
+End Sub</pre><button class="cpy" data-for="exA">Copy</button></div>
+
+  <h3>B. Read a meter through SCPI (Python + PyVISA)</h3>
+  <div style="position:relative"><pre class="term" id="exB"># pip install pyvisa pyvisa-py   (or install NI-VISA / Keysight IO Libraries)
+import time
+import pyvisa
+
+rm = pyvisa.ResourceManager()
+print(rm.list_resources())                       # find your instrument's address
+dmm = rm.open_resource("GPIB0::22::INSTR")       # replace with the address listed above
+dmm.timeout = 5000                               # ms
+print(dmm.query("*IDN?").strip())
+dmm.write("*RST")
+dmm.write("CONF:VOLT:DC 10")                     # 10 V range
+with open("dmm_log.csv", "w") as f:
+    f.write("time_s,volts\n")
+    t0 = time.time()
+    for _ in range(60):                          # one reading per second for a minute
+        v = float(dmm.query("READ?"))
+        f.write(f"{time.time() - t0:.1f},{v:.6f}\n")
+        time.sleep(1)
+dmm.close()</pre><button class="cpy" data-for="exB">Copy</button></div>
+
+  <h3>C. Process every run overnight (MATLAB batch from a Windows task)</h3>
+  <div style="position:relative"><pre class="term" id="exC">rem run_matlab.bat — schedule with Task Scheduler (Episode 35); needs MATLAB R2019a or later
+"C:\Program Files\MATLAB\R2026a\bin\matlab.exe" -batch "process_runs('D:\Archive\Data')" &gt; D:\Archive\matlab_log.txt 2&gt;&amp;1</pre><button class="cpy" data-for="exC">Copy</button></div>
+  <p style="font-size:14px;color:var(--muted)"><code>process_runs.m</code> is your own function on the MATLAB path; <code>-batch</code> exits with a non-zero code if it fails, so the log and Task Scheduler history show errors.</p>
+</section>
+
+<section id="versions" data-toc="8 · Version explorer">
+  <h2><span class="n">08</span>Version explorer</h2>
+  <p>Blue chips: CAD and CAE automation. Amber chips: test and instrument automation.</p>
+  <div class="vbar" id="vbar"></div>
+  <div class="vpanel" id="vpanel"></div>
+</section>
+
+<section id="lessons" data-toc="9 · Lessons">
+  <h2><span class="n">09</span>Lessons for engineers</h2>
+  <ol>
+    <li><b>Put the rules in one place.</b> A table of dimensions driving one program beats twenty hand-drawn variants.</li>
+    <li><b>Separate sequence from code.</b> Limits and step order belong in a sequence file engineers can review; instrument code belongs in tested modules.</li>
+    <li><b>Fail safe.</b> Every automated rig sequence needs a defined safe state on error, loss of communication or operator stop.</li>
+    <li><b>Version and validate scripts.</b> A script that sets test conditions is part of the test procedure; review and record it as such.</li>
+  </ol>
+</section>
+
+<section id="sources">
+  <h2>Sources &amp; further reading</h2>
+  <ol class="src">
+    <li><a href="https://en.wikipedia.org/wiki/AutoLISP">Wikipedia — AutoLISP</a> · <a href="https://en.wikipedia.org/wiki/ObjectARX">ObjectARX</a></li>
+    <li><a href="https://help.solidworks.com/">SOLIDWORKS help (API section)</a> · <a href="https://ezdxf.readthedocs.io/">ezdxf documentation</a></li>
+    <li><a href="https://en.wikipedia.org/wiki/Standard_Commands_for_Programmable_Instruments">Wikipedia — SCPI</a> · <a href="https://en.wikipedia.org/wiki/Virtual_instrument_software_architecture">VISA</a> · <a href="https://pyvisa.readthedocs.io/">PyVISA</a></li>
+    <li><a href="https://en.wikipedia.org/wiki/TestStand">Wikipedia — TestStand</a> · <a href="https://www.mathworks.com/help/matlab/ref/matlabwindows.html">MATLAB command-line options (-batch)</a></li>
+    <li><a href="https://docs.pyansys.com/">PyAnsys</a> · <a href="https://wiki.freecad.org/Python_scripting_tutorial">FreeCAD Python scripting</a></li>
+  </ol>
+</section>
+<div class="epnav"><a href="37-keyboard-desktop-automation.html"><small>← Episode 37</small>Keyboard and desktop automation</a><a class="nx" href="39-rpa-no-code-ai-agents.html"><small>Next · Episode 39</small>RPA, no-code and AI agents →</a></div>
+<footer>Software Through the Ages · Episode 38 · v1.0.0 · haivijayanand.github.io</footer>
+</main>
+</div>
+</div>
+<script src="assets/sh.js"></script>
+<script>
+const V=[
+ {v:'AutoCAD scripts and AutoLISP',d:'1980s / 1986 → today',hw:'AutoCAD, BricsCAD, ZWCAD',n:['.scr command files','AutoLISP in AutoCAD 2.18','Visual LISP editor (AutoCAD 2000)']},
+ {v:'ADS / ObjectARX / .NET',d:'1990 / 1996 / 2000s',hw:'AutoCAD',n:['C, C++ and .NET interfaces','Vertical products built on AutoCAD']},
+ {v:'VBA in CAD',d:'late 1990s → today',hw:'AutoCAD, SolidWorks, CATIA V5',n:['Macro recorders','Dimension-driven automation']},
+ {v:'CAD APIs and KBE',d:'2000s → today',hw:'NX, Creo, CATIA, Onshape',n:['NX Open, Toolkit/J-Link, CAA','Knowledge-based engineering rules']},
+ {v:'CAE scripting',d:'1970s → today',hw:'ANSYS, Abaqus, COMSOL',n:['APDL command files','Abaqus Python journals','PyAnsys (2020s)']},
+ {v:'HP BASIC + GPIB',d:'1970s–1990s',e:2,hw:'HP desktop computers',n:['Instrument control language of its era']},
+ {v:'SCPI / VISA / IVI',d:'1990 / 1995 / 1998',e:2,hw:'Any instrument bus',n:['Common commands','Bus-independent I/O','Interchangeable drivers']},
+ {v:'TestStand',d:'1998 → today',e:2,hw:'Windows test stations',n:['Sequence editor and engine','Calls LabVIEW, C, .NET, Python']},
+ {v:'Python rig control',d:'2000s → today',e:2,hw:'Any PC',n:['PyVISA, pySerial, nidaqmx','Beside LabVIEW or DEWESoft']}
+];
+SH.explorer(V,'',['CAD and CAE','Test and instruments']);
+const q=id=>document.getElementById(id);
+document.querySelectorAll('.cpy').forEach(b=>{b.style.cssText='position:absolute;top:6px;right:6px;padding:3px 10px;border-radius:5px;border:1px solid #8a939e;background:#fff;cursor:pointer;font-size:13px';
+ b.onclick=()=>{const t=q(b.dataset.for).innerText;const ok=()=>{b.textContent='Copied ✓';setTimeout(()=>b.textContent='Copy',1500);};
+  if(navigator.clipboard)navigator.clipboard.writeText(t).then(ok,()=>{});else{const r=document.createRange();r.selectNodeContents(q(b.dataset.for));getSelection().removeAllRanges();getSelection().addRange(r);document.execCommand('copy');ok();}};});
+const P={od:['Outer dia (mm)',200],id:['Bore dia (mm)',80],pcd:['PCD (mm)',150],n:['Bolts',6],hd:['Hole dia (mm)',18]};let fl=0;
+q('flP').innerHTML=Object.entries(P).map(([k,[l,v]])=>'<label>'+l+' <input data-k="'+k+'" type="number" value="'+v+'" style="width:70px;padding:3px;border:1.5px solid var(--grey);border-radius:5px"></label>').join('');
+q('flP').querySelectorAll('input').forEach(e=>e.oninput=()=>{P[e.dataset.k][1]=+e.value;flc();});
+const f3=x=>(Math.round(x*1000)/1000).toString();
+function flc(){const od=P.od[1],id=P.id[1],pcd=P.pcd[1],n=Math.round(P.n[1]),hd=P.hd[1];
+ const err=[];if(!(od>0&&id>0&&pcd>0&&hd>0&&n>=2))err.push('All values must be positive, with at least 2 bolts.');if(id>=od)err.push('Bore must be smaller than the outer diameter.');if(pcd-hd<=id||pcd+hd>=od)err.push('Bolt holes cut into the bore or the outer edge.');if(n>=2&&pcd*Math.sin(Math.PI/n)<=hd)err.push('Bolt holes overlap.');
+ q('flMsg').innerHTML=err.length?'<b style="color:#b06e00">'+err.join(' ')+'</b> A good program checks rules like these before drawing.':'Checks passed: holes clear the bore and edge; ligament between holes '+(pcd*Math.sin(Math.PI/n)-hd).toFixed(1)+' mm.';
+ const sc=120/(od/2||1);let s='<circle cx="0" cy="0" r="'+od/2*sc+'" fill="#cfe0f2" stroke="#1f3b5c" stroke-width="1.5"/><circle cx="0" cy="0" r="'+id/2*sc+'" fill="#fff" stroke="#1f3b5c" stroke-width="1.5"/><circle cx="0" cy="0" r="'+pcd/2*sc+'" fill="none" stroke="#d98a00" stroke-dasharray="6 3 1 3"/>';
+ const pts=[];for(let i=0;i<n;i++){const a=2*Math.PI*i/n;pts.push([pcd/2*Math.cos(a),pcd/2*Math.sin(a)]);s+='<circle cx="'+pts[i][0]*sc+'" cy="'+(-pts[i][1]*sc)+'" r="'+hd/2*sc+'" fill="#fff" stroke="#1f3b5c" stroke-width="1.5"/>';}
+ q('flSvg').innerHTML=s;
+ const lisp=';; FLANGE.lsp — load with APPLOAD, then type FLANGE\n(defun c:FLANGE (/ old i)\n  (setq old (getvar "OSMODE"))\n  (setvar "OSMODE" 0)                      ; no object snaps while drawing\n  (command "_.CIRCLE" \'(0.0 0.0) '+f3(od/2)+')     ; outer edge\n  (command "_.CIRCLE" \'(0.0 0.0) '+f3(id/2)+')     ; bore\n  (setq i 0)\n  (repeat '+n+'\n    (command "_.CIRCLE"\n             (polar \'(0.0 0.0) (* i (/ (* 2 pi) '+n+')) '+f3(pcd/2)+')\n             '+f3(hd/2)+')\n    (setq i (1+ i)))\n  (setvar "OSMODE" old)\n  (princ))';
+ const scr='; flange.scr — run with the SCRIPT command (each space acts as Enter)\nOSMODE 0\n_CIRCLE 0,0 '+f3(od/2)+'\n_CIRCLE 0,0 '+f3(id/2)+'\n'+pts.map(p=>'_CIRCLE '+f3(p[0])+','+f3(p[1])+' '+f3(hd/2)).join('\n')+'\n_ZOOM _E\n';
+ const py='# pip install ezdxf — writes flange.dxf, which AutoCAD, LibreCAD and FreeCAD open\nimport math\nimport ezdxf\n\nOD, ID, PCD, N, HD = '+od+', '+id+', '+pcd+', '+n+', '+hd+'\n\ndoc = ezdxf.new("R2010")\nmsp = doc.modelspace()\nmsp.add_circle((0, 0), OD / 2)\nmsp.add_circle((0, 0), ID / 2)\nfor i in range(N):\n    a = 2 * math.pi * i / N\n    msp.add_circle((PCD / 2 * math.cos(a), PCD / 2 * math.sin(a)), HD / 2)\ndoc.saveas("flange.dxf")\nprint("flange.dxf written")';
+ q('flCode').textContent=[lisp,scr,py][fl];}
+document.querySelectorAll('#flL button').forEach((b,i)=>b.onclick=()=>{fl=i;document.querySelectorAll('#flL button').forEach((x,j)=>x.classList.toggle('on',i===j));flc();});flc();
+const SEQ=[['Pre-checks: E-stop circuit healthy','bool',1,1,1,'',true],['Oil pressure at idle','num',2.0,4.0,3.1,'bar',true],['Thermocouples reading (TC1–TC4)','num',15,45,29,'°C',true],['Ramp to 3000 rpm','num',2970,3030,3001,'rpm',true],['Dwell 5 min — vibration RMS','num',0,4.5,1.9,'mm/s',true],['Ramp to 6000 rpm','num',5940,6060,5998,'rpm',true],['Dwell 30 min — oil temperature','num',40,90,71,'°C',false],['Dwell 30 min — vibration RMS','num',0,4.5,2.4,'mm/s',true],['Ramp down and stop','num',0,10,0,'rpm',true]];
+q('sqRun').onclick=()=>{const f1=q('sqF1').checked,f2=q('sqF2').checked,f3x=q('sqF3').checked;let rows='',stop=false,fails=0;
+ SEQ.forEach((s,i)=>{if(stop){rows+='<tr><td>'+(i+1)+'</td><td>'+s[0]+'</td><td colspan="3" style="color:#5b6672">Skipped — sequence aborted, rig brought to safe state</td></tr>';return;}
+  let v=s[4]*(1+(Math.random()-0.5)*0.004);if(s[1]==='bool')v=1;if(i===1&&f1)v=1.2;if((i===4||i===7)&&f2)v=6.8;if(i===2&&f3x)v=1372;
+  const ok=s[1]==='bool'?v===1:(v>=s[2]&&v<=s[3]);if(!ok)fails++;
+  rows+='<tr><td>'+(i+1)+'</td><td>'+s[0]+'</td><td>'+(s[1]==='bool'?'—':s[2]+' – '+s[3]+' '+s[5])+'</td><td>'+(s[1]==='bool'?'OK':(s[5]==='rpm'?Math.round(v):v.toFixed(i===2&&f3x?0:1))+' '+s[5])+'</td><td style="font-weight:700;color:'+(ok?'#1f3b5c':'#b06e00')+'">'+(ok?'PASS':'FAIL')+(ok?'':s[6]?' — critical':' — logged')+'</td></tr>';
+  if(!ok&&s[6])stop=true;});
+ q('sqOut').innerHTML='<table style="width:100%"><tr><th>#</th><th>Step</th><th>Limits</th><th>Measured</th><th>Result</th></tr>'+rows+'</table>';
+ q('sqSum').innerHTML=fails?'<span style="color:#b06e00">Sequence FAILED — '+fails+' step(s) out of limits. Report saved with time stamp and operator name.</span>':'<span style="color:#1f3b5c">Sequence PASSED — all '+SEQ.length+' steps within limits. Report saved.</span>';};
+q('sqRun').click();
+</script>
+</body>
+</html>

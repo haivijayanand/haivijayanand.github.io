@@ -1,0 +1,203 @@
+title: Engineering and science on Windows
+years: 1988 → today
+lede: Engineering software was once the most expensive software of all: a MATLAB seat, a CAD licence or an FEA package could cost more than the workstation. Over three decades, open-source tools — Python with NumPy and SciPy, GNU Octave, Scilab, FreeCAD, KiCad, QGIS, ParaView and OpenFOAM — grew from university projects into tools that run test-rig analysis, design boards and solve flow fields on ordinary Windows PCs.
+desc: Why open-source engineering and scientific software grew, the history of Python's scientific stack, Jupyter, Octave, Scilab, FreeCAD, LibreCAD, KiCad, QGIS, ParaView and OpenFOAM, how they run on Windows, free-but-closed alternatives, safe installation, and an interactive vibration-spectrum demo with Python and Octave code.
+
+<section id="glance" data-toc="At a glance">
+  <div class="stats">
+    <div class="stat"><div class="v">1988</div><div class="k">John W. Eaton starts GNU Octave for a chemical-reactor course</div></div>
+    <div class="stat"><div class="v">1991</div><div class="k">Guido van Rossum releases Python</div></div>
+    <div class="stat"><div class="v">2004</div><div class="k">OpenFOAM CFD toolkit released as open source</div></div>
+    <div class="stat"><div class="v">2014</div><div class="k">Project Jupyter grows out of IPython</div></div>
+    <div class="stat"><div class="v">Nov 2024</div><div class="k">FreeCAD 1.0 — more than 20 years after it began</div></div>
+    <div class="stat"><div class="v">Mar 2026</div><div class="k">FreeCAD 1.1 and KiCad 10 released</div></div>
+  </div>
+</section>
+
+<section id="need" data-toc="1 · The requirement">
+  <h2><span class="n">01</span>The requirement: tools every engineer can own</h2>
+  <p>In the 1980s and 1990s, numerical work meant FORTRAN on mainframes or Unix workstations, or commercial packages: MATLAB (1984), Mathcad, LabVIEW (1986), NASTRAN and ANSYS for FEA, AutoCAD and Pro/ENGINEER for design (Episode 09). Licences were per seat and per year, tied to dongles or licence servers. Students lost access when they graduated; small labs and laboratories in developing countries could afford few seats; and results locked in proprietary file formats could not be checked by others.</p>
+  <table>
+    <tr><th style="width:28%">Requirement</th><th style="width:34%">Why</th><th>Open-source answer</th></tr>
+    <tr><td>Matrix and signal computation</td><td>Data analysis, control design, vibration processing</td><td>GNU Octave, Scilab; Python with NumPy/SciPy</td></tr>
+    <tr><td>Plots for reports and papers</td><td>Every test produces graphs</td><td>Matplotlib, Gnuplot, ParaView</td></tr>
+    <tr><td>Reproducible analysis</td><td>Others must be able to check and rerun results</td><td>Scripts plus Jupyter notebooks mixing code, plots and text</td></tr>
+    <tr><td>Mechanical and electrical design</td><td>Parts, drawings, PCBs</td><td>FreeCAD, LibreCAD, OpenSCAD; KiCad</td></tr>
+    <tr><td>Simulation</td><td>Stress, heat, flow</td><td>CalculiX, Code_Aster, Elmer; OpenFOAM</td></tr>
+    <tr><td>Maps and spatial data</td><td>Sites, routes, surveys</td><td>QGIS</td></tr>
+  </table>
+</section>
+
+<section id="py" data-toc="2 · Python's scientific stack">
+  <h2><span class="n">02</span>Python: from scripting language to the engineer's workbench</h2>
+  <p>Python was designed by Guido van Rossum (released 1991) as a readable general-purpose language. Its scientific use grew from a set of separate open-source projects that came together:</p>
+  <table>
+    <tr><th>Project</th><th>Year</th><th>What it added</th></tr>
+    <tr><td><b>Numeric → NumPy</b></td><td>1995 → 2006</td><td>Fast n-dimensional arrays; Travis Oliphant merged Numeric and Numarray into NumPy</td></tr>
+    <tr><td><b>SciPy</b></td><td>2001</td><td>Signal processing (filters, Welch spectra), optimisation, integration, statistics, sparse matrices</td></tr>
+    <tr><td><b>Matplotlib</b></td><td>2003</td><td>John Hunter's MATLAB-style plotting, first written to view EEG data</td></tr>
+    <tr><td><b>IPython → Jupyter</b></td><td>2001 → 2014</td><td>Fernando Pérez's interactive shell; notebooks combining code, results and notes</td></tr>
+    <tr><td><b>pandas</b></td><td>2008</td><td>Wes McKinney's tables with time indexes — ideal for test-rig logs</td></tr>
+    <tr><td><b>Anaconda</b></td><td>2012</td><td>Easy Windows distribution with compiled packages; its default package channel became paid for organisations above 200 employees in 2020 — conda-forge and plain pip remain free</td></tr>
+    <tr><td><b>File readers</b></td><td>2010s</td><td>h5py (HDF5), npTDMS (NI TDMS files), openpyxl (Excel), SQLite built in</td></tr>
+  </table>
+  <p>Python 2 reached end of life on 1 January 2020 after a long transition to Python 3. Today Python sits at the top of most programming-language rankings, and Microsoft added Python inside Excel in 2024 (Episode 03).</p>
+</section>
+
+<section id="fft" data-toc="3 · Try a vibration spectrum">
+  <h2><span class="n">03</span>Try it: a gearbox vibration spectrum</h2>
+  <p>A synthetic accelerometer signal: shaft rotation (1×), a gear-mesh frequency (teeth × shaft speed) with sidebands, and noise. The page computes the FFT in your browser — the same operation as one line of NumPy or Octave.</p>
+  <div class="demo">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 18px;font-size:15px">
+      <label>Shaft speed <input type="range" id="fsN" min="600" max="9000" step="100" value="3000"> <b id="fsNv"></b> rpm</label>
+      <label>Gear teeth <input type="range" id="fsZ" min="10" max="60" value="27"> <b id="fsZv"></b></label>
+      <label>Unbalance (1×) amplitude <input type="range" id="fs1" min="0" max="2" step="0.1" value="1"> <b id="fs1v"></b> g</label>
+      <label>Gear-mesh amplitude <input type="range" id="fsG" min="0" max="2" step="0.1" value="0.8"> <b id="fsGv"></b> g</label>
+      <label>Sidebands (gear wear) <input type="range" id="fsS" min="0" max="1" step="0.05" value="0.3"> <b id="fsSv"></b> g</label>
+      <label>Noise <input type="range" id="fsW" min="0" max="1" step="0.05" value="0.2"> <b id="fsWv"></b> g rms</label>
+    </div>
+    <canvas id="fsT" width="900" height="150" style="width:100%;background:#fff;border:1px solid var(--line);border-radius:6px;margin-top:10px"></canvas>
+    <canvas id="fsF" width="900" height="220" style="width:100%;background:#fff;border:1px solid var(--line);border-radius:6px;margin-top:6px"></canvas>
+    <p id="fsMsg" style="margin:6px 0 0;color:var(--muted)"></p>
+    <div class="toggle" id="fsTog"><button class="on">Python</button><button>GNU Octave</button></div>
+    <pre id="fsCode" class="term" style="height:auto;margin:0;white-space:pre-wrap"></pre>
+  </div>
+</section>
+
+<section id="octave" data-toc="4 · Octave and Scilab">
+  <h2><span class="n">04</span>GNU Octave and Scilab: MATLAB-style computing</h2>
+  <p><b>GNU Octave</b> began in 1988 when John W. Eaton wrote software for a chemical-reactor design course at the University of Wisconsin; version 1.0 appeared in 1994. It is named after Octave Levenspiel, a chemical-engineering professor known for fast back-of-envelope calculations. Its language is largely compatible with MATLAB, so many <code>.m</code> scripts run unchanged; packages add signal processing, control and statistics. <b>Scilab</b> came from France's INRIA and ENPC (first release 1994) with its own similar language and <b>Xcos</b>, a block-diagram simulator comparable to Simulink.</p>
+  <table>
+    <tr><th>Task</th><th>MATLAB</th><th>GNU Octave</th><th>Python (NumPy/SciPy)</th></tr>
+    <tr><td>Load a CSV</td><td><code>d = readmatrix('a.csv');</code></td><td><code>d = csvread('a.csv');</code></td><td><code>d = np.loadtxt('a.csv', delimiter=',')</code></td></tr>
+    <tr><td>FFT magnitude</td><td><code>abs(fft(x))/N</code></td><td><code>abs(fft(x))/N</code></td><td><code>np.abs(np.fft.rfft(x))/N</code></td></tr>
+    <tr><td>Welch spectrum</td><td><code>pwelch(x,[],[],[],fs)</code></td><td><code>pwelch(x,[],[],[],fs)</code> (signal pkg)</td><td><code>signal.welch(x, fs)</code></td></tr>
+    <tr><td>Butterworth filter</td><td><code>[b,a]=butter(4,0.2); filtfilt(b,a,x)</code></td><td>same (signal pkg)</td><td><code>b,a=signal.butter(4,0.2); signal.filtfilt(b,a,x)</code></td></tr>
+    <tr><td>Solve A·x = b</td><td><code>A\b</code></td><td><code>A\b</code></td><td><code>np.linalg.solve(A, b)</code></td></tr>
+    <tr><td>Plot</td><td><code>plot(t,x)</code></td><td><code>plot(t,x)</code></td><td><code>plt.plot(t, x)</code></td></tr>
+  </table>
+</section>
+
+<section id="cad" data-toc="5 · Design: FreeCAD, KiCad">
+  <h2><span class="n">05</span>Design: FreeCAD, LibreCAD, OpenSCAD and KiCad</h2>
+  <table>
+    <tr><th>Tool</th><th>Origin</th><th>What it does</th><th>Status</th></tr>
+    <tr><td><b>FreeCAD</b></td><td>Jürgen Riegel and others, from 2002 (LGPL)</td><td>Parametric 3D modelling (Episode 09's ideas) built on the open OpenCASCADE kernel; workbenches for Part Design, Sketcher, TechDraw drawings, Assembly, FEM (with CalculiX), CAM and BIM; Python scripting throughout</td><td>Version 1.0 in November 2024 fixed the long-standing "topological naming" problem; 1.1 (24 March 2026) added datum tools, transparent previews, a CAM tool library and FEM upgrades</td></tr>
+    <tr><td><b>LibreCAD</b></td><td>2010 fork of QCAD's community edition</td><td>2D drafting in DXF — a free AutoCAD LT-style tool for simple drawings</td><td>Active</td></tr>
+    <tr><td><b>OpenSCAD</b></td><td>2010</td><td>"Programmer's CAD": solids described in code — popular for 3D printing</td><td>Active</td></tr>
+    <tr><td><b>KiCad</b></td><td>Jean-Pierre Charras, Grenoble, 1992 (GPL)</td><td>Schematic capture, PCB layout, 3D board view, SPICE simulation via ngspice</td><td>CERN joined development in 2013; KiCad 9 (2025) and KiCad 10 (March 2026) brought design variants and a Windows dark mode</td></tr>
+  </table>
+</section>
+
+<section id="sim" data-toc="6 · Simulation and data">
+  <h2><span class="n">06</span>Simulation, visualisation and maps</h2>
+  <table>
+    <tr><th>Tool</th><th>Origin</th><th>Use</th><th>On Windows</th></tr>
+    <tr><td><b>OpenFOAM</b></td><td>FOAM at Imperial College (Henry Weller, 1989); open-sourced by OpenCFD in 2004</td><td>Computational fluid dynamics: flows, heat transfer, combustion</td><td>Runs best on Linux — on Windows through WSL (Episode 20) or ready builds; two lines exist, openfoam.org (Foundation) and openfoam.com (OpenCFD)</td></tr>
+    <tr><td><b>CalculiX, Code_Aster, Elmer</b></td><td>1998; EDF (open 2001); CSC Finland</td><td>Structural and multiphysics FEA</td><td>CalculiX inside FreeCAD; Salome-Meca for Code_Aster</td></tr>
+    <tr><td><b>ParaView / VTK</b></td><td>Kitware with Sandia and Los Alamos labs, 2002 (VTK 1993)</td><td>3D visualisation of simulation results, very large datasets</td><td>Native Windows builds</td></tr>
+    <tr><td><b>QGIS</b></td><td>Gary Sherman, 2002 (OSGeo)</td><td>Geographic information system: maps, survey data, shapefiles (with the .DBF files of Episode 05)</td><td>Native; long-term-release (LTR) versions for organisations</td></tr>
+    <tr><td><b>ngspice, Qucs-S</b></td><td>1990s / 2000s</td><td>Circuit simulation</td><td>Native; built into KiCad</td></tr>
+    <tr><td><b>Arduino IDE</b></td><td>Ivrea, Italy, 2005</td><td>Microcontroller programming for quick test fixtures and sensors</td><td>Native; IDE 2.0 in 2022</td></tr>
+  </table>
+</section>
+
+<section id="versions" data-toc="7 · Version explorer">
+  <h2><span class="n">07</span>Version explorer</h2>
+  <p>Blue chips: computation and analysis. Amber chips: design and simulation.</p>
+  <div class="vbar" id="vbar"></div>
+  <div class="vpanel" id="vpanel"></div>
+</section>
+
+<section id="closed" data-toc="8 · Free but not open">
+  <h2><span class="n">08</span>Free, or cheap, but not open source</h2>
+  <table>
+    <tr><th>Program</th><th>Model</th><th>Notes</th></tr>
+    <tr><td><b>LTspice</b></td><td>Free, closed (Linear Technology → Analog Devices)</td><td>The most widely used free circuit simulator</td></tr>
+    <tr><td><b>Autodesk Fusion (personal use)</b></td><td>Free limited licence, cloud-linked</td><td>Popular with makers; features and terms have been reduced over time</td></tr>
+    <tr><td><b>Onshape Free</b></td><td>Free if your documents are public</td><td>Browser CAD (Episode 09)</td></tr>
+    <tr><td><b>Solid Edge Community Edition</b></td><td>Free for non-commercial use (Siemens)</td><td>Full parametric CAD for hobbyists and students</td></tr>
+    <tr><td><b>DraftSight</b></td><td>Was free until 2019, now paid</td><td>A reminder that "free" closed software can change its terms</td></tr>
+    <tr><td><b>ANSYS Student, MATLAB Student/Home</b></td><td>Low-cost or free limited editions</td><td>Size limits or non-commercial terms</td></tr>
+  </table>
+  <div class="callout">For work under organisational rules, check licence terms before using any tool for official work — open-source licences generally allow commercial and government use; free closed editions often do not.</div>
+</section>
+
+<section id="install" data-toc="9 · Installing safely">
+  <h2><span class="n">09</span>Installing safely</h2>
+  <table>
+    <tr><th>Program</th><th>Official site</th><th>winget command</th></tr>
+    <tr><td>Python</td><td><code>python.org</code></td><td><code>winget install Python.Python.3.13</code> (choose the current 3.x)</td></tr>
+    <tr><td>GNU Octave</td><td><code>octave.org</code></td><td><code>winget install GNU.Octave</code></td></tr>
+    <tr><td>FreeCAD</td><td><code>freecad.org</code></td><td><code>winget install FreeCAD.FreeCAD</code></td></tr>
+    <tr><td>LibreCAD</td><td><code>librecad.org</code></td><td><code>winget install LibreCAD.LibreCAD</code></td></tr>
+    <tr><td>KiCad</td><td><code>kicad.org</code></td><td><code>winget install KiCad.KiCad</code></td></tr>
+    <tr><td>QGIS</td><td><code>qgis.org</code></td><td><code>winget install OSGeo.QGIS</code></td></tr>
+    <tr><td>ParaView</td><td><code>paraview.org</code></td><td><code>winget install Kitware.ParaView</code></td></tr>
+    <tr><td>Scilab, OpenFOAM</td><td><code>scilab.org</code>, <code>openfoam.org</code> / <code>openfoam.com</code></td><td>Installers from the sites; OpenFOAM via WSL</td></tr>
+  </table>
+  <p style="font-size:14px;color:var(--muted)">On offline or restricted networks, download installers and Python wheels on a connected PC, verify their checksums, and keep a local package mirror. Install Python packages with <code>py -m pip install numpy scipy matplotlib pandas</code> inside a virtual environment (<code>py -m venv .venv</code>). Confirm winget IDs with <code>winget search</code>.</p>
+</section>
+
+<section id="lessons" data-toc="10 · Lessons">
+  <h2><span class="n">10</span>Lessons for engineers</h2>
+  <ol>
+    <li><b>Scripts are documents.</b> An analysis written in Python or Octave records exactly how the numbers were made.</li>
+    <li><b>Open file formats keep data alive.</b> CSV, HDF5 and STEP outlast any licence server.</li>
+    <li><b>University code becomes industry tools.</b> Octave, Matplotlib, KiCad and OpenFOAM all started in academia.</li>
+    <li><b>Long projects reach maturity.</b> FreeCAD took 22 years to reach 1.0 — and then improved quickly.</li>
+  </ol>
+</section>
+
+<section id="sources">
+  <h2>Sources &amp; further reading</h2>
+  <ol class="src">
+    <li><a href="https://wiki.freecad.org/Release_notes_1.1">FreeCAD — Release notes 1.1 (24 March 2026)</a> · <a href="https://alternativeto.net/news/tag/cad">AlternativeTo — FreeCAD and KiCad release news</a></li>
+    <li><a href="https://octave.org/about">GNU Octave — About</a></li>
+    <li><a href="https://numpy.org/doc/stable/">NumPy</a> · <a href="https://scipy.org/">SciPy</a> · <a href="https://matplotlib.org/">Matplotlib</a> · <a href="https://jupyter.org/">Project Jupyter</a></li>
+    <li><a href="https://www.kicad.org/about/kicad/">KiCad — About</a> · <a href="https://www.openfoam.com/">OpenFOAM</a> · <a href="https://qgis.org/">QGIS</a></li>
+    <li>J. D. Hunter, "Matplotlib: A 2D Graphics Environment", <i>Computing in Science &amp; Engineering</i>, 2007.</li>
+  </ol>
+</section>
+<!--SCRIPT-->
+const V=[
+ {v:'GNU Octave',d:'1988 → today',hw:'Unix workstations → Windows PCs',n:['John W. Eaton, University of Wisconsin','MATLAB-compatible language; 1.0 in 1994','Signal, control and statistics packages']},
+ {v:'Scilab',d:'1990 → today',hw:'Workstations → PCs',n:['INRIA and ENPC, France','Xcos block-diagram simulation','Free and open source']},
+ {v:'NumPy / SciPy',d:'1995–2006 → today',hw:'Every platform',n:['Numeric (1995) → NumPy (2006)','SciPy (2001): signal, optimise, integrate','Foundation of scientific Python']},
+ {v:'Jupyter',d:'2001 / 2014 → today',hw:'Browsers, lab servers',n:['IPython by Fernando Pérez','Notebooks mixing code, plots and text','Used for teaching and reproducible research']},
+ {v:'FreeCAD',d:'2002 → today',e:2,hw:'Windows, Linux, macOS',n:['Parametric CAD on OpenCASCADE','1.0 (Nov 2024), 1.1 (Mar 2026)','FEM, CAM, Assembly, TechDraw workbenches']},
+ {v:'KiCad',d:'1992 → today',e:2,hw:'PCB design on any PC',n:['Jean-Pierre Charras, Grenoble','CERN support from 2013','KiCad 10 (March 2026)']},
+ {v:'OpenFOAM',d:'2004 → today',e:2,hw:'Linux clusters, WSL on Windows',n:['From FOAM at Imperial College','Open-sourced by OpenCFD in 2004','Two maintained lines: .org and .com']},
+ {v:'QGIS / ParaView',d:'2002 → today',e:2,hw:'Native Windows builds',n:['QGIS: maps and spatial analysis (OSGeo)','ParaView: large 3D data visualisation (Kitware)']}
+];
+SH.explorer(V,'',['Computation and analysis','Design and simulation']);
+const q=id=>document.getElementById(id);
+function fft(re,im){const n=re.length;for(let i=1,j=0;i<n;i++){let b=n>>1;for(;j&b;b>>=1)j^=b;j^=b;if(i<j){[re[i],re[j]]=[re[j],re[i]];[im[i],im[j]]=[im[j],im[i]];}}
+ for(let len=2;len<=n;len<<=1){const a=-2*Math.PI/len,wr=Math.cos(a),wi=Math.sin(a);for(let i=0;i<n;i+=len){let cr=1,ci=0;for(let k=0;k<len/2;k++){const ur=re[i+k],ui=im[i+k],vr=re[i+k+len/2]*cr-im[i+k+len/2]*ci,vi=re[i+k+len/2]*ci+im[i+k+len/2]*cr;re[i+k]=ur+vr;im[i+k]=ui+vi;re[i+k+len/2]=ur-vr;im[i+k+len/2]=ui-vi;const t=cr*wr-ci*wi;ci=cr*wi+ci*wr;cr=t;}}}}
+let seed=1;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};const gauss=()=>{let u=rnd()||1e-9,v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+let lang=0;
+function fs(){const N=8192,Fs=8192,rpm=+q('fsN').value,Z=+q('fsZ').value,a1=+q('fs1').value,ag=+q('fsG').value,as=+q('fsS').value,nw=+q('fsW').value;
+ ['fsN','fsZ','fs1','fsG','fsS','fsW'].forEach(i=>q(i+'v').textContent=q(i).value);
+ const f1=rpm/60,fg=Z*f1;seed=7;const x=new Float64Array(N);
+ for(let i=0;i<N;i++){const t=i/Fs;x[i]=a1*Math.sin(2*Math.PI*f1*t)+ag*Math.sin(2*Math.PI*fg*t)+as*(Math.sin(2*Math.PI*(fg-f1)*t)+Math.sin(2*Math.PI*(fg+f1)*t))+nw*gauss();}
+ // time plot
+ const T=q('fsT'),c=T.getContext('2d');c.clearRect(0,0,900,150);c.strokeStyle='#1f3b5c';c.lineWidth=1.2;c.beginPath();const show=Math.min(N,Math.round(Fs*4/f1));
+ const mx=Math.max(...x.slice(0,show).map(Math.abs))||1;for(let i=0;i<show;i++){const X=40+i*850/show,Y=75-x[i]/mx*60;i?c.lineTo(X,Y):c.moveTo(X,Y);}c.stroke();
+ c.fillStyle='#1b2430';c.font='12px sans-serif';c.fillText('Time signal: 4 shaft revolutions ('+(show/Fs*1000).toFixed(0)+' ms)',44,14);
+ // spectrum (Hann window)
+ const re=new Float64Array(N),im=new Float64Array(N);for(let i=0;i<N;i++)re[i]=x[i]*(0.5-0.5*Math.cos(2*Math.PI*i/(N-1)));fft(re,im);
+ const fmax=Math.min(Fs/2,Math.max(fg*1.6,f1*10)),bins=Math.floor(fmax*N/Fs),mag=[];for(let k=0;k<bins;k++)mag.push(2*Math.hypot(re[k],im[k])/(N*0.5));
+ const F=q('fsF'),d=F.getContext('2d');d.clearRect(0,0,900,220);const top=Math.max(...mag)||1;
+ d.strokeStyle='#d9dde3';d.beginPath();d.moveTo(40,190);d.lineTo(890,190);d.stroke();d.strokeStyle='#2c6fb0';d.lineWidth=1.5;d.beginPath();
+ mag.forEach((m,k)=>{const X=40+k*850/bins,Y=190-m/top*165;k?d.lineTo(X,Y):d.moveTo(X,Y);});d.stroke();
+ d.fillStyle='#1b2430';d.font='12px sans-serif';d.fillText('Amplitude spectrum (Hann window), 0 – '+fmax.toFixed(0)+' Hz',44,14);
+ const mark=(f,l,r,left)=>{if(f>fmax)return;const X=40+f/fmax*850;d.strokeStyle='#d98a00';d.setLineDash([4,3]);d.beginPath();d.moveTo(X,30);d.lineTo(X,190);d.stroke();d.setLineDash([]);d.fillStyle='#1b2430';d.textAlign=left?'right':'left';d.fillText(l,left?X-4:X+4,42+r*14);d.textAlign='left';};
+ mark(f1,'1× '+f1.toFixed(1)+' Hz',0);mark(fg,'GMF '+fg.toFixed(0)+' Hz',0);if(as>0){mark(fg-f1,'GMF−1×',1,true);mark(fg+f1,'GMF+1×',2);}
+ for(let k=0;k<=4;k++){d.fillText((fmax*k/4).toFixed(0),40+k*212-8,206);}
+ q('fsMsg').textContent='Shaft frequency 1× = '+f1.toFixed(2)+' Hz; gear-mesh frequency = '+Z+' × '+f1.toFixed(2)+' = '+fg.toFixed(1)+' Hz. Sidebands spaced at 1× around the mesh frequency grow with gear wear or eccentricity. Frequency resolution = Fs/N = '+(Fs/N).toFixed(2)+' Hz.'+(fg>Fs/2?' Warning: the mesh frequency is above the Nyquist limit ('+(Fs/2)+' Hz) — a real recorder would alias it to a false lower frequency; sample faster or use an anti-alias filter.':'');
+ const py="import numpy as np\nfrom scipy import signal\nimport matplotlib.pyplot as plt\n\nfs, N = 8192, 8192                 # sample rate (Hz), samples\nt = np.arange(N) / fs\nf1 = "+rpm+" / 60                     # shaft frequency, Hz\nfg = "+Z+" * f1                       # gear-mesh frequency, Hz\nx = ("+a1+"*np.sin(2*np.pi*f1*t) + "+ag+"*np.sin(2*np.pi*fg*t)\n     + "+as+"*(np.sin(2*np.pi*(fg-f1)*t) + np.sin(2*np.pi*(fg+f1)*t))\n     + "+nw+"*np.random.randn(N))\n\nw = signal.windows.hann(N)\nX = 2*np.abs(np.fft.rfft(x*w)) / w.sum()   # amplitude spectrum\nf = np.fft.rfftfreq(N, 1/fs)\nplt.plot(f, X); plt.xlim(0, "+fmax.toFixed(0)+"); plt.xlabel('Hz'); plt.show()";
+ const oc="pkg load signal\nfs = 8192; N = 8192;\nt = (0:N-1)'/fs;\nf1 = "+rpm+"/60;  fg = "+Z+"*f1;\nx = "+a1+"*sin(2*pi*f1*t) + "+ag+"*sin(2*pi*fg*t) ...\n  + "+as+"*(sin(2*pi*(fg-f1)*t) + sin(2*pi*(fg+f1)*t)) ...\n  + "+nw+"*randn(N,1);\nw = hanning(N);\nX = 2*abs(fft(x.*w)) / sum(w);\nf = (0:N-1)*fs/N;\nplot(f(1:N/2), X(1:N/2)); xlim([0 "+fmax.toFixed(0)+"]); xlabel('Hz');";
+ q('fsCode').textContent=lang?oc:py;}
+['fsN','fsZ','fs1','fsG','fsS','fsW'].forEach(i=>q(i).oninput=fs);
+document.querySelectorAll('#fsTog button').forEach((b,i)=>b.onclick=()=>{lang=i;document.querySelectorAll('#fsTog button').forEach((x,j)=>x.classList.toggle('on',i===j));fs();});
+fs();

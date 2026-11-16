@@ -1,0 +1,431 @@
+<!--
+TOOL:    machine-design/_src/week4.html — 30-Day Machine Design Course content source, Week 4 (Days 19–24)
+FAMILY:  machine-design
+VERSION: 1.0.0
+DATE:    2026-11-16
+CHAT:    create an interactive html study for mechanical machine design in 30 days
+CHANGES: 1.0.0 - first version: flat and V-belts, chains and wire ropes, gear geometry, spur gear strength, helical and bevel gears, worm gears
+STATUS:  working
+-->
+
+<day n="19">
+<summary>Belts are the cheapest, quietest way to carry power between shafts that are some distance apart, and they slip instead of breaking when overloaded. Learn the belt tension ratio, centrifugal tension, the speed for maximum power, and how to select V-belts from a catalogue.</summary>
+<goals><li>Find belt length and angle of lap for open and crossed drives</li><li>Use T₁/T₂ = e<sup>μθ</sup> and the wedge effect of V-belts</li><li>Include centrifugal tension and find the speed for maximum power</li><li>Select V-belt section and number of belts with catalogue power ratings and correction factors</li><li>Compare flat, V, ribbed and timing belts on cost and duty</li></goals>
+<content>
+<section><h2>Geometry</h2>
+<div class="fx">Open drive: θ (small pulley) = π − 2·asin((D − d) / 2C)<br>Length L = 2C + (π/2)(D + d) + (D − d)² / (4C)<br>Crossed drive: θ = π + 2·asin((D + d)/2C);  L = 2C + (π/2)(D + d) + (D + d)²/(4C)</div>
+<p>The smaller pulley has the smaller angle of lap and slips first; it decides the capacity. Keep θ ≥ 120° (V-belts) and centre distance between about D and 3(D + d).</p>
+</section>
+<section><h2>Tensions and power</h2>
+<div class="fx">Flat belt: (T₁ − Tc) / (T₂ − Tc) = e<sup>μθ</sup>      Centrifugal tension Tc = m·v²   (m = mass per metre)<br>V-belt (groove angle 2β): replace μ by μ/sin β  — wedge action, 2.5–3× the grip<br>Power P = (T₁ − T₂)·v = (T₁ − m·v²)·(1 − e<sup>−μθ</sup>)·v<br>Maximum power when Tc = T₁/3, i.e. v = √(Tmax / 3m)</div>
+<p>Centrifugal tension does no work but uses up belt strength. Above the optimum speed, the power falls; at v = √(Tmax/m) the belt carries nothing. Practical V-belt speeds: 5–30 m/s, best about 20–25 m/s.</p>
+</section>
+<section><h2>Selecting V-belts</h2>
+<p>V-belts are not designed from first principles in practice — they are <b>selected</b> from the maker's or IS 2494 tables:</p>
+<ol class="steps">
+<li>Design power = rated power × service factor (1.0–1.2 fans and light conveyors; 1.3–1.5 compressors, machine tools; 1.6–2.0 crushers, mills).</li>
+<li>Choose the section from design power and small-pulley speed: A (13 mm), B (17), C (22), D (32) — or narrow wedge SPZ, SPA, SPB, SPC (more power per belt).</li>
+<li>Choose pulley diameters (not below the section minimum: A 75, B 125, C 200 mm) and the ratio.</li>
+<li>Calculate the pitch length; pick the nearest standard length and recalculate C.</li>
+<li>Read power per belt from the table; correct for angle of lap (Fθ) and length (FL).</li>
+<li>Number of belts = design power / (rated power per belt × Fθ × FL), rounded up.</li>
+</ol>
+</section>
+<section><h2>Belt types, materials and cost</h2>
+<table><tr><th>Belt</th><th>Strengths</th><th>Limits</th></tr>
+<tr><td>Flat (leather, rubber-fabric, polyamide)</td><td>High speed, long centres, efficient (98 %)</td><td>High shaft loads (needs high tension), slip</td></tr>
+<tr><td>Classical V (A, B, C, D)</td><td>Cheap, compact, forgiving, widely stocked</td><td>~95 % efficient; matched sets needed</td></tr>
+<tr><td>Narrow wedge (SPZ–SPC)</td><td>30–50 % more power in less width</td><td>Slightly dearer pulleys</td></tr>
+<tr><td>Poly-V (ribbed)</td><td>Small pulleys, high ratio, serpentine drives</td><td>Sensitive to misalignment</td></tr>
+<tr><td>Timing (synchronous)</td><td>No slip, 98 %, positioning drives</td><td>No overload slip; noisy; needs accurate alignment</td></tr></table>
+<p>Belt drives are usually the cheapest solution up to a few hundred kW. Their running cost is in tension maintenance and belt replacement — a drive with a slightly bigger pulley and fewer belts often costs less over its life.</p>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>V-belt drive: pulleys 150 / 400 mm, C = 800 mm, 1440 rpm, μ = 0.3, belt allowable tension 500 N, m = 0.19 kg/m</b><span class="mono">θ = π − 2·asin(250/1600) = 162°;  L = 2483 mm (pick the nearest standard length)
+μ′ = 0.3/sin 20° = 0.877;  e^(μ′θ) = 11.95
+v = π × 0.15 × 1440/60 = 11.31 m/s;  Tc = 0.19 × 11.31² = 24 N
+P per belt = (500 − 24)(1 − 1/11.95) × 11.31 = 4.93 kW
+Maximum power would be at v = √(500/0.57) = 29.6 m/s: 9.05 kW — a bigger driver pulley would use the belt better.</span></div>
+</section>
+<section><h2>Lab: belt power against speed</h2>
+<p>Change the belt type, pulleys and speed. The curve shows the power one belt can carry at each speed — note the optimum and how quickly it falls beyond.</p>
+<div class="widget" data-w="belt"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Set tension by the deflection method (force to deflect the span 16 mm per metre) and re-tension after the first day's running-in.</li>
+<li>Replace V-belts in matched sets — one new belt in an old set takes all the load.</li>
+<li>Shaft load from a belt drive is about T₁ + T₂ — often larger than the gear forces in a gearbox. Size bearings for it.</li>
+<li>Guard every belt drive (Factories Act); design the guard to allow tensioning without removal.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Select V-belts for a 7.5 kW, 1440 rpm motor driving a compressor at 600 rpm, 8 h/day, using any maker's catalogue.</li>
+<li>For a flat belt with m = 0.6 kg/m and Tmax = 2 kN, find the speed for maximum power.</li>
+<li>Why does a crossed belt carry more power than an open belt with the same pulleys?</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"V-belts grip better than flat belts because","o":["They are thicker","The wedge multiplies the normal force: μ′ = μ/sin β","They are made of rubber","They run slower"],"a":1,"e":"With 2β = 40°, μ′ ≈ 2.9 μ."},
+{"q":"Maximum belt power occurs when centrifugal tension equals","o":["Tmax","Tmax/2","Tmax/3","Zero"],"a":2,"e":"dP/dv = 0 gives m·v² = Tmax/3."},
+{"q":"Which pulley decides the capacity of an open belt drive?","o":["The larger","The smaller — it has the smaller angle of lap","Both equally","The idler"],"a":1,"e":"Slip starts on the smaller angle of lap."},
+{"q":"A drive that must keep exact timing should use","o":["Flat belt","V-belt","Timing (synchronous) belt","Rope"],"a":2,"e":"Teeth prevent slip."},
+{"q":"The service factor for a crusher drive is about","o":["1.0","1.1","1.6–2.0","0.5"],"a":2,"e":"Heavy shock loads need the largest factors."}
+]</quiz>
+</day>
+
+<day n="20">
+<summary>Chains drive positively without slip over longer centres than gears; wire ropes lift and haul. Learn roller chain selection, chain length in links, the polygonal (chordal) effect that limits speed and smoothness, and the design of wire ropes for hoists.</summary>
+<goals><li>Read roller chain designations and select a chain from power and speed</li><li>Calculate chain length in pitches and centre distance</li><li>Explain the polygonal effect and choose the number of sprocket teeth</li><li>Know lubrication regimes and chain wear</li><li>Design a wire rope: construction, stresses, sheave size and factor of safety</li></goals>
+<content>
+<section><h2>Roller chains</h2>
+<p>Roller chains (IS 2403 / ISO 606) are named by pitch: <b>08B</b> = 12.7 mm (½ in), 10B = 15.875, 12B = 19.05, 16B = 25.4 mm; "-2" and "-3" are duplex and triplex strands. The B series is the European/Indian form; the A series (ANSI 40, 50, 60, 80) has the same pitches with slightly different dimensions.</p>
+<div class="fx">Pitch Ø of sprocket D = p / sin(180°/z)<br>Chain speed v = z·p·n / 60 000  m/s<br>Length in pitches Ln = 2a/p + (z₁ + z₂)/2 + ((z₂ − z₁)/2π)² · p/a   → round to an even number<br>Design power = power × service factor × tooth factor; compare with the maker's rating chart</div>
+</section>
+<section><h2>The polygonal effect</h2>
+<p>A chain wraps the sprocket as a polygon, not a circle. As each link engages, the chain's effective radius swings between R and R·cos(180°/z): the chain speed pulses and the chain rises and falls. This causes vibration, noise and impact of rollers on teeth.</p>
+<div class="fx">Speed variation = 1 − cos(180°/z)    z = 11: 4.0 %   z = 17: 1.7 %   z = 25: 0.8 %</div>
+<p>Rules: at least 17 teeth on the small sprocket (19–25 at high speed); odd tooth numbers with an even number of links spread wear; ratio up to about 6:1; centre distance 30–50 pitches; slack side at the bottom.</p>
+</section>
+<section><h2>Lubrication and wear</h2>
+<p>Chains wear at the pin–bush joint; the pitch grows. Replace a chain at 1.5–3 % elongation, or it rides up the teeth and jumps. Lubrication type depends on speed: manual or drip below ~3 m/s, oil bath or disc 3–12 m/s, forced spray above. Most chain failures are lubrication failures.</p>
+</section>
+<section><h2>Wire ropes</h2>
+<p>A rope such as <b>6 × 37 FC</b> has six strands of 37 wires round a fibre core: flexible, for cranes and hoists. 6 × 19 is stiffer and more abrasion-resistant; 6 × 7 for haulage. Steel core (IWRC) is stronger and crushes less on drums.</p>
+<div class="fx">Direct stress σd = (W + rope weight) / A<br>Bending stress over a sheave σb = Er · dw / D   (Er ≈ 84 GPa for the rope, dw = wire Ø, D = sheave Ø)<br>Acceleration adds W·a/g;  starting with slack rope adds impact<br>Factor of safety = breaking load / (sum of loads)  — IS 3177 cranes: 5–8; lifts by code</div>
+<p>The sheave-to-rope diameter ratio D/d strongly controls rope life: keep D ≥ 25–30 d for 6 × 37 ropes, more for long life.</p>
+</section>
+<section><h2>Materials and cost</h2>
+<p>Chains: plain carbon/alloy steel, case-hardened pins and bushes; stainless or nickel-plated for food and wet duty; self-lubricating (sintered bush) where oiling is impossible. Sprockets: C45 with induction-hardened teeth for the small sprocket, cast iron for large driven sprockets. A chain drive costs more than a belt drive but less than gears for long centres; its running cost is lubrication and chain replacement. Wire ropes are consumables: inspect, discard by broken-wire count (IS 3973 / ISO 4309), and budget for replacement.</p>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>12B chain, z₁ = 17, z₂ = 51, a = 40 pitches, 720 rpm</b><span class="mono">p = 19.05 mm; pitch Ø of driver = 19.05/sin(10.59°) = 103.7 mm
+Ln = 80 + 34 + (34/2π)² / 40 = 114.73 → 116 links (even, no cranked link)
+Recalculate a for 116 links (slightly over 40 pitches) and allow adjustment for slack.
+v = 17 × 19.05 × 720/60 000 = 3.89 m/s → oil bath or drip
+Speed variation = 1 − cos(10.59°) = 1.7 %</span></div>
+</section>
+<section><h2>Chain selection procedure</h2>
+<ol class="steps">
+<li>Choose z₁ (≥ 17) and z₂ from the ratio.</li>
+<li>Design power = transmitted power × service factor (1.0–1.5) × multi-strand factor.</li>
+<li>From the maker's rating chart, choose pitch and strands at the small sprocket speed.</li>
+<li>Find chain length in links (even) and the exact centre distance; provide adjustment.</li>
+<li>Check chain speed and lubrication regime; check the breaking-load factor of safety (≥ 7–10 incl. dynamic loads).</li>
+<li>Design sprockets: tooth form from the standard, hub and bore.</li>
+</ol>
+</section>
+<section><h2>Lab: chain length and polygon effect</h2>
+<p>Change pitch, teeth and centre distance. Press <kbd>P</kbd> to watch the chain line rise and fall as the polygon turns; the graph shows the speed pulse.</p>
+<div class="widget" data-w="chain"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Never use fewer than 9 teeth even on slow drives; below 17 expect noise and wear.</li>
+<li>A duplex chain does not carry exactly twice a simplex — use the maker's multi-strand factor (≈ 1.7).</li>
+<li>Vertical drives need tensioners — the lower sprocket loses contact as the chain stretches.</li>
+<li>For ropes, reverse bends (S-shapes over two sheaves) cut life by half or more.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Select a chain for 5 kW from 1440 rpm to 480 rpm with moderate shock.</li>
+<li>In the lab, compare z₁ = 11 and z₁ = 25 for speed variation.</li>
+<li>A 2 t hoist uses a 6 × 37 rope of 16 mm (breaking load 150 kN) over a 400 mm drum. Find the factor of safety including bending stress (wire Ø ≈ 0.045d).</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Chain length should be an even number of pitches because","o":["It is cheaper","An odd number needs a weak cranked (offset) link","Sprockets need it","Lubrication"],"a":1,"e":"Inner and outer links alternate; odd counts need an offset link."},
+{"q":"Speed variation due to the polygonal effect with 17 teeth is about","o":["0.1 %","1.7 %","10 %","17 %"],"a":1,"e":"1 − cos(180°/17) = 1.7 %."},
+{"q":"Chain wear shows up as","o":["Shorter chain","Increase in pitch (elongation)","Thinner rollers only","Rust"],"a":1,"e":"Pin and bush wear lengthen every pitch."},
+{"q":"Bending stress in a wire rope over a sheave is reduced by","o":["A smaller sheave","A larger sheave diameter","More load","Fewer wires"],"a":1,"e":"σb = Er·dw/D."},
+{"q":"6 × 37 rope compared with 6 × 7 is","o":["Stiffer","More flexible","Weaker in all ways","Only for haulage"],"a":1,"e":"More, finer wires bend more easily."}
+]</quiz>
+</day>
+
+<day n="21">
+<summary>Gears are the precise, compact, efficient way to transmit power at a fixed ratio. Today is about geometry: the law of gearing, the involute, module and pressure angle, standard proportions, contact ratio, interference and profile shift.</summary>
+<goals><li>State the law of gearing and why the involute satisfies it</li><li>Use module, pitch circle, base circle, addendum and dedendum</li><li>Calculate centre distance and contact ratio</li><li>Find the minimum number of teeth to avoid interference and undercut</li><li>Know the standard modules and when to use profile shift</li></goals>
+<content>
+<section><h2>The law of gearing</h2>
+<p>For a constant speed ratio, the common normal at the point of contact of two teeth must always pass through one fixed point on the line of centres — the <b>pitch point</b>. Two curves do this well: cycloids (clocks) and <b>involutes</b> (nearly every power gear). The involute is the path of the end of a taut string unwound from a circle — the <b>base circle</b>.</p>
+<div class="cols">
+<div class="box"><b class="t">Why involutes win</b>The line of action is a straight line tangent to both base circles, so the force direction is constant. A small change in centre distance does not spoil the ratio. One straight-sided rack tool cuts all tooth numbers.</div>
+<div class="box"><b class="t">Pressure angle φ</b>The angle between the line of action and the common tangent at the pitch point. Standard 20°; 14½° (old, quieter, weaker); 25° (stronger, noisier).</div>
+</div>
+</section>
+<section><h2>Proportions (IS 2535 / ISO 53, full depth)</h2>
+<div class="fx">Pitch Ø d = m·z      Circular pitch p = π·m      Base Ø d<sub>b</sub> = d·cos φ      Base pitch p<sub>b</sub> = π·m·cos φ<br>Addendum h<sub>a</sub> = m      Dedendum h<sub>f</sub> = 1.25 m      Tip Ø d<sub>a</sub> = m(z + 2)      Root Ø d<sub>f</sub> = m(z − 2.5)<br>Centre distance a = m(z₁ + z₂)/2      Speed ratio i = z₂/z₁ = n₁/n₂</div>
+<p>Preferred modules (IS 2535, first choice): 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 12, 16, 20, 25 mm — an R10 series again (Day 1). Two gears mesh only if they have the same module and pressure angle.</p>
+</section>
+<section><h2>Contact ratio</h2>
+<p>The <b>contact ratio</b> is the average number of tooth pairs in contact. It must be above 1, or there will be moments with no tooth carrying the load.</p>
+<div class="fx">ε = [ √(r<sub>a1</sub>² − r<sub>b1</sub>²) + √(r<sub>a2</sub>² − r<sub>b2</sub>²) − a·sin φ ] / (π·m·cos φ)</div>
+<p>Spur gears: 1.4–1.8 is typical. Above 1.2 is acceptable; above 2 (high-contact-ratio gearing) runs very quietly. Helical gears add overlap (Day 23).</p>
+</section>
+<section><h2>Interference and undercut</h2>
+<p>If the tip of the gear reaches below the pinion's base circle, it digs into the pinion's non-involute root — <b>interference</b>. A generating cutter removes that material instead — <b>undercut</b> — weakening the tooth.</p>
+<div class="fx">Minimum teeth on a pinion meshing with a rack: z<sub>min</sub> = 2 / sin² φ   → 20°: 17.1 (18); 14½°: 32<br>With a gear of ratio u = z₂/z₁: z<sub>min</sub> = 2/((1+2u)·sin²φ) · (u + √(u² + (1+2u)·sin²φ))</div>
+<p><b>Profile shift</b> (x·m, cutter moved out) cures undercut on small pinions, balances tooth strength between pinion and gear, and lets you hit an exact centre distance. In practice a pinion with 12–17 teeth and a positive shift is normal.</p>
+</section>
+<section><h2>Materials, manufacture and cost</h2>
+<p>Gears are generated by hobbing or shaping (any tooth number with one tool), then shaved or ground for accuracy. Accuracy grades IS 3681 / ISO 1328: 10–12 rough, 7–8 general machinery (hobbed), 5–6 ground automotive and gearbox test-rig gears, 3–4 master gears. Each grade finer costs significantly more; a ground, case-carburised gear can cost 3–5× a hobbed through-hardened one — but carries 2–3× the power in the same size.</p>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>m = 4, z₁ = 18, z₂ = 36, φ = 20°</b><span class="mono">d₁ = 72, d₂ = 144, a = 108 mm
+r_b1 = 33.83, r_b2 = 67.66, r_a1 = 40, r_a2 = 76
+√(40² − 33.83²) = 21.34;  √(76² − 67.66²) = 34.61;  a·sin φ = 36.94
+Length of contact = 19.02 mm;  p_b = 11.81 mm → ε = 1.61
+z_min for this ratio = 15 (rack: 18) → 18 teeth are free of interference.</span></div>
+</section>
+<section><h2>Procedure for gear geometry</h2>
+<ol class="steps">
+<li>From the ratio, choose z₁ (≥ 18 for 20° without shift; fewer with profile shift) and z₂.</li>
+<li>Choose a module (from strength, Day 22) and the pressure angle.</li>
+<li>Calculate d, d<sub>a</sub>, d<sub>f</sub>, d<sub>b</sub> and centre distance; adjust z or shift for a required a.</li>
+<li>Check contact ratio ≥ 1.2 (aim for 1.4+).</li>
+<li>Check interference / undercut; apply profile shift if needed.</li>
+<li>Specify on the drawing: m, z, φ, x, accuracy grade, span or tooth-thickness measurement, backlash.</li>
+</ol>
+</section>
+<section><h2>Lab: involute pair and contact ratio</h2>
+<p>Real involute teeth are drawn for both gears. Press <kbd>P</kbd> to run the pair; the straight line through the pitch point is the line of action. Reduce the pinion teeth to see interference warnings.</p>
+<div class="widget" data-w="involute"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Make the tooth numbers of a pair <b>hunting</b> (no common factor, e.g. 19/37) so each pinion tooth meets every gear tooth — wear evens out.</li>
+<li>Backlash is needed for oil film and thermal growth: about 0.03–0.05 × m, made by thinning teeth or adjusting centre distance.</li>
+<li>Never mix 14½° and 20° gears, or module and diametral pitch gears.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Find the contact ratio for m = 3, z = 20/80, φ = 20° and φ = 25°.</li>
+<li>A pinion must have 12 teeth. What happens at 20° with no shift? What shift coefficient is needed to avoid undercut (x = (17 − z)/17)?</li>
+<li>Choose tooth numbers for a ratio of 3.8 ± 1 % with a hunting pair.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"The base circle diameter equals","o":["m·z","m·z·cos φ","m(z + 2)","π·m"],"a":1,"e":"d_b = d cos φ."},
+{"q":"The addendum of a standard full-depth gear is","o":["0.8 m","1.0 m","1.25 m","2.25 m"],"a":1,"e":"Dedendum is 1.25 m; whole depth 2.25 m."},
+{"q":"Contact ratio below 1 means","o":["Quiet gears","Moments with no tooth pair in contact","More strength","Interference"],"a":1,"e":"Continuous drive needs ε > 1; aim for 1.4+."},
+{"q":"Minimum pinion teeth with a rack at 20° to avoid interference is about","o":["12","18","32","50"],"a":1,"e":"2/sin²20° = 17.1 → 18 (practical limit about 14 with slight undercut)."},
+{"q":"Which property of involute gears lets a small error in centre distance be harmless?","o":["The ratio depends only on base circles, so it stays constant","They have no backlash","They are hardened","They use cycloids"],"a":0,"e":"Only the pressure angle and backlash change."}
+]</quiz>
+</day>
+
+<day n="22">
+<summary>Gear teeth fail in two main ways: they break at the root (bending fatigue) or their surfaces pit (contact fatigue). Learn the Lewis bending equation, the velocity factor, Buckingham's wear strength, and how modern ISO 6336 and AGMA methods build on them.</summary>
+<goals><li>Calculate tangential, effective and dynamic loads on a spur gear</li><li>Use the Lewis equation with the form factor Y</li><li>Find the wear (pitting) strength with Buckingham's equation</li><li>Decide whether bending or pitting governs and what to change</li><li>Choose gear materials and heat treatment for cost and capacity</li></goals>
+<content>
+<section><h2>Loads on a tooth</h2>
+<div class="fx">Pitch-line velocity v = π·d₁·n₁ / 60 000  m/s<br>Tangential load Ft = P / v = 2T / d<br>Effective load P<sub>eff</sub> = Cs·Ft / Cv     (Cs service factor; Cv velocity (dynamic) factor)<br>Barth: Cv = 3/(3+v) cut gears;  6/(6+v) hobbed;  5.6/(5.6+√v) precision ground</div>
+</section>
+<section><h2>Bending: the Lewis equation</h2>
+<p>In 1892 Wilfred Lewis treated the tooth as a cantilever of uniform strength — a parabola inscribed in the tooth, touching at the root. The geometry collapses into one factor Y that depends only on the tooth number and form.</p>
+<div class="fx">Beam strength S<sub>b</sub> = σ<sub>b</sub> · b · m · Y     (σ<sub>b</sub> allowable bending stress; b face width ≈ 8–12 m)<br>20° full depth: Y ≈ 0.484 − 2.87/z<br>Design: S<sub>b</sub> ≥ n · P<sub>eff</sub></div>
+<p>Because the pinion has fewer teeth (smaller Y), it is weaker unless its material is stronger. Compare σ<sub>b</sub>·Y for pinion and gear: the smaller product is the weaker member to design.</p>
+</section>
+<section><h2>Pitting: Buckingham's wear strength</h2>
+<p>Tooth surfaces roll and slide under high Hertzian contact stress. After millions of cycles, small pits form at the pitch line and grow until the tooth profile is destroyed.</p>
+<div class="fx">Wear strength S<sub>w</sub> = b · Q · d₁ · K<br>Q = 2·z₂/(z₂ + z₁)   (external gears)      K = 0.16 (BHN/100)²  MPa (steel on steel, 20°)<br>Hertz contact stress σ<sub>H</sub> = 0.591·√( Ft·E·(i+1) / (b·d₁·i·sin 2φ) )  — compare with surface endurance ≈ 2.76·BHN − 70 MPa</div>
+<p>Pitting resistance depends on <b>hardness</b>, so surface hardening (induction, carburising, nitriding) is the main lever. Bending depends on core strength and root fillet — module helps most there.</p>
+</section>
+<section><h2>Modern methods</h2>
+<p>Lewis and Buckingham are excellent for first sizing and for understanding. Final rating uses <b>ISO 6336</b> (or AGMA 2001 / IS 4460), which adds factors for load distribution across the face (K<sub>Hβ</sub>), dynamics (K<sub>v</sub>), application (K<sub>A</sub>), the real root stress (Y<sub>F</sub>, Y<sub>S</sub>), size, lubrication, and life. A spur gear rating tool built to ISO 6336 Method B is the right next step for any gear you will actually make.</p>
+</section>
+<section><h2>Materials and cost</h2>
+<table><tr><th>Material</th><th>σ<sub>b</sub> allow, MPa</th><th>Hardness</th><th>Relative cost / capacity</th></tr>
+<tr><td>Grey cast iron FG 260</td><td>~70</td><td>200 HB</td><td>Cheap, quiet, large slow gears</td></tr>
+<tr><td>C45, normalised</td><td>~140</td><td>200 HB</td><td>Cheap, general</td></tr>
+<tr><td>40Cr4, hardened + tempered</td><td>~230</td><td>280–320 HB</td><td>Medium cost, through-hardened gearboxes</td></tr>
+<tr><td>EN24, hardened + tempered</td><td>~280</td><td>300–350 HB</td><td>Heavier duty</td></tr>
+<tr><td>20MnCr5, case-carburised + ground</td><td>~330+</td><td>58–62 HRC case</td><td>Highest capacity per size; automotive, aerospace</td></tr>
+<tr><td>Nylon / acetal</td><td>~25</td><td>—</td><td>Quiet, unlubricated, light duty</td></tr></table>
+<p>Make the pinion <b>harder</b> than the gear (by 30–50 HB) so they wear in together. In production, case-carburised and ground gears are often the cheapest overall because the whole gearbox (housing, bearings, shafts) shrinks.</p>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>10 kW at 1440 rpm, z = 20/60, m = 4, b = 40 mm, 40Cr4 (σb 230 MPa, 300 HB), hobbed, Cs = 1.25</b><span class="mono">d₁ = 80 mm, v = 6.03 m/s, Ft = 1658 N
+Y = 0.484 − 2.87/20 = 0.340;  Cv = 6/(6 + 6.03) = 0.499;  Peff = 1.25 × 1658 / 0.499 = 4156 N
+Sb = 230 × 40 × 4 × 0.340 = 12 530 N → FOS bending 3.0
+Q = 1.5, K = 0.16 × 3² = 1.44 → Sw = 40 × 1.5 × 80 × 1.44 = 6912 N → FOS pitting 1.66
+Pitting governs: induction-harden or carburise the teeth before increasing the module.</span></div>
+</section>
+<section><h2>Spur gear design procedure</h2>
+<ol class="steps">
+<li>Choose ratio, tooth numbers (Day 21), service factor, materials and hardness.</li>
+<li>Decide the weaker member (σb·Y smaller) for bending.</li>
+<li>Estimate the module from Lewis with an assumed Cv; round to a standard module.</li>
+<li>Recalculate v, Cv and Peff; check beam strength.</li>
+<li>Check wear strength (or Hertz stress). If short, raise hardness, then face width, then module/diameter.</li>
+<li>Rate the final design to ISO 6336 / AGMA; specify accuracy grade, backlash and lubrication.</li>
+</ol>
+</section>
+<section><h2>Lab: Lewis, Buckingham and wear</h2>
+<p>Change module, face width, material and tooth quality. Bars compare the effective load with the bending and wear strengths — the shorter blue bar is the one that governs.</p>
+<div class="widget" data-w="spur"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Face width beyond about 12 m (or 1–1.2 d₁) does not help — misalignment loads only one end.</li>
+<li>Crown or lead-correct the teeth on wide or heavily loaded gears so the load stays central.</li>
+<li>Most gearbox failures start from lubrication or bearing problems, not tooth strength — check both.</li>
+<li>Do not stop at Lewis for a production gear; the factors it leaves out can be ±50 %.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>In the lab, find the smallest module that gives FOS ≥ 1.5 on both bending and wear for the example with C45 gears.</li>
+<li>Repeat with 20MnCr5 case-carburised. How much smaller is the gear pair?</li>
+<li>A cast-iron gear (σb 70 MPa) meshes with a steel pinion (σb 140 MPa), z = 18/72. Which is weaker in bending?</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"The Lewis equation treats the gear tooth as","o":["A column","A cantilever beam","A spring","A thin cylinder"],"a":1,"e":"A cantilever of uniform strength."},
+{"q":"Lewis form factor Y increases with","o":["Fewer teeth","More teeth","Smaller module","Lower speed"],"a":1,"e":"Teeth on larger gears are thicker at the root."},
+{"q":"Pitting resistance depends mainly on","o":["Module","Surface hardness","Colour","Face width only"],"a":1,"e":"Wear strength K ∝ BHN²."},
+{"q":"The velocity factor Cv","o":["Increases the allowable load","Accounts for dynamic loads from tooth errors at speed","Is always 1","Applies only to worms"],"a":1,"e":"Higher speed and poorer accuracy mean lower Cv."},
+{"q":"The pinion is usually made","o":["Softer than the gear","Harder than the gear by 30–50 HB","The same hardness","Of cast iron"],"a":1,"e":"It sees more cycles and has thinner roots."}
+]</quiz>
+</day>
+
+<day n="23">
+<summary>Helical gears run quieter and carry more than spur gears because their teeth engage gradually; bevel gears turn the drive through an angle. Learn their geometry, the virtual (formative) number of teeth, and above all the force components they put on shafts and bearings.</summary>
+<goals><li>Describe helix angle, normal and transverse module, and the virtual number of teeth</li><li>Calculate tangential, radial and axial forces on helical gears</li><li>Know double-helical and crossed-helical arrangements</li><li>Describe straight, spiral and hypoid bevel gears and the pitch cone</li><li>Calculate forces on bevel gears and their directions</li></goals>
+<content>
+<section><h2>Helical gears</h2>
+<p>The teeth are cut at a helix angle ψ (typically 15–30°) to the axis. Contact starts at one end of a tooth and spreads across the face, so load is shared by more teeth and the mesh is smooth and quiet.</p>
+<div class="fx">Normal module m<sub>n</sub> (the cutter) and transverse module m<sub>t</sub> = m<sub>n</sub> / cos ψ<br>Pitch Ø d = m<sub>n</sub>·z / cos ψ      tan φ<sub>n</sub> = tan φ<sub>t</sub> · cos ψ<br>Virtual number of teeth z<sub>v</sub> = z / cos³ψ   (use for Y in the Lewis equation)<br>Overlap ratio ε<sub>β</sub> = b·sin ψ / (π·m<sub>n</sub>)  — aim for ≥ 1</div>
+<p>A pair of meshing parallel-shaft helical gears has equal helix angles of <b>opposite hand</b>. A <b>double-helical (herringbone)</b> gear has both hands side by side; the thrusts cancel.</p>
+</section>
+<section><h2>Forces on helical gears</h2>
+<div class="fx">Ft = 2T / d      Fr = Ft · tan φ<sub>n</sub> / cos ψ      Fa = Ft · tan ψ</div>
+<p>The axial thrust must be taken by a <b>locating bearing</b> (angular contact, tapered roller, or a deep groove ball bearing for light thrust). Its direction depends on the hand of helix and the direction of rotation — sketch it for each shaft. On a countershaft with two helical gears, choose hands so the thrusts oppose and partly cancel.</p>
+</section>
+<section><h2>Bevel gears</h2>
+<p>Bevel gears connect intersecting shafts, usually at 90°. The teeth lie on <b>pitch cones</b> whose apexes meet at the shaft intersection.</p>
+<div class="fx">Pitch-cone angle tan γ₁ = z₁ / z₂ (at 90°)      Virtual teeth z<sub>v</sub> = z / cos γ<br>At the mean diameter: Ft = 2T / d<sub>m</sub><br>Pinion: Fr = Ft · tan φ · cos γ₁      Fa = Ft · tan φ · sin γ₁   (pushes away from the cone apex)<br>The pinion's axial force equals the gear's radial force, and vice versa</div>
+<table><tr><th>Type</th><th>Features</th></tr>
+<tr><td>Straight bevel</td><td>Simple, low speed (&lt; 5 m/s), noisy</td></tr>
+<tr><td>Spiral bevel</td><td>Curved teeth, smooth, high load and speed; thrust direction depends on hand and rotation</td></tr>
+<tr><td>Zerol</td><td>Curved teeth with zero spiral angle — forces like straight bevel</td></tr>
+<tr><td>Hypoid</td><td>Offset axes; vehicle rear axles; high sliding, needs EP (hypoid) oil</td></tr></table>
+</section>
+<section><h2>Materials and cost</h2>
+<p>Helical gears cost little more than spur gears to hob, so they are the default in industrial gearboxes. The cost is in the bearings and housing that must carry thrust. Spiral bevel gears need special generators (Gleason, Klingelnberg) and are usually bought as matched, lapped sets — always replace them as a pair. Case-carburised 20MnCr5 or 17CrNiMo6 is standard for automotive and helicopter bevel sets.</p>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>Helical pinion: T = 120 N·m, d = 80 mm, φn = 20°, ψ = 20°</b><span class="mono">Ft = 2 × 120 000 / 80 = 3000 N
+Fr = 3000 × tan20° / cos20° = 1162 N
+Fa = 3000 × tan20° = 1092 N
+Resultant 3397 N.  The thrust (36 % of Ft) needs an angular-contact or tapered roller bearing at one end.
+Same pinion as straight bevel with γ = 25°: Fr = 3000 × 0.364 × 0.906 = 990 N, Fa = 461 N.</span></div>
+</section>
+<section><h2>Procedure</h2>
+<ol class="steps">
+<li>Choose ψ (15–25° single helical; 30–40° double) and hand of helix.</li>
+<li>Find d, z<sub>v</sub>, overlap ratio; size by Lewis/Buckingham with z<sub>v</sub> and Cv (strength methods as Day 22, with the higher helical capacity).</li>
+<li>Calculate Ft, Fr, Fa for each gear; sketch their directions for the given rotation.</li>
+<li>Find bearing reactions in two planes, including the moment Fa·d/2.</li>
+<li>Arrange bearings: one locating (takes Fa) and one floating.</li>
+<li>For bevel gears, add mounting distance and adjustment shims to set the contact pattern.</li>
+</ol>
+</section>
+<section><h2>Lab: gear force resolver</h2>
+<p>Choose spur, helical, bevel or worm and see the three force components at the pitch point. These are the inputs to Days 13 and 25.</p>
+<div class="widget" data-w="gforce"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>The axial force on a helical gear also creates a <b>moment</b> Fa·d/2 on the shaft — forgetting it gives wrong bearing loads.</li>
+<li>Herringbone gears need one shaft free to float axially so the two halves share load.</li>
+<li>Set bevel gear contact pattern with marking compound and shims during assembly — it is never right "as machined".</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>A helical gear pair transmits 20 kW at 960 rpm: mn = 4, z = 23/69, ψ = 18°, φn = 20°. Find d, the forces and the overlap ratio for b = 50 mm.</li>
+<li>On a two-stage helical box, choose the hands so the countershaft thrusts oppose.</li>
+<li>A 90° bevel pair has z = 20/40. Find both pitch-cone angles and the forces on the gear if Ft = 2 kN.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Axial force on a helical gear is","o":["Ft·tan φ","Ft·tan ψ","Ft/cos ψ","Zero"],"a":1,"e":"Fa = Ft·tan ψ."},
+{"q":"The virtual number of teeth for a helical gear is","o":["z·cos ψ","z/cos ψ","z/cos³ψ","z·tan ψ"],"a":2,"e":"Used for the form factor."},
+{"q":"Two parallel-shaft helical gears in mesh have","o":["Same hand","Opposite hands","No helix","Any hand"],"a":1,"e":"Right-hand meshes with left-hand."},
+{"q":"Herringbone gears are used to","o":["Increase thrust","Cancel axial thrust","Run at 90°","Reduce cost"],"a":1,"e":"The two halves' thrusts oppose."},
+{"q":"For a 90° bevel pair, the pinion's axial force equals","o":["The gear's axial force","The gear's radial force","The tangential force","Zero"],"a":1,"e":"Pinion and gear force components swap."}
+]</quiz>
+</day>
+
+<day n="24">
+<summary>A worm and wheel gives a large reduction — 10:1 to 100:1 — in one compact stage, at a right angle, quietly. The price is sliding friction: efficiency, heat and wear. Learn the geometry, efficiency, self-locking, thermal rating and materials of worm gearing.</summary>
+<goals><li>Use worm geometry: starts, diameter factor q, lead angle, centre distance</li><li>Calculate sliding velocity, friction and efficiency</li><li>Judge when a worm drive is (and is not) self-locking</li><li>Check thermal capacity: heat generated vs heat dissipated</li><li>Choose worm and wheel materials</li></goals>
+<content>
+<section><h2>Geometry</h2>
+<div class="fx">Ratio i = z₂ / z₁   (z₁ = starts on the worm, 1–4)<br>Worm pitch Ø d₁ = q·m   (q = diameter factor, 8–16 standard)      Wheel Ø d₂ = m·z₂<br>Lead angle tan λ = z₁ / q      Centre distance a = m(q + z₂)/2<br>Sliding velocity v<sub>s</sub> = π·d₁·n₁ / (60 000·cos λ)</div>
+<p>The worm is like a screw (Day 12); the wheel is a helical gear with a throat that wraps the worm, so contact is along a line. Single-start worms give the highest ratio and the lowest efficiency.</p>
+</section>
+<section><h2>Efficiency and self-locking</h2>
+<div class="fx">η (worm driving) = (cos φ<sub>n</sub> − μ·tan λ) / (cos φ<sub>n</sub> + μ·cot λ)<br>η (wheel driving) = (cos φ<sub>n</sub> − μ·cot λ) / (cos φ<sub>n</sub> + μ·tan λ)  — ≤ 0 means self-locking<br>Friction for bronze on hardened steel falls with sliding speed: μ ≈ 0.08 at 0.1 m/s to ≈ 0.02 at 10 m/s</div>
+<p>Efficiency rises with lead angle (more starts) and with sliding speed (lower μ). Single-start, low-speed worms may be self-locking — but vibration can still let them creep. Never rely on a worm as the only brake on a hoist.</p>
+</section>
+<section><h2>Thermal rating</h2>
+<p>All the lost power becomes heat in the oil. Worm drives are usually limited by temperature, not by tooth strength.</p>
+<div class="fx">Heat generated Q = P<sub>in</sub>·(1 − η)<br>Heat dissipated Q = h·A·(t<sub>oil</sub> − t<sub>air</sub>)   (h ≈ 10–20 W/m²K still air; 25–40 with a fan on the worm shaft)<br>Keep the oil below about 80–90 °C (rise ≤ 50–60 °C)</div>
+</section>
+<section><h2>Materials and cost</h2>
+<p>Worm: case-carburised and ground steel (20MnCr5, 16MnCr5) or hardened 40Cr4. Wheel: <b>phosphor bronze</b> (centrifugally cast rim on a cast-iron or steel hub to save bronze), aluminium bronze for heavy slow drives, cast iron only for light, slow, hand drives. Use EP gear oils compatible with bronze (some sulphur additives attack it) or PAG synthetics for best efficiency. Worm gearboxes are cheap per unit of ratio, but over years their energy loss can cost more than a helical-bevel box that is 95 % efficient (Day 29).</p>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>2-start worm, q = 10, m = 6, wheel 40 teeth, 1440 rpm, 7.5 kW in, φn = 20°</b><span class="mono">λ = atan(2/10) = 11.31°;  d₁ = 60, d₂ = 240, a = 150 mm, ratio 20:1
+vs = π × 60 × 1440/60 000/cos11.31° = 4.61 m/s → μ ≈ 0.022
+η = (0.940 − 0.022 × 0.2)/(0.940 + 0.022 × 5) = 89.2 %
+Heat = 7.5 × 0.108 = 0.81 kW;  housing 1.2 m², h = 15 → oil rise 45 °C ✓
+Back-driving efficiency 88 % — this drive is NOT self-locking.</span></div>
+</section>
+<section><h2>Design procedure</h2>
+<ol class="steps">
+<li>From the ratio, choose starts z₁ and wheel teeth z₂ (≥ 28–30 to avoid undercut at 20°).</li>
+<li>Choose q and module; find λ, diameters and centre distance (round a to a standard value).</li>
+<li>Find sliding velocity, μ and efficiency; decide whether self-locking is wanted.</li>
+<li>Check the wheel teeth for bending (Lewis, with z<sub>v</sub>) and wear (bronze wear factor).</li>
+<li>Check thermal capacity; add fan, fins or a cooler if needed.</li>
+<li>Find forces (Day 23) and size worm shaft and bearings — the worm shaft takes large thrust.</li>
+</ol>
+</section>
+<section><h2>Lab: worm efficiency and heat</h2>
+<p>Change the starts, diameter factor and speed. The curve shows efficiency against lead angle for the current friction; the panel gives heat and oil temperature rise.</p>
+<div class="widget" data-w="worm"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Worm drives lose efficiency at start-up (low sliding speed, high μ) — motors need extra starting torque.</li>
+<li>Run in new worm sets at part load: the bronze conforms and efficiency improves by a few per cent.</li>
+<li>The worm usually goes below the wheel (splash lubrication) unless speed is very high.</li>
+<li>Check the worm shaft deflection — it is long and slender, and deflection spoils the contact.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>In the lab, find which combination of starts and q gives 30:1 with ≥ 85 % efficiency.</li>
+<li>Make the drive self-locking by changing only z₁ and q. What is the efficiency then?</li>
+<li>A 50:1 worm drive (η 70 %) runs 3000 h/year at 5.5 kW. At ₹8/kWh, what does its loss cost per year versus a 95 % helical-bevel unit?</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Lead angle of a 2-start worm with q = 10 is about","o":["5.7°","11.3°","20°","45°"],"a":1,"e":"atan(2/10) = 11.31°."},
+{"q":"Worm drive efficiency increases with","o":["Fewer starts","More starts (larger lead angle)","Higher friction","Lower speed"],"a":1,"e":"Larger λ raises η up to about 45°."},
+{"q":"The usual wheel material is","o":["Hardened steel","Phosphor bronze","Aluminium","Nylon"],"a":1,"e":"Bronze slides well on hardened steel and resists seizure."},
+{"q":"Worm gearboxes are most often limited by","o":["Tooth strength","Heat (thermal capacity)","Shaft size","Key size"],"a":1,"e":"Sliding losses heat the oil."},
+{"q":"A self-locking worm drive should be used as a hoist's only brake","o":["Always","Never — vibration can let it creep","Only if single start","Only below 1 m/s"],"a":1,"e":"Fit a proper brake."}
+]</quiz>
+</day>

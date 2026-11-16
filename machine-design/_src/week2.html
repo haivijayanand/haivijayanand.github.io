@@ -1,0 +1,487 @@
+<!--
+TOOL:    machine-design/_src/week2.html — 30-Day Machine Design Course content source, Week 2 (Days 7–12)
+FAMILY:  machine-design
+VERSION: 1.0.0
+DATE:    2026-11-16
+CHAT:    create an interactive html study for mechanical machine design in 30 days
+CHANGES: 1.0.0 - first version: fatigue and S-N curve, fluctuating stresses, limits and fits, bolted joints, welded and riveted joints, power screws
+STATUS:  working
+-->
+
+<day n="7">
+<summary>Most machine parts that break in service break by fatigue — a crack that grows a little with every load cycle until the part snaps at a stress well below its strength. Learn the S–N curve, the endurance limit and the Marin factors that turn a laboratory number into one you can design with.</summary>
+<goals><li>Describe the three stages of a fatigue failure and read a fatigue fracture surface</li><li>Explain the S–N curve and the endurance limit</li><li>Estimate Se′ from Sut and correct it with the Marin factors ka … ke</li><li>Estimate the life of a part loaded above the endurance limit</li><li>Know the materials and treatments that improve fatigue strength</li></goals>
+<content>
+<section><h2>How fatigue works</h2>
+<p>In 1842 the Versailles train disaster and, later, failed railway axles led August Wöhler to test axles under rotating bending. He found that steel survives a stress forever if the stress is low enough, but breaks after a number of cycles if it is higher — even far below the yield strength.</p>
+<div class="cols">
+<div class="box"><b class="t">1 · Initiation</b>A microscopic crack starts at a stress raiser: a fillet, a machining mark, an inclusion, corrosion pit.</div>
+<div class="box"><b class="t">2 · Propagation</b>The crack grows a little each cycle, leaving <b>beach marks</b> (clam-shell lines) on the fracture face.</div>
+<div class="box"><b class="t">3 · Final fracture</b>The remaining section is too small and breaks suddenly — a rough, fibrous zone. Its size tells you the load: small = low nominal stress.</div>
+</div>
+<p>Fatigue gives no visible warning: no necking, no bending. That is why it is responsible for the majority of mechanical failures in service — shafts, axles, springs, bolts, gear teeth, welded frames.</p>
+</section>
+<section><h2>The S–N curve and endurance limit</h2>
+<p>Plot fully reversed stress amplitude S against cycles to failure N on log–log axes. For steels the curve bends to a horizontal line at about 10⁶–10⁷ cycles: below that stress the part lasts indefinitely. That stress is the <b>endurance limit</b>. Aluminium and copper alloys have no knee — they always fail eventually, so their "fatigue strength" is quoted at a stated life (often 5 × 10⁸ cycles).</p>
+<div class="fx"><b>Rotating-beam endurance limit (steel):</b> Se′ = 0.5 Sut  for Sut ≤ 1400 MPa;  Se′ = 700 MPa above<br><b>High-cycle line:</b> Sf = a·N<sup>b</sup>,  a = (f·Sut)² / Se,  b = −⅓·log(f·Sut / Se)    (f ≈ 0.9 at 10³ cycles)<br><b>Life:</b> N = (σa / a)<sup>1/b</sup></div>
+</section>
+<section><h2>Marin factors: from test bar to real part</h2>
+<p>Se′ comes from a small, mirror-polished specimen in a laboratory. Your part is bigger, rougher, may be loaded axially, and must be reliable. Marin's equation corrects it:</p>
+<div class="fx">Se = ka · kb · kc · kd · ke · Se′</div>
+<table><tr><th>Factor</th><th>Accounts for</th><th>Typical values</th></tr>
+<tr><td>ka surface</td><td>Finish: ka = a·Sut<sup>b</sup></td><td>Ground 0.9; machined 0.8; hot-rolled 0.6; as-forged 0.4 (falls as Sut rises)</td></tr>
+<tr><td>kb size</td><td>Bigger parts have more flaws</td><td>1.24·d<sup>−0.107</sup> for 2.8–51 mm; 1.51·d<sup>−0.157</sup> to 254 mm; 1 for axial</td></tr>
+<tr><td>kc load</td><td>Type of loading</td><td>Bending 1; axial 0.85; torsion 0.59</td></tr>
+<tr><td>kd temperature</td><td>Hot parts</td><td>1 up to ~250 °C</td></tr>
+<tr><td>ke reliability</td><td>Scatter in fatigue data (σ ≈ 8 %)</td><td>50 %: 1; 90 %: 0.897; 99 %: 0.814; 99.9 %: 0.753</td></tr></table>
+<div class="def">The <b>stress concentration</b> (Kf from Day 6) is normally applied to the stress, not to Se — keep it in one place only.</div>
+</section>
+<section><h2>Materials and treatments for fatigue</h2>
+<ul>
+<li>Higher Sut raises Se′ — but the surface factor ka falls, so a rough high-strength part gains little. Polish or grind high-strength steel.</li>
+<li><b>Compressive residual stress</b> at the surface is the best friend of fatigue: shot peening, rolled fillets and threads, nitriding and carburising all add it. Gains of 20–50 % are common.</li>
+<li><b>Tensile residual stress</b> is the enemy: grinding burns, welding, some platings (chrome, nickel) and decarburised surfaces after heat treatment.</li>
+<li>Clean steels (vacuum-degassed, low inclusions) for bearings and springs.</li>
+<li>Corrosion destroys the endurance limit — there is no knee in corrosion fatigue. Protect the surface.</li>
+</ul>
+</section>
+<section><h2>Cost of fatigue strength</h2>
+<p>Grinding a fillet, shot peening a spring or rolling a thread costs little compared with a larger part — and much less than a field failure. In design reviews, look first at the cheap fixes: bigger radius (Day 6), better finish, peening; then at a better steel; last at a bigger section.</p>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>Machined steel bar, Sut = 600 MPa, Ø40, rotating bending</b><span class="mono">Se′ = 0.5 × 600 = 300 MPa
+ka = 4.51 × 600^−0.265 = 0.828
+kb = 1.24 × 40^−0.107 = 0.836
+Se = 300 × 0.828 × 0.836 = 208 MPa  (35 % of Sut, not 50 %)
+f ≈ 0.88 → f·Sut = 530 MPa;  a = 530²/208 = 1351 MPa;  b = −⅓ log(530/208) = −0.1356
+At σa = 250 MPa:  N = (250/1351)^(1/−0.1356) ≈ 2.5 × 10⁵ cycles
+At 1440 rpm that is about 3 hours of running.</span></div>
+</section>
+<section><h2>Procedure</h2>
+<ol class="steps">
+<li>Find Sut of the material in its heat-treated condition.</li>
+<li>Se′ = 0.5 Sut (or 700 MPa if Sut &gt; 1400).</li>
+<li>Apply ka (finish), kb (size), kc (load type), kd (temperature) and ke (reliability) to get Se.</li>
+<li>Calculate the alternating stress σa at the critical point, multiplied by Kf.</li>
+<li>If σa ≤ Se/n: infinite life. If not, find N from the S–N line and compare with the required life.</li>
+<li>If mean stress is present too, go to Day 8.</li>
+</ol>
+</section>
+<section><h2>Lab: Marin factors and the S–N curve</h2>
+<p>Change the strength, finish, size, load type and reliability, and watch the knee of the S–N curve move. Move σa above and below Se to see the life.</p>
+<div class="widget" data-w="sn"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Never use the textbook Se′ without Marin factors — the corrected value is often 30–40 % of Sut.</li>
+<li>A rotating shaft with a steady bending load sees <b>fully reversed</b> bending stress every revolution: 1440 rpm is 2 million cycles a day.</li>
+<li>Count the cycles honestly: a gear tooth is loaded once per revolution, a bearing race many times, a vibration-excited bracket at its natural frequency.</li>
+<li>Read failed parts. Beach marks point back to the origin; the origin shows you what to fix.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Find Se for a hot-rolled 40Cr4 bar (Sut 900), Ø60, axial load, 99 % reliability.</li>
+<li>Repeat for the same bar ground. How much does finish change Se?</li>
+<li>A machined C45 shaft (Sut 620) runs at 960 rpm with σa = 280 MPa. How many hours will it last?</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"The endurance limit of a polished steel specimen is roughly","o":["0.25 Sut","0.5 Sut","0.8 Sut","Equal to Sy"],"a":1,"e":"Se′ ≈ 0.5 Sut up to about 1400 MPa."},
+{"q":"Beach marks on a fracture surface indicate","o":["Overload","Fatigue crack growth","Corrosion only","Brittle fracture"],"a":1,"e":"They mark successive positions of a growing fatigue crack."},
+{"q":"The load factor kc for torsion is about","o":["1","0.85","0.59","0.5"],"a":2,"e":"Based on the von Mises shear relation, kc ≈ 0.577–0.59."},
+{"q":"Which treatment improves fatigue strength?","o":["Chrome plating","Shot peening","Decarburising","Grinding burns"],"a":1,"e":"Shot peening leaves compressive residual stress at the surface."},
+{"q":"Aluminium alloys","o":["Have a clear endurance limit at 10⁶ cycles","Have no true endurance limit","Never fail in fatigue","Have Se = Sut"],"a":1,"e":"Their S–N curve keeps falling; quote fatigue strength at a stated life."}
+]</quiz>
+</day>
+
+<day n="8">
+<summary>Real loads rarely swing evenly about zero. A bolt is preloaded, a spring is compressed before it works, a shaft carries a steady torque. Learn how mean stress lowers fatigue strength and the Goodman, Soderberg, Gerber and ASME criteria that handle it.</summary>
+<goals><li>Split a fluctuating stress into mean σm and alternating σa components</li><li>Draw the fatigue diagram with Goodman, Soderberg, Gerber, ASME-elliptic and Langer lines</li><li>Calculate the fatigue factor of safety for a given load line</li><li>Handle combined fluctuating bending and torsion with von Mises components</li><li>Choose which criterion to use</li></goals>
+<content>
+<section><h2>Mean and alternating stress</h2>
+<div class="fx">σm = (σmax + σmin) / 2      σa = (σmax − σmin) / 2      R = σmin / σmax</div>
+<table><tr><th>Loading</th><th>σm</th><th>R</th><th>Example</th></tr>
+<tr><td>Fully reversed</td><td>0</td><td>−1</td><td>Rotating shaft in bending</td></tr>
+<tr><td>Repeated (0 to max)</td><td>σa</td><td>0</td><td>Gear tooth bending, hoist chain</td></tr>
+<tr><td>Fluctuating</td><td>&gt; σa</td><td>0 to 1</td><td>Preloaded bolt, valve spring, connecting rod</td></tr></table>
+<p>A tensile mean stress opens cracks and shortens life; a compressive mean stress helps. Tests by Gerber (1874) and Goodman (1899) gave the lines we still use.</p>
+</section>
+<section><h2>The fatigue diagram</h2>
+<p>Plot σa (up) against σm (across). Fully reversed failure is at (0, Se); static failure at (Sut, 0). The failure line joins them:</p>
+<div class="fx"><b>Goodman:</b> σa/Se + σm/Sut = 1/n<br><b>Soderberg:</b> σa/Se + σm/Sy = 1/n   (very conservative)<br><b>Gerber:</b> nσa/Se + (nσm/Sut)² = 1   (parabola, fits test data)<br><b>ASME elliptic:</b> (nσa/Se)² + (nσm/Sy)² = 1<br><b>Langer (first-cycle yield):</b> σa + σm = Sy/n</div>
+<p>If the load grows with σa/σm fixed (the usual case: the same force just gets bigger), the factor of safety is measured along the line from the origin through the operating point.</p>
+</section>
+<section><h2>Combined stresses</h2>
+<p>For a shaft with alternating bending, steady torsion and so on, make von Mises equivalents of each component and use them in the Goodman equation:</p>
+<div class="fx">σa′ = √( (Kf·σa,bend + Kf,ax·σa,ax/0.85)² + 3(Kfs·τa)² )<br>σm′ = √( (Kf·σm,bend + Kf,ax·σm,ax)² + 3(Kfs·τm)² )<br>1/n = σa′/Se + σm′/Sut</div>
+<p>This is the basis of the DE-Goodman shaft equation on Day 13.</p>
+</section>
+<section><h2>Which line?</h2>
+<div class="cols">
+<div class="box"><b class="t">Goodman</b>The usual design choice: simple, slightly conservative, linear — easy to solve for size.</div>
+<div class="box"><b class="t">Gerber / ASME elliptic</b>Closer to test data; use for analysing failures or when weight matters.</div>
+<div class="box"><b class="t">Soderberg</b>Guards against yield as well, but too conservative for most designs. Common in older Indian textbooks and exams.</div>
+<div class="box"><b class="t">Always also check Langer</b>A point can be under the Goodman line and still yield on the first cycle when σm is large.</div>
+</div>
+</section>
+<section><h2>Materials and cost</h2>
+<p>Mean stress is often a design choice. Pre-setting springs (Day 16), autofrettage of gun barrels and pressure vessels, and shot peening all create a <b>compressive</b> residual mean stress at the surface — fatigue strength for little cost. Bolt preload (Day 10) does the opposite trick: it keeps the bolt's alternating stress small, even though the mean is high.</p>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>Steel with Sut 620, Sy 380, Se 220 MPa; σm = 120, σa = 80 MPa</b><span class="mono">Goodman:   1/n = 80/220 + 120/620 = 0.364 + 0.194 = 0.557 → n = 1.79
+Soderberg: 1/n = 80/220 + 120/380 = 0.680 → n = 1.47
+Gerber:    n = 2.24
+Langer:    n = 380/(80+120) = 1.90
+Design factor of safety = min(Goodman, Langer) = 1.79</span></div>
+</section>
+<section><h2>Procedure</h2>
+<ol class="steps">
+<li>Find σmax and σmin at the critical point over a load cycle (include Kf).</li>
+<li>Calculate σm and σa (von Mises components for combined loads).</li>
+<li>Find Se with Marin factors (Day 7).</li>
+<li>Decide the load line: usually proportional (from the origin).</li>
+<li>Calculate n by Goodman, and check first-cycle yield with Langer.</li>
+<li>If n is too low: lower Kf, improve finish, use a stronger material, or enlarge the section.</li>
+</ol>
+</section>
+<section><h2>Lab: fatigue diagram</h2>
+<p>Move the operating point (σm, σa). All five lines are drawn; the factors of safety along the load line are listed.</p>
+<div class="widget" data-w="goodman"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Apply Kf to <b>both</b> σa and σm for ductile materials (unless local yielding is shown to relieve the mean).</li>
+<li>A compressive mean stress does not increase allowable σa beyond Se in design — be conservative there.</li>
+<li>If loads vary in blocks (start-up, run, overload), use Miner's rule: Σ nᵢ/Nᵢ = 1 at failure (in practice design to 0.3–0.7).</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>A part sees stress varying from 40 to 220 MPa. Sut 700, Sy 450, Se 260. Find n by Goodman, Gerber and Langer.</li>
+<li>Draw the load line for a spring preloaded to σmin = 300, working to σmax = 600 MPa (torsional values). What does the line look like if preload stays constant while the stroke grows?</li>
+<li>A crankpin carries alternating bending 90 MPa and steady torsion 40 MPa. Find σa′ and σm′.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Stress varies from 20 to 180 MPa. σm and σa are","o":["100 and 80","80 and 100","180 and 20","100 and 160"],"a":0,"e":"σm = (180+20)/2 = 100; σa = (180−20)/2 = 80."},
+{"q":"The Goodman line joins","o":["Se on the σa axis to Sut on the σm axis","Se to Sy","Sy to Sut","Se to 0"],"a":0,"e":"Soderberg uses Sy; Goodman uses Sut."},
+{"q":"The most conservative of these criteria is","o":["Gerber","Goodman","Soderberg","ASME elliptic"],"a":2,"e":"Soderberg uses Sy instead of Sut, so its line lies inside the others."},
+{"q":"Why check the Langer line?","o":["It is the fatigue line","A point can satisfy Goodman but still yield on the first cycle","It replaces Goodman","Only for aluminium"],"a":1,"e":"At large mean stress, σa + σm can exceed Sy even though Goodman is satisfied."},
+{"q":"A rotating shaft carrying a steady torque has","o":["Alternating torsion","Steady (mean) torsional stress","No torsional stress","Fully reversed torsion"],"a":1,"e":"The torque does not change as the shaft rotates, so τ is a mean stress."}
+]</quiz>
+</day>
+
+<day n="9">
+<summary>No part is ever exactly its drawn size. Learn the ISO system of limits and fits (IS 919 / ISO 286): tolerance grades, fundamental deviations, hole-basis fits, how to choose clearance, transition and interference fits, and what surface finish to ask for.</summary>
+<goals><li>Read and write limits like Ø40 H7/g6 and convert them to millimetres</li><li>Explain IT grades and fundamental deviations</li><li>Choose clearance, transition and interference fits for common jobs</li><li>Specify surface roughness Ra suited to the function and process</li><li>Do a simple tolerance stack-up</li></goals>
+<content>
+<section><h2>The vocabulary</h2>
+<table><tr><th>Term</th><th>Meaning</th></tr>
+<tr><td>Basic (nominal) size</td><td>The size on the drawing, e.g. 40 mm</td></tr>
+<tr><td>Limits</td><td>Largest and smallest acceptable sizes</td></tr>
+<tr><td>Tolerance</td><td>Difference between the limits (= IT value)</td></tr>
+<tr><td>Deviation</td><td>Limit minus basic size: upper (ES, es) and lower (EI, ei). Capital = hole, small = shaft</td></tr>
+<tr><td>Fundamental deviation</td><td>The deviation nearest the zero line — given by the letter</td></tr>
+<tr><td>Fit</td><td>The relationship of a hole and shaft that go together</td></tr></table>
+<div class="fx">i = 0.45·∛D + 0.001·D  µm  (D = geometric mean of the size step)<br>IT6 = 10i   IT7 = 16i   IT8 = 25i   IT9 = 40i   IT11 = 100i</div>
+<p>Each grade is about 1.6× the previous one — another R5 series (Day 1). Letters place the zone: <b>H</b> holes start at zero and go up; <b>h</b> shafts start at zero and go down; a–g shafts lie below (clearance), k–n around (transition), p–z above (interference).</p>
+</section>
+<section><h2>Hole-basis system</h2>
+<p>It is easier to grind a shaft to any size than to make a bore to any size, because bores are made with fixed-size tools (reamers, plug gauges). So most fits use the <b>H hole</b> and change the shaft letter. Shaft-basis (h shaft) is used when one drawn bar carries several parts, such as pins.</p>
+<table><tr><th>Fit</th><th>Type</th><th>Use</th></tr>
+<tr><td>H11/c11</td><td>Loose running</td><td>Agricultural, wide-tolerance pivots</td></tr>
+<tr><td>H9/d9</td><td>Free running</td><td>Large clearances, high temperatures</td></tr>
+<tr><td>H8/f7</td><td>Close running</td><td>Plain bearings on accurate machines, sliding shafts</td></tr>
+<tr><td>H7/g6</td><td>Sliding</td><td>Spigots, locating pins that must slide, change gears</td></tr>
+<tr><td>H7/h6</td><td>Locational clearance</td><td>Parts assembled by hand, still accurate</td></tr>
+<tr><td>H7/k6</td><td>Transition</td><td>Gears, pulleys and couplings on keyed shafts; bearing inner rings (light load)</td></tr>
+<tr><td>H7/n6</td><td>Tight transition</td><td>Bearing inner rings (normal load), bushes</td></tr>
+<tr><td>H7/p6</td><td>Locational interference</td><td>Bushes pressed in, gear on shaft without key (light torque)</td></tr>
+<tr><td>H7/s6</td><td>Medium drive / press</td><td>Permanent assemblies, couplings carrying torque by friction (Day 27)</td></tr></table>
+</section>
+<section><h2>Surface finish</h2>
+<p>Roughness Ra is the average height of the surface profile, in µm. Specify it with the ISO 1302 / ISO 21920 symbol.</p>
+<table><tr><th>Ra, µm</th><th>Process</th><th>Use</th></tr>
+<tr><td>12.5–6.3</td><td>Rough turning, milling</td><td>Non-functional faces</td></tr>
+<tr><td>3.2–1.6</td><td>Fine turning, milling</td><td>Static fits, gear blanks, housings</td></tr>
+<tr><td>0.8–0.4</td><td>Grinding</td><td>Bearing seats, running fits, gear teeth</td></tr>
+<tr><td>0.2–0.1</td><td>Honing, lapping, superfinish</td><td>Seal lips, hydraulic rods, gauges</td></tr></table>
+<div class="def">A tolerance and the finish must agree: an IT6 diameter with Ra 6.3 µm is nonsense — the peaks alone eat half the tolerance. A rough rule: Ra ≤ ⅛ of the tolerance.</div>
+</section>
+<section><h2>Tolerance stack-up</h2>
+<p>When parts stack along an axis (bearings, spacers, circlips), their tolerances add. The <b>worst case</b> adds them all: guaranteed to assemble, but expensive. The <b>statistical (RSS)</b> method adds them as √Σtᵢ² — realistic for large batches, accepting a tiny rejection rate.</p>
+<div class="fx">Worst case: T = Σ tᵢ      Statistical: T = √(Σ tᵢ²)</div>
+</section>
+<section><h2>Cost of tolerance</h2>
+<p>Recall Day 3: each step from IT9 to IT6 roughly doubles machining cost, and grinding adds an operation. Use H7/g6, H7/k6 and H7/n6 for the few fits that matter, and the general tolerance (ISO 2768-m) for everything else.</p>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>Ø40 H7/g6 and Ø40 H7/p6</b><span class="mono">Size step 30–50 mm: D = √(30×50) = 38.7, i = 1.56 µm → IT6 = 16, IT7 = 25 µm
+Hole H7:  +0.025 / 0      → 40.000 … 40.025
+Shaft g6: es = −9, ei = −25 → 39.975 … 39.991
+  clearance 9 µm min, 50 µm max  → sliding fit
+Shaft p6: ei = +26, es = +42 → 40.026 … 40.042
+  interference 1 µm min, 42 µm max → light press fit</span></div>
+</section>
+<section><h2>Procedure for a fit</h2>
+<ol class="steps">
+<li>Decide what the joint must do: rotate freely, slide, locate accurately, transmit torque by friction.</li>
+<li>Choose the fit type and a standard combination from the table (hole basis).</li>
+<li>Look up the limits and write both on the drawing: Ø40 H7 on the bore, Ø40 g6 on the shaft (or the limits in mm).</li>
+<li>Specify surface finish consistent with the grade.</li>
+<li>For interference fits, check the stresses and assembly force (Day 27).</li>
+<li>For bearing seats, follow the bearing maker's recommendations (rotating load: tight fit on that ring).</li>
+</ol>
+</section>
+<section><h2>Lab: ISO 286 fit calculator</h2>
+<p>Pick a size, hole and shaft — or a common fit from the list. The zones are drawn to scale about the zero line.</p>
+<div class="widget" data-w="fits"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Bearing inner rings use their own tolerance zone (below zero), so a k5 shaft gives an interference, not a transition fit — always use the bearing catalogue table.</li>
+<li>Do not tolerance a diameter tighter than the measuring equipment in the shop can check.</li>
+<li>Add geometric tolerances (roundness, run-out, perpendicularity) for bearing seats; size alone is not enough.</li>
+<li>Temperature changes fits: an aluminium housing on a steel bearing loosens as it warms.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Find the limits of Ø25 H8/f7 and Ø100 H7/s6 in the lab. Give the maximum and minimum clearance or interference.</li>
+<li>Choose fits for: a gear keyed to a shaft; a bronze bush in a cast-iron housing; a hinge pin in a lever.</li>
+<li>Five parts of 10 ± 0.05 mm stack in a housing. What is the worst-case and RSS variation of the stack?</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"In Ø50 H7/g6, the H7 refers to","o":["The shaft","The hole","The surface finish","The material"],"a":1,"e":"Capital letters are holes; small letters are shafts."},
+{"q":"The fundamental deviation of an H hole is","o":["Lower deviation = 0","Upper deviation = 0","Symmetric about zero","Always positive and large"],"a":0,"e":"H holes start at the basic size and go up by the IT value."},
+{"q":"Which fit is a transition fit?","o":["H7/g6","H7/k6","H7/s6","H11/c11"],"a":1,"e":"k and n shafts give either a small clearance or small interference."},
+{"q":"Why is the hole-basis system preferred?","o":["Holes are cheaper to inspect","Bores are made with fixed-size tools and gauges, so fewer hole sizes are needed","Shafts are always round","It is required by law"],"a":1,"e":"Reamers and plug gauges come in fixed sizes; shafts can be ground to any size."},
+{"q":"Statistical tolerance stack-up adds tolerances as","o":["Σ t","√Σ t²","Max t","Σ t / n"],"a":1,"e":"Root-sum-square, assuming independent normal variations."}
+]</quiz>
+</day>
+
+<day n="10">
+<summary>Bolts hold most machines together. Learn thread standards, why preload is the secret of a reliable joint, the joint diagram, how much of an external load the bolt actually sees, tightening torque, and how to stop joints from separating or loosening.</summary>
+<goals><li>Read metric thread designations and use the tensile-stress area</li><li>Know property classes 8.8, 10.9 and 12.9 and proof load</li><li>Draw the joint diagram and calculate the joint constant C</li><li>Find bolt force, joint separation load and the load factor</li><li>Estimate tightening torque and choose a locking method</li></goals>
+<content>
+<section><h2>Threads and strength</h2>
+<p>Metric ISO threads (IS 4218 / ISO 261) have a 60° profile. <b>M12</b> means coarse pitch 1.75 mm; <b>M12×1.25</b> is fine pitch. The stress in a bolt is calculated on the <b>tensile-stress area</b> At, between the root and pitch areas.</p>
+<table><tr><th>Size</th><th>Pitch</th><th>At, mm²</th><th>Proof load 8.8, kN</th><th>Proof load 10.9, kN</th></tr>
+<tr><td>M8</td><td>1.25</td><td>36.6</td><td>21.2</td><td>30.4</td></tr>
+<tr><td>M10</td><td>1.5</td><td>58.0</td><td>33.7</td><td>48.1</td></tr>
+<tr><td>M12</td><td>1.75</td><td>84.3</td><td>48.9</td><td>70.0</td></tr>
+<tr><td>M16</td><td>2</td><td>157</td><td>91.0</td><td>130</td></tr>
+<tr><td>M20</td><td>2.5</td><td>245</td><td>147</td><td>203</td></tr>
+<tr><td>M24</td><td>3</td><td>353</td><td>212</td><td>293</td></tr></table>
+<p><b>Property class 8.8</b>: first digit × 100 = Sut (800 MPa); product of the digits × 10 = Sy (640 MPa). Proof strength Sp (≈ 0.9 Sy, 580–600 MPa for 8.8) is the stress the bolt must carry without permanent set. Nuts are graded to match (class 8 nut for 8.8 bolts).</p>
+</section>
+<section><h2>Why preload</h2>
+<p>Tightening the nut stretches the bolt and squeezes the clamped parts (members). When an external load P pulls the joint apart, the bolt stretches a little more and the members relax a little — but because the members are much stiffer than the bolt, <b>most of P just reduces the clamping force</b>; the bolt sees only a fraction C of it.</p>
+<div class="fx">C = kb / (kb + km)      (typically 0.15–0.3 for steel joints)<br>Bolt force Fb = Fi + C·P      Member force Fm = Fi − (1 − C)·P<br>Separation load P₀ = Fi / (1 − C)<br>Load factor (proof) n = (Sp·At − Fi) / (C·P)<br>kb ≈ E·At / l   km = 0.5774·π·E·d / (2·ln(5(0.5774l + 0.5d)/(0.5774l + 2.5d)))</div>
+<p>Two consequences: (1) a properly preloaded bolt sees only a small alternating load, so it does not fail in fatigue; (2) the joint stays closed, so it does not leak, slip or hammer. Recommended preload: <b>Fi ≈ 0.75 × proof load</b> for reusable joints, 0.9 for permanent.</p>
+</section>
+<section><h2>Tightening torque</h2>
+<div class="fx">T = K · Fi · d       K ≈ 0.20 dry steel, 0.15–0.18 oiled, 0.12 with MoS₂ paste</div>
+<p>Torque is a poor measure of preload: friction scatter gives ±25 %. Better methods: torque-angle (turn-of-nut), direct tension indicators, hydraulic tensioners, ultrasonic bolt-length measurement — used on critical joints such as cylinder heads, flywheels and test-rig couplings.</p>
+</section>
+<section><h2>Bolts in shear and locking</h2>
+<p>A joint loaded sideways should carry the load by <b>friction</b> from the preload (μ·Fi per surface), with fitted bolts or dowels if slip is not acceptable. Do not rely on a clearance bolt in shear — the joint will slip and the bolt will bend.</p>
+<p>Loosening is caused mostly by transverse slip. Remedies in order of effectiveness: enough preload and long, slender bolts; wedge-locking washer pairs; prevailing-torque nuts (nylon insert, all-metal); thread-locking adhesive; safety wire or tab washers for critical parts. Plain spring washers do little.</p>
+</section>
+<section><h2>Materials and cost</h2>
+<p>8.8 is the general-purpose grade; 10.9 and 12.9 give smaller, lighter joints but are more sensitive to hydrogen embrittlement (careful with electroplating) and to fatigue at the thread. Rolled threads (after heat treatment) are about twice as good in fatigue as cut threads. Stainless A2-70/A4-70 bolts have lower strength (Sy 450 MPa) and gall easily — use anti-seize. A standard bolt costs rupees; a special bolt costs hundreds — design around catalogue sizes and lengths.</p>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>M12 class 8.8, grip 40 mm, steel members, external load 15 kN per bolt</b><span class="mono">Proof load = 580 × 84.3 = 48.9 kN;  Fi = 0.75 × 48.9 = 36.7 kN;  T ≈ 0.2 × 36.7 × 12 = 88 N·m
+kb ≈ 507 kN/mm, km ≈ 2235 kN/mm → C = 0.185
+Bolt force = 36.7 + 0.185 × 15 = 39.5 kN   (bolt sees only 2.8 kN of the 15 kN)
+Member force = 36.7 − 0.815 × 15 = 24.5 kN (joint still closed)
+Load factor = (48.9 − 36.7)/(0.185 × 15) = 4.4;  separation at P₀ = 36.7/0.815 = 45 kN</span></div>
+</section>
+<section><h2>Procedure</h2>
+<ol class="steps">
+<li>Find the external load per bolt, including prying and moment effects for eccentric joints.</li>
+<li>Choose size and property class; find At and proof load.</li>
+<li>Set the preload (0.75 Fp), calculate kb, km and C.</li>
+<li>Check load factor against proof, separation factor, and bolt fatigue: σa = C·P / (2At) against the thread endurance limit (≈ 130–160 MPa for rolled 8.8–12.9).</li>
+<li>Calculate tightening torque and choose a tightening method and locking device.</li>
+<li>Check thread engagement (nut height ≥ 0.8d in steel; ≥ 1.5–2d in aluminium or cast iron).</li>
+</ol>
+</section>
+<section><h2>Lab: bolted-joint diagram</h2>
+<p>The blue line is the bolt, the orange line the clamped members. The vertical black bar is the external load P, shared between them. Raise P until the joint opens.</p>
+<div class="widget" data-w="bolt"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>A soft gasket in the joint makes km small and C large — the bolt then sees most of the load. Use metal-to-metal contact with O-rings in grooves.</li>
+<li>Longer bolts (with sleeves or reduced shanks) lower kb and C — better fatigue life.</li>
+<li>Never reuse torque-to-yield bolts.</li>
+<li>Do not use 12.9 bolts in tapped aluminium without thread inserts.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Repeat the example with an aluminium housing. What happens to C and the separation load?</li>
+<li>A cylinder cover with 8 bolts carries 160 kN of pressure force. Choose bolt size and class for a separation factor of 2.</li>
+<li>Estimate the tightening torque for M16 10.9 bolts with oiled threads at 75 % proof load.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Property class 10.9 means","o":["Sut 1000 MPa, Sy 900 MPa","Sut 109 MPa","Sy 1000 MPa, Sut 900 MPa","Hardness 10.9 HRC"],"a":0,"e":"First number × 100 = Sut; product × 10 = Sy."},
+{"q":"In a preloaded joint with C = 0.2, an external load of 10 kN increases the bolt force by","o":["10 kN","8 kN","2 kN","0"],"a":2,"e":"ΔFb = C·P = 0.2 × 10 = 2 kN."},
+{"q":"A soft gasket between the members","o":["Reduces bolt load","Lowers km and raises the share of load on the bolt","Has no effect","Prevents loosening"],"a":1,"e":"Lower km means C = kb/(kb+km) rises."},
+{"q":"Tightening torque T = K·Fi·d with dry steel threads uses K ≈","o":["0.02","0.2","2","20"],"a":1,"e":"K ≈ 0.2 for dry, as-received steel threads."},
+{"q":"The main cause of self-loosening is","o":["Axial vibration","Transverse slip of the joint","Temperature only","Overtightening"],"a":1,"e":"Junker's tests showed transverse slip is the dominant cause."}
+]</quiz>
+</day>
+
+<day n="11">
+<summary>Permanent joints: welds for steel structures, frames and fabricated housings, rivets where welding is not possible. Learn the strength of butt and fillet welds, how to design an eccentrically loaded weld group, fatigue of welds, and the classic riveted-joint efficiency calculation.</summary>
+<goals><li>Size butt and fillet welds for direct loads</li><li>Use the throat area and allowable stresses from IS 816 / IS 800</li><li>Design eccentric weld groups with primary and secondary shear</li><li>Know why welds are weak in fatigue and what to do about it</li><li>Calculate riveted joint strength and efficiency</li></goals>
+<content>
+<section><h2>Welds</h2>
+<div class="cols">
+<div class="box"><b class="t">Butt weld</b>Joins plates edge to edge. Full penetration: as strong as the plate. Stress = P / (t·l).</div>
+<div class="box"><b class="t">Fillet weld</b>Triangle in a corner. Fails across the <b>throat</b> t = 0.707 h (h = leg). Treated as shear on throat area.</div>
+<div class="box"><b class="t">Plug / slot</b>Through holes in a lap plate; for extra area.</div>
+</div>
+<div class="fx"><b>Fillet weld, parallel or transverse load:</b> τ = P / (0.707·h·l)   (transverse fillets are ≈ 1.4× stronger; designers usually ignore this)<br><b>Allowable (IS 816, E41 electrodes, mild steel):</b> τ ≈ 108 MPa shop welds; take 94 MPa as a working value with site/fatigue margin</div>
+</section>
+<section><h2>Eccentric weld groups</h2>
+<p>A bracket welded to a column with the load off to one side twists the weld group. Treat the welds as lines of unit width:</p>
+<div class="fx">Primary shear: τ₁ = P / A    (A = 0.707 h × total length)<br>Secondary shear: τ₂ = P·e·r / J,  J = 0.707 h × Ju<br>Two parallel welds of length l, b apart: Ju = l(3b² + l²) / 6<br>Resultant at the farthest point: vector sum of τ₁ and τ₂</div>
+<p>For a weld in bending (bracket loaded in its own plane, welds above and below), use the unit section modulus Zu instead: σ = M / (0.707 h·Zu), and combine with direct shear.</p>
+</section>
+<section><h2>Fatigue of welds</h2>
+<p>Welds are full of stress raisers (toe angle, undercut, lack of fusion) and carry tensile residual stresses close to yield. So their fatigue strength hardly depends on the steel's strength. Codes (IS 800, Eurocode 3, BS 7608) give <b>detail categories</b> — S–N curves for each joint shape. A fillet-welded attachment may be good for only 70–80 MPa stress <i>range</i> at 2 × 10⁶ cycles.</p>
+<ul><li>Put welds in low-stress regions; avoid welds at sharp section changes.</li><li>Grind weld toes smooth, or peen them (hammer or ultrasonic peening).</li><li>Stress-relieve after welding when distortion or residual stress matters (machined housings).</li></ul>
+</section>
+<section><h2>Riveted joints</h2>
+<p>Rivets are still used for aircraft skins, bridges, brake linings and where materials cannot be welded. A joint can fail by:</p>
+<div class="fx">Tearing of plate between rivets: Pt = (p − d)·t·σt<br>Shearing of rivets: Ps = n·(π/4)d²·τ   (×2 for double shear)<br>Crushing of plate or rivet: Pc = n·d·t·σc<br>Efficiency η = least of (Pt, Ps, Pc) / (p·t·σt)<br>Unwin's formula for rivet hole: d = 6√t  (t in mm)</div>
+<p>Lap joints reach 50–60 % efficiency; double-strap butt joints with several rows reach 80–90 %. A welded butt joint is 100 %.</p>
+</section>
+<section><h2>Materials and cost</h2>
+<p>Low-carbon steels (E250, E350) weld easily; above about 0.25 % C, or alloy steels, need preheat and controlled cooling. Aluminium welding needs TIG/MIG and loses the temper strength near the weld (6061-T6 drops to about half). Welding cost is roughly proportional to <b>weld metal volume</b> — h² × length — so a 10 mm fillet costs four times a 5 mm fillet. Specify the smallest weld that works; do not "add a bit for safety" everywhere.</p>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>Bracket on two vertical fillet welds</b><span class="mono">P = 40 kN at e = 150 mm; welds l = 120 mm, b = 80 mm apart; h = 8 mm
+Throat 5.66 mm, A = 2 × 120 × 5.66 = 1357 mm²  → τ₁ = 29.5 MPa
+Ju = 120(3×80² + 120²)/6 = 672 000 mm³;  J = 3.80 × 10⁶ mm⁴;  r = 72.1 mm
+τ₂ = 40 000 × 150 × 72.1 / 3.80×10⁶ = 113.8 MPa
+Resultant at the far corner = 132.5 MPa > 94 → need h = 8 × 132.5/94 = 11.3 → 12 mm</span></div>
+</section>
+<section><h2>Procedure (eccentric weld)</h2>
+<ol class="steps">
+<li>Draw the weld group and find its centroid G.</li>
+<li>Move the load to G: a direct force P plus a moment P·e.</li>
+<li>Calculate primary shear (P/A) and secondary shear (P·e·r/J) at the farthest points.</li>
+<li>Add them as vectors; find the largest resultant.</li>
+<li>Size the leg h so the resultant ≤ allowable. Round up to a standard leg (3, 4, 5, 6, 8, 10, 12 mm).</li>
+<li>Check fatigue by the code's detail category if the load varies.</li>
+</ol>
+</section>
+<section><h2>Lab: eccentric fillet weld</h2>
+<p>Change the load, eccentricity, weld length and spacing. The vectors at the critical corner show how primary and secondary shear add.</p>
+<div class="widget" data-w="weld"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Increasing the <b>spacing b</b> is far more effective than increasing h when the moment dominates.</li>
+<li>Show weld symbols to ISO 2553 / IS 813 on drawings; do not write "weld all round" without a size.</li>
+<li>Do not machine a bearing bore before welding is finished and stress-relieved.</li>
+<li>Rivet and bolt holes in the same joint do not share load well — use one or the other.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>In the lab, keep the weld size at 8 mm. What spacing b makes the joint safe?</li>
+<li>Design a double-riveted lap joint for 12 mm plates (σt 80, τ 60, σc 120 MPa) and find its efficiency.</li>
+<li>Why does a high-strength steel welded frame not gain fatigue life over a mild-steel one?</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"The throat of a fillet weld with leg h is","o":["h","0.5 h","0.707 h","1.414 h"],"a":2,"e":"For an equal-leg 45° fillet, throat = h·cos 45°."},
+{"q":"In an eccentric weld group, secondary shear is","o":["P/A","P·e·r/J","P·e/A","Zero at the corners"],"a":1,"e":"Torsion of the weld group: τ = T·r/J with T = P·e."},
+{"q":"Welded joints in fatigue","o":["Gain strength with high-strength steel","Have strength largely independent of the parent steel's strength","Never fail","Are stronger than plain plate"],"a":1,"e":"Weld toe defects and residual stress dominate."},
+{"q":"Doubling the fillet leg size multiplies weld cost by about","o":["2","4","1.4","8"],"a":1,"e":"Weld metal volume ∝ h²."},
+{"q":"Efficiency of a riveted joint is","o":["Rivet strength / plate strength","Least joint strength / strength of solid plate","Number of rivets × 100","Always 100 %"],"a":1,"e":"Compare the weakest failure mode with the solid plate."}
+]</quiz>
+</day>
+
+<day n="12">
+<summary>Power screws turn rotation into a large, slow, precise linear force: screw jacks, vices, presses, lathe lead screws and machine-tool slides. Learn the thread forms, torque to raise and lower, efficiency, self-locking, and the stresses in the screw and nut.</summary>
+<goals><li>Compare square, trapezoidal (ISO metric) and ACME threads</li><li>Calculate lead, helix angle, torque to raise and lower</li><li>Include collar friction</li><li>Explain self-locking and why it limits efficiency to below 50 %</li><li>Check the screw for combined stress, buckling and nut bearing pressure</li></goals>
+<content>
+<section><h2>Thread forms</h2>
+<table><tr><th>Form</th><th>Angle</th><th>Notes</th></tr>
+<tr><td>Square</td><td>0°</td><td>Highest efficiency, hard to make, no wear take-up</td></tr>
+<tr><td>Trapezoidal (Tr, IS 7008 / ISO 2904)</td><td>30°</td><td>The usual Indian/ISO choice; split nut can take up wear</td></tr>
+<tr><td>ACME</td><td>29°</td><td>Inch-based equivalent of trapezoidal</td></tr>
+<tr><td>Buttress</td><td>7°/45°</td><td>Heavy load in one direction (vices, gun breeches)</td></tr>
+<tr><td>Ball screw</td><td>—</td><td>Rolling balls; 90 % efficient, needs a brake — CNC machines</td></tr></table>
+<p>Tr40×7 means nominal Ø40, pitch 7. <b>Lead</b> L = number of starts × pitch: the axial travel per turn.</p>
+</section>
+<section><h2>Torque and efficiency</h2>
+<div class="fx">Mean diameter dm = d − p/2      tan λ = L / (π·dm)      μ′ = μ / cos α  (α = half thread angle)<br>Raise: T = (W·dm/2) · (L + π·μ′·dm) / (π·dm − μ′·L)  + W·μc·dc/2<br>Lower: T = (W·dm/2) · (π·μ′·dm − L) / (π·dm + μ′·L)  + W·μc·dc/2<br>Efficiency η = W·L / (2π·T_raise)<br>Self-locking if π·μ′·dm &gt; L, i.e. λ &lt; φ (friction angle)</div>
+<p>The <b>collar</b> (thrust face between screw and the load cap) often wastes as much torque as the thread itself. A thrust ball bearing there nearly doubles the efficiency.</p>
+<div class="def"><b>The self-locking trade-off.</b> A screw that holds its load without a brake must have λ &lt; φ. It can be shown that its efficiency is then always below 50 %. High efficiency (ball screws) and self-locking cannot go together — add a brake.</div>
+</section>
+<section><h2>Stresses in the screw and nut</h2>
+<div class="fx">Direct: σc = W / (π·dc²/4)   (dc = core Ø)      Torsion: τ = 16T / (π·dc³)<br>Combined (Tresca): τmax = √((σc/2)² + τ²)<br>Thread shear in nut: τn = W / (π·d·t·z)   (z threads engaged, t thread thickness at root ≈ p/2)<br>Bearing pressure: pb = W / ((π/4)(d² − dc²)·z)  ≤ 10–17 MPa for steel on bronze<br>Long screws in compression: check buckling with Euler/Johnson</div>
+</section>
+<section><h2>Materials and cost</h2>
+<p>The screw: C45 or 40Cr4, thread rolled or whirled for production, ground for precision lead screws. The nut: phosphor bronze or cast iron — dissimilar metals to avoid seizure, and the cheaper part wears. Nut length is set by bearing pressure, not strength. A rolled trapezoidal screw costs a fraction of a ball screw; choose ball screws only when efficiency, speed or positional accuracy justify them.</p>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>Screw jack, Tr40×7 single start, W = 50 kN, μ = μc = 0.12, collar Ø60</b><span class="mono">dm = 40 − 3.5 = 36.5 mm;  λ = atan(7/(π×36.5)) = 3.49°;  μ′ = 0.12/cos15° = 0.124 (φ = 7.08°)
+Thread torque to raise = 170.4 N·m;  collar torque = 50 000 × 0.12 × 30 = 180 N·m
+Total 350 N·m → efficiency 15.9 %  (thread alone 32.7 %)
+λ 3.49° < φ 7.08° → self-locking. With a 400 mm handle: 350/0.4 = 876 N push — too much for one person; add a ratchet or a thrust bearing.</span></div>
+</section>
+<section><h2>Design procedure</h2>
+<ol class="steps">
+<li>Estimate the core diameter from direct compression with a generous factor (σ ≈ 60–80 MPa).</li>
+<li>Choose the standard trapezoidal thread above it; find dm, p and λ.</li>
+<li>Calculate torques to raise and lower, efficiency, and confirm self-locking if required.</li>
+<li>Check combined stress in the screw core and buckling for the unsupported length.</li>
+<li>Find the number of nut threads from bearing pressure; check thread shear in nut and screw.</li>
+<li>Size the handle (operator effort ≈ 250–400 N) and the collar or thrust bearing.</li>
+</ol>
+</section>
+<section><h2>Lab: screw efficiency and self-locking</h2>
+<p>Change thread form, pitch, starts and friction. The curve shows efficiency against helix angle; the orange line marks the self-locking limit λ = φ.</p>
+<div class="widget" data-w="screw"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Multi-start threads raise lead and efficiency — and usually lose self-locking. Check.</li>
+<li>Vibration can make a "self-locking" screw creep down. Use a brake for anything that holds a load over people.</li>
+<li>Keep the screw in tension where possible (hang the load) to avoid buckling.</li>
+<li>Protect lead screws from chips and dust with bellows or wipers; wear on the nut controls life.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Change the example to a 2-start thread. Is it still self-locking? What is the efficiency?</li>
+<li>Design the nut for the example: bearing pressure 15 MPa, phosphor bronze. How many threads and what nut length?</li>
+<li>Check the screw core (Ø32) for combined stress while raising the load.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Lead of a two-start thread with pitch 6 mm is","o":["3 mm","6 mm","12 mm","24 mm"],"a":2,"e":"Lead = starts × pitch."},
+{"q":"A screw is self-locking when","o":["Helix angle > friction angle","Helix angle < friction angle","Efficiency > 50 %","Pitch is fine"],"a":1,"e":"Then the load cannot drive the screw back."},
+{"q":"The efficiency of a self-locking screw is always","o":["Above 50 %","Below 50 %","Exactly 50 %","100 %"],"a":1,"e":"A classical result: η < 50 % if λ < φ."},
+{"q":"Why are nuts for power screws often bronze?","o":["Cheaper than steel","Dissimilar metals resist seizure and the replaceable nut takes the wear","Bronze is stronger","Magnetic reasons"],"a":1,"e":"Steel screw on bronze nut slides well; the nut is the wear part."},
+{"q":"The number of threads in the nut is usually set by","o":["Thread shear","Bearing pressure","Torsion","Buckling"],"a":1,"e":"Allowable bearing pressure (≈ 10–17 MPa) controls wear."}
+]</quiz>
+</day>

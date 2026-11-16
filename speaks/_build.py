@@ -2,10 +2,11 @@
 """
 TOOL:    speaks/_build.py
 FAMILY:  SITE
-VERSION: 1.5.0
-DATE:    2026-11-07
+VERSION: 1.6.0
+DATE:    2026-11-16
 CHAT:    Blogger to GitHub migration (Vijay Anand Speaks)
-CHANGES: 1.5.0 - Aa reading settings (light/dark theme, text size, font, line spacing) on every essay (assets/js/reader.js): text size, font incl. Tamil, line spacing; text wraps on phones
+CHANGES: 1.6.0 - every page loads assets/js/site-progress.js (sign-in, reading progress, activity log)
+         1.5.0 - Aa reading settings (light/dark theme, text size, font, line spacing) on every essay (assets/js/reader.js): text size, font incl. Tamil, line spacing; text wraps on phones
          1.4.0 - Listen button on every essay (assets/js/read-aloud.js); Tamil essays use a Tamil voice when the device has one
          1.3.0 - index header shrunk to two lines and pinned at the top; Home and Tools links moved into the filter sidebar
          1.2.0 - desktop index (>=1100 px) uses the full width: sticky filter sidebar + responsive card grid
@@ -29,7 +30,7 @@ Topics (_topics.json): { "<content file name without .json>": ["Management", "Ph
   "_topics" lists the allowed topics in the order the filter shows them. Every essay needs at least one.
   Kept apart from _content so running _import_blogger.py again does not wipe them.
 """
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 
 PAGE_VERSION = "1.3.0"
 PAGE_DATE = "2026-11-07"
@@ -239,6 +240,7 @@ def head(title, desc, url, image, extra_css, lang):
 <meta name="theme-color" content="#1f6f5c">
 {FONTS}
 <style>{BASE_CSS}{extra_css}</style>
+  <script type="module" src="/assets/js/site-progress.js"></script>
 </head>
 """
 

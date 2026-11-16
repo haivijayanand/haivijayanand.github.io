@@ -2,10 +2,11 @@
 <!--
 TOOL: my-progress/index.html — reader dashboard: progress by series + My Certificates (haivijayanand.github.io)
 FAMILY: site-progress
-VERSION: 1.1.0
+VERSION: 1.2.0
 DATE: 2026-11-16
 CHAT: Login, progress & certificates on GitHub Pages with Firebase
-CHANGES: 1.1.0 — Download PDF reopens the page's own certificate design when it supports reprinting
+CHANGES: 1.2.0 — Activity tab: the reader's own history of pages opened (with time on page), completions and certificates, privacy note, clear-history button
+         1.1.0 — Download PDF reopens the page's own certificate design when it supports reprinting
          1.0.0 — first release: progress list with filters and reset, continue link, certificates with PDF download and verify link, full-screen button
 -->
 <html lang="en">
@@ -51,6 +52,7 @@ CHANGES: 1.1.0 — Download PDF reopens the page's own certificate design when i
   .st.done{background:var(--blue);color:#fff}
   .st.prog{background:#fff3e0;color:#9a4a00;border:1px solid var(--orange)}
   .mono{font-family:ui-monospace,Consolas,monospace}
+  .note{background:#eef4ff;border:1px solid #c9d8f5;border-radius:12px;padding:10px 14px;margin:0 0 12px;font-size:14px}
   .empty{color:var(--muted);padding:20px;text-align:center}
   .actions{display:flex;gap:6px;flex-wrap:wrap}
   @media (max-width:700px){main{padding:14px}.hide-sm{display:none}.fs{margin-right:0}}
@@ -66,6 +68,7 @@ CHANGES: 1.1.0 — Download PDF reopens the page's own certificate design when i
   <div class="tabs" role="tablist">
     <button type="button" data-tab="progress" class="on">Progress</button>
     <button type="button" data-tab="certificates">My Certificates</button>
+    <button type="button" data-tab="activity">Activity</button>
   </div>
 
   <div id="gate" class="gate" hidden>
@@ -90,6 +93,12 @@ CHANGES: 1.1.0 — Download PDF reopens the page's own certificate design when i
     <table><thead><tr><th>Certificate</th><th class="hide-sm">Score</th><th class="hide-sm">Issued</th><th>ID</th><th></th></tr></thead>
       <tbody id="certs"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table>
   </section>
+  <section class="panel" id="p-activity">
+    <p class="note">While you are signed in, this site records the pages you open (and how long you stay), pages you complete and certificates you earn, so you can pick up where you left off. Only you and the site owner can see this history. You can clear it at any time.</p>
+    <div class="filters"><button class="btn quiet" type="button" id="clearAct">Clear my history</button><span id="actInfo" style="color:var(--muted)"></span></div>
+    <table><thead><tr><th>When</th><th>What</th><th>Page</th><th class="hide-sm">Details</th></tr></thead>
+      <tbody id="acts"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody></table>
+  </section>
 </main>
 
 <script type="module">
@@ -104,10 +113,11 @@ let items = [];
 function showTab(t) {
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'p-' + t));
-  history.replaceState(null, '', t === 'certificates' ? '#certificates' : location.pathname);
+  history.replaceState(null, '', t === 'progress' ? location.pathname : '#' + t);
 }
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
 if (location.hash === '#certificates') showTab('certificates');
+if (location.hash === '#activity') showTab('activity');
 
 /* full screen */
 $('#fsBtn').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
@@ -173,11 +183,34 @@ async function renderCerts() {
   });
 }
 
+const WHAT = { visit: 'Opened', signin: 'Signed in', complete: '✓ Completed', reopen: 'Marked not completed', step: 'Reached step', certificate: 'Certificate' };
+const fmtT = m => m ? new Date(m).toLocaleString('en-IN', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}) : '';
+const dur = s => !s ? '' : s < 60 ? `${s}s` : s < 3600 ? `${Math.floor(s/60)} min` : `${Math.floor(s/3600)} h ${Math.floor(s%3600/60)} min`;
+async function renderActivity() {
+  if (!SP.user) { $('#acts').innerHTML = `<tr><td colspan="4" class="empty">Sign in to see your history.</td></tr>`; $('#actInfo').textContent = ''; return; }
+  const list = await SP.listActivity(300);
+  $('#actInfo').textContent = list.length ? ` Showing your latest ${list.length} events.` : '';
+  $('#acts').innerHTML = list.length ? list.map(e => {
+    const d = [e.secs ? `stayed ${dur(e.secs)}` : '', e.score != null && e.score !== '' ? `score ${esc(e.score)}${e.total ? ' / ' + esc(e.total) : ''}` : '',
+               e.step != null ? esc(e.label || 'step ' + e.step) : '', e.certId ? `<span class="mono">${esc(e.certId)}</span>` : ''].filter(Boolean).join(' · ');
+    return `<tr><td class="mono" style="white-space:nowrap">${fmtT(e.t)}</td><td>${esc(WHAT[e.type] || e.type)}</td>
+      <td>${e.path ? `<a href="${esc(e.path)}">${esc(e.title || e.path)}</a>` : ''}</td><td class="hide-sm">${d}</td></tr>`;
+  }).join('') : `<tr><td colspan="4" class="empty">No history yet.</td></tr>`;
+}
+$('#clearAct').onclick = async () => {
+  const b = $('#clearAct');
+  if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Click again to delete your whole history'; setTimeout(() => { delete b.dataset.armed; b.textContent = 'Clear my history'; }, 5000); return; }
+  b.disabled = true; b.textContent = 'Deleting…';
+  const n = await SP.clearActivity();
+  b.disabled = false; delete b.dataset.armed; b.textContent = 'Clear my history';
+  $('#actInfo').textContent = ` Deleted ${n} events.`; await renderActivity();
+};
+
 async function load() {
   $('#gate').hidden = !!SP.user;
   const all = await SP.loadAllProgress(true);
   items = Object.values(all).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-  renderCards(); renderProgress(); await renderCerts();
+  renderCards(); renderProgress(); await renderCerts(); await renderActivity();
 }
 ['#fSeries', '#fStatus'].forEach(s => $(s).onchange = renderProgress);
 $('#fText').oninput = renderProgress;

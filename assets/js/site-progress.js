@@ -1,22 +1,24 @@
 /*
 TOOL: site-progress.js — Google sign-in, reading progress, resume, completed ticks and certificates for haivijayanand.github.io
 FAMILY: site-progress
-VERSION: 1.1.1
+VERSION: 1.2.0
 DATE: 2026-11-16
 CHAT: Login, progress & certificates on GitHub Pages with Firebase
-CHANGES: 1.1.1 — Firebase project haivijayanand-site config filled in
+CHANGES: 1.2.0 — activity log for signed-in readers (page visits with time on page, sign-in, completed, steps, certificates) in users/{uid}/activity; visit/completed/certificate counters and first/last seen on users/{uid}; listActivity, clearActivity, logEvent API; <meta name="sp-log" content="off"> to skip a page; account button joins the page's own top toolbar (next to Full screen) when there is one; pages with their own "Mark ... complete" button keep it and it now feeds the account
+         1.1.1 — Firebase project haivijayanand-site config filled in
          1.1.0 — account button sits in the page's top nav when there is one; resume bar clears the Aa/Listen buttons; badges go inside cover cards; done button refreshes on quiz completion; 'sp:loaded' event; certificates can be reprinted in the page's own design
          1.0.0 — first release: Google sign-in, per-page resume, Mark-as-completed, index badges and counts, continue widget, certificate store + PDF reprint, local fallback when signed out
 STATUS: configured for Firebase project haivijayanand-site
 */
-export const SP_VERSION = '1.1.1';
+export const SP_VERSION = '1.2.0';
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {
-  getFirestore, doc, getDoc, setDoc, getDocs, deleteDoc, collection, serverTimestamp, writeBatch
+  getFirestore, doc, getDoc, setDoc, getDocs, deleteDoc, collection, serverTimestamp, writeBatch,
+  updateDoc, increment, query, orderBy, limit
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 /* ───────────── 1. YOUR SETTINGS ───────────── */
@@ -37,6 +39,8 @@ const SITE = {
   issuer: 'K Vijay Anand',
   siteName: 'haivijayanand.github.io',
   resumeMinPct: 5,                   // offer "resume" only past this much
+  revisitGapMin: 10,                 // a reload of the same page within this many minutes is not logged again
+  minVisitSecs: 3,                   // time-on-page shorter than this is not written back
   saveEveryMs: 15000,                // scroll position saved at most this often
   chip: { top: '10px', right: '12px' },   // where the account button floats when no host is found
   chipHosts: ['#sp-account', 'nav.top'],  // first match holds the account button inside the page
@@ -163,18 +167,25 @@ async function saveProgress(fields, path = location.pathname) {
 }
 
 async function markComplete(extra = {}, path = location.pathname) {
+  const before = await getProgress(path).catch(() => null);
   const v = await saveProgress({ status: 'completed', completedAt: now(), scrollPct: 100, ...extra }, path);
   if (normPath(path) === normPath(location.pathname) && pageIsTracked()) { $('.sp-resume')?.remove(); renderDoneButton(v); }
+  if (user) {
+    logEvent('complete', { path, title: v.title, ...('score' in extra ? { score: extra.score } : {}), ...('total' in extra ? { total: extra.total } : {}) });
+    if (before?.status !== 'completed') bumpUser({ completed: increment(1) });
+  }
   emit(); return v;
 }
 async function markIncomplete(path = location.pathname) {
   const v = await saveProgress({ status: 'in-progress', completedAt: null }, path);
   if (normPath(path) === normPath(location.pathname) && pageIsTracked()) renderDoneButton(v);
+  if (user) { logEvent('reopen', { path, title: v.title }); bumpUser({ completed: increment(-1) }); }
   emit(); return v;
 }
 /* for step-based pages (courses, tools): SiteProgress.saveStep(3, 'Day 3 — Sketch relations') */
 async function saveStep(step, label = '') {
   const cur = await getProgress();
+  if (user && cur?.step !== step) logEvent('step', { step, label });
   return saveProgress({ step, stepLabel: label, status: cur?.status === 'completed' ? 'completed' : 'in-progress' });
 }
 async function resetProgress(path) {
@@ -186,7 +197,7 @@ async function resetProgress(path) {
 
 async function signIn() {
   if (!configured) { toast('Sign-in is not set up yet (Firebase config missing).'); return; }
-  try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+  try { await signInWithPopup(auth, new GoogleAuthProvider()); if (!user) user = auth.currentUser; logEvent('signin'); }
   catch (e) {
     if (e.code === 'auth/popup-blocked') toast('Your browser blocked the sign-in window. Allow pop-ups for this site and try again.');
     else if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') toast('Sign-in failed: ' + (e.code || e.message));
@@ -200,6 +211,83 @@ async function signOut() {
 const onUser = fn => { listeners.add(fn); if (userKnown) fn(user); return () => listeners.delete(fn); };
 let userKnown = false;
 function emit() { listeners.forEach(fn => { try { fn(user); } catch (e) { console.error(e); } }); }
+
+/* ── activity log ── */
+// users/{uid}/activity/{auto}: { type, path, title, series, t (ms), at (server time), device, ...details }
+// types written by this script: visit (+secs on leaving), signin, complete, reopen, step, certificate.
+// Pages and tools can add their own: SiteProgress.logEvent('quiz', { chapter: 3, score: 8, total: 10 })
+const actCol = () => collection(db, 'users', user.uid, 'activity');
+const userRef = () => doc(db, 'users', user.uid);
+const device = () => /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
+const logOff = () => meta('sp-log') === 'off';
+function cleanDetails(d) {
+  const o = {};
+  Object.entries(d || {}).slice(0, 12).forEach(([k, v]) => {
+    if (v == null) return;
+    o[k] = typeof v === 'number' || typeof v === 'boolean' ? v : String(v).slice(0, 200);
+  });
+  return o;
+}
+async function logEvent(type, details = {}) {
+  if (!user || !configured) return null;
+  try {
+    const p = normPath(details.path || location.pathname);
+    const ref = doc(actCol());
+    await setDoc(ref, {
+      type: String(type).slice(0, 30), path: p,
+      title: String(details.title || meta('sp-title') || document.title || p).slice(0, 200),
+      series: seriesOf(p) || '', device: device(), t: now(), at: serverTimestamp(),
+      ...cleanDetails(Object.fromEntries(Object.entries(details).filter(([k]) => !['path', 'title'].includes(k))))
+    });
+    return ref;
+  } catch (e) { console.warn('[site-progress] log', e); return null; }
+}
+async function bumpUser(fields) {
+  if (!user) return;
+  try { await setDoc(userRef(), { ...fields, lastSeen: serverTimestamp() }, { merge: true }); } catch (e) { }
+}
+/* one 'visit' per page view; time actually spent on the page (tab visible) is added when the reader leaves */
+let visitRef = null, visibleMs = 0, visibleSince = 0, visitClosed = false;
+async function logVisit() {
+  if (!user || logOff() || visitRef) return;
+  const p = normPath(location.pathname), k = 'sp:lastVisit:' + p;
+  try { const last = +sessionStorage.getItem(k) || 0; if (now() - last < SITE.revisitGapMin * 60e3) return; sessionStorage.setItem(k, String(now())); } catch (e) { }
+  let from = '';
+  try { const r = new URL(document.referrer); if (r.origin === location.origin) from = normPath(r.pathname); } catch (e) { }
+  visibleSince = document.visibilityState === 'visible' ? now() : 0;
+  visitRef = await logEvent('visit', from ? { from } : {});
+  const t = document.title || p;
+  bumpUser({ visits: increment(1), lastPath: p, lastTitle: t.slice(0, 200) });
+}
+function closeVisit() {
+  if (!visitRef || visitClosed) return;
+  if (visibleSince) { visibleMs += now() - visibleSince; visibleSince = 0; }
+  const secs = Math.round(visibleMs / 1000);
+  if (secs < SITE.minVisitSecs) return;
+  visitClosed = true;
+  updateDoc(visitRef, { secs }).catch(() => { });
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') { if (!visibleSince) visibleSince = now(); visitClosed = false; }
+  else closeVisit();
+});
+addEventListener('pagehide', closeVisit);
+
+async function listActivity(n = 300) {
+  if (!user) return [];
+  const snap = await getDocs(query(actCol(), orderBy('t', 'desc'), limit(n)));
+  const out = []; snap.forEach(d => out.push({ id: d.id, ...d.data() })); return out;
+}
+async function clearActivity() {
+  if (!user) return 0;
+  let total = 0;
+  for (;;) {
+    const snap = await getDocs(query(actCol(), limit(400)));
+    if (snap.empty) break;
+    const b = writeBatch(db); snap.forEach(d => b.delete(d.ref)); await b.commit(); total += snap.size;
+  }
+  return total;
+}
 
 /* ── certificates ── */
 // Call from any page after the reader earns it:
@@ -228,6 +316,8 @@ async function saveCertificate(c) {
   };
   await setDoc(ref, { ...rec, reprint: !!c.reprint });     // reprint: the page can redraw it in its own design (?cert=ID)
   await setDoc(doc(db, 'certificates', certId), rec);      // public record for /verify/
+  logEvent('certificate', { certId, score: rec.score, title: rec.title, path: rec.path });
+  if (!old.exists()) bumpUser({ certificates: increment(1) });
   toast('Certificate saved to your account.', 'My Certificates', () => (location.href = SITE.dashboard + '#certificates'));
   return { ...rec, reprint: !!c.reprint, issuedAt: new Date() };
 }
@@ -306,7 +396,7 @@ const CSS = `
 .sp-done-note{display:block;margin-top:8px;font-size:12px;color:#667}
 .sp-badge{display:inline-flex;align-items:center;justify-content:center;margin-left:6px;font:700 11px/1 system-ui,Arial,sans-serif;border-radius:999px;padding:3px 7px;vertical-align:middle;white-space:nowrap}
 .sp-badge.in-card{position:absolute;top:8px;right:8px;margin:0;font-size:13px;padding:5px 9px;box-shadow:0 1px 4px rgba(0,0,0,.3);z-index:2}
-.sp-chip.in-nav{position:static;margin-left:auto}
+.sp-chip.in-nav{position:static;margin-left:auto;z-index:auto}
 .sp-badge.done{background:#1f5fbf;color:#fff}
 .sp-badge.prog{background:#fff3e0;color:#9a4a00;border:1px solid #e08a00}
 .sp-count{font:600 14px system-ui,Arial,sans-serif;color:#1f5fbf}
@@ -331,12 +421,29 @@ function toast(msg, actLabel, act) {
   document.body.appendChild(t); toastTimer = setTimeout(() => t.remove(), 7000);
 }
 
+/* the page's own top toolbar: the row holding a "Full screen" / "Theme" / "Contents" button near the top */
+function pageToolbar() {
+  const btn = $$('button, a').find(b => {
+    if (b.closest('.sp-chip')) return false;
+    const t = (b.textContent || '').trim();
+    if (!/full\s*screen|theme$|contents$|reading width/i.test(t)) return false;
+    const r = b.getBoundingClientRect();
+    return r.top >= 0 && r.top < 160 && r.height > 0;
+  });
+  return btn ? btn.parentElement : null;
+}
+/* a page that already has its own "Mark ... complete" button (courses) */
+function ownDoneButton() {
+  return $$('button').find(b => !b.closest('#sp-complete') &&
+    /mark\b.*\bcomplete|completed\s*.?\s*click to undo|mark as done/i.test(b.textContent || ''));
+}
+
 /* account chip */
 function renderChip() {
   let host = $('#sp-account-box');
   if (!host) {
     host = document.createElement('div'); host.id = 'sp-account-box'; host.className = 'sp-chip';
-    const parent = SITE.chipHosts.map(s => $(s)).find(Boolean);
+    const parent = SITE.chipHosts.map(s => $(s)).find(Boolean) || pageToolbar();
     if (parent) { host.classList.add('in-nav'); host.style.position = 'relative'; parent.appendChild(host); }
     else { Object.assign(host.style, SITE.chip); document.body.appendChild(host); }
   }
@@ -403,8 +510,20 @@ async function flushScroll(force = false) {
   saveProgress({ scrollPct: Math.max(pct, 0), status: 'in-progress' }).catch(e => console.warn('[site-progress]', e));
 }
 
+let ownHooked = false;
 function renderDoneButton(prog) {
   if (meta('sp-done-button') === 'off') return;
+  const own = ownDoneButton();
+  if (own) {            // keep the page's own button; mirror its state into the account
+    if (!ownHooked) {
+      ownHooked = true;
+      own.addEventListener('click', () => setTimeout(() => {
+        const done = /completed|undo|✓/i.test(own.textContent || '') || own.getAttribute('aria-pressed') === 'true';
+        (done ? markComplete() : markIncomplete()).catch(() => { });
+      }, 80));
+    }
+    return;
+  }
   let wrap = $('#sp-complete');
   if (!wrap) {
     wrap = document.createElement('div'); wrap.id = 'sp-complete';
@@ -479,7 +598,15 @@ function start() {
     user = u; cache = null;
     try {
       if (u) {
-        setDoc(doc(db, 'users', u.uid), { name: u.displayName || '', email: u.email || '', lastSeen: serverTimestamp() }, { merge: true }).catch(() => { });
+        const fk = 'sp:seen:' + u.uid;
+        let seen = false; try { seen = !!sessionStorage.getItem(fk); } catch (e) { }
+        if (!seen) {
+          const ud = await getDoc(userRef()).catch(() => null);
+          await setDoc(userRef(), { name: u.displayName || '', email: u.email || '', photo: u.photoURL || '', lastSeen: serverTimestamp(),
+            ...(ud && ud.exists() && ud.data().firstSeen ? {} : { firstSeen: serverTimestamp() }) }, { merge: true }).catch(() => { });
+          try { sessionStorage.setItem(fk, '1'); } catch (e) { }
+        }
+        logVisit();
         await mergeLocalIntoCloud();
         const pending = sessionStorage.getItem('sp:pendingCert');
         if (pending) { sessionStorage.removeItem('sp:pendingCert'); await saveCertificate(JSON.parse(pending)); }
@@ -494,6 +621,7 @@ const SiteProgress = {
   version: SP_VERSION, ready, onUser, get user() { return user; }, signIn, signOut,
   getProgress, loadAllProgress, saveProgress, markComplete, markIncomplete, saveStep, resetProgress,
   saveCertificate, listCertificates, verifyCertificate, certificateHTML, printCertificate, certDate,
+  logEvent, listActivity, clearActivity,
   normPath, keyOf, seriesOf, SITE, refresh: refreshAll
 };
 window.SiteProgress = SiteProgress;

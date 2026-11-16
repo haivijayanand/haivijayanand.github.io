@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<!--
+TOOL: my-progress/admin/index.html — owner-only admin view: readers, their activity, progress and certificates (haivijayanand.github.io)
+FAMILY: site-progress
+VERSION: 1.0.0
+DATE: 2026-11-16
+CHAT: Login, progress & certificates on GitHub Pages with Firebase
+CHANGES: 1.0.0 — first release: overview cards, visits-per-day chart, top pages, users table with per-user timeline/progress/certificates, site-wide activity feed with filters, certificate register, CSV export, full-screen button
+STATUS: needs the admin UID in the Firestore rules (isAdmin) — the page shows your UID if access is refused
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="sp-log" content="off">
+<title>Admin · haivijayanand.github.io</title>
+<style>
+  :root{--ink:#14213d;--muted:#5b6475;--line:#d9dee8;--bg:#f6f8fb;--card:#fff;--blue:#1f5fbf;--blue2:#7fa7e6;--orange:#e08a00;--gold:#b8892d}
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+  header{background:var(--ink);color:#fff;padding:12px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  header a{color:#fff;text-decoration:none;font-weight:600}
+  header h1{font-size:18px;margin:0;flex:1}
+  .hbtn{background:none;border:1px solid #fff;color:#fff;border-radius:8px;padding:6px 10px;cursor:pointer;font:inherit}
+  main{padding:18px 24px 60px;max-width:none}
+  .tabs{display:flex;gap:6px;border-bottom:2px solid var(--line);margin-bottom:16px;flex-wrap:wrap}
+  .tabs button{background:none;border:0;padding:9px 14px;font:600 14px system-ui,Arial,sans-serif;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+  .tabs button.on{color:var(--blue);border-color:var(--blue)}
+  .panel{display:none}.panel.on{display:block}
+  .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  select,input[type=search]{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+  .btn{cursor:pointer;border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:8px;padding:6px 11px;font:600 13px system-ui,Arial,sans-serif}
+  .btn.solid{background:var(--blue);color:#fff}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .card .n{font-size:26px;font-weight:700;color:var(--blue)}
+  .card .l{color:var(--muted);font-size:12.5px}
+  .grid2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px}
+  @media (max-width:1000px){.grid2{grid-template-columns:1fr}}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow:auto}
+  .box h3{margin:0 0 10px;font-size:15px}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#eef1f6;font-size:12px;color:var(--muted);font-weight:600;position:sticky;top:0;cursor:pointer;white-space:nowrap}
+  tr.click{cursor:pointer}tr.click:hover td{background:#f0f5ff}
+  td a{color:var(--blue);text-decoration:none;font-weight:600}
+  .muted{color:var(--muted)}.mono{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .tag{display:inline-block;border-radius:999px;padding:2px 8px;font:700 11px system-ui,Arial,sans-serif;white-space:nowrap}
+  .t-visit{background:#e9edf4;color:#3b4456}
+  .t-signin{background:#14213d;color:#fff}
+  .t-complete{background:var(--blue);color:#fff}
+  .t-reopen{background:#fff;color:var(--blue);border:1px solid var(--blue)}
+  .t-step{background:#dfe9fb;color:#1f4f9f}
+  .t-certificate{background:#fff3e0;color:#8a4a00;border:1px solid var(--orange)}
+  .t-other{background:#f3f0e6;color:#5b4a1c}
+  .scroll{max-height:70vh;overflow:auto}
+  .msg{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px;text-align:center;max-width:720px;margin:30px auto}
+  .msg code{background:#eef1f6;padding:3px 6px;border-radius:5px;user-select:all}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(760px,96vw);background:var(--bg);box-shadow:-8px 0 30px rgba(0,0,0,.25);z-index:50;display:none;flex-direction:column}
+  .drawer.open{display:flex}
+  .drawer .dh{background:var(--ink);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px}
+  .drawer .dh h2{font-size:16px;margin:0;flex:1}
+  .drawer .db{padding:14px 16px;overflow:auto;flex:1}
+  .chart svg{width:100%;height:auto;display:block}
+  .err{color:#9a4a00;background:#fff3e0;border:1px solid var(--orange);border-radius:8px;padding:10px 12px;margin:8px 0}
+  .err a{color:var(--blue);word-break:break-all}
+</style>
+</head>
+<body>
+<header>
+  <a href="/my-progress/">← My Progress</a>
+  <h1>Site admin — readers &amp; activity</h1>
+  <span id="who" class="muted" style="color:#c9d3e6"></span>
+  <button class="hbtn" id="reload" type="button" title="Load fresh data">⟳ Reload</button>
+  <button class="hbtn" id="fsBtn" type="button" title="Full screen">⛶ Full screen</button>
+</header>
+<main>
+  <div id="gate"></div>
+  <div id="app" hidden>
+    <div class="bar">
+      <label>Period <select id="range">
+        <option value="1">Today</option><option value="7" selected>Last 7 days</option>
+        <option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="3650">All time</option></select></label>
+      <label>Max events <select id="cap"><option>500</option><option selected>2000</option><option>5000</option></select></label>
+      <span class="muted" id="status"></span>
+    </div>
+    <div id="feedErr"></div>
+    <div class="tabs" role="tablist">
+      <button type="button" data-tab="overview" class="on">Overview</button>
+      <button type="button" data-tab="users">Users</button>
+      <button type="button" data-tab="activity">Activity</button>
+      <button type="button" data-tab="certs">Certificates</button>
+    </div>
+
+    <section class="panel on" id="p-overview">
+      <div class="cards" id="cards"></div>
+      <div class="grid2">
+        <div class="box chart"><h3>Page visits per day</h3><div id="chart"></div></div>
+        <div class="box"><h3>Most-read pages <span class="muted" style="font-weight:400">(in the period)</span></h3><div class="scroll" style="max-height:340px"><table><thead><tr><th>Page</th><th class="num">Visits</th><th class="num">Readers</th><th class="num">Avg time</th></tr></thead><tbody id="top"></tbody></table></div></div>
+      </div>
+    </section>
+
+    <section class="panel" id="p-users">
+      <div class="bar"><input type="search" id="uq" placeholder="Search name or email"><button class="btn" type="button" id="uCsv">Export CSV</button></div>
+      <div class="box scroll"><table><thead><tr>
+        <th data-k="name">Name</th><th data-k="email">Email</th><th data-k="firstSeen">First seen</th><th data-k="lastSeen">Last seen</th>
+        <th data-k="visits" class="num">Visits</th><th data-k="completed" class="num">Completed</th><th data-k="certificates" class="num">Certificates</th><th data-k="lastTitle">Last page</th>
+      </tr></thead><tbody id="users"></tbody></table></div>
+    </section>
+
+    <section class="panel" id="p-activity">
+      <div class="bar">
+        <label>Type <select id="aType"><option value="">All</option><option>visit</option><option>signin</option><option>complete</option><option>reopen</option><option>step</option><option>certificate</option></select></label>
+        <label>Reader <select id="aUser"><option value="">All</option></select></label>
+        <input type="search" id="aq" placeholder="Search page title or path">
+        <button class="btn" type="button" id="aCsv">Export CSV</button>
+      </div>
+      <div class="box scroll"><table><thead><tr><th>When</th><th>Reader</th><th>Event</th><th>Page</th><th>Details</th><th>Device</th></tr></thead><tbody id="feed"></tbody></table></div>
+    </section>
+
+    <section class="panel" id="p-certs">
+      <div class="bar"><input type="search" id="cq" placeholder="Search holder, title or ID"><button class="btn" type="button" id="cCsv">Export CSV</button></div>
+      <div class="box scroll"><table><thead><tr><th>Issued</th><th>Holder</th><th>Account</th><th>Certificate</th><th>Score</th><th>ID</th></tr></thead><tbody id="certs"></tbody></table></div>
+    </section>
+  </div>
+</main>
+
+<aside class="drawer" id="drawer" aria-label="Reader details">
+  <div class="dh"><h2 id="dTitle">Reader</h2><button class="hbtn" type="button" id="dCsv">Export timeline CSV</button><button class="hbtn" type="button" id="dClose">✕ Close</button></div>
+  <div class="db" id="dBody"></div>
+</aside>
+
+<script type="module">
+import SP from '/assets/js/site-progress.js';
+import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getFirestore, collection, collectionGroup, getDocs, query, where, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ms = v => v == null ? 0 : (typeof v === 'number' ? v : (v.toMillis ? v.toMillis() : (v.seconds ? v.seconds * 1000 : 0)));
+const fmtDT = v => { const m = ms(v); return m ? new Date(m).toLocaleString('en-IN', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : ''; };
+const fmtD = v => { const m = ms(v); return m ? new Date(m).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'}) : ''; };
+const dur = s => !s ? '' : s < 60 ? `${s}s` : s < 3600 ? `${Math.floor(s/60)}m ${s%60}s` : `${Math.floor(s/3600)}h ${Math.floor(s%3600/60)}m`;
+const dayKey = m => { const d = new Date(m); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const TYPES = ['visit','signin','complete','reopen','step','certificate'];
+const tag = t => `<span class="tag t-${TYPES.includes(t) ? t : 'other'}">${esc(t)}</span>`;
+function details(e) {
+  const b = [];
+  if (e.secs) b.push(`time on page ${dur(e.secs)}`);
+  if (e.from) b.push(`from ${esc(e.from)}`);
+  if (e.score != null && e.score !== '') b.push(`score ${esc(e.score)}${e.total ? ' / ' + esc(e.total) : ''}`);
+  if (e.step != null) b.push(`step ${esc(e.label || e.step)}`);
+  if (e.certId) b.push(`<span class="mono">${esc(e.certId)}</span>`);
+  Object.keys(e).filter(k => !['id','uid','type','path','title','series','device','t','at','secs','from','score','total','step','label','certId'].includes(k))
+    .forEach(k => b.push(`${esc(k)}: ${esc(e[k])}`));
+  return b.join(' · ');
+}
+function csv(rows, cols, name) {
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const text = [cols.map(c => q(c[0])).join(',')].concat(rows.map(r => cols.map(c => q(c[1](r))).join(','))).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + text], {type: 'text/csv'}));
+  a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+
+let db, users = {}, feed = [], certs = [], sortK = 'lastSeen', sortDir = -1, drawerRows = [];
+
+/* tabs + full screen */
+$$('.tabs button').forEach(b => b.onclick = () => {
+  $$('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  $$('.panel').forEach(p => p.classList.toggle('on', p.id === 'p-' + b.dataset.tab));
+});
+$('#fsBtn').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
+
+function gate(html) { $('#gate').innerHTML = html ? `<div class="msg">${html}</div>` : ''; $('#app').hidden = !!html; }
+
+async function loadAll() {
+  $('#status').textContent = 'Loading…'; $('#feedErr').innerHTML = '';
+  // users (also the admin check: a refused read means this account is not the admin)
+  try {
+    const snap = await getDocs(collection(db, 'users'));
+    users = {}; snap.forEach(d => users[d.id] = { uid: d.id, ...d.data() });
+  } catch (e) {
+    if (e.code === 'permission-denied') {
+      gate(`<h2>This account is not the site admin</h2>
+        <p>Signed in as <b>${esc(SP.user.email)}</b>. To make it the admin, put this User UID into the Firestore rules
+        (function <code>isAdmin</code>, replacing <code>PASTE_YOUR_UID</code>) and click <b>Publish</b>:</p>
+        <p><code>${esc(SP.user.uid)}</code></p><p class="muted">Then reload this page.</p>`);
+      return;
+    }
+    throw e;
+  }
+  gate('');
+  // site-wide activity in the chosen period
+  const since = Date.now() - (+$('#range').value) * 86400e3, cap = +$('#cap').value;
+  feed = [];
+  try {
+    const snap = await getDocs(query(collectionGroup(db, 'activity'), where('t', '>=', since), orderBy('t', 'desc'), limit(cap)));
+    snap.forEach(d => feed.push({ id: d.id, uid: d.ref.parent.parent.id, ...d.data() }));
+  } catch (e) {
+    const link = (String(e.message).match(/https:\/\/console\.firebase\.google\.com\S+/) || [])[0];
+    $('#feedErr').innerHTML = `<div class="err"><b>The site-wide activity feed needs a one-time index.</b> ${link
+      ? `Open <a href="${esc(link)}" target="_blank" rel="noopener">this link</a>, click <b>Save</b> (or <b>Create index</b>), wait 2–5 minutes, then press Reload.`
+      : esc(e.message)}<br><span class="muted">Users, per-reader timelines and certificates work without it.</span></div>`;
+  }
+  // certificates
+  certs = [];
+  try {
+    const snap = await getDocs(query(collection(db, 'certificates'), orderBy('issuedAt', 'desc'), limit(1000)));
+    snap.forEach(d => certs.push(d.data()));
+  } catch (e) { console.warn(e); }
+  $('#status').textContent = `${Object.keys(users).length} readers · ${feed.length} events in period${feed.length >= cap ? ' (capped — raise Max events for more)' : ''} · ${certs.length} certificates · loaded ${new Date().toLocaleTimeString('en-IN')}`;
+  const sel = $('#aUser'), cur = sel.value;
+  sel.innerHTML = '<option value="">All</option>' + Object.values(users).sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+    .map(u => `<option value="${esc(u.uid)}">${esc(u.name || u.email || u.uid)}</option>`).join('');
+  sel.value = cur;
+  renderOverview(); renderUsers(); renderFeed(); renderCerts();
+}
+
+function renderOverview() {
+  const U = Object.values(users), day = 86400e3, t0 = new Date(); t0.setHours(0, 0, 0, 0);
+  const activeToday = U.filter(u => ms(u.lastSeen) >= t0.getTime()).length;
+  const active7 = U.filter(u => ms(u.lastSeen) >= Date.now() - 7 * day).length;
+  const visits = feed.filter(e => e.type === 'visit');
+  const sum = k => U.reduce((a, u) => a + (+u[k] || 0), 0);
+  const card = (n, l) => `<div class="card"><div class="n">${n}</div><div class="l">${l}</div></div>`;
+  $('#cards').innerHTML = card(U.length, 'readers signed up') + card(activeToday, 'active today') + card(active7, 'active in last 7 days')
+    + card(visits.length, 'page visits in period') + card(new Set(visits.map(v => v.uid)).size, 'readers active in period')
+    + card(sum('completed'), 'pages completed (all time)') + card(certs.length || sum('certificates'), 'certificates issued');
+  // visits per day
+  const nDays = Math.min(+$('#range').value, 30), keys = [];
+  for (let i = nDays - 1; i >= 0; i--) keys.push(dayKey(Date.now() - i * day));
+  const cnt = Object.fromEntries(keys.map(k => [k, 0]));
+  visits.forEach(v => { const k = dayKey(v.t); if (k in cnt) cnt[k]++; });
+  const max = Math.max(1, ...Object.values(cnt)), W = 700, H = 230, pad = 34, bw = (W - pad - 10) / keys.length;
+  const bars = keys.map((k, i) => {
+    const h = (H - 50) * cnt[k] / max, x = pad + i * bw + 2, y = H - 30 - h;
+    const lab = keys.length <= 14 || i % Math.ceil(keys.length / 10) === 0 ? `<text x="${x + (bw - 4) / 2}" y="${H - 14}" text-anchor="middle" font-size="10" fill="#5b6475">${k.slice(8)}/${k.slice(5, 7)}</text>` : '';
+    return `<rect x="${x}" y="${y}" width="${Math.max(1, bw - 4)}" height="${h}" rx="2" fill="#1f5fbf"><title>${k}: ${cnt[k]} visits</title></rect>`
+      + (cnt[k] ? `<text x="${x + (bw - 4) / 2}" y="${y - 4}" text-anchor="middle" font-size="10" fill="#14213d">${cnt[k]}</text>` : '') + lab;
+  }).join('');
+  $('#chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Page visits per day"><line x1="${pad}" x2="${W - 8}" y1="${H - 30}" y2="${H - 30}" stroke="#9aa7c0"/>${bars}</svg>`
+    + (nDays < +$('#range').value ? `<div class="muted">Showing the last 30 days of the period.</div>` : '');
+  // top pages
+  const by = {};
+  visits.forEach(v => { const b = by[v.path] ??= { path: v.path, title: v.title, n: 0, u: new Set(), secs: 0, ns: 0 }; b.n++; b.u.add(v.uid); if (v.secs) { b.secs += v.secs; b.ns++; } });
+  $('#top').innerHTML = Object.values(by).sort((a, b) => b.n - a.n).slice(0, 40).map(b =>
+    `<tr><td><a href="${esc(b.path)}" target="_blank">${esc(b.title || b.path)}</a><br><span class="muted mono">${esc(b.path)}</span></td><td class="num">${b.n}</td><td class="num">${b.u.size}</td><td class="num">${b.ns ? dur(Math.round(b.secs / b.ns)) : ''}</td></tr>`
+  ).join('') || '<tr><td colspan="4" class="muted">No visits in this period yet.</td></tr>';
+}
+
+function userRows() {
+  const q = $('#uq').value.trim().toLowerCase();
+  return Object.values(users).filter(u => !q || `${u.name} ${u.email}`.toLowerCase().includes(q))
+    .sort((a, b) => { const x = a[sortK], y = b[sortK]; const vx = typeof x === 'object' || sortK.endsWith('Seen') ? ms(x) : (x ?? ''), vy = typeof y === 'object' || sortK.endsWith('Seen') ? ms(y) : (y ?? ''); return (vx > vy ? 1 : vx < vy ? -1 : 0) * sortDir; });
+}
+function renderUsers() {
+  $('#users').innerHTML = userRows().map(u => `<tr class="click" data-uid="${esc(u.uid)}">
+    <td><b>${esc(u.name || '—')}</b></td><td>${esc(u.email || '')}</td><td>${fmtD(u.firstSeen)}</td><td>${fmtDT(u.lastSeen)}</td>
+    <td class="num">${u.visits || 0}</td><td class="num">${u.completed || 0}</td><td class="num">${u.certificates || 0}</td>
+    <td>${u.lastPath ? `<a href="${esc(u.lastPath)}" target="_blank" onclick="event.stopPropagation()">${esc(u.lastTitle || u.lastPath)}</a>` : ''}</td></tr>`).join('')
+    || '<tr><td colspan="8" class="muted">No readers yet.</td></tr>';
+  $$('#users tr.click').forEach(r => r.onclick = () => openUser(r.dataset.uid));
+}
+$$('#p-users th[data-k]').forEach(th => th.onclick = () => { if (sortK === th.dataset.k) sortDir *= -1; else { sortK = th.dataset.k; sortDir = -1; } renderUsers(); });
+$('#uq').oninput = renderUsers;
+$('#uCsv').onclick = () => csv(userRows(), [['Name', u => u.name], ['Email', u => u.email], ['UID', u => u.uid], ['First seen', u => fmtDT(u.firstSeen)], ['Last seen', u => fmtDT(u.lastSeen)],
+  ['Visits', u => u.visits || 0], ['Completed', u => u.completed || 0], ['Certificates', u => u.certificates || 0], ['Last page', u => u.lastPath]], 'readers.csv');
+
+function feedRows() {
+  const ty = $('#aType').value, uu = $('#aUser').value, q = $('#aq').value.trim().toLowerCase();
+  return feed.filter(e => (!ty || e.type === ty) && (!uu || e.uid === uu) && (!q || `${e.title} ${e.path}`.toLowerCase().includes(q)));
+}
+const uname = uid => users[uid]?.name || users[uid]?.email || uid.slice(0, 8);
+function renderFeed() {
+  const rows = feedRows().slice(0, 3000);
+  $('#feed').innerHTML = rows.map(e => `<tr><td class="mono">${fmtDT(e.t)}</td><td><a href="#" data-uid="${esc(e.uid)}">${esc(uname(e.uid))}</a></td>
+    <td>${tag(e.type)}</td><td>${e.path ? `<a href="${esc(e.path)}" target="_blank">${esc(e.title || e.path)}</a>` : ''}</td><td>${details(e)}</td><td class="muted">${esc(e.device || '')}</td></tr>`).join('')
+    || '<tr><td colspan="6" class="muted">No events match.</td></tr>';
+  $$('#feed a[data-uid]').forEach(a => a.onclick = ev => { ev.preventDefault(); openUser(a.dataset.uid); });
+}
+['#aType', '#aUser'].forEach(s => $(s).onchange = renderFeed); $('#aq').oninput = renderFeed;
+const feedCols = [['When', e => fmtDT(e.t)], ['Reader', e => uname(e.uid)], ['Email', e => users[e.uid]?.email || ''], ['Event', e => e.type], ['Title', e => e.title], ['Path', e => e.path],
+  ['Seconds on page', e => e.secs || ''], ['Score', e => e.score ?? ''], ['Total', e => e.total ?? ''], ['Step', e => e.label || e.step || ''], ['Certificate ID', e => e.certId || ''], ['From', e => e.from || ''], ['Device', e => e.device || '']];
+$('#aCsv').onclick = () => csv(feedRows(), feedCols, 'activity.csv');
+
+function certRows() {
+  const q = $('#cq').value.trim().toLowerCase();
+  return certs.filter(c => !q || `${c.holderName} ${c.title} ${c.certId}`.toLowerCase().includes(q));
+}
+function renderCerts() {
+  $('#certs').innerHTML = certRows().map(c => `<tr><td>${fmtDT(c.issuedAt)}</td><td><b>${esc(c.holderName)}</b></td>
+    <td><a href="#" data-uid="${esc(c.uid)}">${esc(users[c.uid]?.email || c.uid)}</a></td><td>${c.path ? `<a href="${esc(c.path)}" target="_blank">${esc(c.title)}</a>` : esc(c.title)}</td>
+    <td>${esc(c.score || '')}</td><td class="mono"><a href="/verify/?id=${encodeURIComponent(c.certId)}" target="_blank">${esc(c.certId)}</a></td></tr>`).join('')
+    || '<tr><td colspan="6" class="muted">No certificates issued yet.</td></tr>';
+  $$('#certs a[data-uid]').forEach(a => a.onclick = ev => { ev.preventDefault(); openUser(a.dataset.uid); });
+}
+$('#cq').oninput = renderCerts;
+$('#cCsv').onclick = () => csv(certRows(), [['Issued', c => fmtDT(c.issuedAt)], ['Holder', c => c.holderName], ['Account', c => users[c.uid]?.email || c.uid], ['Certificate', c => c.title], ['Score', c => c.score], ['ID', c => c.certId]], 'certificates.csv');
+
+/* one reader: timeline, progress, certificates */
+async function openUser(uid) {
+  const u = users[uid] || { uid };
+  $('#dTitle').textContent = `${u.name || u.email || uid} — ${u.email || ''}`;
+  $('#dBody').innerHTML = '<p class="muted">Loading…</p>'; $('#drawer').classList.add('open');
+  const [act, prog, uc] = await Promise.all([
+    getDocs(query(collection(db, 'users', uid, 'activity'), orderBy('t', 'desc'), limit(1000))),
+    getDocs(collection(db, 'users', uid, 'progress')),
+    getDocs(collection(db, 'users', uid, 'certificates'))
+  ]);
+  drawerRows = []; act.forEach(d => drawerRows.push({ id: d.id, uid, ...d.data() }));
+  const P = []; prog.forEach(d => P.push(d.data())); P.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const C = []; uc.forEach(d => C.push(d.data()));
+  const secs = drawerRows.reduce((a, e) => a + (e.secs || 0), 0);
+  $('#dBody').innerHTML = `
+    <div class="cards">
+      <div class="card"><div class="n">${drawerRows.filter(e => e.type === 'visit').length}</div><div class="l">visits logged</div></div>
+      <div class="card"><div class="n">${dur(secs) || '0'}</div><div class="l">total reading time</div></div>
+      <div class="card"><div class="n">${P.filter(p => p.status === 'completed').length}</div><div class="l">pages completed</div></div>
+      <div class="card"><div class="n">${C.length}</div><div class="l">certificates</div></div>
+    </div>
+    <p class="muted">First seen ${fmtDT(u.firstSeen) || '—'} · last seen ${fmtDT(u.lastSeen) || '—'} · UID <span class="mono">${esc(uid)}</span></p>
+    <div class="box" style="margin-bottom:14px"><h3>Timeline</h3><div class="scroll" style="max-height:44vh"><table><thead><tr><th>When</th><th>Event</th><th>Page</th><th>Details</th></tr></thead><tbody>
+      ${drawerRows.map(e => `<tr><td class="mono">${fmtDT(e.t)}</td><td>${tag(e.type)}</td><td>${e.path ? `<a href="${esc(e.path)}" target="_blank">${esc(e.title || e.path)}</a>` : ''}</td><td>${details(e)}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">No activity logged yet.</td></tr>'}
+    </tbody></table></div></div>
+    <div class="box" style="margin-bottom:14px"><h3>Progress</h3><table><thead><tr><th>Page</th><th>Status</th><th>Where</th><th>Updated</th></tr></thead><tbody>
+      ${P.map(p => `<tr><td><a href="${esc(p.path)}" target="_blank">${esc(p.title || p.path)}</a></td><td>${p.status === 'completed' ? tag('complete') : '<span class="tag t-visit">in progress</span>'}</td>
+        <td>${p.status === 'completed' ? (p.score != null ? `score ${esc(p.score)}${p.total ? ' / ' + esc(p.total) : ''}` : '') : p.step != null ? esc(p.stepLabel || 'step ' + p.step) : (p.scrollPct || 0) + '% read'}</td><td>${fmtDT(p.updatedAt)}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">No progress saved.</td></tr>'}
+    </tbody></table></div>
+    <div class="box"><h3>Certificates</h3><table><thead><tr><th>Certificate</th><th>Holder</th><th>Score</th><th>Issued</th><th>ID</th></tr></thead><tbody>
+      ${C.map(c => `<tr><td>${esc(c.title)}</td><td>${esc(c.holderName)}</td><td>${esc(c.score || '')}</td><td>${fmtD(c.issuedAt)}</td><td class="mono"><a href="/verify/?id=${encodeURIComponent(c.certId)}" target="_blank">${esc(c.certId)}</a></td></tr>`).join('') || '<tr><td colspan="5" class="muted">None.</td></tr>'}
+    </tbody></table></div>`;
+}
+$('#dClose').onclick = () => $('#drawer').classList.remove('open');
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#drawer').classList.remove('open'); });
+$('#dCsv').onclick = () => drawerRows.length && csv(drawerRows, feedCols, `timeline-${(users[drawerRows[0].uid]?.email || drawerRows[0].uid).replace(/[^\w.@-]+/g, '_')}.csv`);
+
+['#range', '#cap'].forEach(s => $(s).onchange = () => loadAll().catch(err));
+$('#reload').onclick = () => loadAll().catch(err);
+function err(e) { console.error(e); $('#status').textContent = 'Error: ' + e.message; }
+
+SP.onUser(u => {
+  $('#who').textContent = u ? u.email : '';
+  if (!u) { gate(`<h2>Admin sign-in</h2><p>Sign in with the site owner's Google account.</p><button class="btn solid" type="button" id="gin">Sign in with Google</button>`); $('#gin').onclick = () => SP.signIn(); return; }
+  db = getFirestore(getApp());
+  loadAll().catch(err);
+});
+</script>
+</body>
+</html>

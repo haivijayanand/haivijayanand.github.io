@@ -2,10 +2,11 @@
 """
 TOOL:    life-books/_build.py
 FAMILY:  SITE
-VERSION: 1.2.0
-DATE:    2026-11-07
+VERSION: 1.3.0
+DATE:    2026-11-16
 CHAT:    Daily life books review (personal growth, family, love, parenting) on GitHub Pages
-CHANGES: 1.2.0 - Aa reading settings (light/dark theme, text size, font, line spacing) on every review page (assets/js/reader.js): text size, font, line spacing; text wraps on phones
+CHANGES: 1.3.0 - every page loads assets/js/site-progress.js (sign-in, reading progress, activity log)
+         1.2.0 - Aa reading settings (light/dark theme, text size, font, line spacing) on every review page (assets/js/reader.js): text size, font, line spacing; text wraps on phones
          1.1.0 - Listen button on every review page (assets/js/read-aloud.js); word count, quiz and certificate are not read out
          1.0.0 - new section modelled on the Book Review build script 1.1.0: warm cover palettes and motifs, own paths and labels, empty-index message
 STATUS:  working
@@ -19,7 +20,7 @@ Content file (_content/<slug>.json):
   takeaway: one sentence,
   questions: 10 x {q, options: [4 strings], answer: 0-3, why}
 """
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
 # review page template version; each page's header lists these plus its own first line
 PAGE_VERSION = "1.2.0"
@@ -378,6 +379,7 @@ def render_page(c, prev_c, next_c):
 <meta name="description" content="{esc(c['theme'])}">
 <meta name="theme-color" content="{bg}">
 <style>{STYLE}</style>
+  <script type="module" src="/assets/js/site-progress.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -458,6 +460,7 @@ def render_index(items):
 .card .s{{font:13px/1.45 Verdana,sans-serif;margin-top:4px}}
 #q{{width:100%;font:15px Verdana,sans-serif;padding:9px 12px;border:1px solid var(--rule);border-radius:7px;background:var(--card);color:var(--ink)}}
 </style>
+  <script type="module" src="/assets/js/site-progress.js"></script>
 </head>
 <body>
 <div class="wrap" style="max-width:1100px">

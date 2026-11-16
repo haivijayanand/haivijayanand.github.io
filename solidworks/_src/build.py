@@ -2,16 +2,17 @@
 """
 TOOL:    solidworks/_src/build.py — builds the 42 day pages (Part I days 1–28, Part II days 29–42) and the hub of the SolidWorks Course from _src/week1-6.html
 FAMILY:  solidworks
-VERSION: 1.1.0
+VERSION: 1.2.0
 DATE:    2026-11-16
 CHAT:    28-day SolidWorks course with interactive HTML on GitHub Pages
-CHANGES: 1.1.0 - Part II (Days 29–42, weeks 5–6) added; hub shows Part I and Part II
+CHANGES: 1.2.0 - every page loads assets/js/site-progress.js (sign-in, reading progress, activity log)
+         1.1.0 - Part II (Days 29–42, weeks 5–6) added; hub shows Part I and Part II
          1.0.0 - syllabus of 28 days in 4 weeks; wraps day sources with header block, toolbar, hero, contents,
                  goals, numbered sections, quiz, done button, pager and footer; writes hub index.html
 STATUS:  working
 """
 import json, re, os, html
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.dirname(HERE)
 DATE = "2026-11-16"
 CHAT = "28-day SolidWorks course with interactive HTML on GitHub Pages"
@@ -129,6 +130,7 @@ def page(n, src):
 <title>Day {n}: {html.escape(title)} — SolidWorks Course — K Vijay Anand</title>
 <meta name="description" content="{html.escape(re.sub('<[^>]+>', '', summary))}">
 {FONTS}
+  <script type="module" src="/assets/js/site-progress.js"></script>
 </head>
 <body data-day="{n}">
 {TOOLBAR.format(extra=nav)}
@@ -171,6 +173,7 @@ def hub():
 <title>SolidWorks Course: 28 days + Part II — interactive — K Vijay Anand</title>
 <meta name="description" content="A free SolidWorks course: 28 days of sketching, part modelling, assemblies, drawings, sheet metal, weldments, surfaces and simulation, plus a 14-day Part II on macros, PDM, data exchange, MBD, costing and AI-assisted engineering documentation — a lab, exercise and quiz every day.">
 {FONTS}
+  <script type="module" src="/assets/js/site-progress.js"></script>
 </head>
 <body>
 {TOOLBAR.format(extra='')}

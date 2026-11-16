@@ -2,15 +2,16 @@
 """
 TOOL:    business-admin/_src/build.py — builds Business Administration chapter pages and hub from _src/NN.html
 FAMILY:  business-admin
-VERSION: 1.1.0
-DATE:    2026-11-14
+VERSION: 1.2.0
+DATE:    2026-11-16
 CHAT:    Business Administration series — 50 chapters, three levels (school, working, expert), interactive
-CHANGES: 1.1.0 - injects shared Kaveri Foods data (kf.js) into Part D chapters; 1.0.0 - syllabus of 50 chapters in 6 parts; wraps chapter sources with header block, toolbar,
+CHANGES: 1.2.0 - every page loads assets/js/site-progress.js (sign-in, reading progress, activity log)
+         1.1.0 - injects shared Kaveri Foods data (kf.js) into Part D chapters; 1.0.0 - syllabus of 50 chapters in 6 parts; wraps chapter sources with header block, toolbar,
                  level switch, contents, pager and footer; writes hub index.html
 STATUS:  working
 """
 import json, re, os, html, sys
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.dirname(HERE)
 DATE = "2026-11-14"
 PARTS = {
@@ -69,6 +70,7 @@ STATUS:  working
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/ba.css">
+  <script type="module" src="/assets/js/site-progress.js"></script>
 </head>
 '''
 def page(n,src):
@@ -136,6 +138,7 @@ STATUS:  working
  .soon{opacity:.55}
  .prog{max-width:1500px;margin:20px auto 0;padding:0 5vw;color:var(--faint);text-align:center}
 </style>
+  <script type="module" src="/assets/js/site-progress.js"></script>
 </head>
 <body class="hub">
 <div class="toolbar"><a href="/">← Home</a><button id="themeBtn" title="Light / dark (T)">◐ Theme</button><button id="fsBtn" title="Full screen (F)">⤢ Full screen</button></div>

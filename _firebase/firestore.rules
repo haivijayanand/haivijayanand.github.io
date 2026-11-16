@@ -1,30 +1,45 @@
 // TOOL: firestore.rules — Firestore security rules for site-progress (haivijayanand.github.io)
 // FAMILY: site-progress
-// VERSION: 1.0.0
+// VERSION: 1.1.0
 // DATE: 2026-11-16
 // CHAT: Login, progress & certificates on GitHub Pages with Firebase
-// CHANGES: 1.0.0 — first release: each user reads/writes only their own data; public certificate records readable by ID only
+// CHANGES: 1.1.0 — admin (site owner, by UID) can READ every user's profile, progress, activity log and the certificate list; nobody else gains anything
+//          1.0.0 — first release: each user reads/writes only their own data; public certificate records readable by ID only
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // users/{uid}, users/{uid}/progress/*, users/{uid}/certificates/* — owner only
+    // ── who is the admin: replace PASTE_YOUR_UID with your User UID
+    //    (Firebase console → Security → Authentication → Users → "User UID" column,
+    //     or open /my-progress/admin/ while signed in — it shows your UID)
+    function isAdmin() {
+      return request.auth != null && request.auth.uid in ['PASTE_YOUR_UID'];
+    }
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // users/{uid} and everything under it (progress, certificates, activity):
+    // the owner reads and writes; the admin can only read
     match /users/{uid} {
-      allow read, write: if isOwner(uid);
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isOwner(uid) && request.resource.data.size() <= 30;
       match /{sub=**} {
-        allow read, delete: if isOwner(uid);
+        allow read: if isOwner(uid) || isAdmin();
+        allow delete: if isOwner(uid);
         allow create, update: if isOwner(uid) && request.resource.data.size() <= 30;
       }
     }
 
-    function isOwner(uid) {
-      return request.auth != null && request.auth.uid == uid;
+    // admin's site-wide activity feed (collection-group query over every user's activity)
+    match /{path=**}/activity/{actId} {
+      allow read: if isAdmin();
     }
 
     // certificates/{certId} — public record used by /verify/
     match /certificates/{certId} {
       allow get: if true;            // anyone with the ID can check it
-      allow list: if false;          // nobody can browse the list of certificates
+      allow list: if isAdmin();      // only the admin can browse all certificates
       allow create: if validCert(certId);
       allow update: if validCert(certId) && resource.data.uid == request.auth.uid;
       allow delete: if false;

@@ -1,0 +1,413 @@
+<!--
+TOOL:    creo/_src/week3.html — 28-Day Creo Parametric Course content source, Week 3 (Days 15–21)
+FAMILY:  creo
+VERSION: 1.0.0
+DATE:    2026-11-16
+CHAT:    Same like solidworks, create a GitHub for Creo also
+CHANGES: 1.0.0 - first version: parent/child and resolve, draft and ribs, assembly constraints, mechanism, skeletons, simplified reps and explode, sheetmetal
+STATUS:  working
+-->
+
+<day n="15">
+<summary>Every Creo user meets a failed regeneration. Learn parent/child relationships, the Reference Viewer, suppress, reorder, insert mode — and how to fix failures calmly with Edit References and Edit Definition.</summary>
+<goals><li>Explain parents and children and see them in the Reference Viewer</li><li>Suppress, resume, reorder and insert features</li><li>Read a regeneration failure and the Notification Center</li><li>Fix failures with Undo, Edit References, Edit Definition, Suppress or Delete</li><li>Know resolve mode vs no-resolve mode</li><li>Build models that fail less</li></goals>
+<content>
+<section><h2>Parents, children and failure</h2>
+<p>A feature's <b>parents</b> are the things it was built on: its sketch plane, sketch references, the edges it rounds, the axis it is coaxial with. Its <b>children</b> are the features built on it. Delete or change a parent and every child must find its references again — or fail.</p>
+<div class="cols">
+<div class="box"><b class="t">See them</b>Select a feature ▸ <span class="path">Tools ▸ Reference Viewer</span>, or right-click ▸ Information ▸ Reference Viewer. Parents left, children right.</div>
+<div class="box"><b class="t">Suppress / Resume</b>Temporarily remove a feature and its children from regeneration. Nothing is lost.</div>
+<div class="box"><b class="t">Reorder</b>Drag a feature up or down the tree. Creo will not let a child move above its parent.</div>
+<div class="box"><b class="t">Insert mode</b>Drag the green <b>Insert Here</b> arrow up the tree; new features go there. Drag it back to the end when done.</div>
+</div>
+<div class="def"><b>When regeneration fails</b> (Creo 4 and later), the model stays open, the failed feature is flagged in the tree, and the Notification Center explains. With <code>regen_failure_handling resolve_mode</code> Creo stops in a Resolve environment until you fix it. Your options: <b>Undo Changes</b>; <b>Edit References</b> (reroute — pick new references for the missing ones); <b>Edit Definition</b>; <b>Suppress</b> (fix later — but don't forget); <b>Delete</b>.</div>
+<div class="def"><b>Fail-safe habits:</b> sketch on datum planes; dimension to datums; round and chamfer late; reference axes and datum planes rather than edges; avoid references to rounds; keep sketches simple.</div>
+</section>
+<section><h2>Do it in Creo</h2>
+<ol class="steps">
+<li>Build the lab's part: base plate 120 × 80 × 12 on TOP; Ø40 × 30 boss sketched on the plate's top face; Ø20 hole in the boss; R3 round at the boss root; Ø9 hole + 2 × 2 pattern in the plate.</li>
+<li>Select the boss ▸ <span class="path">Tools ▸ Reference Viewer</span>. Note parents (plate, its sketch references) and children (hole, round).</li>
+<li>Suppress the boss: Creo lists the children and suppresses them too. Resume All.</li>
+<li>Edit the boss sketch: delete the circle and sketch a 40 × 40 square instead. Finish. Watch Round 1 fail.</li>
+<li>Read the Notification Center. Choose <b>Edit References</b> on Round 1 and pick the four bottom edges of the square boss. Regenerate — fixed.</li>
+<li>Drag the Insert Here arrow above the boss and add a 1 mm chamfer to the plate edges. Drag the arrow back to the bottom.</li>
+<li>Try to drag the hole above the boss: Creo refuses — a child cannot go above its parent.</li>
+</ol>
+</section>
+<section><h2>Lab: break it and fix it</h2>
+<p>Click features to see parents (orange edge) and children (blue edge). Suppress or delete to see what goes with them. Then redraw the boss as a square and choose how to fix the failed round.</p>
+<div class="widget" data-w="regen"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li><b>Fix the first failure first.</b> Later failures are often just children of the first.</li>
+<li>"Suppress and fix later" is how parts leave the office with a missing round. Add a note or a tree column (Tree Filters ▸ Suppressed objects) and check before release.</li>
+<li>Look at the tree column <b>Status</b> and the Notification Center rather than guessing which feature failed.</li>
+<li>When you inherit a fragile model: use Reference Viewer on the failing feature and reroute it to a datum, not to another edge.</li>
+<li>Deleting a sketch entity and drawing a new one gives it a new ID — any feature referencing the old edge loses it. <b>Modify</b> geometry instead of redrawing where you can.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Open any of your Week 1–2 parts and run Reference Viewer on its round features. Re-reference any that use edges of other rounds.</li>
+<li>Model a pump bracket badly on purpose (sketch on faces, dimension to rounded edges). Make three big changes and record what fails. Then rebuild it using datums and repeat — count the failures.</li>
+<li>Set <code>regen_failure_handling</code> to resolve_mode for one session and compare.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Which tool shows a feature's parents and children?","o":["Model Player","Reference Viewer","Mass Properties","Layer Tree"],"a":1,"e":"Tools ▸ Reference Viewer."},
+{"q":"You suppress a feature with children. What happens to them?","o":["They stay","They are suppressed too","They are deleted","They move up"],"a":1,"e":"Children cannot regenerate without their parent."},
+{"q":"A round lost its edge. Which fix keeps the round and picks a new edge?","o":["Undo Changes","Edit References (reroute)","Delete","Suppress"],"a":1,"e":"Edit References asks for each missing reference."},
+{"q":"How do you add a feature in the middle of the tree?","o":["Reorder after","Drag the Insert Here arrow","Suppress everything below","It is impossible"],"a":1,"e":"New features go where the arrow is."},
+{"q":"Most fail-safe reference for a hole position?","o":["Edge of a round","Datum planes","A chamfer edge","A random vertex"],"a":1,"e":"Datums don't change when other features do."}
+]</quiz>
+</day>
+
+<day n="16">
+<summary>Cast and moulded parts need draft and ribs. Learn Creo's Draft feature with hinges and pull direction, split drafts, profile and trajectory ribs, draft analysis, and the usual design rules.</summary>
+<goals><li>Make a draft with draft surfaces, hinges and pull direction</li><li>Use split drafts at a parting plane</li><li>Make Profile Ribs and Trajectory Ribs</li><li>Check draft with Draft Analysis</li><li>Apply wall, rib and draft rules for castings and mouldings</li></goals>
+<content>
+<section><h2>Draft and ribs</h2>
+<div class="cols">
+<div class="box"><b class="t">Draft</b><span class="path">Model ▸ Engineering ▸ Draft</span>. Pick <b>draft surfaces</b>, the <b>draft hinge</b> (the plane or edge chain that does not move) and the <b>pull direction</b>, then the angle.</div>
+<div class="box"><b class="t">Split draft</b>In the Split panel split by the hinge plane: each side drafts away from the parting line, as a two-part mould needs.</div>
+<div class="box"><b class="t">Profile Rib</b><span class="path">Model ▸ Engineering ▸ Rib ▸ Profile Rib</span>. Sketch an open line between walls; Creo fills it with thickness, symmetric or to one side.</div>
+<div class="box"><b class="t">Trajectory Rib</b>Sketch rib paths on a plane; Creo grows them down to the next surfaces, with draft and rounds options — ideal inside shelled parts.</div>
+</div>
+<table><tr><th>Rule of thumb</th><th>Sand casting</th><th>Die casting</th><th>Injection moulding</th></tr>
+<tr><td>Draft</td><td>1–3°</td><td>0.5–2°</td><td>0.5–1° outside, 1–2° textured</td></tr>
+<tr><td>Wall</td><td>≥ 5 mm</td><td>1.5–4 mm</td><td>1–3 mm, uniform</td></tr>
+<tr><td>Rib thickness</td><td>0.8 × wall</td><td>0.6–0.8 × wall</td><td>0.5–0.6 × wall</td></tr></table>
+<p>Draft analysis: <span class="path">Analysis ▸ Inspect Geometry ▸ Draft</span> colours faces by their angle to the pull direction against a limit you set.</p>
+</section>
+<section><h2>Do it in Creo</h2>
+<ol class="steps">
+<li>New part <code>housing_cast</code>. Extrude a 160 × 100 × 60 block on TOP, Symmetric about TOP (so TOP is the parting plane).</li>
+<li><b>Draft</b>: pick the four side faces (Shift for the loop), hinge = <b>TOP</b>, pull direction = TOP, angle 2°. In <b>Split</b> choose <i>Split by draft hinge</i>, sides draft independently. Finish.</li>
+<li>Round the vertical edges R10, then <b>Shell</b> 6 with the bottom face open.</li>
+<li><span class="path">Analysis ▸ Inspect Geometry ▸ Draft</span>: pick the part, direction TOP, angle 1°. Check every side face passes.</li>
+<li><b>Trajectory Rib</b>: sketch on a plane 10 below the top inside face two lines crossing the inside. Thickness 4. Add draft and top rounds in the rib's Shape panel. Finish.</li>
+<li><b>Profile Rib</b>: on FRONT, sketch an open line from the inside wall to the floor. Thickness 4 symmetric. Finish.</li>
+<li>Add Auto Round R2 for remaining inside edges at the end of the tree.</li>
+</ol>
+</section>
+<section><h2>Lab: draft analysis</h2>
+<p>Change the draft angle and the pull direction and see which faces would stick in the mould.</p>
+<div class="widget" data-w="draft"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Draft before shell, so the inside walls get draft too.</li>
+<li>Draft faces, then round — rounds on undrafted edges make draft fail.</li>
+<li>Machined faces (bearing bores, joint faces) need no draft; model the casting with machining allowance, then a machined version (family table or separate part).</li>
+<li>Thick ribs cause sink marks and shrinkage porosity — thin, tall ribs are better than thick ones.</li>
+<li>Use a datum plane as the hinge rather than a face — the parting line then stays put.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Model a die-cast gearbox cover 180 × 120 × 40 with 1.5° split draft, 3 mm walls, four internal ribs 2 mm thick with 0.5° draft, and four screw bosses Ø12 with Ø5.5 holes.</li>
+<li>Run draft analysis at 1° and fix any failing faces.</li>
+<li>Make a "machined" instance with a family table: suppress the draft on the joint face and add a 0.5 mm skim cut.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"What is the draft hinge?","o":["The pull direction","The plane or edge that stays put while faces tilt","The mould","A datum point"],"a":1,"e":"Faces pivot about the hinge."},
+{"q":"Why draft before shelling?","o":["Shell needs draft","So the inside walls are drafted as well","Draft is faster","It changes the material"],"a":1,"e":"Shell offsets the drafted outside faces."},
+{"q":"Recommended rib thickness for injection moulding?","o":["0.5–0.6 × wall","1 × wall","2 × wall","Any"],"a":0,"e":"Thicker ribs cause sink marks."},
+{"q":"Which rib grows from sketched paths down to the next surfaces inside a shelled part?","o":["Profile Rib","Trajectory Rib","Shell","Draft"],"a":1,"e":"Trajectory Rib suits shelled parts."},
+{"q":"Where is draft analysis?","o":["Analysis ▸ Inspect Geometry ▸ Draft","Tools ▸ Draft","File ▸ Prepare","View ▸ Draft"],"a":0,"e":"It colours faces against your angle limit."}
+]</quiz>
+</day>
+
+<day n="17">
+<summary>Assemblies place parts relative to each other. Learn the Component Placement dashboard, Creo's constraints, the Default constraint, placement status, and how to keep assemblies fast and stable.</summary>
+<goals><li>Start an assembly from the mmns template and place the first part with Default</li><li>Use Coincident, Distance, Parallel, Angle Offset, Normal, Centered, Tangent and Fix</li><li>Read the placement status: Fully, Partially, No constraints, Packaged</li><li>Use the 3D dragger and Move panel</li><li>Edit, redefine and replace components</li></goals>
+<content>
+<section><h2>Placement and constraints</h2>
+<p><span class="path">Model ▸ Assemble</span> brings in a component and opens the <b>Component Placement</b> dashboard. Each constraint you add removes degrees of freedom; the dashboard shows the status.</p>
+<table><tr><th>Constraint</th><th>Between</th><th>Typical use</th></tr>
+<tr><td>Default</td><td>Component csys ↔ assembly csys</td><td>First component — fixed with its datums on the assembly's</td></tr>
+<tr><td>Coincident</td><td>Faces, planes, axes, points, edges</td><td>Faces together; axes aligned (pin in hole)</td></tr>
+<tr><td>Distance</td><td>Faces, planes, axes, points</td><td>Offset faces, gaps</td></tr>
+<tr><td>Parallel / Normal / Angle Offset</td><td>Planes, faces, axes</td><td>Orientation</td></tr>
+<tr><td>Centered</td><td>Cones, spheres, coordinate systems</td><td>Taper in taper, ball in socket</td></tr>
+<tr><td>Tangent</td><td>Curved surfaces</td><td>Cam on follower</td></tr>
+<tr><td>Fix</td><td>Current position</td><td>"Leave it where it is" — use sparingly</td></tr>
+<tr><td>Automatic</td><td>Creo guesses from what you pick</td><td>Fast, but check the result</td></tr></table>
+<div class="def"><b>Status.</b> <b>Fully Constrained</b>: no DOF left. <b>Partially Constrained</b>: some free (you can finish anyway — the part is placed where it is). <b>No Constraints</b>. <b>Packaged</b>: placed without constraints, shown in the tree with a special icon — fine for an early layout, not for release. Over-constraining gives <b>Constraints invalid</b>.</div>
+<p>Constraints are stored in the <b>assembly</b>. The part file knows nothing about where it is used.</p>
+</section>
+<section><h2>Do it in Creo</h2>
+<ol class="steps">
+<li>Set a new working directory. <span class="path">File ▸ New ▸ Assembly ▸ Design</span>, untick default template, choose <b>mmns_asm_design_abs</b>.</li>
+<li><span class="path">Model ▸ Assemble</span> the base plate from Day 15. Choose <b>Default</b> in the constraint list. Status: Fully Constrained. OK.</li>
+<li>Assemble a pin (Ø10 × 40 revolve). Pick the pin's axis and the plate hole axis → Coincident. Pick the pin's shoulder face and the plate top → Coincident. Status: Partially Constrained — the pin can still spin. That is correct for a pin.</li>
+<li>Assemble a bracket: Coincident bottom face to plate top; Coincident hole axis to pin axis; Parallel side face to plate side face. Fully Constrained.</li>
+<li>Edit the bracket's placement (right-click ▸ Edit Definition), change Parallel to <b>Angle Offset</b> 30°.</li>
+<li>Use the <b>Move</b> tab or the 3D dragger to drag a partly constrained part and see what is free.</li>
+<li>Open the bracket from the tree (right-click ▸ Open), change its thickness, save, return to the assembly and regenerate.</li>
+</ol>
+</section>
+<section><h2>Lab: constraints and degrees of freedom</h2>
+<p>Tick constraints and watch which degrees of freedom remain. Press <kbd>P</kbd> to drag the bracket.</p>
+<div class="widget" data-w="mates"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Place the first component with <b>Default</b>. Every other part then has a stable base.</li>
+<li>Constrain to <b>datum planes and axes</b> of parts, not to faces of rounds or chamfers — the same reason as in parts.</li>
+<li>Coincident between two axes is the Creo way of saying "concentric".</li>
+<li>If something should move (shaft, slide), leave it partially constrained or — better — use a <b>connection</b> (Day 18).</li>
+<li>Do not over-use Fix: the assembly then stops updating when parts change.</li>
+<li>Rename components through the assembly (File ▸ Manage File ▸ Rename) so the assembly follows the new name.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Assemble a bearing housing (Day 11), a shaft (Day 5) and two bought-out bearings (simple revolves) into a shaft unit. Bearings Coincident axis + face; shaft left free to rotate.</li>
+<li>Add four M8 bolts from your Day 13 family table and replace one with a longer instance (right-click ▸ Replace).</li>
+<li>Run <span class="path">Analysis ▸ Global Interference</span> and explain each interference reported.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Which constraint places the first component on the assembly's csys?","o":["Fix","Default","Coincident","Automatic"],"a":1,"e":"Default aligns the component and assembly coordinate systems."},
+{"q":"How do you make a pin concentric with a hole in Creo?","o":["Concentric constraint","Coincident between the two axes","Tangent","Centered"],"a":1,"e":"Coincident on axes = concentric."},
+{"q":"A shaft is constrained by axis and shoulder face only. Status?","o":["Fully Constrained","Partially Constrained (it can rotate)","Packaged","Invalid"],"a":1,"e":"One rotation is free."},
+{"q":"Where are assembly constraints stored?","o":["In each part","In the assembly","In config.pro","In the drawing"],"a":1,"e":"Parts don't know where they are used."},
+{"q":"A packaged component is…","o":["Fully constrained","Placed without constraints","A bought-out part","Suppressed"],"a":1,"e":"Fine for layouts, not for release."}
+]</quiz>
+</day>
+
+<day n="18">
+<summary>Mechanisms need parts that move the right way. Learn predefined connections (Pin, Slider, Cylinder, Planar, Ball, Bearing, Weld, 6DOF), the Mechanism application, gear pairs, servo motors and drag.</summary>
+<goals><li>Use connections instead of constraints for moving parts</li><li>Know the DOF each connection leaves</li><li>Set joint axis zero and limits</li><li>Make a gear pair and a servo motor</li><li>Run a kinematic analysis and look for collisions</li></goals>
+<content>
+<section><h2>Connections</h2>
+<p>In the Component Placement dashboard the list next to the constraint type has <b>user-defined</b> (ordinary constraints) and <b>predefined connections</b>. A connection is a constraint set that leaves exactly the motion you want, and Mechanism knows how to drive it.</p>
+<table><tr><th>Connection</th><th>Built from</th><th>Free DOF</th></tr>
+<tr><td>Rigid</td><td>Any constraints</td><td>0</td></tr>
+<tr><td>Pin</td><td>Axis alignment + translation (plane)</td><td>1 rotation</td></tr>
+<tr><td>Slider</td><td>Axis alignment + rotation (plane)</td><td>1 translation</td></tr>
+<tr><td>Cylinder</td><td>Axis alignment</td><td>1 rotation + 1 translation</td></tr>
+<tr><td>Planar</td><td>Planar</td><td>2 translations + 1 rotation</td></tr>
+<tr><td>Ball</td><td>Point alignment</td><td>3 rotations</td></tr>
+<tr><td>Bearing</td><td>Point on line</td><td>3 rotations + 1 translation</td></tr>
+<tr><td>Weld</td><td>Coordinate systems</td><td>0</td></tr>
+<tr><td>6DOF</td><td>Coordinate systems</td><td>6</td></tr></table>
+<div class="def"><b>Mechanism</b> (<span class="path">Applications ▸ Mechanism</span>) adds gear pairs, cams, belts, 3D contacts, springs, dampers, <b>servo motors</b> (prescribed motion on a connection axis) and analyses: Position (kinematics), Kinematic, Dynamic, Static, Force Balance.</div>
+<p>Gear pair: the two gears each need a <b>Pin</b> connection; you give the pitch diameters and Creo applies the ratio N₂/N₁ = d₂/d₁.</p>
+</section>
+<section><h2>Do it in Creo</h2>
+<ol class="steps">
+<li>Assembly <code>gear_unit</code>: housing placed with Default.</li>
+<li>Assemble the input shaft. In the dashboard choose <b>Pin</b> from the connection list. Axis alignment: shaft axis ↔ bore axis. Translation: shaft shoulder ↔ bearing face. Status: connection definition complete.</li>
+<li>Same for the output shaft (Pin). <span class="path">Model ▸ Drag Components</span> (the hand icon) — drag a shaft: it only turns.</li>
+<li><span class="path">Applications ▸ Mechanism</span> ▸ <b>Gears</b>: Gear 1 = input pin, pitch Ø 34; Gear 2 = output pin, pitch Ø 84. OK.</li>
+<li><b>Servo Motor</b> on the input pin: velocity 1450 rpm = 8700 deg/s.</li>
+<li><b>Mechanism Analysis</b> ▸ Position, 1 s, 100 frames, motor on. Run. Play back with <b>Playback</b>; tick Global Interference to check collisions during motion.</li>
+<li>Add a slider: a piston with a <b>Slider</b> connection in a cylinder, and a <b>Pin</b>-connected con-rod — then drive the crank and watch the slider follow.</li>
+</ol>
+</section>
+<section><h2>Lab: connections and the gear pair</h2>
+<p>Pick a connection and press <kbd>P</kbd> to see the motion it allows.</p>
+<div class="widget" data-w="conn"></div>
+<p>Then size a gear pair: centre distance, ratio and the pitch diameters to enter in Mechanism.</p>
+<div class="widget" data-w="gears"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Use connections for anything that moves — constraints leave things free by accident; connections say what is free on purpose.</li>
+<li>Set <b>Zero</b> and <b>Limits</b> on a Pin or Slider (Edit Definition ▸ Placement ▸ Rotation Axis) to stop drag going past real stops.</li>
+<li>Gear pitch circles must touch: centre distance = (d₁ + d₂)/2. Check it in the skeleton, not by eye.</li>
+<li>Kinematic analyses ignore mass; dynamic ones need mass properties (Day 14) and forces.</li>
+<li>Save snapshots (Drag ▸ Snapshots) for positions you want on drawings: open, closed, mid-stroke.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Four-bar linkage: ground, crank 40, coupler 120, rocker 90, ground link 100. Pins at each joint, servo on the crank; plot the rocker angle.</li>
+<li>Slider-crank: crank 50, con-rod 180. Measure the piston stroke (should be 100) with a Measure of the slider position.</li>
+<li>The spur gear pair from the lab with 17 and 42 teeth, module 2: check centre distance 59 mm and the output speed.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Which connection leaves one rotation only?","o":["Slider","Pin","Cylinder","Ball"],"a":1,"e":"Pin = axis alignment + translation constraint."},
+{"q":"Which connection lets a part rotate about and slide along an axis?","o":["Pin","Cylinder","Weld","Planar"],"a":1,"e":"Cylinder uses axis alignment only."},
+{"q":"Gears module 2, 17 and 42 teeth. Centre distance?","o":["59 mm","118 mm","42 mm","84 mm"],"a":0,"e":"a = m(N1+N2)/2 = 2 × 59 / 2 = 59."},
+{"q":"What drives a kinematic analysis?","o":["Gravity","A servo motor","A spring","Mass properties"],"a":1,"e":"Servo motors prescribe motion on a connection axis."},
+{"q":"1450 rpm in deg/s?","o":["1450","8700","24.2","87 000"],"a":1,"e":"1450 × 360 / 60 = 8700 deg/s."}
+]</quiz>
+</day>
+
+<day n="19">
+<summary>Top-down design starts from a skeleton: a light part that holds the layout — shaft centres, envelopes, interfaces. Learn skeleton models, Copy Geometry and Publish Geometry, and how to keep external references under control.</summary>
+<goals><li>Create a skeleton model in an assembly</li><li>Put layout datums, curves and surfaces in the skeleton</li><li>Pass geometry to parts with Copy Geometry and Publish Geometry</li><li>Control dependency and external references</li><li>Know when top-down pays off</li></goals>
+<content>
+<section><h2>Skeletons</h2>
+<p>A <b>skeleton model</b> is a special part in an assembly (<span class="path">Model ▸ Create ▸ Skeleton Model</span>). It sits at the top of the tree, has no mass, is left out of BOMs, and holds the layout: datum axes for shafts, planes for joint faces, curves for paths, surfaces for envelopes.</p>
+<div class="cols">
+<div class="box"><b class="t">Publish Geometry</b>In the skeleton: a named package of references ("GEARBOX_INTERFACE") so parts take exactly that set and nothing else.</div>
+<div class="box"><b class="t">Copy Geometry</b>In each part: copies references (or a published package) from the skeleton. The part's features are built on the copies — <b>local</b> references.</div>
+<div class="box"><b class="t">Dependent</b>Copy Geometry can stay <b>dependent</b> (updates when the skeleton changes) or be made independent (frozen).</div>
+<div class="box"><b class="t">Reference Control</b><span class="path">Model ▸ Reference Control</span> (or in config.pro) limits which external references are allowed — e.g. only to skeletons.</div>
+</div>
+<div class="def"><b>Why not just sketch in context?</b> A part that references other parts' faces directly breaks when they change and drags all of them into memory. Referencing one skeleton through Copy Geometry gives one clear source of truth and a part that opens on its own.</div>
+</section>
+<section><h2>Do it in Creo</h2>
+<ol class="steps">
+<li>New assembly <code>reducer</code>. <span class="path">Model ▸ Create</span> ▸ Type <b>Skeleton Model</b> ▸ name <code>reducer_skel</code> ▸ Copy from existing (empty mmns part). Place it with Default.</li>
+<li>Activate the skeleton (right-click ▸ Activate). Add datum axes A_IN and A_OUT 59 apart, a plane JOINT_FACE, and a sketched envelope curve for the housing.</li>
+<li>Name the centre distance <code>C</code> in the skeleton. <span class="path">Model ▸ Publish Geometry</span>: A_IN, A_OUT, JOINT_FACE → name <code>LAYOUT</code>.</li>
+<li>Activate the assembly again. Create a part <code>housing</code> (Model ▸ Create ▸ Part ▸ Solid, empty mmns). Activate it.</li>
+<li><span class="path">Model ▸ Get Data ▸ Copy Geometry</span> ▸ Publish geometry ▸ pick LAYOUT. Finish. Build the housing bores on the copied axes.</li>
+<li>Do the same for the cover. Activate the assembly.</li>
+<li>Change C in the skeleton from 59 to 70. Regenerate the assembly — housing and cover bores move together.</li>
+</ol>
+</section>
+<section><h2>Lab: skeleton-driven parts</h2>
+<p>Move the skeleton's centre distance and bearing size and see which design approach keeps the parts matching.</p>
+<div class="widget" data-w="topdown"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Keep skeletons light: datums, curves and simple surfaces. No solid features.</li>
+<li>Name everything in the skeleton; parts will show those names in Copy Geometry.</li>
+<li>Use Publish Geometry for anything more than one or two references — it documents the interface.</li>
+<li>Information ▸ Reference Viewer on a part shows its external references; anything not going to the skeleton is a warning sign.</li>
+<li>Top-down pays off on products with many interacting parts that change together — gearboxes, frames, housings with covers. For a single bracket it is overkill.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Build the gear reducer skeleton: shaft axes, bearing planes, joint face, bolt-pattern points, envelope surface.</li>
+<li>Housing and cover take geometry only from published packages. Bolt holes in both come from the same skeleton points.</li>
+<li>Change the bolt PCD and C in the skeleton; check holes still line up with Global Interference on bolts.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"A skeleton model is…","o":["A simplified representation","A layout part at the top of the assembly, without mass, left out of BOMs","A sketch","A drawing format"],"a":1,"e":"It holds the layout references."},
+{"q":"How does a part take references from the skeleton?","o":["Sketching on the skeleton's faces","Copy Geometry (often of a Publish Geometry package)","Mirror","Family table"],"a":1,"e":"Copy Geometry makes local copies of the references."},
+{"q":"What does Publish Geometry do?","o":["Exports STEP","Groups chosen references under one name for others to copy","Saves a version","Locks the skeleton"],"a":1,"e":"It defines the interface explicitly."},
+{"q":"Copy Geometry made independent means…","o":["It updates always","It is frozen and no longer follows the skeleton","It is deleted","It moves to the skeleton"],"a":1,"e":"Dependent copies follow; independent ones don't."},
+{"q":"Which tool limits which external references are allowed?","o":["Reference Control","Layers","Simplified Rep","Family Table"],"a":0,"e":"Reference Control enforces the rules."}
+]</quiz>
+</day>
+
+<day n="20">
+<summary>Big assemblies need control. Learn the View Manager: simplified representations, exploded states, cross-sections and combined states; plus Global Interference and clearance checks.</summary>
+<goals><li>Make Master, Geometry, Graphics and Symbolic reps and user simplified reps</li><li>Create explode states and move components with offset lines</li><li>Make and show cross-sections</li><li>Save combined states for drawings</li><li>Run Global Interference and clearance checks</li></goals>
+<content>
+<section><h2>The View Manager</h2>
+<p><span class="path">View ▸ View Manager</span> (also on the graphics toolbar) holds named states of an assembly:</p>
+<div class="cols">
+<div class="box"><b class="t">Simp Rep</b>Which parts are loaded and how: <b>Master</b> (everything), <b>Exclude</b>, <b>Graphics</b> (display only, fast), <b>Geometry</b> (measurable, not editable), <b>Symbolic</b>. Open big assemblies in a light rep.</div>
+<div class="box"><b class="t">Explode</b>Positions of components for an exploded view, with offset lines.</div>
+<div class="box"><b class="t">Sections</b>Planar, offset (stepped) and zone cross-sections, with hatching for drawings.</div>
+<div class="box"><b class="t">Orient / Appearance / All</b>Saved views, colour states, and <b>combined states</b> (All tab) that bundle a rep + explode + section + orientation + appearance for a drawing view.</div>
+</div>
+<div class="def"><b>Open in a rep.</b> <span class="path">File ▸ Open</span> ▸ the Open button's drop-down ▸ <b>Open Subset</b> / pick a rep. Creo loads only what that rep needs — essential for assemblies of thousands of parts.</div>
+<p><b>Global Interference</b> (<span class="path">Analysis ▸ Global Interference</span>) lists every pair of parts that overlap and the volume. Press fits are expected; anything else is a mistake. <b>Global Clearance</b> finds pairs closer than a set distance.</p>
+</section>
+<section><h2>Do it in Creo</h2>
+<ol class="steps">
+<li>Open your shaft unit from Day 17. View Manager ▸ <b>Simp Rep</b> ▸ New <code>NO_FASTENERS</code> ▸ Exclude the bolts ▸ OK. Switch between Master and NO_FASTENERS.</li>
+<li><b>Explode</b> tab ▸ New <code>EXP1</code> ▸ Edit Position: drag the cover up, the bolts up further, the shaft out sideways. Add <b>offset lines</b> from bolt axes to holes.</li>
+<li><b>Sections</b> ▸ New ▸ Planar ▸ through FRONT. Show it; edit the hatch on each part.</li>
+<li><b>All</b> tab ▸ New combined state <code>SECTION_VIEW</code> with Master rep, no explode, section on, saved orientation FRONT.</li>
+<li><span class="path">Analysis ▸ Global Interference</span> ▸ Compute. Explain each pair. Fix any unintended clash.</li>
+<li>Save. Close. <span class="path">File ▸ Open</span> the assembly in the NO_FASTENERS rep.</li>
+</ol>
+</section>
+<section><h2>Lab: exploded view in 3D</h2>
+<p>Explode a bearing unit — housing, bearing, shaft, cover and screws. Press <kbd>P</kbd> to animate.</p>
+<div class="widget" data-w="explode"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Make a company standard set of reps for every top assembly: NO_HARDWARE, ENVELOPE, GRAPHICS_ONLY.</li>
+<li>Envelopes (simple stand-in parts) replace complex bought-out items in large layouts.</li>
+<li>Explode in assembly order: the order you move things is the fitting order a fitter will read.</li>
+<li>Name sections A, B, C — those letters appear on drawings.</li>
+<li>Run interference before every release, and after every change to a mating part.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>For your gear reducer: reps MASTER, NO_FASTENERS, HOUSING_ONLY; explode EXP_FITTING; section A-A through both shafts; combined state for the GA drawing.</li>
+<li>Global Interference: the only interferences should be bearing press fits.</li>
+<li>Global Clearance at 2 mm: list parts that come close to the rotating gears.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Which simplified rep shows parts but lets you measure, not edit?","o":["Master","Geometry","Graphics","Exclude"],"a":1,"e":"Graphics is display-only; Geometry can be measured."},
+{"q":"Where do you create exploded states?","o":["View Manager ▸ Explode","Tools ▸ Explode","File ▸ Prepare","Mechanism"],"a":0,"e":"View Manager holds explode states."},
+{"q":"A combined state bundles…","o":["Several assemblies","Rep, explode, section, orientation and appearance","Two parts","A drawing and a part"],"a":1,"e":"Combined states are ideal for drawing views."},
+{"q":"Global Interference reports a bearing in a housing. Usually this is…","o":["A design error","The intended press fit","A bug","A missing constraint"],"a":1,"e":"Press fits show as interference — expected."},
+{"q":"Fastest way to open a huge assembly?","o":["Open Master","Open a light simplified rep","Open each part first","Erase everything"],"a":1,"e":"Load only what you need."}
+]</quiz>
+</day>
+
+<day n="21">
+<summary>Sheet metal is designed bent and manufactured flat. Learn the Creo Sheetmetal application: walls, flanges, bends, reliefs, Y-factor and K-factor, bend tables, flat state and flat pattern preview.</summary>
+<goals><li>Start a sheetmetal part and set thickness and bend allowance</li><li>Make planar, flat and flange walls with reliefs</li><li>Understand Y-factor = K·π/2 and bend allowance</li><li>Unbend, bend back and create a flat state</li><li>Convert a solid to sheetmetal</li></goals>
+<content>
+<section><h2>Sheetmetal in Creo</h2>
+<p><span class="path">File ▸ New ▸ Part ▸ Sheetmetal</span> (template mmns_part_sheetmetal_abs). The whole part has one thickness; every wall knows how to unbend.</p>
+<div class="cols">
+<div class="box"><b class="t">Planar wall</b>The first flat wall from a closed sketch.</div>
+<div class="box"><b class="t">Flat wall</b>Attached to an edge, flat shape from a library (rectangle, trapezoid, user sketch) at an angle.</div>
+<div class="box"><b class="t">Flange wall</b>Profile along an edge or chain (I, L, J, S, hem, open…). The workhorse.</div>
+<div class="box"><b class="t">Bend / Unbend / Bend Back</b>Bend a flat region on a line; unbend for flat work; bend back after.</div>
+<div class="box"><b class="t">Reliefs</b>Bend relief (rip, stretch, rectangle, obround) and corner relief stop tearing.</div>
+<div class="box"><b class="t">Flat Pattern</b>A feature that shows the part flat; Flat Pattern Preview shows it in a separate window.</div>
+</div>
+<div class="def"><b>Y-factor vs K-factor.</b> Creo uses the <b>Y-factor</b> by default: Y = K·π/2. Bend allowance BA = (π/2·R + Y·T)·θ/90° for angle θ. Default Y = 0.50 means K ≈ 0.32. Many companies use <b>bend tables</b> instead (measured values per material/thickness/radius). Set it in <span class="path">File ▸ Prepare ▸ Model Properties ▸ Bend Allowance</span>.</div>
+</section>
+<section><h2>Do it in Creo</h2>
+<ol class="steps">
+<li>New Sheetmetal part <code>bracket_sm</code>.</li>
+<li><b>Planar</b> wall: sketch 100 × 60 on TOP, thickness 2 in the dashboard (this sets the thickness of the whole part). Finish.</li>
+<li><b>Flange</b> wall on one long edge: I-type, height 40, angle 90°, inside radius 2. Relief: Rip.</li>
+<li>Flange on the opposite edge: L-type (flange with a return of 15).</li>
+<li>Cut two Ø9 holes with an extrude <b>Sheetmetal cut</b> (normal to the sheet).</li>
+<li>Check bend allowance: <span class="path">File ▸ Prepare ▸ Model Properties ▸ Bend Allowance</span> — note Y-factor 0.5. Change it to K 0.44 (Y 0.69) and watch the flat length change.</li>
+<li><b>Flat Pattern</b>: pick the base wall as the fixed geometry. Measure the flat length; compare with the lab.</li>
+<li>Convert a solid: open a shelled box from Day 6, <span class="path">Operations ▸ Convert to Sheetmetal</span> → Shell, add Edge rips at the corners.</li>
+</ol>
+</section>
+<section><h2>Lab: flat length and Y-factor</h2>
+<p>Thickness, radius, angle, K and flange lengths → bend allowance, bend deduction, flat length, and the Y-factor Creo would use.</p>
+<div class="widget" data-w="sheet"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Agree Y/K or bend tables with the shop. A wrong factor makes every flat pattern slightly wrong — enough to make flanges miss holes.</li>
+<li>Keep holes at least 2T + R from a bend edge or they stretch into ovals.</li>
+<li>Use Flat Pattern as the <b>last</b> feature; Unbend/Bend Back in the middle of the tree only for features that must be cut flat across a bend.</li>
+<li>Minimum flange height ≈ 2.5T + R so the press-brake die can grip it.</li>
+<li>Drawings of sheetmetal parts: one sheet with the bent views and a flat state view with bend lines and bend notes.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Electrical enclosure lid 300 × 200 × 2, four 25 flanges with 3 mm corner reliefs, louvres in the top (Form or Punch from a library if you have one, or simple slots).</li>
+<li>Z-bracket 2.5 thick: 40 – 60 – 40 with two 90° bends, R 2.5. Check the flat length with the lab.</li>
+<li>Make a bend table or Y-factor change for aluminium 5052 (K ≈ 0.40) and compare the flat lengths.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Relation between Y-factor and K-factor?","o":["Y = K","Y = K·π/2","Y = 2K","Y = K/π"],"a":1,"e":"Y = K·π/2; default Y 0.5 ⇔ K ≈ 0.32."},
+{"q":"Which wall follows an edge with a profile like L or J?","o":["Planar","Flat","Flange","Unattached"],"a":2,"e":"Flange walls take profiles along an edge chain."},
+{"q":"90° bend, T 2, R 3: outside setback?","o":["2","3","5","6"],"a":2,"e":"OSSB = tan(45°)·(R + T) = 5."},
+{"q":"Why add a bend relief?","o":["To save material","To stop tearing where a bend meets a flat edge","To make the part lighter","For appearance"],"a":1,"e":"Reliefs let the bend form cleanly."},
+{"q":"Best position for the Flat Pattern feature in the tree?","o":["First","Last","After the first wall","Anywhere"],"a":1,"e":"New features are then added to the bent part."}
+]</quiz>
+</day>

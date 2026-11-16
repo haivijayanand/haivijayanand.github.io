@@ -1,0 +1,430 @@
+<!--
+TOOL:    creo/_src/week4.html — 28-Day Creo Parametric Course content source, Week 4 (Days 22–28)
+FAMILY:  creo
+VERSION: 1.0.0
+DATE:    2026-11-16
+CHAT:    Same like solidworks, create a GitHub for Creo also
+CHANGES: 1.0.0 - first version: drawings, GD&T, tables/repeat regions/BOM, surfacing, Flexible Modeling + config.pro + mapkeys, Creo Simulate, capstone with exam and certificate
+STATUS:  working
+-->
+
+<day n="22">
+<summary>Drawings are still how most parts get made. Learn drawing templates and formats, detail options (.dtl), general, projection, detailed, auxiliary and section views, and first- vs third-angle projection.</summary>
+<goals><li>Start a drawing with a template and a format (.frm)</li><li>Set detail options: projection type, text height, units</li><li>Place general and projection views, set scale and display style</li><li>Add detailed, auxiliary, section and broken views</li><li>Fill the title block from model parameters</li></goals>
+<content>
+<section><h2>How Creo drawings are built</h2>
+<div class="cols">
+<div class="box"><b class="t">Drawing (.drw)</b>Views of one or more models, dimensions, notes, tables. Fully associative with the model.</div>
+<div class="box"><b class="t">Format (.frm)</b>The border and title block sheet that sits behind. Notes in it can read parameters: <code>&amp;PART_NO</code>, <code>&amp;DESCRIPTION</code>, <code>&amp;todays_date</code>, <code>&amp;scale</code>.</div>
+<div class="box"><b class="t">Template</b>A drawing that places views automatically when you start a new drawing.</div>
+<div class="box"><b class="t">Detail options (.dtl)</b>The drawing's standard: <code>projection_type first_angle</code>, <code>text_height 3.5</code>, <code>drawing_units mm</code>, arrow style, tolerance display. Set through <span class="path">File ▸ Prepare ▸ Drawing Properties ▸ Detail Options</span>.</div>
+</div>
+<table><tr><th>View</th><th>How</th></tr>
+<tr><td>General</td><td>The first view: pick a saved orientation (FRONT, etc.)</td></tr>
+<tr><td>Projection</td><td>Select a view ▸ Projection View ▸ drag right, left, up or down</td></tr>
+<tr><td>Detailed</td><td>Pick a point, sketch a spline around it, place the enlarged view</td></tr>
+<tr><td>Auxiliary</td><td>Projected normal to an inclined edge or datum</td></tr>
+<tr><td>Section</td><td>View properties ▸ Sections ▸ 2D section (from the model's View Manager)</td></tr>
+<tr><td>Broken</td><td>View properties ▸ Visible Area ▸ Broken View — long shafts</td></tr></table>
+<div class="def"><b>First angle</b> (ISO, used in India and Europe) puts the left-side view on the <i>right</i> of the front view and the top view <i>below</i> it. <b>Third angle</b> (USA) does the opposite. Same views, different places. Set <code>projection_type</code> once in your company .dtl.</div>
+</section>
+<section><h2>Do it in Creo</h2>
+<ol class="steps">
+<li>Open your bracket. <span class="path">File ▸ New ▸ Drawing</span>, name <code>bracket</code>, untick default template, <b>Empty with format</b> ▸ browse to an A3 format ▸ OK.</li>
+<li><span class="path">File ▸ Prepare ▸ Drawing Properties ▸ Detail Options</span>: set <code>projection_type first_angle</code>, <code>text_height 3.5</code>. Save the options as <code>company_iso.dtl</code> for reuse.</li>
+<li><span class="path">Layout ▸ General View</span> ▸ click on the sheet ▸ choose FRONT ▸ Scale 1:1 ▸ View Display: No Hidden ▸ OK.</li>
+<li>Select it ▸ <span class="path">Layout ▸ Projection View</span>: place a top view below (first angle) and a side view on the right.</li>
+<li>Make a cross-section A-A in the part (View Manager ▸ Sections). In the drawing, double-click the side view ▸ Sections ▸ 2D cross-section ▸ A ▸ Full. Add the arrows (right-click the view ▸ Add Arrows).</li>
+<li><span class="path">Layout ▸ Detailed View</span> on a small groove, scale 4:1.</li>
+<li>Check the title block: PART_NO and DESCRIPTION from Day 1 fill in by themselves through &amp;parameters in the format.</li>
+<li>Change a dimension on the part, return to the drawing — the views update.</li>
+</ol>
+</section>
+<section><h2>Lab: first vs third angle</h2>
+<p>Toggle the projection and see where each view lands and which symbol to put in the title block.</p>
+<div class="widget" data-w="proj"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Keep company formats and .dtl files in one shared folder and point <code>pro_format_dir</code> and <code>drawing_setup_file</code> there (Day 26).</li>
+<li>Put the projection symbol and the default tolerance block in the format, linked to parameters.</li>
+<li>Do not move views by mistake: lock view movement (right-click ▸ Lock View Movement).</li>
+<li>Show only the views needed to make the part — every extra view is extra checking.</li>
+<li>Erase Not Displayed before opening a drawing of a model with the same name in another folder.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>A3 drawing of the bearing housing (Day 11): three views, section A-A through the bore, detail of a tapped hole, first angle, scale 1:2.</li>
+<li>A4 drawing of the shaft (Day 5): one broken view, two sections at the keyway and groove.</li>
+<li>Make a drawing template that places front, top and right views automatically at 1:1.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"In first-angle projection the left-side view goes…","o":["Left of the front view","Right of the front view","Above","Below"],"a":1,"e":"First angle: views project through the object to the far side."},
+{"q":"Which file holds the border and title block?","o":[".drw",".frm",".dtl",".prt"],"a":1,"e":"Formats are .frm files."},
+{"q":"How does the title block show the part number automatically?","o":["Type it each time","A note with &PART_NO in the format","Export to Excel","Relations in the drawing only"],"a":1,"e":"&parameter text reads model parameters."},
+{"q":"Where is the projection type set?","o":["config.pro only","Detail option projection_type","Model properties","Layer tree"],"a":1,"e":"projection_type first_angle / third_angle."},
+{"q":"Section views in drawings come from…","o":["Sketches in the drawing","Cross-sections defined in the model's View Manager","The format","Mechanism"],"a":1,"e":"The drawing shows a section the model already has."}
+]</quiz>
+</day>
+
+<day n="23">
+<summary>Dimensions and tolerances turn a picture into a contract. Learn to show model dimensions, add driven ones, set tolerance modes, apply ISO fits, and build correct GD&amp;T with datum features and feature control frames.</summary>
+<goals><li>Show model annotations instead of re-dimensioning</li><li>Set tolerance display and modes: nominal, limits, plus-minus, symmetric</li><li>Apply ISO fits (H7, k6) to dimensions</li><li>Define datum feature symbols and set datums</li><li>Write valid feature control frames; know the GD&amp;T Advisor</li></goals>
+<content>
+<section><h2>Dimensions, tolerances and GD&amp;T</h2>
+<div class="cols">
+<div class="box"><b class="t">Show Model Annotations</b><span class="path">Annotate ▸ Show Model Annotations</span>. Brings the model's own dimensions onto a view. Edit them on the drawing and the model changes — the strongest Creo habit.</div>
+<div class="box"><b class="t">Driven dimensions</b><span class="path">Annotate ▸ Dimension</span>. Measures but does not drive. Use for overall sizes you did not model directly.</div>
+<div class="box"><b class="t">Tolerances</b>Turn on <code>tol_display yes</code>. Each dimension: Nominal, Limits, Plus-Minus, Symmetric, or ISO fit class (H7, g6…) with the <b>Tolerance table</b>.</div>
+<div class="box"><b class="t">Datums and GTOL</b><span class="path">Annotate ▸ Datum Feature Symbol</span> marks A, B, C. <span class="path">Annotate ▸ Geometric Tolerance</span> makes the frame. Both can live in the 3D model (MBD) and show on drawings.</div>
+</div>
+<table><tr><th>Group</th><th>Characteristics</th><th>Datum?</th></tr>
+<tr><td>Form</td><td>Flatness, straightness, circularity, cylindricity</td><td>Never</td></tr>
+<tr><td>Orientation</td><td>Parallelism, perpendicularity, angularity</td><td>Always</td></tr>
+<tr><td>Location</td><td>Position, concentricity, symmetry</td><td>Usually</td></tr>
+<tr><td>Runout</td><td>Circular runout, total runout</td><td>Always (an axis)</td></tr>
+<tr><td>Profile</td><td>Line profile, surface profile</td><td>Optional</td></tr></table>
+<div class="def"><b>GD&amp;T Advisor</b> (an extension) checks your scheme as you build it: missing datums, under-constrained features, invalid frames — and Creo 12 extends it to datum reference features and intent surfaces. Without it, the lab below gives the same kind of check for single frames.</div>
+</section>
+<section><h2>Do it in Creo</h2>
+<ol class="steps">
+<li>Open the bearing housing drawing (Day 22). Select the views ▸ <span class="path">Annotate ▸ Show Model Annotations</span> ▸ Dimensions tab ▸ tick the ones you want ▸ OK.</li>
+<li>Clean up: <span class="path">Annotate ▸ Cleanup Dimensions</span> spaces them; drag the rest. Align with Align Dimensions.</li>
+<li>Select the bore Ø47 ▸ Dimension tab ▸ Tolerance ▸ ISO fit ▸ <b>H7</b>. Check the limits shown (47.000 / 47.025).</li>
+<li><span class="path">Annotate ▸ Datum Feature Symbol</span> on the base face → <b>A</b>; on the bore axis → <b>B</b>.</li>
+<li><span class="path">Annotate ▸ Geometric Tolerance</span>: bore axis, Perpendicularity 0.02 to A.</li>
+<li>Mounting holes: Position Ø0.2 Ⓜ | A | B. Base face: Flatness 0.05 (no datum).</li>
+<li>Add the general tolerance note "ISO 2768-mK" in the title block.</li>
+</ol>
+</section>
+<section><h2>Lab: feature control frames</h2>
+<p>Build a frame — characteristic, tolerance, modifiers, datums — and the lab checks it is valid.</p>
+<div class="widget" data-w="fcf"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Show model dimensions; avoid driven ones unless needed. A driven dimension cannot change the part.</li>
+<li>Datum A is the face the part sits on in use or in the fixture — choose datums from function, not convenience.</li>
+<li>Flatness never takes a datum. A frame "Flatness 0.05 | A" is invalid.</li>
+<li>Use Position with Ⓜ for clearance-hole patterns; it gives the shop bonus tolerance.</li>
+<li>Bearing seats: k6/m6 on shafts, H7 or J7 in housings — and a runout to the shaft axis.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Fully tolerance the shaft drawing: bearing seats Ø25 k6, circlip groove widths, runout 0.02 of seats to datum A-B (common axis of both seats).</li>
+<li>Housing: datums A (base), B (bore), C (side face); position of 4 holes to A|B|C.</li>
+<li>Check each frame with the lab before you finalise.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Which command brings the model's own dimensions onto a drawing?","o":["Annotate ▸ Dimension","Annotate ▸ Show Model Annotations","Layout ▸ General View","Table ▸ Repeat Region"],"a":1,"e":"Shown model dimensions drive the model."},
+{"q":"Which GD&T characteristic never takes a datum?","o":["Position","Parallelism","Flatness","Runout"],"a":2,"e":"Form tolerances have no datums."},
+{"q":"Ø47 H7 means…","o":["47.000 to 47.025","46.975 to 47.000","47 ± 0.7","Shaft tolerance"],"a":0,"e":"H holes have a zero lower deviation; IT7 at 47 mm is 25 µm."},
+{"q":"Which config option makes tolerances appear on dimensions?","o":["tol_display yes","show_tol on","display_tol 1","tolerance true"],"a":0,"e":"tol_display yes."},
+{"q":"Why use Ⓜ on a position tolerance for clearance holes?","o":["It looks standard","It gives bonus tolerance as the hole departs from MMC","It removes the datum","It is required"],"a":1,"e":"Maximum material condition allows bonus tolerance."}
+]</quiz>
+</day>
+
+<day n="24">
+<summary>Creo tables are smarter than they look: repeat regions read the assembly and fill themselves. Learn tables, repeat regions with report parameters, BOM types, balloons, and indented vs flat lists.</summary>
+<goals><li>Insert and format tables</li><li>Add a repeat region with &amp;rpt.index, &amp;asm.mbr.name, &amp;rpt.qty</li><li>Read custom parameters into a BOM (&amp;asm.mbr.PART_NO)</li><li>Make flat (parts only) and indented BOMs</li><li>Create and clean up balloons</li></goals>
+<content>
+<section><h2>Tables and repeat regions</h2>
+<p>A <b>repeat region</b> is a row of a table that Creo copies once for every member of the assembly, filling in report parameters.</p>
+<table><tr><th>Report parameter</th><th>Shows</th></tr>
+<tr><td><code>&amp;rpt.index</code></td><td>Item number</td></tr>
+<tr><td><code>&amp;asm.mbr.name</code></td><td>Component name</td></tr>
+<tr><td><code>&amp;asm.mbr.PART_NO</code>, <code>&amp;asm.mbr.DESCRIPTION</code></td><td>Your own model parameters</td></tr>
+<tr><td><code>&amp;rpt.qty</code></td><td>Quantity</td></tr>
+<tr><td><code>&amp;rpt.level</code></td><td>Indent level in a multi-level region</td></tr>
+<tr><td><code>&amp;asm.mbr.type</code></td><td>Part or assembly</td></tr></table>
+<div class="def"><b>Attributes</b> of a repeat region decide its type: <b>Duplicates</b> (one row per instance) vs <b>No Duplicates</b> (one row per part with qty), <b>Flat</b> (only top level) vs <b>Recursive</b> (every level). Recursive + No Duplicates = a parts list for purchase; multi-level with &amp;rpt.level = an indented BOM. Filters drop items like skeletons and bulk items.</div>
+<p><b>Balloons</b>: <span class="path">Table ▸ Create Balloons</span> uses the repeat region's index numbers, so balloons and BOM always agree.</p>
+</section>
+<section><h2>Do it in Creo</h2>
+<ol class="steps">
+<li>Drawing of your shaft unit assembly. <span class="path">Table ▸ Table</span> ▸ insert 2 rows × 4 columns at the title block's top edge.</li>
+<li>Header row: ITEM, PART NO., DESCRIPTION, QTY.</li>
+<li><span class="path">Table ▸ Repeat Region</span> ▸ Add ▸ Simple ▸ pick the first and last cell of row 2.</li>
+<li>Double-click each cell of row 2: Report Symbol ▸ rpt ▸ index; asm ▸ mbr ▸ User Defined ▸ PART_NO; same for DESCRIPTION; rpt ▸ qty.</li>
+<li><span class="path">Table ▸ Update Tables</span>. Rows appear for every component.</li>
+<li>Repeat Region ▸ Attributes ▸ <b>No Duplicates</b> + <b>Recursive</b>: a flat parts list with quantities rolled up.</li>
+<li><span class="path">Table ▸ Create Balloons ▸ All</span>. Then Clean up Balloons and drag them to tidy positions.</li>
+</ol>
+</section>
+<section><h2>Lab: three BOM types</h2>
+<p>The same assembly as top-level, parts-only and indented lists.</p>
+<div class="widget" data-w="bom"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Save a good BOM table (Table ▸ Save As Table) and put it in your drawing template — never build one by hand again.</li>
+<li>Give every part the same parameters (PART_NO, DESCRIPTION, MATERIAL) through the start template, so BOMs fill in.</li>
+<li>Filter skeletons and reference-only parts out of the repeat region; mark bulk items (grease, adhesive) with a BOM-only parameter.</li>
+<li>Fix sort order with Repeat Region ▸ Sort Regions (by PART_NO, then by type).</li>
+<li>Family-table instances show their own instance names and parameters — good for bolts.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>GA drawing of the gear reducer with an indented BOM and a separate parts-only purchase list on sheet 2.</li>
+<li>Add a MATERIAL column that reads &amp;asm.mbr.PTC_MATERIAL_NAME.</li>
+<li>Balloon every item in the exploded view.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Which report parameter gives the item number?","o":["&rpt.qty","&rpt.index","&asm.mbr.name","&rpt.level"],"a":1,"e":"&rpt.index."},
+{"q":"Recursive + No Duplicates gives…","o":["Top-level list","A flat parts list with total quantities","An indented BOM","Nothing"],"a":1,"e":"All levels, one row per part."},
+{"q":"How do you show your PART_NO parameter in the BOM?","o":["&PART_NO","&asm.mbr.PART_NO","&rpt.PART_NO","&mdl.part"],"a":1,"e":"asm.mbr reads each member's parameters."},
+{"q":"Why create balloons from the table?","o":["They are bigger","Balloon numbers always match the BOM item numbers","They print faster","They have leaders"],"a":1,"e":"Both use &rpt.index."},
+{"q":"A bearing appears twice inside a sub-assembly and once at top level. Parts-only quantity?","o":["1","2","3","4"],"a":2,"e":"Quantities roll up through levels."}
+]</quiz>
+</day>
+
+<day n="25">
+<summary>When shapes stop being prismatic, you need surfaces. Learn Boundary Blend, Fill, Merge, Trim and Thicken/Solidify, an introduction to Style (ISDX), and how to judge quality with curvature and reflection.</summary>
+<goals><li>Make Boundary Blend surfaces from curves in one or two directions</li><li>Set boundary conditions: Free, Tangent, Curvature, Normal</li><li>Merge, trim and solidify quilts into a solid</li><li>Know Style (ISDX) curves and Freestyle</li><li>Read G0, G1, G2 continuity and check with curvature and reflection analysis</li></goals>
+<content>
+<section><h2>Surfaces in Creo</h2>
+<p>Surfaces form <b>quilts</b> (one or more joined surfaces). A closed quilt can be <b>solidified</b>; an open one can be <b>thickened</b> or used to cut.</p>
+<div class="cols">
+<div class="box"><b class="t">Boundary Blend</b><span class="path">Model ▸ Boundary Blend</span>. Curves in the first direction, optional curves in the second. The most-used freeform tool.</div>
+<div class="box"><b class="t">Fill / Merge / Trim</b>Fill a flat sketched region. Merge two quilts (intersect or join). Trim a quilt with a curve, plane or other quilt.</div>
+<div class="box"><b class="t">Solidify / Thicken</b>Turn a closed quilt into solid, or replace/cut with it. Thicken gives an open quilt a wall.</div>
+<div class="box"><b class="t">Style (ISDX)</b><span class="path">Model ▸ Style</span>. Free curves with control points, tied to each other with tangent/curvature conditions; surfaces from them. Freestyle is the sub-division "clay" tool.</div>
+</div>
+<div class="def"><b>Continuity.</b> <b>G0</b> = touching (crease). <b>G1</b> = tangent (no crease, but reflections kink). <b>G2</b> = curvature-continuous (smooth reflections). In Boundary Blend set each edge's condition: Free, Tangent, <b>Curvature</b>, Normal. Check with <span class="path">Analysis ▸ Inspect Geometry ▸ Curvature</span> (combs) and <b>Reflection</b> (zebra stripes).</div>
+</section>
+<section><h2>Do it in Creo</h2>
+<ol class="steps">
+<li>New part <code>mouse_shell</code>. Sketch three curves on three parallel datum planes: section arcs of 50, 60, 40 width (front, middle, back). Sketch two side curves on TOP joining their ends.</li>
+<li><span class="path">Model ▸ Boundary Blend</span>: first direction = the three sections; second direction = the two side curves. Finish.</li>
+<li><b>Fill</b> the bottom with a flat sketched region on TOP. Select both quilts ▸ <b>Merge</b>.</li>
+<li>Select the merged quilt ▸ <span class="path">Model ▸ Solidify</span>. You have a solid.</li>
+<li>Shell it 1.5 with the bottom face removed.</li>
+<li><span class="path">Analysis ▸ Inspect Geometry ▸ Curvature</span> on the top: look at the combs. Then <b>Reflection</b>.</li>
+<li>Edit the Boundary Blend ▸ Constraints: set the front edge to <b>Tangent</b> to a planar surface and compare reflections.</li>
+<li>Open <span class="path">Model ▸ Style</span> and sketch a free curve with four interpolation points; drag a point and watch the curve.</li>
+</ol>
+</section>
+<section><h2>Lab: G0 / G1 / G2 combs</h2>
+<p>Join two curves with different continuity and watch the curvature comb.</p>
+<div class="widget" data-w="cont"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Good surfaces need good curves. Fewer, smoother curves beat many wavy ones.</li>
+<li>Make the second-direction curves meet the first-direction curves exactly (sketch with Intersect/Project), or the blend fails.</li>
+<li>Solidify needs a <b>watertight</b> quilt — check with <span class="path">Analysis ▸ Inspect Geometry ▸ Quilt edges</span> (or show quilt edge colours: one-sided edges are open).</li>
+<li>Reflection stripes that kink at a join mean G1 at best. Curvature boundary conditions fix it.</li>
+<li>Creo 12 improves advanced surfacing tools; for most mechanical work, Boundary Blend + Fill + Merge + Solidify covers it.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>A handheld remote case top: boundary blend with curvature-continuous edges, solidified and shelled 1.5.</li>
+<li>A fan blade: four section curves along a twisted spine, Boundary Blend, thickened 2.</li>
+<li>Show reflection analysis before and after setting curvature boundary conditions; save both images.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"What is a quilt?","o":["A sketch","One or more joined surfaces","A drawing format","A family table"],"a":1,"e":"Quilts are surface bodies."},
+{"q":"Which continuity gives smooth reflections across a join?","o":["G0","G1","G2","None"],"a":2,"e":"G2 = curvature-continuous."},
+{"q":"Which tool turns a closed quilt into a solid?","o":["Thicken","Solidify","Merge","Fill"],"a":1,"e":"Solidify fills or replaces with a closed quilt."},
+{"q":"Most-used freeform surface tool from curves in two directions?","o":["Extrude","Boundary Blend","Revolve","Fill"],"a":1,"e":"Boundary Blend."},
+{"q":"Zebra stripes kink at a join. The join is…","o":["G2","G1 or G0","Perfect","Not merged"],"a":1,"e":"Kinked reflections show a curvature jump."}
+]</quiz>
+</day>
+
+<day n="26">
+<summary>Work faster in Creo. Edit imported or messy geometry with Flexible Modeling, set up config.pro so every session starts right, and record mapkeys for the clicks you repeat a hundred times a day.</summary>
+<goals><li>Use Flexible Modeling: Move, Offset, Modify Analytic, Substitute, Remove, Pattern Recognition</li><li>Know where config.pro is read from and in what order</li><li>Set templates, units, folders and behaviour options</li><li>Record, save and share mapkeys</li><li>Keep a company standards folder</li></goals>
+<content>
+<section><h2>Flexible Modeling</h2>
+<p>The <b>Flexible Modeling</b> tab edits geometry directly — faces, not features — while keeping the result as a feature in the tree. Ideal for imported STEP parts and for quick changes to models you do not want to rebuild.</p>
+<div class="cols">
+<div class="box"><b class="t">Move</b>Move or rotate a set of faces (e.g. a boss) with a dragger or by dimensions; the neighbours stretch to follow.</div>
+<div class="box"><b class="t">Offset / Modify Analytic</b>Offset faces; change a cylinder's radius or a cone's angle directly.</div>
+<div class="box"><b class="t">Remove</b>Remove a round, hole or boss from imported geometry.</div>
+<div class="box"><b class="t">Recognition</b>Pattern and symmetry recognition find repeated geometry so one edit changes all instances.</div>
+</div>
+<h3>config.pro</h3>
+<p>config.pro is a text file of <code>option value</code> lines. Creo reads it at start-up from the installation's text folder, then the <b>start-in folder</b>, then (for some options) the working directory — later files win. <span class="path">File ▸ Options ▸ Configuration Editor</span> shows every option, its value and its source.</p>
+<h3>Mapkeys</h3>
+<p>A mapkey is a recorded sequence of commands fired by a short key sequence. <span class="path">File ▸ Options ▸ Environment ▸ Mapkeys Settings</span> (or Tools ▸ Mapkeys in older releases) ▸ New ▸ give keys and a name ▸ <b>Record</b> ▸ do the clicks ▸ Stop ▸ OK ▸ <b>Save Changed</b>. Creo writes them into config.pro.</p>
+</section>
+<section><h2>Do it in Creo</h2>
+<ol class="steps">
+<li>Import a STEP file (any bracket) with <span class="path">File ▸ Open</span>. On the <b>Flexible Modeling</b> tab, select a boss's faces (Shape Surface set) ▸ <b>Move using Dimensions</b> 10 mm. Finish.</li>
+<li><b>Modify Analytic</b>: pick a hole, change Ø8 → Ø9. <b>Remove</b>: pick a round's face — it is gone.</li>
+<li>Close Creo. Make a folder <code>C:\creo_std</code> with sub-folders templates, formats, dtl, materials.</li>
+<li>Build your config.pro with the lab below. Save it in your Creo <b>start-in folder</b> (see the desktop shortcut's Properties ▸ Start in).</li>
+<li>Restart Creo. <span class="path">File ▸ Options ▸ Configuration Editor</span>: check each option and its source file.</li>
+<li>Record a mapkey <code>vf</code>: Saved Orientations ▸ FRONT, then Refit. Stop, OK, Save Changed. Type <code>vf</code> in the graphics window.</li>
+<li>Record <code>em</code>: File ▸ Manage Session ▸ Erase Not Displayed ▸ OK.</li>
+</ol>
+</section>
+<section><h2>Lab: config.pro and mapkey planner</h2>
+<p>Tick the options you want, edit the values, and plan your mapkeys. The lab writes a config.pro you can copy and warns about key clashes.</p>
+<div class="widget" data-w="cfgpro"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Keep one company config.pro under version control and copy it to every PC; personal mapkeys go in a second file loaded after it.</li>
+<li>Do not put company options in a working directory's config.pro — they will change behaviour only for some jobs and confuse everyone.</li>
+<li>Prefix your mapkeys with a letter nobody types in the graphics window (e.g. <code>;</code> or two letters).</li>
+<li>Mapkeys that open dialogs can pause for input — tick "Pause" options when recording if a step needs the user.</li>
+<li>Flexible Modeling on native parts is fine for quick edits, but a feature edit is usually cleaner when the history is good.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Write your config.pro with templates, formats, dtl, materials, trail_dir and units. Restart and verify each in the Configuration Editor.</li>
+<li>Record five mapkeys you will use daily (views, erase, save-close, datum display toggles). Use them for one full day.</li>
+<li>Import a STEP casting, remove all its small rounds with Flexible Modeling, move a boss, and export it again.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Which tool edits faces of an imported part without feature history?","o":["Edit Definition","Flexible Modeling","Family Table","Relations"],"a":1,"e":"Flexible Modeling works on geometry directly."},
+{"q":"Where can you see which file set a config option?","o":["Model Tree","File ▸ Options ▸ Configuration Editor","Layer Tree","Notification Center"],"a":1,"e":"The editor shows value and source."},
+{"q":"Which option sets the default part template?","o":["template_solidpart","pro_part_template","default_part","part_template_dir"],"a":0,"e":"template_solidpart."},
+{"q":"How are mapkeys made?","o":["Typed in C++","Recorded while you do the clicks, then saved to config.pro","Bought from PTC","With relations"],"a":1,"e":"Record ▸ Stop ▸ Save Changed."},
+{"q":"Why avoid single-letter mapkeys?","o":["They are slower","They fire whenever you type that letter in the graphics window","They cannot be saved","They break config.pro"],"a":1,"e":"Use two letters or function keys."}
+]</quiz>
+</day>
+
+<day n="27">
+<summary>Check strength before making metal. Learn the Creo Simulate workflow — materials, constraints, loads, p-element meshing, static analysis, convergence — plus hand checks and how to spot singularities. A word on Creo Simulation Live.</summary>
+<goals><li>Run a linear static analysis in Creo Simulate</li><li>Apply constraints, loads and materials correctly</li><li>Use Multi-Pass Adaptive convergence and read the report</li><li>Check results with hand calculations</li><li>Recognise singularities and over-constraint</li></goals>
+<content>
+<section><h2>Creo Simulate in one page</h2>
+<p><span class="path">Applications ▸ Simulate</span> switches to Structure (or Thermal). Creo Simulate uses <b>p-elements</b>: instead of a finer mesh, it raises the polynomial order of each element until the answer stops changing — that is <b>convergence</b>.</p>
+<div class="cols"><div class="box"><b class="t">1 Material assignment</b>From the part's material (Day 14): E, ν, density, yield.</div><div class="box"><b class="t">2 Constraints</b>Where the part is held. Over-constraining makes it too stiff.</div><div class="box"><b class="t">3 Loads</b>Force/moment, pressure, bearing load, gravity, temperature.</div><div class="box"><b class="t">4 Analysis</b>Static, Modal, Buckling, Fatigue, Prestress. Convergence: Quick Check, Single-Pass Adaptive, <b>Multi-Pass Adaptive</b>.</div><div class="box"><b class="t">5 Run &amp; results</b>von Mises stress, displacement, strain energy. Check the convergence graph.</div><div class="box"><b class="t">6 Check</b>Compare with a hand calculation; question peaks at corners.</div></div>
+<div class="def"><b>Singularity:</b> at a perfectly sharp inside corner, a point load or the edge of a fixed constraint the theoretical stress is infinite, so it never converges. Do not design to that number — model the real fillet, spread the load, or read the stress a little away from the point.</div>
+<p>Hand checks for a cantilever of width b, depth h, length L, tip load P: σ = 6PL/(bh²), δ = PL³/(3EI) with I = bh³/12. <b>Creo Simulation Live</b> (the Live Simulation tab) gives instant stress colours while you model — good for direction, not for sign-off.</p>
+</section>
+<section><h2>Do it in Creo</h2>
+<ol class="steps">
+<li>Model a cantilever 200 × 20 × 10 (L × b × h), material steel.</li>
+<li><span class="path">Applications ▸ Simulate</span> ▸ Structure mode. <b>Material Assignment</b>: check steel is assigned.</li>
+<li><b>Displacement</b> constraint: the 20 × 10 end face, all translations fixed.</li>
+<li><b>Force/Moment</b> load: 300 N downward on the free end face.</li>
+<li><b>Analyses and Studies</b> ▸ New Static ▸ Convergence <b>Multi-Pass Adaptive</b>, polynomial order 1–9, 5 % on displacement and strain energy.</li>
+<li>Run. Check the status: converged? at what order? Open Results: von Mises fringe and displacement.</li>
+<li>Compare: σ = 6·300·200 / (20·10²) = 180 MPa; δ = 300·200³/(3·210 000·1667) ≈ 2.29 mm.</li>
+<li>Put a 300 N point load on a single vertex instead. Run again and watch the stress there not converge — a singularity.</li>
+</ol>
+</section>
+<section><h2>Lab: cantilever check and convergence</h2>
+<p>Size a cantilever and compare stress and deflection with the hand formulas.</p>
+<div class="widget" data-w="fea"></div>
+<p>Then watch how a finite-element answer converges as the model is refined.</p>
+<div class="widget" data-w="converge"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Always read the run status: "did not converge" means the colourful picture is not an answer.</li>
+<li>Fix the minimum needed. Fixing every face of a bolted joint makes it far too stiff.</li>
+<li>Use <b>bearing loads</b> on holes and pins rather than a force on half the hole face.</li>
+<li>Use <b>AutoGEM</b> controls (max element size, isolate for exclusion) to keep elements well shaped at fillets.</li>
+<li>Factor of safety = yield ÷ peak von Mises (ductile, static). For shafts, fatigue matters more — use the Fatigue Advisor or a hand calculation.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>The bracket from Day 4: fixed on the two holes (bolt faces), 2 kN on the boss bore as a bearing load. Find max stress and FoS.</li>
+<li>Add R3 to the boss root and rerun. Compare peak stress before and after.</li>
+<li>Modal analysis of the same bracket: first three natural frequencies. Compare with your rotating speed.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Creo Simulate refines results by…","o":["Only making the mesh finer","Raising the polynomial order of p-elements","Changing the material","Adding constraints"],"a":1,"e":"Multi-Pass Adaptive raises the order until convergence."},
+{"q":"Cantilever L 200, b 20, h 10, P 300 N: bending stress at the root?","o":["90 MPa","180 MPa","360 MPa","18 MPa"],"a":1,"e":"σ = 6PL/(bh²) = 180 MPa."},
+{"q":"Stress at a point load keeps rising as order increases. This is…","o":["Convergence","A singularity","Buckling","Resonance"],"a":1,"e":"Point loads and sharp corners have infinite theoretical stress."},
+{"q":"Best load type for a pin in a hole?","o":["Pressure on the whole hole","Bearing load","Point load","Gravity"],"a":1,"e":"A bearing load distributes like a real pin."},
+{"q":"What is Creo Simulation Live for?","o":["Final certification","Instant stress feedback while modelling","Mould flow","CNC"],"a":1,"e":"Good for direction; verify with Simulate."}
+]</quiz>
+</day>
+
+<day n="28">
+<summary>Put it all together: a single-stage spur gear reducer from skeleton to parts, assembly, mechanism, drawings, BOM and a strength check. Then take the final assessment and print your certificate.</summary>
+<goals><li>Plan a product with a skeleton and design intent</li><li>Model, assemble, animate, check and document it</li><li>Pass the 20-question final assessment</li><li>Know the next steps: PTC certification and beyond</li></goals>
+<content>
+<section><h2>Capstone brief: spur gear reducer</h2>
+<p>Design a single-stage spur gear reducer: input 1450 rpm, ratio about 2.5 : 1, module 2, pinion 17 teeth, gear 42 teeth (centre distance 59 mm), face width 20. Bearings 6205 on the input, 6206 on the output. Cast housing split at the shaft plane with a bolted cover.</p>
+<table><tr><th>Part / item</th><th>Skills (day)</th></tr>
+<tr><td>Skeleton: shaft axes, joint plane, bolt points, envelope; published LAYOUT</td><td>8, 19</td></tr>
+<tr><td>Housing (cast): split draft, shell, ribs, bearing bores, bosses</td><td>4, 6, 11, 16</td></tr>
+<tr><td>Cover: Copy Geometry from the skeleton</td><td>19</td></tr>
+<tr><td>Shafts: steps, grooves, keyways, cosmetic threads; parameters + relations</td><td>5, 11, 12</td></tr>
+<tr><td>Pinion and gear: one generic gear with a family table for tooth counts</td><td>12, 13</td></tr>
+<tr><td>Bolts and washers from family tables</td><td>13</td></tr>
+<tr><td>Assembly: Default, constraints, Pin connections, gear pair, servo, interference</td><td>17, 18, 20</td></tr>
+<tr><td>Reps, explode, sections, combined states</td><td>20</td></tr>
+<tr><td>Drawings with GD&amp;T; GA with indented BOM and balloons</td><td>22, 23, 24</td></tr>
+<tr><td>Mass of the unit; output shaft stress check</td><td>14, 27</td></tr></table>
+</section>
+<section><h2>Deliverables checklist</h2>
+<ol class="steps">
+<li>Working directory and config.pro set; all parts from the mmns templates with PART_NO, DESCRIPTION, MATERIAL parameters.</li>
+<li>Skeleton with A_IN, A_OUT (C = 59 as a named parameter), JOINT_FACE, bolt points; Publish Geometry LAYOUT.</li>
+<li>Housing with 2° split draft, 8 mm walls, bores Ø52 H7 and Ø62 H7, 6 × M8 tapped holes; cover from the same skeleton.</li>
+<li>Shafts with bearing seats (k6), circlip grooves, keyways; diameters driven by relations from one parameter.</li>
+<li>Gear generic with a family table (17T and 42T instances), pitch Ø = m·N by relation.</li>
+<li>Assembly: both shafts on Pin connections; gear pair 34 : 84; servo at 8700 deg/s; Position analysis played back with interference checking.</li>
+<li>Global Interference: only bearing press fits reported.</li>
+<li>View Manager: NO_FASTENERS rep, fitting-order explode, section A-A, combined state for the GA.</li>
+<li>Drawings: housing, cover, both shafts, gear; GA with indented BOM and balloons; title blocks from parameters; first-angle.</li>
+<li>Mass of the whole unit; output-shaft bending stress by hand and in Creo Simulate.</li>
+</ol>
+</section>
+<section><h2>Final assessment</h2>
+<p>Twenty questions from all four weeks. 70 % is the pass mark.</p>
+<script type="application/json" id="exam-data">[
+{"q":"What must you set at the start of every Creo session?","o":["The colour scheme","The working directory","The licence server","The units of every part"],"a":1,"e":"Day 1."},
+{"q":"Saving a part three times leaves…","o":["One file","Three numbered versions","A .bak file","A zip"],"a":1,"e":"part.prt.1, .2, .3 (Day 1)."},
+{"q":"A dimension Creo added automatically is…","o":["Strong","Weak","Locked","Reference"],"a":1,"e":"Day 2."},
+{"q":"Two constraints conflict in a sketch. Creo opens…","o":["SketchXpert","Resolve Sketch","Reference Viewer","Notification Center"],"a":1,"e":"Day 3."},
+{"q":"Depth option that keeps a hole through when the plate thickens?","o":["Blind","Through All","Symmetric","To Next"],"a":1,"e":"Day 4."},
+{"q":"Which centreline does Revolve use as its axis?","o":["Construction","Geometry","Any","None"],"a":1,"e":"Day 5."},
+{"q":"Best pattern type for a bolt circle?","o":["Direction","Axis","Fill","Curve"],"a":1,"e":"Day 7."},
+{"q":"Why build on datum planes rather than faces?","o":["Faster","Stable references that do not vanish","Prettier","Required by drawings"],"a":1,"e":"Day 8."},
+{"q":"trajpar goes from…","o":["0 to 360","0 to 1 along the trajectory","1 to 10","−1 to 1"],"a":1,"e":"Day 9."},
+{"q":"A circle blends to a square. The circle must be…","o":["Deleted","Divided into four entities","Made construction","Made a blend vertex"],"a":1,"e":"Day 10."},
+{"q":"In relations, cos(60) equals…","o":["−0.952","0.5","0.866","Error"],"a":1,"e":"Degrees (Day 12)."},
+{"q":"In a family table, * means…","o":["Error","Same as the generic","Suppressed","Any"],"a":1,"e":"Day 13."},
+{"q":"Changing units with Interpret dimensions…","o":["Keeps the size","Keeps the numbers — the size changes","Deletes the model","Rounds values"],"a":1,"e":"Day 14."},
+{"q":"A round lost its edge. To keep it and pick a new edge use…","o":["Delete","Edit References","Undo","Suppress"],"a":1,"e":"Day 15."},
+{"q":"How do you make a pin concentric with a hole?","o":["Concentric","Coincident on the axes","Tangent","Fix"],"a":1,"e":"Day 17."},
+{"q":"Which connection leaves one rotation?","o":["Slider","Pin","Ball","Cylinder"],"a":1,"e":"Day 18."},
+{"q":"Parts take skeleton references through…","o":["Mirror","Copy Geometry","Merge","Family table"],"a":1,"e":"Day 19."},
+{"q":"Creo's default bend factor is the…","o":["K-factor","Y-factor","Bend deduction","Setback"],"a":1,"e":"Y = K·π/2 (Day 21)."},
+{"q":"First-angle projection puts the top view…","o":["Above the front view","Below the front view","Left","Right"],"a":1,"e":"Day 22."},
+{"q":"Which report parameter gives a BOM item number?","o":["&rpt.qty","&rpt.index","&asm.mbr.name","&todays_date"],"a":1,"e":"Day 24."}
+]</script>
+<div class="widget" data-w="exam" data-src="exam-data"></div>
+</section>
+<section><h2>Certificate</h2>
+<p>Type your name. The certificate shows how many days you have marked complete and your best final-assessment score. Print it or save as PDF.</p>
+<div class="widget" data-w="cert"></div>
+</section>
+<section><h2>What next</h2>
+<ul>
+<li><b>PTC University</b> learning paths and the Creo certification exams (associate and professional levels) — check PTC's site for the current programme.</li>
+<li>Go deeper where your work is: Pro/PROGRAM and Creo TOOLKIT for automation, Creo Simulate Advanced, Mechanism Dynamics, Advanced Assembly Extension, Piping and Cabling.</li>
+<li>Re-model a real part from your own work every week. Speed comes from repetition; design intent comes from being made to change your models.</li>
+<li>Keep this course as a reference: every lab works offline once the page has loaded.</li>
+</ul>
+</section>
+</content>
+<quiz></quiz>
+</day>

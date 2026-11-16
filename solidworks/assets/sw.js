@@ -1,16 +1,17 @@
 /*
 TOOL:    solidworks/assets/sw.js — shared engine for the 28-Day SolidWorks Course: page shell, progress, quiz, 3D viewer and interactive labs
 FAMILY:  solidworks
-VERSION: 1.0.0
-DATE:    2026-11-15
+VERSION: 1.1.0
+DATE:    2026-11-16
 CHAT:    28-day SolidWorks course with interactive HTML on GitHub Pages
-CHANGES: 1.0.0 - first version; 3D wireframe/shaded viewer, 30 labs, quiz, exam, certificate, keyboard M/F/T/P/S/X/[ ]
+CHANGES: 1.1.0 - Part II (Days 29–42): 13 new labs (macro generator, macro bug hunt, rules, PDM states, revision log, formats, large-assembly modes, stack-up, costing, number checker, test report, RFQ, rendering), copy buttons, per-part exam/certificate, viewer lighting; 1.0.0 - first version; 3D wireframe/shaded viewer, 30 labs, quiz, exam, certificate, keyboard M/F/T/P/S/X/[ ]
 STATUS:  working
 */
 (function () {
 'use strict';
 const SW = window.SW = window.SW || {};
-SW.version = '1.0.0';
+SW.version = '1.1.0';
+const ND = () => (window.SW_DAYS ? SW_DAYS.length : 28);
 const $ = (s, r) => (r || document).querySelector(s), $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const store = {
   get(k, d) { try { const v = localStorage.getItem('sw28:' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -37,7 +38,7 @@ function buildToc() {
   hs.forEach((h2, i) => { const s = h2.parentElement; if (!s.id) s.id = 's' + (i + 1); h += `<a href="#${s.id}">${esc(h2.textContent.replace(/^\d+/, '').trim())}</a>`; });
   if (window.SW_DAYS) {
     const dm = doneMap();
-    h += '<b style="margin-top:16px">28 days</b><div class="days">' + SW_DAYS.map((d, i) => `<a href="${d[0]}" title="Day ${i + 1}: ${esc(d[1])}" class="${dm[i + 1] ? 'done' : ''} ${DAY === i + 1 ? 'cur' : ''}">${i + 1}</a>`).join('') + '</div>';
+    h += '<b style="margin-top:16px">' + SW_DAYS.length + ' days</b><div class="days">' + SW_DAYS.map((d, i) => `<a href="${d[0]}" title="Day ${i + 1}: ${esc(d[1])}" class="${dm[i + 1] ? 'done' : ''} ${DAY === i + 1 ? 'cur' : ''}">${i + 1}</a>`).join('') + '</div>';
     h += '<p class="hint" style="font-size:12.5px;color:var(--soft);margin-top:12px">Keys: <kbd>M</kbd> contents · <kbd>F</kbd> full screen · <kbd>T</kbd> theme · <kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause · <kbd>[</kbd> <kbd>]</kbd> previous / next day</p>';
   }
   toc.innerHTML = h;
@@ -52,7 +53,7 @@ function doneBar() {
     b._upd = upd; upd();
   });
 }
-function refreshAll() { $$('.donebar').forEach(b => b._upd && b._upd()); buildToc(); hub(); const p = $('.toolbar .prog'); if (p) p.textContent = Object.keys(doneMap()).length + ' / 28 days done'; }
+function refreshAll() { $$('.donebar').forEach(b => b._upd && b._upd()); buildToc(); hub(); const p = $('.toolbar .prog'); if (p) p.textContent = Object.keys(doneMap()).length + ' / ' + ND() + ' days done'; }
 function steps() {
   $$('ol.steps').forEach((ol, k) => {
     const key = 'st' + DAY + '_' + k, st = store.get(key, []);
@@ -67,9 +68,9 @@ function hub() {
   const dm = doneMap();
   $$('.dcard[data-day]').forEach(c => c.classList.toggle('done', !!dm[c.dataset.day]));
   const n = Object.keys(dm).length, pb = $('#hubprog');
-  if (pb) pb.innerHTML = `<div class="pbar"><i style="width:${n / 28 * 100}%"></i></div><p>${n} of 28 days complete${n ? ' · next: <a href="' + nextDay(dm) + '">continue</a>' : ''}</p>`;
+  if (pb) pb.innerHTML = `<div class="pbar"><i style="width:${n / ND() * 100}%"></i></div><p>${n} of ${ND()} days complete${n ? ' · next: <a href="' + nextDay(dm) + '">continue</a>' : ''}</p>`;
 }
-function nextDay(dm) { if (!window.SW_DAYS) return '#'; for (let i = 0; i < 28; i++) if (!dm[i + 1]) return SW_DAYS[i][0]; return SW_DAYS[27][0]; }
+function nextDay(dm) { if (!window.SW_DAYS) return '#'; for (let i = 0; i < SW_DAYS.length; i++) if (!dm[i + 1]) return SW_DAYS[i][0]; return SW_DAYS[SW_DAYS.length - 1][0]; }
 SW.resetProgress = () => { if (confirm('Clear all progress, ticks and quiz scores stored in this browser?')) { try { Object.keys(localStorage).filter(k => k.startsWith('sw28:')).forEach(k => localStorage.removeItem(k)); } catch (e) { } location.reload(); } };
 
 /* ---------------- quiz ---------------- */
@@ -104,7 +105,7 @@ document.addEventListener('keydown', e => {
   else if (k === 'f') fullscreen();
   else if (k === 't') setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
   else if (k === 'p' || k === 's' || k === 'x') { const a = visibleAnim(); if (a) { if (k === 'p') a.play(); else if (k === 's') a.step(); else a.pause(); } }
-  else if ((k === '[' || k === ']') && window.SW_DAYS && DAY) { const n = DAY + (k === ']' ? 1 : -1); if (n >= 1 && n <= 28) location.href = SW_DAYS[n - 1][0]; }
+  else if ((k === '[' || k === ']') && window.SW_DAYS && DAY) { const n = DAY + (k === ']' ? 1 : -1); if (n >= 1 && n <= SW_DAYS.length) location.href = SW_DAYS[n - 1][0]; }
 });
 function animCtl(host, el, tick, stepFn) {
   let on = false, last = 0;
@@ -217,10 +218,11 @@ function Viewer(host, sceneFn, opt) {
   cv.addEventListener('wheel', e => { e.preventDefault(); V.zoom *= e.deltaY < 0 ? 1.1 : 1 / 1.1; draw(); }, { passive: false });
   cv.addEventListener('dblclick', () => { V.yaw = y0; V.pitch = p0; V.zoom = 1; draw(); });
   function fit(F) { const mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9]; F.forEach(f => f.p.forEach(p => { for (let i = 0; i < 3; i++) { if (p[i] < mn[i]) mn[i] = p[i]; if (p[i] > mx[i]) mx[i] = p[i]; } })); return { c: [0, 1, 2].map(i => (mn[i] + mx[i]) / 2), R: Math.max(1, Math.hypot(mx[0] - mn[0], mx[1] - mn[1], mx[2] - mn[2]) / 2) }; }
-  const L = V3.nrm([0.3, 0.6, 0.75]);
+  const L0 = V3.nrm([0.3, 0.6, 0.75]);
   function draw() {
     const d = window.devicePixelRatio || 1, W = Math.round(cv.clientWidth * d), H = Math.round(cv.clientHeight * d);
     if (!W || !H) return; if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+    const L = opt.light ? V3.nrm(opt.light()) : L0, amb = opt.amb ? opt.amb() : 0.42;
     const F = sceneFn(); if (!F.length) { ctx.clearRect(0, 0, W, H); return; }
     const fr = opt.fixed || fit(F), s = Math.min(W, H) * 0.44 / fr.R * V.zoom;
     const cy = Math.cos(V.yaw), sy = Math.sin(V.yaw), cp = Math.cos(V.pitch), sp = Math.sin(V.pitch);
@@ -231,7 +233,7 @@ function Viewer(host, sceneFn, opt) {
     ctx.clearRect(0, 0, W, H); ctx.lineJoin = 'round';
     const path = pts => { pts.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.closePath(); };
     for (const o of list) {
-      const f = o.f, k = 0.42 + 0.58 * Math.abs(V3.dot(o.n, L)), c = f.c || COL.part, a = f.a === undefined ? 1 : f.a;
+      const f = o.f, k = amb + (1 - amb) * Math.abs(V3.dot(o.n, L)), c = f.c || COL.part, a = f.a === undefined ? 1 : f.a;
       const col = `rgba(${c[0] * k | 0},${c[1] * k | 0},${c[2] * k | 0},${a})`;
       ctx.beginPath(); path(o.tp); if (o.th) o.th.forEach(path);
       ctx.fillStyle = col; ctx.fill('evenodd');
@@ -1193,7 +1195,8 @@ W.converge = el => {
 /* Day 28: exam + certificate */
 W.exam = el => {
   lab(el); const data = JSON.parse($('#' + el.dataset.src).textContent), q = div(el);
-  quiz(q, data, 'exam', (g, n) => { store.set('examscore', [g, n]); cert && cert._upd && cert._upd(); });
+  const key = el.dataset.key || 'exam';
+  quiz(q, data, key, (g, n) => { store.set(key + 'score', [g, n]); cert && cert._upd && cert._upd(); });
 };
 let cert = null;
 W.cert = el => {
@@ -1201,13 +1204,401 @@ W.cert = el => {
   const nmIn = document.createElement('input'); nmIn.type = 'text'; nmIn.placeholder = 'Your name'; nmIn.value = store.get('name', ''); nmIn.style.maxWidth = '300px';
   const c = div(el, 'ctl'); c.appendChild(nmIn); const pb = document.createElement('button'); pb.textContent = '🖨 Print certificate'; c.appendChild(pb);
   const card = div(el, 'cert');
+  const d0 = +(el.dataset.from || 1), d1 = +(el.dataset.to || 28), tot = d1 - d0 + 1, key = el.dataset.key || 'exam';
+  const title = el.dataset.title || '28-Day SolidWorks Course', topics = el.dataset.topics || 'part modelling, assemblies, drawings, sheet metal, weldments, surfaces and simulation';
   el._upd = () => {
-    const dm = doneMap(), n = Object.keys(dm).length, sc = store.get('examscore', null);
-    card.innerHTML = `<div class="series" style="letter-spacing:.2em;color:var(--soft)">CERTIFICATE OF COMPLETION</div><h2>28-Day SolidWorks Course</h2><p>This is to certify that</p><div class="nm">${esc(nmIn.value || 'Your name')}</div><p>has worked through <b>${n} of 28</b> days of part modelling, assemblies, drawings, sheet metal, weldments, surfaces and simulation${sc ? `, and scored <b>${sc[0]} / ${sc[1]}</b> in the final assessment` : ''}.</p><p class="hint">${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} · haivijayanand.github.io/solidworks</p>${n < 28 || !sc ? '<p class="hint">(Complete all 28 days and the final assessment to make it count.)</p>' : ''}`;
+    const dm = doneMap(); let n = 0; for (let i = d0; i <= d1; i++) if (dm[i]) n++;
+    const sc = store.get(key + 'score', null);
+    card.innerHTML = `<div class="series" style="letter-spacing:.2em;color:var(--soft)">CERTIFICATE OF COMPLETION</div><h2>${esc(title)}</h2><p>This is to certify that</p><div class="nm">${esc(nmIn.value || 'Your name')}</div><p>has worked through <b>${n} of ${tot}</b> days of ${esc(topics)}${sc ? `, and scored <b>${sc[0]} / ${sc[1]}</b> in the final assessment` : ''}.</p><p class="hint">${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} · haivijayanand.github.io/solidworks</p>${n < tot || !sc ? `<p class="hint">(Complete all ${tot} days and the final assessment to make it count.)</p>` : ''}<p class="hint">A course-completion certificate — not an official SOLIDWORKS or Anthropic certification.</p>`;
   };
   nmIn.oninput = () => { store.set('name', nmIn.value); el._upd(); };
   pb.onclick = () => { document.body.classList.add('printcert'); window.print(); setTimeout(() => document.body.classList.remove('printcert'), 500); };
   el._upd();
+};
+
+/* ================= PART II LABS (Days 29–42) ================= */
+function copyText(t, btn) { const done = () => { if (btn) { const o = btn.textContent; btn.textContent = '✓ Copied'; setTimeout(() => btn.textContent = o, 1200); } }; try { navigator.clipboard.writeText(t).then(done, () => fallbackCopy(t, done)); } catch (e) { fallbackCopy(t, done); } }
+function fallbackCopy(t, done) { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) { } ta.remove(); done(); }
+function copyButtons() { $$('pre.tpl').forEach(p => { if (p._cb) return; p._cb = 1; const b = document.createElement('button'); b.className = 'btn'; b.textContent = '📋 Copy template'; b.style.margin = '0 0 12px'; b.onclick = () => copyText(p.textContent, b); p.after(b); }); }
+function codeBox(host) { const pre = document.createElement('pre'); pre.className = 'code'; host.appendChild(pre); const b = document.createElement('button'); b.className = 'btn'; b.textContent = '📋 Copy'; b.onclick = () => copyText(pre.textContent, b); host.appendChild(b); return pre; }
+const today = () => new Date().toISOString().slice(0, 10);
+
+/* Day 29: macro generator with line-by-line explanation */
+W.macrogen = el => {
+  lab(el);
+  const st = form(el, [
+    { k: 'job', t: 'seg', l: 'Macro', o: [['step', 'Parts → STEP'], ['xt', 'Parts → Parasolid'], ['pdf', 'Drawings → PDF (all sheets)'], ['dxf', 'Drawings → DXF'], ['prop', 'Write custom properties']], v: 'step' }
+  ], draw);
+  const fl = document.createElement('label'); fl.innerHTML = 'Folder <input type="text" value="C:\\Work\\Project\\" style="max-width:260px">'; $('.ctl', el).appendChild(fl);
+  const pl = document.createElement('label'); pl.innerHTML = 'Properties (name=value per line)<br><textarea rows="3" style="width:260px;font:13px JetBrains Mono,monospace">Description=Bearing housing\nMaterial="SW-Material@@FILE@"\nDrawnBy=KVA</textarea>'; $('.ctl', el).appendChild(pl);
+  const row = div(el, 'row'), left = div(row), info = div(row, 'out'); left.style.flex = '2 1 520px'; info.style.whiteSpace = 'normal';
+  const pre = codeBox(left); pre.style.cursor = 'pointer';
+  div(el, 'hint', 'Click any line of the code to see what it does. In SolidWorks: Tools ▸ Macro ▸ New, save as .swp, paste, then Tools ▸ Macro ▸ Run (or F5 in the editor).');
+  $('input', fl).oninput = draw; $('textarea', pl).oninput = draw;
+  let lines = [];
+  pre.onclick = e => { const sp = e.target.closest('[data-i]'); if (!sp) return; $$('[data-i]', pre).forEach(x => x.style.background = ''); sp.style.background = 'var(--hi)'; info.innerHTML = '<b>Line ' + (+sp.dataset.i + 1) + '</b><br>' + lines[+sp.dataset.i][1]; };
+  function draw() {
+    let folder = $('input', fl).value.trim(); if (folder && !folder.endsWith('\\')) folder += '\\';
+    pl.style.display = st.job === 'prop' ? '' : 'none'; fl.style.display = st.job === 'prop' ? 'none' : '';
+    const L = (c, e) => lines.push([c, e || '']);
+    lines = [];
+    const part = st.job === 'step' || st.job === 'xt', ext = { step: '.step', xt: '.x_t', pdf: '.pdf', dxf: '.dxf' }[st.job];
+    L("' Generated by the SolidWorks Course, Day 29 — test on copies first", 'A comment. Everything after an apostrophe is ignored by VBA. Always run new macros on a copy of your files.');
+    L('Option Explicit', 'Forces you to declare every variable — catches typing mistakes in variable names.');
+    L('Dim swApp As SldWorks.SldWorks', 'The SolidWorks application object. Every API call starts from it.');
+    L('');
+    L('Sub main()', 'SolidWorks runs the Sub called main when you run the macro.');
+    if (st.job === 'prop') {
+      L('    Dim swModel As SldWorks.ModelDoc2', 'ModelDoc2 = any open document (part, assembly or drawing).');
+      L('    Dim cpm As SldWorks.CustomPropertyManager', 'The object that reads and writes File ▸ Properties.');
+      L('    Set swApp = Application.SldWorks', 'Connects to the running SolidWorks session.');
+      L('    Set swModel = swApp.ActiveDoc', 'The document in the active window.');
+      L('    If swModel Is Nothing Then MsgBox "Open a document first": Exit Sub', 'Defensive check — without it the next line fails with "Object variable not set".');
+      L('    Set cpm = swModel.Extension.CustomPropertyManager("")', '"" = the file-level Custom tab. Pass a configuration name instead for configuration-specific properties.');
+      $('textarea', pl).value.split('\n').forEach(t => { const m = t.match(/^\s*([^=]+?)\s*=\s*(.*)$/); if (!m) return; const v = m[2].replace(/"/g, '""').replace('@FILE@', '" & swModel.GetTitle & "'); L(`    cpm.Add3 "${m[1].replace(/"/g, '')}", swCustomInfoText, "${v}", swCustomPropertyReplaceValue`, `Adds the property <code>${esc(m[1])}</code> as text, or replaces its value if it already exists (swCustomPropertyReplaceValue). A value in "double quotes" with @ (like "SW-Material@Part.SLDPRT") becomes a linked property.`); });
+      L('    swModel.ForceRebuild3 False', 'Rebuilds so linked values (mass, material) refresh.');
+      L('    MsgBox "Properties written to " & swModel.GetTitle', 'Tells you it finished. Save the file yourself after checking.');
+    } else {
+      L('    Dim swModel As SldWorks.ModelDoc2', 'Each file we open.');
+      if (!part) L('    Dim swDraw As SldWorks.DrawingDoc', 'The same document seen as a drawing, so drawing-only methods are available.');
+      if (st.job === 'pdf') L('    Dim swPdf As SldWorks.ExportPdfData', 'Holds PDF export options (which sheets).');
+      L('    Dim folder As String, fileName As String, outName As String', 'Text variables for the paths.');
+      L('    Dim errs As Long, warns As Long, ok As Boolean', 'The API reports problems through these instead of stopping.');
+      L('    Set swApp = Application.SldWorks', 'Connects to the running SolidWorks session.');
+      L(`    folder = "${folder}"`, 'The folder to process. It must end with a backslash, because the file name is added straight after it.');
+      L(`    fileName = Dir(folder & "*.${part ? 'SLDPRT' : 'SLDDRW'}")`, 'VBA Dir() returns the first matching file name in the folder (or "" if none).');
+      L('    Do While fileName <> ""', 'Loop until Dir() runs out of files.');
+      L(`        Set swModel = swApp.OpenDoc6(folder & fileName, ${part ? 'swDocPART' : 'swDocDRAWING'}, swOpenDocOptions_Silent, "", errs, warns)`, 'Opens the file without dialogs. The document type must match the file type, or it returns Nothing. "" = last-saved configuration.');
+      L('        If Not swModel Is Nothing Then', 'Skip files that failed to open (errs tells you why).');
+      L(`            outName = folder & Left(fileName, Len(fileName) - 7) & "${ext}"`, 'Removes the 7-character extension (.SLDPRT / .SLDDRW) and adds the new one. The extension decides the export format.');
+      if (st.job === 'pdf') {
+        L('            Set swDraw = swModel', 'Treat the open document as a drawing.');
+        L('            Set swPdf = swApp.GetExportFileData(swExportPdfData)', 'Gets a PDF options object.');
+        L('            swPdf.SetSheets swExportData_ExportAllSheets, swDraw.GetSheetNames', 'Without this, only the active sheet is exported.');
+        L('            ok = swModel.Extension.SaveAs(outName, swSaveAsCurrentVersion, swSaveAsOptions_Silent, swPdf, errs, warns)', 'Exports the PDF using the options above.');
+      } else {
+        L('            ok = swModel.Extension.SaveAs(outName, swSaveAsCurrentVersion, swSaveAsOptions_Silent, Nothing, errs, warns)', `Save As with the ${ext} extension = export. Export options (STEP AP214/AP242, DXF scale…) come from Tools ▸ Options ▸ System Options ▸ Export. Newer API versions add SaveAs3; SaveAs still works.`);
+      }
+      L('            Debug.Print fileName, IIf(ok, "OK", "FAILED " & errs)', 'Writes a log line to the Immediate window (View ▸ Immediate Window in the VBA editor).');
+      L('            swApp.CloseDoc swModel.GetTitle', 'Closes the file so memory does not fill up on big folders.');
+      L('        End If', '');
+      L('        fileName = Dir', 'Dir with no argument returns the NEXT file. Forget this line and the loop never ends.');
+      L('    Loop', '');
+      L('    MsgBox "Export finished"', 'Tells you it is done.');
+    }
+    L('End Sub', '');
+    pre.innerHTML = lines.map((l, i) => `<span data-i="${i}" style="display:block">${esc(l[0]) || ' '}</span>`).join('');
+  }
+  draw();
+};
+
+/* Day 30: bug hunt in an AI-drafted macro */
+W.bughunt = el => {
+  lab(el);
+  const code = [
+    ["' AI draft: export every part in a folder to STEP", 0],
+    ['Dim swApp As SldWorks.SldWorks', 0],
+    ['Sub main()', 0],
+    ['    Dim swModel As SldWorks.ModelDoc2', 0],
+    ['    Dim folder As String, fileName As String', 0],
+    ['    Dim errs As Long, warns As Long', 0],
+    ['    Set swApp = Application.SldWorks', 0],
+    ['    folder = "C:\\Work\\Parts"', 'Missing trailing backslash: Dir("C:\\Work\\Parts*.SLDPRT") looks in C:\\Work for files starting with "Parts".'],
+    ['    fileName = Dir(folder & "*.SLDPRT")', 0],
+    ['    Do While fileName <> ""', 0],
+    ['        Set swModel = swApp.OpenDoc6(folder & fileName, swDocASSEMBLY, swOpenDocOptions_Silent, "", errs, warns)', 'Wrong document type: parts need swDocPART. With swDocASSEMBLY OpenDoc6 returns Nothing.'],
+    ['        swModel.ExportToStep folder & fileName & ".step"', 'Invented method: ModelDoc2 has no ExportToStep. Export is Extension.SaveAs with a .step file name. AI tools invent plausible API names — check every call in the API Help.'],
+    ['        swApp.CloseDoc swModel.GetTitle', 0],
+    ['    Loop', 'Missing fileName = Dir before Loop: the same file is processed for ever (infinite loop).'],
+    ['    MsgBox "Done"', 0],
+    ['End Sub', 0]
+  ];
+  const nb = code.filter(c => c[1]).length, sel = new Set();
+  div(el, 'hint', `This macro was drafted by an AI assistant. It has ${nb} real bugs. Click the lines you think are wrong, then press Check.`);
+  const pre = document.createElement('pre'); pre.className = 'code'; el.appendChild(pre);
+  const bar = div(el, 'ctl', '<button data-a="chk">✓ Check</button><button data-a="show">Show all bugs</button><button data-a="rst">↺ Reset</button>');
+  const out = div(el, 'out'); out.style.whiteSpace = 'normal';
+  function draw(show) {
+    pre.innerHTML = code.map((c, i) => { const s = sel.has(i), b = !!c[1]; let st = 'display:block;cursor:pointer;'; if (show) { if (b && s) st += 'background:var(--hi);border-left:5px solid var(--pri)'; else if (b) st += 'border-left:5px solid var(--acc);background:var(--hi)'; else if (s) st += 'border-left:5px dashed var(--soft);opacity:.7'; } else if (s) st += 'background:var(--hi);border-left:5px solid var(--pri)'; return `<span data-i="${i}" style="${st}">${esc(c[0])}${show && b ? (s ? '   ✓ found' : '   ← missed') : ''}</span>`; }).join('');
+  }
+  pre.onclick = e => { const sp = e.target.closest('[data-i]'); if (!sp) return; const i = +sp.dataset.i; sel.has(i) ? sel.delete(i) : sel.add(i); draw(false); };
+  bar.onclick = e => {
+    const a = e.target.dataset.a; if (!a) return;
+    if (a === 'rst') { sel.clear(); out.innerHTML = ''; draw(false); return; }
+    if (a === 'show') code.forEach((c, i) => { if (c[1]) sel.add(i); });
+    const hit = code.filter((c, i) => c[1] && sel.has(i)).length, fp = [...sel].filter(i => !code[i][1]).length;
+    draw(true);
+    out.innerHTML = `<b>Found ${hit} of ${nb}</b>${fp ? ` · ${fp} line(s) marked that are fine` : ''}<br><br>` + code.map((c, i) => c[1] ? `<b>Line ${i + 1}:</b> ${esc(c[1])}` : '').filter(Boolean).join('<br>');
+  };
+  draw(false);
+};
+
+/* Day 31: DriveWorksXpress-style rules */
+W.rules = el => {
+  lab(el);
+  const st = form(el, [
+    { k: 'load', t: 'range', l: 'Load', min: 100, max: 3000, s: 50, v: 800, u: 'N' },
+    { k: 'w', t: 'range', l: 'Width', min: 60, max: 400, s: 10, v: 200, u: 'mm' },
+    { k: 'm', t: 'sel', l: 'Material', o: [['ST', 'Steel'], ['AL', 'Aluminium']], v: 'ST' }
+  ], draw);
+  const row = div(el, 'row'), box = div(row), out = div(row, 'out'); out.style.whiteSpace = 'normal';
+  const STOCK = [5, 6, 8, 10, 12, 16, 20];
+  function draw() {
+    let t0 = st.load > 2000 ? 12 : st.load > 1000 ? 10 : st.load > 400 ? 8 : 6;
+    const t = st.m === 'AL' ? STOCK.find(v => v >= t0 * 1.5) || 20 : t0;
+    const n = Math.ceil(st.w / 100) + 1, hd = st.load > 1500 ? 13.5 : 11, bolt = hd > 12 ? 'M12' : 'M10', H = 80, name = `BRK-W${st.w}-T${t}-${st.m}`;
+    const sc = Math.min(1.6, 420 / st.w), x0 = 30, y0 = 40;
+    let s = `<svg viewBox="0 0 ${st.w * sc + 60} ${H * sc + 90}"><rect class="fb" x="${x0}" y="${y0}" width="${st.w * sc}" height="${H * sc}" rx="${t * sc}"/>`;
+    for (let i = 0; i < n; i++) { const x = x0 + (25 + i * (st.w - 50) / Math.max(1, n - 1)) * sc; s += `<circle class="fg" cx="${x}" cy="${y0 + H / 2 * sc}" r="${hd / 2 * sc}"/>`; }
+    s += dimL(x0, y0 + H * sc + 22, x0 + st.w * sc, y0 + H * sc + 22, 'W ' + st.w) + `<text x="${x0}" y="${y0 - 12}" class="bt">${name}.SLDPRT · thickness ${t}</text></svg>`;
+    box.innerHTML = s;
+    out.innerHTML = `<table><tr><th>Rule (as in DriveWorksXpress)</th><th>Result</th></tr>
+<tr><td class="mono">Thickness = IF(Load&gt;2000,12,IF(Load&gt;1000,10,IF(Load&gt;400,8,6)))</td><td>${t0}</td></tr>
+<tr><td class="mono">If aluminium: next stock size ≥ 1.5 × thickness</td><td>${t}</td></tr>
+<tr><td class="mono">Holes = ROUNDUP(Width/100,0)+1</td><td>${n}</td></tr>
+<tr><td class="mono">Hole Ø = IF(Load&gt;1500,13.5,11)</td><td>Ø${hd} (${bolt} clearance)</td></tr>
+<tr><td class="mono">Fillet R = Thickness</td><td>R${t}</td></tr>
+<tr><td class="mono">File name = "BRK-W"&amp;Width&amp;"-T"&amp;Thk&amp;"-"&amp;Mat</td><td>${name}</td></tr></table><span class="hint">The rules are illustrative engineering choices, not a design standard — your own rules come from your calculations.</span>`;
+  }
+  draw();
+};
+
+/* Day 32: PDM workflow state machine */
+W.pdm = el => {
+  lab(el);
+  const skip = new Set(['I', 'O', 'Q', 'S', 'X', 'Z']), letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').filter(c => !skip.has(c));
+  let S = { state: 'Work in Progress', out: false, dirty: false, ver: 1, rev: '', revN: -1 }, log = [['Created', 'Version 1, Work in Progress']];
+  const bar = div(el, 'ctl', ['Check out', 'Edit & save locally', 'Check in', 'Submit for approval', 'Approve', 'Reject', 'Change request'].map(b => `<button data-a="${b}">${b}</button>`).join('') + '<button data-a="rst">↺ Reset</button>');
+  const row = div(el, 'row'), box = div(row), out = div(row, 'out'); out.style.whiteSpace = 'normal';
+  const msg = m => log.unshift([m[0], m[1]]);
+  bar.onclick = e => {
+    const a = e.target.dataset.a; if (!a) return;
+    if (a === 'rst') { S = { state: 'Work in Progress', out: false, dirty: false, ver: 1, rev: '', revN: -1 }; log = [['Created', 'Version 1, Work in Progress']]; draw(); return; }
+    const no = t => msg(['✗ ' + a, t]);
+    if (a === 'Check out') { if (S.state !== 'Work in Progress') no('Only files in Work in Progress can be checked out for editing. Released files need a Change request first.'); else if (S.out) no('Already checked out to you.'); else { S.out = true; msg([a, 'You now have write access; others see it as checked out by you.']); } }
+    else if (a === 'Edit & save locally') { if (!S.out) no('The file is read-only — check it out first.'); else { S.dirty = true; msg([a, 'Saved in your local cache only. The vault still holds version ' + S.ver + '.']); } }
+    else if (a === 'Check in') { if (!S.out) no('Nothing checked out.'); else { if (S.dirty) S.ver++; S.out = false; msg([a, S.dirty ? 'New version ' + S.ver + ' stored in the vault.' : 'No changes — version stays ' + S.ver + '.']); S.dirty = false; } }
+    else if (a === 'Submit for approval') { if (S.out) no('Check the file in before submitting.'); else if (S.state !== 'Work in Progress') no('Only Work in Progress files can be submitted.'); else { S.state = 'Pending Approval'; msg([a, 'Reviewer notified. File is locked while it is reviewed.']); } }
+    else if (a === 'Approve') { if (S.state !== 'Pending Approval') no('Nothing is waiting for approval.'); else { S.revN++; S.rev = letters[S.revN] || '?'; S.state = 'Released'; msg([a, `Released as revision ${S.rev} (version ${S.ver}). Revision table and title block update automatically.`]); } }
+    else if (a === 'Reject') { if (S.state !== 'Pending Approval') no('Nothing is waiting for approval.'); else { S.state = 'Work in Progress'; msg([a, 'Back to Work in Progress with the reviewer\'s comment.']); } }
+    else if (a === 'Change request') { if (S.state !== 'Released') no('Change requests start from a Released file.'); else { S.state = 'Work in Progress'; msg([a, `Revision ${S.rev} stays valid in the shop until the next revision is released.`]); } }
+    draw();
+  };
+  function draw() {
+    const states = ['Work in Progress', 'Pending Approval', 'Released'];
+    let s = '<svg viewBox="0 0 560 170">';
+    states.forEach((t, i) => { const x = 20 + i * 185, on = S.state === t; s += `<rect x="${x}" y="40" width="150" height="60" rx="12" class="${on ? 'fo' : 'fg'}" style="stroke-width:${on ? 4 : 1.5}"/><text x="${x + 75}" y="75" text-anchor="middle" style="font-weight:${on ? 700 : 400}">${t}</text>`; if (i < 2) s += `<line class="k" x1="${x + 152}" y1="70" x2="${x + 182}" y2="70"/>${arrow(x + 184, 70, 0)}`; });
+    s += `<path class="d" d="M465,102 C465,150 95,150 95,104"/>${arrow(95, 103, -PI / 2)}<text x="280" y="160" text-anchor="middle" class="s">Change request / Reject</text>`;
+    s += `<text x="20" y="22">${S.out ? '🔓 Checked out to you' : '🔒 Checked in'}${S.dirty ? ' · unsaved changes in local cache' : ''}</text></svg>`;
+    box.innerHTML = s;
+    out.innerHTML = `<b>Housing.SLDPRT</b> · version <b>${S.ver}</b> · revision <b>${S.rev || '—'}</b><br><span class="hint">Version = every check-in. Revision = every release. Letters skip I, O, Q, S, X, Z (ASME Y14.35 practice).</span><br><br>` + log.slice(0, 8).map(l => `<b>${esc(l[0])}</b> — ${esc(l[1])}`).join('<br>');
+  }
+  draw();
+};
+
+/* Day 33: revision log / ECN builder */
+W.revlog = el => {
+  lab(el);
+  const P = [['Base thickness', '20', '25'], ['Material', 'FG 200 grey cast iron', 'FG 260 grey cast iron'], ['Mounting holes', '2 × Ø14 thru', '2 × M12 counterbore'], ['Bore', 'Ø40 H7', 'Ø40 H7'], ['Oil hole', 'Ø8', 'Ø8 + M8 grease nipple']];
+  const st = form(el, [
+    { k: 'rev', t: 'sel', l: 'Current revision', o: ['A', 'B', 'C', 'D'], v: 'A' },
+    { k: 'disp', t: 'sel', l: 'Stock disposition', o: ['Use as is', 'Rework', 'Scrap', 'Use up existing stock first'], v: 'Rework' }
+  ], draw);
+  const extra = div(el, 'ctl', 'ECN no. <input type="text" value="ECN-2026-014" style="max-width:150px"> Reason <input type="text" value="Base flexing in vibration test; bolts upgraded" style="max-width:360px;width:360px">');
+  const tb = div(el), out = div(el); const pre = codeBox(out);
+  function table() { tb.innerHTML = '<table><tr><th>Item</th><th>Before</th><th>After (edit)</th></tr>' + P.map((p, i) => `<tr><td>${p[0]}</td><td>${esc(p[1])}</td><td contenteditable="true" data-i="${i}">${esc(p[2])}</td></tr>`).join('') + '</table>'; $$('td[data-i]', tb).forEach(td => td.oninput = () => { P[+td.dataset.i][2] = td.textContent.trim(); draw(); }); }
+  $$('input', extra).forEach(i => i.oninput = draw);
+  function draw() {
+    const ch = P.filter(p => p[1] !== p[2]), nx = String.fromCharCode(st.rev.charCodeAt(0) + 1), [ecn, why] = $$('input', extra).map(i => i.value);
+    const desc = ch.map(p => `${p[0].toUpperCase()} ${p[1]} WAS → ${p[2]}`).join('; ') || '(no changes)';
+    pre.textContent = `REVISION TABLE ROW\nREV | DESCRIPTION | DATE | APPROVED\n${nx} | ${ecn}: ${desc} | ${today()} | ______\n\nECN DRAFT (check every line before issue)\nECN: ${ecn}    Part: Pillow block HSG-101    Rev ${st.rev} → ${nx}\nReason: ${why}\nChanges:\n${ch.map((p, i) => `  ${i + 1}. ${p[0]}: ${p[1]} → ${p[2]}`).join('\n') || '  none'}\nUnchanged and checked: ${P.filter(p => p[1] === p[2]).map(p => p[0]).join(', ') || '—'}\nAffected documents: part HSG-101, drawing HSG-101 sheet 1, assembly GB-000 (where-used)\nStock disposition: ${st.disp}\nEffectivity: from next production batch\n\nPROMPT FOR THE AI (paste with the text above)\nRewrite this ECN in our company format. Do not change, add or round any number,\nsize or material grade. List anything that looks missing (fits, tolerances,\nfinish, heat treatment) as questions at the end instead of inventing it.`;
+  }
+  table(); draw();
+};
+
+/* Day 34: file format matrix */
+W.formats = el => {
+  lab(el);
+  const F = [
+    ['Parasolid (.x_t / .x_b)', '✓', '✗', '✓', '✓', '✗', 'SolidWorks\' own geometry kernel: the cleanest neutral exchange between Parasolid-based CAD systems.'],
+    ['STEP AP203', '✓', '✗', '✓', 'partly', '✗', 'Oldest STEP protocol; colours limited. Fine for plain geometry.'],
+    ['STEP AP214', '✓', '✗', '✓', '✓', '✗', 'The everyday choice for suppliers: geometry, assembly structure and colours.'],
+    ['STEP AP242', '✓', '✗', '✓', '✓', '✓', 'Adds semantic PMI (3D tolerances) when you export MBD data — Day 36.'],
+    ['IGES (.igs)', 'partly', '✗', 'partly', '✓', '✗', 'Old surface format; solids often arrive as loose surfaces you must knit.'],
+    ['Native via 3D Interconnect', '✓', '✗', '✓', '✓', 'partly', 'Opens Creo, NX, Inventor, CATIA V5, Solid Edge files directly and keeps a link: update when the source changes.'],
+    ['STL', '✗ mesh', '✗', '✗', '✗', '✗', 'Triangles only — for 3D printing, not for engineering exchange.'],
+    ['3MF', '✗ mesh', '✗', 'partly', '✓', '✗', 'Modern 3D printing format: mesh plus colours and materials.'],
+    ['DXF / DWG', '2D', '✗', '✗', 'partly', 'partly', 'For drawings and sheet-metal flat patterns (laser / punch).'],
+    ['eDrawings (.eprt/.easm/.edrw)', 'view', '✗', '✓', '✓', '✓', 'For viewing, measuring and marking up — not for re-modelling.']
+  ];
+  const H = ['Format', 'Exact geometry', 'Feature history', 'Assembly structure', 'Colours', 'PMI / annotations'];
+  const tb = div(el), out = div(el, 'out'); out.style.whiteSpace = 'normal';
+  tb.innerHTML = '<table><tr>' + H.map(h => `<th>${h}</th>`).join('') + '</tr>' + F.map((f, i) => `<tr data-i="${i}" style="cursor:pointer">${f.slice(0, 6).map(c => `<td>${c}</td>`).join('')}</tr>`).join('') + '</table><p class="hint">✓ yes · partly · ✗ no. Click a row. No neutral format carries the feature tree — that is what FeatureWorks (Recognize Features) is for.</p>';
+  tb.onclick = e => { const r = e.target.closest('tr[data-i]'); if (!r) return; $$('tr[data-i]', tb).forEach(x => x.style.background = x === r ? 'var(--hi)' : ''); const f = F[+r.dataset.i]; out.innerHTML = `<b>${f[0]}</b> — ${f[6]}`; };
+  out.textContent = 'Click a format to read when to use it.';
+};
+
+/* Day 35: large assembly mode helper */
+W.lamode = el => {
+  lab(el);
+  const st = form(el, [
+    { k: 'n', t: 'range', l: 'Components', min: 10, max: 20000, s: 10, v: 3000 },
+    { k: 'task', t: 'sel', l: 'What you need to do', o: [['view', 'Review, measure, section, walk through'], ['mate', 'Add or edit mates, move parts'], ['edit', 'Edit one part in context'], ['dwg', 'Add notes or dimensions to an existing drawing'], ['bom', 'Check quantities / BOM only']], v: 'view' },
+    { k: 'hw', t: 'chk', l: 'Older PC (≤ 16 GB RAM)', v: false }
+  ], draw);
+  const out = div(el, 'out'); out.style.whiteSpace = 'normal';
+  function draw() {
+    const big = st.n > (st.hw ? 300 : 500), huge = st.n > 5000; let m, why, tips = [];
+    if (st.task === 'view') { m = big ? 'Large Design Review' : 'Resolved'; why = big ? 'Opens in seconds by loading only graphics data; you can still measure, section, walk-through and use Edit Assembly for simple mates.' : 'Small enough to open fully.'; }
+    else if (st.task === 'mate') { m = big ? 'Lightweight (+ Large Assembly Settings)' : 'Resolved'; why = big ? 'Lightweight loads a subset of the model data; parts resolve automatically when you select their faces for mates.' : 'Small enough to open fully.'; if (huge) tips.push('Open only the sub-assembly you are working on.'); }
+    else if (st.task === 'edit') { m = 'Open the part in its own window, or Lightweight assembly + resolve that part only'; why = 'Editing in context resolves the references; keep everything else lightweight or suppressed.'; }
+    else if (st.task === 'dwg') { m = big ? 'Detailing mode (drawings)' : 'Resolved drawing'; why = big ? 'Detailing mode opens the drawing without loading the models, for adding annotations and dimensions to existing views.' : 'Small enough to open normally.'; }
+    else { m = 'Large Design Review or the assembly\'s BOM in a drawing'; why = 'Quantities come from the assembly structure — no need to load geometry.'; }
+    if (big) tips.push('SpeedPak configurations for sub-assemblies you only need to look at', 'Defeature (Tools) to make a light, IP-safe version for customers and layouts', 'Hide or suppress fasteners; show threads as cosmetic, not modelled', 'Assembly Visualization: sort components by rebuild time or graphics triangles to find the heavy ones', 'Performance Evaluation (Evaluate tab) to find circular references, in-context links and slow mates');
+    if (st.hw) tips.push('Turn off RealView, shadows and anti-aliasing; lower image quality for big assemblies');
+    out.innerHTML = `<b>Suggested way to open:</b> <span class="badge" style="color:var(--pri)">${m}</span><br>${why}${tips.length ? '<br><br><b>Also:</b><br>' + tips.map(t => '• ' + t).join('<br>') : ''}<br><br><span class="hint">The component counts where modes help are rules of thumb; your PC and models decide. SolidWorks applies Large Assembly Settings above the threshold set in System Options ▸ Assemblies.</span>`;
+  }
+  draw();
+};
+
+/* Day 36: tolerance stack-up */
+W.stack = el => {
+  lab(el);
+  const R = [['A Housing bore depth', 60, 0.1, 0.1, 1], ['B Bearing width (6205)', 15, 0, 0.12, -1], ['C Spacer', 30, 0.05, 0.05, -1], ['D Bearing width (6205)', 15, 0, 0.12, -1]];
+  const tb = div(el), row = div(el, 'row'), box = div(row), out = div(row, 'out');
+  const add = div(el, 'ctl', '<button data-a="add">+ Add dimension</button><span class="hint">Direction +1 adds to the gap, −1 subtracts. Tolerances are + upper / − lower deviation.</span>');
+  add.onclick = e => { if (e.target.dataset.a) { R.push(['New dim', 10, 0.05, 0.05, -1]); table(); draw(); } };
+  function table() {
+    tb.innerHTML = '<table class="mono"><tr><th>Dimension</th><th>Nominal</th><th>+ tol</th><th>− tol</th><th>Dir (±1)</th></tr>' + R.map((r, i) => `<tr>${r.map((c, j) => `<td contenteditable="true" data-i="${i}" data-j="${j}">${c}</td>`).join('')}</tr>`).join('') + '</table>';
+    $$('td', tb).forEach(td => td.oninput = () => { const i = +td.dataset.i, j = +td.dataset.j, v = td.textContent.trim(); R[i][j] = j === 0 ? v : (parseFloat(v) || 0); if (j === 4) R[i][4] = R[i][4] < 0 ? -1 : 1; draw(); });
+  }
+  function draw() {
+    let nom = 0, wmax = 0, wmin = 0, mean = 0, ss = 0; const ht = [];
+    R.forEach(r => { const [n, up, lo, d] = [r[1], r[2], r[3], r[4]]; nom += d * n; const hi = n + up, lw = n - lo; if (d > 0) { wmax += hi; wmin += lw; } else { wmax -= lw; wmin -= hi; } const m = (hi + lw) / 2, t = (up + lo) / 2; mean += d * m; ss += t * t; ht.push(t); });
+    const rss = Math.sqrt(ss);
+    out.textContent = `Nominal gap      ${fmt(nom, 3)} mm\nWorst case       ${fmt(wmin, 3)} … ${fmt(wmax, 3)} mm  (range ${fmt(wmax - wmin, 3)})\nRSS (statistical) ${fmt(mean - rss, 3)} … ${fmt(mean + rss, 3)} mm  (±${fmt(rss, 3)} about ${fmt(mean, 3)})\n` + (wmin < 0 ? '⚠ Worst case can go negative: parts may not assemble (interference).' : '✓ Worst case gap stays positive.') + '\nRSS assumes independent, centred, normally distributed sizes — use worst case for small batches and safety-critical fits.';
+    const W2 = 420; let s = `<svg viewBox="0 0 ${W2} ${30 + R.length * 30}"><text x="0" y="16" class="s">Contribution to variance (t² / Σt²)</text>`;
+    R.forEach((r, i) => { const f = ss ? ht[i] * ht[i] / ss : 0; s += `<rect class="fb" x="160" y="${26 + i * 30}" width="${f * 240}" height="18"/><text x="0" y="${40 + i * 30}">${esc(String(r[0])).slice(0, 22)}</text><text x="${166 + f * 240}" y="${40 + i * 30}" class="s">${fmt(f * 100, 0)} %</text>`; });
+    box.innerHTML = s + '</svg>';
+  }
+  table(); draw();
+};
+
+/* Day 37: cost estimator */
+W.cost = el => {
+  lab(el);
+  const st = form(el, [
+    { k: 'q', t: 'range', l: 'Batch quantity', min: 1, max: 1000, v: 50 },
+    { k: 'rm', t: 'num', l: 'Bar stock mass', v: 3.2, s: 0.1, u: 'kg/part' },
+    { k: 'rate', t: 'num', l: 'Material', v: 95, u: '₹/kg' },
+    { k: 'ht', t: 'chk', l: 'Heat treatment (₹40/kg)', v: true },
+    { k: 'oh', t: 'range', l: 'Overhead + profit', min: 0, max: 50, v: 20, u: '%' }
+  ], draw);
+  const OPS = [['Saw cutting', 10, 2, 400], ['CNC turning', 45, 14, 900], ['VMC keyway', 30, 6, 1100], ['Grinding bearing seats', 30, 8, 1000], ['Inspection', 0, 4, 600]];
+  const tb = div(el), row = div(el, 'row'), box = div(row), out = div(row, 'out');
+  function table() { tb.innerHTML = '<table class="mono"><tr><th>Operation</th><th>Setup min (per batch)</th><th>Cycle min (per part)</th><th>Rate ₹/h</th></tr>' + OPS.map((o, i) => `<tr>${o.map((c, j) => `<td contenteditable="true" data-i="${i}" data-j="${j}">${c}</td>`).join('')}</tr>`).join('') + '</table>'; $$('td', tb).forEach(td => td.oninput = () => { const i = +td.dataset.i, j = +td.dataset.j; OPS[i][j] = j ? (parseFloat(td.textContent) || 0) : td.textContent; draw(); }); }
+  const unit = q => { const mat = st.rm * st.rate + (st.ht ? st.rm * 0.7 * 40 : 0); let setup = 0, cyc = 0; OPS.forEach(o => { setup += o[1] / 60 * o[3]; cyc += o[2] / 60 * o[3]; }); const base = mat + cyc + setup / q; return { mat, cyc, setup: setup / q, tot: base * (1 + st.oh / 100) }; };
+  function draw() {
+    const u = unit(st.q);
+    out.textContent = `Material (incl. heat treatment)  ₹${fmt(u.mat, 0)}\nMachining cycle                   ₹${fmt(u.cyc, 0)}\nSetup shared over ${st.q} part(s)  ₹${fmt(u.setup, 0)}\nUnit cost with ${st.oh}% overhead     ₹${fmt(u.tot, 0)}\nBatch total                       ₹${fmt(u.tot * st.q, 0)}\nRates are example values — use your shop's.`;
+    const qs = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000], mx = unit(1).tot, mn = unit(1000).tot, X = q => 50 + Math.log10(q) / 3 * 360, Y = v => 20 + (mx - v) / (mx - mn || 1) * 150;
+    let s = `<svg viewBox="0 0 430 210"><polyline class="b" points="${pts(qs.map(q => [X(q), Y(unit(q).tot)]))}"/><circle class="fa" cx="${X(st.q)}" cy="${Y(u.tot)}" r="6"/>`;
+    [1, 10, 100, 1000].forEach(q => s += `<text x="${X(q)}" y="200" text-anchor="middle" class="s">${q}</text>`);
+    s += `<text x="50" y="14" class="s">Unit cost vs batch size (log scale): ₹${fmt(mx, 0)} → ₹${fmt(mn, 0)}</text></svg>`; box.innerHTML = s;
+  }
+  table(); draw();
+};
+
+/* Day 38: number checker for AI-written reports */
+W.numcheck = el => {
+  lab(el);
+  div(el, 'hint', 'Left: the source data you gave the AI (from Mass Properties, Simulation, Interference). Right: the AI\'s draft. Every number in the draft that is not in the source is flagged.');
+  const row = div(el, 'row'), a = document.createElement('textarea'), b = document.createElement('textarea');
+  [a, b].forEach(t => { t.rows = 12; t.style.cssText = 'width:100%;font:13.5px JetBrains Mono,monospace;padding:8px;border-radius:8px;border:1px solid var(--rule);background:var(--card);color:var(--ink)'; div(row).appendChild(t); t.oninput = run; });
+  a.value = 'Part: Bearing housing HSG-101\nMaterial: FG 260 grey cast iron\nMass: 4.82 kg\nCentre of mass height: 31.6 mm\nLoad case: 2400 N radial on bore\nMax von Mises stress: 38.4 MPa\nTensile strength: 260 MPa\nMax displacement: 0.012 mm\nInterferences: 2 (bearing press fits, intended)';
+  b.value = 'The FG 260 housing (mass 4.82 kg) was analysed under a 2400 N radial bearing load. The maximum von Mises stress of 38.4 MPa gives a factor of safety of 6.8 against the 260 MPa tensile strength. Maximum displacement is 0.12 mm. Interference detection found 3 interferences, all intended press fits.';
+  const out = div(el, 'out'); out.style.whiteSpace = 'normal';
+  const nums = t => (t.match(/-?\d+(?:\.\d+)?/g) || []).map(Number);
+  function run() {
+    const src = nums(a.value), ok = v => src.some(x => Math.abs(x - v) <= Math.max(1e-9, Math.abs(x) * 0.005));
+    let bad = 0, derived = 0;
+    const html = esc(b.value).replace(/-?\d+(?:\.\d+)?/g, m => { const v = +m; if (ok(v)) return `<b style="border-bottom:3px solid var(--pri)">${m}</b>`; const d = Math.abs(v) >= 1 && src.some(x => src.some(y => y && Math.abs(x / y - v) <= Math.abs(v) * 0.01)); if (d) { derived++; return `<b style="border-bottom:3px dashed var(--pri)">${m}</b>`; } bad++; return `<b style="background:var(--hi);border:2px solid var(--acc);padding:0 3px">${m} ⚠</b>`; });
+    out.innerHTML = html + `<br><br><b>${bad}</b> number(s) not found in the source ⚠ · <b>${derived}</b> look like a ratio of two source values (dashed — check the arithmetic) · solid underline = matches the source.<br><span class="hint">In the sample, 0.12 should be 0.012 and the interference count is wrong. 6.8 = 260 / 38.4 — a derived value you must recompute yourself.</span>`;
+  }
+  run();
+};
+
+/* Day 39: test data to report */
+W.testrep = el => {
+  lab(el);
+  const gen = () => { const r = ['time_h,speed_rpm,oil_C,vib_mms']; let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647; for (let i = 0; i <= 60; i++) { const t = i / 6, oil = 40 + 52 * (1 - Math.exp(-t / 1.6)) + (rnd() - 0.5) * 1.5, vib = 3.2 + 0.25 * t + (rnd() - 0.5) * 0.4 + (Math.abs(t - 7.5) < 0.2 ? 3.6 : 0), sp = 8000 + (rnd() - 0.5) * 30; r.push([t.toFixed(2), sp.toFixed(0), oil.toFixed(1), vib.toFixed(2)].join(',')); } return r.join('\n'); };
+  const st = form(el, [
+    { k: 'ch', t: 'sel', l: 'Plot channel', o: [['1', 'speed_rpm'], ['2', 'oil_C'], ['3', 'vib_mms']], v: '3' },
+    { k: 'lo', t: 'num', l: 'Oil temp limit', v: 110, u: '°C' },
+    { k: 'lv', t: 'num', l: 'Vibration alarm', v: 6.5, u: 'mm/s' }
+  ], run);
+  const ta = document.createElement('textarea'); ta.rows = 5; ta.style.cssText = 'width:100%;font:13px JetBrains Mono,monospace;border-radius:8px;border:1px solid var(--rule);background:var(--card);color:var(--ink)'; ta.value = gen(); el.appendChild(ta); ta.oninput = run;
+  div(el, 'hint', 'Sample: a 10-hour run logged every 10 minutes. Paste your own CSV with the same four columns (header row first).');
+  const row = div(el, 'row'), box = div(row), out = div(el); const pre = codeBox(out);
+  function run() {
+    const L = ta.value.trim().split(/\r?\n/).slice(1).map(l => l.split(',').map(Number)).filter(r => r.length >= 4 && r.every(Number.isFinite));
+    if (L.length < 2) { pre.textContent = 'Need at least two data rows.'; return; }
+    const col = j => L.map(r => r[j]), stat = a => ({ min: Math.min(...a), max: Math.max(...a), mean: a.reduce((s, v) => s + v, 0) / a.length });
+    const S = [1, 2, 3].map(j => stat(col(j))), dur = L[L.length - 1][0] - L[0][0];
+    const exO = L.filter(r => r[2] > st.lo), exV = L.filter(r => r[3] > st.lv);
+    const j = +st.ch, a = col(j), mn = Math.min(...a), mx = Math.max(...a), X = t => 40 + (t - L[0][0]) / (dur || 1) * 380, Y = v => 15 + (mx - v) / ((mx - mn) || 1) * 160;
+    const lim = j === 2 ? st.lo : j === 3 ? st.lv : null;
+    let s = `<svg viewBox="0 0 440 210"><polyline class="b" points="${pts(L.map(r => [X(r[0]), Y(r[j])]))}" style="stroke-width:2"/>`;
+    if (lim !== null && lim <= mx * 1.2) s += `<line x1="40" x2="420" y1="${Math.max(5, Y(lim))}" y2="${Math.max(5, Y(lim))}" style="stroke:var(--acc);stroke-width:2;stroke-dasharray:6 4"/><text x="420" y="${Math.max(5, Y(lim)) - 4}" text-anchor="end" class="ot">limit ${lim}</text>`;
+    s += `<text x="40" y="205" class="s">${fmt(L[0][0], 1)} h</text><text x="420" y="205" text-anchor="end" class="s">${fmt(L[L.length - 1][0], 1)} h</text><text x="4" y="20" class="s">${fmt(mx, 1)}</text><text x="4" y="178" class="s">${fmt(mn, 1)}</text></svg>`;
+    box.innerHTML = s;
+    const nm = ['Speed (rpm)', 'Oil temperature (°C)', 'Vibration (mm/s)'];
+    pre.textContent = `DATA SUMMARY (computed here — give this to the AI, never let it compute)\nDuration ${fmt(dur, 2)} h, ${L.length} samples\n` + S.map((x, i) => `${nm[i].padEnd(22)} min ${fmt(x.min, 2)}  mean ${fmt(x.mean, 2)}  max ${fmt(x.max, 2)}`).join('\n') + `\nOil above ${st.lo} °C: ${exO.length} sample(s)${exO.length ? ' from ' + exO[0][0] + ' h' : ''}\nVibration above ${st.lv} mm/s: ${exV.length} sample(s)${exV.length ? ' at ' + exV.map(r => r[0] + ' h (' + r[3] + ')').join(', ') : ''}\n\nPROMPT\nWrite section 5 "Test results" of a test report in formal third person, past tense.\nUse ONLY the numbers in the data summary above, with their units. Do not round\nfurther. State each limit exceedance with its time. Do not give causes — list\nquestions for the test engineer instead. End with a table: channel, min, mean,\nmax, limit, status.`;
+  }
+  run();
+};
+
+/* Day 40: RFQ generator */
+W.rfq = el => {
+  lab(el);
+  const ITEMS = [['GB-101', 'Housing', 'FG 260 grey cast iron', 'Casting + machining', 'Bores Ø52 H7 / Ø62 H7, Ra 1.6'], ['GB-102', 'Cover', 'Al 6061-T6', 'CNC machining', 'General ISO 2768-mK'], ['GB-201', 'Input shaft', 'EN19 (42CrMo4)', 'Turning + grinding', 'Bearing seats Ø25 k6'], ['GB-301', 'Output shaft', 'EN19 (42CrMo4)', 'Turning + grinding', 'Bearing seats Ø30 k6'], ['GB-202', 'Pinion 17T m2', '20MnCr5', 'Hobbing + case hardening + grinding', 'ISO 1328 grade 6, case 0.6–0.8 mm, 58–62 HRC'], ['GB-302', 'Gear 42T m2', '20MnCr5', 'Hobbing + case hardening + grinding', 'ISO 1328 grade 6, case 0.6–0.8 mm, 58–62 HRC']];
+  const sel = new Set([0, 4, 5]);
+  const st = form(el, [
+    { k: 'q', t: 'num', l: 'Sets', v: 25, min: 1 },
+    { k: 'wk', t: 'num', l: 'Delivery', v: 8, min: 1, u: 'weeks' },
+    { k: 'mtc', t: 'chk', l: 'Material test certificate (EN 10204 3.1)', v: true },
+    { k: 'dim', t: 'chk', l: 'Dimensional report', v: true },
+    { k: 'fai', t: 'chk', l: 'First article inspection', v: false },
+    { k: 'rev', t: 'chk', l: 'Drawing revisions listed', v: true },
+    { k: 'conf', t: 'chk', l: 'NDA / confidentiality note', v: true }
+  ], draw);
+  const tb = div(el); tb.innerHTML = '<div class="ctl">' + ITEMS.map((it, i) => `<label><input type="checkbox" data-i="${i}" ${sel.has(i) ? 'checked' : ''}> ${it[0]} ${it[1]}</label>`).join('') + '</div>';
+  tb.onchange = e => { const i = +e.target.dataset.i; e.target.checked ? sel.add(i) : sel.delete(i); draw(); };
+  const row = div(el, 'row'), left = div(row), out = div(row, 'out'); left.style.flex = '2 1 520px'; out.style.whiteSpace = 'normal';
+  const pre = codeBox(left);
+  function draw() {
+    const its = [...sel].sort().map(i => ITEMS[i]);
+    pre.textContent = `Subject: RFQ — gear reducer parts, ${st.q} sets — quote by ${new Date(Date.now() + 10 * 864e5).toISOString().slice(0, 10)}\n\nDear Sir/Madam,\n\nPlease quote for the following parts as per the attached drawings:\n\n` + its.map((it, k) => `${k + 1}. ${it[0]}${st.rev ? ' Rev A' : ''} — ${it[1]}\n   Material: ${it[2]} · Process: ${it[3]}\n   Key requirements: ${it[4]}\n   Quantity: ${st.q} nos`).join('\n') + `\n\nDelivery: ${st.wk} weeks from purchase order, ex-works.\nDocuments with supply: ${[st.mtc && 'material test certificate EN 10204 3.1', st.dim && 'dimensional inspection report', st.fai && 'first article inspection report'].filter(Boolean).join(', ') || 'none'}.\nPlease state unit price, tooling/pattern cost separately, validity, payment terms and any deviations from the drawing.\n${st.conf ? 'The drawings are confidential and are shared only for this quotation.\n' : ''}\nRegards,\n[Name], [Company], [Phone]`;
+    const chk = [[its.length > 0, 'At least one part selected'], [st.rev, 'Drawing numbers with revision'], [its.every(i => i[2]), 'Material grade for every part'], [true, 'Heat treatment and hardness stated for gears'], [st.q > 0, 'Quantity'], [st.wk > 0, 'Delivery time'], [st.mtc || st.dim, 'Inspection documents'], [st.conf, 'Confidentiality note'], [true, 'Tooling/pattern cost asked separately']];
+    const sc = chk.filter(c => c[0]).length;
+    out.innerHTML = `<b>RFQ completeness ${sc} / ${chk.length}</b><br>` + chk.map(c => (c[0] ? '✓ ' : '✗ ') + c[1]).join('<br>') + '<br><br><span class="hint">Send the drawings, not just this text. Before using an AI to polish an RFQ, remove anything your organisation does not allow outside — part numbers, customer names, defence or export-controlled data.</span>';
+  }
+  draw();
+};
+
+/* Day 41: rendering lights */
+W.render = el => {
+  lab(el);
+  const MAT = { steel: [175, 182, 192], blue: [60, 110, 200], orange: [235, 140, 50], black: [70, 74, 82], white: [235, 236, 238] };
+  const st = form(el, [
+    { k: 'm', t: 'sel', l: 'Appearance', o: [['steel', 'Machined steel'], ['blue', 'Blue powder coat'], ['orange', 'Orange plastic'], ['black', 'Black anodised'], ['white', 'White plastic']], v: 'blue' },
+    { k: 'az', t: 'range', l: 'Key light azimuth', min: -180, max: 180, v: 35, u: '°' },
+    { k: 'el', t: 'range', l: 'Key light elevation', min: -10, max: 90, v: 40, u: '°' },
+    { k: 'amb', t: 'range', l: 'Fill / environment', min: 0, max: 90, v: 40, u: '%' }
+  ], () => vw.draw());
+  const prof = [[8, 0], [42, 0], [42, 6], [32, 15], [42, 24], [42, 30], [20, 30], [20, 44], [8, 44]];
+  const vw = Viewer(el, () => G.revolve(prof, 2 * PI, 48, { c: MAT[st.m] }), { yaw: -0.5, pitch: 0.45, light: () => { const a = rad(st.az), e = rad(st.el); return [Math.sin(a) * Math.cos(e), Math.sin(e), Math.cos(a) * Math.cos(e)]; }, amb: () => st.amb / 100 });
+  div(el, 'hint', 'Lighting here is relative to the camera, as in a studio. Low fill gives drama but hides detail; high fill flattens the shape. Product shots usually use a key light 30–45° up and to one side, plus fill.');
 };
 
 /* ---------------- boot ---------------- */
@@ -1217,7 +1608,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const b = id => $('#' + id, tb);
     b('sbBtn') && (b('sbBtn').onclick = toggleSidebar); b('themeBtn') && (b('themeBtn').onclick = () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark')); b('fsBtn') && (b('fsBtn').onclick = fullscreen);
   }
-  buildToc(); doneBar(); steps(); initQuizzes(); hub(); refreshAll();
+  buildToc(); doneBar(); steps(); initQuizzes(); hub(); refreshAll(); copyButtons();
   $$('.widget').forEach(el => { const f = W[el.dataset.w]; if (!f) return; try { f(el); } catch (e) { el.textContent = 'This lab failed to load: ' + e.message; console.error(e); } });
   document.addEventListener('fullscreenchange', () => setTimeout(SW.redraw, 100));
 });

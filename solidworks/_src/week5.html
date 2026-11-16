@@ -1,0 +1,382 @@
+<!--
+TOOL:    solidworks/_src/week5.html — SolidWorks Course Part II content source, Week 5 (Days 29–35)
+FAMILY:  solidworks
+VERSION: 1.0.0
+DATE:    2026-11-16
+CHAT:    SolidWorks course Part II — mix of uncovered SolidWorks topics and AI-assisted documentation
+CHANGES: 1.0.0 - first version: API macros, AI macro drafting, DriveWorksXpress/Design Checker, PDM, revision logs, import/formats, large assemblies
+STATUS:  working
+-->
+
+<day n="29">
+<summary>Let SolidWorks do the boring clicks. Record, read and edit VBA macros that batch-export files and write properties through the SolidWorks API.</summary>
+<goals><li>Record, edit and run a macro</li><li>Read the API object chain: SldWorks → ModelDoc2 → Extension</li><li>Loop through a folder and export files</li><li>Write custom properties from code</li><li>Run macros safely</li></goals>
+<content>
+<section><h2>What the API is</h2>
+<p>Everything you click in SolidWorks is also available to a program through the <b>SolidWorks API</b>. A <b>macro</b> is a small program inside SolidWorks: VBA (<code>.swp</code>, the most common), or VSTA in VB.NET/C#. Bigger tools become <b>add-ins</b> written in C# or VB.NET.</p>
+<table><tr><th>Object</th><th>What it is</th><th>Typical calls</th></tr>
+<tr><td><code>SldWorks</code></td><td>The application</td><td><code>ActiveDoc</code>, <code>OpenDoc6</code>, <code>CloseDoc</code>, <code>GetExportFileData</code></td></tr>
+<tr><td><code>ModelDoc2</code></td><td>Any open document</td><td><code>GetTitle</code>, <code>GetPathName</code>, <code>ForceRebuild3</code>, <code>Save3</code></td></tr>
+<tr><td><code>ModelDocExtension</code></td><td>More document functions</td><td><code>SaveAs</code> (export), <code>CustomPropertyManager</code>, <code>SelectByID2</code></td></tr>
+<tr><td><code>PartDoc / AssemblyDoc / DrawingDoc</code></td><td>Type-specific functions</td><td>bodies, components, sheets and views</td></tr>
+<tr><td><code>FeatureManager</code></td><td>Creates features</td><td>extrudes, fillets, holes</td></tr></table>
+<p><span class="path">Tools ▸ Macro ▸ Record</span> writes code while you click — a great way to discover call names, though recorded code is long and full of exact pick points. <span class="path">Tools ▸ Macro ▸ New / Edit / Run</span>. The <b>API Help</b> (Help ▸ API Help) lists every call with examples — it is the final authority.</p>
+<div class="warn"><b>Safety:</b> a macro can overwrite or close files without asking. Test on a <b>copy</b> of the folder; keep backups; never run macros from unknown sources (they can do anything your Windows account can).</div>
+</section>
+<section><h2>Do it in SolidWorks</h2>
+<ol class="steps">
+<li><span class="path">Tools ▸ Macro ▸ Record</span>. Change a dimension, rebuild, stop and save as <b>rec1.swp</b>. Open it with <b>Edit</b> and find your dimension value in the code.</li>
+<li><span class="path">Tools ▸ Macro ▸ New</span> → <b>batch_step.swp</b>. Paste the "Parts → STEP" macro from the lab and change the folder.</li>
+<li>Copy five parts into a test folder. In the VBA editor open <span class="path">View ▸ Immediate Window</span>, then run with <kbd>F5</kbd>. Read the log lines.</li>
+<li>Set STEP options first: <span class="path">System Options ▸ Export ▸ STEP</span> → AP214. The macro uses whatever is set there.</li>
+<li>Try the PDF macro on a folder of multi-sheet drawings and confirm every sheet is in the PDF.</li>
+<li>Try the custom property macro on an open part; check <span class="path">File ▸ Properties</span>.</li>
+<li>Assign a macro to a toolbar button: <span class="path">Tools ▸ Customize ▸ Commands ▸ Macro</span> → New Macro Button.</li>
+</ol>
+</section>
+<section><h2>Lab: macro generator</h2>
+<p>Choose a job, set the folder, and click each line of the generated code to see what it does. The code uses the standard SolidWorks API calls and the constants from the SolidWorks type libraries that new macros reference by default.</p>
+<div class="widget" data-w="macrogen"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li><b>Object variable not set</b> — something returned <code>Nothing</code> (no document open, wrong document type, file failed to open). Check before using it.</li>
+<li>Use <code>Debug.Print</code> and the Immediate window rather than many <code>MsgBox</code> lines.</li>
+<li>Keep macros in a shared, version-controlled folder and put the standard header block at the top so you know what each one does.</li>
+<li>Recorded selections (<code>SelectByID2</code> with coordinates) break on other models — select by name instead.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Write a macro that opens every drawing in a folder, exports a PDF <b>and</b> a DXF of sheet 1, and writes one line per file (name, OK/FAILED) into a text file using VBA <code>Open … For Append</code>.</p>
+</section>
+</content>
+<quiz>[
+{"q":"Which object represents any open document in the API?","o":["SldWorks","ModelDoc2","Feature","Sketch"],"a":1,"e":"ModelDoc2 is the generic document; PartDoc, AssemblyDoc and DrawingDoc add type-specific calls."},
+{"q":"How does Extension.SaveAs decide the export format?","o":["A format argument","The file extension of the new name","The document type","The template"],"a":1,"e":"Saving as .step, .x_t, .pdf or .dxf exports to that format, using the options in System Options ▸ Export."},
+{"q":"A Dir() loop never ends. Most likely cause?","o":["Wrong folder","Missing fileName = Dir inside the loop","Too many files","Option Explicit"],"a":1,"e":"Dir with no argument returns the next file; without it the loop repeats the first."},
+{"q":"OpenDoc6 returns Nothing for a .SLDPRT. Likely reason?","o":["Document type set to swDocDRAWING or swDocASSEMBLY","The part has no material","Missing MsgBox","Read-only folder"],"a":0,"e":"The type argument must match the file."},
+{"q":"Best first step before running a new batch macro?","o":["Run it on the live project","Run it on a copy of the files","Disable Option Explicit","Close SolidWorks"],"a":1,"e":"Macros can overwrite or close files without asking."}
+]</quiz>
+</day>
+
+<day n="30">
+<summary>An AI assistant can draft a macro in seconds — and invent API calls that do not exist. Learn to ask well, then review and test like an engineer.</summary>
+<goals><li>Write a precise prompt for a SolidWorks macro</li><li>Recognise invented API calls and logic bugs</li><li>Review with a checklist and test on copies</li><li>Know what not to paste into an AI tool</li></goals>
+<content>
+<section><h2>Draft fast, check slowly</h2>
+<p>AI assistants (Claude and others) are good at the shape of a macro: loops, file handling, error checks, comments. They are less reliable on exact SolidWorks API names, argument order and version differences — they may produce a <b>plausible call that does not exist</b>. Treat AI code like code from a new colleague: useful, reviewed before use.</p>
+<div class="cols">
+<div class="box"><b class="t">Give context</b>SolidWorks version, VBA or VB.NET, document types, folder layout, what "done" looks like.</div>
+<div class="box"><b class="t">Give constraints</b>"Use only calls from the SolidWorks API Help", "no deletion", "log every file", "stop on first error".</div>
+<div class="box"><b class="t">Ask for checks</b>Null checks after every Open, error codes printed, a dry-run mode that only lists files.</div>
+<div class="box"><b class="t">Verify</b>Look up every API call in API Help; run on copies; read the log.</div>
+</div>
+<div class="warn"><b>Confidentiality:</b> follow your organisation's rules on AI tools. Never paste classified, export-controlled, customer-confidential or personal data into a tool that is not approved for it. For macros you rarely need real data — use dummy folder names and part names.</div>
+<h3>Prompt template</h3>
+<pre class="tpl">You are helping me write a SolidWorks VBA macro (.swp) for SolidWorks [2024].
+Goal: [export every .SLDPRT in a folder to STEP AP214 in the same folder].
+Inputs: folder path in a constant at the top. Files: [parts only].
+Rules:
+- Use only methods documented in the SolidWorks API Help; name the interface for each call.
+- Check every object for Nothing before using it; print errors and warnings codes.
+- Never delete or overwrite source files. Close each document after use.
+- Add a DRY_RUN constant: when True, only list what would be done.
+- Comment each block in plain English.
+Finish with a list of API calls used, so I can check each one in API Help.</pre>
+</section>
+<section><h2>Do it in SolidWorks</h2>
+<ol class="steps">
+<li>Write your prompt with the template; ask your approved AI assistant for the macro.</li>
+<li>Paste it into a new macro. Turn on <code>Option Explicit</code> and <span class="path">Debug ▸ Compile VBAProject</span> — compile errors catch invented names and missing variables.</li>
+<li>Look up every API call it lists in <span class="path">Help ▸ API Help</span>: interface, arguments, return value.</li>
+<li>Run with DRY_RUN = True on a copy folder. Read the list.</li>
+<li>Run for real on the copy. Open three outputs and check them.</li>
+<li>Ask the AI to explain any line you do not understand — then confirm in API Help.</li>
+<li>Save the reviewed macro with a header block and a note "reviewed by / date".</li>
+</ol>
+</section>
+<section><h2>Lab: bug hunt</h2>
+<p>An AI-drafted macro with four real problems — including one invented API method. Find them before you check.</p>
+<div class="widget" data-w="bughunt"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Compile first: <b>Method or data member not found</b> usually means an invented or wrong-interface call.</li>
+<li>Ask for <b>small</b> macros and combine them yourself; long AI programs hide more mistakes.</li>
+<li>When the AI fixes a bug, re-run the whole test — fixes often break something else.</li>
+<li>Keep a library of reviewed macros; reuse beats regenerating.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Ask an AI assistant for a macro that renames the custom property <code>PartNo</code> to <code>PartNumber</code> in every part of a folder, keeping the value. Review it with the checklist above and the lab's four bug types, test on copies, and record what you had to fix.</p>
+</section>
+</content>
+<quiz>[
+{"q":"An AI-written macro calls swModel.ExportToStep. What should you do?","o":["Trust it","Look it up in API Help — it does not exist; use Extension.SaveAs","Add a reference","Run it to see"],"a":1,"e":"Plausible but invented calls are a common AI mistake."},
+{"q":"Fastest way to catch invented names before running?","o":["Debug ▸ Compile VBAProject with Option Explicit","Run on the server","Use MsgBox","Record a macro"],"a":0,"e":"Compiling flags unknown methods and undeclared variables."},
+{"q":"What is a dry-run mode for?","o":["Running faster","Listing what would happen without changing files","Skipping errors","Testing the AI"],"a":1,"e":"It shows exactly which files would be touched."},
+{"q":"Which data should not go into an unapproved AI tool?","o":["Dummy folder names","Classified, export-controlled or customer-confidential data","Generic VBA questions","Public API names"],"a":1,"e":"Follow your organisation's rules; use dummy data for macro work."},
+{"q":"Best final authority for a SolidWorks API call?","o":["The AI's answer","SolidWorks API Help","A forum post","The macro recorder"],"a":1,"e":"API Help documents interfaces, arguments and return values."}
+]</quiz>
+</day>
+
+<day n="31">
+<summary>Automate without code. DriveWorksXpress turns a model into a rule-driven product configurator; Design Checker enforces your drafting and modelling standards.</summary>
+<goals><li>Capture dimensions and features in DriveWorksXpress</li><li>Build a form and write rules</li><li>Generate named variants automatically</li><li>Build and run Design Checker checks</li></goals>
+<content>
+<section><h2>Rules instead of clicks</h2>
+<p><b>DriveWorksXpress</b> (<span class="path">Tools ▸ Xpress Products ▸ DriveWorksXpress</span>, included with SOLIDWORKS) works in four stages:</p>
+<ol><li><b>Capture</b> dimensions, features (suppress/unsuppress) and custom properties of a part or assembly — give each a clear name.</li><li><b>Form</b>: inputs the user fills (numbers, lists, checkboxes).</li><li><b>Rules</b>: Excel-like formulas linking inputs to captured items, e.g. <code>IF(Load&gt;1000,10,8)</code>, and a rule for the new file name.</li><li><b>Run</b>: fill the form → DriveWorksXpress creates new, renamed parts, assemblies and drawings.</li></ol>
+<p>The full products (DriveWorks Solo / Pro) add web forms, quotes and more — Xpress is the free entry point and good for families of brackets, frames, shafts and plates.</p>
+<h3>Design Checker</h3>
+<p><span class="path">Tools ▸ Design Checker</span> (SOLIDWORKS Professional and Premium) checks documents against standards you define: dimension fonts and arrow styles, allowed materials, units, fully-defined sketches, required custom properties, hole sizes. <b>Build Checks</b> creates a <code>.swstd</code> file — you can learn it from a "golden" document — and <b>Check Active Document</b> lists failures, with automatic corrections for many of them. The Task Scheduler can run it on whole folders.</p>
+</section>
+<section><h2>Do it in SolidWorks</h2>
+<ol class="steps">
+<li>Model a bracket plate: width, height, thickness, a linear pattern of holes, corner fillets. Name the dimensions (Day 12).</li>
+<li><b>DriveWorksXpress ▸ Capture</b>: width, thickness, fillet radius, hole diameter, pattern count.</li>
+<li><b>Form</b>: inputs Load (number), Width (number), Material (list Steel/Aluminium).</li>
+<li><b>Rules</b>: write the rules from the lab, plus the file-name rule.</li>
+<li><b>Run</b> three variants; open the new files and check names and sizes.</li>
+<li>Design Checker: <b>Build Checks</b> — require properties Description, PartNo, Material; require fully defined sketches. Save <b>company.swstd</b>.</li>
+<li>Check one of the generated brackets; fix what fails.</li>
+</ol>
+</section>
+<section><h2>Lab: rules engine</h2>
+<p>A small configurator with DriveWorksXpress-style rules. Change load, width and material, read which rule fired, and watch the bracket and the generated file name change.</p>
+<div class="widget" data-w="rules"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Model the master robustly first — configurators expose every weak sketch.</li>
+<li>Keep rules readable; put engineering logic (sizes from loads) in a calculation you can show a reviewer.</li>
+<li>Store generated files in a separate output folder — never overwrite the master.</li>
+<li>Design Checker is only as good as its rules: start with five checks that catch real mistakes.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Configure a shaft: inputs length, bearing seat diameter (list 20/25/30/35), keyway yes/no. Rules: keyway size from the shaft diameter (IS 2048 / DIN 6885 table), chamfer = 1 for ≤ 25 else 1.5, file name SFT-D-L. Generate four shafts and their drawings.</p>
+</section>
+</content>
+<quiz>[
+{"q":"The four DriveWorksXpress stages are…","o":["Sketch, feature, assembly, drawing","Capture, form, rules, run","Record, edit, run, debug","Import, repair, export, save"],"a":1,"e":"Capture items, build a form, write rules, run to generate files."},
+{"q":"DriveWorksXpress rules look like…","o":["VBA code","Excel-like formulas","SQL queries","G-code"],"a":1,"e":"IF(), arithmetic and text joins like a spreadsheet."},
+{"q":"Design Checker standards are saved as…","o":[".swp",".swstd",".sldprt",".xlsx"],"a":1,"e":"A .swstd file holds the checks."},
+{"q":"Where should generated variants be saved?","o":["Over the master","In a separate output folder","In Toolbox","In the template folder"],"a":1,"e":"Keep the master untouched."},
+{"q":"Design Checker can…","o":["Only report","Report and auto-correct many failures","Only fix fonts","Replace PDM"],"a":1,"e":"Many checks offer automatic corrections."}
+]</quiz>
+</day>
+
+<day n="32">
+<summary>Many people, one truth. PDM keeps files in a vault with check-in/out, versions, workflows and revisions — the end of "final_v7_REALLY_final.SLDPRT".</summary>
+<goals><li>Explain vault, local cache, check-out and check-in</li><li>Tell versions from revisions</li><li>Follow a release workflow with approvals</li><li>Use where-used and rollback</li></goals>
+<content>
+<section><h2>Vault thinking</h2>
+<p><b>SOLIDWORKS PDM</b> stores files in a <b>vault</b> on a server; you work in a <b>local cache</b> (a vault view in Windows Explorer). <b>PDM Standard</b> comes with SOLIDWORKS Professional/Premium; <b>PDM Professional</b> adds scale, replication, a web client and more automation.</p>
+<table><tr><th>Concept</th><th>Meaning</th></tr>
+<tr><td>Check out</td><td>Get write access; others see who has it</td></tr>
+<tr><td>Check in</td><td>Send changes to the vault → new <b>version</b> (1, 2, 3…)</td></tr>
+<tr><td>Workflow</td><td>States (Work in Progress → Pending Approval → Released) and transitions with permissions</td></tr>
+<tr><td>Revision</td><td>A label (A, B, C…) given on <b>release</b>; written into the title block and revision table</td></tr>
+<tr><td>Data card</td><td>Form showing file properties; edits write to custom properties</td></tr>
+<tr><td>Where Used / Contains</td><td>Which assemblies use this part; what this assembly references</td></tr>
+<tr><td>Get version / Rollback</td><td>Open or restore an older version</td></tr></table>
+<p>Without PDM, use at least a clear folder structure, Pack and Go for releases and a written revision rule. On the 3DEXPERIENCE platform, the same ideas are called maturity states and revisions.</p>
+</section>
+<section><h2>Do it in SolidWorks PDM</h2>
+<ol class="steps">
+<li>Log in to the vault view in Windows Explorer; browse to your project folder.</li>
+<li>Drag a new part into the vault. Fill the data card (Description, PartNo, Material) and check it in.</li>
+<li>Open it in SolidWorks, change a dimension; the <b>PDM task pane</b> shows it is not checked out — check out from there.</li>
+<li>Save and check in with a comment. Look at the <b>History</b> tab: version 2.</li>
+<li>Change state: <b>Submit for approval</b>. As the approver, <b>Approve</b> → revision A.</li>
+<li>Right-click ▸ <b>Where Used</b> to see the assemblies affected by a change.</li>
+<li>Make a change request, edit, and release revision B. Compare A and B with <b>Get ▸ version</b>.</li>
+</ol>
+</section>
+<section><h2>Lab: workflow simulator</h2>
+<p>Try the buttons in different orders. The simulator refuses illegal moves just as a PDM workflow would — editing without check-out, submitting a checked-out file, approving nothing.</p>
+<div class="widget" data-w="pdm"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Check in at the end of every day; a checked-out file on a laptop is invisible to everyone else.</li>
+<li>Check in assemblies with their parts so references stay consistent.</li>
+<li>Rename and move files <b>inside the vault</b> (or with SolidWorks Rename) — Windows rename breaks references.</li>
+<li>Agree the revision scheme before the first release: letters, numbers, prototype stages (P1, P2) then A.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Write your team's revision rule on one page: when the version changes, when the revision changes, letters to skip, who approves, and what goes in the revision table. Use the simulator to walk through one full change.</p>
+</section>
+</content>
+<quiz>[
+{"q":"A new version is created when…","o":["You save locally","You check in changes","The file is released","You open the file"],"a":1,"e":"Versions come from check-ins; revisions from releases."},
+{"q":"A revision letter is usually assigned when…","o":["The file is created","The file is released through the workflow","Every save","Every check-out"],"a":1,"e":"Release gives the revision."},
+{"q":"Safest way to rename a part used in assemblies under PDM?","o":["Windows Explorer outside the vault","Rename inside the vault or with SolidWorks Rename","Save As and delete","Change the property only"],"a":1,"e":"These update the references."},
+{"q":"Which command shows the assemblies that use a part?","o":["Contains","Where Used","History","Data card"],"a":1,"e":"Where Used lists parents."},
+{"q":"Letters often skipped in revision schemes?","o":["A, B, C","I, O, Q, S, X, Z","E, F, G","None"],"a":1,"e":"They are easily confused with numbers or other letters."}
+]</quiz>
+</day>
+
+<day n="33">
+<summary>Every change needs a record. Turn a before/after comparison into a revision-table entry and an engineering change notice, with AI help for the wording and you in charge of the facts.</summary>
+<goals><li>Write clear revision descriptions</li><li>Draft an ECN: reason, change, effect, disposition</li><li>Use an AI assistant for wording, not for facts</li><li>Check where-used before releasing</li></goals>
+<content>
+<section><h2>What a good change record says</h2>
+<div class="cols">
+<div class="box"><b class="t">What changed</b>Each item with the old and new value: "BASE THK 20 WAS → 25".</div>
+<div class="box"><b class="t">Why</b>The problem or request, with a reference (test report, NCR, customer request).</div>
+<div class="box"><b class="t">What is affected</b>Parts, drawings, assemblies (where-used), tooling, CNC programs, manuals.</div>
+<div class="box"><b class="t">What to do with stock</b>Use as is, rework, scrap, use up first — and from which batch the change applies (effectivity).</div>
+</div>
+<p>In SolidWorks: <span class="path">Annotation ▸ Tables ▸ Revision Table</span> on the drawing; <b>Add Revision</b> creates a row and can place revision symbols (triangles) next to the changed dimensions. With PDM, the revision letter comes from the workflow.</p>
+<h3>Where AI helps</h3>
+<p>Give the assistant the <b>facts as a list</b> and ask it to turn them into clear, consistent wording in your format. Do not ask it to "figure out what changed" from screenshots, and never let it fill gaps — tell it to list missing information as questions.</p>
+<pre class="tpl">Rewrite the change below as an engineering change notice in this format:
+ECN no. / Part and drawing / Rev from → to / Reason / Changes (numbered,
+old → new) / Affected documents / Stock disposition / Effectivity.
+Rules: copy every number, size, tolerance and material grade exactly;
+do not add changes; do not guess reasons; list anything missing as
+questions at the end.
+FACTS:
+[paste the before/after list, reason, ECN number, disposition]</pre>
+</section>
+<section><h2>Do it in SolidWorks</h2>
+<ol class="steps">
+<li>Open the Day 22 pillow-block drawing. Make the changes from the lab (base 25, FG 260, M12 counterbores).</li>
+<li><span class="path">Annotation ▸ Tables ▸ Revision Table</span> (if not present), then right-click ▸ <b>Revisions ▸ Add Revision</b>.</li>
+<li>Place revision symbols on the changed dimensions; fill the description from the lab output.</li>
+<li>Check where-used (PDM Where Used, or open the assemblies) and list them in the ECN.</li>
+<li>Use the prompt template to polish the ECN wording; compare every number with your list.</li>
+<li>Release through the workflow (Day 32) or archive the PDF with the ECN.</li>
+</ol>
+</section>
+<section><h2>Lab: revision log builder</h2>
+<p>Edit the "After" column. The revision row, ECN draft and the AI prompt update. Only items that actually changed are listed; unchanged items are recorded as checked.</p>
+<div class="widget" data-w="revlog"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>"Updated drawing" is not a revision description. Say what and where.</li>
+<li>One ECN can cover several documents, but each document gets its own revision.</li>
+<li>Do not reuse revision letters; do not "silently" fix a released drawing.</li>
+<li>Keep the AI's text and your fact list side by side when checking — read numbers, not sentences.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Write the ECN for changing the reducer's input bearing from 6205 to 6205-2RS (sealed): what else changes (housing seal groove, lubrication note, BOM)? Draft the facts, have an AI assistant word it, then check it line by line.</p>
+</section>
+</content>
+<quiz>[
+{"q":"Best revision description?","o":["Drawing updated","BASE THK 20 WAS → 25; MATERIAL FG 200 → FG 260","Minor changes","As per discussion"],"a":1,"e":"Say what changed, old and new values."},
+{"q":"Stock disposition tells the shop…","o":["Who approved","What to do with existing parts (use, rework, scrap)","The new material","The drawing size"],"a":1,"e":"It covers parts already made or in stock."},
+{"q":"What should an AI assistant do with missing information in an ECN?","o":["Guess sensible values","List it as questions","Leave it out silently","Copy from another ECN"],"a":1,"e":"It must not invent facts."},
+{"q":"Before releasing a change to a part you should check…","o":["Where used","The rendering","The font","The macro list"],"a":0,"e":"Every assembly and drawing using the part may be affected."},
+{"q":"Effectivity means…","o":["How effective the change is","From which batch or date the change applies","The approver","The revision letter"],"a":1,"e":"It states when the change takes effect."}
+]</quiz>
+</day>
+
+<day n="34">
+<summary>Most of your suppliers and customers do not use SolidWorks. Choose the right neutral format, import cleanly, repair what breaks and get features back when you need them.</summary>
+<goals><li>Choose between Parasolid, STEP AP203/214/242, IGES, STL/3MF, DXF</li><li>Import with Import Diagnostics and repair faces</li><li>Recognise features with FeatureWorks</li><li>Use 3D Interconnect for native files</li></goals>
+<content>
+<section><h2>Formats and what they carry</h2>
+<p>Neutral formats carry <b>geometry</b>, not the <b>feature tree</b>. An imported part is a "dumb solid" (an <i>Imported1</i> feature) that you can still cut, fillet and measure — but not edit by its original dimensions.</p>
+<ul>
+<li><b>Export</b>: <span class="path">File ▸ Save As</span> → choose the type; set options in <span class="path">System Options ▸ Export</span> (STEP protocol, units, output as solid/surfaces, coordinate system).</li>
+<li><b>Import</b>: <span class="path">File ▸ Open</span> the STEP/IGES/Parasolid; options under <span class="path">System Options ▸ Import</span>.</li>
+<li><b>Import Diagnostics</b> (<span class="path">Tools ▸ Evaluate ▸ Import Diagnostics</span>) finds faulty faces and gaps, and can heal them; then <b>Knit</b> surfaces into a solid if needed.</li>
+<li><b>FeatureWorks</b> (add-in) — right-click Imported1 ▸ <b>FeatureWorks ▸ Recognize Features</b>: automatic or interactive recognition of extrudes, revolves, holes, fillets, chamfers.</li>
+<li><b>3D Interconnect</b> opens native files from other CAD systems directly and keeps a link: <b>Update</b> when the original changes; <b>Break Link</b> to make it independent.</li>
+<li><b>Direct editing</b> of dumb solids: Move Face, Delete Face, Replace Face (Day 26).</li>
+</ul>
+</section>
+<section><h2>Do it in SolidWorks</h2>
+<ol class="steps">
+<li>Export the pillow block as STEP AP214 and as Parasolid. Open both; compare tree, colours and file size.</li>
+<li>Download a supplier STEP of a motor or bearing (any vendor site). Open it; run <b>Import Diagnostics</b>.</li>
+<li>If faces are listed as faulty, <b>Attempt to Heal All</b>; check with <span class="path">Tools ▸ Evaluate ▸ Check</span>.</li>
+<li>Activate FeatureWorks (<span class="path">Tools ▸ Add-Ins</span>); <b>Recognize Features</b> on a simple imported part; edit a recognised hole.</li>
+<li>Export a sheet-metal flat pattern to DXF (Day 21) and open it in eDrawings to check the layers.</li>
+<li>Save an STL for 3D printing: Options → resolution Fine; check deviation and angle.</li>
+</ol>
+</section>
+<section><h2>Lab: format chooser</h2>
+<p>What survives in each format? Click a row for when to use it.</p>
+<div class="widget" data-w="formats"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Agree the format and <b>units</b> with the supplier; send STEP AP214 by default, Parasolid to Parasolid-based systems.</li>
+<li>Large imported assemblies: import as a multibody part if you only need an envelope.</li>
+<li>Check mass and a few key dimensions after import — tolerance mismatches can leave tiny gaps.</li>
+<li>Do not send native files to outsiders unless agreed — they contain your full design history.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Import a STEP of a commercial gear motor, defeature it to an envelope, add mate references at its mounting face and shaft axis, and save it as your library part.</p>
+</section>
+</content>
+<quiz>[
+{"q":"Which neutral format can carry semantic 3D tolerances (PMI)?","o":["STEP AP214","STEP AP242","IGES","STL"],"a":1,"e":"AP242 supports PMI from MBD."},
+{"q":"An imported STEP part appears as 'Imported1'. You need its holes as editable features. Use…","o":["Import Diagnostics","FeatureWorks","Pack and Go","3D Interconnect"],"a":1,"e":"FeatureWorks recognises features on imported geometry."},
+{"q":"SolidWorks' own geometry kernel format is…","o":["ACIS (.sat)","Parasolid (.x_t)","IGES","STEP"],"a":1,"e":"Parasolid is the kernel SolidWorks uses."},
+{"q":"STL contains…","o":["Exact surfaces","Triangle mesh only","Feature history","Colours and PMI"],"a":1,"e":"It is for 3D printing and visual use."},
+{"q":"3D Interconnect lets you…","o":["Open native files from other CAD systems and update when they change","Convert to STL","Recognise features","Render"],"a":0,"e":"It keeps a link to the original file."}
+]</quiz>
+</day>
+
+<day n="35">
+<summary>When an assembly takes minutes to open, the tool is not slow — the method is. Lightweight, Large Design Review, SpeedPak, Defeature and good modelling habits keep big assemblies usable.</summary>
+<goals><li>Choose the right open mode for the task</li><li>Use Assembly Visualization and Performance Evaluation</li><li>Make SpeedPak and Defeature versions</li><li>Model parts that are light in assemblies</li></goals>
+<content>
+<section><h2>Modes and tools</h2>
+<table><tr><th>Mode / tool</th><th>What it does</th></tr>
+<tr><td>Resolved</td><td>Everything loaded — full editing</td></tr>
+<tr><td>Lightweight</td><td>Loads a subset of model data; parts resolve on demand</td></tr>
+<tr><td>Large Assembly Settings</td><td>Switches off heavy graphics and options above a component threshold (System Options ▸ Assemblies)</td></tr>
+<tr><td>Large Design Review</td><td>Opens very large assemblies fast for review: measure, section, walk-through, and simple mates with Edit Assembly</td></tr>
+<tr><td>Detailing mode</td><td>Opens a drawing without loading the models, for annotations</td></tr>
+<tr><td>SpeedPak</td><td>A configuration of a sub-assembly that keeps only selected faces/bodies — light in the parent</td></tr>
+<tr><td>Defeature</td><td>Makes a simplified, IP-safe part or configuration (remove internal detail)</td></tr>
+<tr><td>Envelopes</td><td>Reference components for space claims and selections</td></tr>
+<tr><td>Assembly Visualization</td><td>Sorts components by rebuild time, triangles, mass, any property</td></tr>
+<tr><td>Performance Evaluation</td><td>Reports slow mates, in-context references, circular references, heavy graphics</td></tr></table>
+<h3>Habits that help</h3>
+<ul><li>Mate to planes and origins of parts; fewer, simpler mates; fix what does not move.</li><li>Cosmetic threads, not modelled threads; simplified configurations of purchased parts.</li><li>Sub-assemblies that match how the product is built; keep them rigid unless motion is needed.</li><li>Keep files on a fast local disk or a properly configured PDM cache, not a slow network share.</li></ul>
+</section>
+<section><h2>Do it in SolidWorks</h2>
+<ol class="steps">
+<li>Open the reducer assembly with <b>Mode: Large Design Review</b> from the Open dialog; time it. Measure the shaft centre distance.</li>
+<li>Reopen as <b>Lightweight</b>; add a mate — note the parts resolving.</li>
+<li><span class="path">Assembly ▸ Assembly Visualization</span>: add a column <b>SW-Rebuild Time</b>; sort; identify the heaviest part.</li>
+<li><span class="path">Evaluate ▸ Performance Evaluation</span>: read the mate and rebuild reports.</li>
+<li>In the input-shaft sub-assembly: ConfigurationManager ▸ right-click ▸ <b>Add SpeedPak</b>, keep the shaft ends and bearing outer faces.</li>
+<li><span class="path">Tools ▸ Defeature</span> on the whole reducer: keep outer faces and mounting holes; save as a part to send to a customer.</li>
+</ol>
+</section>
+<section><h2>Lab: which mode?</h2>
+<p>Pick the size and the job; the lab suggests how to open it and what else to try.</p>
+<div class="widget" data-w="lamode"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>One in-context reference chain can slow a whole assembly — lock or break them after release (Day 19).</li>
+<li>Flexible sub-assemblies cost solve time; make them flexible only when you study motion.</li>
+<li>Patterned fasteners: use pattern-driven component patterns, not hundreds of individually mated screws.</li>
+<li>Turn off <b>Verification on rebuild</b> and RealView for big assemblies unless you need them.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Take the largest assembly you have. Record open time, rebuild time and memory (Task Manager) in Resolved, Lightweight and Large Design Review. Fix the three slowest components using Assembly Visualization, and record the times again.</p>
+</section>
+</content>
+<quiz>[
+{"q":"Fastest way to open a huge assembly just to review and measure it?","o":["Resolved","Large Design Review","Lightweight","Detailing mode"],"a":1,"e":"LDR loads only what is needed for review."},
+{"q":"SpeedPak is…","o":["A faster PC","A configuration that keeps only selected faces/bodies of a sub-assembly","A file format","A rendering mode"],"a":1,"e":"It makes sub-assemblies light in their parent."},
+{"q":"Which tool sorts components by rebuild time?","o":["Assembly Visualization","Interference Detection","MateXpert","Design Checker"],"a":0,"e":"Add a rebuild-time column and sort."},
+{"q":"To send a customer a simple outside shape without internal details, use…","o":["Pack and Go","Defeature","STL","Lightweight"],"a":1,"e":"Defeature removes internal details."},
+{"q":"Adding notes to a big drawing without loading models:","o":["Detailing mode","Lightweight","SpeedPak","Envelope"],"a":0,"e":"Detailing mode opens drawings without the models."}
+]</quiz>
+</day>

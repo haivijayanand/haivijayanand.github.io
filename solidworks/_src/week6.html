@@ -1,0 +1,380 @@
+<!--
+TOOL:    solidworks/_src/week6.html — SolidWorks Course Part II content source, Week 6 (Days 36–42)
+FAMILY:  solidworks
+VERSION: 1.0.0
+DATE:    2026-11-16
+CHAT:    SolidWorks course Part II — mix of uncovered SolidWorks topics and AI-assisted documentation
+CHANGES: 1.0.0 - first version: MBD and stack-ups, Costing, AI engineering reports, AI test reports, AI RFQs, Visualize rendering, Part II capstone
+STATUS:  working
+-->
+
+<day n="36">
+<summary>Put the tolerances on the 3D model and prove they work. Model-based definition with DimXpert and MBD, 3D PDF output, and tolerance stack-ups by worst case and RSS.</summary>
+<goals><li>Apply DimXpert dimensions and tolerances in 3D</li><li>Organise 3D views and publish a 3D PDF or STEP AP242</li><li>Do a 1D tolerance stack-up: worst case and RSS</li><li>Decide which tolerance to tighten</li></goals>
+<content>
+<section><h2>Model-based definition</h2>
+<p><b>MBD</b> means the 3D model carries the product definition — dimensions, tolerances, datums, notes (PMI) — so CAM, inspection (CMM) and suppliers read it directly. In SolidWorks: the <b>MBD Dimensions</b> tab (DimXpert), <b>3D Views</b> to save annotated views, and output to <b>3D PDF</b> (SOLIDWORKS MBD product) or <b>STEP AP242</b> with semantic PMI.</p>
+<ul><li><b>Auto Dimension Scheme</b>: pick datums, tolerance type (plus/minus or geometric) and pattern type; DimXpert dimensions the part for you.</li><li><b>Location / Size dimensions</b>, <b>Datum</b>, <b>Geometric Tolerance</b> — the same ideas as Day 23, applied to model faces.</li><li><b>Show Tolerance Status</b> colours features fully, under or over-constrained by tolerances.</li><li><b>TolAnalyst</b> (SOLIDWORKS Premium) runs worst-case and RSS stack-ups through an assembly using the DimXpert data.</li></ul>
+<h3>Tolerance stack-up</h3>
+<p>A chain of dimensions adds up to a gap. <b>Worst case</b> adds all tolerances in the bad direction — safe, often too tight. <b>RSS</b> (root sum of squares) assumes independent, centred, normally distributed sizes: total = √(Σ tᵢ²) — realistic for production volumes, risky for a handful of parts. The largest contributors are where tightening a tolerance helps most.</p>
+</section>
+<section><h2>Do it in SolidWorks</h2>
+<ol class="steps">
+<li>Open the reducer housing. <span class="path">MBD Dimensions ▸ Auto Dimension Scheme</span>: datum A = mounting face, B = input bore, C = side face.</li>
+<li>Edit the bore tolerances to Ø52 H7 and Ø62 H7; add position Ø0.02 to A|B for the output bore.</li>
+<li><b>Show Tolerance Status</b>; fix any under-constrained feature.</li>
+<li><span class="path">MBD ▸ Capture 3D View</span>: "Bores", "Mounting", "General".</li>
+<li>Publish to 3D PDF (if you have SOLIDWORKS MBD) or Save As STEP AP242 with PMI.</li>
+<li>Do the shaft-bearing-spacer stack-up from the lab by hand, then (Premium) with TolAnalyst.</li>
+</ol>
+</section>
+<section><h2>Lab: stack-up calculator</h2>
+<p>A bearing–spacer–bearing stack inside a housing. Edit nominals, tolerances and directions; add dimensions. See worst case vs RSS and which tolerance contributes most.</p>
+<div class="widget" data-w="stack"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Draw the loop first: start at one face, walk through every part to the other face; each dimension in the loop gets a sign.</li>
+<li>Bearing widths are standard tolerances (usually 0 / −0.12 for small bearings) — look them up, do not guess.</li>
+<li>Use worst case for prototypes, safety parts and small batches; RSS when you have process data.</li>
+<li>MBD needs agreement with the shop and inspection — a perfect 3D PDF nobody can read helps no one.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Do the axial stack of the output shaft: housing width 90 ±0.1, two bearings 16 0/−0.12, spacer 56 ±0.05, circlip groove positions ±0.05. Find the axial play by worst case and RSS. Which single tolerance would you tighten?</p>
+</section>
+</content>
+<quiz>[
+{"q":"RSS stack-up total for tolerances ±0.1, ±0.1, ±0.1, ±0.1?","o":["±0.4","±0.2","±0.1","±0.05"],"a":1,"e":"√(4 × 0.01) = 0.2."},
+{"q":"Worst-case stack-up assumes…","o":["Normal distribution","Every part at its worst limit at the same time","Only the largest tolerance","Zero tolerance"],"a":1,"e":"Safe but often over-tight."},
+{"q":"Which SolidWorks tab holds DimXpert tools?","o":["Features","MBD Dimensions","Evaluate","Sketch"],"a":1,"e":"MBD Dimensions (DimXpert)."},
+{"q":"Which neutral format carries semantic PMI?","o":["STEP AP242","IGES","STL","DXF"],"a":0,"e":"AP242 supports PMI."},
+{"q":"To reduce gap variation most, tighten…","o":["The smallest tolerance","The largest contributor","All equally","None"],"a":1,"e":"Contribution is proportional to t²."}
+]</quiz>
+</day>
+
+<day n="37">
+<summary>Know the price before you send the drawing. SOLIDWORKS Costing estimates machined, sheet-metal, weldment, cast, plastic and 3D-printed parts from the model and your shop's rates.</summary>
+<goals><li>Run Costing on machined and sheet-metal parts</li><li>Edit templates: material prices, operations, rates</li><li>Read the cost breakdown and the effect of batch size</li><li>Design for cost</li></goals>
+<content>
+<section><h2>How Costing works</h2>
+<p><span class="path">Evaluate ▸ Costing</span> (SOLIDWORKS Professional and Premium) recognises features — holes, pockets, bends, cut length — and applies a <b>template</b> of material prices, operations, setup and cycle times and machine rates. Templates are edited in the <b>Costing Template Editor</b>; methods exist for machining, sheet metal, weldments, castings, plastic parts and 3D printing. Assemblies roll up part costs and add purchased-part prices.</p>
+<div class="def"><b>Unit cost</b> = material (with scrap) + Σ(cycle time × rate) + Σ(setup time × rate) ÷ batch quantity, then overhead and margin. Setup is what makes one-off parts expensive.</div>
+<p>Even without the Costing tool you can do the same estimate in a spreadsheet — the lab does exactly that.</p>
+</section>
+<section><h2>Do it in SolidWorks</h2>
+<ol class="steps">
+<li>Open the input shaft. <span class="path">Evaluate ▸ Costing</span> → method Machining, template your shop's (copy the default and rename).</li>
+<li>Set stock: round bar, diameter and length with allowance; material price ₹/kg.</li>
+<li>Read the CostingManager: stock, turning, keyway milling, holes. Change the quantity 1 → 100.</li>
+<li>Edit the template rates in the Costing Template Editor (machine ₹/h, setup minutes) and rerun.</li>
+<li>Sheet-metal bracket from Day 21: method Sheet Metal — cut length, pierces, bends.</li>
+<li>Generate the Costing report (Word/Excel) and compare with a real quote.</li>
+</ol>
+</section>
+<section><h2>Lab: cost estimator</h2>
+<p>A turned and ground shaft. Edit operations and rates; slide the batch size and watch setup cost fall away. Values are examples — use your own shop rates.</p>
+<div class="widget" data-w="cost"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Calibrate the template with three or four real quotes; then trust its comparisons more than its absolute numbers.</li>
+<li>Design for cost: standard bar sizes, fewer setups, standard hole sizes, generous tolerances where function allows, no grinding unless needed.</li>
+<li>Tight tolerances and surface finishes drive cost more than geometry.</li>
+<li>Always add tooling and pattern costs separately for castings and moulded parts.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Cost the reducer housing as a casting and as a fully machined block from plate, at 5, 50 and 500 sets. At what quantity does the casting pattern pay for itself?</p>
+</section>
+</content>
+<quiz>[
+{"q":"Why is a single part expensive?","o":["Material","Setup time is not shared","Tolerances","Colour"],"a":1,"e":"Setup ÷ quantity dominates at small batch sizes."},
+{"q":"Costing estimates are driven by…","o":["The template's rates and operations","Rendering","PDM","The drawing font"],"a":0,"e":"Templates hold material prices, times and rates."},
+{"q":"Best way to make Costing numbers trustworthy?","o":["Use defaults","Calibrate templates against real quotes","Double everything","Ignore setup"],"a":1,"e":"Calibrate with your suppliers' prices."},
+{"q":"Which change usually reduces machining cost most?","o":["Relaxing unnecessary tight tolerances","Changing colour","Adding fillets everywhere","Renaming"],"a":0,"e":"Tight tolerances need slower, extra operations."},
+{"q":"Casting cost quotes should list separately…","o":["Pattern/tooling cost","Drawing fee","Font","Macro"],"a":0,"e":"One-off tooling must be visible."}
+]</quiz>
+</day>
+
+<day n="38">
+<summary>Turn model data into a design report people trust. Collect the facts from SolidWorks, let an AI assistant draft the words, and check every number against the source.</summary>
+<goals><li>Structure an engineering design report</li><li>Extract facts from Mass Properties, Simulation and Interference</li><li>Prompt an AI assistant to draft from facts only</li><li>Verify numbers, units and derived values</li></goals>
+<content>
+<section><h2>Facts first, words second</h2>
+<p>A design report has a predictable structure: <b>purpose and scope → design inputs and requirements → description of the design → analysis and checks → results against requirements → conclusions and open points → references and appendices</b>. Your organisation's format (for example a DRDO or ISO 9001 template) comes first.</p>
+<p>The engineer's job is the facts: requirements, results, assumptions. An AI assistant is good at the words: structure, consistent tense, clear sentences, tables. It is <b>not</b> a source of engineering values — it can mistype a decimal, round, swap units or "fill in" a factor of safety it computed itself.</p>
+<table><tr><th>Fact</th><th>Where to get it in SolidWorks</th></tr>
+<tr><td>Mass, CoG, inertia</td><td>Evaluate ▸ Mass Properties (copy to clipboard)</td></tr>
+<tr><td>Stress, displacement, FoS</td><td>Simulation results, probe, Report tool (Word)</td></tr>
+<tr><td>Interferences, clearances</td><td>Interference Detection / Clearance Verification → Save Results</td></tr>
+<tr><td>Part list</td><td>BOM exported to Excel</td></tr>
+<tr><td>Figures</td><td>Save As image, or rendered views (Day 41)</td></tr></table>
+<pre class="tpl">You are helping me write section [6, "Analysis and results"] of a design report
+in formal English, third person, past tense, for [organisation format].
+Use ONLY the facts below. Copy numbers and units exactly; do not round, convert
+or calculate anything. If a statement needs a value that is not in the facts,
+write [VALUE NEEDED] instead. Do not judge whether the design is acceptable —
+I will write the conclusion.
+Format: short paragraphs plus one table (quantity, value, unit, source).
+FACTS:
+[paste key = value lines]</pre>
+<div class="warn">Use only AI tools your organisation approves for the data involved. For classified or export-controlled projects, the facts may not leave the approved network at all — then use the template structure, not the tool.</div>
+</section>
+<section><h2>Do it</h2>
+<ol class="steps">
+<li>Collect the facts for the reducer housing into a plain list: key = value with units and source.</li>
+<li>Write the report skeleton (headings) in your company template.</li>
+<li>Prompt your approved AI assistant with the template above, one section at a time.</li>
+<li>Paste the draft into the lab's number checker with your fact list. Fix every flagged number.</li>
+<li>Recompute any derived value yourself (factor of safety, percentages) and state the formula.</li>
+<li>Add figures with captions and the source file name and revision.</li>
+<li>Review: a second engineer checks numbers against the source, not against the draft.</li>
+</ol>
+</section>
+<section><h2>Lab: number checker</h2>
+<p>Every number in the AI draft is compared with the source list. Matches are underlined; numbers that are a ratio of two source values are marked for you to recompute; anything else is flagged. Try editing the draft.</p>
+<div class="widget" data-w="numcheck"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Keep the fact list in the report's appendix — reviewers can trace every number.</li>
+<li>Ask for one section at a time; long one-shot reports drift.</li>
+<li>Watch units in particular: N vs kN, MPa vs N/mm² (same), mm vs m.</li>
+<li>The conclusion — acceptable or not — is an engineering judgement. Write it yourself.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Write the analysis section for the Day 27 cantilever: facts from your SimulationXpress run and the hand calculation. Draft with an AI assistant, check with the number checker, and show the comparison table (FEA vs hand calc, % difference).</p>
+</section>
+</content>
+<quiz>[
+{"q":"In an AI-assisted report, who supplies the engineering values?","o":["The AI","The engineer, from the source data","The template","The reviewer only"],"a":1,"e":"The AI words the facts; it does not create them."},
+{"q":"The AI writes 'factor of safety 6.8'. You should…","o":["Accept it","Recompute it from the source values and state the formula","Delete it","Round to 7"],"a":1,"e":"Derived values must be recalculated by you."},
+{"q":"What should the prompt say about missing values?","o":["Estimate them","Write [VALUE NEEDED]","Use typical values","Skip the sentence silently"],"a":1,"e":"Make gaps visible."},
+{"q":"Where do mass and CoG come from?","o":["Evaluate ▸ Mass Properties","The BOM","Design Checker","PDM"],"a":0,"e":"Copy them from Mass Properties."},
+{"q":"A reviewer should check numbers against…","o":["The draft text","The source data","Memory","The AI"],"a":1,"e":"Always back to the source."}
+]</quiz>
+</day>
+
+<day n="39">
+<summary>From raw test logs to a signed test report. Compute the statistics yourself, then use an AI assistant to write clear results and observations around them.</summary>
+<goals><li>Structure a test report: object, setup, procedure, results, observations</li><li>Summarise channels: min, mean, max, limit exceedances</li><li>Prompt for results wording from computed data</li><li>Keep traceability to raw data files</li></goals>
+<content>
+<section><h2>A test report people can rely on</h2>
+<p>Typical sections: <b>1 Purpose · 2 Test article</b> (part numbers, serial numbers, revisions) <b>· 3 Test setup</b> (rig, instruments with calibration due dates, sampling rates) <b>· 4 Procedure</b> (reference to the test plan and any deviations) <b>· 5 Results · 6 Observations and anomalies · 7 Conclusions · Annexures</b> (raw data file list with checksums, photos, calibration certificates).</p>
+<div class="def"><b>Rule:</b> statistics are computed by software you control (Python, Excel, DeweSoft, the lab below) — never by the AI. The AI gets the computed summary and turns it into prose and tables.</div>
+<p>SolidWorks links: test fixtures and rig layouts are modelled assemblies; figures of the test article come from drawings; the part's revision in the report must match the PDM revision tested.</p>
+<pre class="tpl">Write section 5 "Results" of a test report, formal third person, past tense.
+Test: [10 h endurance run at 8000 rpm on test article S/N ___].
+Use ONLY the data summary below. Copy numbers and units exactly; no rounding.
+For each limit exceedance, state channel, value, time and limit.
+Do not explain causes — list questions for the test engineer at the end.
+Add a table: channel | min | mean | max | limit | within limit (yes/no).
+DATA SUMMARY:
+[paste the computed summary]</pre>
+</section>
+<section><h2>Do it</h2>
+<ol class="steps">
+<li>Export your logged data to CSV with a header row (time, channels with units).</li>
+<li>Paste it into the lab (or run your own script) and set the limits from the test specification.</li>
+<li>Check the plot for spikes, dropouts and wrong scaling before trusting any statistic.</li>
+<li>Copy the data summary; prompt your approved AI assistant with the template.</li>
+<li>Check every number in the draft (Day 38 number checker) and that every exceedance is reported.</li>
+<li>Write observations and conclusions yourself; attach raw data file names and checksums.</li>
+</ol>
+</section>
+<section><h2>Lab: test data to report</h2>
+<p>A sample 10-hour endurance log with a vibration spike near 7.5 h. Change the limits or paste your own CSV; the summary and the prompt update together.</p>
+<div class="widget" data-w="testrep"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Report the instrument and sampling rate with every channel; a 1 Hz log cannot show a 50 ms spike.</li>
+<li>State whether values are peak, RMS or averaged — and over what time.</li>
+<li>Never let wording soften a failure: "exceeded the limit" is the phrase, not "slightly above expected".</li>
+<li>Keep the AI draft and your summary in the review record.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Take one real (non-confidential, or anonymised) log of your own. Produce the data summary with the lab or a script, draft the results section with an AI assistant, and have a colleague check it against the raw file.</p>
+</section>
+</content>
+<quiz>[
+{"q":"Who should compute min, mean and max for a test report?","o":["The AI assistant","Your own software or script","The reviewer","Nobody"],"a":1,"e":"Compute with tools you control; the AI only words the results."},
+{"q":"A limit exceedance should be reported with…","o":["Channel, value, time and limit","Only the channel","A softened description","Nothing if brief"],"a":0,"e":"Complete and plain."},
+{"q":"Before trusting statistics you should…","o":["Plot the data and check for spikes, dropouts and scaling","Round them","Ask the AI","Delete outliers"],"a":0,"e":"Look at the data first."},
+{"q":"Traceability means the report lists…","o":["Raw data files, test article revision and instrument calibration","Only results","Only photos","The AI used"],"a":0,"e":"Anyone can trace results to their source."},
+{"q":"Who writes conclusions?","o":["The AI","The test engineer","The supplier","The template"],"a":1,"e":"Conclusions are engineering judgement."}
+]</quiz>
+</day>
+
+<day n="40">
+<summary>A clear RFQ gets fast, comparable quotes. Build requests for quotation from your BOM and drawings, and use an AI assistant to keep them complete and polite — without leaking what you should not.</summary>
+<goals><li>List what every RFQ needs</li><li>Build RFQs from the BOM and drawings</li><li>Compare quotes on equal terms</li><li>Protect confidential information</li></goals>
+<content>
+<section><h2>What makes an RFQ complete</h2>
+<div class="cols">
+<div class="box"><b class="t">Identification</b>Drawing number and revision for every part; attached PDF and STEP (Day 34).</div>
+<div class="box"><b class="t">Technical</b>Material grade, process route, heat treatment and hardness, critical tolerances and finishes, special requirements.</div>
+<div class="box"><b class="t">Commercial</b>Quantity (and price breaks), delivery, place of delivery, payment terms, validity, quote due date.</div>
+<div class="box"><b class="t">Quality</b>Inspection documents: material test certificate (EN 10204 3.1), dimensional report, first article inspection.</div>
+</div>
+<p>From SolidWorks: export the BOM (Day 24) to Excel; Pack and Go or PDM to collect PDFs and STEP files; check every drawing is at the released revision. A parts-only BOM with custom properties Material and Finish gives most of the RFQ table automatically.</p>
+<pre class="tpl">Write a polite, concise RFQ email to a machining supplier.
+Use only the items and requirements below; keep part numbers, revisions,
+materials, tolerances and quantities exactly as given.
+Ask for: unit price, tooling/pattern cost separately, delivery, validity,
+payment terms and any deviations from the drawing.
+List anything a supplier would need that is missing, as questions to me.
+ITEMS AND REQUIREMENTS:
+[paste the table]</pre>
+<div class="warn">Remove or replace anything that must not leave your organisation — customer names, project names, defence or export-controlled information — before using any AI tool. Drawings go to suppliers through your approved channels and NDAs, not through the AI.</div>
+</section>
+<section><h2>Do it</h2>
+<ol class="steps">
+<li>Export the reducer BOM (parts only) to Excel with Material, Process and Finish columns.</li>
+<li>Choose make-items for each supplier type (foundry, machine shop, gear cutter).</li>
+<li>Build the RFQ text with the lab; add delivery, documents and due date.</li>
+<li>Collect drawing PDFs and STEP files of the released revisions.</li>
+<li>Optionally polish the wording with an approved AI assistant; check part numbers and quantities line by line.</li>
+<li>When quotes arrive, tabulate them: unit price, tooling, delivery, deviations, documents — compare like with like.</li>
+</ol>
+</section>
+<section><h2>Lab: RFQ builder</h2>
+<p>Pick parts and requirements; the RFQ text and a completeness check update together.</p>
+<div class="widget" data-w="rfq"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Send the same RFQ to every supplier — different questions give quotes you cannot compare.</li>
+<li>Ask for deviations explicitly; silent deviations become surprises at inspection.</li>
+<li>State critical-to-function features; suppliers price risk they cannot see.</li>
+<li>Keep a quote comparison sheet with the RFQ revision it answers.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Prepare three RFQs for the reducer — castings, machined parts, gears — with a quote comparison sheet ready to fill. Have a colleague check one RFQ for missing information.</p>
+</section>
+</content>
+<quiz>[
+{"q":"Every part in an RFQ must be identified by…","o":["Its colour","Drawing number and revision","Weight","Supplier name"],"a":1,"e":"So the quote matches the right design."},
+{"q":"Pattern or tooling cost should be…","o":["Hidden in unit price","Asked for separately","Ignored","Paid by the designer"],"a":1,"e":"It is a one-time cost."},
+{"q":"Which certificate type is commonly requested for material traceability?","o":["EN 10204 3.1","ISO 9001","IS SP 46","ASME Y14.5"],"a":0,"e":"A 3.1 inspection certificate from the material producer."},
+{"q":"Before using an AI tool on an RFQ you should…","o":["Paste everything","Remove information that must not leave your organisation","Attach drawings","Add customer names"],"a":1,"e":"Confidentiality rules first."},
+{"q":"Quotes are comparable when…","o":["Every supplier received the same RFQ","Prices are similar","They arrive the same day","They are in English"],"a":0,"e":"Same questions, same basis."}
+]</quiz>
+</day>
+
+<day n="41">
+<summary>A good picture sells a design review. Appearances, decals, scenes and cameras in SolidWorks, photorealistic rendering in SOLIDWORKS Visualize, and eDrawings for sharing.</summary>
+<goals><li>Apply appearances, decals and scenes</li><li>Set up cameras and lighting</li><li>Render in SOLIDWORKS Visualize</li><li>Share with eDrawings and images</li></goals>
+<content>
+<section><h2>From shaded model to render</h2>
+<p>In SolidWorks itself: <b>Appearances</b> (Task Pane ▸ Appearances, Scenes and Decals) on faces, features, bodies or parts; <b>Decals</b> for labels and logos; <b>Scenes</b> (environment and floor); <b>RealView</b> graphics for realistic display; <b>Cameras</b> (<span class="path">View ▸ Lights and Cameras ▸ Add Camera</span>).</p>
+<p>For photorealistic images and animations, <b>SOLIDWORKS Visualize</b> is the tool: it is a separate program that uses the GPU, and Visualize Standard is included with SOLIDWORKS Professional and Premium on subscription. PhotoView 360 was retired from SOLIDWORKS 2024 onwards. Import the SolidWorks assembly (keeping appearances), choose an environment (HDR), place cameras, render.</p>
+<div class="cols"><div class="box"><b class="t">Key light</b>Main light, 30–45° up and to one side.</div><div class="box"><b class="t">Fill</b>Softer light or the environment, opening the shadows.</div><div class="box"><b class="t">Rim / back light</b>Separates the part from the background.</div><div class="box"><b class="t">Camera</b>Longer focal length (50–85 mm) for less distortion; slight downward view.</div></div>
+<p>For sharing: <b>eDrawings</b> files (.eprt, .easm, .edrw) and the free eDrawings viewer let reviewers rotate, measure and mark up without SolidWorks.</p>
+</section>
+<section><h2>Do it</h2>
+<ol class="steps">
+<li>Apply appearances: housing cast iron painted, shafts machined steel, gears case-hardened steel.</li>
+<li>Add a decal with your company logo and part number on the cover.</li>
+<li>Apply a scene (Studio) and save a camera at a three-quarter view.</li>
+<li>Open SOLIDWORKS Visualize, import the assembly (Grouping: Appearance). Choose an HDR environment.</li>
+<li>Render a 1920 × 1080 image; then an exploded-view turntable animation (Day 20 explode imported).</li>
+<li>Save the assembly as eDrawings (.easm) with the exploded view; send it for review.</li>
+</ol>
+</section>
+<section><h2>Lab: light the part</h2>
+<p>Move the key light and change fill to see how lighting reveals or hides the shape of a pulley. Drag to rotate.</p>
+<div class="widget" data-w="render"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Apply appearances at the part level for parts; assembly-level appearances override them only in that assembly.</li>
+<li>Dark materials need more light; a black part on a black background disappears.</li>
+<li>Use a plain background and consistent camera for every image in a report.</li>
+<li>Render resolution: about 2× the size you will print or display, no more.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<p>Make a one-page product sheet for the reducer: hero render, exploded render, three key specifications and a QR code to the eDrawings file on your intranet.</p>
+</section>
+</content>
+<quiz>[
+{"q":"Which tool replaced PhotoView 360 for rendering from SOLIDWORKS 2024?","o":["eDrawings","SOLIDWORKS Visualize","Toolbox","MBD"],"a":1,"e":"PhotoView 360 was retired; Visualize is the rendering tool."},
+{"q":"Main light in a three-point setup is the…","o":["Fill","Key light","Rim light","Ambient"],"a":1,"e":"The key light sets the shape."},
+{"q":"Reviewers without SolidWorks can rotate and mark up using…","o":["eDrawings","Toolbox","PDM vault","Costing"],"a":0,"e":"eDrawings files and the free viewer."},
+{"q":"Appearances change…","o":["Mass","Only the look","Material properties","Tolerances"],"a":1,"e":"Material changes mass; appearances do not."},
+{"q":"Lens for less distortion in product shots?","o":["14 mm wide angle","50–85 mm","Fisheye","Any"],"a":1,"e":"Longer focal lengths flatten perspective."}
+]</quiz>
+</day>
+
+<day n="42">
+<summary>Put Part II together: a documentation and automation pack for the gear reducer — macros, configurator, controlled revisions, stack-up, cost, reports, RFQs and renders — then the Part II assessment and certificate.</summary>
+<goals><li>Deliver a complete documentation pack for one product</li><li>Use automation and AI where they save time, and checks where they add risk</li><li>Pass the 15-question Part II assessment</li><li>Plan your next steps</li></goals>
+<content>
+<section><h2>Capstone brief</h2>
+<p>Take the Part I gear reducer (Day 28) and produce the pack a real project would hand over.</p>
+<table><tr><th>Deliverable</th><th>Skills (day)</th></tr>
+<tr><td>Reviewed macro that exports all drawings to PDF and parts to STEP</td><td>29, 30</td></tr>
+<tr><td>DriveWorksXpress configurator for the shafts; Design Checker standard</td><td>31</td></tr>
+<tr><td>All files in PDM (or a controlled folder) at revision A, then a change to B with ECN</td><td>32, 33</td></tr>
+<tr><td>Supplier bearing and motor STEP imported, repaired, defeatured</td><td>34, 35</td></tr>
+<tr><td>Axial stack-up of the output shaft, worst case and RSS</td><td>36</td></tr>
+<tr><td>Cost estimate at 25 and 250 sets</td><td>37</td></tr>
+<tr><td>Design report (analysis section) with a fact list and number check</td><td>38</td></tr>
+<tr><td>Test report results section from a sample run log</td><td>39</td></tr>
+<tr><td>Three RFQs and a quote comparison sheet</td><td>40</td></tr>
+<tr><td>Hero render, exploded render and eDrawings file</td><td>41</td></tr></table>
+</section>
+<section><h2>Deliverables checklist</h2>
+<ol class="steps">
+<li>Macro folder with header blocks and a "reviewed by / date" note.</li>
+<li>Configurator generates four shaft variants with correct names and drawings.</li>
+<li>Revision B released with revision table entries and ECN.</li>
+<li>Imported supplier parts with mate references in your library.</li>
+<li>Stack-up sheet with the tolerance you chose to tighten and why.</li>
+<li>Cost table with assumptions and rates.</li>
+<li>Design report section: fact list, AI draft, number-check record, final text.</li>
+<li>Test report results: data summary, plot, final text, raw file list.</li>
+<li>RFQs sent (or ready) and comparison sheet.</li>
+<li>Renders and eDrawings in the release folder; everything packed with Pack and Go.</li>
+</ol>
+</section>
+<section><h2>Part II assessment</h2>
+<p>Fifteen questions across Days 29–41. 70 % to pass.</p>
+<script type="application/json" id="exam2-data">[
+{"q":"Export format in Extension.SaveAs is chosen by…","o":["A format code","The new file's extension","The template","The document type"],"a":1,"e":"Day 29."},
+{"q":"A Dir() loop processes the same file forever. Missing line?","o":["Option Explicit","fileName = Dir","CloseDoc","MsgBox"],"a":1,"e":"Day 29."},
+{"q":"First check for an AI-drafted macro before running it?","o":["Compile with Option Explicit and look up each API call","Run on live files","Add comments","Record a macro"],"a":0,"e":"Day 30."},
+{"q":"DriveWorksXpress stages are…","o":["Capture, form, rules, run","Record, play, stop, save","Import, heal, knit, save","Draft, review, release, archive"],"a":0,"e":"Day 31."},
+{"q":"In PDM a new version is created by…","o":["Release","Check-in with changes","Opening","Check-out"],"a":1,"e":"Day 32."},
+{"q":"A good revision description states…","o":["What changed, old and new values","Updated","Who drew it","The date only"],"a":0,"e":"Day 33."},
+{"q":"An AI assistant finds information missing from an ECN. It should…","o":["Invent typical values","List it as questions","Omit it","Copy from elsewhere"],"a":1,"e":"Day 33, 38."},
+{"q":"Recognise features on an imported STEP part with…","o":["Import Diagnostics","FeatureWorks","Defeature","SpeedPak"],"a":1,"e":"Day 34."},
+{"q":"Open a very large assembly for review and measuring:","o":["Large Design Review","Resolved","Detailing mode","Flexible"],"a":0,"e":"Day 35."},
+{"q":"RSS of four ±0.05 tolerances:","o":["±0.20","±0.10","±0.05","±0.025"],"a":1,"e":"√(4 × 0.0025) = 0.1 (Day 36)."},
+{"q":"Unit cost falls with batch size mainly because…","o":["Material gets cheaper","Setup is shared","Machines run faster","Tolerances relax"],"a":1,"e":"Day 37."},
+{"q":"In an AI-assisted report the factor of safety should be…","o":["Taken from the AI","Recomputed by the engineer from source values","Rounded up","Omitted"],"a":1,"e":"Day 38."},
+{"q":"Test statistics for a report are computed by…","o":["The AI","Your own software or script","The supplier","Guessing"],"a":1,"e":"Day 39."},
+{"q":"Before pasting an RFQ into an AI tool you must…","o":["Add the customer name","Remove information that must not leave the organisation","Attach drawings","Add prices"],"a":1,"e":"Day 40."},
+{"q":"Rendering tool for SOLIDWORKS 2024 and later:","o":["PhotoView 360","SOLIDWORKS Visualize","eDrawings","Costing"],"a":1,"e":"Day 41."}
+]</script>
+<div class="widget" data-w="exam" data-src="exam2-data" data-key="exam2"></div>
+</section>
+<section><h2>Part II certificate</h2>
+<p>Shows how many of Days 29–42 you have marked complete and your best Part II score.</p>
+<div class="widget" data-w="cert" data-from="29" data-to="42" data-key="exam2" data-title="SolidWorks Course Part II: Documentation and Automation" data-topics="SolidWorks automation, PDM and revisions, data exchange, large assemblies, MBD and costing, and AI-assisted engineering documentation"></div>
+</section>
+<section><h2>What next</h2>
+<ul>
+<li>Certifications: CSWP, then specialist exams such as CSWPA-Drawing Tools, Sheet Metal, Weldments and Simulation (CSWA-S).</li>
+<li>Learn the SolidWorks API properly (C# add-ins) if macros become part of your daily work.</li>
+<li>Write your team's rules: macro review, AI-tool use, revision scheme, report fact lists. Rules make the speed safe.</li>
+</ul>
+</section>
+</content>
+<quiz></quiz>
+</day>

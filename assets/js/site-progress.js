@@ -1,16 +1,17 @@
 /*
 TOOL: site-progress.js — Google sign-in, reading progress, resume, completed ticks and certificates for haivijayanand.github.io
 FAMILY: site-progress
-VERSION: 1.2.0
+VERSION: 1.2.1
 DATE: 2026-11-16
 CHAT: Login, progress & certificates on GitHub Pages with Firebase
-CHANGES: 1.2.0 — activity log for signed-in readers (page visits with time on page, sign-in, completed, steps, certificates) in users/{uid}/activity; visit/completed/certificate counters and first/last seen on users/{uid}; listActivity, clearActivity, logEvent API; <meta name="sp-log" content="off"> to skip a page; account button joins the page's own top toolbar (next to Full screen) when there is one; pages with their own "Mark ... complete" button keep it and it now feeds the account
+CHANGES: 1.2.1 — account menu shows an Admin link (to /my-progress/admin/) only for the site owner's account
+         1.2.0 — activity log for signed-in readers (page visits with time on page, sign-in, completed, steps, certificates) in users/{uid}/activity; visit/completed/certificate counters and first/last seen on users/{uid}; listActivity, clearActivity, logEvent API; <meta name="sp-log" content="off"> to skip a page; account button joins the page's own top toolbar (next to Full screen) when there is one; pages with their own "Mark ... complete" button keep it and it now feeds the account
          1.1.1 — Firebase project haivijayanand-site config filled in
          1.1.0 — account button sits in the page's top nav when there is one; resume bar clears the Aa/Listen buttons; badges go inside cover cards; done button refreshes on quiz completion; 'sp:loaded' event; certificates can be reprinted in the page's own design
          1.0.0 — first release: Google sign-in, per-page resume, Mark-as-completed, index badges and counts, continue widget, certificate store + PDF reprint, local fallback when signed out
 STATUS: configured for Firebase project haivijayanand-site
 */
-export const SP_VERSION = '1.2.0';
+export const SP_VERSION = '1.2.1';
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {
@@ -34,6 +35,9 @@ const FIREBASE_CONFIG = {
 
 const SITE = {
   dashboard: '/my-progress/',
+  admin: '/my-progress/admin/',
+  // site owner's User UID(s): only these accounts see the Admin link (the Firestore rules are what actually protect the data)
+  adminUids: ['pn7eEDgN9CYEc3kxZPKp3BmftcH2'],
   verify: '/verify/',
   certPrefix: 'HVA',                 // certificate IDs look like HVA-2026-7KQ3XM
   issuer: 'K Vijay Anand',
@@ -454,7 +458,7 @@ function renderChip() {
   const initial = (user.displayName || user.email || '?').trim()[0].toUpperCase();
   host.innerHTML = `<div class="sp-av" tabindex="0" title="${esc(user.displayName || user.email)}">${user.photoURL ? `<img src="${esc(user.photoURL)}" alt="" referrerpolicy="no-referrer">` : esc(initial)}</div>
   <div class="sp-menu" role="menu"><div class="who"><b>${esc(user.displayName || '')}</b><br>${esc(user.email || '')}</div>
-  <a href="${SITE.dashboard}">My Progress</a><a href="${SITE.dashboard}#certificates">My Certificates</a><button type="button" data-out>Sign out</button></div>`;
+  <a href="${SITE.dashboard}">My Progress</a><a href="${SITE.dashboard}#certificates">My Certificates</a>${SITE.adminUids.includes(user.uid) ? `<a href="${SITE.admin}">Admin</a>` : ''}<button type="button" data-out>Sign out</button></div>`;
   const av = $('.sp-av', host), menu = $('.sp-menu', host);
   const toggle = e => { e.stopPropagation(); menu.classList.toggle('open'); };
   av.onclick = toggle; av.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') toggle(e); };

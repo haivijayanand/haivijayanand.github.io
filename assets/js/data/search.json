@@ -1,0 +1,38 @@
+---
+layout: compress
+swcache: true
+---
+{% comment %}
+TOOL:    assets/js/data/search.json — site search data (overrides the Chirpy theme file)
+FAMILY:  SITE
+VERSION: 1.0.0
+DATE:    2026-11-16
+CHAT:    Combine Engineering Articles with Technical Papers (home search not searching fully)
+CHANGES: 1.0.0 - posts (as in Chirpy) plus every standalone HTML page from _data/search_pages.json,
+                 built by _scripts/build_search_index.py
+{% endcomment %}
+[
+  {% for post in site.posts %}
+  {
+    "title": {{ post.title | jsonify }},
+    "url": {{ post.url | relative_url | jsonify }},
+    "categories": {{ "Papers & Articles" | jsonify }},
+    "tags": {{ post.tags | join: ', ' | jsonify }},
+    "date": {{ post.date | jsonify }},
+    {% assign _content = post.content | strip_html | strip_newlines %}
+    "snippet": {{ _content | truncate: 200 | jsonify }},
+    "content": {{ _content | truncate: 3000 | jsonify }}
+  }{% if site.data.search_pages.size > 0 or forloop.last == false %},{% endif %}
+  {% endfor %}
+  {% for p in site.data.search_pages %}
+  {
+    "title": {{ p.title | jsonify }},
+    "url": {{ p.url | relative_url | jsonify }},
+    "categories": {{ p.categories | jsonify }},
+    "tags": {{ p.tags | jsonify }},
+    "date": "",
+    "snippet": {{ p.snippet | jsonify }},
+    "content": {{ p.content | jsonify }}
+  }{% unless forloop.last %},{% endunless %}
+  {% endfor %}
+]

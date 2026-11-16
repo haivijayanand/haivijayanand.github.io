@@ -1,0 +1,56 @@
+<!--
+  TOOL:    _includes/search-loader.html — overrides Chirpy 7.6: shows a short snippet, up to 50 results
+  FAMILY:  SITE
+  VERSION: 1.0.0
+  DATE:    2026-11-16
+  CHAT:    Combine Engineering Articles with Technical Papers (home search not searching fully)
+  CHANGES: 1.0.0 - limit raised from the theme default 10 to 50; result shows {snippet} while {content} holds the searchable text
+  Jekyll Simple Search loader
+  See: <https://github.com/christian-fei/Simple-Jekyll-Search>
+-->
+
+{% capture result_elem %}
+  <article class="px-1 px-sm-2 px-lg-4 px-xl-0">
+    <header>
+      <h2><a href="{url}">{title}</a></h2>
+      <div class="post-meta d-flex flex-column flex-sm-row text-muted mt-1 mb-1">
+        {categories}
+        {tags}
+      </div>
+    </header>
+    <p>{snippet}</p>
+  </article>
+{% endcapture %}
+
+{% capture not_found %}<p class="mt-5">{{ site.data.locales[include.lang].search.no_results }}</p>{% endcapture %}
+
+<script>
+  {% comment %} Note: dependent library will be loaded in `js-selector.html` {% endcomment %}
+  document.addEventListener('DOMContentLoaded', () => {
+    SimpleJekyllSearch({
+      searchInput: document.getElementById('search-input'),
+      resultsContainer: document.getElementById('search-results'),
+      json: '{{ '/assets/js/data/search.json' | relative_url }}',
+      searchResultTemplate: '{{ result_elem | strip_newlines }}',
+      noResultsText: '{{ not_found }}',
+      limit: 50,
+      templateMiddleware: function(prop, value, template) {
+        if (prop === 'categories') {
+          if (value === '') {
+            return `${value}`;
+          } else {
+            return `<div class="me-sm-4"><i class="far fa-folder fa-fw"></i>${value}</div>`;
+          }
+        }
+
+        if (prop === 'tags') {
+          if (value === '') {
+            return `${value}`;
+          } else {
+            return `<div><i class="fa fa-tag fa-fw"></i>${value}</div>`;
+          }
+        }
+      }
+    });
+  });
+</script>

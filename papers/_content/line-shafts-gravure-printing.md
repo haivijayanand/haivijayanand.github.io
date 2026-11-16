@@ -218,7 +218,7 @@ The motion network's cycle time and jitter must sit well inside the register bud
 
 ### 9.3 Web tension zoning
 
-Tension zones between driven rollers should each be controlled with load cells or dancers; without compensators, tension and register are decoupled only if the zones are. Register and tension loops should be tuned to different bandwidths so that they do not fight. Starting tension values for each zone, by substrate and thickness, are given in [Technical Paper No. 06](tension-control-gravure-printing.html).
+Tension zones between driven rollers should each be controlled with load cells or dancers; without compensators, tension and register are decoupled only if the zones are. Register and tension loops should be tuned to different bandwidths so that they do not fight. Starting tension values for each zone, by substrate and thickness, are given in the companion paper [The Role of Tension Control in Gravure Printing](tension-control-gravure-printing.html).
 
 ### 9.4 Safety and fault handling
 

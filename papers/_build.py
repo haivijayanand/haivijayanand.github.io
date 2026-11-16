@@ -2,10 +2,11 @@
 """
 TOOL:    papers/_build.py
 FAMILY:  papers
-VERSION: 1.7.0
+VERSION: 1.7.1
 DATE:    2026-11-16
 CHAT:    Exoskeleton technical paper — Technical Papers section
-CHANGES: 1.7.0 - paper numbers are optional (new papers carry none); "articles" in _papers.json lists the longer
+CHANGES: 1.7.1 - numbers removed from all existing papers too (manifest, texts, PDFs)
+         1.7.0 - paper numbers are optional (new papers carry none); "articles" in _papers.json lists the longer
                  site articles (former Engineering Articles page) on the same index, newest first
          1.6.0 - every page loads assets/js/site-progress.js (sign-in, reading progress, activity log)
          1.5.0 - optional "pdf": "supplied" in _papers.json keeps a hand-made PDF (e.g. IEEE layout) instead of printing the page
@@ -29,12 +30,12 @@ Adding a paper:
      (caption, author, licence, licence_url, source) and place them with a line "!fig[key]" or "!fig[a, b]" (side by side).
      Use only public-domain or Creative Commons images and copy the credit from the image's Commons page.
   2. add an entry at the end of _papers.json: slug, title, short, author, date (YYYY-MM-DD), tags, summary
-     Do not add "no" — papers are not numbered any more (Papers 01–08 keep theirs for their PDFs).
+     Do not add "no" — papers are not numbered (numbers removed from all papers and PDFs on 2026-11-16).
      Articles (Jekyll posts in _posts/) go in "articles": title, url, date, tags, summary — listed on the same index.
      Optional "pdf": "supplied" — put your own pdf/<slug>.pdf (e.g. IEEE two-column) and the build will not overwrite it.
   3. run this script, then git add papers/ && git commit && git push
 """
-__version__ = "1.7.0"
+__version__ = "1.7.1"
 
 PAGE_VERSION = "1.5.0"
 PAGE_DATE = "2026-11-16"

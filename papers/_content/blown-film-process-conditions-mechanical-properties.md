@@ -1,16 +1,16 @@
 ## Abstract
 
-Technical Paper No. 02 [1] predicted the properties of blended and coextruded blown polyethylene (PE) films from datasheet values, all of which were measured on small lines at a blow-up ratio (BUR) of about 2.5 (BUR 4 with a high stalk for HDPE). Real films are made at other BURs, draw-down ratios (DDR), die gaps, frost-line heights and outputs, and these process conditions decide the orientation frozen into the film, and with it tear, dart and tensile balance. This paper reviews what the literature shows for each variable, turns the reported trends into family-specific correction laws for LLDPE, mLLDPE, LDPE and HMW-HDPE, and applies them to each resin before the mixture rules of Paper 02. It adds a melt-fracture (sharkskin) check based on the die wall shear rate, typical operating windows, and an optimiser that suggests the BUR and die gap for a recipe. For a 55 µm milk-pouch film the corrections show that the same recipe can give a dart of 175 g at BUR 1.5 and about 320 g at BUR 3.5, and that narrowing the die gap from 1.8 to 1.0 mm raises MD tear by about 25 % but crosses the sharkskin onset unless a process aid is used. For an HDPE-rich carry bag, dart falls by more than half when the stalk is too short. The coefficients are illustrative trend fits, not measurements on one line; they show direction and rough size and must be calibrated before use. The companion calculator now includes these process corrections.
+An earlier paper in this series [1] predicted the properties of blended and coextruded blown polyethylene (PE) films from datasheet values, all of which were measured on small lines at a blow-up ratio (BUR) of about 2.5 (BUR 4 with a high stalk for HDPE). Real films are made at other BURs, draw-down ratios (DDR), die gaps, frost-line heights and outputs, and these process conditions decide the orientation frozen into the film, and with it tear, dart and tensile balance. This paper reviews what the literature shows for each variable, turns the reported trends into family-specific correction laws for LLDPE, mLLDPE, LDPE and HMW-HDPE, and applies them to each resin before the mixture rules of the earlier paper. It adds a melt-fracture (sharkskin) check based on the die wall shear rate, typical operating windows, and an optimiser that suggests the BUR and die gap for a recipe. For a 55 µm milk-pouch film the corrections show that the same recipe can give a dart of 175 g at BUR 1.5 and about 320 g at BUR 3.5, and that narrowing the die gap from 1.8 to 1.0 mm raises MD tear by about 25 % but crosses the sharkskin onset unless a process aid is used. For an HDPE-rich carry bag, dart falls by more than half when the stalk is too short. The coefficients are illustrative trend fits, not measurements on one line; they show direction and rough size and must be calibrated before use. The companion calculator now includes these process corrections.
 
 **Keywords:** blown film; blow-up ratio; draw-down ratio; frost-line height; high stalk; die gap; melt fracture; sharkskin; polymer processing aid; orientation; dart impact; Elmendorf tear
 
 ## 1. Introduction
 
-In Paper 02 [1] the mechanical properties of a film were built from the properties of its resins, using mixture rules inside each layer and across the layers of a coextrusion. Every end-member value came from a datasheet, and every datasheet describes one film made on one line under one set of conditions. That is a hidden assumption: the model predicts the film *as if it were blown under the datasheet conditions*.
+In the earlier paper [1] the mechanical properties of a film were built from the properties of its resins, using mixture rules inside each layer and across the layers of a coextrusion. Every end-member value came from a datasheet, and every datasheet describes one film made on one line under one set of conditions. That is a hidden assumption: the model predicts the film *as if it were blown under the datasheet conditions*.
 
 Converters do not run at datasheet conditions. A milk-pouch line may run at a BUR of 2, a lamination line at 2.5 with a wide die gap, a shrink line at 3 or more, and an HDPE carry-bag line at 4 with a stalk of several die diameters. The resin is the same; the film is not. Orientation set in the bubble is the main reason: it decides how lamellae and amorphous chains line up in the machine direction (MD) and transverse direction (TD), and tear, dart and tensile balance follow from it [3, 5, 6].
 
-This paper therefore: (1) defines the process variables and how they relate; (2) collects what the literature shows for each of them; (3) builds correction laws that move each end member from its datasheet condition to the actual condition, after which the mixture rules of Paper 02 apply unchanged; (4) adds a melt-fracture check and operating windows; and (5) shows worked results for common recipes and the best BUR and die gap for each.
+This paper therefore: (1) defines the process variables and how they relate; (2) collects what the literature shows for each of them; (3) builds correction laws that move each end member from its datasheet condition to the actual condition, after which the mixture rules of the earlier paper apply unchanged; (4) adds a melt-fracture check and operating windows; and (5) shows worked results for common recipes and the best BUR and die gap for each.
 
 ## 2. Process variables
 
@@ -49,9 +49,9 @@ Sharkskin melt fracture is a fine, regular surface roughness that appears when t
 
 ### 4.1 Approach
 
-Each end member in the library is taken as valid at a reference condition (Table 1). For a film made at another condition, each resin's properties are multiplied by correction factors for its family, and the mixture rules of Paper 02 are then applied unchanged. Correcting before mixing keeps the method consistent: a blend of LLDPE and LDPE responds to BUR partly like LLDPE and partly like LDPE.
+Each end member in the library is taken as valid at a reference condition (Table 1). For a film made at another condition, each resin's properties are multiplied by correction factors for its family, and the mixture rules of the earlier paper are then applied unchanged. Correcting before mixing keeps the method consistent: a blend of LLDPE and LDPE responds to BUR partly like LLDPE and partly like LDPE.
 
-**Table 1.** Reference conditions assumed for the Paper 02 end-member data.
+**Table 1.** Reference conditions assumed for the end-member data of the earlier paper.
 
 | Family | Reference BUR | Reference die gap (mm) | Reference frost-line / neck (die Ø) | Bubble | Basis |
 | --- | --- | --- | --- | --- | --- |
@@ -88,7 +88,7 @@ Equation (2) is the shape of Butler's dart model [4]: a quadratic in BUR with an
 
 ### 4.3 Bubble mode and HDPE
 
-The bubble mode is chosen from the dominant resin family by mass, or set by the user. In stalk mode the HDPE laws are applied to every resin in the film, taking each resin's library data as valid at the stalk reference. In pocket mode HDPE keeps its BUR tear laws, but its dart is not penalised again: Paper 02 already added a negative excess term for HDPE in LLDPE to represent exactly this processing mismatch, and correcting it twice would double count.
+The bubble mode is chosen from the dominant resin family by mass, or set by the user. In stalk mode the HDPE laws are applied to every resin in the film, taking each resin's library data as valid at the stalk reference. In pocket mode HDPE keeps its BUR tear laws, but its dart is not penalised again: the earlier paper already added a negative excess term for HDPE in LLDPE to represent exactly this processing mismatch, and correcting it twice would double count.
 
 ### 4.4 Melt-fracture check
 
@@ -102,7 +102,7 @@ The apparent wall shear rate γ<sub>w</sub> = 6Q<sub>v</sub>/(πDh²) is compare
 | Wider die gap | Lowers wall shear rate (∝ 1/h²) | Higher DDR: more MD orientation, lower MD tear [5, 12] |
 | Higher melt temperature | Lowers viscosity and wall stress | Less bubble stability; slower cooling lowers dart [4] |
 | Lower output | Lowers shear rate in proportion | Lower productivity |
-| More LDPE in the skins | Broad-MWD, branched melt is less prone | Lower dart and MD tear (Paper 02) |
+| More LDPE in the skins | Broad-MWD, branched melt is less prone | Lower dart and MD tear (earlier paper) |
 
 ### 4.5 Operating windows and optimiser
 
@@ -121,7 +121,7 @@ Table 4 gives the typical windows used to flag settings. The optimiser scans BUR
 
 ### 5.1 Datasheet conditions are not line conditions
 
-Structure S1 of Paper 02, a 55 µm milk-pouch-type film, was set on a typical three-layer line (Table 5). At the same BUR of 2.5 and a 1.8 mm gap, its DDR is 13.1, against 28.8 for a 25 µm datasheet film. The thicker film is drawn down less in MD, so the corrected MD tear rises from 220 g to 290 g (+32 %) and dart from 268 g to 284 g. Paper 02 noted that per-µm tear does not scale with gauge; the DDR explains much of why.
+Structure S1 of the earlier paper, a 55 µm milk-pouch-type film, was set on a typical three-layer line (Table 5). At the same BUR of 2.5 and a 1.8 mm gap, its DDR is 13.1, against 28.8 for a 25 µm datasheet film. The thicker film is drawn down less in MD, so the corrected MD tear rises from 220 g to 290 g (+32 %) and dart from 268 g to 284 g. The earlier paper noted that per-µm tear does not scale with gauge; the DDR explains much of why.
 
 **Table 5.** Structure S1 (55 µm) on a standard three-layer line.
 
@@ -216,7 +216,7 @@ The [Blown Film Mixture Calculator](../tools/blown-film-mixture-calculator.html)
 
 ## 9. Conclusions
 
-- The method of mixtures of Paper 02 predicts films at datasheet conditions; moving each resin to the actual BUR, DDR and frost-line or neck height before mixing extends it to real lines.
+- The method of mixtures of the earlier paper predicts films at datasheet conditions; moving each resin to the actual BUR, DDR and frost-line or neck height before mixing extends it to real lines.
 - BUR moves strength from MD to TD and raises dart toward an optimum near BUR 3.3 for LLDPE; DDR controls MD tear; a low frost line helps LLDPE, and a high stalk is essential for HMW-HDPE.
 - Melt fracture sets the lower limit of the die gap. A narrow gap improves MD tear only if sharkskin is controlled, usually with a process aid.
 - For common recipes, settings inside the usual windows can change dart and MD tear by 10–40 % at no material cost, which is often more than a change of resin grade.
@@ -224,7 +224,7 @@ The [Blown Film Mixture Calculator](../tools/blown-film-mixture-calculator.html)
 
 ## Data basis
 
-Resin data and mixture rules are those of Paper 02 [1]. Process trends are from the published sources cited; only the tensile BUR exponents are fitted to quantitative data [2], and the other coefficients, the reference die gaps and frost lines, the operating windows, and the melt-fracture onset rates for mLLDPE, LDPE and HDPE are assumptions chosen to follow reported trends and common practice. All tables and figures were computed with the same engine as the calculator. The downloadable PDF is laid out in IEEE two-column conference format.
+Resin data and mixture rules are those of the earlier paper [1]. Process trends are from the published sources cited; only the tensile BUR exponents are fitted to quantitative data [2], and the other coefficients, the reference die gaps and frost lines, the operating windows, and the melt-fracture onset rates for mLLDPE, LDPE and HDPE are assumptions chosen to follow reported trends and common practice. All tables and figures were computed with the same engine as the calculator. The downloadable PDF is laid out in IEEE two-column conference format.
 
 ## Acknowledgement
 
@@ -232,7 +232,7 @@ The author acknowledges the assistance of Claude, a large language model by Anth
 
 ## References
 
-1. K Vijay Anand, “Predicting the mechanical properties and cost of blown polyethylene films by the method of mixtures,” Technical Paper No. 02, 2026. <https://haivijayanand.github.io/papers/blown-film-mechanical-properties-method-of-mixtures.html>
+1. K Vijay Anand, “Predicting the mechanical properties and cost of blown polyethylene films by the method of mixtures,” Technical Papers, 2026. <https://haivijayanand.github.io/papers/blown-film-mechanical-properties-method-of-mixtures.html>
 2. “Effect of the blow-up ratio on morphology and engineering properties of three-layered linear low-density polyethylene blown films” (academia.edu). <https://www.academia.edu/49152026/>
 3. “Rheological studies of molecular effect and processing conditions on blown film property of polyethylenes,” Polymer, 2022. <https://www.sciencedirect.com/science/article/abs/pii/S0032386122011569>
 4. T. I. Butler, “Predicting blown film residual stress levels influence on properties,” TAPPI PLACE Conf., 2006. <https://www.tappi.org/content/enewsletters/eplace/2006/06PLA71.pdf>

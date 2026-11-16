@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<!--
+TOOL: my-progress/index.html — reader dashboard: progress by series + My Certificates (haivijayanand.github.io)
+FAMILY: site-progress
+VERSION: 1.1.0
+DATE: 2026-11-16
+CHAT: Login, progress & certificates on GitHub Pages with Firebase
+CHANGES: 1.1.0 — Download PDF reopens the page's own certificate design when it supports reprinting
+         1.0.0 — first release: progress list with filters and reset, continue link, certificates with PDF download and verify link, full-screen button
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Progress · haivijayanand.github.io</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{--ink:#14213d;--muted:#5b6475;--line:#d9dee8;--bg:#f6f8fb;--card:#fff;--blue:#1f5fbf;--orange:#e08a00}
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+  header{background:var(--ink);color:#fff;padding:14px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  header a.home{color:#fff;text-decoration:none;font-weight:600}
+  header h1{font-size:18px;margin:0;flex:1}
+  .fs{background:none;border:1px solid #fff;color:#fff;border-radius:8px;padding:6px 10px;cursor:pointer;font:inherit;margin-right:120px}
+  main{max-width:1400px;margin:0 auto;padding:20px 24px 60px}
+  .tabs{display:flex;gap:8px;border-bottom:2px solid var(--line);margin-bottom:18px}
+  .tabs button{background:none;border:0;padding:10px 16px;font:600 15px system-ui,Arial,sans-serif;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+  .tabs button.on{color:var(--blue);border-color:var(--blue)}
+  .panel{display:none}.panel.on{display:block}
+  .gate{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:28px;text-align:center;margin-bottom:18px}
+  .gate button{margin-top:12px}
+  .btn{cursor:pointer;border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:8px;padding:7px 12px;font:600 13px system-ui,Arial,sans-serif}
+  .btn.solid{background:var(--blue);color:#fff}
+  .btn.quiet{border-color:var(--line);color:var(--muted)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .card .n{font-size:26px;font-weight:700;color:var(--blue)}
+  .card .l{color:var(--muted);font-size:13px}
+  .bar{height:6px;background:#e9edf4;border-radius:3px;margin-top:8px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--blue)}
+  .continue{background:#eef4ff;border:1px solid #c9d8f5;border-radius:12px;padding:12px 16px;margin-bottom:18px}
+  .continue a{font-weight:700;color:var(--blue)}
+  .filters{display:flex;gap:8px;align-items:center;margin:0 0 10px;flex-wrap:wrap}
+  .filters select,.filters input{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{background:#eef1f6;font-size:13px;color:var(--muted);font-weight:600}
+  tr:last-child td{border-bottom:0}
+  td a{color:var(--blue);font-weight:600;text-decoration:none}
+  .st{display:inline-block;border-radius:999px;padding:3px 9px;font:700 12px system-ui,Arial,sans-serif;white-space:nowrap}
+  .st.done{background:var(--blue);color:#fff}
+  .st.prog{background:#fff3e0;color:#9a4a00;border:1px solid var(--orange)}
+  .mono{font-family:ui-monospace,Consolas,monospace}
+  .empty{color:var(--muted);padding:20px;text-align:center}
+  .actions{display:flex;gap:6px;flex-wrap:wrap}
+  @media (max-width:700px){main{padding:14px}.hide-sm{display:none}.fs{margin-right:0}}
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="/">← haivijayanand.github.io</a>
+  <h1>My Progress</h1>
+  <button class="fs" type="button" id="fsBtn" title="Full screen">⛶ Full screen</button>
+</header>
+<main>
+  <div class="tabs" role="tablist">
+    <button type="button" data-tab="progress" class="on">Progress</button>
+    <button type="button" data-tab="certificates">My Certificates</button>
+  </div>
+
+  <div id="gate" class="gate" hidden>
+    <b>Sign in to see your progress and certificates on any device.</b><br>
+    <span style="color:var(--muted)">Until you sign in, progress is kept in this browser only and shown below.</span><br>
+    <button class="btn solid" type="button" id="gateIn">Sign in with Google</button>
+  </div>
+
+  <section class="panel on" id="p-progress">
+    <div id="continue"></div>
+    <div class="cards" id="cards"></div>
+    <div class="filters">
+      <label>Series <select id="fSeries"><option value="">All</option></select></label>
+      <label>Status <select id="fStatus"><option value="">All</option><option value="in-progress">In progress</option><option value="completed">Completed</option></select></label>
+      <input id="fText" type="search" placeholder="Search titles">
+    </div>
+    <table><thead><tr><th>Status</th><th>Title</th><th class="hide-sm">Series</th><th class="hide-sm">Where</th><th class="hide-sm">Last opened</th><th></th></tr></thead>
+      <tbody id="rows"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody></table>
+  </section>
+
+  <section class="panel" id="p-certificates">
+    <table><thead><tr><th>Certificate</th><th class="hide-sm">Score</th><th class="hide-sm">Issued</th><th>ID</th><th></th></tr></thead>
+      <tbody id="certs"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table>
+  </section>
+</main>
+
+<script type="module">
+import SP from '/assets/js/site-progress.js';
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = ms => ms ? new Date(ms).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'}) : '';
+let items = [];
+
+/* tabs */
+function showTab(t) {
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'p-' + t));
+  history.replaceState(null, '', t === 'certificates' ? '#certificates' : location.pathname);
+}
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+if (location.hash === '#certificates') showTab('certificates');
+
+/* full screen */
+$('#fsBtn').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
+$('#gateIn').onclick = () => SP.signIn();
+
+function seriesName(k) { return SP.SITE.series[k] || k || '—'; }
+
+function renderProgress() {
+  const fs = $('#fSeries').value, st = $('#fStatus').value, q = $('#fText').value.trim().toLowerCase();
+  const list = items.filter(p => (!fs || p.series === fs) && (!st || (p.status || 'in-progress') === st) && (!q || (p.title || '').toLowerCase().includes(q)));
+  $('#rows').innerHTML = list.length ? list.map(p => {
+    const done = p.status === 'completed';
+    const where = done ? `Completed ${fmt(p.completedAt)}` : (p.step != null ? esc(p.stepLabel || 'Step ' + p.step) : `${p.scrollPct || 0}% read`);
+    return `<tr><td><span class="st ${done ? 'done' : 'prog'}">${done ? '✓ Completed' : 'In progress'}</span></td>
+      <td><a href="${esc(p.path)}">${esc(p.title || p.path)}</a></td>
+      <td class="hide-sm">${esc(seriesName(p.series))}</td><td class="hide-sm">${where}</td><td class="hide-sm">${fmt(p.updatedAt)}</td>
+      <td><button class="btn quiet" type="button" data-reset="${esc(p.path)}" title="Remove this page's progress">Reset</button></td></tr>`;
+  }).join('') : `<tr><td colspan="6" class="empty">Nothing here yet. Open a Book Review or course page and your progress will appear.</td></tr>`;
+  document.querySelectorAll('[data-reset]').forEach(b => b.onclick = async () => {
+    if (!confirmReset(b)) return;
+    await SP.resetProgress(b.dataset.reset); await load();
+  });
+}
+/* two-click reset instead of a browser confirm() dialog */
+function confirmReset(b) {
+  if (b.dataset.armed) return true;
+  b.dataset.armed = '1'; b.textContent = 'Click again to reset'; setTimeout(() => { delete b.dataset.armed; b.textContent = 'Reset'; }, 4000);
+  return false;
+}
+
+function renderCards() {
+  const by = {};
+  items.forEach(p => { const s = p.series || ''; by[s] ??= {done: 0, all: 0}; by[s].all++; if (p.status === 'completed') by[s].done++; });
+  $('#cards').innerHTML = Object.entries(by).map(([s, v]) => `<div class="card"><div class="n">${v.done}</div>
+    <div class="l">${esc(seriesName(s))} · completed of ${v.all} opened</div><div class="bar"><i style="width:${v.all ? v.done / v.all * 100 : 0}%"></i></div></div>`).join('');
+  const sel = $('#fSeries'), cur = sel.value;
+  sel.innerHTML = '<option value="">All</option>' + Object.keys(by).map(s => `<option value="${esc(s)}">${esc(seriesName(s))}</option>`).join('');
+  sel.value = cur;
+  const last = items.find(p => p.status !== 'completed');
+  $('#continue').innerHTML = last ? `<div class="continue">Continue where you left off: <a href="${esc(last.path)}">${esc(last.title || last.path)}</a></div>` : '';
+}
+
+async function renderCerts() {
+  if (!SP.user) { $('#certs').innerHTML = `<tr><td colspan="5" class="empty">Sign in to see the certificates saved to your account.</td></tr>`; return; }
+  const list = await SP.listCertificates();
+  $('#certs').innerHTML = list.length ? list.map((c, i) => `<tr>
+      <td><b>${esc(c.title)}</b><br><span style="color:var(--muted);font-size:13px">${esc(c.holderName)}</span></td>
+      <td class="hide-sm">${esc(c.score || '—')}</td><td class="hide-sm">${esc(SP.certDate(c))}</td>
+      <td class="mono">${esc(c.certId)}</td>
+      <td><div class="actions"><button class="btn solid" type="button" data-pdf="${i}">Download PDF</button>
+        <button class="btn" type="button" data-link="${esc(c.certId)}">Copy verify link</button>
+        ${c.path ? `<a class="btn quiet" href="${esc(c.path)}">Open page</a>` : ''}</div></td></tr>`).join('')
+    : `<tr><td colspan="5" class="empty">No certificates yet. Certificates you generate on the site will be collected here.</td></tr>`;
+  document.querySelectorAll('[data-pdf]').forEach(b => b.onclick = () => {
+    const c = list[+b.dataset.pdf];
+    if (c.reprint && c.path) location.href = `${c.path}.html?cert=${encodeURIComponent(c.certId)}#cert`;   // page's own design
+    else SP.printCertificate(c);                                                                          // built-in design
+  });
+  document.querySelectorAll('[data-link]').forEach(b => b.onclick = async () => {
+    const url = `${location.origin}${SP.SITE.verify}?id=${encodeURIComponent(b.dataset.link)}`;
+    try { await navigator.clipboard.writeText(url); b.textContent = 'Copied ✓'; } catch (e) { b.textContent = url; }
+    setTimeout(() => (b.textContent = 'Copy verify link'), 2500);
+  });
+}
+
+async function load() {
+  $('#gate').hidden = !!SP.user;
+  const all = await SP.loadAllProgress(true);
+  items = Object.values(all).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  renderCards(); renderProgress(); await renderCerts();
+}
+['#fSeries', '#fStatus'].forEach(s => $(s).onchange = renderProgress);
+$('#fText').oninput = renderProgress;
+
+SP.onUser(() => load().catch(e => { console.error(e); $('#rows').innerHTML = `<tr><td colspan="6" class="empty">Could not load: ${esc(e.message)}</td></tr>`; }));
+</script>
+</body>
+</html>

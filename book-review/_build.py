@@ -2,10 +2,11 @@
 """
 TOOL:    book-review/_build.py
 FAMILY:  SITE
-VERSION: 1.3.0
-DATE:    2026-11-07
+VERSION: 1.4.0
+DATE:    2026-11-16
 CHAT:    Daily management book review on GitHub Pages
-CHANGES: 1.3.0 - Aa reading settings (light/dark theme, text size, font, line spacing) on every review page (assets/js/reader.js): text size, font, line spacing; text wraps on phones
+CHANGES: 1.4.0 - sign-in via assets/js/site-progress.js: quiz completion ticks the review, certificate saved to the reader's account with an ID printed on it, reprint via ?cert=ID; index shows ticks, count and continue line
+         1.3.0 - Aa reading settings (light/dark theme, text size, font, line spacing) on every review page (assets/js/reader.js): text size, font, line spacing; text wraps on phones
          1.2.0 - Listen button on every review page (assets/js/read-aloud.js); word count, quiz and certificate are not read out
          1.1.0 - certificate after the quiz: name remembered per device, A4 PDF to save or share (WhatsApp, email)
          1.0.0 - renders each _content/<slug>.json into <slug>.html (cover, 300-word summary, 10-question quiz) and rebuilds index.html
@@ -20,12 +21,12 @@ Content file (_content/<slug>.json):
   takeaway: one sentence,
   questions: 10 x {q, options: [4 strings], answer: 0-3, why}
 """
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 
 # review page template version; each page's header lists these plus its own first line
-PAGE_VERSION = "1.3.0"
-PAGE_DATE = "2026-11-07"     # date of the last template change
-PAGE_CHANGES = ["v1.3.0  Aa button: theme, text size, font, line spacing; wraps to phone screen", "v1.2.0  Listen button reads the review aloud (summary and takeaway)", "v1.1.0  certificate after the quiz: name remembered on this device, A4 PDF to save or share"]
+PAGE_VERSION = "1.4.0"
+PAGE_DATE = "2026-11-16"     # date of the last template change
+PAGE_CHANGES = ["v1.4.0  Sign-in: quiz completion ticks the review, certificate saved to the reader's account with an ID, reprint via ?cert=", "v1.3.0  Aa button: theme, text size, font, line spacing; wraps to phone screen", "v1.2.0  Listen button reads the review aloud (summary and takeaway)", "v1.1.0  certificate after the quiz: name remembered on this device, A4 PDF to save or share"]
 
 import datetime as dt
 import hashlib
@@ -217,8 +218,19 @@ CERT_JS = """
   function getName(){try{return localStorage.getItem(KEY_NAME)||'';}catch(e){return '';}}
   function setName(n){try{localStorage.setItem(KEY_NAME,n);}catch(e){}}
   inp.value=getName();
+  /* site-progress: tick on quiz completion, certificate saved to the reader's account, reprint via ?cert=ID */
+  var reprint=null;
+  function spReady(fn){if(window.SiteProgress)fn(window.SiteProgress);else window.addEventListener('sp:loaded',function(){fn(window.SiteProgress);},{once:true});}
+  function spDone(got,total){spReady(function(SP){SP.markComplete({score:got,total:total}).catch(function(){});});}
+  function spSaveCert(name,got,total){
+    var SP=window.SiteProgress;if(reprint||!SP)return Promise.resolve();
+    return SP.saveCertificate({course:location.pathname.replace(/^\\/|\\.html?$/g,''),title:C.title+' — Book Review Day '+C.day,
+      holderName:name,score:got+' / '+total,reprint:true}).then(function(c){if(c)C.certId=c.certId;}).catch(function(){});
+  }
+  spReady(function(SP){SP.onUser(function(u){if(u&&last&&!C.certId&&!reprint)make();});});
   window.onQuizChange=function(got,done,total){
     if(done<total){box.classList.remove('show');return;}
+    spDone(got,total);
     box.classList.add('show');
     document.getElementById('cert-score').textContent=got+' / '+total;
     if(inp.value.trim())make();
@@ -277,6 +289,7 @@ CERT_JS = """
     x.strokeStyle=MUTE;x.lineWidth=2;x.beginPath();x.moveTo(lx-190,1395);x.lineTo(lx+190,1395);x.stroke();
     x.fillStyle=MUTE;x.font='30px '+SANS;x.fillText('Date',lx,1440);
     x.font='28px '+SANS;x.fillText('haivijayanand.github.io/book-review',cx,H-150);
+    if(C.certId){x.fillStyle=MUTE;x.font='bold 22px '+SANS;x.fillText('CERTIFICATE ID',cx,1365);x.fillStyle=INK;x.font='bold 36px '+SANS;x.fillText(C.certId,cx,1412);x.fillStyle=MUTE;x.font='20px '+SANS;x.fillText('verify: haivijayanand.github.io/verify',cx,1448);}
     return cv;
   }
   function make(){
@@ -284,7 +297,7 @@ CERT_JS = """
     if(!name){inp.focus();note.textContent='Please type your name first.';return;}
     setName(name);
     var parts=document.getElementById('cert-score').textContent.split(' / ');
-    coverImage().then(function(cover){
+    spSaveCert(name,+parts[0],+parts[1]).then(coverImage).then(function(cover){
       var cv=draw(name,+parts[0],+parts[1],cover);
       prev.src=cv.toDataURL('image/jpeg',0.9);prev.classList.remove('hidden');
       acts.classList.remove('hidden');last={cv:cv,name:name,got:parts[0]};
@@ -317,6 +330,16 @@ CERT_JS = """
     document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
   }
   function msg(){return 'I scored '+last.got+'/10 on the "'+C.title+'" book review quiz. '+C.url;}
+  var rq=new URLSearchParams(location.search).get('cert');
+  if(rq)spReady(function(SP){SP.ready.then(function(u){return u?SP.listCertificates():[];}).then(function(list){
+    var c=list.filter(function(k){return k.certId===rq;})[0];
+    box.classList.add('show');
+    if(!c){note.textContent='Sign in with the account that earned this certificate to reprint it.';return;}
+    reprint=c;inp.value=c.holderName;C.certId=c.certId;C.when=SP.certDate(c);
+    var s=String(c.score||'').split('/');
+    document.getElementById('cert-score').textContent=(s[0]||'').trim()+' / '+(s[1]||'10').trim();
+    make();setTimeout(function(){box.scrollIntoView({behavior:'smooth',block:'start'});},300);
+  });});
   document.getElementById('cert-make').addEventListener('click',make);
   inp.addEventListener('keydown',function(e){if(e.key==='Enter')make();});
   document.getElementById('cert-pdf').addEventListener('click',function(){
@@ -377,6 +400,7 @@ def render_page(c, prev_c, next_c):
 <meta name="description" content="{esc(c['theme'])}">
 <meta name="theme-color" content="{bg}">
 <style>{STYLE}</style>
+  <script type="module" src="/assets/js/site-progress.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -457,12 +481,14 @@ def render_index(items):
 .card .s{{font:13px/1.45 Verdana,sans-serif;margin-top:4px}}
 #q{{width:100%;font:15px Verdana,sans-serif;padding:9px 12px;border:1px solid var(--rule);border-radius:7px;background:var(--card);color:var(--ink)}}
 </style>
+  <script type="module" src="/assets/js/site-progress.js"></script>
 </head>
 <body>
 <div class="wrap" style="max-width:1100px">
 <nav class="top"><a href="/">← K Vijay Anand</a><a href="/tools/">Tools</a></nav>
 <h1 style="margin-top:6px">Book Review</h1>
 <p class="byline">One famous management book a day — a 300-word summary and ten questions to test yourself. {len(items)} reviewed so far, newest first.</p>
+<p class="byline" data-noread><span data-sp-count="book-review"></span> &nbsp; <span data-sp-continue="book-review"></span></p>
 <input id="q" type="search" placeholder="Search by title, author or idea…" aria-label="Search reviews">
 <div class="grid" id="grid">
 {chr(10).join(cards)}

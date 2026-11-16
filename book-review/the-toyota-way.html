@@ -2,15 +2,16 @@
 <!--
 TOOL    : book-review/the-toyota-way.html — Book Review Day 10: The Toyota Way
 FAMILY  : SITE
-VERSION : 1.3.0
-DATE    : 2026-11-07
+VERSION : 1.4.0
+DATE    : 2026-11-16
 CHAT    : Daily management book review on GitHub Pages
-CHANGES : v1.3.0  Aa button: theme, text size, font, line spacing; wraps to phone screen
+CHANGES : v1.4.0  Sign-in: quiz completion ticks the review, certificate saved to the reader's account with an ID, reprint via ?cert=
+          v1.3.0  Aa button: theme, text size, font, line spacing; wraps to phone screen
           v1.2.0  Listen button reads the review aloud (summary and takeaway)
           v1.1.0  certificate after the quiz: name remembered on this device, A4 PDF to save or share
           v1.0.0  review of The Toyota Way (Jeffrey K. Liker)
 STATUS  : working
-BUILT BY: book-review/_build.py v1.3.0
+BUILT BY: book-review/_build.py v1.4.0
 -->
 <html lang="en">
 <head>
@@ -66,6 +67,7 @@ li.done .why{display:block}
 footer{font:13px/1.5 Verdana,sans-serif;color:var(--muted);padding:26px 0 40px}
 @media print{.cover{min-height:auto;page-break-after:always}.cert,.score,nav.top,.scroll{display:none}.why{display:block}body{background:#fff}}
 </style>
+  <script type="module" src="/assets/js/site-progress.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -148,8 +150,19 @@ footer{font:13px/1.5 Verdana,sans-serif;color:var(--muted);padding:26px 0 40px}
   function getName(){try{return localStorage.getItem(KEY_NAME)||'';}catch(e){return '';}}
   function setName(n){try{localStorage.setItem(KEY_NAME,n);}catch(e){}}
   inp.value=getName();
+  /* site-progress: tick on quiz completion, certificate saved to the reader's account, reprint via ?cert=ID */
+  var reprint=null;
+  function spReady(fn){if(window.SiteProgress)fn(window.SiteProgress);else window.addEventListener('sp:loaded',function(){fn(window.SiteProgress);},{once:true});}
+  function spDone(got,total){spReady(function(SP){SP.markComplete({score:got,total:total}).catch(function(){});});}
+  function spSaveCert(name,got,total){
+    var SP=window.SiteProgress;if(reprint||!SP)return Promise.resolve();
+    return SP.saveCertificate({course:location.pathname.replace(/^\/|\.html?$/g,''),title:C.title+' — Book Review Day '+C.day,
+      holderName:name,score:got+' / '+total,reprint:true}).then(function(c){if(c)C.certId=c.certId;}).catch(function(){});
+  }
+  spReady(function(SP){SP.onUser(function(u){if(u&&last&&!C.certId&&!reprint)make();});});
   window.onQuizChange=function(got,done,total){
     if(done<total){box.classList.remove('show');return;}
+    spDone(got,total);
     box.classList.add('show');
     document.getElementById('cert-score').textContent=got+' / '+total;
     if(inp.value.trim())make();
@@ -208,6 +221,7 @@ footer{font:13px/1.5 Verdana,sans-serif;color:var(--muted);padding:26px 0 40px}
     x.strokeStyle=MUTE;x.lineWidth=2;x.beginPath();x.moveTo(lx-190,1395);x.lineTo(lx+190,1395);x.stroke();
     x.fillStyle=MUTE;x.font='30px '+SANS;x.fillText('Date',lx,1440);
     x.font='28px '+SANS;x.fillText('haivijayanand.github.io/book-review',cx,H-150);
+    if(C.certId){x.fillStyle=MUTE;x.font='bold 22px '+SANS;x.fillText('CERTIFICATE ID',cx,1365);x.fillStyle=INK;x.font='bold 36px '+SANS;x.fillText(C.certId,cx,1412);x.fillStyle=MUTE;x.font='20px '+SANS;x.fillText('verify: haivijayanand.github.io/verify',cx,1448);}
     return cv;
   }
   function make(){
@@ -215,7 +229,7 @@ footer{font:13px/1.5 Verdana,sans-serif;color:var(--muted);padding:26px 0 40px}
     if(!name){inp.focus();note.textContent='Please type your name first.';return;}
     setName(name);
     var parts=document.getElementById('cert-score').textContent.split(' / ');
-    coverImage().then(function(cover){
+    spSaveCert(name,+parts[0],+parts[1]).then(coverImage).then(function(cover){
       var cv=draw(name,+parts[0],+parts[1],cover);
       prev.src=cv.toDataURL('image/jpeg',0.9);prev.classList.remove('hidden');
       acts.classList.remove('hidden');last={cv:cv,name:name,got:parts[0]};
@@ -248,6 +262,16 @@ footer{font:13px/1.5 Verdana,sans-serif;color:var(--muted);padding:26px 0 40px}
     document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
   }
   function msg(){return 'I scored '+last.got+'/10 on the "'+C.title+'" book review quiz. '+C.url;}
+  var rq=new URLSearchParams(location.search).get('cert');
+  if(rq)spReady(function(SP){SP.ready.then(function(u){return u?SP.listCertificates():[];}).then(function(list){
+    var c=list.filter(function(k){return k.certId===rq;})[0];
+    box.classList.add('show');
+    if(!c){note.textContent='Sign in with the account that earned this certificate to reprint it.';return;}
+    reprint=c;inp.value=c.holderName;C.certId=c.certId;C.when=SP.certDate(c);
+    var s=String(c.score||'').split('/');
+    document.getElementById('cert-score').textContent=(s[0]||'').trim()+' / '+(s[1]||'10').trim();
+    make();setTimeout(function(){box.scrollIntoView({behavior:'smooth',block:'start'});},300);
+  });});
   document.getElementById('cert-make').addEventListener('click',make);
   inp.addEventListener('keydown',function(e){if(e.key==='Enter')make();});
   document.getElementById('cert-pdf').addEventListener('click',function(){

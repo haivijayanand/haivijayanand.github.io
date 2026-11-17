@@ -1,0 +1,426 @@
+<!--
+TOOL:    manufacturing/_src/week2.html — 30-Day Manufacturing Course content source, Week 2 (Days 7–12)
+FAMILY:  manufacturing
+VERSION: 1.0.0
+DATE:    2026-11-17
+CHAT:    Prepare a 30 days course on manufacturing aspects for engineers and managers
+CHANGES: 1.0.0 - first version: forecasting, S&OP and MRP, scheduling and sequencing, inventory and EOQ, SMED, WIP, Little's Law and Kanban
+STATUS:  working
+-->
+
+<day n="7">
+<summary>Every plan starts with a guess about demand. Moving averages, exponential smoothing, trend and seasonality, and how to measure forecast error so the guess gets better — and so you know how much safety stock it needs.</summary>
+<goals><li>Know when to forecast and when to work to orders</li><li>Calculate a moving average and an exponentially smoothed forecast</li><li>Recognise trend and seasonality in a demand history</li><li>Measure error with MAD, MAPE and bias (tracking signal)</li><li>Combine statistics with sales knowledge in a consensus forecast</li></goals>
+<content>
+<section><h2>Why forecast at all?</h2>
+<p>Anything with a lead time longer than the customer will wait must be planned to a forecast: raw material with a six-week import lead time, a new extruder, the number of operators for next quarter. Even a make-to-order converter forecasts films, resins and foil, because the customer gives ten days and the supplier needs forty.</p>
+<div class="def"><b>Three truths about forecasts.</b> They are always wrong; they are better for families than for single items; they are better for the near future than the far future. So forecast at the level and horizon the decision needs — tonnes of BOPP film per month, not pouches of SKU 4711 next Thursday.</div>
+</section>
+<section><h2>Simple methods</h2>
+<div class="fx">Moving average:          F(t+1) = (D(t) + D(t−1) + … + D(t−n+1)) ÷ n
+Exponential smoothing:   F(t+1) = α·D(t) + (1 − α)·F(t)       0 &lt; α &lt; 1</div>
+<p>A longer moving average (larger n) or a smaller α smooths noise but reacts slowly to real change. Typical α is 0.1–0.3. Where there is a <b>trend</b>, use double smoothing (Holt); where there is <b>seasonality</b>, use seasonal indices (Holt–Winters) or year-on-year ratios.</p>
+</section>
+<section><h2>Measuring error</h2>
+<div class="fx">Error e = actual − forecast
+MAD  = average of |e|                 MAPE = average of |e| ÷ actual × 100 %
+Bias = Σ e      Tracking signal = Σ e ÷ MAD   (outside ±4 → the method is biased)</div>
+<p>MAD feeds directly into safety stock (Day 10): σ ≈ 1.25 × MAD. A forecast that is always low (positive bias) causes shortages however clever the method.</p>
+</section>
+<section><h2>Demand in flexible packaging</h2>
+<div class="pk"><b>Seasonal, lumpy and promotion-driven</b>Packaging demand follows the customer's sales: edible oil and snacks peak before festivals, ice-cream and beverages in summer, tea in winter. Brand owners change artwork often and run promotions with special packs, so SKU-level demand is lumpy. The usable forecast is at the level of <b>substrate and structure</b> (tonnes of PET, BOPP, foil, PE film per month) plus <b>customer schedules</b> (call-offs) for the next 4–8 weeks. Ask key customers for their rolling forecast every month and track how good it is — some are reliable, some always over-order.</div>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>Exponential smoothing, α = 0.3</b><span class="mono">Month:     1    2    3    4    5
+Actual t:  120  132  118  140  151
+Forecast:  120  120  123.6 121.9 127.3 → month 6: 0.3×151 + 0.7×127.3 = 134.4 t
+Errors (months 2–5): 12, −5.6, 18.1, 23.7 → MAD = 14.9 t, bias +48.2 → tracking signal 3.2
+Positive and growing: demand is trending up; use Holt's method or raise α.</span></div>
+</section>
+<section><h2>A monthly forecasting routine</h2>
+<ol class="steps">
+<li>Clean the history: remove one-off orders, stock-outs, and data errors.</li>
+<li>Run a statistical forecast for each family (with trend and season where present).</li>
+<li>Collect customers' forecasts and sales team's knowledge of new products, losses and promotions.</li>
+<li>Agree one consensus number in a short meeting; write down why it differs from the statistics.</li>
+<li>Track MAPE and bias by family and by customer every month.</li>
+<li>Feed the agreed forecast to S&amp;OP and material planning (Day 8).</li>
+</ol>
+</section>
+<section><h2>Lab: forecast and error</h2>
+<p>A two-year demand history with trend, season and noise. Choose a moving average or exponential smoothing and watch the forecast follow the actuals. MAD, MAPE and the tracking signal update.</p>
+<div class="widget" data-w="forecast"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li><b>Forecast demand, not sales.</b> Shipments during a stock-out under-state what customers wanted.</li>
+<li>Do not tune α every month to fit the last point — you will chase noise.</li>
+<li>Measure forecast accuracy at the lead-time horizon you buy at, not last week's number.</li>
+<li>Managers: a forecast without an error figure is half a number.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Take 24 months of sales of one family and compute a 3-month moving average and α = 0.2 smoothing.</li>
+<li>Compare MAD and MAPE of the two. Which is better?</li>
+<li>Find one customer whose forecasts are biased and estimate by how much.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"With exponential smoothing, a larger α makes the forecast","o":["Smoother and slower","React faster to recent demand","Ignore recent demand","Always higher"],"a":1,"e":"α is the weight on the latest actual."},
+{"q":"Forecasts are generally more accurate for","o":["Single SKUs","Product families","Far future","New products"],"a":1,"e":"Aggregation cancels random variation."},
+{"q":"A tracking signal of +6 indicates","o":["A good forecast","Persistent under-forecasting (bias)","Random error","Seasonality has been removed"],"a":1,"e":"Errors keep adding up in one direction; outside ±4 the method is biased."},
+{"q":"MAD of 20 t gives a demand standard deviation of about","o":["16 t","20 t","25 t","40 t"],"a":2,"e":"σ ≈ 1.25 × MAD for normal errors."},
+{"q":"A converter should forecast mainly at the level of","o":["Each pouch artwork","Substrates and structures per month","Each customer's daily orders","Each operator"],"a":1,"e":"That is the level the long-lead decisions (film, resin, foil) are made at."}
+]</quiz>
+</day>
+
+<day n="8">
+<summary>Turning the forecast and orders into a plan the whole company signs: sales and operations planning, the master production schedule, bills of materials and material requirements planning — gross to net, lot sizing and lead-time offset.</summary>
+<goals><li>Describe the planning hierarchy: business plan, S&amp;OP, MPS, MRP, shop-floor schedule</li><li>Run a monthly S&amp;OP meeting that balances demand and supply</li><li>Read a multi-level bill of materials with scrap allowances</li><li>Do an MRP explosion: gross requirement, on-hand, net requirement, planned order release</li><li>Know what ERP systems do and why their data must be right</li></goals>
+<content>
+<section><h2>The planning hierarchy</h2>
+<table><tr><th>Level</th><th>Horizon</th><th>Unit</th><th>Who</th></tr>
+<tr><td>Business / strategic plan</td><td>1–5 years</td><td>₹, capacity, new lines</td><td>Owners, MD</td></tr>
+<tr><td>Sales &amp; operations plan (S&amp;OP)</td><td>3–18 months, monthly</td><td>Families, tonnes, hours</td><td>Sales, operations, finance, purchase together</td></tr>
+<tr><td>Master production schedule (MPS)</td><td>Weeks</td><td>End items or jobs</td><td>Planning</td></tr>
+<tr><td>Material requirements planning (MRP)</td><td>Weeks</td><td>Every material and component</td><td>Planning, purchase</td></tr>
+<tr><td>Shop-floor schedule</td><td>Days, shifts</td><td>Jobs on machines</td><td>Production planning and control (Day 9)</td></tr></table>
+<div class="def"><b>S&amp;OP in one sentence.</b> Once a month, one meeting agrees one number for demand and one plan for supply — capacity, inventory, overtime, outsourcing — and the finance view of both, so that sales does not promise what operations cannot make and purchase does not buy what nobody will sell.</div>
+</section>
+<section><h2>Bill of materials and MRP</h2>
+<p>The <b>bill of materials (BOM)</b> lists what goes into one unit, level by level, with the quantity per unit and the scrap allowance. MRP takes each MPS quantity and explodes it through the BOM:</p>
+<div class="fx">Gross requirement = parent quantity × quantity per parent × (1 + scrap allowance)
+Net requirement   = gross − on-hand − scheduled receipts (+ safety stock)
+Planned order     = net, rounded up to the lot size (minimum order, pack size)
+Release date      = need date − lead time</div>
+</section>
+<section><h2>BOM of a laminated pouch</h2>
+<div class="pk"><b>Three-layer PET / ink / adhesive / Al foil / adhesive / PE stand-up pouch</b>Level 0: 1 000 stand-up pouches. Level 1: slit laminate reel (kg) + zipper (m) + cartons. Level 2: laminate = printed PET (12 µm) + Al foil (9 µm) + PE film (80 µm) + adhesive (2 × ~2.5 g/m²). Level 3: printed PET = plain PET + inks (by colour) + solvent; PE film = LDPE/LLDPE resins + masterbatch + slip additives (made in-house on the blown-film line). Each level has its own scrap allowance: make-ready waste in printing, edge trim in slitting, set-up waste in pouch making. The lead times differ widely: foil and PET may be imported (6–10 weeks), inks are local (1 week), the PE film is made in-house (3 days).</div>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>Net requirement for PET film</b><span class="mono">Order: 10 lakh stand-up pouches 150 × 220 mm; laminate per pouch incl. gusset ≈ 0.0727 m²
+Laminate needed = 72 700 m² × (1 + 8 % pouch waste) = 78 500 m²
+Printed PET = 78 500 × (1 + 3 % slit trim) × (1 + 5 % print make-ready) = 84 900 m²
+PET 12 µm at 16.8 g/m² → 1 426 kg gross. On hand 600 kg, on order 0 → net 826 kg.
+Supplier pack: 1 000 kg rolls bundle → order 1 000 kg. Lead time 3 weeks → release now if printing starts in week 4.</span></div>
+</section>
+<section><h2>A monthly S&amp;OP cycle</h2>
+<ol class="steps">
+<li><b>Data</b>: update actuals, inventory and the statistical forecast (week 1).</li>
+<li><b>Demand review</b>: sales agrees the demand plan by family with new products and risks.</li>
+<li><b>Supply review</b>: operations checks capacity of each constraint (Day 4) against it; proposes overtime, outsourcing or build-ahead.</li>
+<li><b>Financial view</b>: finance prices the plan — revenue, margin, inventory, cash.</li>
+<li><b>Executive meeting</b>: decide the gaps, approve one plan, record decisions.</li>
+<li>Release the MPS and run MRP; purchase places orders; planning loads machines.</li>
+</ol>
+</section>
+<section><h2>Lab: MRP explosion</h2>
+<p>Enter an order of pouches and the stock of each material. The lab explodes the BOM through the scrap allowances, nets against stock, rounds to pack sizes and offsets by lead time.</p>
+<div class="widget" data-w="mrp"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li><b>MRP is only as good as its data.</b> Wrong BOMs, wrong stock and wrong lead times make it a random-number generator. Cycle-count stock; audit BOMs.</li>
+<li>Scrap allowances in the BOM must match the real yield (Day 26), or you will run short on every job.</li>
+<li>Freeze the near-term schedule (a "frozen zone") so the floor is not replanned every hour.</li>
+<li>Managers: S&amp;OP fails when it becomes a sales meeting or a production meeting. It must be both, with finance in the room.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Write the four-level BOM of your main product with scrap allowances.</li>
+<li>Explode one real order and compare with what the store actually issued.</li>
+<li>List the decisions your last S&amp;OP (or monthly review) took. Were they followed?</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"S&amp;OP mainly balances","o":["Shifts and breaks","Demand and supply at family level, with finance","Daily machine sequence","Supplier invoices"],"a":1,"e":"One agreed plan across sales, operations and finance."},
+{"q":"Net requirement equals","o":["Gross + on-hand","Gross − on-hand − scheduled receipts (+ safety stock)","Lot size × lead time","Forecast × scrap"],"a":1,"e":"What you still need after what you have and what is coming."},
+{"q":"A planned order for foil with a 6-week lead time needed in week 9 should be released in","o":["Week 9","Week 3","Week 15","Week 6"],"a":1,"e":"Need date minus lead time."},
+{"q":"If the BOM scrap allowance is lower than real waste, the result is","o":["Excess stock","Shortages on jobs","Lower OEE","Higher prices"],"a":1,"e":"MRP orders too little."},
+{"q":"A 'frozen zone' in the MPS is","o":["Cold storage","The near-term period where the schedule is not changed","A safety zone","A curing room"],"a":1,"e":"It protects the shop floor from constant replanning."}
+]</quiz>
+</day>
+
+<day n="9">
+<summary>What to run next, on which machine: priority rules (FIFO, SPT, EDD), Johnson's rule for two machines, finite capacity scheduling, and sequence-dependent changeovers — light-to-dark colour sequences and width sequences in converting.</summary>
+<goals><li>Build a Gantt chart for jobs on machines</li><li>Apply FIFO, SPT, EDD and critical ratio rules and compare the results</li><li>Use Johnson's rule to minimise makespan on two machines in series</li><li>Plan sequence-dependent changeovers to cut total set-up time</li><li>Measure schedule performance: lateness, flow time, OTIF</li></goals>
+<content>
+<section><h2>Scheduling measures</h2>
+<table><tr><th>Measure</th><th>Meaning</th></tr>
+<tr><td>Makespan</td><td>Time to finish all the jobs</td></tr>
+<tr><td>Flow time</td><td>Time each job spends in the shop (waiting + processing)</td></tr>
+<tr><td>Lateness / tardiness</td><td>Finish − due date (tardiness counts only late jobs)</td></tr>
+<tr><td>OTIF</td><td>Orders delivered on time and in full ÷ all orders — the customer's measure</td></tr></table>
+</section>
+<section><h2>Priority rules</h2>
+<table><tr><th>Rule</th><th>Run next</th><th>Strength</th></tr>
+<tr><td>FIFO</td><td>First in, first out</td><td>Fair, simple; poor on everything else</td></tr>
+<tr><td>SPT</td><td>Shortest processing time</td><td>Minimises average flow time and WIP</td></tr>
+<tr><td>EDD</td><td>Earliest due date</td><td>Minimises maximum lateness</td></tr>
+<tr><td>Critical ratio</td><td>Smallest (time to due) ÷ (work remaining)</td><td>Dynamic; good for multi-step jobs</td></tr></table>
+<div class="def"><b>Johnson's rule (two machines in series, e.g. print → laminate).</b> List all jobs with their times on both machines. Pick the smallest time anywhere. If it is on machine 1, put that job as early as possible; if on machine 2, as late as possible. Remove the job and repeat. The result minimises makespan.</div>
+</section>
+<section><h2>Sequence-dependent changeovers</h2>
+<div class="pk"><b>Colour, width, substrate and adhesive sequencing</b>In printing, changeover time depends on what ran before: going from a light job to a dark one in the same station needs only a quick wash; dark to light needs a thorough wash-up. Shared colours (the same white or the same brand red) can stay in the station. Planners group jobs by <b>number of colours, shared inks, cylinder circumference, web width and substrate</b>. In lamination, group by adhesive system (solvent-less vs solvent-based, food vs non-food) and by web width. In extrusion, sequence by MFI and colour of masterbatch: natural → white → coloured → black. In pouch making, group by pouch size and zipper type. A good sequence can cut changeover time by a third with no investment.</div>
+<p>Machining has the same problem with fixture and tool families; food plants with allergen sequences (allergen-free first, washdown after).</p>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>Johnson's rule: print then laminate</b><span class="mono">Job:     A    B    C    D    E
+Print h: 5    2    8    3    6
+Lam h:   4    6    3    7    2
+Smallest 2: B on print → first; E on lam → last.   Order: B _ _ _ E
+Next 3: D on print → second; C on lam → fourth.    Order: B D _ C E
+Remaining A → third.                               Order: B D A C E
+Makespan = 26 h (FIFO order A B C D E gives 27 h; with more jobs the gap grows).</span></div>
+</section>
+<section><h2>How to build a weekly schedule</h2>
+<ol class="steps">
+<li>List released jobs with due dates, routes, run times and material status (no material, no schedule).</li>
+<li>Schedule the bottleneck first (drum), in a changeover-friendly sequence that still meets due dates.</li>
+<li>Back-schedule upstream steps from the bottleneck dates; forward-schedule downstream steps.</li>
+<li>Check finite capacity — no machine loaded beyond its hours.</li>
+<li>Publish a frozen 2–3 day sequence to the floor; replan the rest daily.</li>
+<li>Track OTIF and the reasons for misses every week.</li>
+</ol>
+</section>
+<section><h2>Lab: job sequencing Gantt</h2>
+<p>Six jobs on two machines in series. Choose a rule and compare the Gantt charts, makespan, average flow time and lateness.</p>
+<div class="widget" data-w="sequence"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>No rule is best for everything. SPT for flow, EDD for due dates, sequence groups for changeovers — combine them.</li>
+<li>Do not schedule jobs whose material, cylinders or approvals are not ready — they fill the plan and block the floor.</li>
+<li>Expediting is a symptom. If more than 10 % of jobs are "urgent", the planning system is broken, not the people.</li>
+<li>Managers: protect the schedule. Every jump-the-queue order costs a changeover and delays others.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Take next week's printing jobs and build a light-to-dark, width-grouped sequence. Estimate changeover hours saved.</li>
+<li>Apply Johnson's rule to five jobs on your two busiest consecutive machines.</li>
+<li>Calculate last month's OTIF and the top three reasons for misses.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Which rule minimises average flow time on one machine?","o":["FIFO","SPT","EDD","LPT"],"a":1,"e":"Shortest processing time first."},
+{"q":"In Johnson's rule, if the smallest time is on machine 2, that job goes","o":["First","As late as possible","In the middle","Is removed"],"a":1,"e":"Small machine-2 times go to the end."},
+{"q":"Running a dark-coloured print job before a light one in the same station usually","o":["Shortens changeover","Lengthens wash-up","Has no effect","Lowers ink cost"],"a":1,"e":"Dark to light needs a thorough clean."},
+{"q":"OTIF measures","o":["Machine speed","Orders delivered on time and in full","Operator attendance","Inventory turns"],"a":1,"e":"It is the customer's view of delivery."},
+{"q":"In extrusion, a sensible masterbatch sequence is","o":["Black → white → natural","Natural → white → coloured → black","Random","Coloured → natural"],"a":1,"e":"Light to dark minimises purging."}
+]</quiz>
+</day>
+
+<day n="10">
+<summary>Stock is money on the floor. Why we hold it, what it costs, how much to order (EOQ), when to order (reorder point and safety stock), and where to focus (ABC and XYZ).</summary>
+<goals><li>List the purposes and costs of inventory</li><li>Calculate EOQ and the total annual cost of ordering and holding</li><li>Set safety stock and reorder point for a service level</li><li>Classify items by ABC (value) and XYZ (variability)</li><li>Calculate inventory turns and days of inventory</li></goals>
+<content>
+<section><h2>Why hold stock, and what it costs</h2>
+<div class="cols">
+<div class="box"><b class="t">Reasons</b>Cover lead time; absorb variation in demand and supply; allow economic batches; buy ahead of price rises; decouple processes.</div>
+<div class="box"><b class="t">Holding cost (20–30 % of value per year)</b>Interest on money, storage space, handling, insurance, obsolescence (artwork changes!), damage and ageing (films, adhesives with shelf life).</div>
+<div class="box"><b class="t">Ordering / set-up cost</b>Purchase paperwork, freight, inspection — or for made items, the changeover cost.</div>
+</div>
+<div class="fx">Inventory turns = annual cost of goods sold ÷ average inventory value     Days of inventory = 365 ÷ turns</div>
+</section>
+<section><h2>How much to order: EOQ</h2>
+<div class="fx">EOQ = √(2·D·S ÷ H)     D annual demand, S cost per order, H holding cost per unit per year
+Total cost = (D ÷ Q)·S + (Q ÷ 2)·H</div>
+<p>The total-cost curve is flat near the EOQ: ordering 30 % more or less than EOQ raises cost only a few percent. So round EOQ to a convenient pack or truck load. The real power of the formula is what it says about set-up: cut S (Day 11) and the economic batch falls with its square root.</p>
+</section>
+<section><h2>When to order: reorder point and safety stock</h2>
+<div class="fx">Reorder point = d̄·L + SS        Safety stock SS = z·σ_d·√L
+(d̄ average daily demand, L lead time in days, σ_d daily demand standard deviation, z from service level)</div>
+<table><tr><th>Cycle service level</th><td>90 %</td><td>95 %</td><td>98 %</td><td>99 %</td><td>99.9 %</td></tr>
+<tr><th>z</th><td>1.28</td><td>1.65</td><td>2.05</td><td>2.33</td><td>3.09</td></tr></table>
+<p>Where lead time also varies: SS = z·√(L·σ_d² + d̄²·σ_L²). Long, uncertain import lead times are why converters carry weeks of foil and PET.</p>
+</section>
+<section><h2>Inventory in flexible packaging</h2>
+<div class="pk"><b>Raw, WIP and finished — and the special problems</b>Raw material: films (PET, BOPP, CPP, Al foil, paper) by grade, thickness and width; resins and masterbatches; inks (with Pantone shades) and solvents; adhesives with shelf life. Too many widths multiply stock — standardise mother-roll widths and slit. WIP: printed and laminated rolls waiting for cure, slitting or pouching — often the largest pile. Finished goods: customer-specific and printed, so <b>obsolete stock</b> appears overnight when artwork changes; agree with customers who owns the stock of their printed material. Also watch <b>leftover ink</b>: reuse returned ink with colour correction, or it becomes hazardous waste.</div>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>Adhesive for the laminator</b><span class="mono">Annual use D = 60 000 kg; cost per order S = ₹4 000 (freight + handling + QC); price ₹320/kg; holding 25 % → H = ₹80/kg/yr
+EOQ = √(2 × 60 000 × 4 000 / 80) = 2 449 kg → order 2 400 kg (two pallets of 1 200 kg)
+Daily use 200 kg (300 days), σ_d = 50 kg, lead time 10 days, 98 % service (z 2.05)
+SS = 2.05 × 50 × √10 = 324 kg → ROP = 200 × 10 + 324 = 2 324 kg
+Shelf life 6 months → 2 400 kg lasts 12 days — fine.</span></div>
+</section>
+<section><h2>Setting inventory policy</h2>
+<ol class="steps">
+<li>Do an ABC analysis by annual value: A ≈ 20 % of items, 80 % of value — control tightly.</li>
+<li>Add XYZ by demand variability: X steady, Y variable, Z lumpy. AX items can run lean; CZ items may be made only to order.</li>
+<li>For A and B items set EOQ (or pack size) and ROP with a chosen service level.</li>
+<li>For C items use simple two-bin or periodic review with generous stock — they are cheap.</li>
+<li>Measure turns and slow / obsolete stock monthly; clear what has not moved in 180 days.</li>
+<li>Review supplier lead times twice a year; they drift.</li>
+</ol>
+</section>
+<section><h2>Lab: EOQ and reorder point</h2>
+<p>Move the order quantity and see the ordering, holding and total cost curves. The saw-tooth below shows stock over time with safety stock and the reorder point.</p>
+<div class="widget" data-w="eoq"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li><b>Average stock is Q/2 + SS</b> — the safety stock is always there; size it carefully.</li>
+<li>99.9 % service on every item is ruinously expensive; reserve it for items that stop the line.</li>
+<li>Count a sample of items every week (cycle counting) instead of a year-end stock take.</li>
+<li>Managers: inventory hides problems — long changeovers, unreliable suppliers, poor forecasts. Lower it slowly and fix what appears.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Do an ABC analysis of your raw material for the last year.</li>
+<li>Calculate EOQ, SS and ROP for your top three A items.</li>
+<li>Find the value of finished stock older than 90 days and why it is there.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"If the cost per order S is cut to a quarter, EOQ becomes","o":["A quarter","Half","The same","Double"],"a":1,"e":"EOQ ∝ √S."},
+{"q":"Safety stock for 95 % cycle service uses z of about","o":["1.28","1.65","2.33","3.09"],"a":1,"e":"z = 1.65 for 95 %."},
+{"q":"Reorder point equals","o":["EOQ + SS","Demand during lead time + safety stock","Lead time × EOQ","SS ÷ 2"],"a":1,"e":"ROP = d̄·L + SS."},
+{"q":"In ABC analysis, 'A' items are","o":["Cheap and many","The few items with most of the annual value","Obsolete","Always imported"],"a":1,"e":"About 20 % of items, 80 % of value."},
+{"q":"A special risk for printed packaging stock is","o":["Evaporation","Obsolescence when artwork changes","Magnetism","Low density"],"a":1,"e":"Customer-specific print becomes scrap when the design changes."}
+]</quiz>
+</day>
+
+<day n="11">
+<summary>Single-Minute Exchange of Die: the method that cuts changeover from hours to minutes by separating internal from external work, converting one to the other and streamlining both — and why it is the key to small batches, short lead times and flexibility.</summary>
+<goals><li>Define changeover time from last good piece to first good piece at full speed</li><li>Separate internal and external elements and convert internal to external</li><li>Use quick fasteners, standard heights, presetting and parallel work</li><li>Calculate the capacity and batch-size gain from a shorter changeover</li><li>Run a SMED workshop with video and a spaghetti chart</li></goals>
+<content>
+<section><h2>The SMED method (Shigeo Shingo)</h2>
+<div class="def"><b>Changeover time</b> = from the last good unit of the old job to the first good unit of the new job at full speed and quality. Include the "ramp-up" — it is often the longest part.</div>
+<ol class="steps">
+<li><b>Observe and record</b> — video the whole changeover; list every element with its time.</li>
+<li><b>Separate</b> — mark each element <b>internal</b> (only possible with the machine stopped) or <b>external</b> (could be done while running). Move external elements outside the stop: fetch tools, cylinders, inks and material before the stop.</li>
+<li><b>Convert</b> internal to external — preheat, premix, preset, prealign off-line.</li>
+<li><b>Streamline</b> all elements — quick clamps instead of bolts, standard heights and centring, no adjustments (fixed stops), parallel work by two people, checklists and changeover carts.</li>
+<li><b>Standardise</b> — write the new standard work, train, and measure every changeover.</li>
+</ol>
+</section>
+<section><h2>Why it matters</h2>
+<div class="fx">Capacity lost to changeovers = number of changeovers × changeover time
+Economic batch ∝ √(changeover cost)   (Day 10)
+At the same capacity, halving changeover time lets you halve batch size → halve cycle stock and WIP lead time</div>
+<p>SMED is the bridge between cost and flexibility: either you gain capacity (same batches, more running time) or you gain flexibility (smaller batches, same running time) — or a bit of both.</p>
+</section>
+<section><h2>SMED in converting</h2>
+<div class="pk"><b>Gravure, flexo, laminator, slitter, pouch machine</b>Gravure press: cylinders, doctor blades and inks staged on a trolley by the next station before the stop (external); ink viscosity and shade pre-adjusted in the ink kitchen; quick-lock cylinder chucks; two operators working both sides; pre-register marks and auto-register. Flexo: <b>sleeves</b> mounted and proofed off-line on a mounting machine; anilox and chambers changed as cassettes. Laminator: adhesive mix ready; web splice at speed. Slitter: knife positions preset from the job card or recipe; shafts preloaded with cores. Pouch machine: sealing jaws and cutting dies preheated on a stand; recipe-stored temperatures and lengths. Typical results: 9-colour gravure changeovers from 90 min to 40 min; pouch machine size change from 60 to 20 min.</div>
+<p>The method was born in car press shops (die changes from hours to under ten minutes) and works the same in injection moulding, CNC machining (tool presetting, zero-point clamping) and food filling (CIP and format parts).</p>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>Pouch machine size change</b><span class="mono">Before: 62 min, 5 changeovers/day on 3 shifts → 310 min/day lost (23 % of 1 350 min)
+Elements external but done during the stop: fetch dies 8 min, find tools 5 min, get film 6 min → move out
+Convert: preheat seal jaws on a stand (12 min internal → 0)
+Streamline: quick clamps (10 → 4 min), recipe for settings (8 → 2 min)
+After: 23 min → 115 min/day lost → 195 min/day gained = 3.25 h/day: running time 1 040 → 1 235 min, ≈ 19 % more output, no capex.</span></div>
+</section>
+<section><h2>Running a SMED workshop</h2>
+<ol class="steps">
+<li>Pick the bottleneck machine (Day 4) and a frequent changeover.</li>
+<li>Video it from start to full-speed good output; time every element.</li>
+<li>With operators, mark each element internal or external, and write ideas on each.</li>
+<li>Do the free ideas first (prepare, organise, checklists) and measure again.</li>
+<li>Then the cheap engineering ideas (clamps, stops, carts, presetting).</li>
+<li>Write a standard changeover sheet; post it on the machine; track every changeover time on a chart.</li>
+</ol>
+</section>
+<section><h2>Lab: changeover analyser</h2>
+<p>Each row is a changeover element. Tick the ones you can make external and set improved times. The bar shows the new internal changeover; below are the capacity gain and the smallest batch you can now afford.</p>
+<div class="widget" data-w="smed"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li><b>Adjustment is the enemy.</b> Every "try, check, adjust" loop is waste — use fixed stops, gauges, recipes and presetting.</li>
+<li>Count the ramp-up to good quality, not just mechanical change.</li>
+<li>Give operators the credit and the stopwatch. They know where the time goes.</li>
+<li>Managers: decide in advance whether gained time goes to capacity or to smaller batches — or it disappears.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Video one changeover on your bottleneck and list the elements.</li>
+<li>Classify them internal or external; estimate the time you can save with no spending.</li>
+<li>Calculate the capacity gained per month in hours and in rupees of contribution.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Changeover time is measured","o":["From stop to restart","From last good unit to first good unit at full speed","Only while tools are being changed","From order to dispatch"],"a":1,"e":"Ramp-up to good, full-speed output is part of it."},
+{"q":"An external element is one that","o":["Needs the machine stopped","Can be done while the machine is still running","Is done by an outside contractor","Is optional"],"a":1,"e":"Move it outside the stop."},
+{"q":"Mounting flexo sleeves on a mounting machine before the stop is an example of","o":["Internal work","Converting internal to external","Breakdown maintenance","Inspection"],"a":1,"e":"Work that used to need the press stopped is done off-line."},
+{"q":"If changeover time halves and capacity is kept the same, batch size can","o":["Double","Halve","Stay the same","Quarter"],"a":1,"e":"Same changeover hours, twice as many changeovers."},
+{"q":"The biggest source of lost time in many changeovers is","o":["Unbolting","Trial-and-adjust loops","Paperwork","Cleaning"],"a":1,"e":"Adjustment is removed with fixed stops, presetting and recipes."}
+]</quiz>
+</day>
+
+<day n="12">
+<summary>Controlling what happens on the floor: work in progress, Little's Law that links WIP, throughput and lead time, push versus pull, Kanban and supermarkets, CONWIP, and the visual boards that run a shift.</summary>
+<goals><li>Apply Little's Law: WIP = throughput × lead time</li><li>Explain push (MRP) and pull (Kanban) control and when each fits</li><li>Size a Kanban loop and a supermarket</li><li>Use CONWIP to cap WIP in a job-shop flow</li><li>Run a shift with a production board and a daily meeting</li></goals>
+<content>
+<section><h2>Little's Law</h2>
+<div class="fx">WIP = throughput × lead time      →      lead time = WIP ÷ throughput</div>
+<p>This holds for any stable system — a factory, a department, a queue at a bank. Its message is blunt: <b>if throughput is fixed by the bottleneck, the only way to cut lead time is to cut WIP</b>. Releasing more orders into the floor to "get things moving" does the opposite.</p>
+</section>
+<section><h2>Push and pull</h2>
+<table><tr><th></th><th>Push (MRP schedule)</th><th>Pull (Kanban)</th></tr>
+<tr><td>Trigger</td><td>A plan says make it</td><td>Downstream consumption says replace it</td></tr>
+<tr><td>Good for</td><td>Make-to-order, long lead times, lumpy demand</td><td>Repetitive items with steady demand</td></tr>
+<tr><td>WIP</td><td>Uncapped — grows when plans are wrong</td><td>Capped by the number of cards</td></tr>
+<tr><td>Risk</td><td>Floods the floor</td><td>Starves if demand jumps</td></tr></table>
+<div class="fx">Number of Kanbans  N = d̄ × L × (1 + α) ÷ C     d̄ demand rate, L replenishment lead time, α safety factor, C container quantity</div>
+<div class="def"><b>CONWIP</b> (constant work in progress): a hybrid for varied jobs. A fixed number of "cards" circulates through the whole route; a new job is released only when a finished one leaves. Jobs are chosen by the schedule, but WIP never rises above the cap.</div>
+</section>
+<section><h2>Shop-floor control in converting</h2>
+<div class="pk"><b>Push for jobs, pull for common items</b>Customer-specific printed jobs are pushed by the schedule (they are make-to-order), but WIP is capped CONWIP-style: no more than, say, two days of work released in front of the press. <b>Common items run on pull</b>: plain PE film for lamination kept in a supermarket of standard widths, replenished by Kanban to the extrusion line; standard inks and adhesives on two-bin Kanban; cores and cartons on vendor-managed Kanban. A <b>job tracking board</b> (physical or MES screen, Day 27) shows every job's stage: printed → curing (with cure-release time) → slit → pouched → QC → dispatch.</div>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>WIP and lead time</b><span class="mono">Laminate WIP between press and dispatch = 120 t; throughput (bottleneck) = 12 t/day
+Lead time = 120 / 12 = 10 days
+Cap released WIP at 60 t (CONWIP) → lead time 5 days, same output.
+Kanban for plain PE film: use 6 t/day, extrusion lead time 2 days, 1 t rolls (C = 1), α = 0.2
+N = 6 × 2 × 1.2 / 1 = 14.4 → 15 roll cards in the supermarket loop.</span></div>
+</section>
+<section><h2>Running a shift</h2>
+<ol class="steps">
+<li>A board at each area: plan vs actual by hour, downtime reasons, quality issues, safety cross.</li>
+<li>A 10-minute start-of-shift meeting: safety, yesterday's misses, today's plan, problems needing help.</li>
+<li>Hourly: supervisor marks actual vs plan; any gap gets a reason, not just a number.</li>
+<li>Escalate problems by rule — within 15 minutes to the supervisor, within an hour to the manager.</li>
+<li>Release new jobs only when WIP is below the cap.</li>
+<li>End of shift: handover note — job status, issues, settings that worked.</li>
+</ol>
+</section>
+<section><h2>Lab: Little's Law and Kanban</h2>
+<p>Set throughput and WIP to see lead time; then size a Kanban loop. The animation shows cards circulating between the supermarket and the supplying process — press <kbd>P</kbd>.</p>
+<div class="widget" data-w="kanban"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li><b>Releasing work early does not finish it early.</b> It just waits longer on the floor.</li>
+<li>Reduce Kanban cards one at a time; each removal exposes a problem to fix.</li>
+<li>Pull needs stable demand and short, reliable changeovers (Day 11). Fix those first.</li>
+<li>Managers: ask "how many days of WIP?" every week. It is the earliest warning of a late-delivery month.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Count WIP in your plant and compute lead time with Little's Law. Compare with what customers are told.</li>
+<li>Pick one common item and size a Kanban loop for it.</li>
+<li>Draft a production board for your bottleneck.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"WIP 200 units and throughput 40 units/day give a lead time of","o":["8 000 days","5 days","0.2 day","240 days"],"a":1,"e":"Lead time = WIP ÷ throughput."},
+{"q":"With throughput fixed by the bottleneck, lead time falls mainly by","o":["Releasing more jobs","Cutting WIP","Adding inspectors","Larger batches"],"a":1,"e":"Little's Law."},
+{"q":"Kanban is a","o":["Push system","Pull system","Forecasting method","Costing method"],"a":1,"e":"Consumption triggers replenishment."},
+{"q":"CONWIP caps","o":["Machine speed","Total work in progress in a route","Number of operators","Order size"],"a":1,"e":"A new job enters only when one leaves."},
+{"q":"Demand 100/day, lead time 3 days, container 50, safety 0. Kanbans needed:","o":["3","6","150","2"],"a":1,"e":"100 × 3 ÷ 50 = 6."}
+]</quiz>
+</day>

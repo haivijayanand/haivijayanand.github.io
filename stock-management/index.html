@@ -2,10 +2,11 @@
 <!--
 TOOL: Stock Management Crash Course (15 Days)
 FAMILY: courses
-VERSION: 1.0.1
+VERSION: 1.1.0
 DATE: 2026-11-18
 CHAT: 15-day interactive crash course on raw materials, stock types, lead time and stock management terms
-CHANGES: 1.0.1 - meta description for site search, link back to site home; published at /stock-management/
+CHANGES: 1.1.0 - connected to the site's Firebase login (site-progress.js): account button, day completion, quiz/exam events, two-way sync, certificate saved to My Certificates with verifiable ID
+         1.0.1 - meta description for site search, link back to site home; published at /stock-management/
          1.0.0 - Initial release - 15 day lessons, 14 interactive labs, inventory simulator, 56 quiz questions, final exam, certificate, glossary and flashcards
 STATUS: Generic educational content; all figures are illustrative
 -->
@@ -157,6 +158,7 @@ kbd{background:#eef1f5;border:1px solid #c5ccd6;border-bottom-width:2px;border-r
   <h1>Stock Management · 15-Day Crash Course</h1>
   <div class="sp"></div>
   <a class="tbtn" href="/" style="text-decoration:none" title="Back to haivijayanand.github.io">⌂ Site</a>
+  <span id="sp-account" style="display:flex;align-items:center"></span>
   <div id="pbar"><div></div></div><span id="ptext">0 / 15 days</span>
   <button class="tbtn" onclick="go('glossary')" title="Glossary (G)">Glossary</button>
   <button class="tbtn" id="bFull" title="Full screen (F)">⛶ Full screen</button>
@@ -175,13 +177,13 @@ kbd{background:#eef1f5;border:1px solid #c5ccd6;border-bottom-width:2px;border-r
     <tr><td><kbd>P</kbd> <kbd>S</kbd> <kbd>X</kbd></td><td>Simulator: play · next step · pause (Day 9 and Day 15)</td></tr>
     <tr><td><kbd>?</kbd></td><td>This help</td></tr>
   </table>
-  <p class="legend-note">Shortcuts are ignored while typing in an input box. Your progress is kept in this browser only.</p>
+  <p class="legend-note">Shortcuts are ignored while typing in an input box. Sign in (top right) to keep your progress and certificate in your account on every device.</p>
   <button class="btn" onclick="toggleHelp()">Close</button>
 </div></div>
 
 <script>
 'use strict';
-const __version__='1.0.1';
+const __version__='1.1.0';
 /* ================= utilities ================= */
 const $=id=>document.getElementById(id);
 const fmt=(x,d=0)=>isFinite(x)?Number(x).toLocaleString('en-IN',{minimumFractionDigits:d,maximumFractionDigits:d}):'–';
@@ -834,8 +836,9 @@ html:`
 <div class="certbox"><div style="letter-spacing:.2em;color:#5b6675;font-size:13px">CERTIFICATE OF COMPLETION</div>
 <h2>Stock Management · 15-Day Crash Course</h2><p style="margin:14px 0 0">This is to certify that</p><div class="nm" id="certNm">Your name</div>
 <p>has completed the course covering materials, stock types, lead time, classification, safety stock, EOQ, replenishment systems, inventory costs, KPIs, valuation, MRP and stores practice,<br>and passed the final exam with a score of <b id="certSc"></b>.</p>
-<p style="color:#5b6675;font-size:13px" id="certDt"></p></div>
-<button class="btn noprint" onclick="printCert()">Print / save as PDF</button></div></div>`,
+<p style="color:#5b6675;font-size:13px" id="certDt"></p><p style="color:#5b6675;font-size:12.5px" id="certId"></p></div>
+<button class="btn noprint" onclick="printCert()">Print / save as PDF</button><button class="btn o noprint" onclick="spSaveCert()">Save to my account</button>
+<p class="legend-note noprint">Saving puts the certificate in My Certificates with an ID anyone can check on the site's Verify page. Change the name above and save again to update it.</p></div></div>`,
 widget:'cap',
 quiz:[]}
 ];
@@ -968,7 +971,7 @@ function renderHome(c){
   <ul><li>Each day has: learning goals → short lessons → an interactive <b>lab</b> → a 4-question quiz.</li>
   <li>A day is marked done when you score 3/4 or more, or press <b>Mark day complete</b>.</li>
   <li>Click any key-term chip to jump to its glossary entry. Press <kbd>?</kbd> for keyboard shortcuts, <kbd>M</kbd> to hide the menu, <kbd>F</kbd> for full screen.</li>
-  <li>All numbers in examples are illustrative and not taken from any particular company. Progress is stored only in your browser.</li></ul>
+  <li>All numbers in examples are illustrative and not taken from any particular company.</li><li><b>Sign in</b> (top right) to save completed days, quiz scores and your certificate to your account and continue on any device. Without signing in, progress stays in this browser.</li></ul>
   <button class="btn o" onclick="go('day'+(firstOpen()))">${Object.keys(prog.done).length?'Continue with Day '+firstOpen():'Start Day 1'}</button></div>
   <div class="card"><h3>Course plan</h3><div class="daycards">${DAYS.map((d,i)=>`<div class="dc ${prog.done[i+1]?'done':''}" onclick="go('day${i+1}')"><div class="d">DAY ${i+1}</div><div class="t">${d.t}</div><div class="s">${d.s}</div></div>`).join('')}</div></div>
   <div class="card"><h3>Who is it for?</h3><p>Stores and purchase staff, production planners, engineers and managers who are new to inventory work, and students of operations and supply chain. No prior knowledge is needed beyond basic arithmetic.</p></div>`;
@@ -986,8 +989,9 @@ function renderDay(c,i){
   ${n<15?`<button class="btn" onclick="go('day${n+1}')">Day ${n+1} →</button>`:'<span></span>'}</div>`;
   if(d.quiz.length)renderQuiz($('quiz'),d.quiz,'q');
   if(W[d.widget])W[d.widget]();
+  spOpen(n);
 }
-function markDone(n){prog.done[n]=1;save();render()}
+function markDone(n){prog.done[n]=1;save();spDone(n);render()}
 function renderQuiz(box,qs,pf){
   box.innerHTML=qs.map((q,i)=>`<div class="q" id="${pf}${i}"><div class="qt">${i+1}. ${q.q}</div>${q.o.map((o,j)=>`<label><input type="radio" name="${pf}${i}" value="${j}"> ${o}</label>`).join('')}<div class="fb"></div></div>`).join('');
 }
@@ -995,7 +999,8 @@ function gradeQuiz(qs,pf){let s=0;qs.forEach((q,i)=>{const box=$(pf+i),sel=box.q
   box.classList.remove('ok','bad');box.classList.add(ok?'ok':'bad');box.querySelectorAll('label').forEach((l,j)=>l.classList.toggle('right',j===q.a));
   box.querySelector('.fb').innerHTML=(ok?'✓ Correct. ':'✗ Not quite. The answer is: <b>'+q.o[q.a]+'</b>. ')+q.e});return s}
 function checkQuiz(n){const qs=DAYS[n-1].quiz;const s=gradeQuiz(qs,'q');prog.quiz[n]=Math.max(prog.quiz[n]||0,s);
-  if(s>=Math.ceil(qs.length*.75))prog.done[n]=1;save();
+  const pass=s>=Math.ceil(qs.length*.75);if(pass)prog.done[n]=1;save();
+  withSP(sp=>sp.logEvent('quiz',{day:n,score:s,total:qs.length,path:dayPath(n),title:dayTitle(n)}));if(pass)spDone(n,{score:prog.quiz[n],total:qs.length});
   $('qscore').textContent=`Score: ${s} / ${qs.length}`+(s>=Math.ceil(qs.length*.75)?' — day marked complete ✓':' — review the lesson and try again');
   const nb=document.querySelector('.navrow .btn.o');if(prog.done[n]&&nb){nb.className='btn g';nb.textContent='✓ Day complete'}}
 
@@ -1272,11 +1277,46 @@ let EXAM=[];
 function startExam(){const pool=[];DAYS.forEach(d=>d.quiz.forEach(q=>pool.push(q)));EXAM=pool.sort(()=>Math.random()-.5).slice(0,15);
   $('exam').innerHTML='<div id="exq"></div><button class="btn" onclick="gradeExam()">Submit exam</button><div class="score" id="exs"></div>';renderQuiz($('exq'),EXAM,'e')}
 function gradeExam(){const s=gradeQuiz(EXAM,'e');const pct=Math.round(s/15*100);$('exs').textContent=`Score ${s} / 15 (${pct}%) — `+(pct>=70?'PASSED ✓ Certificate unlocked below.':'Not passed yet. Review the explanations and try again.');
-  if(s>prog.exam)prog.exam=s;if(pct>=70){prog.done[15]=1;unlockCert()}save()}
+  if(s>prog.exam)prog.exam=s;withSP(sp=>sp.logEvent('exam',{score:s,total:15,path:dayPath(15),title:'Final exam'}));
+  if(pct>=70){prog.done[15]=1;unlockCert();spDone(15,{score:s,total:15});spSaveCert()}save()}
 function unlockCert(){$('certlock').style.display='none';$('cert').style.display='block';$('certSc').textContent=Math.round(prog.exam/15*100)+'%';$('certDt').textContent='Date: '+new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
-  const nm=store('smc_name');if(nm){$('certName').value=nm;certUpd()}}
+  const nm=store('smc_name');if(nm){$('certName').value=nm;certUpd()}showCertId()}
 function certUpd(){const v=$('certName').value.trim();$('certNm').textContent=v||'Your name';store('smc_name',v)}
 function printCert(){document.body.classList.add('printcert');window.print();setTimeout(()=>document.body.classList.remove('printcert'),500)}
+
+/* ================= site account (Firebase via /assets/js/site-progress.js) =================
+   Each day is stored as its own progress record at /stock-management/day-NN (small redirect pages exist at those
+   addresses so links from My Progress land on the right day). Works without the script too (offline copy). */
+const SP_BASE='/stock-management/';
+const dayPath=n=>SP_BASE+'day-'+String(n).padStart(2,'0');
+const dayTitle=n=>`Day ${n}: ${DAYS[n-1].t}`;
+const CERT_COURSE='stock-management',CERT_TITLE='Stock Management · 15-Day Crash Course';
+let SP=null,certRec=null;
+function withSP(fn){const run=()=>{try{const r=fn(SP);if(r&&r.catch)r.catch(e=>console.warn('[course]',e))}catch(e){console.warn('[course]',e)}};
+  if(SP)return run();if(window.SiteProgress){SP=window.SiteProgress;return run()}
+  addEventListener('sp:loaded',()=>{SP=window.SiteProgress;run()},{once:true})}
+function spDone(n,extra={}){withSP(sp=>sp.markComplete({title:dayTitle(n),...extra},dayPath(n)))}
+function spOpen(n){withSP(async sp=>{await sp.ready;const p=await sp.getProgress(dayPath(n));
+  if(!p)await sp.saveProgress({title:dayTitle(n),status:'in-progress'},dayPath(n));
+  sp.logEvent('step',{step:n,label:dayTitle(n),path:dayPath(n),title:dayTitle(n)})})}
+function showCertId(){const e=$('certId');if(e)e.innerHTML=certRec?`Certificate ID <b>${certRec.certId}</b> · verify at haivijayanand.github.io/verify/?id=${certRec.certId}`:''}
+function spSaveCert(){if(prog.exam<11){alert('Pass the final exam first.');return}
+  withSP(async sp=>{const nm=($('certName')&&$('certName').value.trim())||(sp.user&&sp.user.displayName)||'';
+    const c=await sp.saveCertificate({course:CERT_COURSE,title:CERT_TITLE,holderName:nm||undefined,score:`${Math.round(prog.exam/15*100)}% (${prog.exam} / 15)`,path:SP_BASE});
+    if(c){certRec=c;showCertId()}})}
+/* two-way sync: days completed on another device appear here; days done here (or before signing in) go to the account */
+async function spSync(sp){
+  const all=await sp.loadAllProgress();let ch=false;
+  for(let n=1;n<=15;n++){const p=all[sp.keyOf(sp.normPath(dayPath(n)))];
+    if(p&&p.status==='completed'&&!prog.done[n]){prog.done[n]=1;ch=true}
+    else if(prog.done[n]&&(!p||p.status!=='completed'))await sp.markComplete({title:dayTitle(n),...(prog.quiz[n]!=null&&n<15?{score:prog.quiz[n],total:4}:{})},dayPath(n));
+    if(p&&n<15&&typeof p.score==='number'&&(prog.quiz[n]==null||p.score>prog.quiz[n])){prog.quiz[n]=p.score;ch=true}
+    if(p&&n===15&&typeof p.score==='number'&&p.score>(prog.exam||0)){prog.exam=p.score;ch=true}}
+  if(sp.user){const c=(await sp.listCertificates()).find(c=>c.course===CERT_COURSE);
+    if(c){certRec=c;const m=/\((\d+)\s*\/\s*15\)/.exec(c.score||'');const sc=m?+m[1]:11;if(sc>(prog.exam||0)){prog.exam=sc;ch=true}}}
+  if(ch){store('smc_progress',prog);renderSide();updBar();if(route==='home')render()}
+  if(route==='day15'&&prog.exam>=11)unlockCert();else showCertId()}
+withSP(sp=>sp.onUser(()=>spSync(sp).catch(e=>console.warn('[course]',e))));
 
 /* ================= chrome: sidebar, full screen, keys ================= */
 function toggleSide(){if(window.innerWidth<=800)document.body.classList.toggle('showside');else document.body.classList.toggle('noside');setTimeout(()=>window.dispatchEvent(new Event('resize')),220)}
@@ -1293,5 +1333,6 @@ let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>
 window.addEventListener('hashchange',render);
 updBar();render();
 </script>
+<script type="module" src="/assets/js/site-progress.js"></script>
 </body>
 </html>

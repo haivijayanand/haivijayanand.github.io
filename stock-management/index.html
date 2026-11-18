@@ -2,10 +2,11 @@
 <!--
 TOOL: Stock Management Crash Course (15 Days)
 FAMILY: courses
-VERSION: 1.1.0
+VERSION: 1.2.0
 DATE: 2026-11-18
 CHAT: 15-day interactive crash course on raw materials, stock types, lead time and stock management terms
-CHANGES: 1.1.0 - connected to the site's Firebase login (site-progress.js): account button, day completion, quiz/exam events, two-way sync, certificate saved to My Certificates with verifiable ID
+CHANGES: 1.2.0 - Day 3 ABC lab: example picker with extrusion, gravure & lamination and bag-making unit data sets, UoM column, notes on what to observe
+         1.1.0 - connected to the site's Firebase login (site-progress.js): account button, day completion, quiz/exam events, two-way sync, certificate saved to My Certificates with verifiable ID
          1.0.1 - meta description for site search, link back to site home; published at /stock-management/
          1.0.0 - Initial release - 15 day lessons, 14 interactive labs, inventory simulator, 56 quiz questions, final exam, certificate, glossary and flashcards
 STATUS: Generic educational content; all figures are illustrative
@@ -183,7 +184,7 @@ kbd{background:#eef1f5;border:1px solid #c5ccd6;border-bottom-width:2px;border-r
 
 <script>
 'use strict';
-const __version__='1.1.0';
+const __version__='1.2.0';
 /* ================= utilities ================= */
 const $=id=>document.getElementById(id);
 const fmt=(x,d=0)=>isFinite(x)?Number(x).toLocaleString('en-IN',{minimumFractionDigits:d,maximumFractionDigits:d}):'–';
@@ -354,10 +355,11 @@ html:`
 <div class="tip"><b>Control effort by ABC class</b>A: weekly review, statistical safety stock, several suppliers, cycle count monthly. B: monthly review, standard rules, cycle count quarterly. C: simple two-bin or min-max, bulk buying, count once a year.</div>
 </div>
 <div class="card"><div class="widget"><div class="wt">ABC (Pareto) analyser</div>
-<p class="legend-note">Edit quantities, costs or the class cut-offs. Items are sorted by annual value; an item is A while the cumulative % stays within the A cut-off. Paste your own data by editing rows.</p>
-<div class="frm"><label>A cut-off (cumulative %)<input id="abcA" type="number" value="80"></label><label>B cut-off (cumulative %)<input id="abcB" type="number" value="95"></label></div>
+<p class="legend-note">Pick an example plant, then edit quantities, costs or the class cut-offs. Items are sorted by annual value; an item is A while the cumulative % stays within the A cut-off. Replace the rows with your own data to analyse your store.</p>
+<div class="frm"><label>Example data set<select id="abcSet"><option value="extrusion">Extrusion (blown film) unit</option><option value="gravure">Gravure printing &amp; lamination unit</option><option value="bag">Bag &amp; pouch making unit</option><option value="generic">Mixed plant (general example)</option></select></label><label>A cut-off (cumulative %)<input id="abcA" type="number" value="80"></label><label>B cut-off (cumulative %)<input id="abcB" type="number" value="95"></label></div>
+<div id="abcNote" class="ex"></div>
 <div id="w-abc"></div>
-<button class="btn g" onclick="abcAdd()">+ Add row</button>
+<button class="btn g" onclick="abcAdd()">+ Add row</button><button class="btn g" onclick="abcLoad($('abcSet').value)">↺ Reset this example</button>
 <div class="out" id="w-abc-out"></div>
 <canvas id="abcCv" style="height:320px"></canvas>
 <p class="legend-note">Bars: annual value of each item (blue = A, light orange = B, grey = C). Dashed line: cumulative % (right axis).</p>
@@ -1060,10 +1062,23 @@ function clsCheck(){let s=0;CITEMS.forEach((it,i)=>{const v=+$('cs'+i).value,ok=
 function clsReset(){W.cls();$('w-cls-score').textContent=''}
 
 /* Day 3 ABC */
-let ABC=[['Polymer granules – grade 1',90000,115],['Metal foil',12000,420],['Polymer granules – grade 2',30000,105],['Printing ink – process colours',6000,380],['Two-part adhesive',5000,290],['Solvent',15000,85],['Paper cores',40000,18],['Corrugated cartons',30000,22],['Stretch film',3000,160],['Doctor blades',400,650],['Masking tape',2000,45],['Cleaning cloth',3000,20]];
-function abcAdd(){ABC.push(['New item',1000,10]);W.abc()}
-W.abc=()=>{$('w-abc').innerHTML=`<table><thead><tr><th>Item</th><th class="n">Annual qty</th><th class="n">Unit cost (₹)</th><th></th></tr></thead><tbody>${ABC.map((r,i)=>`<tr><td><input data-r="${i}" data-c="0" value="${r[0]}"></td><td><input type="number" data-r="${i}" data-c="1" value="${r[1]}"></td><td><input type="number" data-r="${i}" data-c="2" value="${r[2]}"></td><td><button class="btn g" onclick="ABC.splice(${i},1);W.abc()">✕</button></td></tr>`).join('')}</tbody></table><div id="abcRes"></div>`;
-  $('w-abc').querySelectorAll('input').forEach(e=>e.addEventListener('input',()=>{const r=+e.dataset.r,c=+e.dataset.c;ABC[r][c]=c?parseFloat(e.value)||0:e.value;abcCalc()}));
+/* example data sets: [item, annual qty, unit cost ₹, UoM] — illustrative figures, not any company's data */
+const ABC_SETS={
+extrusion:{note:'<b>Extrusion (blown film) unit</b>Polymer granules dominate: a handful of resin grades carry most of the money, so they get weekly review, two approved suppliers and tight safety stock. Masterbatches and additives are mostly B. Screen packs, cores, purging compound and shop consumables are the many small C items. Watch the <i>purging compound</i> and <i>corona treater spares</i>: C by value but Vital by VED — a stock-out stops the line.',
+ rows:[['LLDPE granules (butene grade)',600000,105,'kg'],['LDPE granules',300000,110,'kg'],['HDPE granules',120000,102,'kg'],['Metallocene LLDPE granules',60000,135,'kg'],['White masterbatch',18000,180,'kg'],['Slip / antiblock masterbatch',9000,210,'kg'],['Paper cores (3 inch)',60000,28,'nos'],['Colour masterbatch',4000,320,'kg'],['Stretch film for pallet wrap',6000,150,'kg'],['Screen packs / filter meshes',6000,60,'nos'],['Corona treater electrodes (spares)',20,9000,'nos'],['Purging compound',400,400,'kg'],['Core plugs / end caps',50000,3,'nos'],['Gearbox lubricating oil',600,220,'litre'],['Cleaning cloth',1500,25,'kg']]},
+gravure:{note:'<b>Gravure printing &amp; lamination unit</b>Value is spread over more items than in extrusion: substrates (BOPP, polyester, metallised films), inks, adhesives and solvent all reach class A or B. That is why converters often set the A cut-off a little lower (try 70%) to keep the A list short. Printing cylinders are job-specific and high in unit price (HML: H) but appear as B here. Doctor blades and impression rollers are low value but Vital.',
+ rows:[['BOPP film 20 µm',300000,160,'kg'],['Polyester film 12 µm',150000,155,'kg'],['Solvent-based gravure inks',60000,330,'kg'],['Solvent-less PU adhesive',40000,420,'kg'],['Ethyl acetate (solvent)',150000,95,'kg'],['PE film for lamination',120000,115,'kg'],['Metallised polyester film',60000,185,'kg'],['Printing cylinders (new / re-chrome)',300,18000,'nos'],['Solvent-based adhesive',15000,300,'kg'],['Doctor blades',1500,650,'nos'],['Paper cores',30000,30,'nos'],['Isopropyl alcohol',6000,110,'litre'],['Impression rollers (recoating)',60,9000,'nos'],['Splicing / masking tape',4000,60,'rolls'],['Cleaning rags',3000,25,'kg']]},
+bag:{note:'<b>Bag &amp; pouch making unit</b>One item — the printed laminate roll — carries about three-quarters of the annual value, so the A class may hold a single item. That is a signal to split it further (by structure, width or customer) and control each laminate specification separately. Zippers, spouts and valves form the B class. Seal-bar Teflon, heaters and knives are cheap C items but Vital spares: keep them on min-max with generous stock.',
+ rows:[['Printed laminate rolls',400000,210,'kg'],['Spouts with caps',2000000,3.5,'nos'],['Zipper tape',3000000,2.2,'m'],['Corrugated shipper cartons',120000,35,'nos'],['One-way degassing valves',500000,4,'nos'],['Inner poly bags',8000,140,'kg'],['PTFE (Teflon) tape for seal bars',2000,450,'rolls'],['Heater cartridges / seal bars (spares)',400,1800,'nos'],['Cutting knives and punches',300,2200,'nos'],['Stretch film',4000,150,'kg'],['BOPP carton-sealing tape',6000,45,'rolls'],['Carton labels',300000,0.8,'nos'],['Silicone rubber pads',200,900,'nos'],['Returnable pallets',300,600,'nos'],['Cleaning alcohol',800,110,'litre']]},
+generic:{note:'<b>Mixed plant (general example)</b>The classic Pareto shape: about a quarter of the items carry roughly 70–80% of the annual value.',
+ rows:[['Polymer granules – grade 1',90000,115,'kg'],['Metal foil',12000,420,'kg'],['Polymer granules – grade 2',30000,105,'kg'],['Printing ink – process colours',6000,380,'kg'],['Two-part adhesive',5000,290,'kg'],['Solvent',15000,85,'litre'],['Paper cores',40000,18,'nos'],['Corrugated cartons',30000,22,'nos'],['Stretch film',3000,160,'kg'],['Doctor blades',400,650,'nos'],['Masking tape',2000,45,'rolls'],['Cleaning cloth',3000,20,'kg']]}};
+let ABC=[],abcKey='extrusion';
+function abcLoad(k){abcKey=k;ABC=ABC_SETS[k].rows.map(r=>r.slice());W.abc()}
+function abcAdd(){ABC.push(['New item',1000,10,'nos']);W.abc()}
+W.abc=()=>{if(!ABC.length)ABC=ABC_SETS[abcKey].rows.map(r=>r.slice());
+  $('abcSet').value=abcKey;$('abcSet').onchange=()=>abcLoad($('abcSet').value);$('abcNote').innerHTML=ABC_SETS[abcKey].note;
+  $('w-abc').innerHTML=`<table><colgroup><col style="width:42%"><col style="width:18%"><col style="width:10%"><col style="width:20%"><col style="width:60px"></colgroup><thead><tr><th>Item</th><th class="n">Annual qty</th><th>UoM</th><th class="n">Unit cost (₹ per UoM)</th><th></th></tr></thead><tbody>${ABC.map((r,i)=>`<tr><td><input data-r="${i}" data-c="0" value="${r[0]}"></td><td><input type="number" data-r="${i}" data-c="1" value="${r[1]}"></td><td><input data-r="${i}" data-c="3" value="${r[3]||''}" style="min-width:60px"></td><td><input type="number" step="any" data-r="${i}" data-c="2" value="${r[2]}"></td><td><button class="btn g" onclick="ABC.splice(${i},1);W.abc()">✕</button></td></tr>`).join('')}</tbody></table><div id="abcRes"></div>`;
+  $('w-abc').querySelectorAll('input').forEach(e=>e.addEventListener('input',()=>{const r=+e.dataset.r,c=+e.dataset.c;ABC[r][c]=(c===1||c===2)?parseFloat(e.value)||0:e.value;abcCalc()}));
   ['abcA','abcB'].forEach(id=>$(id).oninput=abcCalc);abcCalc()};
 function abcCalc(){const A=val('abcA'),B=val('abcB');const rows=ABC.map(r=>({n:r[0],v:r[1]*r[2]})).sort((a,b)=>b.v-a.v);const T=rows.reduce((s,r)=>s+r.v,0);let cum=0;
   rows.forEach(r=>{cum+=r.v;r.cp=cum/T*100;r.c=r.cp<=A+1e-9?'A':r.cp<=B+1e-9?'B':'C'});

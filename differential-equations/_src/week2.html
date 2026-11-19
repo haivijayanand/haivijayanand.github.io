@@ -1,0 +1,341 @@
+<!--
+TOOL:    differential-equations/_src/week2.html — 15-Day Differential Equations Course content source, Week 2 (Days 6–10)
+FAMILY:  differential-equations
+VERSION: 1.0.0
+DATE:    2026-11-19
+CHAT:    Differential equations are fascinating — make a 15 days course to deeper understanding of differential equations
+CHANGES: 1.0.0 - first version: forcing and resonance, Laplace transforms and poles, systems and mode shapes, the linear phase plane, nonlinear dynamics
+STATUS:  working
+-->
+
+<day n="6">
+<summary>Push an oscillator with a periodic force and it answers at the forcing frequency — with an amplitude and a lag that depend only on the frequency ratio and the damping. Build the frequency response curve, understand resonance, beats and phase, and design a vibration isolator with the transmissibility curve.</summary>
+<goals><li>Split a forced response into transient and steady state</li><li>Find the steady-state amplitude and phase by the complex-exponential method</li><li>Read resonance, the 90° phase point and the half-power bandwidth from an FRF</li><li>Explain beats and why undamped resonance grows linearly</li><li>Design a vibration isolator from the transmissibility curve</li></goals>
+<content>
+<section><h2>Transient plus steady state</h2>
+<p>Add a harmonic force to the oscillator:</p>
+<div class="fx">m·x″ + c·x′ + k·x = F₀·cos ωt</div>
+<p>Because the equation is linear (Day 2), the solution is the free response (which carries the initial conditions and dies away at the rate ζωn) <b>plus</b> one particular solution that follows the force for ever. After a few time constants 1/(ζωn) only that <b>steady state</b> remains, and it is a cosine at the <i>forcing</i> frequency ω — not at ωn.</p>
+</section>
+<section><h2>Amplitude and phase: the complex trick</h2>
+<p>Replace cos ωt by e<sup>jωt</sup> (its real part) and guess x = X·e<sup>jωt</sup>. Every derivative becomes a multiplication by jω:</p>
+<div class="fx">(k − m·ω² + j·c·ω)·X = F₀      →      X = F₀ / (k − mω² + jcω)<br>With r = ω/ωn:    |X|·k/F₀ = 1 / √((1 − r²)² + (2ζr)²)        φ = arctan( 2ζr / (1 − r²) )</div>
+<table><tr><th>Region</th><th>Amplitude</th><th>Phase lag</th><th>What controls it</th></tr>
+<tr><td>r ≪ 1 (slow)</td><td>≈ F₀/k — the static deflection</td><td>≈ 0°</td><td>Stiffness</td></tr>
+<tr><td>r = 1 (resonance)</td><td>F₀/(k·2ζ) — the static deflection × Q, with Q = 1/(2ζ)</td><td>exactly 90°</td><td>Damping</td></tr>
+<tr><td>r ≫ 1 (fast)</td><td>≈ F₀/(m·ω²) — falls as 1/ω²</td><td>≈ 180°</td><td>Mass</td></tr></table>
+<p>The peak is at r = √(1 − 2ζ²), just below ωn. The <b>half-power bandwidth</b> — the width of the peak where the amplitude is 1/√2 of maximum — is Δω ≈ 2ζωn, a second way to measure damping from a frequency sweep.</p>
+<details class="deep"><summary>Undamped resonance and beats</summary><div>
+<p>With c = 0 and ω = ωn exactly, the guess X·e<sup>jωt</sup> fails (it is already a free solution). The particular solution becomes x = (F₀/(2mωn))·t·sin ωn·t: the amplitude grows <i>linearly</i> without limit. Near but not at resonance, starting from rest gives x = (2F₀/(m(ωn² − ω²)))·sin((ωn − ω)t/2)·sin((ωn + ω)t/2): a fast oscillation inside a slow envelope — <b>beats</b>, with beat period 2π/|ωn − ω|. You hear them when two guitar strings are almost in tune, and you see them on a rig when a shaft speed sits near a structural mode.</p>
+</div></details>
+</section>
+<section><h2>Transmissibility and isolation</h2>
+<p>The force passed to the foundation goes through both the spring and the damper. Its ratio to the applied force is the <b>transmissibility</b>:</p>
+<div class="fx">TR = √(1 + (2ζr)²) / √((1 − r²)² + (2ζr)²)</div>
+<p>All curves cross TR = 1 at r = √2. Below √2 the mount <i>amplifies</i>; above it the mount isolates. And above √2 more damping makes isolation <i>worse</i> — designers use just enough damping to get through resonance at start-up and shut-down.</p>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>Isolate a 200 kg motor-pump set running at 1450 rpm so that only 20 % of its shaking force reaches the floor (ζ ≈ 0.05)</b><span class="mono">ω = 1450 × 2π/60 = 151.8 rad/s
+Light damping: TR ≈ 1/(r² − 1) = 0.2  →  r² = 6  →  r = 2.45
+ωn = 151.8/2.45 = 62.0 rad/s (9.9 Hz)
+Total mount stiffness k = m·ωn² = 200 × 62.0² = 7.69 × 10⁵ N/m
+Static deflection δ = g/ωn² = 9.81/3843 = 2.55 mm  ← what you would specify to the mount supplier
+Check with ζ = 0.05:  TR = √(1 + 0.245²)/√(5² + 0.245²) = 0.206 ✓
+At start-up the set passes 9.9 Hz: amplitude there ≈ 1/(2ζ) = 10 × static — pass through quickly.</span></div>
+<div class="app"><b>Where you meet this</b>Machine mounts and inertia blocks, test-rig bed plates, vehicle seats, the critical speed of rotors (Day 14 of the Machine Design course), loudspeakers and microphones, buildings in earthquakes, and every frequency-response (sine-sweep) test on a shaker.</div>
+</section>
+<section><h2>Lab: frequency response explorer</h2>
+<p>Slide r through 1 with small ζ. Top: the mass and the force arrow (watch the phase: in step at low r, a quarter-cycle late at r = 1, opposite at high r). Bottom: the time response growing out of rest, the FRF amplitude on log axes and the phase. Switch the plot to transmissibility to see the √2 crossing. Press <kbd>P</kbd> to animate.</p>
+<div class="widget" data-w="forced"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Resonance is a <b>frequency</b> coincidence, not a large force. A tiny unbalance at the right speed can shake a structure apart.</li>
+<li>Use the 90° phase point, not the amplitude peak, to locate a natural frequency in tests — it is sharper and does not shift with damping.</li>
+<li>Rotating unbalance m<sub>u</sub>·e gives a force that grows with ω², so its response curve rises to (m<sub>u</sub>e/M) at high speed instead of falling.</li>
+<li>Isolators assume a rigid floor. On a flexible mezzanine the floor's own modes can undo the design — check them.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>An oscillator has ωn = 20 rad/s and ζ = 0.02. What is the dynamic magnification at resonance? The half-power bandwidth in Hz?</li>
+<li>Repeat the isolator example for 90 % isolation. What static deflection is needed?</li>
+<li>In the lab, set ζ = 0 and r = 0.95. Measure the beat period on the time plot and check 2π/|ω − ωn|.</li>
+<li>Why does a washing machine shake most during spin-up and spin-down, not at full speed?</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"At resonance (r = 1) the steady-state response lags the force by","o":["0°","45°","90°","180°"],"a":2,"e":"The phase is exactly 90° at r = 1 for any damping."},
+{"q":"With ζ = 0.05, the amplitude at resonance is about how many times the static deflection?","o":["2","5","10","20"],"a":2,"e":"Q = 1/(2ζ) = 10."},
+{"q":"A spring mount isolates (TR < 1) only when","o":["r < 1","r > 1","r > √2","r < √2"],"a":2,"e":"All transmissibility curves cross 1 at r = √2."},
+{"q":"Far above resonance (r ≫ 1) the amplitude is governed mainly by","o":["Stiffness","Damping","Mass","The initial conditions"],"a":2,"e":"X ≈ F₀/(mω²): the mass-controlled region."},
+{"q":"The steady-state response of a linear oscillator to cos ωt has frequency","o":["ωn","ωd","ω","ω − ωn"],"a":2,"e":"Linear systems respond at the forcing frequency; the free part dies out."}
+]</quiz>
+</day>
+
+<day n="7">
+<summary>The Laplace transform turns calculus into algebra: derivatives become multiplications by s and initial conditions drop in automatically. It also gives every linear system a transfer function whose poles, plotted in the s-plane, tell you at a glance how it responds. Drag the poles yourself and watch.</summary>
+<goals><li>Transform simple functions and derivatives with a short table</li><li>Solve an initial value problem by transform, partial fractions and inverse</li><li>Define a transfer function, its poles and zeros</li><li>Read decay rate, frequency, overshoot and stability from pole positions</li><li>See how feedback moves poles</li></goals>
+<content>
+<section><h2>The transform</h2>
+<div class="fx">F(s) = ℒ{f(t)} = ∫₀<sup>∞</sup> f(t)·e<sup>−st</sup> dt</div>
+<table><tr><th>f(t)</th><th>F(s)</th><th>f(t)</th><th>F(s)</th></tr>
+<tr><td>1 (unit step)</td><td>1/s</td><td>δ(t) (unit impulse)</td><td>1</td></tr>
+<tr><td>t</td><td>1/s²</td><td>e<sup>at</sup></td><td>1/(s − a)</td></tr>
+<tr><td>sin ωt</td><td>ω/(s² + ω²)</td><td>cos ωt</td><td>s/(s² + ω²)</td></tr>
+<tr><td>e<sup>at</sup>·sin ωt</td><td>ω/((s − a)² + ω²)</td><td>e<sup>at</sup>·cos ωt</td><td>(s − a)/((s − a)² + ω²)</td></tr>
+<tr><td>y′(t)</td><td>s·Y(s) − y(0)</td><td>y″(t)</td><td>s²·Y − s·y(0) − y′(0)</td></tr></table>
+<p>The last row is the whole point: differentiation becomes multiplication by s, and the initial conditions are built in.</p>
+</section>
+<section><h2>Solving an equation in three steps</h2>
+<div class="eg"><b>y″ + 3y′ + 2y = 1 (a unit step), y(0) = y′(0) = 0</b><span class="mono">1. Transform:      s²Y + 3sY + 2Y = 1/s
+2. Solve for Y:    Y = 1 / (s·(s + 1)·(s + 2))
+   Partial fractions:  Y = (1/2)/s − 1/(s + 1) + (1/2)/(s + 2)
+   (cover-up: at s = 0 → 1/(1·2) = ½;  s = −1 → 1/(−1·1) = −1;  s = −2 → 1/(−2·−1) = ½)
+3. Invert:         y(t) = ½ − e^(−t) + ½·e^(−2t)
+Check: y(0) = ½ − 1 + ½ = 0 ✓   y(∞) = ½ ✓ (final value theorem: lim s·Y as s→0 = ½)</span></div>
+</section>
+<section><h2>Transfer functions, poles and zeros</h2>
+<p>With zero initial conditions, output over input in the s-domain is a ratio of polynomials — the <b>transfer function</b>:</p>
+<div class="fx">G(s) = Y(s)/U(s)      e.g. first order: K/(τs + 1)      second order: ωn² / (s² + 2ζωn·s + ωn²)</div>
+<p>Roots of the denominator are <b>poles</b>; roots of the numerator are <b>zeros</b>. Each pole p contributes a term e<sup>pt</sup> to the response. So the <b>s-plane</b> is a map of behaviour:</p>
+<ul><li><b>Left half-plane</b> (Re p &lt; 0): decays → stable. Further left = faster.</li>
+<li><b>Right half-plane</b>: grows → unstable.</li>
+<li><b>Imaginary part</b> = oscillation frequency. On the jω axis: oscillates for ever.</li>
+<li>For a pole pair at σ ± jω: ωn = distance from the origin, ζ = cos of the angle from the negative real axis.</li></ul>
+<div class="fx">Overshoot to a step:  M<sub>p</sub> = e<sup>−πζ/√(1−ζ²)</sup>      peak time t<sub>p</sub> = π/ω<sub>d</sub>      2 % settling t<sub>s</sub> ≈ 4/(ζωn) = 4/|σ|</div>
+<p>Put s = jω into G and you get the frequency response of Day 6. Time response, frequency response and pole positions are three views of the same object.</p>
+<details class="deep"><summary>Convolution, the impulse response and the final value theorem</summary><div>
+<p>The inverse transform of G(s) itself is the <b>impulse response</b> g(t). Because a product in s is a convolution in time, the response to any input is y(t) = ∫₀ᵗ g(τ)·u(t − τ) dτ — the output is the input "smeared" by the system's memory. The <b>final value theorem</b> lim<sub>t→∞</sub> y(t) = lim<sub>s→0</sub> s·Y(s) holds only if y actually settles, i.e. all poles of s·Y are in the left half-plane; apply it to an unstable system and it gives a confident, wrong answer.</p>
+</div></details>
+</section>
+<section><h2>Feedback moves poles</h2>
+<p>Take a slow plant G = K/(τs + 1) with K = 2, τ = 5 s, and close a proportional loop with gain K<sub>p</sub> = 4:</p>
+<div class="eg"><b>Closed loop  Y/R = K<sub>p</sub>K / (τs + 1 + K<sub>p</sub>K)</b><span class="mono">Open-loop pole: s = −1/τ = −0.2       → time constant 5 s
+Closed-loop pole: s = −(1 + 8)/5 = −1.8  → time constant 0.56 s (9× faster)
+Steady-state error to a step = 1/(1 + K_p·K) = 1/9 = 11 %   (an integral term removes it)</span></div>
+<p>Control design is, at heart, the art of putting poles where you want them. Push the gain too far on a higher-order plant and a pole pair crosses into the right half-plane: the loop oscillates.</p>
+<div class="app"><b>Where you meet this</b>Speed and torque control of dynamometers and motors, temperature controllers on test rigs, suspension and engine-mount design, filter design in data acquisition (Butterworth poles sit on a circle), PLL clock circuits, aircraft autopilots.</div>
+</section>
+<section><h2>Lab: drag the poles</h2>
+<p>Drag the × poles around the s-plane and watch the step or impulse response and the frequency response change together. Move them left: faster decay. Up: faster ringing, more overshoot. Across the jω axis: growth. Choose "pole pair + zero" and drag the ○ zero into the right half-plane: the step response starts the wrong way — a non-minimum-phase system (like the level in a boiler drum after a sudden steam demand, or the dip in altitude when an aircraft pulls up).</p>
+<div class="widget" data-w="poles"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Use the transform for <b>linear, constant-coefficient</b> systems. For nonlinear or time-varying ones it does not apply.</li>
+<li>A pole close to a zero nearly cancels it: the term exists but with a tiny coefficient.</li>
+<li>The slowest (right-most) stable poles dominate the response: they are the last to decay.</li>
+<li>A system with any pole in the right half-plane is unstable even if that pole's term starts tiny — it will win eventually.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Solve y′ + 4y = 0, y(0) = 3 by Laplace transform.</li>
+<li>Find poles, ωn and ζ of G = 25/(s² + 4s + 25). Predict the overshoot.</li>
+<li>Solve y″ + y = sin 2t, y(0) = y′(0) = 0.</li>
+<li>In the lab, place the poles to give about 10 % overshoot and settle within 2 s. Where do they sit?</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"ℒ{y′} equals","o":["s·Y(s)","s·Y(s) − y(0)","Y(s)/s","Y(s) − s·y(0)"],"a":1,"e":"Integration by parts gives sY − y(0)."},
+{"q":"A system with poles at −2 ± 5j responds with","o":["No oscillation","Oscillation at 5 rad/s decaying like e^(−2t)","Oscillation at 2 rad/s","Growing oscillation"],"a":1,"e":"Imaginary part = frequency, real part = decay rate."},
+{"q":"Which pole location gives an unstable system?","o":["s = −3","s = −1 ± 2j","s = +0.5","s = −10"],"a":2,"e":"Any pole with positive real part grows."},
+{"q":"For ζ = 0.5 the step overshoot is about","o":["4 %","16 %","30 %","50 %"],"a":1,"e":"e^(−π·0.5/0.866) = e^(−1.81) = 0.163."},
+{"q":"Proportional feedback around G = 2/(5s + 1) with Kp = 4 gives a closed-loop time constant of","o":["5 s","1.25 s","0.56 s","0.2 s"],"a":2,"e":"Pole at −(1 + 8)/5 = −1.8 → τ = 0.56 s."}
+]</quiz>
+</day>
+
+<day n="8">
+<summary>Real machines have many parts that push on each other: two masses, a gearbox and a motor, coupled tanks, competing populations. Write them as one matrix equation and the eigenvalues and eigenvectors do the rest — giving natural frequencies and mode shapes, the special patterns in which the whole system moves as one.</summary>
+<goals><li>Write coupled equations as x′ = A·x or M·x″ + K·x = 0</li><li>Revise eigenvalues and eigenvectors of a 2 × 2 matrix</li><li>Build the general solution as a sum of modes</li><li>Find natural frequencies and mode shapes from det(K − ω²M) = 0</li><li>Explain energy exchange, tuned absorbers and why FEA is "just" this with more masses</li></goals>
+<content>
+<section><h2>Many equations, one matrix</h2>
+<p>Two masses connected by three springs (wall – k₁ – m₁ – k₂ – m₂ – k₃ – wall). Newton for each mass:</p>
+<div class="fx">m₁·x₁″ = −k₁x₁ + k₂(x₂ − x₁)<br>m₂·x₂″ = −k₂(x₂ − x₁) − k₃x₂<br><b>Matrix form:</b>   M·x″ + K·x = 0,    M = [[m₁, 0], [0, m₂]],   K = [[k₁ + k₂, −k₂], [−k₂, k₂ + k₃]]</div>
+<p>The off-diagonal −k₂ is the <b>coupling</b>: it is why pushing one mass moves the other. First-order systems look the same: two tanks in series, a two-compartment drug model or a predator–prey pair near equilibrium all become x′ = A·x.</p>
+</section>
+<section><h2>Eigenvalues: directions that do not turn</h2>
+<p>For a matrix A, an <b>eigenvector</b> v is a direction that A only stretches: A·v = λ·v. The stretch factor λ is the <b>eigenvalue</b>. Find them from</p>
+<div class="fx">det(A − λI) = 0   →   for 2×2:   λ² − (trace)·λ + det = 0</div>
+<p>Then the general solution of x′ = A·x is a sum of independent pieces, each moving along one eigenvector at its own rate:</p>
+<div class="fx">x(t) = c₁·e<sup>λ₁t</sup>·v₁ + c₂·e<sup>λ₂t</sup>·v₂</div>
+<p>The eigenvectors <b>decouple</b> the system: in eigen-coordinates, each equation stands alone. That single idea underlies modal analysis, principal components, Google's PageRank and quantum mechanics.</p>
+</section>
+<section><h2>Natural frequencies and mode shapes</h2>
+<p>For M·x″ + K·x = 0 guess x = φ·cos ωt. Then (K − ω²M)·φ = 0, which has a non-zero φ only if</p>
+<div class="fx">det(K − ω²M) = 0      → n natural frequencies ω₁ &lt; ω₂ &lt; …,  each with a mode shape φᵢ</div>
+<p>A <b>mode</b> is a pattern in which every part moves at the same frequency, in step (or exactly opposite), with fixed amplitude ratios. Start the system in a mode shape and it stays in it for ever. Any other start is a <b>mix</b> of modes, each ringing at its own frequency — and the mix generally does not repeat.</p>
+<details class="deep"><summary>Orthogonality, and why modes are independent</summary><div>
+<p>Because M and K are symmetric, mode shapes are orthogonal with respect to both: φᵢᵀ·M·φⱼ = 0 and φᵢᵀ·K·φⱼ = 0 for i ≠ j. Substituting x = Σ qᵢ(t)·φᵢ and multiplying by φⱼᵀ splits the coupled system into independent single-degree-of-freedom oscillators qⱼ″ + ωⱼ²·qⱼ = (forces projected on φⱼ). With proportional damping each gets its own ζⱼ. Every finite-element vibration analysis does exactly this for millions of degrees of freedom, then keeps only the few modes in the frequency range of interest.</p>
+</div></details>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>m₁ = m₂ = 1 kg, k₁ = k₃ = 20 N/m, k₂ = 10 N/m (the lab's default)</b><span class="mono">K = [[30, −10], [−10, 30]],   M = I
+det(K − λI) = (30 − λ)² − 100 = 0  →  λ = 20 or 40
+ω₁ = √20 = 4.47 rad/s,   φ₁ = [1, 1]   (both move together; the middle spring is never stretched)
+ω₂ = √40 = 6.32 rad/s,   φ₂ = [1, −1]  (they move opposite; the middle spring works twice as hard)
+Pull m₁ by 0.4 only:  x(0) = [0.4, 0] = 0.2·φ₁ + 0.2·φ₂
+x₁(t) = 0.2·cos 4.47t + 0.2·cos 6.32t,   x₂(t) = 0.2·cos 4.47t − 0.2·cos 6.32t
+→ beats: the energy swaps between the masses every π/(6.32 − 4.47) = 1.7 s</span></div>
+<div class="app"><b>Where you meet this</b>Torsional modes of a motor–coupling–gearbox–dynamometer drive line (keep them away from gear-mesh and running frequencies), building floors, car body and engine-mount modes, the <b>tuned mass absorber</b> (a small spring–mass tuned to the forcing frequency that makes the main mass stand still — used in the Taipei 101 tower and on power-line Stockbridge dampers), molecules' vibration spectra, and coupled pendulum clocks that synchronise.</div>
+</section>
+<section><h2>Lab: two-mass mode shapes</h2>
+<p>Start in mode 1 or mode 2 and press <kbd>P</kbd>: both masses move at one frequency, in step or opposite. Then choose "pull m₁ only" and reduce the coupling spring k₂: the energy wanders slowly from one mass to the other and back. Make the masses unequal and watch the mode shapes stop being symmetric.</p>
+<div class="widget" data-w="modes"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Mode shapes have no absolute size — only ratios matter. Normalise them however you like (largest = 1, or φᵀMφ = 1).</li>
+<li>A node of a mode (a point that does not move) is the worst place for an accelerometer and the best place for a mounting point.</li>
+<li>Free–free systems (k₁ = k₃ = 0) have a <b>rigid-body mode</b> at ω = 0 — the whole thing moving together without stretching any spring.</li>
+<li>Modal testing (an impact hammer and accelerometers) measures ωᵢ, ζᵢ and φᵢ directly; compare with your model's eigen-solution to validate it.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Find eigenvalues and eigenvectors of A = [[2, 1], [1, 2]].</li>
+<li>For m₁ = 2, m₂ = 1, k₁ = k₂ = k₃ = 10, find both natural frequencies. Check in the lab.</li>
+<li>Set k₃ = 0 and k₁ = 0 in the lab. What is mode 1 now?</li>
+<li>Write the two-tank system V₁c₁′ = Q(c<sub>in</sub> − c₁), V₂c₂′ = Q(c₁ − c₂) in matrix form. What are the eigenvalues?</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"An eigenvector v of A satisfies","o":["A·v = 0","A·v = λ·v","A·v = v + λ","det(A) = λ"],"a":1,"e":"A only stretches it by λ."},
+{"q":"For K = [[30, −10], [−10, 30]] and M = I, the natural frequencies are","o":["√20 and √40 rad/s","20 and 40 rad/s","√30 rad/s twice","10 and 30 rad/s"],"a":0,"e":"λ = 20, 40 → ω = √λ."},
+{"q":"A system started exactly in a mode shape","o":["Moves in all modes","Moves at one frequency with fixed amplitude ratios","Stays still","Becomes chaotic"],"a":1,"e":"That is the defining property of a mode."},
+{"q":"The trace of a 2×2 matrix equals","o":["The product of its eigenvalues","The sum of its eigenvalues","The largest eigenvalue","Its determinant"],"a":1,"e":"trace = λ₁ + λ₂, det = λ₁·λ₂."},
+{"q":"A tuned mass absorber works by","o":["Adding damping only","Making the main mass's motion vanish at the tuned forcing frequency","Raising the stiffness","Removing a mode"],"a":1,"e":"The absorber's spring force cancels the applied force at its own natural frequency."}
+]</quiz>
+</day>
+
+<day n="9">
+<summary>Any two-variable linear system x′ = A·x has only a handful of possible pictures: saddles, nodes, spirals and centres. Learn to read them from the eigenvalues, and then from just two numbers — the trace and the determinant — on one map that classifies every 2 × 2 system at once.</summary>
+<goals><li>Draw a phase portrait from eigenvalues and eigenvectors</li><li>Classify the origin as saddle, node, spiral, centre or degenerate</li><li>Use the trace–determinant map</li><li>Recognise the spring–mass–damper's three cases on that map</li><li>Sketch straight-line solutions and the direction of rotation</li></goals>
+<content>
+<section><h2>The phase plane</h2>
+<p>For two state variables (x, y), forget time for a moment and draw the vector (x′, y′) at each point of the plane. Solutions are curves that follow the arrows — <b>trajectories</b> or <b>orbits</b> — and the whole set is the <b>phase portrait</b>. Time is still there: it is how fast you move along the curve.</p>
+<p>For x′ = A·x the origin is always an equilibrium, and the eigenvalues decide everything.</p>
+</section>
+<section><h2>The catalogue</h2>
+<table><tr><th>Eigenvalues</th><th>Name</th><th>Picture</th></tr>
+<tr><td>Real, opposite signs</td><td><b>Saddle</b></td><td>In along one eigenvector, out along the other. Unstable. The two straight lines are separatrices.</td></tr>
+<tr><td>Real, both negative</td><td><b>Stable node</b></td><td>All curves flow in, arriving tangent to the slower eigenvector.</td></tr>
+<tr><td>Real, both positive</td><td><b>Unstable node</b></td><td>Same, flowing out.</td></tr>
+<tr><td>Complex α ± βi, α &lt; 0</td><td><b>Spiral sink</b> (stable focus)</td><td>Spirals in; turns at β rad per unit time.</td></tr>
+<tr><td>Complex, α &gt; 0</td><td><b>Spiral source</b></td><td>Spirals out.</td></tr>
+<tr><td>Pure imaginary ±βi</td><td><b>Centre</b></td><td>Closed ellipses, for ever.</td></tr>
+<tr><td>Repeated real</td><td><b>Star or degenerate node</b></td><td>Borderline between node and spiral.</td></tr>
+<tr><td>One zero</td><td><b>Line of equilibria</b></td><td>Every point on a line is at rest.</td></tr></table>
+<p>The direction of rotation of a spiral comes from any one arrow: at (1, 0) the velocity is (a, c); if c &gt; 0 the flow turns anticlockwise.</p>
+</section>
+<section><h2>The trace–determinant map</h2>
+<p>The characteristic equation λ² − τ·λ + Δ = 0 depends only on <b>τ = trace = a + d</b> and <b>Δ = det = ad − bc</b>. So one plane with τ across and Δ upwards classifies every 2 × 2 linear system:</p>
+<div class="fx">Δ &lt; 0 → saddle        Δ &gt; 0 and τ² &gt; 4Δ → node        Δ &gt; 0 and τ² &lt; 4Δ → spiral<br>τ &lt; 0 → stable        τ &gt; 0 → unstable        τ = 0, Δ &gt; 0 → centre<br>The parabola Δ = τ²/4 separates nodes from spirals.</div>
+<p><b>The oscillator again.</b> x″ + 2ζωn·x′ + ωn²·x = 0 in state form has A = [[0, 1], [−ωn², −2ζωn]], so τ = −2ζωn and Δ = ωn². Increasing damping moves the point left along a horizontal line: centre (ζ = 0) → spiral sink (ζ &lt; 1) → crosses the parabola at ζ = 1 → stable node. Day 5's three cases are three regions of this map.</p>
+<details class="deep"><summary>Structural stability: which pictures survive small changes</summary><div>
+<p>Nudge the matrix entries slightly. Saddles, nodes and spirals keep their type — they sit in open regions of the map. Centres (the τ = 0 line), degenerate nodes (on the parabola) and lines of equilibria (Δ = 0) do not: any perturbation changes them. That is why a real "undamped" system always turns out to spiral slightly in or out, and why centres in a linearisation tell you nothing certain about the nonlinear system (Day 10).</p>
+</div></details>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>x′ = x + y,  y′ = 4x − 2y     A = [[1, 1], [4, −2]]</b><span class="mono">τ = 1 + (−2) = −1,   Δ = (1)(−2) − (1)(4) = −6 < 0  → saddle
+λ² + λ − 6 = 0  →  λ = 2, λ = −3
+λ = 2:  (1 − 2)·v₁ + v₂ = 0  → v = [1, 1]    (outgoing straight line y = x)
+λ = −3: (1 + 3)·v₁ + v₂ = 0  → v = [1, −4]   (incoming straight line y = −4x)
+Solution: x(t) = c₁·e^(2t)·[1, 1] + c₂·e^(−3t)·[1, −4]
+Almost every start ends up shooting off along y = x.</span></div>
+<div class="app"><b>Where you meet this</b>Linearised stability of any operating point: an aircraft's short-period and phugoid modes, a rotor on oil-film bearings (where cross-coupled stiffness can push a spiral sink across into a source — oil whirl), two-species ecology, Romeo-and-Juliet "love dynamics" in Strogatz's famous example, and macro-economic models of inflation and unemployment.</div>
+</section>
+<section><h2>Lab: matrix phase portrait</h2>
+<p>Choose a preset or move a, b, c, d. Left: the field, some trajectories, the eigenvector lines (dashed, when the eigenvalues are real) and a cloud of particles — press <kbd>P</kbd> to let them flow. Click to add your own trajectories. Right: the trace–determinant map with your matrix as the blue dot. Drag d slowly to walk the dot across the parabola and watch a node turn into a spiral.</p>
+<div class="widget" data-w="linphase"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Eigenvectors are lines through the origin, not single arrows — both directions are solutions.</li>
+<li>Trajectories never cross (uniqueness, Day 1), except at an equilibrium which they approach only as t → ±∞.</li>
+<li>For real systems you rarely know A exactly; the map tells you how far you are from a boundary — your stability margin.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Classify A = [[−2, 1], [−1, −2]] and give the rotation direction.</li>
+<li>Classify A = [[3, −2], [4, −1]] using only τ and Δ.</li>
+<li>For which k is A = [[0, 1], [−k, −2]] a spiral? A node? Relate to damping.</li>
+<li>In the lab, find a matrix with τ = 0 and Δ &gt; 0. Now change a by +0.1. What happens to the orbits?</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"A 2×2 system with det < 0 has an equilibrium that is a","o":["Stable node","Centre","Saddle","Spiral"],"a":2,"e":"Negative determinant → eigenvalues of opposite sign."},
+{"q":"Eigenvalues −1 ± 3i give a","o":["Stable spiral turning at 3 rad/s","Unstable node","Centre","Saddle"],"a":0,"e":"Negative real part, non-zero imaginary part."},
+{"q":"On the trace–determinant map, nodes and spirals are separated by","o":["The τ axis","The Δ axis","The parabola Δ = τ²/4","The line Δ = τ"],"a":2,"e":"Real versus complex eigenvalues: τ² − 4Δ = 0."},
+{"q":"For x″ + 2ζωn x′ + ωn² x = 0 in state form, increasing ζ moves the point","o":["Up","Down","Left (more negative trace)","Right"],"a":2,"e":"τ = −2ζωn, Δ = ωn² stays fixed."},
+{"q":"Which phase portrait is NOT structurally stable?","o":["Saddle","Stable node","Spiral sink","Centre"],"a":3,"e":"A centre sits on the τ = 0 line; any perturbation makes it spiral."}
+]</quiz>
+</day>
+
+<day n="10">
+<summary>Nonlinear systems can do things linear ones never can: several stable states, oscillations of a fixed size whatever the start, sudden switching. Find equilibria from nullclines, classify them with the Jacobian, and meet the pendulum, predator and prey, the Van der Pol limit cycle and the SIR epidemic.</summary>
+<goals><li>Find equilibria from the intersection of nullclines</li><li>Linearise with the Jacobian and know when that is trustworthy</li><li>Use conserved quantities to read a phase portrait</li><li>Explain a limit cycle and the Poincaré–Bendixson idea</li><li>Read R₀ and the epidemic threshold from the SIR model</li></goals>
+<content>
+<section><h2>Nullclines and equilibria</h2>
+<p>For x′ = f(x, y), y′ = g(x, y) the <b>x-nullcline</b> is the curve f = 0 (flow is purely vertical there) and the <b>y-nullcline</b> is g = 0 (flow purely horizontal). Equilibria are where they cross. Between nullclines the arrows keep the same general direction, so sketching the two curves and one arrow per region already gives a rough phase portrait — no computer needed.</p>
+</section>
+<section><h2>Linearisation: the Jacobian</h2>
+<p>Near an equilibrium (x*, y*) replace f and g by their tangent planes:</p>
+<div class="fx">J = [[∂f/∂x, ∂f/∂y], [∂g/∂x, ∂g/∂y]] evaluated at (x*, y*)       →      η′ ≈ J·η</div>
+<p>Classify J with Day 9's map. The <b>Hartman–Grobman theorem</b> says the nonlinear picture near the point looks like the linear one <i>provided no eigenvalue has zero real part</i> (a "hyperbolic" equilibrium). Saddles, nodes and spirals carry over; centres do not — the nonlinear terms decide whether the orbits close, spiral in or spiral out.</p>
+</section>
+<section><h2>Four classic systems</h2>
+<table><tr><th>System</th><th>Equations</th><th>What to look for</th></tr>
+<tr><td><b>Pendulum</b></td><td>θ′ = ω,  ω′ = −sin θ − c·ω</td><td>Hanging equilibria (spirals), inverted ones (saddles). With c = 0 the energy ½ω² − cos θ is conserved: closed swings inside the separatrix, continuous spinning outside.</td></tr>
+<tr><td><b>Predator–prey</b> (Lotka–Volterra)</td><td>x′ = x − 0.5xy,  y′ = 0.25xy − p·y</td><td>A centre at (4p, 2) surrounded by closed cycles: prey peak, then predators peak a quarter-cycle later. A hidden conserved quantity keeps the orbits closed.</td></tr>
+<tr><td><b>Van der Pol</b></td><td>x′ = y,  y′ = μ(1 − x²)y − x</td><td>Negative damping at small amplitude, positive at large: every start converges to one closed orbit — a <b>limit cycle</b>.</td></tr>
+<tr><td><b>SIR epidemic</b></td><td>S′ = −βSI,  I′ = βSI − γI</td><td>Infections grow only while S &gt; γ/β. R₀ = β/γ; the epidemic turns when S falls to 1/R₀.</td></tr></table>
+<details class="deep"><summary>Limit cycles and the Poincaré–Bendixson theorem</summary><div>
+<p>In the plane, a trajectory that stays in a closed bounded region containing no equilibrium must approach a closed orbit. So if you can draw a "trapping" ring that the flow enters everywhere on its edges, and the only equilibrium inside the hole is a source, there must be a limit cycle in the ring. This is why chaos is impossible in two-dimensional autonomous systems: trajectories cannot cross, so in the plane they have nowhere to go except to equilibria or cycles. A limit cycle is usually born in a <b>Hopf bifurcation</b>, where a spiral sink's eigenvalues cross the imaginary axis (Van der Pol at μ = 0).</p>
+</div></details>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>Damped pendulum θ″ + 0.25·θ′ + sin θ = 0 as θ′ = ω, ω′ = −sin θ − 0.25ω</b><span class="mono">Equilibria: ω = 0 and sin θ = 0 → θ = 0, ±π, ±2π …
+J = [[0, 1], [−cos θ, −0.25]]
+At θ = 0:  J = [[0, 1], [−1, −0.25]]   τ = −0.25, Δ = 1 → λ = −0.125 ± 0.992i → spiral sink (hanging)
+At θ = π:  J = [[0, 1], [ 1, −0.25]]   Δ = −1 < 0 → λ = 0.883, −1.133 → saddle (inverted)</span></div>
+<div class="eg"><b>Predator–prey at p = 0.75</b><span class="mono">Equilibrium: y′ = 0 → x* = 0.75/0.25 = 3;  x′ = 0 → y* = 1/0.5 = 2
+J(3, 2) = [[1 − 0.5·2, −0.5·3], [0.25·2, 0.25·3 − 0.75]] = [[0, −1.5], [0.5, 0]]
+λ = ±√(−0.75) = ±0.866i → linear centre; cycles of period ≈ 2π/0.866 = 7.3 time units</span></div>
+<div class="app"><b>Where you meet this</b>Limit cycles are self-sustained oscillations: heart beats, a clock's escapement, a violin bow, brake squeal and stick-slip on machine slides, wheel shimmy, aero-elastic flutter, oil whirl in journal bearings, and valve chatter. Nonlinear multistability: a Duffing-type rig mount that jumps between two vibration amplitudes, latch-up in electronics, and the two possible states of a bistable switch.</div>
+</section>
+<section><h2>Lab: nonlinear phase plane</h2>
+<p>Choose a model and press <kbd>P</kbd> to watch the flow. Dashed blue is the x-nullcline, dashed orange the y-nullcline; equilibria are found where they cross and classified from the Jacobian (filled blue = stable, hollow orange = unstable, × = saddle). Click to launch trajectories; the right plot shows the last one in time. You can also type your own system in x, y and a parameter p.</p>
+<div class="widget" data-w="nonlin"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Always sketch nullclines first — they catch algebra slips in finding equilibria.</li>
+<li>A centre in the linearisation is a warning, not an answer. Look for a conserved quantity or simulate.</li>
+<li>A limit cycle's amplitude is set by the nonlinearity, not by the initial conditions — that is the key test to tell it from a linear oscillation in measured data.</li>
+<li>In SIR, the peak of infections happens when S drops to 1/R₀, well before most people are infected; the total ever infected depends on R₀ alone.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Find and classify all equilibria of x′ = x(3 − x − 2y), y′ = y(2 − x − y). Which species wins?</li>
+<li>Show that E = ½ω² − cos θ is constant along undamped pendulum trajectories (differentiate it).</li>
+<li>In the lab, set Van der Pol's p = 0.1 and p = 4. How do the cycle's shape and the x(t) waveform change? (Hint: "relaxation oscillation".)</li>
+<li>For SIR with β = 0.3 and γ = 0.1, at what fraction susceptible does the infection peak?</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"The x-nullcline of x′ = f, y′ = g is where","o":["f = 0, so the flow is vertical","g = 0, so the flow is vertical","x = 0","f = g"],"a":0,"e":"x′ = 0 means no horizontal motion."},
+{"q":"Linearisation reliably predicts the local picture when","o":["The Jacobian is symmetric","No eigenvalue has zero real part","The system is a pendulum","There is one equilibrium"],"a":1,"e":"Hartman–Grobman needs a hyperbolic equilibrium."},
+{"q":"The inverted pendulum equilibrium (θ = π) is a","o":["Centre","Spiral sink","Saddle","Stable node"],"a":2,"e":"J has determinant −1 < 0."},
+{"q":"A limit cycle differs from the orbits of a linear centre because","o":["It is not periodic","Its amplitude is fixed and nearby orbits converge to it","It only exists in 3-D","It has no frequency"],"a":1,"e":"An isolated closed orbit that attracts its neighbours."},
+{"q":"In SIR with R₀ = 3, infections begin to fall when the susceptible fraction drops below","o":["1/9","1/3","1/2","2/3"],"a":1,"e":"I′ < 0 when S < γ/β = 1/R₀."}
+]</quiz>
+</day>

@@ -1,0 +1,385 @@
+<!--
+TOOL:    differential-equations/_src/week1.html — 15-Day Differential Equations Course content source, Week 1 (Days 1–5)
+FAMILY:  differential-equations
+VERSION: 1.0.0
+DATE:    2026-11-19
+CHAT:    Differential equations are fascinating — make a 15 days course to deeper understanding of differential equations
+CHANGES: 1.0.0 - first version: rates and slope fields, first-order equations, equilibria and bifurcations, numerical methods, the spring–mass–damper
+STATUS:  working
+-->
+
+<day n="1">
+<summary>A differential equation is a rule that tells you how fast something changes, given where it is now. Learn to read equations that way, to build them from "rate in minus rate out", and to see them as a field of slopes that every solution must follow.</summary>
+<goals><li>Read y′ = f(t, y) as a rule for change, not a puzzle to be solved</li><li>Build an equation from a balance: accumulation = in − out</li><li>Use the words order, linear, autonomous, initial value problem and solution correctly</li><li>Draw and read a slope field, and sketch solutions through it</li><li>Know when a solution exists, when it is unique, and when it can blow up</li></goals>
+<content>
+<section><h2>A rule for change</h2>
+<p>Most laws of nature do not tell you <i>what</i> a quantity is. They tell you <i>how fast it changes</i>. Newton did not say where a planet will be; he said its acceleration is set by the force on it. Fourier did not say how hot a rod is; he said heat flows from hot to cold at a rate set by the temperature gradient. A <b>differential equation</b> is exactly such a statement: it links a quantity to its own rate of change.</p>
+<div class="fx">y′ = dy/dt = f(t, y)<br><b>In words:</b> "the rate at which y changes right now depends on the time and on the value of y right now."</div>
+<p>Once you know the rule and where you start, the whole future is fixed — step forward a little at the rate the rule gives, look at the rule again, step again. That is the whole idea, and every method in this course is a more clever way of doing that walk.</p>
+<table><tr><th>Process</th><th>Quantity y</th><th>Rate law in words</th><th>Equation</th></tr>
+<tr><td>Bank deposit, continuous interest</td><td>Balance B</td><td>Grows in proportion to itself</td><td>B′ = r·B</td></tr>
+<tr><td>Radioactive decay, drug in the blood</td><td>Amount N</td><td>A fixed fraction leaves per unit time</td><td>N′ = −k·N</td></tr>
+<tr><td>Hot gearbox oil cooling down</td><td>Temperature T</td><td>Heat loss ∝ difference from the room</td><td>T′ = −k·(T − T<sub>room</sub>)</td></tr>
+<tr><td>Population with limited food</td><td>Population P</td><td>Grows, but slows as it nears capacity K</td><td>P′ = r·P·(1 − P/K)</td></tr>
+<tr><td>Falling body with air drag</td><td>Velocity v</td><td>Gravity minus drag ∝ v²</td><td>m·v′ = m·g − c·v²</td></tr>
+<tr><td>Spring–mass system</td><td>Displacement x</td><td>Acceleration ∝ −displacement</td><td>m·x″ = −k·x</td></tr></table>
+</section>
+<section><h2>Building an equation: rate in minus rate out</h2>
+<p>Almost every model you will ever write starts from one sentence, the <b>balance law</b>:</p>
+<div class="def"><b>Rate of accumulation = rate in − rate out + rate generated − rate consumed.</b> It holds for mass, energy, money, people, heat, charge — anything you can count.</div>
+<p><b>Example — a tank with an outlet.</b> Water flows in at Q<sub>in</sub>. It drains through a hole at the bottom; by Torricelli, the outflow is Q<sub>out</sub> = k·√h, faster when the water is deeper. The volume is A·h, so</p>
+<div class="fx">A · dh/dt = Q<sub>in</sub> − k·√h</div>
+<p>Read it before you solve it. When h is small the outflow is small, dh/dt &gt; 0 and the tank fills. When h is large the outflow wins and the tank drains. Somewhere in between, in and out balance — that level h* = (Q<sub>in</sub>/k)² is an <b>equilibrium</b>. You know all of this without solving anything.</p>
+<p><b>Example — a mixing tank.</b> A V-litre tank of brine is flushed with fresh water at Q litres per minute, perfectly mixed. The salt mass m leaves at the outflow concentration m/V: m′ = −(Q/V)·m. Same shape as decay, with time constant V/Q.</p>
+</section>
+<section><h2>The vocabulary</h2>
+<table><tr><th>Word</th><th>Meaning</th><th>Example</th></tr>
+<tr><td><b>Order</b></td><td>The highest derivative that appears</td><td>m·x″ + k·x = 0 is second order</td></tr>
+<tr><td><b>Linear</b></td><td>y and its derivatives appear only to the first power, never multiplied together or inside sin, √ …</td><td>y′ + 2y = sin t is linear; y′ = y² is not</td></tr>
+<tr><td><b>Autonomous</b></td><td>f does not depend on t explicitly</td><td>P′ = r·P·(1 − P/K)</td></tr>
+<tr><td><b>ODE / PDE</b></td><td>Ordinary: one independent variable (time). Partial: several (time and space)</td><td>Heat in a rod: u<sub>t</sub> = α·u<sub>xx</sub> (Day 12)</td></tr>
+<tr><td><b>Initial value problem</b></td><td>The equation plus a starting value y(t₀) = y₀</td><td>T′ = −0.06(T − 27), T(0) = 85</td></tr>
+<tr><td><b>Solution</b></td><td>A <i>function</i> y(t) that makes the equation true for every t</td><td>y = C·e<sup>0.5t</sup> solves y′ = 0.5y</td></tr></table>
+<p>Checking a solution needs no cleverness — just substitute. If y = C·e<sup>0.5t</sup> then y′ = 0.5·C·e<sup>0.5t</sup> = 0.5·y. ✓ The constant C is free: that is the <b>general solution</b>, a whole family of curves. The initial value picks one member: y(0) = 2 gives C = 2.</p>
+</section>
+<section><h2>The picture: a field of slopes</h2>
+<p>The equation y′ = f(t, y) gives a slope at <i>every</i> point of the (t, y) plane. Draw a tiny line segment with that slope at a grid of points and you get a <b>slope field</b> (or direction field). A solution is a curve that is tangent to the field everywhere — like a leaf carried on a stream, it has no choice where to go.</p>
+<ul><li><b>Isoclines</b> are curves where the slope is the same. The isocline f = 0 is special: there the solutions are momentarily flat, so maxima and minima of solutions sit on it.</li>
+<li>Where the field is the same along every horizontal line, the equation is <b>autonomous</b>: shifting a solution in time gives another solution.</li>
+<li>Different starting points give different curves, but in a well-behaved field <b>curves never cross</b>. If two did, the point of crossing would have two different futures.</li></ul>
+<details class="deep"><summary>Existence, uniqueness and blow-up</summary><div>
+<p><b>Picard–Lindelöf theorem.</b> If f(t, y) and ∂f/∂y are continuous near (t₀, y₀), exactly one solution passes through that point, at least for a short time. The proof builds the solution as the limit of the iteration y<sub>k+1</sub>(t) = y₀ + ∫ f(s, y<sub>k</sub>(s)) ds, which is a contraction when ∂f/∂y is bounded.</p>
+<p><b>When uniqueness fails.</b> y′ = 3·|y|<sup>2/3</sup> with y(0) = 0 has the solution y = 0 <i>and</i> y = t³, and infinitely many that sit at zero for a while and then take off. Here ∂f/∂y = 2·|y|<sup>−1/3</sup> is infinite at y = 0, so the theorem does not apply. Pick the last preset in the lab to see it.</p>
+<p><b>Blow-up in finite time.</b> y′ = y², y(0) = 1 has the solution y = 1/(1 − t), which is infinite at t = 1. A smooth, innocent-looking f can still send solutions to infinity — the theorem only promises a solution for "a short time". Linear equations never do this.</p>
+</div></details>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>The tank: A = 0.5 m², Q<sub>in</sub> = 60 L/min, k = 60 L/min per √m</b><span class="mono">Units: Q in L/min = 0.001 m³/min, so  dh/dt = (Q_in − k·√h) / (1000·A)   [m/min]
+At h = 0.25 m:  outflow = 60 × √0.25 = 30 L/min
+dh/dt = (60 − 30) / (1000 × 0.5) = 30/500 = 0.06 m/min  → rising 60 mm per minute
+Equilibrium: 60 = 60·√h*  →  h* = 1 m
+At h = 1.44 m: outflow = 60 × 1.2 = 72 L/min, dh/dt = −12/500 = −0.024 m/min → falling
+So whatever the start, the level heads for 1 m — and we have not solved anything.</span></div>
+<div class="app"><b>Where you meet this</b>Coolant header tanks, lube-oil sumps with a return line, a settling pond, a reservoir behind a dam, a bath tub — and, by analogy, a capacitor discharging through a resistor, or a queue of jobs being served.</div>
+</section>
+<section><h2>Lab: slope field explorer</h2>
+<p>Pick an equation or type your own in t and y (use * for multiply and ^ for powers, e.g. <code>y*(1-y) - 0.1*t</code>). Click anywhere to start a solution there. Press <kbd>P</kbd> to send a point along the newest curve: the orange line is its tangent, and the right-hand plot shows the solution and its derivative together — the derivative is just f evaluated along the curve.</p>
+<div class="widget" data-w="field"></div>
+<h3>The tank, live</h3>
+<p>Press <kbd>P</kbd>, then move the inflow slider while it runs. The level never jumps — only its <i>rate</i> jumps. That is what a first-order equation means physically: the state is continuous; the rule sets the slope.</p>
+<div class="widget" data-w="tank"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li><b>Check units first.</b> Every term in an equation must have the same units. In the tank, L/min had to become m³/min before dividing by A.</li>
+<li><b>A solution is a function, not a number.</b> "Solve y′ = 2y" means "find all functions whose derivative is twice themselves".</li>
+<li><b>Signs carry the physics.</b> Write out-flows with a minus sign and check: if y is big, does the equation pull it back?</li>
+<li><b>Look before you solve.</b> Equilibria and the direction of change can be read off the equation in seconds and catch most algebra slips later.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>In the lab, choose y′ = t − y. Where is the isocline of zero slope? Show that y = t − 1 is a solution, and see that every curve approaches it.</li>
+<li>A 2000-litre tank of brine with 50 kg of salt is flushed with fresh water at 40 L/min. Write the equation for the salt mass. What is the time constant?</li>
+<li>Show by substitution that y = 1/(1 − t) solves y′ = y². Where does it blow up? Type <code>y^2</code> in the lab and look.</li>
+<li>Classify (order, linear or not, autonomous or not): (a) x″ + sin x = 0 (b) y′ = t·y (c) y′ + y = cos t.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"The equation y′ = f(t, y) tells you","o":["The value of y at every time directly","How fast y is changing, given t and the current y","The area under y","Only the final value of y"],"a":1,"e":"A differential equation is a rule for the rate of change; the values follow by stepping along it."},
+{"q":"In a tank, A·dh/dt = Q_in − k·√h. The equilibrium level is","o":["Q_in/k","(Q_in/k)²","k/Q_in","√(Q_in/k)"],"a":1,"e":"Set dh/dt = 0: Q_in = k·√h*, so h* = (Q_in/k)²."},
+{"q":"Which equation is linear?","o":["y′ = y²","y′ = sin y","y′ + 3t·y = e^t","y·y′ = 1"],"a":2,"e":"y and y′ appear to the first power with coefficients that depend only on t."},
+{"q":"On a slope field, the isocline f(t, y) = 0 is where","o":["Solutions cross each other","Solutions are momentarily horizontal","The equation has no solution","y = 0"],"a":1,"e":"Zero slope: the maxima and minima of solutions lie on it."},
+{"q":"y′ = 3|y|^(2/3), y(0) = 0 has more than one solution because","o":["f is not continuous","∂f/∂y is infinite at y = 0, so uniqueness is not guaranteed","It is a linear equation","The initial value is zero"],"a":1,"e":"Picard–Lindelöf needs ∂f/∂y to be bounded; here it is not, and both y = 0 and y = t³ work."}
+]</quiz>
+</day>
+
+<day n="2">
+<summary>The two families of first-order equations you can always solve by hand — separable and linear — and the single idea that ties most engineering ones together: the time constant τ. See why every first-order lag reaches 63 % in one τ, whatever the size of the step.</summary>
+<goals><li>Solve separable equations by separating and integrating</li><li>Solve linear equations with an integrating factor</li><li>Write a first-order system in standard form τ·y′ + y = K·u and read off τ and K</li><li>Use the 1τ / 3τ / 5τ rule and the initial-slope rule</li><li>Predict the lag and attenuation of a slow sensor reading a sine wave</li></goals>
+<content>
+<section><h2>Separable equations</h2>
+<p>If the right-hand side splits into a function of t times a function of y, put all the y on one side and all the t on the other, then integrate both.</p>
+<div class="fx">dy/dt = g(t)·h(y)   →   ∫ dy / h(y) = ∫ g(t) dt + C</div>
+<p><b>Growth and decay.</b> y′ = k·y → ∫dy/y = ∫k dt → ln|y| = k·t + C → <b>y = y₀·e<sup>kt</sup></b>. For decay (k &lt; 0) the <b>half-life</b> is t<sub>½</sub> = ln 2/|k| ≈ 0.693/|k|.</p>
+<p><b>Logistic growth.</b> y′ = r·y·(1 − y/K). Separating with partial fractions gives</p>
+<div class="fx">y(t) = K / (1 + (K/y₀ − 1)·e<sup>−rt</sup>)</div>
+<p>An S-curve: exponential at first, fastest at y = K/2, then flattening onto the capacity K. Sales of a new product, a spreading rumour, a culture of bacteria and the adoption of a new technology all trace S-curves of this kind.</p>
+</section>
+<section><h2>Linear equations and the integrating factor</h2>
+<p>Every first-order linear equation can be written</p>
+<div class="fx">y′ + p(t)·y = q(t)</div>
+<p>Multiply by μ(t) = e<sup>∫p dt</sup>. The left side becomes the derivative of a product, (μ·y)′ = μ·q, because μ′ = p·μ. Integrate once and divide by μ:</p>
+<div class="fx">y(t) = (1/μ)·( ∫ μ·q dt + C ),    μ = e<sup>∫p dt</sup></div>
+<div class="eg"><b>Example: y′ + 2y = e<sup>−t</sup>, y(0) = 0</b><span class="mono">μ = e^(2t)   →   (y·e^(2t))′ = e^(2t)·e^(−t) = e^t
+y·e^(2t) = e^t + C,   y(0) = 0  →  C = −1
+y = e^(−t) − e^(−2t)     (rises, peaks at t = ln 2 = 0.693, then decays)</span></div>
+<details class="deep"><summary>Why linear equations are special: superposition</summary><div>
+<p>For a linear equation L[y] = q, the difference of any two solutions solves L[y] = 0. So <b>every solution = one particular solution + the general solution of the homogeneous equation</b>. The homogeneous part carries the initial condition and dies away (if the system is stable) — it is the <i>transient</i>. The particular part follows the input — it is the <i>steady state</i>. And if inputs q₁ and q₂ give responses y₁ and y₂, input q₁ + q₂ gives y₁ + y₂. This one property is why Laplace transforms (Day 7), Fourier series (Day 12) and modal analysis (Day 8) work — and why none of them work for nonlinear systems.</p>
+</div></details>
+</section>
+<section><h2>The time constant</h2>
+<p>A huge number of engineering processes are first-order lags. Written in standard form:</p>
+<div class="fx">τ · y′ + y = K · u(t)      τ = time constant,  K = steady-state gain<br><b>Step response</b> (u jumps from 0 to 1 at t = 0):   y(t) = K + (y₀ − K)·e<sup>−t/τ</sup></div>
+<table><tr><th>Time</th><th>1τ</th><th>2τ</th><th>3τ</th><th>4τ</th><th>5τ</th></tr>
+<tr><td>Fraction of the change completed</td><td>63.2 %</td><td>86.5 %</td><td>95.0 %</td><td>98.2 %</td><td>99.3 %</td></tr></table>
+<p><b>The initial-slope rule:</b> the tangent at t = 0 has slope (K − y₀)/τ, so if the change continued at its starting rate it would finish in exactly one τ. On a recorder trace, draw the tangent at the start and read τ where it hits the final value.</p>
+<table><tr><th>System</th><th>τ</th><th>K</th></tr>
+<tr><td>RC circuit</td><td>R·C</td><td>Supply voltage</td></tr>
+<tr><td>Thermal mass with heat loss (oil sump, motor winding)</td><td>m·c / (h·A)</td><td>Heat input / (h·A)</td></tr>
+<tr><td>Mixing tank</td><td>V / Q</td><td>Inlet concentration</td></tr>
+<tr><td>Thermocouple or RTD in a fluid</td><td>ρ·c·V / (h·A) — seconds for a bare bead, tens of seconds in a thermowell</td><td>1</td></tr>
+<tr><td>Motor speed after a voltage step (inertia + viscous drag)</td><td>J / b</td><td>Speed per volt</td></tr></table>
+<p><b>Sine input.</b> Feed u = sin ωt into a lag and, after the transient, the output is a sine at the same frequency, smaller by 1/√(1 + (ωτ)²) and late by φ = arctan(ωτ). At ωτ = 1 the output is 71 % in amplitude and 45° behind. A slow sensor quietly under-reads fast fluctuations.</p>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>Newton cooling: tea at 85 °C in a 27 °C room reads 70 °C after 5 min. When will it be 50 °C?</b><span class="mono">T − 27 = 58·e^(−k·t)          (58 = 85 − 27)
+At t = 5:  43 = 58·e^(−5k)  →  k = ln(58/43)/5 = 0.0598 per min   (τ = 1/k = 16.7 min)
+50 °C:     23 = 58·e^(−k·t)  →  t = ln(58/23)/0.0598 = 15.5 min</span></div>
+<div class="eg"><b>Gearbox oil warming up on a test rig: τ = 25 min, final rise 45 °C above the room</b><span class="mono">Rise after 25 min (1τ) = 0.632 × 45 = 28.4 °C
+Rise after 75 min (3τ) = 0.950 × 45 = 42.8 °C — within 2.2 °C of final
+Initial rate = 45/25 = 1.8 °C per min
+Practical rule: "thermally stable" readings need 3–5 τ, i.e. 75–125 min of running.</span></div>
+<div class="app"><b>Where you meet this</b>Rig warm-up and stabilisation criteria, sensor response times, RC filters in data acquisition (anti-aliasing), drug dosing intervals (half-life), carbon dating, charging a phone battery at constant voltage, a bank loan at continuous interest.</div>
+</section>
+<section><h2>Lab: time-constant explorer</h2>
+<p>Pick a process and an input. Watch three things: the dotted initial tangent hitting the final value at t = τ, the 63 / 95 / 99 % marks, and the derivative on the right — biggest at the start and dying with the <i>same</i> time constant. Then choose the thermocouple with a sine input and slide ω·τ: watch the response shrink and fall behind.</p>
+<div class="widget" data-w="tau"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Forgetting the <b>absolute value</b> and the constant when integrating 1/y loses solutions; check the sign case separately.</li>
+<li>Always put a linear equation in the form y′ + p·y = q (coefficient of y′ equal to 1) <i>before</i> computing μ.</li>
+<li>τ does not depend on the size of the step — a small and a large step take the same time to reach 63 %. If yours does not, the system is nonlinear.</li>
+<li>Plot ln|y − y<sub>final</sub>| against t: a straight line confirms a first-order lag and its slope is −1/τ.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Solve y′ = −t·y², y(0) = 2 by separation.</li>
+<li>Solve y′ + y/t = t², y(1) = 0 (μ = t).</li>
+<li>A thermocouple with τ = 4 s is plunged from 25 °C into 200 °C oil. What does it read after 4 s and after 10 s?</li>
+<li>In the lab, choose a ramp input. How far behind the ramp does the output run once settled? Prove it from the equation.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"A first-order lag after a step reaches what fraction of its final change in one time constant?","o":["50 %","63.2 %","86.5 %","95 %"],"a":1,"e":"1 − e^(−1) = 0.632."},
+{"q":"The integrating factor for y′ + 3y = t is","o":["e^(3t)","e^(−3t)","3t","e^t"],"a":0,"e":"μ = e^(∫3 dt) = e^(3t)."},
+{"q":"An RC circuit with R = 10 kΩ and C = 100 µF has a time constant of","o":["0.1 s","1 s","10 s","1 ms"],"a":1,"e":"τ = RC = 10⁴ × 10⁻⁴ = 1 s."},
+{"q":"A sensor with τ = 2 s reads a sine at ω = 0.5 rad/s. Its amplitude ratio is","o":["1","0.71","0.5","0.25"],"a":1,"e":"ωτ = 1 → 1/√2 = 0.71, lagging 45°."},
+{"q":"A substance decays with k = 0.1 per hour. Its half-life is about","o":["0.69 h","6.9 h","10 h","14 h"],"a":1,"e":"t½ = ln 2 / k = 0.693/0.1 = 6.9 h."}
+]</quiz>
+</day>
+
+<day n="3">
+<summary>Most differential equations have no formula for their solution — and you often do not need one. For y′ = f(y) a single plot of f tells you every equilibrium, which are stable, and where every solution ends up. Then let a parameter vary and watch equilibria collide and vanish: a bifurcation, the mathematics of tipping points.</summary>
+<goals><li>Find equilibria of y′ = f(y) and decide their stability from the sign of f′</li><li>Draw the phase line and predict every solution's fate</li><li>Linearise near an equilibrium and get the local time constant</li><li>Recognise saddle-node, transcritical and pitchfork bifurcations</li><li>Explain hysteresis and sudden collapse in harvesting and thermal runaway</li></goals>
+<content>
+<section><h2>Equilibria and the phase line</h2>
+<p>For an autonomous equation y′ = f(y) the rate depends only on where you are. Plot f(y) against y:</p>
+<ul><li>Where f(y) &gt; 0, y increases — draw an arrow to the right on the y-axis.</li>
+<li>Where f(y) &lt; 0, y decreases — arrow to the left.</li>
+<li>Where f(y*) = 0, nothing changes: y* is an <b>equilibrium</b> (fixed point, steady state).</li></ul>
+<p>The y-axis with its arrows is the <b>phase line</b>. Solutions slide along it towards the next equilibrium in the arrow's direction and can never pass one. If the arrows on both sides point inwards the equilibrium is <b>stable</b> (an attractor); outwards, <b>unstable</b> (a repeller); same direction on both sides, <b>half-stable</b>.</p>
+<div class="fx"><b>Test:</b>   f′(y*) &lt; 0 → stable      f′(y*) &gt; 0 → unstable      f′(y*) = 0 → look closer</div>
+</section>
+<section><h2>Linearisation: the local time constant</h2>
+<p>Near an equilibrium write y = y* + η with η small. Taylor: f(y* + η) ≈ f(y*) + f′(y*)·η = f′(y*)·η. So</p>
+<div class="fx">η′ ≈ f′(y*)·η   →   η(t) ≈ η₀·e<sup>f′(y*)·t</sup>       local time constant τ = −1/f′(y*)</div>
+<p>The slope of f at the crossing tells you <i>how fast</i> small disturbances die (or grow). A shallow crossing means a sluggish system that takes long to recover — an early warning that a tipping point is near ("critical slowing down").</p>
+<p><b>Logistic example.</b> f(y) = r·y(1 − y/K): equilibria y* = 0 and y* = K. f′(0) = r &gt; 0 → unstable (a tiny population grows). f′(K) = −r &lt; 0 → stable, with recovery time 1/r.</p>
+</section>
+<section><h2>Bifurcations: when a parameter changes the picture</h2>
+<p>Let f depend on a parameter p (a harvest rate, a load, a heating rate). As p changes, the graph of f moves up and down. Usually the equilibria just shift — but at special values they appear, disappear or swap stability. That qualitative change is a <b>bifurcation</b>. Plotting equilibria against p gives the <b>bifurcation diagram</b>.</p>
+<table><tr><th>Type</th><th>Normal form</th><th>What happens</th></tr>
+<tr><td><b>Saddle-node</b> (fold)</td><td>y′ = p + y²</td><td>A stable and an unstable equilibrium approach, merge and vanish. The system falls off a cliff.</td></tr>
+<tr><td><b>Transcritical</b></td><td>y′ = p·y − y²</td><td>Two equilibria pass through each other and exchange stability. A threshold: below it the disease dies out, above it the epidemic takes off.</td></tr>
+<tr><td><b>Pitchfork</b></td><td>y′ = p·y − y³</td><td>One stable state splits into two symmetric ones. A straight column buckling left or right; a magnet choosing north or south.</td></tr></table>
+<details class="deep"><summary>Why these three are the only common ones</summary><div>
+<p>At a one-dimensional bifurcation f(y*) = 0 and f′(y*) = 0 at the same time. Expand f in a Taylor series about that point and keep the lowest-order terms that do not vanish: generically you get p + y² (the fold). Extra structure removes terms: if y = 0 is always an equilibrium (f(0, p) = 0 for all p) you get p·y − y² (transcritical); if the system is symmetric under y → −y, even powers vanish and you get p·y − y³ (pitchfork). Every bifurcation of y′ = f(y, p) "looks like" one of these near the critical point — that is the meaning of a <i>normal form</i>.</p>
+</div></details>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>Fishery with constant harvest: y′ = y·(1 − y/4) − p   (fish stock y in thousands of tonnes, harvest p per year)</b><span class="mono">Equilibria: y − y²/4 − p = 0  →  y² − 4y + 4p = 0  →  y* = 2 ± 2·√(1 − p)
+p = 0.5:  y* = 0.586 (unstable)  and  3.414 (stable)   ← the fishery settles at 3.414
+f′(y) = 1 − y/2:  f′(3.414) = −0.707 → stable, recovery time ≈ 1/0.707 = 1.4 years
+                  f′(0.586) = +0.707 → unstable: below 0.586 the stock collapses
+p = 1:    both merge at y* = 2 (saddle-node).   p > 1: no equilibrium at all → extinction
+Maximum sustainable yield = 1 = r·K/4, but operating right at it leaves no margin:
+recovery time → ∞ as p → 1.</span></div>
+<div class="app"><b>Where you meet this</b><b>Thermal runaway</b> in a bearing or battery: heat generation rises steeply with temperature while cooling rises only linearly. Below a critical load there is a stable operating temperature; above it the two curves no longer cross and temperature runs away — a saddle-node. Also: lake eutrophication, ecosystem collapse, voltage collapse in power grids, bank runs, and the "click" of a snap-through switch.</div>
+</section>
+<section><h2>Lab: phase line and bifurcation</h2>
+<p>Left: f(y) with the phase-line arrows and equilibria (filled = stable, hollow = unstable). Middle: solutions from many starts, each heading to a stable level. Right: the bifurcation diagram, with your p as a dashed line. Press <kbd>P</kbd> to sweep p back and forth and watch the equilibria collide.</p>
+<div class="widget" data-w="phaseline"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Stability is about <b>small</b> disturbances. A stable equilibrium can still be knocked over by a big one — look at where the unstable neighbour sits; that is the edge of the basin.</li>
+<li><b>Hysteresis.</b> In the spruce budworm model, sweep p up and then down: the population jumps to the outbreak branch at one value and falls back at a different one. Undoing the cause does not undo the effect.</li>
+<li>One-dimensional autonomous systems can never oscillate — solutions are monotonic. Oscillation needs at least two dimensions (Day 8 onward) or a time delay.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Find and classify the equilibria of y′ = y(y − 1)(y − 3). Sketch the phase line.</li>
+<li>For y′ = p − y², at which p is the bifurcation? Which type?</li>
+<li>In the lab, pick the pitchfork. What happens to the recovery time (slope of f at the stable point) as p → 0 from above?</li>
+<li>A bearing makes heat Q = a·e<sup>T/30</sup> and loses h·(T − 30). Sketch both curves and explain how increasing a can make the stable temperature vanish.</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"For y′ = f(y), an equilibrium y* is stable if","o":["f(y*) > 0","f′(y*) < 0","f′(y*) > 0","f″(y*) = 0"],"a":1,"e":"Disturbances obey η′ = f′(y*)·η and decay when f′(y*) < 0."},
+{"q":"y′ = y(1 − y) has equilibria","o":["0 (stable), 1 (unstable)","0 (unstable), 1 (stable)","Both stable","Only y = 1"],"a":1,"e":"f′(0) = 1 > 0 unstable; f′(1) = −1 < 0 stable."},
+{"q":"In a saddle-node bifurcation","o":["One equilibrium splits into three","A stable and an unstable equilibrium merge and disappear","Two equilibria exchange stability","An oscillation is born"],"a":1,"e":"The fold: the cliff edge of tipping points."},
+{"q":"Near a stable equilibrium with f′(y*) = −0.2 per day, small disturbances decay with a time constant of","o":["0.2 days","2 days","5 days","20 days"],"a":2,"e":"τ = −1/f′(y*) = 5 days."},
+{"q":"Why can't y′ = f(y) produce oscillations?","o":["Because f is always linear","Solutions on the phase line move monotonically and cannot pass an equilibrium or turn back","Because there is no damping","They can, if f is periodic"],"a":1,"e":"On a line, a trajectory that turned back would need y′ to have two signs at the same y."}
+]</quiz>
+</day>
+
+<day n="4">
+<summary>When no formula exists, the computer walks along the slope field for you. Learn exactly how Euler's method, Heun's method and the classic fourth-order Runge–Kutta work, why halving the step cuts RK4's error sixteen-fold, and why some perfectly smooth problems make simple methods explode.</summary>
+<goals><li>Derive Euler's method from the tangent line and know its error order</li><li>Write out Heun (RK2) and RK4 step by step</li><li>Read an error-versus-step plot on log–log axes and find the order</li><li>Turn any higher-order equation into a first-order system</li><li>Recognise stiffness and know when to use an implicit method</li></goals>
+<content>
+<section><h2>Euler's method: follow the tangent</h2>
+<p>Stand at (t<sub>n</sub>, y<sub>n</sub>). The equation gives the slope there. Walk a step h along that straight line:</p>
+<div class="fx">y<sub>n+1</sub> = y<sub>n</sub> + h · f(t<sub>n</sub>, y<sub>n</sub>)<br>t<sub>n+1</sub> = t<sub>n</sub> + h</div>
+<p>Each step makes a small error because the true curve bends away from its tangent. Taylor's theorem says that local error is about (h²/2)·y″. Over a fixed interval you take T/h steps, so the <b>global error is proportional to h</b>: Euler is a <b>first-order</b> method. Halve h and the error halves — but the work doubles.</p>
+</section>
+<section><h2>Better slopes: Heun and Runge–Kutta</h2>
+<p>The fix is to use a better average slope over the step.</p>
+<div class="fx"><b>Heun (RK2, improved Euler):</b><br>k₁ = f(t<sub>n</sub>, y<sub>n</sub>)        k₂ = f(t<sub>n</sub> + h, y<sub>n</sub> + h·k₁)<br>y<sub>n+1</sub> = y<sub>n</sub> + (h/2)·(k₁ + k₂)          global error ∝ h²<br><br><b>Classic RK4:</b><br>k₁ = f(t<sub>n</sub>, y<sub>n</sub>)<br>k₂ = f(t<sub>n</sub> + h/2, y<sub>n</sub> + h·k₁/2)<br>k₃ = f(t<sub>n</sub> + h/2, y<sub>n</sub> + h·k₂/2)<br>k₄ = f(t<sub>n</sub> + h, y<sub>n</sub> + h·k₃)<br>y<sub>n+1</sub> = y<sub>n</sub> + (h/6)·(k₁ + 2k₂ + 2k₃ + k₄)          global error ∝ h⁴</div>
+<p>RK4 is Simpson's rule in disguise: slopes at the start, twice in the middle, at the end, weighted 1 : 4 : 1. Four evaluations per step buy you a fourth-order method — every lab in this course runs on it.</p>
+<table><tr><th>Method</th><th>f-evaluations per step</th><th>Order</th><th>Halve h → error ×</th></tr>
+<tr><td>Euler</td><td>1</td><td>1</td><td>½</td></tr>
+<tr><td>Heun / midpoint (RK2)</td><td>2</td><td>2</td><td>¼</td></tr>
+<tr><td>RK4</td><td>4</td><td>4</td><td>1/16</td></tr>
+<tr><td>Adaptive RK45 (Dormand–Prince: MATLAB ode45, SciPy solve_ivp)</td><td>6 – 7</td><td>5 with a 4th-order error estimate</td><td>step chosen automatically</td></tr></table>
+</section>
+<section><h2>Systems and higher order</h2>
+<p>Every method above works unchanged when y is a <b>vector</b>. And any higher-order equation becomes a first-order system by naming the derivatives:</p>
+<div class="fx">m·x″ + c·x′ + k·x = F(t)      →      x′ = v,     v′ = (F(t) − c·v − k·x)/m</div>
+<p>This is how every simulation package — Simulink, Modelica, a rotor-dynamics code, a flight simulator — sees a model: a state vector and a function that returns its rate of change.</p>
+</section>
+<section><h2>Stiffness: when small steps are forced on you</h2>
+<p>Apply Euler to the test equation y′ = λ·y with λ &lt; 0. Each step multiplies y by (1 + h·λ). The true solution decays, but if |1 + h·λ| &gt; 1 the numbers grow and oscillate. Euler is stable only for</p>
+<div class="fx">h &lt; 2 / |λ|</div>
+<p>A problem is <b>stiff</b> when it contains a very fast decaying component (large |λ|) alongside the slow behaviour you care about. The fast part is dead after a moment, yet it still forces tiny steps for ever. Chemical kinetics, circuits with small parasitic capacitances, and a thermocouple model coupled to a slow oven are typical.</p>
+<p>The cure is an <b>implicit</b> method. Backward Euler, y<sub>n+1</sub> = y<sub>n</sub> + h·f(t<sub>n+1</sub>, y<sub>n+1</sub>), multiplies by 1/(1 − h·λ), which is below 1 for any h when λ &lt; 0 — stable at any step. The price: an equation to solve each step. Stiff solvers (ode15s, BDF, Radau, LSODA) do exactly this.</p>
+<details class="deep"><summary>Local error, global error and why they differ by one order</summary><div>
+<p>The local truncation error of a method of order p is C·h<sup>p+1</sup> per step. Errors made early are carried forward and amplified (or damped) by the equation itself, roughly by e<sup>L·(T−t)</sup> where L bounds ∂f/∂y. Summing N = T/h such contributions gives a global error ≤ (C/L)·(e<sup>LT</sup> − 1)·h<sup>p</sup>. One power of h is "spent" on the number of steps. Note the e<sup>LT</sup> factor: for unstable or chaotic problems the global error grows exponentially with time no matter how good the method — the theme of Day 11.</p>
+</div></details>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>y′ = y, y(0) = 1. Estimate y(1) (exact e = 2.71828)</b><span class="mono">Euler, h = 0.5:   y₁ = 1 + 0.5·1 = 1.5,   y₂ = 1.5 + 0.5·1.5 = 2.25        error 0.468
+Euler, h = 0.25:  1.25, 1.5625, 1.9531, 2.4414                          error 0.277  (≈ halved)
+RK4, h = 1 (one step):
+  k₁ = 1,  k₂ = 1 + 0.5 = 1.5,  k₃ = 1 + 0.75 = 1.75,  k₄ = 1 + 1.75 = 2.75
+  y₁ = 1 + (1 + 3 + 3.5 + 2.75)/6 = 2.7083                               error 0.0099
+One RK4 step (4 evaluations) beats four Euler steps by a factor of 28.</span></div>
+<div class="app"><b>Where you meet this</b>Every simulation you run: rig controller models, rotor run-up simulations, battery state-of-charge estimators, orbit propagation, game physics engines (which often use simple "semi-implicit Euler" for speed), and the training of neural ODEs.</div>
+</section>
+<section><h2>Lab: method race and error order</h2>
+<p>Choose a problem and slide the step size. Left: the three methods against the exact solution (dots mark the steps). Right: the error at the end for many step sizes on log–log axes — the slopes are the orders 1, 2 and 4. Try the <b>stiff</b> problem and push h above 0.04: Euler explodes. Try the <b>oscillator</b>: Euler's spiral gains energy every cycle.</p>
+<div class="widget" data-w="numerics"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>At very small h the RK4 curve flattens out at ~10⁻¹⁴: that is <b>round-off</b>, not truncation. Smaller steps stop helping.</li>
+<li>Always check a simulation by halving the step (or tightening the tolerance). If the answer changes in a digit you care about, it was not converged.</li>
+<li>Energy-conserving problems (orbits, undamped oscillators) need <b>symplectic</b> methods (leapfrog, Verlet) for long runs; plain RK4 slowly loses energy.</li>
+<li>If a simulation suddenly needs tiny steps somewhere, suspect stiffness or a discontinuity (a switch, a stop, friction stick-slip) — tell the solver about events.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>Do two Heun steps of h = 0.5 for y′ = y, y(0) = 1, and compare with Euler and RK4 above.</li>
+<li>For y′ = −50(y − cos t), what is the largest stable Euler step? Check it in the lab.</li>
+<li>Write θ″ + 0.2·θ′ + 9.81·sin θ = 0 as a first-order system.</li>
+<li>From the lab's log–log plot, read the error of Heun at h = 0.1 and at h = 0.01. What order does that imply?</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"Euler's method has global error proportional to","o":["h","h²","h⁴","1/h"],"a":0,"e":"Local error ~h², times T/h steps → h."},
+{"q":"If you halve the step in RK4, the global error falls by about","o":["2×","4×","8×","16×"],"a":3,"e":"Fourth order: (½)⁴ = 1/16."},
+{"q":"Euler on y′ = −100·y is stable only if","o":["h < 0.2","h < 0.02","h < 0.01","any h"],"a":1,"e":"h < 2/|λ| = 2/100 = 0.02."},
+{"q":"A stiff problem is best solved with","o":["Euler with a large step","An explicit RK4 with a large step","An implicit method such as backward Euler or BDF","A symplectic method"],"a":2,"e":"Implicit methods stay stable for large steps on fast-decaying components."},
+{"q":"To simulate m·x″ + k·x = 0 with RK4 you first","o":["Differentiate it again","Write it as x′ = v, v′ = −k·x/m","Take its Laplace transform","Linearise it"],"a":1,"e":"Any higher-order ODE becomes a first-order system of states."}
+]</quiz>
+</day>
+
+<day n="5">
+<summary>Newton's second law with a spring and a damper is the most important differential equation in engineering. Solve it with the characteristic equation, meet natural frequency and damping ratio, and see the same mathematics in an RLC circuit, a torsional shaft and a car suspension — then measure damping from a single tap test.</summary>
+<goals><li>Derive m·x″ + c·x′ + k·x = 0 from a free-body diagram</li><li>Solve it with the characteristic equation and know the three damping cases</li><li>Compute ωn, ζ and ωd and read them from a response or a root plot</li><li>Read motion as a spiral in the phase plane</li><li>Estimate damping from a decay trace by the logarithmic decrement</li></goals>
+<content>
+<section><h2>From Newton to the equation</h2>
+<p>A mass m on a spring of stiffness k with a viscous damper c. Displace it by x. The spring pulls back with −k·x, the damper resists motion with −c·x′. Newton:</p>
+<div class="fx">m·x″ = −c·x′ − k·x      ⇔      m·x″ + c·x′ + k·x = 0<br>Divide by m:   x″ + 2ζωn·x′ + ωn²·x = 0,     ωn = √(k/m),   ζ = c / (2√(k·m))</div>
+<p>Two numbers describe everything: <b>ωn</b>, the natural frequency (how fast it wants to swing), and <b>ζ</b>, the damping ratio (what fraction of "critical" damping it has).</p>
+<table><tr><th>System</th><th>Equation</th><th>"Mass"</th><th>"Damper"</th><th>"Spring"</th></tr>
+<tr><td>Mass–spring–damper</td><td>m·x″ + c·x′ + k·x = F</td><td>m</td><td>c</td><td>k</td></tr>
+<tr><td>Torsional shaft and disc</td><td>J·θ″ + c<sub>t</sub>·θ′ + k<sub>t</sub>·θ = T</td><td>J</td><td>c<sub>t</sub></td><td>k<sub>t</sub> = G·J<sub>p</sub>/L</td></tr>
+<tr><td>Series RLC circuit</td><td>L·q″ + R·q′ + q/C = V</td><td>L</td><td>R</td><td>1/C</td></tr>
+<tr><td>Pendulum (small angles)</td><td>θ″ + (g/ℓ)·θ = 0</td><td>—</td><td>—</td><td>ωn² = g/ℓ</td></tr></table>
+</section>
+<section><h2>The characteristic equation</h2>
+<p>Guess x = e<sup>st</sup>. Then x′ = s·x and x″ = s²·x, and the equation becomes algebra:</p>
+<div class="fx">m·s² + c·s + k = 0      →      s = −ζωn ± ωn·√(ζ² − 1)</div>
+<table><tr><th>Case</th><th>Roots</th><th>Motion</th></tr>
+<tr><td><b>Under-damped</b> ζ &lt; 1</td><td>Complex pair −ζωn ± j·ωd, with ωd = ωn·√(1 − ζ²)</td><td>x = e<sup>−ζωn·t</sup>·(A·cos ωd·t + B·sin ωd·t): oscillates inside a decaying envelope</td></tr>
+<tr><td><b>Critically damped</b> ζ = 1</td><td>Repeated real −ωn</td><td>x = (A + B·t)·e<sup>−ωn·t</sup>: fastest return with no overshoot</td></tr>
+<tr><td><b>Over-damped</b> ζ &gt; 1</td><td>Two negative reals</td><td>x = A·e<sup>s₁t</sup> + B·e<sup>s₂t</sup>: creeps back slowly</td></tr>
+<tr><td><b>Undamped</b> ζ = 0</td><td>±j·ωn</td><td>Pure sine for ever; energy ½kx² + ½mv² is constant</td></tr></table>
+<p>The real part of the roots is the <b>decay rate</b>, the imaginary part the <b>oscillation frequency</b>. Plotting the roots in the complex plane is a complete summary of the motion — the idea behind Day 7's s-plane.</p>
+<details class="deep"><summary>Why e<sup>st</sup>, and where the sines come from</summary><div>
+<p>Exponentials are the only functions whose derivatives are multiples of themselves, so a linear constant-coefficient equation turns into a polynomial in s. Complex roots come in conjugate pairs s = σ ± jω, and Euler's formula e<sup>jωt</sup> = cos ωt + j·sin ωt turns the pair into real sines and cosines. The repeated-root case needs the extra t·e<sup>st</sup> because the two exponentials coincide; you can get it as the limit of (e<sup>s₁t</sup> − e<sup>s₂t</sup>)/(s₁ − s₂) as s₂ → s₁.</p>
+</div></details>
+</section>
+<section><h2>Phase plane: motion as a spiral</h2>
+<p>Plot velocity against displacement. An undamped oscillator traces an ellipse — constant energy. Damping drains energy every cycle, so the ellipse shrinks into a <b>spiral</b> that ends at the origin. The phase plane will be our main tool from Day 9 onward; here is its first appearance.</p>
+<p><b>Logarithmic decrement.</b> For an under-damped system, successive peaks shrink by the same factor:</p>
+<div class="fx">δ = ln(x<sub>n</sub> / x<sub>n+1</sub>) = 2πζ / √(1 − ζ²)      →      ζ = δ / √(4π² + δ²) ≈ δ / 2π for light damping<br>Over N cycles:  δ = (1/N)·ln(x<sub>0</sub>/x<sub>N</sub>)</div>
+</section>
+<section><h2>Worked example</h2>
+<div class="eg"><b>m = 1 kg, k = 40 N/m, c = 1.5 N·s/m (the lab's default)</b><span class="mono">ωn = √(40/1) = 6.325 rad/s  → fn = 1.007 Hz
+ζ  = 1.5 / (2·√40) = 1.5/12.649 = 0.119   → under-damped
+ωd = 6.325·√(1 − 0.119²) = 6.280 rad/s
+Roots s = −0.75 ± 6.28j       (−ζωn = −c/2m = −0.75)
+δ = 2π·0.119/0.993 = 0.750  → each peak is e^(−0.75) = 0.47 of the one before</span></div>
+<div class="eg"><b>Tap test on a bracket: peak amplitude falls from 2.0 g to 0.5 g over 4 cycles</b><span class="mono">δ = ln(2.0/0.5)/4 = 1.386/4 = 0.347
+ζ = 0.347 / √(4π² + 0.347²) = 0.055   (5.5 % of critical — typical of a bolted steel structure)</span></div>
+<div class="app"><b>Where you meet this</b>Vehicle suspensions (ζ ≈ 0.2–0.4), instrument needles and accelerometers (ζ ≈ 0.7 for the flattest response), machine foundations, door closers (critically damped), building sway, torsional vibration of a gearbox drive line, and every RLC tuned circuit in a radio.</div>
+</section>
+<section><h2>Lab: live oscillator</h2>
+<p>Press <kbd>P</kbd> to run. Five views of one equation: the moving mass, x(t) with its envelope, the velocity, the spiral in the phase plane, and the two roots in the complex plane. Slide c from 0 upwards and watch the roots travel along the circle of radius ωn, meet on the real axis at critical damping (ζ = 1), and split along it when over-damped.</p>
+<div class="widget" data-w="smd"></div>
+</section>
+<section><h2>Pro tips and common mistakes</h2>
+<ul>
+<li>Use consistent units: k in N/m with m in kg gives ωn in rad/s. Divide by 2π for Hz.</li>
+<li>Light damping hardly changes the frequency: at ζ = 0.1, ωd is 99.5 % of ωn. Damping shows up in the <i>decay</i>, not in the period.</li>
+<li>Critical damping is not "best" for everything: it is fastest without overshoot, but a little overshoot (ζ ≈ 0.6–0.7) settles faster within a tolerance band.</li>
+<li>Real structures are rarely viscous; friction and material damping are approximated by an "equivalent ζ" measured exactly as in the tap test.</li>
+</ul>
+</section>
+<section><h2>Practice</h2>
+<ol>
+<li>A 50 kg machine sits on mounts of total stiffness 2×10⁵ N/m with ζ = 0.1. Find fn and the damped period.</li>
+<li>What damping c makes it critically damped?</li>
+<li>Solve x″ + 4x′ + 13x = 0, x(0) = 1, x′(0) = 0.</li>
+<li>In the lab, set ζ ≈ 1. Now raise c further. Which root moves towards zero, and why does the return become <i>slower</i>?</li>
+</ol>
+</section>
+</content>
+<quiz>[
+{"q":"For m = 2 kg and k = 200 N/m, ωn is","o":["10 rad/s","100 rad/s","14.1 rad/s","1.59 rad/s"],"a":0,"e":"√(200/2) = 10 rad/s (1.59 Hz)."},
+{"q":"Critical damping occurs when","o":["c = 0","c = 2√(k·m)","c = k/m","c = √(k/m)"],"a":1,"e":"ζ = c/(2√(km)) = 1."},
+{"q":"Roots s = −1 ± 6j mean","o":["Over-damped motion","Oscillation at 6 rad/s decaying like e^(−t)","Unstable motion","Oscillation at 1 rad/s"],"a":1,"e":"Real part = decay rate; imaginary part = damped frequency."},
+{"q":"Peaks fall by a factor of 2 each cycle. ζ is about","o":["0.011","0.11","0.5","0.69"],"a":1,"e":"δ = ln 2 = 0.693, ζ ≈ 0.693/√(4π² + 0.48) = 0.110."},
+{"q":"In the phase plane an under-damped free vibration looks like","o":["A straight line","An ellipse","An inward spiral","An outward spiral"],"a":2,"e":"Energy is lost every cycle, so the orbit shrinks to the origin."}
+]</quiz>
+</day>

@@ -1,10 +1,11 @@
 <!--
 TOOL:    differential-equations/_src/week3.html — 15-Day Differential Equations Course content source, Week 3 (Days 11–15)
 FAMILY:  differential-equations
-VERSION: 1.0.0
-DATE:    2026-11-19
+VERSION: 1.0.1
+DATE:    2026-11-21
 CHAT:    Differential equations are fascinating — make a 15 days course to deeper understanding of differential equations
-CHANGES: 1.0.0 - first version: chaos, Fourier series and the heat equation, waves and Laplace's equation, fitting models to data, finite differences and the capstone
+CHANGES: 1.0.1 - review corrections: Day 11 Lorenz anecdote worded as an estimate; Day 13 wave-speed table header and drum-pitch statement; Day 14 note on reading the 30-minute stabilisation window; Day 15 explicit-scheme work factor is 8×, not 16×
+         1.0.0 - first version: chaos, Fourier series and the heat equation, waves and Laplace's equation, fitting models to data, finite differences and the capstone
 STATUS:  working
 -->
 
@@ -46,7 +47,8 @@ STATUS:  working
 <div class="eg"><b>How long until two Lorenz runs started 10⁻⁸ apart disagree completely (Δ ≈ 1)?</b><span class="mono">t ≈ (1/0.906)·ln(1/10⁻⁸) = 18.42/0.906 = 20.3 time units
 Measure 1000× better (δ₀ = 10⁻¹¹):  t ≈ 25.4/0.906 = 28.0 — only 7.6 units more.
 Lorenz's own experience: restarting a run from a printout rounded to 3 decimals (δ₀ ≈ 10⁻⁴)
-gives t ≈ 9.2/0.906 ≈ 10 units of agreement — which is what he saw.</span></div>
+gives t ≈ 9.2/0.906 ≈ 10 units of agreement before the runs part —
+the same kind of sudden divergence he saw on his printout.</span></div>
 <div class="app"><b>Where you meet this</b>Gear rattle in a lightly loaded gearbox with backlash, rotor–stator rub, loose bolted joints under vibration, chatter in machining, the double pendulum, dripping taps, irregular heart rhythms, population boom-and-bust, mixing of fluids, and secure communication schemes based on synchronised chaos.</div>
 </section>
 <section><h2>Lab: the Lorenz attractor</h2>
@@ -155,10 +157,10 @@ Rule of thumb: diffusion across a length L takes about L²/α — double the siz
 <section><h2>The wave equation</h2>
 <p>A string under tension T with mass μ per metre. A small element bent into a curve feels a net vertical force T·u<sub>xx</sub>·dx (the tension pulls it towards the straight line). Newton:</p>
 <div class="fx">μ·u<sub>tt</sub> = T·u<sub>xx</sub>      →      <b>u<sub>tt</sub> = c²·u<sub>xx</sub></b>,     c = √(T/μ)</div>
-<table><tr><th>System</th><th>Wave speed c</th><th>Steel, typical</th></tr>
+<table><tr><th>System</th><th>Wave speed c</th><th>Typical value</th></tr>
 <tr><td>String</td><td>√(T/μ)</td><td>100 – 400 m/s for instrument strings</td></tr>
-<tr><td>Axial waves in a bar</td><td>√(E/ρ)</td><td>≈ 5100 m/s</td></tr>
-<tr><td>Torsional waves in a shaft</td><td>√(G/ρ)</td><td>≈ 3200 m/s</td></tr>
+<tr><td>Axial waves in a bar</td><td>√(E/ρ)</td><td>≈ 5100 m/s (steel)</td></tr>
+<tr><td>Torsional waves in a shaft</td><td>√(G/ρ)</td><td>≈ 3200 m/s (steel)</td></tr>
 <tr><td>Sound in a pipe</td><td>√(γp/ρ)</td><td>≈ 343 m/s in air at 20 °C</td></tr></table>
 </section>
 <section><h2>d'Alembert: two travelling copies</h2>
@@ -171,7 +173,7 @@ Rule of thumb: diffusion across a length L takes about L²/α — double the siz
 <div class="fx">u = Σ sin(nπx/L)·[ A<sub>n</sub>·cos(nπct/L) + B<sub>n</sub>·sin(nπct/L) ]      fₙ = n·c/(2L)</div>
 <p>The frequencies are whole-number multiples of the fundamental — the <b>harmonic series</b> that makes a string sound musical. Pluck at a point and every mode with a <b>node</b> there is not excited: pluck at L/2 and all even harmonics vanish (a hollow sound); pluck near the end and the high harmonics are strong (a bright sound).</p>
 <details class="deep"><summary>Fixed–free shafts, and why drums sound "out of tune"</summary><div>
-<p>A shaft fixed at one end and free at the other has u = 0 at x = 0 and u<sub>x</sub> = 0 at x = L. The modes become sin((2n − 1)πx/2L) with frequencies (2n − 1)·c/(4L): only odd multiples, like a clarinet. A drum membrane obeys the 2-D wave equation; on a circle its modes are Bessel functions whose frequencies are <i>not</i> whole-number multiples, which is why a drum has a clear pitch only with careful tuning.</p>
+<p>A shaft fixed at one end and free at the other has u = 0 at x = 0 and u<sub>x</sub> = 0 at x = L. The modes become sin((2n − 1)πx/2L) with frequencies (2n − 1)·c/(4L): only odd multiples, like a clarinet. A drum membrane obeys the 2-D wave equation; on a circle its modes are Bessel functions whose frequencies are <i>not</i> whole-number multiples, which is why most drums have no clear pitch. Timpani are the exception: the air in the kettle and around the head pulls their main modes close to a harmonic series.</p>
 </div></details>
 </section>
 <section><h2>Laplace's equation: when time stops</h2>
@@ -264,6 +266,9 @@ With a heavy disc at the free end the shaft acts as a spring and f₁ drops to (
 Criterion: T′ < 1/30 = 0.0333 °C/min
 e^(−t/22) < 0.0333/2.09 = 0.0159  →  t > 22·ln(62.7) = 22 × 4.14 = 91 min
 Equivalently, the criterion is met when 46·e^(−t/22) < 22/30 → within 0.73 °C of T∞ (about 4.1 τ).
+This reads the criterion as an instantaneous rate. If the procedure means "the reading changed by less
+than 1 °C over the last 30 min", the change over that window is 46·e^(−(t−30)/22)·(1 − e^(−30/22)) < 1
+→ t > 30 + 22·ln(34.2) = 108 min. Write down which reading your procedure means.
 A fit on the first 30–40 min already predicts T∞ and the ready time — the rest of the warm-up can be
 used for something else.</span></div>
 <div class="eg"><b>Rotor run-down: why ω′ = −a − b·ω²?</b><span class="mono">Bearing and seal friction give a roughly constant torque  → −a
@@ -313,7 +318,7 @@ straight line (friction). Fitting a and b separates the two losses — a standar
 </section>
 <section><h2>Three schemes for the heat equation</h2>
 <div class="fx">r = α·Δt / Δx²<br><b>Explicit (FTCS):</b>  u<sub>i</sub><sup>n+1</sup> = u<sub>i</sub><sup>n</sup> + r·(u<sub>i+1</sub><sup>n</sup> − 2u<sub>i</sub><sup>n</sup> + u<sub>i−1</sub><sup>n</sup>)          stable only if r ≤ ½<br><b>Implicit (backward Euler):</b>  u<sup>n+1</sup> − r·δ²u<sup>n+1</sup> = u<sup>n</sup>          stable for all r, first order in time<br><b>Crank–Nicolson:</b>  average of the two          stable for all r, second order in time</div>
-<p>The implicit schemes need a tridiagonal solve each step (cheap: the Thomas algorithm is O(N)). The explicit scheme is simplest but halving Δx forces Δt down four times — sixteen times more work in one dimension.</p>
+<p>The implicit schemes need a tridiagonal solve each step (cheap: the Thomas algorithm is O(N)). The explicit scheme is simplest but halving Δx forces Δt down four times — eight times more work in one dimension (twice the points × four times the steps), and sixteen times in two.</p>
 <details class="deep"><summary>Von Neumann stability analysis</summary><div>
 <p>Put a single Fourier mode u<sub>i</sub><sup>n</sup> = G<sup>n</sup>·e<sup>jkiΔx</sup> into the scheme. For FTCS: G = 1 + r·(e<sup>jkΔx</sup> − 2 + e<sup>−jkΔx</sup>) = 1 − 4r·sin²(kΔx/2). The scheme is stable if |G| ≤ 1 for every k. The worst mode is the grid's zig-zag, kΔx = π, where G = 1 − 4r; |G| ≤ 1 needs r ≤ ½. For the wave equation the same analysis of the leapfrog scheme gives the <b>Courant–Friedrichs–Lewy (CFL) condition</b> c·Δt/Δx ≤ 1: in one time step, a wave must not travel further than one grid cell — the numerical domain of dependence must contain the physical one. Every explicit CFD and crash code respects a condition of this kind.</p>
 </div></details>

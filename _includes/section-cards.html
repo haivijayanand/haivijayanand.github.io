@@ -1,0 +1,73 @@
+{%- comment -%}
+TOOL:    _includes/section-cards.html — grouped section cards for the home page and the group hub tabs
+FAMILY:  SITE
+VERSION: 1.0.0
+DATE:    2026-11-21
+CHAT:    GitHub home page layout change - classify into sections
+CHANGES: 1.0.0 - renders the groups in _data/sections.json as headed card grids; {% include section-cards.html %} shows
+                 every group with jump chips (home page), {% include section-cards.html group="courses" %} shows one (hub tab)
+STATUS:  working
+Accent colours are used only for borders and badges; titles stay in the theme text colour, and every group is
+named by a heading and an icon, so nothing depends on telling colours apart.
+{%- endcomment -%}
+<style>
+.sc-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 26px}
+.sc-chips a{border:1px solid var(--a);border-radius:999px;padding:5px 14px;font-size:.92rem;text-decoration:none!important;
+  color:inherit!important;background:color-mix(in srgb,var(--a) 10%,transparent)}
+.sc-chips a:hover{background:color-mix(in srgb,var(--a) 22%,transparent)}
+.sc-chips i{margin-right:6px}
+.sc-group{margin:0 0 34px;scroll-margin-top:70px}
+.sc-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:2px solid var(--a);
+  padding-bottom:6px;margin-bottom:6px}
+.sc-head h2{margin:0!important;font-size:1.35rem}
+.sc-head h2 i{margin-right:10px;opacity:.9}
+.sc-head a{font-size:.9rem;white-space:nowrap}
+.sc-intro{opacity:.8;margin:0 0 14px;font-size:.96rem}
+.sc-sub{font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.7;margin:14px 0 8px}
+.sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.sc-card{position:relative;display:flex;flex-direction:column;border:1px solid color-mix(in srgb,var(--a) 45%,transparent);
+  border-left:5px solid var(--a);border-radius:8px;padding:12px 16px;background:color-mix(in srgb,var(--a) 6%,transparent);
+  text-decoration:none!important;color:inherit!important;transition:transform .12s,box-shadow .12s}
+.sc-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.sc-card b{display:block;font-size:1.06rem;margin:0 0 5px;line-height:1.35}
+.sc-card span{display:block;line-height:1.55;font-size:.93rem;flex:1}
+.sc-card small{display:block;margin-top:8px;opacity:.72;font-size:.82rem}
+.sc-badge{position:absolute;top:-9px;right:10px;background:var(--a);color:#fff;font-size:.7rem;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:2px 7px}
+</style>
+{%- assign sc_groups = site.data.sections.groups -%}
+{%- if include.group -%}{%- assign sc_groups = sc_groups | where: "id", include.group -%}{%- endif -%}
+
+{%- unless include.group %}
+<nav class="sc-chips" aria-label="Sections">
+  {%- for g in sc_groups %}
+  <a href="#{{ g.id }}" style="--a:{{ g.accent }}"><i class="{{ g.icon }}"></i>{{ g.title | escape }}</a>
+  {%- endfor %}
+</nav>
+{%- endunless %}
+
+{%- for g in sc_groups %}
+<section class="sc-group" id="{{ g.id }}" style="--a:{{ g.accent }}">
+  {%- unless include.group %}
+  <div class="sc-head">
+    <h2><i class="{{ g.icon }}"></i>{{ g.title | escape }}</h2>
+    <a href="{{ g.url | relative_url }}">Section page →</a>
+  </div>
+  {%- endunless %}
+  <p class="sc-intro">{{ g.intro | escape }}</p>
+  {%- if g.subgroups %}{%- assign sc_sets = g.subgroups -%}{%- else %}{%- assign sc_sets = "" | split: "" | push: g -%}{%- endif %}
+  {%- for s in sc_sets %}
+  {%- if g.subgroups %}<div class="sc-sub">{{ s.title | escape }}</div>{% endif %}
+  <div class="sc-grid">
+    {%- for c in s.items %}
+    <a class="sc-card" href="{{ c.url | relative_url }}">
+      {%- if c.badge %}<em class="sc-badge">{{ c.badge }}</em>{% endif %}
+      <b>{{ c.title | escape }} →</b>
+      <span>{{ c.blurb | escape }}</span>
+      <small>{{ c.meta | escape }}</small>
+    </a>
+    {%- endfor %}
+  </div>
+  {%- endfor %}
+</section>
+{%- endfor %}

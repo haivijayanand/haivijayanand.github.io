@@ -1,11 +1,11 @@
 ---
-# TOOL: _tabs/finance-economics.md | FAMILY: SITE | VERSION: 1.0.0 | DATE: 2026-11-14
+# TOOL: legacy-tabs/finance-economics.md | FAMILY: SITE | VERSION: 1.1.0 | DATE: 2026-11-21
 # CHAT: Finance & Economics series — three levels (school, working, expert); Topic 01 Inflation
-# CHANGES: 1.0.0 - sidebar tab that opens the /finance-economics/ series hub
+# CHANGES: 1.1.0 - moved out of the sidebar into legacy-tabs/ (sidebar now shows five section groups); kept only so old -tab links still redirect; 1.0.0 - sidebar tab that opens the /finance-economics/ series hub
 layout: page
 title: Finance & Economics
 icon: fas fa-coins
-order: 11
+sitemap: false
 permalink: /finance-economics-tab/
 ---
 

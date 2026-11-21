@@ -1,10 +1,11 @@
 /*
 TOOL: site-progress.js — Google sign-in, reading progress, resume, completed ticks and certificates for haivijayanand.github.io
 FAMILY: site-progress
-VERSION: 1.5.0
-DATE: 2026-11-21
+VERSION: 1.6.0
+DATE: 2026-11-22
 CHAT: Login, progress & certificates on GitHub Pages with Firebase
-CHANGES: 1.5.0 — Differential Equations Part II added to the tracked series
+CHANGES: 1.6.0 — Law Study Explorers (/llb/ hub and /tools/llb-*.html course pages) added to the tracked series
+         1.5.0 — Differential Equations Part II added to the tracked series
          1.4.0 — Differential Equations Course added to the tracked series
          1.3.0 — Manufacturing, Machine Design and Stock Management courses added to the tracked series
          1.2.1 — account menu shows an Admin link (to /my-progress/admin/) only for the site owner's account
@@ -14,7 +15,7 @@ CHANGES: 1.5.0 — Differential Equations Part II added to the tracked series
          1.0.0 — first release: Google sign-in, per-page resume, Mark-as-completed, index badges and counts, continue widget, certificate store + PDF reprint, local fallback when signed out
 STATUS: configured for Firebase project haivijayanand-site
 */
-export const SP_VERSION = '1.5.0';
+export const SP_VERSION = '1.6.0';
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {
@@ -65,7 +66,8 @@ const SITE = {
     'differential-equations-2': 'Differential Equations Part II',
     'finance-economics': 'Finance & Economics',
     'business-admin': 'Business Administration',
-    'papers': 'Technical Papers'
+    'papers': 'Technical Papers',
+    'llb': 'Law Study Explorers'
   }
 };
 
@@ -87,6 +89,7 @@ const keyOf = path => (path.replace(/^\//, '').replace(/[\/#?.\s]+/g, '__') || '
 function seriesOf(path) {
   const forced = path === normPath(location.pathname) ? meta('sp-series') : '';
   if (forced) return forced;
+  if (/^\/tools\/llb-/.test(path)) return 'llb';      // B.Com. LL.B. course explorers live in /tools/
   const first = path.split('/')[1] || '';
   return SITE.series[first] ? first : '';
 }

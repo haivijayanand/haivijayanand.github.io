@@ -1,0 +1,131 @@
+<!--
+TOOL:    differential-equations-2/_src/ch07.html — Part II source, Chapter 7: Waves, Fields and the Quantum World (equations 61–70)
+FAMILY:  differential-equations
+VERSION: 1.0.0
+DATE:    2026-11-21
+CHAT:    As a continuation as part 2, discuss the most famous 100 useful differential equations that are being used in different applications with worked out examples
+CHANGES: 1.0.0 - first version
+STATUS:  working
+-->
+<day n="7">
+<summary>The equations of mathematical physics: waves in bars, the Helmholtz equation of acoustic modes, Laplace and Poisson for potential fields and torsion, Schrödinger's quantum wave, KdV solitons, and the special functions — Bessel, Legendre, Airy — that come out of solving them, ending with the Euler–Lagrange equation that generates them all.</summary>
+<goals><li>Recognise wave, Helmholtz, Laplace and Poisson problems in engineering disguise</li><li>Compute room modes, drum frequencies and impact stresses</li><li>See why Bessel and Legendre functions appear in round and spherical problems</li><li>Watch quantum tunnelling and soliton collisions</li><li>Derive equations of motion from a Lagrangian</li></goals>
+<intro><p>Separate variables in a round domain and Bessel's equation appears; in a sphere, Legendre's; near a turning point, Airy's. These "special functions" are just solutions of particular ODEs, tabulated because they recur so often. The lab engine computes them for you.</p></intro>
+
+<eq n="61" name="Wave equation (stress waves in a bar)" tags="PDE,linear,hyperbolic" who="d'Alembert 1747" p1="13" short="u_tt = c²·u_xx">
+<f>∂²u/∂t² = c²·∂²u/∂x²      bar: c = √(E/ρ),   impact stress σ = ρ·c·v</f>
+<sym><b>u</b> axial displacement · <b>c</b> wave speed · <b>v</b> particle (impact) velocity</sym>
+<idea><p>Part I met the wave equation on a string; in a solid bar the same equation carries stress. Hit the end of a bar and a stress pulse runs along it at c = √(E/ρ) — 5 km/s in steel — carrying a stress ρcv, independent of the bar's length. At a free end it reflects as tension, which is why brittle rods can snap at the far end when hit (spalling).</p></idea>
+<ex t="A steel bar is struck end-on at 1 m/s. Stress in the pulse? Time to cross a 1 m bar?">c = √(210e9/7850) = 5170 m/s
+σ = ρcv = 7850 × 5170 × 1 = 40.6 MPa per m/s of impact speed
+Transit time = 1/5170 = 0.19 ms — the basis of the split Hopkinson bar test.</ex>
+<app>Pile driving, impact and drop testing, Hopkinson bar material testing, ultrasonic thickness gauges and flaw detection, seismic waves, rock drilling, torsional and axial shaft resonances.</app>
+<lab>{"t":"pde","wave":true,"c":"c","p":{"c":[0.5,2,1,"wave speed (scaled)"]},"ics":[["struck pulse","exp(-(((x-0.15)/0.04)^2))"],["two pulses","exp(-(((x-0.25)/0.04)^2))-exp(-(((x-0.75)/0.04)^2))"]],"bc":"neu","x":[0,1],"T":4,"pre":0,"u":[-1.2,1.2],"xl":"position along the bar","ul":"stress","out":[["peak","umax","",3]],"note":"Free ends (insulated / Neumann on displacement): watch the pulse reflect and the two pulses pass through each other."}</lab>
+</eq>
+
+<eq n="62" name="Helmholtz equation (acoustic modes)" tags="PDE,linear,elliptic,eigenvalue" who="Helmholtz 1860" short="∇²p + k²p = 0">
+<f>∇²p + k²·p = 0,   k = ω/c      rectangular room:  f = (c/2)·√((n<sub>x</sub>/L<sub>x</sub>)² + (n<sub>y</sub>/L<sub>y</sub>)² + (n<sub>z</sub>/L<sub>z</sub>)²)</f>
+<sym><b>p</b> pressure amplitude · <b>k</b> wave number · <b>n</b> mode numbers (0, 1, 2 …) · <b>c</b> speed of sound (343 m/s)</sym>
+<idea><p>Assume a wave oscillates at one frequency, p(x, t) = p(x)·e<sup>iωt</sup>, and the wave equation becomes the Helmholtz equation for the spatial shape. In a closed space only certain frequencies fit — the room's modes. At low frequency these standing waves make a test cell or listening room boom at some notes and go dead at others, and make microphone readings depend on where you stand.</p></idea>
+<ex t="A gearbox test cell is 6 × 4 × 3 m. Its lowest acoustic modes?">(1,0,0): 343/(2 × 6) = 28.6 Hz   (0,1,0): 343/8 = 42.9 Hz   (0,0,1): 57.2 Hz
+(1,1,0): (343/2)·√(1/36 + 1/16) = 51.5 Hz
+Below about 100 Hz the modes are sparse — noise measurements there need several microphone positions.</ex>
+<app>Room and test-cell acoustics, exhaust and intake silencers, ducts and organ pipes, ultrasonics, antennas and waveguides (same equation for EM fields), vibrating membranes and plates.</app>
+<lab>{"t":"fn","x":[0,"Lx","position along the room, m"],"c":[["cos(n*pi*x/Lx)","pressure mode shape"]],"p":{"Lx":[1,20,6,"room length","m"],"n":[1,6,1,"mode number n","",1]},"y":[-1.1,1.1],"out":[["frequency","343*n/(2*Lx)","Hz",1]],"note":"Pressure is largest at the walls for every axial mode — the corners of a room are where bass builds up."}</lab>
+</eq>
+
+<eq n="63" name="Laplace's equation (potential flow round a cylinder)" tags="PDE,linear,elliptic" who="Laplace 1782" p1="13" short="∇²φ = 0">
+<f>∇²φ = 0,   <b>u</b> = ∇φ      flow past a cylinder:  u<sub>θ</sub> = −2U·sin θ on the surface,   C<sub>p</sub> = 1 − 4·sin²θ</f>
+<sym><b>φ</b> velocity potential · <b>U</b> free-stream speed · <b>C<sub>p</sub> = (p − p<sub>∞</sub>)/(½ρU²)</b></sym>
+<idea><p>For irrotational, inviscid, incompressible flow the velocity is the gradient of a potential satisfying Laplace's equation — the same equation as steady heat (Part I, Day 13). Superposing simple solutions (uniform flow + doublet) gives flow round a cylinder: the speed doubles at the sides, and the pressure drops to −3 times the dynamic pressure. Real flow separates on the back, but the front half is predicted well.</p></idea>
+<ex t="Wind at 20 m/s across a chimney. Peak surface speed and suction?">Peak speed = 2U = 40 m/s at θ = 90°
+C_p = 1 − 4 = −3 → suction = 3 × ½ × 1.225 × 20² = 735 Pa
+(Separated real flow: about −1.2 at the sides — Laplace overestimates the suction.)</ex>
+<app>Ideal-flow aerodynamics (panel methods), electrostatics and capacitance, steady heat conduction, groundwater (Darcy), stress functions in elasticity, image processing (inpainting).</app>
+<lab>{"t":"fn","x":[0,360,"angle θ from the front stagnation point, °"],"c":[["1-4*sin(x*pi/180)^2","C_p ideal (Laplace)"],["x<70?1-4*sin(x*pi/180)^2*0.6:-1.2+0*x","C_p real, separated (approx.)"]],"p":{"U":[1,50,20,"wind speed","m/s"]},"y":[-3.2,1.2],"out":[["peak suction (ideal)","3*0.5*1.225*U^2","Pa",0]],"note":"The real curve is a rough sketch for subcritical Reynolds numbers; separation near 80° leaves a low-pressure wake."}</lab>
+</eq>
+
+<eq n="64" name="Poisson equation (torsion of non-circular shafts)" tags="PDE,linear,elliptic" who="Poisson 1813; Prandtl 1903 (membrane analogy)" short="∇²Φ = −2Gθ′">
+<f>∂²Φ/∂x² + ∂²Φ/∂y² = −2·G·θ′,   Φ = 0 on the boundary      T = 2∬Φ dA,   τ = |∇Φ|</f>
+<sym><b>Φ</b> Prandtl stress function · <b>θ′</b> twist per length · <b>T</b> torque · <b>τ</b> shear stress</sym>
+<idea><p>Laplace's equation with a source term. For a twisted shaft of any cross-section, Prandtl showed the stress function is the shape of a soap film stretched over a hole of that shape and blown up by pressure: the torque is twice the volume under the film, the shear stress is its slope. Steepest slope = highest stress, which is why re-entrant corners (keyways, splines) concentrate stress.</p></idea>
+<ex t="100 N·m on a square shaft of side 20 mm versus a round shaft of 20 mm diameter. Peak shear stress?">Square (Poisson solution, tabulated): τ_max = T/(0.208·a³) = 100/(0.208 × 8e-6) = 60.1 MPa, at the middle of each side
+Round: τ_max = 16T/(πd³) = 63.7 MPa
+The square has more material yet only 6 % lower stress — its corners carry almost nothing.</ex>
+<app>Torsion of keyed, splined and rectangular shafts, electrostatics with charges, gravity fields, pressure in Darcy flow with sources, heat generation (equation 34), deflection of membranes.</app>
+<lab>{"t":"fn","x":["-R","R","radius, mm"],"c":[["G*1000*th*((R/1000)^2-(x/1000)^2)/2/1e3","stress function Φ (soap-film height)"],["G*1e3*th*abs(x)/1000","shear stress τ = |dΦ/dr|, MPa"]],"p":{"R":[5,50,10,"shaft radius","mm"],"G":[20,100,80,"G","GPa"],"th":[0.001,0.05,0.01,"twist θ′","rad/m"]},"out":[["torque 2∬Φ dA","pi*G*1e9*th*(R/1000)^4/2","N·m",1],["τ at surface","G*1e3*th*R/1000","MPa",1]],"note":"For a circle Φ = Gθ′(R² − r²)/2: a paraboloid soap film, stress ∝ r — the textbook result recovered."}</lab>
+</eq>
+
+<eq n="65" name="Schrödinger equation" tags="PDE,linear,complex" who="Schrödinger 1926" short="iħψ_t = −(ħ²/2m)ψ_xx + Vψ">
+<f>i·ħ·∂ψ/∂t = −(ħ²/2m)·∂²ψ/∂x² + V(x)·ψ      particle in a box:  E<sub>n</sub> = n²h²/(8mL²)</f>
+<sym><b>ψ</b> wave function (|ψ|² = probability density) · <b>ħ</b> reduced Planck constant · <b>V</b> potential energy</sym>
+<idea><p>The wave equation of quantum mechanics — first order in time, complex, and dispersive. Confinement makes energy levels discrete (the box), and a particle can cross a barrier higher than its energy with a probability that falls exponentially with barrier width: <b>tunnelling</b>, which flash memory, tunnel diodes, the scanning tunnelling microscope and nuclear fusion in the Sun all depend on.</p></idea>
+<ex t="An electron confined in a 1 nm box (a quantum dot). Ground-state energy? Wavelength of light emitted from n = 2 → 1?">E₁ = h²/(8mL²) = (6.626e-34)²/(8 × 9.109e-31 × 1e-18) = 6.02×10⁻²⁰ J = 0.376 eV
+E₂ − E₁ = 3E₁ = 1.13 eV → λ = 1240/1.13 = 1100 nm (infrared)
+Halve the box → four times the energy: quantum-dot colours are tuned by size.</ex>
+<app>Semiconductors and transistors, LEDs and lasers, quantum dots (display colours), MRI and spectroscopy, chemistry (molecular orbitals), tunnelling devices, quantum computing.</app>
+<lab w="schrod"></lab>
+</eq>
+
+<eq n="66" name="Korteweg–de Vries equation (solitons)" tags="PDE,nonlinear,dispersive" who="Korteweg and de Vries 1895; Zabusky and Kruskal 1965" short="u_t + 6u·u_x + u_xxx = 0">
+<f>∂u/∂t + 6·u·∂u/∂x + ∂³u/∂x³ = 0      soliton:  u = (c/2)·sech²( (√c/2)·(x − c·t) )</f>
+<sym><b>u</b> wave height (scaled) · <b>c</b> speed — taller solitons are faster and narrower</sym>
+<idea><p>Nonlinearity steepens a wave (as in Burgers, equation 49); dispersion spreads it. In KdV they balance exactly, giving a solitary wave that keeps its shape for ever. Even more remarkable, two solitons collide and emerge unchanged except for a shift in position — they behave like particles, hence "soliton". The equation turned out to be exactly solvable (inverse scattering), a landmark of 20th-century mathematics.</p></idea>
+<ex t="A solitary wave 0.5 m high in a 2 m deep channel. Its speed compared with an ordinary small wave?">Shallow-water soliton speed ≈ √(g(h + a)) = √(9.81 × 2.5) = 4.95 m/s
+Small linear wave: √(gh) = √(9.81 × 2) = 4.43 m/s — the hump outruns ordinary waves by 12 %.</ex>
+<app>Solitary waves in canals and the ocean (internal waves, tsunami fronts near shore), pulses in optical fibres (nonlinear Schrödinger cousin), plasma waves, blood-pressure pulses, crystal lattice vibrations.</app>
+<lab w="kdv"></lab>
+</eq>
+
+<eq n="67" name="Bessel's equation (drums and round domains)" tags="ODE,linear,second order,special function" who="Bernoulli 1732; Bessel 1824" short="x²y″ + xy′ + (x² − n²)y = 0">
+<f>x²·y″ + x·y′ + (x² − n²)·y = 0  →  y = J<sub>n</sub>(x)      drum:  f<sub>mn</sub> = j<sub>mn</sub>·c/(2πa)</f>
+<sym><b>J<sub>n</sub></b> Bessel function of order n · <b>j<sub>mn</sub></b> zeros: j₀₁ = 2.405, j₁₁ = 3.832, j₂₁ = 5.136, j₀₂ = 5.520 · <b>c = √(T/σ)</b> membrane wave speed</sym>
+<idea><p>Separate the wave or heat equation in polar coordinates and the radial part obeys Bessel's equation. Its solutions are like decaying cosines whose zeros are <i>not</i> evenly spaced — so a drum's overtones are not harmonics, which is why it has a vague pitch. Bessel functions also give FM radio sidebands, heat in cylinders and the vibration of circular plates.</p></idea>
+<ex t="A drum of radius 0.3 m, membrane tension 2000 N/m and 0.1 kg/m². First three frequencies?">c = √(2000/0.1) = 141.4 m/s
+f₀₁ = 2.405 × 141.4/(2π × 0.3) = 180 Hz;  f₁₁ = 3.832 × … = 287 Hz;  f₀₂ = 5.520 × … = 414 Hz
+Ratios 1 : 1.59 : 2.30 — not 1 : 2 : 3.</ex>
+<app>Drums and loudspeaker cones, circular plates and diaphragms (pressure sensors), heat flow in pipes and fins, FM spectra, fibre-optic modes, antennas, vibration of rotating discs.</app>
+<lab>{"t":"fn","x":[0,20,"x"],"c":[["Jn(0,x)","J₀"],["Jn(1,x)","J₁"],["Jn(nn,x)","J_n (your order)"]],"p":{"nn":[2,6,2,"order n","",1]},"y":[-0.5,1.05],"out":[["J₀(2.405) (should be ≈ 0)","Jn(0,2.405)","",4]]}</lab>
+</eq>
+
+<eq n="68" name="Legendre's equation (spherical problems)" tags="ODE,linear,second order,special function" who="Legendre 1782" short="(1 − x²)y″ − 2xy′ + n(n+1)y = 0">
+<f>(1 − x²)·y″ − 2x·y′ + n(n + 1)·y = 0  →  y = P<sub>n</sub>(x),   x = cos θ<br>P₀ = 1, P₁ = x, P₂ = (3x² − 1)/2, P₃ = (5x³ − 3x)/2</f>
+<sym><b>P<sub>n</sub></b> Legendre polynomials · <b>θ</b> polar angle on a sphere</sym>
+<idea><p>Separate Laplace's equation in spherical coordinates and the angular part obeys Legendre's equation. Its polynomial solutions describe how any field varies over a sphere: gravity of the oblate Earth, the shape of atomic orbitals, the flow round a sphere and antenna patterns. Accurate GPS needs the P₂ term of Earth's gravity (J₂).</p></idea>
+<ex t="Earth's oblateness adds a gravity term ∝ J₂·P₂(cos θ) with J₂ = 1.083×10⁻³. Where is the effect largest, and what does it do to orbits?">P₂ = 1 at the poles (θ = 0) and −½ at the equator: gravity is stronger relative to a sphere over the poles' direction.
+The J₂ torque makes an orbit's plane precess. Choosing altitude and inclination so the precession is one turn per year gives a sun-synchronous orbit (about 98° inclination at 700 km) — used by Earth-imaging satellites.</ex>
+<app>Geodesy and satellite orbits, atomic and molecular orbitals (spherical harmonics), multipole expansions in electrostatics, antenna radiation patterns, flow round spheres, 3-D sound (ambisonics).</app>
+<lab>{"t":"fn","x":[-1,1,"x = cos θ"],"c":[["Pn(1,x)","P₁"],["Pn(2,x)","P₂"],["Pn(3,x)","P₃"],["Pn(nn,x)","P_n (your order)"]],"p":{"nn":[4,10,4,"order n","",1]},"y":[-1.1,1.1],"out":[["P_n(1) (always 1)","Pn(nn,1)","",3]]}</lab>
+</eq>
+
+<eq n="69" name="Airy equation (turning points)" tags="ODE,linear,second order,special function" who="Airy 1838 (the rainbow)" short="y″ − x·y = 0">
+<f>y″ − x·y = 0  →  y = Ai(x), Bi(x)      Ai(0) = 0.3550,  Ai′(0) = −0.2588,  first zero at x = −2.338</f>
+<sym><b>Ai</b> decays for x &gt; 0 and oscillates for x &lt; 0 · the switch happens at the turning point x = 0</sym>
+<idea><p>The simplest equation that changes from oscillating to decaying. Airy derived it to explain the extra faint bands inside a rainbow (supernumerary bows) where geometrical optics fails. It appears wherever a wave meets a "turning point": light near a caustic, a quantum particle in a uniform field, a ship's wake, radio waves bending in the ionosphere.</p></idea>
+<ex t="A neutron bouncing on a mirror in gravity (a real experiment, 2002): its energy levels follow from the zeros of Ai.">E_n = a_n·(m g² ħ²/2)^(1/3) with a₁ = 2.338, a₂ = 4.088, …
+For a neutron (m = 1.675e-27 kg): (mg²ħ²/2)^(1/3) = 0.602 peV → E₁ = 1.41 peV, height scale ≈ 13.7 µm
+The measured quantum heights matched these Airy-zero predictions.</ex>
+<app>Optics near caustics and rainbows, quantum particles in uniform fields (semiconductor heterostructures), WKB matching in wave problems, ocean waves near beaches, beam propagation (Airy beams).</app>
+<lab>{"t":"ode","v":["y","yp"],"f":["yp","t*y"],"t0":0,"T":-12,"init":[0.35503,-0.25882],"show":[["y"]],"lab":{"y":"Ai(x)"},"tl":"x","out":[["Ai at x = −12","yT","",4]],"note":"Integrated from x = 0 towards negative x: oscillating, with the wavelength shrinking as |x| grows."}</lab>
+</eq>
+
+<eq n="70" name="Euler–Lagrange equation" tags="ODE,nonlinear,variational" who="Euler 1744; Lagrange 1755" short="d/dt(∂L/∂q′) − ∂L/∂q = 0">
+<f>d/dt(∂L/∂q̇) − ∂L/∂q = 0,   L = T − V      double pendulum: two coupled nonlinear ODEs</f>
+<sym><b>L</b> Lagrangian (kinetic minus potential energy) · <b>q</b> generalised coordinates (angles, lengths…)</sym>
+<idea><p>Nature picks the path that makes the action ∫L dt stationary. Writing down energies is easier than drawing free-body diagrams with constraint forces, so Lagrange's method is the standard way to get equations of motion for linkages, robots and multi-body machines. It also solves geometric optimisation problems: the brachistochrone (fastest slide), the catenary (hanging chain), geodesics.</p></idea>
+<deep t="Deriving the pendulum in two lines"><p>L = ½mℓ²θ̇² + mgℓ cos θ. Then ∂L/∂θ̇ = mℓ²θ̇ and ∂L/∂θ = −mgℓ sin θ, so mℓ²θ̈ + mgℓ sin θ = 0 — equation 16, with no forces drawn. For the double pendulum, L includes the coupled kinetic energy ½m₂(ℓ₁²θ̇₁² + ℓ₂²θ̇₂² + 2ℓ₁ℓ₂θ̇₁θ̇₂cos(θ₁ − θ₂)), giving the chaotic system in the lab.</p></deep>
+<ex t="Brachistochrone: a bead slides from rest down 2 m while moving π m sideways. Cycloid versus straight wire?">The optimal curve is a cycloid with a = 1 m: time = π√(a/g) = 1.003 s
+Straight wire: length √(π² + 4) = 3.72 m, acceleration g × 2/3.72 = 5.27 m/s² → time √(2 × 3.72/5.27) = 1.19 s
+The curve that dips steeply first wins by 16 %.</ex>
+<app>Equations of motion for robots, vehicles and mechanisms, optimal control and trajectory design, cable and chain shapes, light paths (Fermat), general relativity, finite-element formulations (energy methods).</app>
+<lab>{"t":"ode","v":["a","b","wa","wb"],"f":["wa","wb","(-9.81*3*sin(a)-9.81*sin(a-2*b)-2*sin(a-b)*(wb^2+wa^2*cos(a-b)))/(3-cos(2*a-2*b))","(2*sin(a-b)*(wa^2*2+9.81*2*cos(a)+wb^2*cos(a-b)))/(3-cos(2*a-2*b))"],"y0":{"a0":[0,180,120,"θ₁(0)","°"],"b0":[0,180,120.5,"θ₂(0)","°"]},"init":["a0*pi/180","b0*pi/180",0,0],"T":20,"n":8000,"show":[["a","b"]],"ph":["a","b"],"lab":{"a":"θ₁","b":"θ₂"},"out":[["max θ₂","bmax*180/pi","°",0]],"note":"Double pendulum (equal 1 m arms and 1 kg masses) from the Euler–Lagrange equations. Change a start angle by 0.5° and the motion soon differs completely: chaos."}</lab>
+</eq>
+
+<quiz>[
+{"q":"The stress in a bar struck end-on at speed v is","o":["E·v","ρ·c·v","½ρv²","m·v/A"],"a":1,"e":"σ = ρcv with c = √(E/ρ)."},
+{"q":"The lowest axial mode of a 6 m long room (c = 343 m/s) is about","o":["57 Hz","43 Hz","29 Hz","14 Hz"],"a":2,"e":"f = c/(2L) = 28.6 Hz."},
+{"q":"In Prandtl's membrane analogy, the shear stress in a twisted shaft is","o":["The height of the film","The slope of the film","The volume under the film","The film tension"],"a":1,"e":"τ = |∇Φ|; torque = 2 × volume."},
+{"q":"A drum's overtones are not harmonic because","o":["The membrane is too stiff","Zeros of Bessel functions are not evenly spaced","Air damps them","Drums are not linear"],"a":1,"e":"2.405, 3.832, 5.136, 5.520 … are not integer multiples."},
+{"q":"A KdV soliton that is taller is","o":["Slower and wider","Faster and narrower","The same speed","Unstable"],"a":1,"e":"Speed c, height c/2, width ∝ 1/√c."}
+]</quiz>
+</day>

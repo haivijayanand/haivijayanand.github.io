@@ -1,0 +1,133 @@
+<!--
+TOOL:    differential-equations-2/_src/ch04.html — Part II source, Chapter 4: Heat and Mass Transfer (equations 31–40)
+FAMILY:  differential-equations
+VERSION: 1.0.0
+DATE:    2026-11-21
+CHAT:    As a continuation as part 2, discuss the most famous 100 useful differential equations that are being used in different applications with worked out examples
+CHANGES: 1.0.0 - first version
+STATUS:  working
+-->
+<day n="4">
+<summary>How heat and matter spread: transient conduction into a solid, fins, lumped bodies, heat generation in wires and fuel rods, Fick's diffusion for case hardening, pollutants carried by a river, melting fronts, radiative cooling, Arrhenius reaction rates and — for every gearbox and bearing — the heat balance that decides between a stable temperature and thermal runaway.</summary>
+<goals><li>Use the error-function solution for a suddenly heated surface</li><li>Size fins and judge when a body can be treated as one temperature (Biot number)</li><li>Compute case depths, plume spreading and freezing fronts with √(αt) scaling</li><li>Handle T⁴ radiation and Arrhenius temperature sensitivity</li><li>Find the critical condition for thermal runaway in a bearing or battery</li></goals>
+<intro><p>The heat equation of Part I, Day 12 underlies almost every card here. Its fingerprint is the <b>diffusion length √(αt)</b>: heat or matter penetrates a distance that grows with the square root of time. Double the depth, wait four times as long.</p></intro>
+
+<eq n="31" name="Transient conduction into a semi-infinite solid" tags="PDE,linear,parabolic" who="Fourier 1822" p1="12" short="T_t = α·T_xx → erf solution">
+<f>∂T/∂t = α·∂²T/∂x²      surface stepped to T<sub>s</sub>:   (T − T<sub>s</sub>)/(T<sub>i</sub> − T<sub>s</sub>) = erf( x / (2√(αt)) )</f>
+<sym><b>α = k/(ρc)</b> thermal diffusivity (steel 1.3×10⁻⁵, concrete 7×10⁻⁷, soil ≈ 5×10⁻⁷ m²/s) · <b>erf</b> error function</sym>
+<idea><p>Suddenly heat the surface of a thick body: the temperature profile is the same shape at every instant, just stretched by √(αt). The single similarity variable x/(2√(αt)) collapses the PDE into an ODE whose solution is the error function — a profile that reaches about half way at η = 0.48.</p></idea>
+<deep t="The similarity solution"><p>Put η = x/(2√(αt)) and T = f(η). Then T<sub>t</sub> = −(η/(2t))·f′ and T<sub>xx</sub> = f″/(4αt), so the PDE becomes f″ + 2η·f′ = 0. Integrate: f′ = C·e<sup>−η²</sup>, f = C₁·erf(η) + C₂. The boundary values at η = 0 (surface) and η → ∞ (deep inside) fix the constants.</p></deep>
+<ex t="A thick steel plate at 20 °C has its surface suddenly held at 100 °C. How deep is the 60 °C point after one minute?">(60 − 100)/(20 − 100) = 0.5 = erf(η)  →  η = 0.477
+x = 2η√(αt) = 0.954 × √(1.3e-5 × 60) = 0.954 × 0.0279 = 26.6 mm</ex>
+<ex t="How deep must a water pipe be buried so a 2-week cold spell (surface −15 °C, ground 10 °C, α = 5×10⁻⁷) does not freeze it?">0 °C point: (0 − (−15))/(10 − (−15)) = 0.6 = erf(η) → η = 0.595
+x = 2 × 0.595 × √(5e-7 × 1.21e6) = 1.19 × 0.778 = 0.93 m</ex>
+<app>Weld heat-affected zones, brake discs and clutch plates in one engagement, frost depth, hot-rolling and quenching, contact temperature when you touch metal, geothermal and building thermal mass.</app>
+<lab>{"t":"fn","x":[0,"80","depth x, mm"],"c":[["Ts+(Ti-Ts)*erf(x/1000/(2*sqrt(a*1e-6*t)))","T after t"],["Ts+(Ti-Ts)*erf(x/1000/(2*sqrt(a*1e-6*t*4)))","T after 4t"]],"p":{"a":[0.1,100,13,"α","mm²/s"],"t":[1,600,60,"time t","s"],"Ts":[-20,500,100,"surface","°C"],"Ti":[-20,200,20,"initial","°C"]},"out":[["penetration √(αt)","sqrt(a*t)","mm",1]],"note":"The second curve is four times later: the same shape, twice as deep."}</lab>
+</eq>
+
+<eq n="32" name="Fin equation (extended surfaces)" tags="ODE,linear,boundary value" who="Harper and Brown 1922" short="θ″ − m²θ = 0">
+<f>d²θ/dx² − m²·θ = 0,   m = √(hP/(kA))      tip insulated: θ/θ<sub>b</sub> = cosh(m(L − x))/cosh(mL),   η<sub>fin</sub> = tanh(mL)/(mL)</f>
+<sym><b>θ = T − T<sub>∞</sub></b> · <b>h</b> convection coefficient · <b>P</b> perimeter · <b>A</b> cross-section · <b>k</b> conductivity</sym>
+<idea><p>Heat conducts along a fin and leaks out of its sides. The balance gives a second-order ODE with exponential solutions; m sets the length over which the fin "dies out". Beyond mL ≈ 2–3 extra length is wasted. Fins pay off when h is small (air) and k is high (aluminium, copper).</p></idea>
+<ex t="An aluminium pin fin, 5 mm diameter, 50 mm long (k = 200 W/m·K), in air with h = 25 W/m²K, base 60 K above ambient. Efficiency and heat flow?">For a round pin m = √(4h/(k·d)) = √(100/1) = 10 per m,  mL = 0.5
+η = tanh(0.5)/0.5 = 0.924
+q = √(hPkA)·θ_b·tanh(mL) = 0.0393 × 60 × 0.462 = 1.09 W per pin</ex>
+<app>Heat sinks for electronics and power devices, motor and gearbox casing fins, air-cooled engine cylinders, heat-exchanger tubes, thermocouple stem conduction error (a thermowell is a fin — the error equation is exactly this one).</app>
+<lab>{"t":"fn","x":[0,"L","x along the fin, mm"],"c":[["cosh(sqrt(4*h/(k*d/1000))*(L-x)/1000)/cosh(sqrt(4*h/(k*d/1000))*L/1000)","θ/θ_b"]],"p":{"h":[5,500,25,"h","W/m²K"],"k":[15,400,200,"k","W/m·K"],"d":[1,20,5,"diameter","mm"],"L":[10,200,50,"length","mm"]},"y":[0,1.05],"out":[["mL","sqrt(4*h/(k*d/1000))*L/1000","",3],["efficiency","tanh(sqrt(4*h/(k*d/1000))*L/1000)/(sqrt(4*h/(k*d/1000))*L/1000)","",3]]}</lab>
+</eq>
+
+<eq n="33" name="Lumped capacitance (Biot number)" tags="ODE,linear,first order" who="Biot 1804; Newton" p1="2" short="ρcV·T′ = −hA(T − T∞), Bi < 0.1">
+<f>ρ·c·V·dT/dt = −h·A·(T − T<sub>∞</sub>)      τ = ρcV/(hA),   valid when Bi = h·L<sub>c</sub>/k &lt; 0.1, L<sub>c</sub> = V/A</f>
+<sym><b>Bi</b> Biot number = internal conduction resistance / surface convection resistance</sym>
+<idea><p>Newton's cooling (equation 3) with the constant spelled out. It is valid when heat moves inside the body much more easily than it leaves the surface, so the body stays uniform. Check Bi first: small parts in air almost always pass; a large forging quenched in water does not, and needs the full heat equation.</p></idea>
+<ex t="A 10 mm steel bearing ball (k = 45, ρ = 7850, c = 460) is quenched from 850 °C in oil at 60 °C with h = 500 W/m²K. Check Bi; time to reach 100 °C?">L_c = d/6 = 1.67 mm,  Bi = 500 × 0.00167/45 = 0.019 < 0.1 ✓
+τ = ρcd/(6h) = 7850 × 460 × 0.01/3000 = 12.0 s
+t = τ·ln(790/40) = 12.0 × 2.98 = 36 s</ex>
+<app>Heat treatment and quenching, thermocouple response time, warm-up of small components, food cooling, battery cells (if small), electronic components on boards.</app>
+<lab>{"t":"ode","v":["T"],"f":["-6*h/(7850*460*d/1000)*(T-Tinf)"],"p":{"d":[1,50,10,"ball diameter","mm"],"h":[10,5000,500,"h","W/m²K"],"Tinf":[20,200,60,"fluid","°C"]},"init":[850],"T":120,"tl":"t, s","show":[["T"]],"out":[["Biot number","h*d/6000/45","",3],["τ","7850*460*d/1000/(6*h)","s",2],["T at 120 s","TT","°C",1]]}</lab>
+</eq>
+
+<eq n="34" name="Heat generation in a wire or rod (Poisson)" tags="ODE,linear,boundary value" who="Poisson 1813" short="(1/r)(rT′)′ + q/k = 0">
+<f>(1/r)·d/dr( r·dT/dr ) + q/k = 0      →      T(r) = T<sub>s</sub> + q·(R² − r²)/(4k)</f>
+<sym><b>q</b> heat generated per volume (W/m³) · <b>k</b> conductivity · <b>R</b> radius</sym>
+<idea><p>Electrical current, nuclear fission or chemical reaction generates heat throughout the volume. It must conduct to the surface, so the centre runs hotter by qR²/4k — parabolic. Low conductivity and large radius make the centre much hotter than the skin.</p></idea>
+<ex t="A uranium-oxide fuel pellet: q = 3×10⁸ W/m³, R = 5 mm, k = 3 W/m·K. Centre-to-surface temperature difference?">ΔT = qR²/(4k) = 3e8 × 25e-6/12 = 625 K
+(A copper cable carrying its rated current has a ΔT of under 0.01 K inside the copper — the insulation is what gets hot.)</ex>
+<app>Nuclear fuel rods, electrical cables and windings, resistance heaters, curing of thick resin parts, self-heating of compost and coal piles, current-carrying shafts and busbars.</app>
+<lab>{"t":"fn","x":[0,"R","radius r, mm"],"c":[["Ts+q*1e6*((R/1000)^2-(x/1000)^2)/(4*k)","T(r), °C"]],"p":{"q":[1,500,300,"q","MW/m³"],"R":[1,20,5,"radius","mm"],"k":[1,400,3,"k","W/m·K"],"Ts":[20,600,300,"surface","°C"]},"out":[["centre rise","q*1e6*(R/1000)^2/(4*k)","K",1]]}</lab>
+</eq>
+
+<eq n="35" name="Fick's second law (diffusion)" tags="PDE,linear,parabolic" who="Fick 1855" p1="12" short="C_t = D·C_xx">
+<f>∂C/∂t = D·∂²C/∂x²      constant surface:   (C − C<sub>s</sub>)/(C₀ − C<sub>s</sub>) = erf( x / (2√(Dt)) )</f>
+<sym><b>C</b> concentration · <b>D</b> diffusion coefficient (m²/s; carbon in austenite at 927 °C ≈ 1.6×10⁻¹¹)</sym>
+<idea><p>The heat equation with heat replaced by atoms. Flux is proportional to the concentration gradient (Fick's first law); conservation turns that into the same parabolic PDE, with the same erf solution and the same √(Dt) scaling. D rises steeply with temperature (Arrhenius, equation 39), which is why case hardening is done hot.</p></idea>
+<ex t="Gas carburising a gear at 927 °C: core 0.20 % C, surface held at 1.00 % C, D = 1.6×10⁻¹¹ m²/s. Time to reach 0.60 % C at 0.5 mm depth?">(0.60 − 1.00)/(0.20 − 1.00) = 0.5 = erf(η) → η = 0.477
+t = (x/(2η))²/D = (0.5e-3/0.954)²/1.6e-11 = 1.72×10⁴ s ≈ 4.8 h
+Double the case depth to 1 mm → four times as long: 19 h.</ex>
+<app>Carburising and nitriding of gears and shafts, doping of semiconductors, drug release from patches, moisture uptake in composites and insulation, hydrogen embrittlement, food salting and drying.</app>
+<lab>{"t":"pde","D":"D","p":{"D":[0.2,5,1,"D (scaled)"]},"ics":[["surface held at 1","0"]],"bl":1,"br":0,"x":[0,1],"T":0.1,"u":[0,1],"xl":"depth (scaled)","ul":"C","out":[["depth of C = 0.5","2*0.477*sqrt(D*t)","",3]],"note":"Left boundary held at the surface concentration; watch the front advance as √t."}</lab>
+</eq>
+
+<eq n="36" name="Convection–diffusion (advection–dispersion)" tags="PDE,linear,parabolic" who="Taylor 1953 (dispersion in pipes)" short="c_t + u·c_x = D·c_xx">
+<f>∂c/∂t + u·∂c/∂x = D·∂²c/∂x²      a pulse moves at u and spreads with σ = √(2Dt);   Péclet Pe = uL/D</f>
+<sym><b>u</b> flow velocity · <b>D</b> diffusion (or dispersion) coefficient · <b>Pe</b> ratio of carried to diffused transport</sym>
+<idea><p>Diffusion plus a current. A spill drifts downstream at the flow speed and spreads by mixing. When Pe is large the plume moves as a sharp blob; when small, it spreads in all directions. Numerically this equation is notorious: naive central differences oscillate at high Pe, which is why CFD codes use upwinding.</p></idea>
+<ex t="A dye spill in a river flowing at 0.5 m/s with longitudinal dispersion D = 5 m²/s. Where is it after one hour and how wide?">Distance = u·t = 0.5 × 3600 = 1800 m
+σ = √(2Dt) = √(2 × 5 × 3600) = 190 m  → about 760 m between the ±2σ edges
+Peak concentration falls as 1/√t: four times longer, half the peak.</ex>
+<app>Pollutant spills in rivers and groundwater, chromatography, smoke plumes, drug transport in blood, heat in pipe flow, residence-time distribution in reactors, tracer tests.</app>
+<lab>{"t":"pde","D":"D","a":"U","p":{"U":[0,2,0.5,"velocity u"],"D":[0.0005,0.02,0.003,"dispersion D"]},"ics":[["pulse","exp(-(((x-0.15)/0.03)^2))"]],"bc":"dir","x":[0,1],"T":1.2,"u":[0,1],"out":[["peak now at x","xmax","",3],["peak height","umax","",3],["Péclet uL/D","U/D","",0]]}</lab>
+</eq>
+
+<eq n="37" name="Stefan problem (melting and freezing front)" tags="PDE,nonlinear,moving boundary" who="Stefan 1889 (polar ice)" short="ρL·ds/dt = k·∂T/∂x at the front">
+<f>Heat equation in each phase, plus at the front x = s(t):  ρ·L·ds/dt = k·∂T/∂x<br>Quasi-steady ice growth:  s(t) = √( 2k·ΔT·t / (ρ·L) )</f>
+<sym><b>s</b> front position · <b>L</b> latent heat (water 334 kJ/kg) · <b>ΔT</b> temperature difference across the frozen layer</sym>
+<idea><p>Melting or freezing needs latent heat at the interface, and the interface moves — so the domain itself is unknown, a <b>moving-boundary</b> problem. When latent heat dominates (Stefan number cΔT/L small) the thickness grows as √t again: the thicker the ice, the better it insulates and the slower it grows.</p></idea>
+<ex t="A lake under −10 °C air (ice surface at −10 °C). How thick is the ice after 24 hours? After 10 days?">s = √(2 × 2.2 × 10 × 86400/(917 × 334000)) = √0.0124 = 0.111 m in one day
+10 days: √10 × 0.111 = 0.35 m (ignoring snow cover, which insulates)</ex>
+<app>Ice formation on lakes and pipes, casting and solidification of metals, welding pools, cryosurgery, phase-change thermal storage (PCM), permafrost thaw, ablation of re-entry heat shields.</app>
+<lab>{"t":"ode","v":["s"],"f":["k*dT/(917*334000*max(s,1e-4))*86400"],"p":{"k":[0.5,3,2.2,"ice k","W/m·K"],"dT":[1,40,10,"below zero","K"]},"init":[0.001],"T":30,"tl":"t, days","show":[["s"]],"cap":["ice thickness, m"],"out":[["after 1 day","sqrt(2*k*dT*86400/(917*334000))","m",3],["after 30 days","sT","m",3]]}</lab>
+</eq>
+
+<eq n="38" name="Radiative cooling (Stefan–Boltzmann)" tags="ODE,nonlinear,first order" who="Stefan 1879; Boltzmann 1884" short="m·c·T′ = −εσA(T⁴ − T_s⁴)">
+<f>m·c·dT/dt = −ε·σ·A·(T⁴ − T<sub>s</sub>⁴)      σ = 5.67×10⁻⁸ W/m²K⁴<br>Into cold space (T<sub>s</sub> ≈ 0):  t = (mc/(3εσA))·(1/T³ − 1/T₀³)</f>
+<sym><b>T</b> absolute temperature (K) · <b>ε</b> emissivity (0.05 polished metal … 0.95 black paint)</sym>
+<idea><p>Radiation scales with the fourth power of absolute temperature, so very hot bodies cool fast and then slow down dramatically. At furnace temperatures radiation dominates convection; at room temperature they are comparable. In vacuum it is the only way out — the design driver for spacecraft radiators.</p></idea>
+<ex t="A 100 mm steel sphere (4.11 kg, c = 500, ε = 0.8) cools in vacuum from 1000 K. Time to 500 K?">A = π d² = 0.0314 m²,  a = εσA/(mc) = 6.93×10⁻¹³ per K³s
+t = (1/(3a))·(1/500³ − 1/1000³) = (8e-9 − 1e-9)/(2.08e-12) = 3360 s ≈ 56 min
+Going on to 250 K would take a further 6.7 hours — the T⁴ law tails off.</ex>
+<app>Furnaces and hot forgings, spacecraft thermal control, incandescent lamps, night-time ground frost, thermal imaging (emissivity setting), astronomy (stellar temperatures).</app>
+<lab>{"t":"ode","v":["T"],"f":["-e*5.67e-8*pi*(d/1000)^2/(7850*pi/6*(d/1000)^3*500)*(T^4-Ts^4)"],"p":{"d":[10,500,100,"sphere diameter","mm"],"e":[0.05,1,0.8,"emissivity ε"],"Ts":[0,300,0,"surroundings","K"]},"init":[1000],"T":20000,"tl":"t, s","show":[["T"]],"out":[["T after 20 000 s","TT","K",0]]}</lab>
+</eq>
+
+<eq n="39" name="Arrhenius reaction kinetics" tags="ODE,linear,first order" who="Arrhenius 1889" short="dC/dt = −k(T)·C, k = A·e^(−Ea/RT)">
+<f>dC/dt = −k·C<sup>n</sup>,      k(T) = A·e<sup>−E<sub>a</sub>/(R·T)</sup>      k₂/k₁ = exp[ (E<sub>a</sub>/R)·(1/T₁ − 1/T₂) ]</f>
+<sym><b>C</b> concentration · <b>n</b> reaction order · <b>E<sub>a</sub></b> activation energy · <b>R</b> = 8.314 J/mol·K</sym>
+<idea><p>Molecules must climb an energy barrier to react; the fraction able to do so is e<sup>−E<sub>a</sub>/RT</sup>. A modest temperature rise multiplies the rate. The old rule "10 °C doubles the rate" holds for E<sub>a</sub> ≈ 50 kJ/mol near room temperature. Insulation life, oil oxidation, battery ageing and food spoilage are all Arrhenius processes — the basis of accelerated life testing.</p></idea>
+<ex t="A product degrades with a half-life of 1 year at 25 °C, E_a = 80 kJ/mol. Half-life if stored at 40 °C?">k₄₀/k₂₅ = exp[(80000/8.314)·(1/298.15 − 1/313.15)] = exp(1.546) = 4.69
+Half-life = 365/4.69 = 78 days</ex>
+<ex t="Accelerated test: how many hours at 120 °C equal 10 000 h at 80 °C for oil oxidation with E_a = 60 kJ/mol?">Factor = exp[(60000/8.314)·(1/353.15 − 1/393.15)] = exp(2.079) = 8.0  →  1250 h</ex>
+<app>Lubricant and insulation life, battery and capacitor ageing, accelerated life testing, shelf life of food and drugs, curing of adhesives and composites, combustion, creep (equation 29).</app>
+<lab>{"t":"ode","v":["C"],"f":["-log(2)/H*exp(Ea*1000/8.314*(1/298.15-1/(T+273.15)))*C"],"p":{"Ea":[20,150,80,"E_a","kJ/mol"],"T":[0,100,40,"storage temperature","°C"],"H":[0.1,5,1,"half-life at 25 °C","years"]},"init":[100],"T":3,"tl":"t, years","show":[["C"]],"cap":["% of the original remaining"],"out":[["rate factor vs 25 °C","exp(Ea*1000/8.314*(1/298.15-1/(T+273.15)))","",2],["half-life at T","365*H/exp(Ea*1000/8.314*(1/298.15-1/(T+273.15)))","days",0]]}</lab>
+</eq>
+
+<eq n="40" name="Bearing / gearbox heat balance and thermal runaway (Semenov)" tags="ODE,nonlinear,first order" who="Semenov 1928; Frank-Kamenetskii" p1="3" short="mc·θ′ = P₀·e^(βθ) − hA·θ">
+<f>m·c·dθ/dt = P₀·e<sup>β·θ</sup> − h·A·θ      runaway if  P₀·β/(h·A) &gt; 1/e</f>
+<sym><b>θ = T − T<sub>a</sub></b> temperature rise · <b>P₀</b> heat generated at ambient · <b>β</b> how fast generation grows with temperature · <b>hA</b> cooling capacity (W/K)</sym>
+<idea><p>A bearing, gearbox, battery or reactor generates heat that <i>increases</i> with temperature (thinner oil film and more friction, faster reactions), while cooling grows only linearly. Plot both against temperature: two crossings means a stable operating point and an unstable threshold above it; no crossing means the temperature runs away. The boundary is where the curves just touch — Semenov's tangency condition, a saddle-node bifurcation (Part I, Day 3).</p></idea>
+<deep t="The critical condition"><p>Equilibrium needs hAθ = P₀e<sup>βθ</sup>. At the critical point the curves also have equal slopes: hA = βP₀e<sup>βθ</sup>. Dividing gives θ = 1/β; substituting back gives P₀β/(hA) = e<sup>−1</sup>. Above it, no equilibrium exists. Note the critical rise is only 1/β — the temperature just before runaway is not dramatic, which makes the onset hard to spot.</p></deep>
+<ex t="A test gearbox makes P₀ = 200 W of losses at ambient, rising 2 % per kelvin (β = 0.02 /K). Cooling hA = 10 W/K, or with a fan 12 W/K. Stable?">hA = 10:  P₀β/hA = 200 × 0.02/10 = 0.40 > 0.368 → runaway: no steady temperature exists
+hA = 12:  0.333 < 0.368 → stable; 12θ = 200·e^(0.02θ) gives θ = 31.0 K (stable) and 75.6 K (threshold)
+A 20 % cooling improvement turned runaway into a 31 K rise — and above 75.6 K it would still run away.</ex>
+<app>Gearbox and bearing thermal stability on endurance rigs, lithium-ion battery thermal runaway, exothermic reactors and storage of reactive materials (self-heating of coal, hay), electronics with leakage current rising with temperature, power-cable rating.</app>
+<lab>{"t":"ode","v":["th"],"f":["(P0*exp(b*th)-hA*th)/C"],"p":{"P0":[50,400,200,"P₀","W"],"b":[0.005,0.05,0.02,"β","1/K"],"hA":[2,30,12,"cooling hA","W/K"],"C":[2000,50000,20000,"heat capacity mc","J/K"]},"init":[0],"T":30000,"tl":"t, s","stop":"th>200","show":[["th"]],"cap":["temperature rise θ, K (stops at 200 K)"],"out":[["P₀β/hA (critical 0.368)","P0*b/hA","",3],["rise reached","thT","K",1]]}</lab>
+</eq>
+
+<quiz>[
+{"q":"Heat penetrates a solid a distance that grows like","o":["t","√t","t²","log t"],"a":1,"e":"The diffusion length is √(αt)."},
+{"q":"Lumped-capacitance (one-temperature) analysis is valid when the Biot number is","o":["Greater than 1","Less than about 0.1","Exactly 1","Negative"],"a":1,"e":"Bi = hL_c/k < 0.1 means internal gradients are small."},
+{"q":"Doubling the required case depth in carburising multiplies the time by","o":["2","4","√2","8"],"a":1,"e":"t ∝ x²/D."},
+{"q":"For E_a ≈ 50 kJ/mol near room temperature, a 10 °C rise multiplies a reaction rate by about","o":["1.1","2","10","100"],"a":1,"e":"exp[(50000/8.314)(1/298 − 1/308)] ≈ 1.9."},
+{"q":"Thermal runaway occurs (Semenov) when P₀β/(hA) exceeds","o":["1","0.5","1/e ≈ 0.368","e"],"a":2,"e":"The tangency condition gives 1/e."}
+]</quiz>
+</day>

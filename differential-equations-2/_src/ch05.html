@@ -1,0 +1,135 @@
+<!--
+TOOL:    differential-equations-2/_src/ch05.html — Part II source, Chapter 5: Fluids and Lubrication (equations 41–50)
+FAMILY:  differential-equations
+VERSION: 1.0.0
+DATE:    2026-11-21
+CHAT:    As a continuation as part 2, discuss the most famous 100 useful differential equations that are being used in different applications with worked out examples
+CHANGES: 1.0.0 - first version
+STATUS:  working
+-->
+<day n="5">
+<summary>From the full Navier–Stokes equations down to the special cases engineers solve every day: Bernoulli and flow meters, pipe flow, Couette shear and bearing friction, settling particles, the Blasius boundary layer, the Reynolds equation of hydrodynamic lubrication, water hammer, Burgers' shocks and Darcy groundwater flow.</summary>
+<goals><li>Know which terms of Navier–Stokes survive in each special case</li><li>Size orifices, pipes and lube lines; estimate bearing friction (Petroff)</li><li>Read the pressure field and load capacity of a journal bearing from the Reynolds equation</li><li>Estimate surge pressures in pipes and boundary-layer thickness</li><li>Recognise shock formation in nonlinear transport</li></goals>
+<intro><p>Fluid mechanics is one great PDE system — mass, momentum and energy conservation — and almost nobody solves it whole. Engineering progress came from knowing what to throw away: viscosity (Bernoulli), inertia (Stokes, Reynolds lubrication), the downstream direction (boundary layers), or two space dimensions (pipes). Each card shows one such simplification.</p></intro>
+
+<eq n="41" name="Navier–Stokes equations" tags="PDE,nonlinear,system" who="Navier 1822; Stokes 1845" short="ρ(u_t + u·∇u) = −∇p + μ∇²u + f, ∇·u = 0">
+<f>ρ·(∂<b>u</b>/∂t + <b>u</b>·∇<b>u</b>) = −∇p + μ·∇²<b>u</b> + <b>f</b>      ∇·<b>u</b> = 0  (incompressible)</f>
+<sym><b>u</b> velocity field · <b>p</b> pressure · <b>μ</b> viscosity · <b>f</b> body force · Reynolds number Re = ρUL/μ = inertia/viscous</sym>
+<idea><p>Newton's second law for every fluid particle: acceleration (including the nonlinear "carried along" term u·∇u) equals pressure push plus viscous rubbing plus gravity. The nonlinearity makes turbulence possible; whether smooth solutions always exist in 3-D is one of the seven Millennium Prize problems. The Reynolds number decides the character of the flow: below about 2300 in a pipe, smooth and laminar; far above, turbulent.</p></idea>
+<deep t="Stokes' first problem — a plate suddenly set moving"><p>For flow along x over a plate that starts moving at speed U, only u(y, t) survives: ∂u/∂t = ν·∂²u/∂y². It is the heat equation (ν = μ/ρ plays the role of α), so u = U·erfc(y/(2√(νt))): momentum diffuses into the fluid, and the "boundary layer" thickens like √(νt). The lab shows this exact special case.</p></deep>
+<ex t="Reynolds numbers: water at 2 m/s in a 50 mm pipe, and gear oil (ν = 50 mm²/s) at the same speed.">Water: Re = 1000 × 2 × 0.05/0.001 = 100 000 — turbulent
+Oil:   Re = 2 × 0.05/50e-6 = 2000 — laminar, just below transition
+Same pipe and speed, opposite flow regimes: which equation applies depends on Re.</ex>
+<app>Everything that flows: aerodynamics, pumps and turbines, weather and ocean models, blood flow, lubrication and cooling oil jets in gearboxes — solved numerically by CFD.</app>
+<lab>{"t":"pde","D":"nu","p":{"nu":[0.2,3,1,"kinematic viscosity ν (scaled)"]},"ics":[["fluid at rest","0"]],"bl":1,"br":0,"x":[0,1],"T":0.08,"u":[0,1],"xl":"distance from the plate y","ul":"u/U","out":[["boundary-layer thickness ≈ 4√(νt)","4*sqrt(nu*t)","",3]],"note":"Stokes' first problem: the plate at y = 0 moves at U; momentum diffuses into the fluid."}</lab>
+</eq>
+
+<eq n="42" name="Euler equations and Bernoulli's equation" tags="PDE,nonlinear,inviscid" who="Euler 1757; D. Bernoulli 1738" short="p + ½ρv² + ρgz = const">
+<f>ρ·D<b>u</b>/Dt = −∇p + ρ<b>g</b>      along a streamline, steady:  p + ½·ρ·v² + ρ·g·z = constant</f>
+<sym><b>p</b> static pressure · <b>½ρv²</b> dynamic pressure · <b>ρgz</b> hydrostatic head</sym>
+<idea><p>Drop viscosity from Navier–Stokes and integrate along a streamline: pressure, kinetic and potential energy trade with each other. Faster flow means lower pressure — the principle of venturi and orifice meters, carburettors, aerofoil lift and cavitation.</p></idea>
+<ex t="A venturi meter: 100 mm pipe narrowing to 50 mm, pressure difference 20 kPa, water. Flow rate?">Continuity: v₁ = v₂/4.  Bernoulli: Δp = ½ρ(v₂² − v₁²) = ½ρv₂²(1 − 1/16)
+v₂ = √(2 × 20 000/(1000 × 0.9375)) = 6.53 m/s
+Q = v₂ × π × 0.05²/4 = 0.0128 m³/s = 12.8 L/s  (× C_d ≈ 0.98 for a real venturi)</ex>
+<app>Flow meters (venturi, orifice, Pitot tube for airspeed), siphons, spray nozzles, cavitation risk at pump inlets and in hydraulic valves, wind loads, lube-oil jets.</app>
+<lab>{"t":"fn","x":[0,50,"pressure difference Δp, kPa"],"c":[["pi*(d2/1000)^2/4*sqrt(2*x*1000/(rho*(1-(d2/d1)^4)))*1000","flow, L/s"]],"p":{"d1":[20,300,100,"pipe d₁","mm"],"d2":[10,250,50,"throat d₂","mm"],"rho":[700,1100,1000,"density","kg/m³"]},"out":[["flow at 20 kPa","pi*(d2/1000)^2/4*sqrt(2*20000/(rho*(1-(d2/d1)^4)))*1000","L/s",2]],"note":"Flow grows only as √Δp: to measure low flows accurately you need a smaller throat."}</lab>
+</eq>
+
+<eq n="43" name="Hagen–Poiseuille pipe flow" tags="ODE,linear,boundary value" who="Hagen 1839; Poiseuille 1840" short="(1/r)(r·u′)′ = (1/μ)·dp/dx">
+<f>(1/r)·d/dr( r·du/dr ) = (1/μ)·dp/dx      →      u = (Δp/(4μL))·(R² − r²),   Q = π·R⁴·Δp/(8·μ·L)</f>
+<sym><b>R</b> pipe radius · <b>Δp/L</b> pressure gradient · <b>μ</b> dynamic viscosity</sym>
+<idea><p>Steady laminar flow in a straight pipe: Navier–Stokes collapses to a one-line ODE across the radius. The profile is a parabola, peak speed twice the mean. Flow goes as R⁴: halve the bore and you need sixteen times the pressure — the reason narrowed arteries and partly blocked oil galleries are so serious.</p></idea>
+<ex t="A gearbox lube line: 4 mm bore, 2 m long, oil μ = 0.03 Pa·s (ρ = 870), 1 L/min. Pressure drop? Check laminar.">Q = 1.667×10⁻⁵ m³/s,  R = 2 mm
+Δp = 8μLQ/(πR⁴) = 8 × 0.03 × 2 × 1.667e-5/(π × 1.6e-11) = 1.59×10⁵ Pa ≈ 1.6 bar
+Mean speed 1.33 m/s, Re = 870 × 1.33 × 0.004/0.03 = 154 → laminar ✓
+With a 3 mm bore: Δp × (4/3)⁴ = 5.0 bar.</ex>
+<app>Lube-oil and hydraulic lines, capillary viscometers, blood flow in vessels, IV drips and syringes, microfluidics, oil-gallery design in gearbox housings.</app>
+<lab>{"t":"fn","x":["-d/2","d/2","radius r, mm"],"c":[["dp*1e5/(4*mu*L)*((d/2000)^2-(x/1000)^2)","velocity u(r), m/s"]],"p":{"d":[1,20,4,"bore","mm"],"L":[0.2,10,2,"length","m"],"dp":[0.1,10,1.59,"Δp","bar"],"mu":[0.001,0.3,0.03,"μ","Pa·s"]},"out":[["flow","pi*(d/2000)^4*dp*1e5/(8*mu*L)*60000","L/min",3],["peak speed","dp*1e5/(4*mu*L)*(d/2000)^2","m/s",2]]}</lab>
+</eq>
+
+<eq n="44" name="Couette flow and Petroff's bearing friction" tags="ODE,linear,boundary value" who="Couette 1890; Petroff 1883" short="μ·u″ = 0 → τ = μU/h">
+<f>μ·d²u/dy² = 0  →  u = U·y/h,   τ = μ·U/h      Petroff torque  T = 2π·μ·R³·L·ω / c</f>
+<sym><b>U</b> sliding speed · <b>h</b> gap (in a bearing the radial clearance c) · <b>τ</b> shear stress</sym>
+<idea><p>Fluid sheared between a moving and a fixed surface takes a straight-line velocity profile. Applied to a lightly loaded, concentric journal bearing, it gives the friction torque — Petroff's law, still the first estimate of bearing power loss and heat generation. Friction rises with speed and viscosity and falls with clearance.</p></idea>
+<ex t="A journal bearing: D = 50 mm, L = 25 mm, radial clearance 50 µm, 6000 rpm, oil μ = 0.02 Pa·s. Friction force and power loss?">U = ωR = 628.3 × 0.025 = 15.7 m/s
+τ = μU/c = 0.02 × 15.7/50e-6 = 6280 Pa
+F = τ·πDL = 6280 × π × 0.05 × 0.025 = 24.7 N  →  power = F·U = 388 W of heat per bearing
+This heat is the P₀ of the heat balance in equation 40.</ex>
+<app>Plain-bearing friction and heat, viscometers (rotating cylinder), seals, lubricated slideways, the oil film between piston rings and liner, the viscous coupling.</app>
+<lab>{"t":"fn","x":[0,20000,"speed, rpm"],"c":[["mu*(x*pi/30*D/2000)/(c/1e6)*pi*D/1000*L/1000*(x*pi/30*D/2000)","Petroff power loss, W"]],"p":{"D":[10,200,50,"diameter","mm"],"L":[5,200,25,"length","mm"],"c":[10,200,50,"radial clearance","µm"],"mu":[0.002,0.1,0.02,"μ","Pa·s"]},"out":[["loss at 6000 rpm","mu*(6000*pi/30*D/2000)^2/(c/1e6)*pi*D/1000*L/1000","W",1]],"note":"Power loss rises with the square of speed — high-speed bearings need their heat carried away by oil flow."}</lab>
+</eq>
+
+<eq n="45" name="Stokes drag and particle settling" tags="ODE,linear,first order" who="Stokes 1851" short="m·v′ = (ρp − ρf)Vg − 3πμd·v">
+<f>m·dv/dt = (ρ<sub>p</sub> − ρ<sub>f</sub>)·V·g − 3π·μ·d·v      →      v<sub>t</sub> = (ρ<sub>p</sub> − ρ<sub>f</sub>)·g·d²/(18·μ)</f>
+<sym><b>d</b> particle diameter · <b>ρ<sub>p</sub>, ρ<sub>f</sub></b> particle and fluid densities · valid for particle Reynolds number &lt; 1</sym>
+<idea><p>At very low Reynolds number drag is proportional to speed, not speed squared (compare equation 11), so the equation is linear and the particle reaches terminal speed after a tiny time constant ρ<sub>p</sub>d²/(18μ). Settling speed goes as d²: big particles drop out fast, fine ones stay suspended for hours — the principle behind sumps, magnetic plugs, clarifiers and the centrifuge.</p></idea>
+<ex t="Steel wear debris, 10 µm, in gearbox oil (μ = 0.03 Pa·s, ρ = 870). Settling speed? And for 100 µm?">v_t = (7850 − 870) × 9.81 × (10e-6)²/(18 × 0.03) = 1.27×10⁻⁵ m/s ≈ 4.6 cm per hour
+100 µm: ×100 → 1.27 mm/s ≈ 4.6 m per hour
+So large wear particles reach the magnetic plug, while fine ones circulate to the filter — and to the oil sample bottle, which is why oil analysis sees them.</ex>
+<app>Oil sumps and debris monitoring, sedimentation tanks, centrifuges and cyclones, blood sedimentation rate, aerosol and dust behaviour, Millikan's oil-drop experiment, viscometers (falling ball).</app>
+<lab>{"t":"fn","x":[1,200,"particle diameter, µm"],"logx":true,"logy":true,"c":[["(rp-rf)*9.81*(x*1e-6)^2/(18*mu)*3600","settling speed, m/h"]],"p":{"rp":[1000,20000,7850,"particle density","kg/m³"],"rf":[700,1100,870,"fluid density","kg/m³"],"mu":[0.001,0.5,0.03,"μ","Pa·s"]},"y":[0.0001,1000],"out":[["10 µm","(rp-rf)*9.81*1e-10/(18*mu)*3600*100","cm/h",2]]}</lab>
+</eq>
+
+<eq n="46" name="Blasius boundary layer" tags="ODE,nonlinear,third order" who="Prandtl 1904; Blasius 1908" short="f‴ + ½·f·f″ = 0">
+<f>f‴ + ½·f·f″ = 0,   f(0) = f′(0) = 0,  f′(∞) = 1      δ ≈ 5x/√Re<sub>x</sub>,   C<sub>f</sub> = 0.664/√Re<sub>x</sub></f>
+<sym><b>η = y·√(U/(νx))</b> similarity variable · <b>f′(η) = u/U</b> velocity profile · <b>Re<sub>x</sub> = Ux/ν</b></sym>
+<idea><p>Prandtl's great insight: viscosity matters only in a thin layer near a surface; outside it, Bernoulli rules. For a flat plate, the boundary-layer PDEs reduce — by the same similarity trick as equation 31 — to Blasius's ODE. It has no closed form; the shooting method finds f″(0) = 0.332, which gives skin friction directly.</p></idea>
+<ex t="Air at 10 m/s over a 0.5 m plate (ν = 1.5×10⁻⁵ m²/s). Is the flow laminar at the end? Boundary-layer thickness there?">Re_x = 10 × 0.5/1.5e-5 = 3.3×10⁵  (< 5×10⁵, still laminar)
+δ = 5x/√Re = 2.5/577 = 4.3 mm
+Local skin friction C_f = 0.664/577 = 0.00115 → wall shear = C_f·½ρU² = 0.07 Pa</ex>
+<app>Drag of wings, hulls and car bodies, heat transfer from surfaces (the thermal boundary layer is its twin), cooling-fin spacing, hot-wire anemometers, why turbulence promoters improve heat exchangers.</app>
+<lab>{"t":"ode","v":["f","fp","fpp"],"f":["fp","fpp","-0.5*f*fpp"],"y0":{"s":[0.2,0.5,0.332,"guess f″(0) (shooting)"]},"init":[0,0,"s"],"T":8,"tl":"η = y·√(U/νx)","show":[["fp"]],"lab":{"fp":"u/U = f′(η)"},"yr":[[0,1.4]],"out":[["f′ at η = 8 (must be 1)","fpT","",4]],"note":"Shooting method: adjust the guess until u/U levels off at exactly 1 — that is f″(0) = 0.332."}</lab>
+</eq>
+
+<eq n="47" name="Reynolds equation (hydrodynamic lubrication)" tags="PDE,nonlinear,elliptic" who="Osborne Reynolds 1886" short="∇·(h³∇p) = 6μU·∂h/∂x">
+<f>∂/∂x( h³·∂p/∂x ) + ∂/∂z( h³·∂p/∂z ) = 6·μ·U·∂h/∂x      journal: h = c·(1 + ε·cos θ)</f>
+<sym><b>p</b> film pressure · <b>h</b> film thickness · <b>U</b> surface speed · <b>ε</b> eccentricity ratio · <b>c</b> radial clearance</sym>
+<idea><p>In a thin film, inertia is negligible and pressure is constant across the gap; Navier–Stokes integrates across the film into one equation for pressure. A converging wedge of oil, dragged by the moving surface, builds pressure large enough to float a shaft on a film thinner than a hair — no contact, almost no wear. The short-bearing (Ocvirk) solution drops the circumferential term and gives closed-form pressure and load.</p></idea>
+<deep t="Short-bearing solution"><p>For L/D &lt; ½, ∂/∂z(h³∂p/∂z) dominates: integrate twice in z with p = 0 at both ends: p = (3μU/(R·c²))·(L²/4 − z²)·ε sin θ/(1 + ε cos θ)³, kept only where positive (the rest cavitates). Integrating p over the bearing gives the load W = (μUL³/c²)·ε/(4(1 − ε²)²)·√(π²(1 − ε²) + 16ε²) and the attitude angle tan φ = π√(1 − ε²)/(4ε).</p></deep>
+<ex t="The lab's bearing: D = 50 mm, L = 25 mm, c = 50 µm, 6000 rpm, μ = 0.02 Pa·s, ε = 0.6. Load capacity?">U = 15.7 m/s
+W = (0.02 × 15.7 × 0.025³/(50e-6)²) × 0.6/(4 × 0.64²) × √(π² × 0.64 + 16 × 0.36) = 2.50 kN
+Minimum film h_min = c(1 − ε) = 20 µm; attitude angle 46°.
+At ε = 0.8 the same bearing carries about 11 kN with a 10 µm film.</ex>
+<app>Journal and thrust bearings in turbines, compressors, engines and gearboxes; piston rings; slipper pads; magnetic-disk heads (air bearings); joint lubrication in knees and hips.</app>
+<lab w="reynolds"></lab>
+</eq>
+
+<eq n="48" name="Water hammer equations" tags="PDE,linear,hyperbolic" who="Joukowsky 1898; Allievi 1902" p1="13" short="H_t + (a²/g)V_x = 0, V_t + gH_x = 0">
+<f>∂H/∂t + (a²/g)·∂V/∂x = 0      ∂V/∂t + g·∂H/∂x + f·V|V|/(2D) = 0      Joukowsky:  ΔH = a·ΔV/g</f>
+<sym><b>H</b> head · <b>V</b> flow velocity · <b>a</b> pressure-wave speed (≈ 1200 m/s in steel water pipe, less in plastic) · <b>f</b> friction factor</sym>
+<idea><p>Shut a valve quickly and the moving water column has to stop. Fluid compressibility and pipe elasticity turn the change into a pressure wave that travels back and forth at speed a — a wave equation. A closure faster than the round-trip time 2L/a produces the full Joukowsky surge, which can burst pipes; a slow closure reduces it in proportion.</p></idea>
+<ex t="A 600 m steel water main carries 1.5 m/s. The valve shuts in 0.2 s. Surge? Safe closing time for a 20 m surge?">2L/a = 1200/1200 = 1.0 s > 0.2 s → rapid closure
+ΔH = a·V/g = 1200 × 1.5/9.81 = 183 m ≈ 18 bar on top of the static pressure
+For 20 m: t_c ≈ (2L/a)·(183/20) = 9.2 s</ex>
+<app>Pump trips and valve closures in water mains and penstocks, hydraulic systems (pressure spikes in fuel and oil lines), fire-sprinkler piping, surge tanks and air vessels, the thump in household plumbing.</app>
+<lab w="waterhammer"></lab>
+</eq>
+
+<eq n="49" name="Burgers' equation (shocks)" tags="PDE,nonlinear,parabolic" who="Bateman 1915; Burgers 1948" short="u_t + u·u_x = ν·u_xx">
+<f>∂u/∂t + u·∂u/∂x = ν·∂²u/∂x²      inviscid shock forms at  t* = −1/min(u₀′(x))</f>
+<sym><b>u</b> velocity (or traffic density, or wave amplitude) · <b>ν</b> viscosity</sym>
+<idea><p>The simplest equation with both nonlinear steepening and diffusion. Faster parts of a wave catch up with slower parts ahead, so the profile steepens; without viscosity it would overturn at a finite time. Viscosity holds the front as a thin shock of width ∝ ν. It is a toy model for shock waves, traffic jams and turbulence — and the standard test for CFD schemes.</p></idea>
+<ex t="Inviscid Burgers' equation with u₀(x) = sin x. When does the shock form?">Characteristics x = x₀ + u₀(x₀)·t cross first where u₀′ is most negative: u₀′ = cos x, minimum −1 at x = π
+t* = −1/(−1) = 1. After that, a shock sits at x = π and dissipates energy.</ex>
+<app>Shock waves in gases, traffic flow (jams form as backward-moving shocks), sediment transport, nonlinear acoustics (sonic booms), testing numerical schemes.</app>
+<lab>{"t":"pde","D":"nu","a":"u","p":{"nu":[0.001,0.05,0.005,"viscosity ν"]},"ics":[["sine bump","0.5+0.5*sin(2*pi*x)"],["step down","x<0.3?1:0.2"]],"bc":"per","x":[0,1],"T":0.6,"pre":0,"u":[0,1.1],"out":[["peak u","umax","",3]],"note":"The tall part runs ahead and steepens into a shock; smaller ν makes it sharper."}</lab>
+</eq>
+
+<eq n="50" name="Darcy flow and groundwater diffusion" tags="PDE,linear,parabolic" who="Darcy 1856; Theis 1935" short="S·h_t = K·h_xx, q = −K·dh/dx">
+<f>q = −K·dh/dx  (Darcy)      S<sub>s</sub>·∂h/∂t = K·∂²h/∂x²  (diffusion of head)</f>
+<sym><b>q</b> specific discharge · <b>K</b> hydraulic conductivity (gravel 10⁻², sand 10⁻⁴, clay 10⁻⁹ m/s) · <b>h</b> hydraulic head · <b>S<sub>s</sub></b> specific storage</sym>
+<idea><p>Flow through porous media is proportional to the head gradient — Darcy's experiments with sand filters in Dijon. Add storage and you get another heat equation, with hydraulic diffusivity K/S<sub>s</sub>. The same equations describe oil reservoirs, soil consolidation under foundations (Terzaghi) and seepage under dams.</p></idea>
+<ex t="A sand aquifer (K = 10⁻⁴ m/s) with a water-table slope of 0.5 % and a flow cross-section of 100 m². Daily flow?">Q = K·i·A = 1e-4 × 0.005 × 100 = 5×10⁻⁵ m³/s = 4.3 m³ per day
+Through clay (K = 10⁻⁹) the same gradient passes 0.04 litres per day — which is why clay liners work.</ex>
+<app>Groundwater and wells, oil and gas reservoirs, seepage under dams and through embankments, consolidation of soil under buildings, filters, porous bearings (sintered bronze bushes), drainage design.</app>
+<lab>{"t":"pde","D":"Dh","p":{"Dh":[0.1,3,1,"hydraulic diffusivity K/S (scaled)"]},"ics":[["flat water table","1"]],"bl":"1","br":"1-0.8*min(1,t*20)","x":[0,1],"T":0.4,"pre":0,"u":[0,1],"xl":"distance from the river","ul":"head h","out":[["head at the middle","umax","",3]],"note":"A well at the right end is pumped down; the drawdown spreads into the aquifer as a diffusion front."}</lab>
+</eq>
+
+<quiz>[
+{"q":"Bernoulli's equation neglects","o":["Pressure","Gravity","Viscosity","Velocity"],"a":2,"e":"It integrates the inviscid Euler equations along a streamline."},
+{"q":"Halving the bore of a laminar pipe at the same flow multiplies the pressure drop by","o":["2","4","8","16"],"a":3,"e":"Q ∝ R⁴Δp."},
+{"q":"Stokes settling speed is proportional to particle diameter","o":["d","d²","√d","d³"],"a":1,"e":"v_t = Δρ·g·d²/(18μ)."},
+{"q":"The Reynolds lubrication equation assumes","o":["Turbulent flow","A thin film where inertia is negligible","Inviscid fluid","Compressible gas only"],"a":1,"e":"It is the thin-film, low-inertia limit of Navier–Stokes."},
+{"q":"The Joukowsky surge for rapid valve closure is","o":["ρV²/2","a·V/g (head)","8μLQ/πR⁴","V²/2g"],"a":1,"e":"ΔH = aΔV/g, independent of closure details if faster than 2L/a."}
+]</quiz>
+</day>

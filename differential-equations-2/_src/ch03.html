@@ -1,0 +1,138 @@
+<!--
+TOOL:    differential-equations-2/_src/ch03.html — Part II source, Chapter 3: Structures and Machine Elements (equations 21–30)
+FAMILY:  differential-equations
+VERSION: 1.0.0
+DATE:    2026-11-21
+CHAT:    As a continuation as part 2, discuss the most famous 100 useful differential equations that are being used in different applications with worked out examples
+CHANGES: 1.0.0 - first version
+STATUS:  working
+-->
+<day n="3">
+<summary>The differential equations behind strength of materials and machine design: beam bending and shear deformation, column buckling, beam vibration, thick cylinders and rotating discs, gear-mesh dynamics, viscoelasticity, creep and fatigue crack growth. Here x is often position along a part, not time.</summary>
+<goals><li>Read EI·y⁗ = q as a chain: load → shear → moment → slope → deflection</li><li>Know when shear deformation (Timoshenko) matters and when buckling governs</li><li>Compute beam natural frequencies, hoop stresses and disc stresses</li><li>Model gear-mesh stiffness variation as a time-varying (Mathieu-type) system</li><li>Predict relaxation, creep and fatigue life by integrating rate laws</li></goals>
+<intro><p>Boundary-value problems arrive in this chapter: instead of a starting value you have conditions at both ends (supports, free surfaces). The equations are still ODEs — just in space. The last three cards return to time: materials that flow, creep and crack.</p></intro>
+
+<eq n="21" name="Euler–Bernoulli beam equation" tags="ODE,linear,fourth order,boundary value" who="Euler and Daniel Bernoulli, 1750" short="EI·y⁗ = q(x)">
+<f>EI·d⁴y/dx⁴ = q(x)      V = −EI·y‴,   M = EI·y″,   θ = y′</f>
+<sym><b>y</b> deflection · <b>q</b> distributed load (N/m) · <b>E</b> Young's modulus · <b>I</b> second moment of area · <b>V</b> shear · <b>M</b> bending moment</sym>
+<idea><p>Plane sections stay plane and perpendicular to the neutral axis; curvature is proportional to bending moment, y″ = M/EI. Differentiate twice more using dM/dx = V and dV/dx = −q and you get the fourth-order equation. Four integrations, four constants — fixed by two conditions at each end: pinned (y = 0, M = 0), fixed (y = 0, θ = 0) or free (M = 0, V = 0).</p></idea>
+<deep t="Derivation in four lines"><p>Equilibrium of a slice: dV/dx = −q and dM/dx = V. Geometry: strain at height z is ε = −z·κ, curvature κ = y″ for small slopes. Material: σ = Eε, so M = ∫σz dA = EI·y″. Combining: (EI·y″)″ = q, which is EI·y⁗ = q for constant EI.</p></deep>
+<ex t="Simply supported steel beam, span 3 m, I = 1000 cm⁴, 10 kN at mid-span. Maximum deflection and moment?">EI = 210e9 × 1000e-8 = 2.1×10⁶ N·m²
+y_max = PL³/(48EI) = 10⁴ × 27/(48 × 2.1e6) = 2.68 mm
+M_max = PL/4 = 7.5 kN·m</ex>
+<ex t="A cantilevered bracket, 0.4 m long, carries a uniform 5 kN/m (I = 50 cm⁴). Tip deflection?">y = wL⁴/(8EI) = 5000 × 0.0256/(8 × 210e9 × 50e-8) = 128/840 000 = 0.152 mm</ex>
+<app>Shafts (deflection at bearings and gears), machine frames and beds, test-rig bed plates, cranes, bridges, PCB stiffness, MEMS cantilevers, atomic force microscope tips.</app>
+<lab w="beam"></lab>
+</eq>
+
+<eq n="22" name="Timoshenko beam (shear deformation)" tags="ODE,linear,system,boundary value" who="Timoshenko 1921" short="κGA(y′ − φ) + q = 0, EIφ″ + κGA(y′ − φ) = 0">
+<f>κ·G·A·(y′ − φ)′ + q = 0      EI·φ″ + κ·G·A·(y′ − φ) = 0<br>Point load, simple support:  y<sub>max</sub> = PL³/(48EI) + PL/(4κGA)</f>
+<sym><b>φ</b> rotation of the cross-section (no longer equal to y′) · <b>G</b> shear modulus · <b>κ</b> shear coefficient (5/6 for rectangles)</sym>
+<idea><p>Euler–Bernoulli ignores shear strain. For long slender beams that is fine; for short deep beams, sandwich panels, gear teeth and the high modes of shafts, shear adds deflection and lowers natural frequencies. The extra term grows as (h/L)² relative to bending.</p></idea>
+<ex t="A short, deep steel beam: 100 × 200 mm section, 0.6 m span, 100 kN at centre. Bending and shear deflections?">I = 0.1 × 0.2³/12 = 6.67×10⁻⁵ m⁴,  A = 0.02 m²,  G = 80 GPa
+Bending:  PL³/(48EI) = 100e3 × 0.216/(48 × 210e9 × 6.67e-5) = 0.032 mm
+Shear:    PL/(4κGA) = 100e3 × 0.6/(4 × 0.833 × 80e9 × 0.02) = 0.011 mm
+Shear adds 35 % — Euler–Bernoulli would be badly unconservative here.</ex>
+<app>Gear-tooth deflection (mesh stiffness), short stubby shafts and spline teeth, sandwich and composite panels, deep girders, high-frequency vibration of beams, finite-element "thick beam" elements.</app>
+<lab>{"t":"fn","x":[2,30,"span-to-depth ratio L/h"],"c":[["100*(E/(5/6*G*x^2))/(1+E/(5/6*G*x^2))","shear share of total deflection, %"]],"p":{"E":[70,400,210,"E","GPa"],"G":[20,160,80,"G","GPa"]},"y":[0,60],"out":[["at L/h = 3","100*(E/(5/6*G*9))/(1+E/(5/6*G*9))","%",1],["at L/h = 10","100*(E/(5/6*G*100))/(1+E/(5/6*G*100))","%",1]],"note":"Centre load on a simple rectangular beam: shear/bending = (E/κG)·(h/L)². Below L/h ≈ 10, shear matters."}</lab>
+</eq>
+
+<eq n="23" name="Euler buckling of a column" tags="ODE,linear,eigenvalue" who="Euler 1744" short="EI·y″ + P·y = 0">
+<f>EI·y″ + P·y = 0      →      P<sub>cr</sub> = π²·EI/(K·L)²</f>
+<sym><b>P</b> axial load · <b>K</b> effective-length factor (pinned–pinned 1, fixed–free 2, fixed–fixed 0.5, fixed–pinned 0.7)</sym>
+<idea><p>A straight column under compression has the trivial solution y = 0 for every load — but at special loads a bent shape also satisfies equilibrium. It is an <b>eigenvalue problem</b>: y = sin(πx/L) works only when P = π²EI/L². Above that load the straight column is unstable and bows sideways suddenly, long before the material yields if the column is slender.</p></idea>
+<deep t="From the moment equation to the eigenvalue"><p>Cut the bent column at x: the internal moment balances P·y, so EI·y″ = −P·y. With k² = P/EI, y = A sin kx + B cos kx. Pinned ends: y(0) = 0 → B = 0; y(L) = 0 → A sin kL = 0. A non-zero A needs kL = nπ, so P = n²π²EI/L². The lowest, n = 1, is the buckling load. Imperfections and eccentricity (Perry–Robertson, secant formula) lower the real failure load.</p></deep>
+<ex t="A 20 mm diameter steel push-rod, 1 m long, pinned at both ends. Buckling load versus squash load (yield 250 MPa)?">I = π × 0.02⁴/64 = 7.85×10⁻⁹ m⁴
+P_cr = π² × 210e9 × 7.85e-9/1² = 16.3 kN
+Squash load = A·σ_y = 314 mm² × 250 MPa = 78.5 kN  →  buckling governs by a factor of 4.8.
+Halve the length and P_cr rises fourfold to 65 kN.</ex>
+<app>Push-rods, hydraulic cylinder rods, screw jacks and lead screws, columns and struts, thin-walled panels (local buckling), drill strings, railway rails in hot weather.</app>
+<lab>{"t":"fn","x":[0.2,3,"length L, m"],"c":[["pi^2*210e9*pi*(d/1000)^4/64/(K*x)^2/1000","Euler P_cr, kN"],["pi*(d/1000)^2/4*sy*1e6/1000","squash load A·σ_y, kN"]],"p":{"d":[5,60,20,"diameter","mm"],"K":[0.5,2,1,"end factor K"],"sy":[200,800,250,"yield","MPa"]},"y":[0,200],"out":[["transition length (P_cr = squash)","pi*sqrt(210e9*(d/1000)^2/16/(sy*1e6))/K","m",2]]}</lab>
+</eq>
+
+<eq n="24" name="Beam vibration (Euler–Bernoulli dynamic)" tags="PDE,linear,fourth order" who="Daniel Bernoulli 1742; Rayleigh" p1="13" short="EI·w⁗ + ρA·w_tt = 0">
+<f>EI·∂⁴w/∂x⁴ + ρA·∂²w/∂t² = 0      ω<sub>n</sub> = (β<sub>n</sub>L)²·√(EI/(ρA·L⁴))</f>
+<sym><b>w(x,t)</b> lateral displacement · <b>ρA</b> mass per length · <b>β<sub>n</sub>L</b>: simply supported nπ; cantilever 1.875, 4.694, 7.855; free–free 4.730, 7.853</sym>
+<idea><p>Add inertia to the beam equation and bending waves appear. Unlike a string, the frequencies are <i>not</i> harmonics: for a cantilever they stand in the ratio 1 : 6.27 : 17.5. Each mode has its own shape with nodes — the information a modal test (impact hammer and accelerometers) measures.</p></idea>
+<ex t="A steel ruler, 300 mm overhang, 25 × 1 mm, clamped to a desk. First natural frequency?">I = 0.025 × 0.001³/12 = 2.08×10⁻¹² m⁴,  EI = 0.4375 N·m²,  ρA = 7850 × 25e-6 = 0.196 kg/m
+f₁ = (1.875²/2π)·√(EI/(ρA·L⁴)) = 0.5595 × √(0.4375/(0.196 × 0.0081)) = 9.3 Hz
+Second mode: 6.27 × 9.3 = 58 Hz — the buzz you hear when you twang it.</ex>
+<app>Shafts and pipes (support spacing against flow-induced vibration), turbine and fan blades, tuning forks, MEMS resonators, machine beds, bridge decks, aircraft wings.</app>
+<lab>{"t":"fn","x":[0,1,"x/L"],"c":[["(cosh(1.8751*x)-cos(1.8751*x))-0.7341*(sinh(1.8751*x)-sin(1.8751*x))","mode 1 (1.875)"],["((cosh(4.6941*x)-cos(4.6941*x))-1.0185*(sinh(4.6941*x)-sin(4.6941*x)))/1","mode 2 (4.694)"],["((cosh(7.8548*x)-cos(7.8548*x))-0.9992*(sinh(7.8548*x)-sin(7.8548*x)))","mode 3 (7.855)"]],"p":{"L":[100,1000,300,"length","mm"],"h":[0.5,10,1,"thickness","mm"]},"y":[-2.2,2.2],"out":[["f₁","1.875^2/(2*pi)*sqrt(210e9*(h/1000)^2/12/7850/(L/1000)^4)","Hz",2],["f₂","4.694^2/(2*pi)*sqrt(210e9*(h/1000)^2/12/7850/(L/1000)^4)","Hz",1],["f₃","7.855^2/(2*pi)*sqrt(210e9*(h/1000)^2/12/7850/(L/1000)^4)","Hz",1]],"note":"Cantilever mode shapes (fixed at x = 0). Frequencies for a rectangular steel strip: they scale with h/L², not with width."}</lab>
+</eq>
+
+<eq n="25" name="Lamé equations (thick-walled cylinder)" tags="ODE,linear,boundary value" who="Lamé and Clapeyron 1833" short="d/dr(1/r·d(r·u)/dr) = 0">
+<f>d/dr[ (1/r)·d(r·u)/dr ] = 0      σ<sub>r</sub> = A − B/r²,   σ<sub>θ</sub> = A + B/r²</f>
+<sym><b>u(r)</b> radial displacement · <b>σ<sub>r</sub>, σ<sub>θ</sub></b> radial and hoop stress · A, B from the pressures at r<sub>i</sub> and r<sub>o</sub></sym>
+<idea><p>Equilibrium of a ring element plus Hooke's law gives an Euler-type ODE whose solution is u = C₁r + C₂/r. The hoop stress is largest at the bore and falls off as 1/r² — so making a cylinder thicker helps less and less. That is why gun barrels and high-pressure vessels use shrink fits or autofrettage to pre-compress the bore.</p></idea>
+<ex t="A hydraulic cylinder: bore radius 50 mm, outer radius 100 mm, 100 MPa internal pressure. Peak hoop stress? Compare with the thin-wall estimate.">A = p·r_i²/(r_o² − r_i²) = 100 × 2500/7500 = 33.3 MPa,  B = A·r_o²
+σ_θ(r_i) = A(1 + r_o²/r_i²) = 33.3 × 5 = 167 MPa;  σ_θ(r_o) = 2A = 67 MPa
+σ_r(r_i) = −100 MPa.  Thin-wall p·r_mean/t = 100 × 75/50 = 150 MPa — 10 % low at the bore.</ex>
+<app>Hydraulic cylinders and accumulators, gun barrels, pressure vessels, interference (shrink) fits of gears and bearings on shafts, pipes, hubs and press-fitted bushes.</app>
+<lab>{"t":"fn","x":["ri","ro","radius r, mm"],"c":[["p*ri^2/(ro^2-ri^2)*(1+ro^2/x^2)","hoop σ_θ, MPa"],["p*ri^2/(ro^2-ri^2)*(1-ro^2/x^2)","radial σ_r, MPa"]],"p":{"p":[10,300,100,"pressure","MPa"],"ri":[10,100,50,"inner radius","mm"],"ro":[60,300,100,"outer radius","mm"]},"out":[["σ_θ at bore","p*(ro^2+ri^2)/(ro^2-ri^2)","MPa",1],["thin-wall p·r/t","p*(ri+ro)/2/(ro-ri)","MPa",1]]}</lab>
+</eq>
+
+<eq n="26" name="Rotating disc stresses" tags="ODE,linear,boundary value" who="Stodola 1903" short="d/dr(r·σ_r) − σ_θ + ρω²r² = 0">
+<f>d(r·σ<sub>r</sub>)/dr − σ<sub>θ</sub> + ρ·ω²·r² = 0      solid disc centre: σ<sub>max</sub> = (3 + ν)/8 · ρω²R²</f>
+<sym><b>ω</b> angular speed · <b>ρ</b> density · <b>ν</b> Poisson's ratio · <b>R</b> outer radius</sym>
+<idea><p>Centrifugal force on each ring element is balanced by radial and hoop stresses. Stress scales with (rim speed)², so the limit of any rotor is its tip speed: about 400–500 m/s for steel discs. A central hole doubles the hoop stress at the bore — which is why turbine discs are thick at the hub.</p></idea>
+<ex t="A solid steel disc, R = 250 mm, at 10 000 rpm (ν = 0.3). Peak stress? With a small central bore?">ω = 1047 rad/s, rim speed ωR = 262 m/s
+σ_max = (3.3/8) × 7850 × 1047² × 0.25² = 222 MPa at the centre (σ_r = σ_θ)
+Small bore: σ_θ ≈ (3 + ν)/4 · ρω²R² = 444 MPa — twice as much.</ex>
+<app>Turbine and compressor discs, flywheels (energy storage limit), grinding wheels (burst speed), centrifuges, gear blanks and high-speed accessory gears, rotor burst containment.</app>
+<lab>{"t":"fn","x":[0,"R","radius r, mm"],"c":[["(3+nu)/8*7850*(N*pi/30)^2*((R/1000)^2-(x/1000)^2)/1e6","radial σ_r, MPa"],["7850*(N*pi/30)^2*((3+nu)/8*(R/1000)^2-(1+3*nu)/8*(x/1000)^2)/1e6","hoop σ_θ, MPa"]],"p":{"R":[50,600,250,"outer radius","mm"],"N":[1000,30000,10000,"speed","rpm"],"nu":[0.2,0.4,0.3,"ν"]},"out":[["rim speed","N*pi/30*R/1000","m/s",0],["peak (centre)","(3+nu)/8*7850*(N*pi/30)^2*(R/1000)^2/1e6","MPa",1]]}</lab>
+</eq>
+
+<eq n="27" name="Gear-mesh dynamics (time-varying mesh stiffness)" tags="ODE,linear,time-varying" who="Harris 1958; Özgüven and Houser 1988" short="m_e·x″ + c·x′ + k(t)·x = F + k(t)·e(t)">
+<f>m<sub>e</sub>·x″ + c·x′ + k<sub>m</sub>(t)·x = F + k<sub>m</sub>(t)·e(t)      k<sub>m</sub>(t) = k̄·(1 + α·cos(z·Ω·t)),   f<sub>mesh</sub> = z·n/60</f>
+<sym><b>x</b> dynamic transmission error along the line of action · <b>m<sub>e</sub></b> equivalent mass J₁J₂/(J₁r₂² + J₂r₁²) · <b>k<sub>m</sub></b> mesh stiffness, varying as one or two tooth pairs share load · <b>e(t)</b> profile errors</sym>
+<idea><p>As gears roll, the number of tooth pairs in contact alternates (between 1 and 2 for a contact ratio of 1.6), so the mesh stiffness pulses at the mesh frequency. That is both a forcing (static transmission error) and a parametric excitation (Mathieu, equation 18). Resonances appear when the mesh frequency or its harmonics hit the mesh natural frequency, and parametric instabilities near twice it — the source of gear whine and of sidebands in gearbox vibration spectra.</p></idea>
+<ex t="A pinion with 23 teeth runs at 6000 rpm. Mesh stiffness 2.8×10⁸ N/m, equivalent mass 0.5 kg. Mesh frequency and the speed for mesh resonance?">f_mesh = 23 × 6000/60 = 2300 Hz
+f_n = √(k/m_e)/2π = √(5.6e8)/6.283 = 3766 Hz
+Mesh resonance when z·n/60 = f_n → n = 3766 × 60/23 = 9830 rpm; 2nd harmonic hits it at 4910 rpm.
+On a vibration spectrum: peaks at 2300 Hz and 4600 Hz with sidebands at ± shaft speed (100 Hz).</ex>
+<app>Gear whine and noise, accessory gearbox vibration signatures, transmission-error testing, gear diagnostics (sidebands, tooth cracks reduce stiffness), helical gears (higher contact ratio smooths k(t)).</app>
+<lab>{"t":"ode","v":["x","v"],"f":["v","-2*z*v+(1+al*cos(r*t))*(0.1*cos(r*t)-x)+1"],"p":{"r":[0.2,3,0.6,"mesh freq / f_n"],"al":[0,0.5,0.25,"stiffness variation α"],"z":[0.01,0.2,0.05,"ζ"]},"init":[1,0],"T":200,"n":8000,"show":[["x"]],"cap":["dynamic transmission error (static deflection = 1)"],"out":[["peak DTE","xmax","",3]],"note":"Time in units of 1/ω_n. Peaks appear near r = 1 (direct resonance), r = 0.5 (2nd harmonic) and r = 2 (parametric). Try them."}</lab>
+</eq>
+
+<eq n="28" name="Viscoelasticity (Maxwell and Kelvin–Voigt)" tags="ODE,linear,first order" who="Maxwell 1867; Kelvin 1865; Voigt 1892" short="Maxwell: ε′ = σ′/E + σ/η;  Kelvin: σ = Eε + ηε′">
+<f>Maxwell (spring + dashpot in series):  dε/dt = (1/E)·dσ/dt + σ/η      → stress relaxation σ = σ₀·e<sup>−t/τ</sup><br>Kelvin–Voigt (in parallel):  σ = E·ε + η·dε/dt      → creep ε = (σ₀/E)·(1 − e<sup>−t/τ</sup>),   τ = η/E</f>
+<sym><b>E</b> spring modulus · <b>η</b> dashpot viscosity · <b>τ</b> relaxation / retardation time</sym>
+<idea><p>Rubbers, polymers, gaskets, wood, bitumen and biological tissue are part spring, part fluid. Hold them stretched and the stress relaxes (Maxwell); hang a weight and they creep towards a limit (Kelvin). Real materials combine both (standard linear solid, Burgers model). The time constant decides whether a part behaves like a solid or a liquid for your load: Silly Putty bounces but flows.</p></idea>
+<ex t="A bolted joint with a polymer gasket: preload 20 kN, gasket relaxation time 1000 h. Preload after 500 h?">σ = σ₀·e^(−t/τ) = 20 × e^(−0.5) = 12.1 kN — 40 % lost.
+Re-torque after first run-in, use a stiffer gasket, or longer bolts (more stored stretch per µm lost).</ex>
+<app>Gaskets and seals, rubber engine and equipment mounts, bolted joints with soft layers, polymer gears and bushes, tyres, biological tissue, asphalt and concrete creep.</app>
+<lab>{"t":"ode","v":["sM","eK"],"f":["-E/eta*sM","(s0-E*eK)/eta"],"p":{"E":[1,50,5,"E","MPa"],"eta":[5,500,50,"η","MPa·s"],"s0":[0.5,10,2,"step stress (Kelvin)","MPa"]},"init":[1,0],"T":60,"tl":"t, s","show":[["sM"],["eK"]],"cap":["Maxwell: stress after a step strain (σ/σ₀)","Kelvin–Voigt: strain under a step stress"],"out":[["τ = η/E","eta/E","s",2],["final Kelvin strain","s0/E","",4]]}</lab>
+</eq>
+
+<eq n="29" name="Norton creep law" tags="ODE,nonlinear,first order" who="Norton 1929; Bailey" short="ε′ = A·σⁿ·e^(−Q/RT)">
+<f>dε/dt = A·σ<sup>n</sup>·e<sup>−Q/RT</sup>      bolt relaxation: dσ/dt = −E·A·σ<sup>n</sup>  →  σ = [σ₀<sup>1−n</sup> + (n − 1)·E·A·t]<sup>1/(1−n)</sup></f>
+<sym><b>n</b> stress exponent (3–8 for metals) · <b>Q</b> activation energy · <b>T</b> absolute temperature</sym>
+<idea><p>Above about 0.4 of their melting temperature, metals deform slowly and permanently under constant stress. The steady (secondary) creep rate is a power of stress, so a small rise in stress or temperature shortens life dramatically. Combine with a strain limit and you get creep life; put it inside a bolt at fixed length and you get relaxation of preload.</p></idea>
+<ex t="A steam-pipe steel has n = 5 and creeps at 1×10⁻⁸ per hour at 100 MPa. What if the stress rises to 120 MPa? Strain in 100 000 h?">Rate ratio = (120/100)⁵ = 2.49  →  2.49×10⁻⁸ per h
+Strain in 100 000 h = 2.49e-8 × 1e5 = 0.25 %  (a common 1 % design limit leaves margin)
+A 20 % stress increase cut the life by 60 %.</ex>
+<app>Turbine blades and discs, boiler and steam pipes, bolts in hot flanges, solder joints in electronics, lead and polymer components even at room temperature, glacier flow.</app>
+<lab>{"t":"ode","v":["s"],"f":["-r0/1000*(s/s0)^n"],"p":{"n":[1.5,8,5,"stress exponent n"],"r0":[1,50,10,"initial relaxation rate","MPa per 1000 h"]},"y0":{"s0":[50,400,200,"initial bolt stress","MPa"]},"init":["s0"],"T":50000,"n":3000,"tl":"t, h","show":[["s"]],"cap":["bolt stress relaxing, MPa"],"out":[["remaining after 50 000 h","sT/s0*100","%",1],["closed form","(s0^(1-n)+(n-1)*r0/1000/s0^n*50000)^(1/(1-n))/s0*100","%",1]],"note":"dσ/dt = −E·A·σⁿ written as −r₀·(σ/σ₀)ⁿ: the higher n, the faster the relaxation slows down as stress falls."}</lab>
+</eq>
+
+<eq n="30" name="Paris law (fatigue crack growth)" tags="ODE,nonlinear,first order" who="Paris and Erdogan 1963" short="da/dN = C·(ΔK)^m">
+<f>da/dN = C·(ΔK)<sup>m</sup>,   ΔK = Y·Δσ·√(πa)      →      N = ∫ da / (C·(Y·Δσ·√(πa))<sup>m</sup>)</f>
+<sym><b>a</b> crack length · <b>N</b> cycles · <b>ΔK</b> stress-intensity range (MPa√m) · <b>C, m</b> material constants (steel: m ≈ 3) · <b>Y</b> geometry factor</sym>
+<idea><p>Once a fatigue crack exists, its growth per cycle is a power of the stress-intensity range. Because ΔK grows with √a, the crack accelerates: most of the life is spent while the crack is tiny. That is the basis of damage-tolerant design — inspect at intervals shorter than the time to grow from the smallest detectable crack to the critical one.</p></idea>
+<ex t="A steel part: C = 1×10⁻¹¹ (m/cycle, MPa√m), m = 3, Y = 1.12, Δσ = 100 MPa. Cycles to grow a crack from 1 mm to 10 mm?">YΔσ√π = 112 × 1.772 = 198.5
+N = 2/((m − 2)·C·(YΔσ√π)^m) · (a₀^−½ − a_f^−½) = 2/(1e-11 × 7.82e6) × (31.6 − 10.0) = 5.5×10⁵ cycles
+From 1 to 2 mm takes 2.1×10⁵ of those — over a third of the life in the first millimetre.
+At 6000 rpm (one cycle per revolution) that is only about 1.5 hours.</ex>
+<app>Inspection intervals for aircraft (damage tolerance), rotating shafts and gears with cracks, pressure vessels, welded structures, railway axles, wind-turbine blades.</app>
+<lab>{"t":"ode","v":["a"],"f":["C*1e-11*(1.12*ds*sqrt(pi*a/1000))^m*1000"],"p":{"ds":[20,300,100,"stress range Δσ","MPa"],"m":[2.2,4,3,"exponent m"],"C":[0.1,10,1,"C","×10⁻¹¹"]},"y0":{"a0":[0.2,5,1,"initial crack","mm"]},"init":["a0"],"T":600000,"n":3000,"tl":"cycles N","stop":"a>10","show":[["a"]],"cap":["crack length a, mm (stops at 10 mm)"],"out":[["cycles to 10 mm","T","",0]]}</lab>
+</eq>
+
+<quiz>[
+{"q":"In EI·y⁗ = q, the bending moment is","o":["EI·y′","EI·y″","EI·y‴","q·x"],"a":1,"e":"M = EI·y″; shear V = −EI·y‴."},
+{"q":"Shear deformation (Timoshenko) matters most for","o":["Long thin beams","Short deep beams","Cables","Columns in tension"],"a":1,"e":"The shear share grows as (h/L)²."},
+{"q":"Fixing both ends of a column instead of pinning them multiplies its buckling load by","o":["2","4","0.5","1"],"a":1,"e":"K goes from 1 to 0.5, and P ∝ 1/K²."},
+{"q":"In a thick cylinder under internal pressure, the hoop stress is largest","o":["At the outer surface","At the bore","In the middle of the wall","Equal everywhere"],"a":1,"e":"σ_θ = A + B/r² falls with radius."},
+{"q":"With Paris exponent m = 3, doubling the stress range shortens crack-growth life by","o":["2×","4×","8×","16×"],"a":2,"e":"N ∝ Δσ^(−m) = 2³."}
+]</quiz>
+</day>

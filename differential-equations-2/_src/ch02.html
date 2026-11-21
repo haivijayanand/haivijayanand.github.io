@@ -1,0 +1,132 @@
+<!--
+TOOL:    differential-equations-2/_src/ch02.html — Part II source, Chapter 2: Mechanics and Rotor Vibration (equations 11–20)
+FAMILY:  differential-equations
+VERSION: 1.0.0
+DATE:    2026-11-21
+CHAT:    As a continuation as part 2, discuss the most famous 100 useful differential equations that are being used in different applications with worked out examples
+CHANGES: 1.0.0 - first version
+STATUS:  working
+-->
+<day n="2">
+<summary>Newton's second law in ten disguises: falling with drag, a projectile, the harmonic, damped and base-excited oscillators, the large-swing pendulum, Duffing's hardening spring, Mathieu's parametric pumping, and two rotor-dynamics classics — the Jeffcott rotor and oil whirl in journal bearings.</summary>
+<goals><li>Write m·x″ = ΣF for particles and rotors and spot linear versus nonlinear terms</li><li>Find terminal velocity, ranges, natural frequencies and transmissibility</li><li>See how amplitude changes frequency in nonlinear oscillators</li><li>Understand parametric resonance (Mathieu) and why gear-mesh stiffness variation matters</li><li>Explain critical speeds, self-centring and the 2× critical-speed limit of plain bearings</li></goals>
+<intro><p>Every equation here comes from F = m·a. The art is in the forces: drag ∝ v², spring ∝ x or x³, damping ∝ v, unbalance ∝ Ω², and fluid-film forces that push sideways. Part I's Days 5–6 and 10 give the methods; here they meet real machines.</p></intro>
+
+<eq n="11" name="Free fall with air drag" tags="ODE,nonlinear,first order" who="Newton, Principia 1687" short="m·v′ = m·g − ½ρC_dA·v²">
+<f>m·dv/dt = m·g − ½·ρ·C<sub>d</sub>·A·v²      →      v = v<sub>t</sub>·tanh(g·t/v<sub>t</sub>),   v<sub>t</sub> = √(2mg/(ρC<sub>d</sub>A))</f>
+<sym><b>v</b> speed · <b>ρ</b> air density 1.225 kg/m³ · <b>C<sub>d</sub>A</b> drag area · <b>v<sub>t</sub></b> terminal velocity</sym>
+<idea><p>Gravity is constant; quadratic drag grows with speed until it balances weight. The speed then levels off at the terminal velocity. Quadratic drag applies at high Reynolds number (anything bigger than a dust grain moving faster than a walk); tiny particles in oil follow linear Stokes drag instead (equation 45).</p></idea>
+<ex t="A skydiver: m = 80 kg, C_d·A = 0.5 m². Terminal speed and time to reach 95 % of it?">v_t = √(2 × 80 × 9.81/(1.225 × 0.5)) = √2563 = 50.6 m/s (182 km/h)
+tanh(x) = 0.95 → x = 1.832  →  t = 1.832 × 50.6/9.81 = 9.5 s
+Head-down (C_d·A ≈ 0.15) gives 92 m/s — that is how speed skydivers reach 500 km/h.</ex>
+<app>Parachutes and skydiving, ballistics, falling objects and drop tests, raindrops, cars coasting (with rolling resistance added — equation 77).</app>
+<lab>{"t":"ode","v":["y","v"],"f":["v","9.81-0.5*1.225*CdA*v*abs(v)/m"],"p":{"m":[20,150,80,"mass","kg"],"CdA":[0.1,30,0.5,"C_d·A","m²"]},"init":[0,0],"T":30,"tl":"t, s","show":[["v"],["y"]],"cap":["speed v, m/s","distance fallen, m"],"out":[["terminal speed","sqrt(2*m*9.81/(1.225*CdA))","m/s",1],["speed at 30 s","vT","m/s",1]]}</lab>
+</eq>
+
+<eq n="12" name="Projectile with air drag" tags="ODE,nonlinear,system" who="Bashforth 1860s; ballistic tables" short="x″ = −k·|v|·x′, y″ = −g − k·|v|·y′">
+<f>x″ = −k·|v|·x′      y″ = −g − k·|v|·y′      k = ρC<sub>d</sub>A/(2m),   |v| = √(x′² + y′²)</f>
+<sym><b>x, y</b> position · <b>k</b> drag parameter (1/m)</sym>
+<idea><p>Without drag the path is a parabola and 45° gives the longest range. Drag couples the two directions through the speed |v|: the trajectory becomes lopsided — a long climb and a steep fall — and the best launch angle drops below 45°. There is no closed-form solution; this was one of the first problems ever put on a computer (ENIAC, 1946, firing tables).</p></idea>
+<ex t="A cricket ball (m = 0.16 kg, d = 72 mm, C_d = 0.5) thrown at 30 m/s and 45°. Range with and without drag?">k = 1.225 × 0.5 × 4.07×10⁻³/(2 × 0.16) = 0.0078 per m
+No drag: R = v²/g = 900/9.81 = 91.7 m
+With drag (numerical): R = 60.7 m, flight time 3.8 s — a third of the range lost
+Best angle with drag ≈ 42°, giving 61.0 m.</ex>
+<app>Ballistics and artillery tables, sports science (golf, cricket, javelin), water jets from fire hoses, sprinkler design, debris throw distances in safety studies.</app>
+<lab>{"t":"ode","v":["x","y","vx","vy"],"f":["vx","vy","-k*sqrt(vx^2+vy^2)*vx","-9.81-k*sqrt(vx^2+vy^2)*vy"],"p":{"v0":[5,60,30,"launch speed","m/s"],"ang":[10,80,45,"angle","°"],"k":[0,0.03,0.0078,"drag k","1/m"]},"init":[0,0,"v0*cos(ang*pi/180)","v0*sin(ang*pi/180)"],"T":12,"stop":"y<0","show":[["y"]],"ph":["x","y"],"xy":false,"phcap":"Trajectory y against x","cap":["height y(t)"],"out":[["range","xT","m",1],["no-drag range","v0^2*sin(2*ang*pi/180)/9.81","m",1],["flight time","T","s",2]]}</lab>
+</eq>
+
+<eq n="13" name="Simple harmonic oscillator" tags="ODE,linear,second order" who="Hooke 1678; Huygens 1673" p1="5" short="x″ + ω²x = 0">
+<f>m·x″ + k·x = 0      →      x = A·cos(ω<sub>n</sub>t + φ),   ω<sub>n</sub> = √(k/m)</f>
+<sym><b>x</b> displacement · <b>k</b> stiffness · <b>m</b> mass · <b>ω<sub>n</sub></b> natural frequency (rad/s)</sym>
+<idea><p>The most important equation in physics: any system near a stable equilibrium behaves like a mass on a spring for small motions. Energy sloshes between kinetic ½mv² and potential ½kx², the total constant. The frequency does not depend on the amplitude — which is what makes pendulum clocks and quartz watches keep time.</p></idea>
+<ex t="A pendulum clock beats seconds (period 2 s). How long is the pendulum?">For small swings ω = √(g/ℓ), T = 2π√(ℓ/g) = 2 s  →  ℓ = g·(T/2π)² = 9.81/π² = 0.994 m</ex>
+<ex t="A 2 kg sensor bracket deflects 0.5 mm under its own weight. Its natural frequency?">k = m·g/δ  →  ω_n = √(g/δ) = √(9.81/0.0005) = 140 rad/s → f_n = 22.3 Hz
+(Handy rule: f_n ≈ 15.8/√δ_mm Hz.)</ex>
+<app>Clocks, tuning forks, quartz crystals, LC tanks, molecular vibrations, ear drums, building sway — and every small-amplitude model of a stable equilibrium.</app>
+<lab>{"t":"ode","v":["x","v"],"f":["v","-k/m*x"],"p":{"m":[0.1,5,1,"m","kg"],"k":[1,200,40,"k","N/m"]},"y0":{"x0":[-1,1,0.5,"x(0)","m"]},"init":["x0",0],"T":10,"show":[["x","v"]],"ph":["x","v"],"der":{"E":"0.5*m*v^2+0.5*k*x^2"},"out":[["f_n","sqrt(k/m)/(2*pi)","Hz",3],["period","2*pi*sqrt(m/k)","s",3],["energy (constant)","ET","J",4]]}</lab>
+</eq>
+
+<eq n="14" name="Damped free vibration" tags="ODE,linear,second order" who="Rayleigh, Theory of Sound 1877" p1="5" short="m·x″ + c·x′ + k·x = 0">
+<f>m·x″ + c·x′ + k·x = 0      ζ = c/(2√(km)),   ω<sub>d</sub> = ω<sub>n</sub>·√(1 − ζ²)</f>
+<sym><b>c</b> damping coefficient (N·s/m) · <b>ζ</b> damping ratio · <b>ω<sub>d</sub></b> damped natural frequency</sym>
+<idea><p>Add a force opposing velocity and the oscillation decays inside an envelope e<sup>−ζω<sub>n</sub>t</sup>. Under-damped (ζ &lt; 1) rings; critically damped (ζ = 1) returns fastest without overshoot; over-damped creeps. Part I, Day 5 has the full treatment and the log-decrement test.</p></idea>
+<ex t="Size the shock absorber for one wheel of a car: quarter-car sprung mass 300 kg, spring 20 kN/m, target ζ = 0.3.">c = ζ·2√(k·m) = 0.3 × 2√(20000 × 300) = 0.3 × 4899 = 1470 N·s/m
+f_n = √(k/m)/2π = √66.7/6.283 = 1.30 Hz — a comfortable body bounce</ex>
+<app>Vehicle suspensions, door closers, instrument movements, machine foundations, building dampers, ship roll, measuring damping by tap tests on brackets and casings.</app>
+<lab>{"t":"ode","v":["x","v"],"f":["v","-(c*v+k*x)/m"],"p":{"m":[50,600,300,"m","kg"],"k":[5000,60000,20000,"k","N/m"],"c":[0,6000,1470,"c","N·s/m"]},"init":[0.05,0],"T":4,"show":[["x"]],"ph":["x","v"],"out":[["ζ","c/(2*sqrt(k*m))","",3],["f_n","sqrt(k/m)/(2*pi)","Hz",2],["critical c","2*sqrt(k*m)","N·s/m",0]]}</lab>
+</eq>
+
+<eq n="15" name="Base excitation (seismic) response" tags="ODE,linear,second order" who="vibration isolation theory, 1920s" p1="6" short="x″ + 2ζωₙx′ + ωₙ²x = 2ζωₙy′ + ωₙ²y">
+<f>m·x″ + c·(x′ − y′) + k·(x − y) = 0      |X/Y| = √(1 + (2ζr)²)/√((1 − r²)² + (2ζr)²)</f>
+<sym><b>y(t)</b> motion of the base (floor, road, vehicle) · <b>x</b> motion of the mass · <b>r = ω/ω<sub>n</sub></b></sym>
+<idea><p>Here the support moves, not a force on the mass. The spring and damper drag the mass along. The ratio of motions is the same transmissibility as on Part I Day 6: amplification near r = 1, isolation only above r = √2. Seismometers and accelerometers use the same equation the other way round: well above (seismometer) or well below (accelerometer) their own resonance.</p></idea>
+<ex t="A precision balance is isolated with mounts giving f_n = 5 Hz, ζ = 0.05. The floor shakes at 25 Hz with 0.1 mm amplitude. How much reaches the balance?">r = 25/5 = 5,  2ζr = 0.5
+|X/Y| = √(1 + 0.25)/√(24² + 0.25) = 1.118/24.0 = 0.047  →  0.1 mm × 0.047 = 4.7 µm</ex>
+<app>Isolation of instruments and test rigs from floor vibration, vehicle ride (road = base input), earthquake response of buildings, accelerometer and seismometer design, packaging for transport.</app>
+<lab>{"t":"ode","v":["x","v"],"f":["v","2*z*(2*pi*fn)*(0.1*2*pi*fb*cos(2*pi*fb*t)-v)+(2*pi*fn)^2*(0.1*sin(2*pi*fb*t)-x)"],"p":{"fn":[1,20,5,"f_n","Hz"],"fb":[1,60,25,"floor frequency","Hz"],"z":[0.01,0.5,0.05,"ζ"]},"der":{"y":"0.1*sin(2*pi*fb*t)"},"init":[0,0],"T":2,"n":4000,"tl":"t, s","show":[["x","y"]],"yl":["mm"],"lab":{"x":"mass x","y":"floor y (0.1 mm)"},"out":[["r","fb/fn","",2],["steady |X/Y|","sqrt(1+(2*z*fb/fn)^2)/sqrt((1-(fb/fn)^2)^2+(2*z*fb/fn)^2)","",3]],"note":"Starts from rest, so a transient at f_n rides on top for the first second."}</lab>
+</eq>
+
+<eq n="16" name="The nonlinear pendulum" tags="ODE,nonlinear,second order" who="Galileo 1602; Huygens; Legendre (elliptic integrals)" p1="10" short="θ″ + (g/ℓ)·sin θ = 0">
+<f>θ″ + (g/ℓ)·sin θ = 0      T = 4√(ℓ/g)·K(sin(θ₀/2))</f>
+<sym><b>θ</b> swing angle · <b>ℓ</b> length · <b>K</b> complete elliptic integral of the first kind</sym>
+<idea><p>sin θ ≈ θ only for small swings. For larger amplitudes the restoring torque grows more slowly than θ, so the pendulum takes longer: the period depends on amplitude — Galileo's "isochronism" is only approximate. Beyond 180° the pendulum goes over the top and spins.</p></idea>
+<ex t="A 1 m pendulum: small-swing period, and the period when released from 90°?">T₀ = 2π√(ℓ/g) = 2.006 s
+90°: K(sin 45°) = 1.8541,  T = 4√(1/9.81) × 1.8541 = 2.368 s — 18 % longer
+Small-angle rule: T ≈ T₀(1 + θ₀²/16) gives 2.315 s (θ₀ = 1.571) — already 2 % off</ex>
+<app>Clock escapements (keep the swing small and constant), cranes with swinging loads, ship roll at large angles, Segway and rocket balancing (inverted pendulum), seismometer pendulums.</app>
+<lab>{"t":"ode","v":["th","w"],"f":["w","-9.81/L*sin(th)-c*w"],"p":{"L":[0.2,5,1,"ℓ","m"],"c":[0,1,0,"damping"]},"y0":{"a0":[5,179,90,"release angle","°"]},"init":["a0*pi/180",0],"T":10,"show":[["th"]],"ph":["th","w"],"field":true,"lab":{"th":"θ, rad","w":"ω, rad/s"},"out":[["small-swing period","2*pi*sqrt(L/9.81)","s",3],["max angle","thmax*180/pi","°",1]]}</lab>
+</eq>
+
+<eq n="17" name="Duffing oscillator" tags="ODE,nonlinear,second order" who="Duffing 1918" p1="11" short="x″ + δx′ + αx + βx³ = γ·cos ωt">
+<f>x″ + δ·x′ + α·x + β·x³ = γ·cos ωt      backbone: ω² ≈ α + ¾·β·A²</f>
+<sym><b>β &gt; 0</b> hardening spring · <b>β &lt; 0</b> softening · <b>A</b> amplitude</sym>
+<idea><p>A spring that stiffens with stretch (rubber mounts, thin plates, bolted joints, preloaded bearings) makes the natural frequency rise with amplitude. Near resonance the response curve bends over: for one forcing frequency there can be two stable amplitudes, and slowly sweeping the frequency makes the amplitude <b>jump</b> — up on the way down, down on the way up. Part I, Day 11 shows its chaotic side.</p></idea>
+<deep t="Where the backbone formula comes from"><p>Try x ≈ A cos ωt. Then x³ = A³(¾ cos ωt + ¼ cos 3ωt). Keeping the first harmonic (harmonic balance) gives −ω²A + αA + ¾βA³ = 0 for free vibration, so ω² = α + ¾βA². The neglected cos 3ωt term is why nonlinear vibration shows harmonics in a spectrum.</p></deep>
+<ex t="A hardening mount with α = 1, β = 0.1 (units of ω_n = 1). Natural frequency at amplitude 2?">ω² ≈ 1 + 0.75 × 0.1 × 4 = 1.3  →  ω = 1.14 — 14 % above the small-amplitude value</ex>
+<app>Jump phenomena in rubber-mounted equipment, MEMS resonators, nonlinear energy harvesters, ship roll, cable vibration, preloaded rolling bearings, bistable (snap-through) structures.</app>
+<lab>{"t":"ode","v":["x","v"],"f":["v","g*cos(w*t)-d*v-a*x-b*x^3"],"p":{"a":[-1,2,1,"α"],"b":[-0.2,1,0.1,"β"],"d":[0,0.5,0.1,"δ"],"g":[0,1,0.3,"γ"],"w":[0.2,2.5,1.2,"ω"]},"init":[0,0],"T":120,"n":6000,"show":[["x"]],"ph":["x","v"],"out":[["late amplitude","xmax","",3],["backbone ω at that amplitude","sqrt(max(0,a+0.75*b*xmax^2))","",3]]}</lab>
+</eq>
+
+<eq n="18" name="Mathieu equation (parametric resonance)" tags="ODE,linear,time-varying" who="Mathieu 1868" short="x″ + (δ + ε·cos t)·x = 0">
+<f>x″ + c·x′ + (δ + ε·cos t)·x = 0      first instability near δ = ¼ (pumping at twice the natural frequency)</f>
+<sym><b>δ</b> = (ω<sub>n</sub>/ω<sub>pump</sub>)² · <b>ε</b> depth of the stiffness variation · <b>c</b> damping</sym>
+<idea><p>Nothing pushes the mass — instead its stiffness wobbles. If the stiffness varies at about twice the natural frequency, tiny motions grow exponentially. A child pumps a swing by standing and squatting twice per cycle; a pendulum whose pivot is shaken vertically can even be stabilised upside down (Kapitza). In machines it explains instability from time-varying stiffness: gear meshes, cracked shafts, and two-pole rotors.</p></idea>
+<deep t="Stability chart (Ince–Strutt diagram)"><p>Floquet theory says solutions are e<sup>μt</sup>·(periodic). Instability tongues start at δ = n²/4 (n = 1, 2, 3 …) and widen as ε grows; the first, around δ = ¼, has edges δ ≈ ¼ ± ε/2. Damping lifts the tongues off the δ axis, so a minimum ε is needed before growth begins: roughly ε &gt; 2c for the first tongue.</p></deep>
+<ex t="A rotor with unequal shaft stiffness in two directions has ω_n = 50 Hz. At what shaft speed does parametric instability appear?">A two-pole stiffness variation repeats twice per revolution: pumping at 2Ω
+Instability when 2Ω ≈ 2ω_n  →  Ω ≈ ω_n = 50 Hz = 3000 rpm  — plus the familiar "half critical" response at 1500 rpm from gravity excitation.</ex>
+<app>Swing pumping, Faraday waves on a shaken liquid, ship parametric rolling in head seas, gear-mesh stiffness variation (equation 27), cracked-shaft diagnostics, quadrupole ion traps (Paul trap).</app>
+<lab>{"t":"ode","v":["x","v"],"f":["v","-c*v-(dl+ep*cos(t))*x"],"p":{"dl":[0,1.2,0.25,"δ"],"ep":[0,1,0.2,"ε"],"c":[0,0.2,0.01,"damping c"]},"init":[0.01,0],"T":150,"n":5000,"show":[["x"]],"out":[["largest |x| reached","xmax","",4],["inside the first tongue?","abs(dl-0.25)<ep/2?1:0","(1 = yes)",0]]}</lab>
+</eq>
+
+<eq n="19" name="Jeffcott rotor (unbalance response)" tags="ODE,linear,rotor dynamics" who="Föppl 1895; Jeffcott 1919" p1="6" short="m·r″ + c·r′ + k·r = m·e·Ω²·e^(iΩt)">
+<f>m·x″ + c·x′ + k·x = m·e·Ω²·cos Ωt      m·y″ + c·y′ + k·y = m·e·Ω²·sin Ωt<br>|r|/e = (Ω/ω<sub>n</sub>)² / √((1 − (Ω/ω<sub>n</sub>)²)² + (2ζΩ/ω<sub>n</sub>)²)</f>
+<sym><b>x, y</b> shaft-centre displacement · <b>e</b> mass eccentricity (unbalance) · <b>Ω</b> running speed · <b>ω<sub>n</sub> = √(k/m)</b> critical speed</sym>
+<idea><p>A disc on a flexible shaft with a small unbalance whirls in a circle at running speed. The whirl radius peaks at the <b>critical speed</b> ω<sub>n</sub>, where the phase lag is 90°. Above it the phase passes 180°: the mass centre moves inside, and the disc spins about its own centre of mass — the rotor <b>self-centres</b>, which is why turbines run happily far above their first critical speed if they get through it quickly.</p></idea>
+<ex t="A 20 kg disc at the middle of a 25 mm steel shaft, 600 mm between simple bearings. Critical speed? Whirl at 3000 rpm with e = 20 µm (balance grade G6.3)?">I = π d⁴/64 = 1.92×10⁻⁸ m⁴,  k = 48EI/L³ = 48 × 210e9 × 1.92e-8/0.216 = 8.95×10⁵ N/m
+ω_n = √(k/m) = 211.5 rad/s  →  2020 rpm
+At 3000 rpm: r = 314.2/211.5 = 1.486  →  |r| = e·r²/(r² − 1) = 20 × 2.21/1.21 = 36.6 µm (light damping)
+Running at 1.5× critical, the shaft whirls with less than twice the eccentricity.</ex>
+<app>Turbines, compressors, fans, spindles, centrifuges, gearbox and accessory-drive shafts, balancing grades (ISO 21940), run-up and coast-down tests with Bode plots.</app>
+<lab w="jeffcott"></lab>
+</eq>
+
+<eq n="20" name="Oil whirl and whip (cross-coupled stiffness)" tags="ODE,linear,rotor dynamics" who="Newkirk 1925; Lund 1960s" short="m·z″ + c·z′ + (k − i·k_xy)·z = 0">
+<f>m·x″ + c·x′ + k·x + k<sub>xy</sub>·y = 0      m·y″ + c·y′ + k·y − k<sub>xy</sub>·x = 0      k<sub>xy</sub> ≈ c·Ω/2</f>
+<sym><b>k<sub>xy</sub></b> cross-coupled (tangential) stiffness from the oil film · <b>Ω</b> shaft speed</sym>
+<idea><p>A plain journal bearing's oil film turns at about half the shaft speed. Push the shaft sideways and the film pushes back <i>at right angles</i> — forward along the whirl. This cross-coupled force feeds energy into a forward whirl at the natural frequency. Damping drains energy at a rate ∝ ω<sub>n</sub>; the film feeds it at a rate ∝ Ω/2. When Ω exceeds about 2ω<sub>n</sub> feeding wins: the orbit grows (oil whip) and locks at the critical frequency however fast the shaft turns.</p></idea>
+<deep t="Stability threshold"><p>With z = x + iy the two equations become m·z″ + c·z′ + (k − i·cΩ/2)·z = 0. Try z = e<sup>iωt</sup> on the stability boundary: real part −mω² + k = 0 → ω = ω<sub>n</sub>; imaginary part cω − cΩ/2 = 0 → Ω = 2ω<sub>n</sub>. Real bearings have stiffness that also changes with speed, so the onset is usually a little below 2× critical, with whirl at 0.42–0.48× running speed before it.</p></deep>
+<ex t="A compressor rotor on plain bearings has its first critical speed at 2400 rpm. Highest safe speed? What would the spectrum show above it?">Onset ≈ 2 × 2400 = 4800 rpm (often 4000–4500 rpm in practice)
+At 6000 rpm: a large sub-synchronous peak at ≈ 2400 rpm (40 Hz), i.e. 0.40× running speed, that does not move as speed increases — the classic oil-whip signature.
+Cure: tilting-pad, lemon-bore or pressure-dam bearings, which have almost no cross-coupling.</ex>
+<app>High-speed turbomachinery, turbochargers on floating-ring bearings, generators, aircraft accessory gearbox shafts with fluid-film supports; also steam whirl in seals (same mechanism, different source).</app>
+<lab w="oilwhirl"></lab>
+</eq>
+
+<quiz>[
+{"q":"Terminal velocity in quadratic drag scales with mass as","o":["m","√m","m²","1/m"],"a":1,"e":"v_t = √(2mg/(ρC_dA))."},
+{"q":"With air drag, the launch angle for maximum range is","o":["Exactly 45°","Above 45°","Below 45°","90°"],"a":2,"e":"Drag penalises the long, high flight; best angles are typically 35–43°."},
+{"q":"A pendulum released from 90° has a period","o":["The same as small swings","About 18 % longer","About 18 % shorter","Twice as long"],"a":1,"e":"T/T₀ = (2/π)K(sin 45°) = 1.18."},
+{"q":"Parametric resonance in the Mathieu equation is strongest when the stiffness varies at","o":["The natural frequency","Twice the natural frequency","Half the natural frequency","Any frequency"],"a":1,"e":"The first instability tongue is at δ = ¼, i.e. ω_pump = 2ω_n."},
+{"q":"A rotor on plain journal bearings risks oil whip above about","o":["0.5 × its first critical speed","Its first critical speed","2 × its first critical speed","10 × its first critical speed"],"a":2,"e":"Cross-coupled stiffness ≈ cΩ/2 overcomes damping when Ω > 2ω_n."}
+]</quiz>
+</day>

@@ -1,10 +1,11 @@
 /*
 TOOL: site-progress.js — Google sign-in, reading progress, resume, completed ticks and certificates for haivijayanand.github.io
 FAMILY: site-progress
-VERSION: 1.4.0
-DATE: 2026-11-19
+VERSION: 1.5.0
+DATE: 2026-11-21
 CHAT: Login, progress & certificates on GitHub Pages with Firebase
-CHANGES: 1.4.0 — Differential Equations Course added to the tracked series
+CHANGES: 1.5.0 — Differential Equations Part II added to the tracked series
+         1.4.0 — Differential Equations Course added to the tracked series
          1.3.0 — Manufacturing, Machine Design and Stock Management courses added to the tracked series
          1.2.1 — account menu shows an Admin link (to /my-progress/admin/) only for the site owner's account
          1.2.0 — activity log for signed-in readers (page visits with time on page, sign-in, completed, steps, certificates) in users/{uid}/activity; visit/completed/certificate counters and first/last seen on users/{uid}; listActivity, clearActivity, logEvent API; <meta name="sp-log" content="off"> to skip a page; account button joins the page's own top toolbar (next to Full screen) when there is one; pages with their own "Mark ... complete" button keep it and it now feeds the account
@@ -13,7 +14,7 @@ CHANGES: 1.4.0 — Differential Equations Course added to the tracked series
          1.0.0 — first release: Google sign-in, per-page resume, Mark-as-completed, index badges and counts, continue widget, certificate store + PDF reprint, local fallback when signed out
 STATUS: configured for Firebase project haivijayanand-site
 */
-export const SP_VERSION = '1.4.0';
+export const SP_VERSION = '1.5.0';
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {
@@ -61,6 +62,7 @@ const SITE = {
     'manufacturing': 'Manufacturing Course',
     'stock-management': 'Stock Management Course',
     'differential-equations': 'Differential Equations Course',
+    'differential-equations-2': 'Differential Equations Part II',
     'finance-economics': 'Finance & Economics',
     'business-admin': 'Business Administration',
     'papers': 'Technical Papers'

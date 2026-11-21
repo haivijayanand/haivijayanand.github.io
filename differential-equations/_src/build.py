@@ -2,16 +2,17 @@
 """
 TOOL:    differential-equations/_src/build.py — builds the 15 day pages and the hub of the 15-Day Differential Equations Course from _src/week1-3.html
 FAMILY:  differential-equations
-VERSION: 1.0.2
+VERSION: 1.1.0
 DATE:    2026-11-21
 CHAT:    Differential equations are fascinating — make a 15 days course to deeper understanding of differential equations
-CHANGES: 1.0.2 - hub links to Part II (100 Equations That Run the World)
+CHANGES: 1.1.0 - every page loads assets/js/site-theme.js (site-wide light / dark)
+         1.0.2 - hub links to Part II (100 Equations That Run the World)
          1.0.1 - footer no longer says "nothing is sent anywhere" (sign-in saves progress and certificates); pages rebuilt with review corrections
          1.0.0 - first version, adapted from machine-design/_src/build.py 1.0.0: 15 days in 3 weeks, de.css/de.js, hub page
 STATUS:  working
 """
 import json, re, os, html
-__version__ = "1.0.2"
+__version__ = "1.1.0"
 HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.dirname(HERE)
 DATE = "2026-11-21"
 CHAT = "Differential equations are fascinating — make a 15 days course to deeper understanding of differential equations"
@@ -98,6 +99,7 @@ def page(n, src):
     out = header(fn(n), SHORT + ", Day %02d: %s" % (n, title)) + f'''
 <html lang="en" data-theme="light">
 <head>
+<script src="/assets/js/site-theme.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Day {n}: {html.escape(title)} — {SHORT} — K Vijay Anand</title>
@@ -140,6 +142,7 @@ def hub():
     return header("index.html", COURSE + ": hub page with schedule and progress") + f'''
 <html lang="en" data-theme="light">
 <head>
+<script src="/assets/js/site-theme.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{COURSE} — interactive — K Vijay Anand</title>

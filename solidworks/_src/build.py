@@ -2,17 +2,18 @@
 """
 TOOL:    solidworks/_src/build.py — builds the 42 day pages (Part I days 1–28, Part II days 29–42) and the hub of the SolidWorks Course from _src/week1-6.html
 FAMILY:  solidworks
-VERSION: 1.2.0
-DATE:    2026-11-16
+VERSION: 1.3.0
+DATE:    2026-11-21
 CHAT:    28-day SolidWorks course with interactive HTML on GitHub Pages
-CHANGES: 1.2.0 - every page loads assets/js/site-progress.js (sign-in, reading progress, activity log)
+CHANGES: 1.3.0 - every page loads assets/js/site-theme.js (site-wide light / dark)
+         1.2.0 - every page loads assets/js/site-progress.js (sign-in, reading progress, activity log)
          1.1.0 - Part II (Days 29–42, weeks 5–6) added; hub shows Part I and Part II
          1.0.0 - syllabus of 28 days in 4 weeks; wraps day sources with header block, toolbar, hero, contents,
                  goals, numbered sections, quiz, done button, pager and footer; writes hub index.html
 STATUS:  working
 """
 import json, re, os, html
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.dirname(HERE)
 DATE = "2026-11-16"
 CHAT = "28-day SolidWorks course with interactive HTML on GitHub Pages"
@@ -125,6 +126,7 @@ def page(n, src):
     out = header(fn(n), "SolidWorks Course, Day %02d: %s" % (n, title)) + f'''
 <html lang="en" data-theme="light">
 <head>
+<script src="/assets/js/site-theme.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Day {n}: {html.escape(title)} — SolidWorks Course — K Vijay Anand</title>
@@ -168,6 +170,7 @@ def hub():
     return header("index.html", "28-Day SolidWorks Course: hub page with schedule and progress") + f'''
 <html lang="en" data-theme="light">
 <head>
+<script src="/assets/js/site-theme.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SolidWorks Course: 28 days + Part II — interactive — K Vijay Anand</title>

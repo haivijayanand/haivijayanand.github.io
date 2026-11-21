@@ -2,16 +2,17 @@
 """
 TOOL:    creo/_src/build.py — builds the 28 day pages, the SolidWorks-to-Creo command map and the hub of the 28-Day Creo Parametric Course from _src/week1-4.html
 FAMILY:  creo
-VERSION: 1.1.0
-DATE:    2026-11-16
+VERSION: 1.2.0
+DATE:    2026-11-21
 CHAT:    Same like solidworks, create a GitHub for Creo also
-CHANGES: 1.1.0 - every page loads assets/js/site-progress.js (sign-in, reading progress, activity log)
+CHANGES: 1.2.0 - every page loads assets/js/site-theme.js (site-wide light / dark)
+         1.1.0 - every page loads assets/js/site-progress.js (sign-in, reading progress, activity log)
          1.0.0 - first version, adapted from solidworks/_src/build.py 1.1.0: Creo syllabus of 28 days in 4 weeks,
                  day pages, hub index.html and solidworks-to-creo.html command map
 STATUS:  working
 """
 import json, re, os, html
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.dirname(HERE)
 DATE = "2026-11-16"
 CHAT = "Same like solidworks, create a GitHub for Creo also"
@@ -108,6 +109,7 @@ def page(n, src):
     out = header(fn(n), "Creo Course, Day %02d: %s" % (n, title)) + f'''
 <html lang="en" data-theme="light">
 <head>
+<script src="/assets/js/site-theme.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Day {n}: {html.escape(title)} — Creo Parametric Course — K Vijay Anand</title>
@@ -149,6 +151,7 @@ def hub():
     return header("index.html", "28-Day Creo Parametric Course: hub page with schedule and progress") + f'''
 <html lang="en" data-theme="light">
 <head>
+<script src="/assets/js/site-theme.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>28-Day Creo Parametric Course — interactive — K Vijay Anand</title>
@@ -189,6 +192,7 @@ def cmdmap():
     return header("solidworks-to-creo.html", "SolidWorks to Creo command map with search") + f'''
 <html lang="en" data-theme="light">
 <head>
+<script src="/assets/js/site-theme.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SolidWorks → Creo command map — Creo Parametric Course — K Vijay Anand</title>

@@ -2,10 +2,11 @@
 """
 TOOL:    book-review/_build.py
 FAMILY:  SITE
-VERSION: 1.4.0
-DATE:    2026-11-16
+VERSION: 1.5.0
+DATE:    2026-11-21
 CHAT:    Daily management book review on GitHub Pages
-CHANGES: 1.4.0 - sign-in via assets/js/site-progress.js: quiz completion ticks the review, certificate saved to the reader's account with an ID printed on it, reprint via ?cert=ID; index shows ticks, count and continue line
+CHANGES: 1.5.0 - every page loads assets/js/site-theme.js (site-wide light / dark)
+         1.4.0 - sign-in via assets/js/site-progress.js: quiz completion ticks the review, certificate saved to the reader's account with an ID printed on it, reprint via ?cert=ID; index shows ticks, count and continue line
          1.3.0 - Aa reading settings (light/dark theme, text size, font, line spacing) on every review page (assets/js/reader.js): text size, font, line spacing; text wraps on phones
          1.2.0 - Listen button on every review page (assets/js/read-aloud.js); word count, quiz and certificate are not read out
          1.1.0 - certificate after the quiz: name remembered per device, A4 PDF to save or share (WhatsApp, email)
@@ -21,7 +22,7 @@ Content file (_content/<slug>.json):
   takeaway: one sentence,
   questions: 10 x {q, options: [4 strings], answer: 0-3, why}
 """
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 
 # review page template version; each page's header lists these plus its own first line
 PAGE_VERSION = "1.4.0"
@@ -394,6 +395,7 @@ def render_page(c, prev_c, next_c):
     return header(f"book-review/{c['slug']}.html — Book Review Day {c['day']}: {c['title']}", PAGE_VERSION,
                   "Daily management book review on GitHub Pages", changes, max(c["date"], PAGE_DATE)) + f"""<html lang="en">
 <head>
+<script src="/assets/js/site-theme.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{esc(c['title'])} — Book Review Day {c['day']}</title>
@@ -467,6 +469,7 @@ def render_index(items):
     return header("book-review/index.html — list of daily management book reviews", f"1.0.{len(items)}",
                   "Daily management book review on GitHub Pages", f"v1.0.{len(items)}  {len(items)} reviews listed") + f"""<html lang="en">
 <head>
+<script src="/assets/js/site-theme.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Book Review — K Vijay Anand</title>

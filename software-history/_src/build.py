@@ -1,13 +1,14 @@
 """
 TOOL:    software-history/_src/build.py — builds episode pages from _src/NN.html fragments
 FAMILY:  software-history
-VERSION: 1.7.0
-DATE:    2026-11-16
+VERSION: 1.8.0
+DATE:    2026-11-21
 CHAT:    Software history series — start with MS-DOS, publish all episodes
-CHANGES: 1.7.0 — every page loads assets/js/site-progress.js (sign-in, reading progress, activity log)
+CHANGES: 1.8.0 — every page loads assets/js/site-theme.js (site-wide light / dark)
+         1.7.0 — every page loads assets/js/site-progress.js (sign-in, reading progress, activity log)
          1.6.0 — Season 7 episodes 35–39 (macros and automation); 1.5.0 — keeps earlier CHANGES entries of an existing page when rebuilding; 1.4.0 — Season 5 episodes 27–30 (engineering and test software) and Season 6 episodes 31–34 (PC-era extras); 1.3.0 — Season 4 episodes 21–26 (thinking, research and office tools); 1.2.0 — Season 3 episodes 15–20 (open source on Windows); 1.1.0 — Season 2 episodes 11–14 (DTP, graphics, prepress, packaging prepress); last-episode nav computed; 1.0.0 — fragment (meta lines + body + optional script) to full page with header block, TOC, nav
 """
-__version__ = "1.7.0"
+__version__ = "1.8.0"
 import re, sys, pathlib, html
 SRC = pathlib.Path(__file__).parent
 OUT = SRC.parent
@@ -59,6 +60,7 @@ STATUS:  published
 -->
 <html lang="en">
 <head>
+<script src="/assets/js/site-theme.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Software Through the Ages · {n:02d} · {html.escape(meta['title'])}</title>

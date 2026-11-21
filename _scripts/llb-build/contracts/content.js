@@ -1,0 +1,607 @@
+/*
+TOOL:    contracts/content.js — course data and unit pages, assembled by build.py
+FAMILY:  law-explorers
+VERSION: 1.0.0
+DATE:    2026-11-22
+CHAT:    Kaavya Study Materials – TNNLU B.Com. LL.B. Semester II explorers (claude.ai, 2026-11-22)
+CHANGES: 1.0.0 - first version
+*/
+const UNITS = [
+ {id:"u1", n:1, title:"Offer and Acceptance", short:"Proposal, acceptance, communication and revocation; general offers; e-contracts."},
+ {id:"u2", n:2, title:"Consideration and Capacity", short:"Consideration and its exceptions; privity; minors and persons of unsound mind."},
+ {id:"u3", n:3, title:"Free Consent", short:"Coercion, undue influence, fraud, misrepresentation and mistake."},
+ {id:"u4", n:4, title:"Lawful Object and Void Agreements", short:"Unlawful object, restraints, uncertainty, wagering, contingent contracts."},
+ {id:"u5", n:5, title:"Performance and Discharge", short:"Who performs, time, reciprocal promises, frustration, novation, breach."},
+ {id:"u6", n:6, title:"Breach, Damages and Quasi-Contracts", short:"Sections 73–75, remoteness, liquidated damages, sections 68–72."},
+ {id:"u7", n:7, title:"Specific Relief Act, 1963", short:"Specific performance after 2018, injunctions, rescission and rectification."}
+];
+
+const EXTRAS = [
+ {id:"check", ic:"🧭", title:"Is it a valid contract?"},
+ {id:"flash", ic:"🃏", title:"Flashcards"},
+ {id:"maxims", ic:"📜", title:"Latin maxims"},
+ {id:"cases", ic:"🏛️", title:"Leading cases"},
+ {id:"quiz", ic:"✅", title:"Quiz"},
+ {id:"brief", ic:"📝", title:"Case brief builder"},
+ {id:"refs", ic:"📚", title:"References"}
+];
+
+const FLASH = [
+ ["Proposal (offer)","When one person signifies to another his willingness to do or not to do anything, with a view to obtaining that person's assent (s.2(a))."],
+ ["Acceptance","When the person to whom the proposal is made signifies assent to it, the proposal becomes a promise (s.2(b))."],
+ ["Agreement","Every promise and every set of promises forming the consideration for each other (s.2(e))."],
+ ["Contract","An agreement enforceable by law (s.2(h)). All contracts are agreements, but not all agreements are contracts."],
+ ["Void agreement","An agreement not enforceable by law (s.2(g)) – void from the start, e.g. a minor's agreement or a wager."],
+ ["Voidable contract","Enforceable at the option of one party but not the other (s.2(i)) – e.g. consent caused by coercion or fraud."],
+ ["Void contract","A contract that was valid when made but later ceases to be enforceable (s.2(j)) – e.g. after frustration."],
+ ["Invitation to treat","An invitation to make offers – goods on display, catalogues, tender notices, auction notices. Not an offer."],
+ ["General offer","An offer made to the world at large; anyone who performs its conditions accepts it (Carlill; s.8)."],
+ ["Counter-offer","A reply that changes the terms; it rejects the original offer and becomes a new offer (Hyde v Wrench; s.7)."],
+ ["Postal rule (s.4)","Acceptance is complete against the proposer when it is put in course of transmission; against the acceptor when it reaches the proposer."],
+ ["Consideration","Something done, abstained from or promised at the desire of the promisor, by the promisee or any other person (s.2(d))."],
+ ["Past consideration","Valid in India – s.2(d) says 'has done or abstained from doing', unlike English law."],
+ ["Section 25 exceptions","No consideration needed for: (1) registered written promise out of natural love and affection between near relations; (2) compensation for a past voluntary act; (3) written promise to pay a time-barred debt."],
+ ["Privity of contract","Only a party can sue on a contract. In India the consideration may move from a third person (Chinnaya v Ramayya)."],
+ ["Competency (s.11)","Majority (18 years), sound mind and not disqualified by law."],
+ ["Minor's agreement","Void ab initio (Mohori Bibee v Dharmodas Ghose, 1903). Cannot be ratified on attaining majority."],
+ ["Free consent (s.14)","Consent not caused by coercion, undue influence, fraud, misrepresentation or mistake."],
+ ["Coercion (s.15)","Committing or threatening any act forbidden by the Indian Penal Code (now BNS), or unlawfully detaining property, to obtain agreement."],
+ ["Undue influence (s.16)","A person in a position to dominate the will of another uses it to get an unfair advantage."],
+ ["Fraud (s.17)","Deliberate deception: false statement known to be false, active concealment, promise without intent to perform."],
+ ["Misrepresentation (s.18)","An innocent false statement, believed true by the maker, that induces the contract."],
+ ["Bilateral mistake (s.20)","Both parties mistaken about a fact essential to the agreement – the agreement is void."],
+ ["Section 23","Consideration or object unlawful if forbidden by law, defeats any law, fraudulent, injurious to person or property, immoral or against public policy."],
+ ["Restraint of trade (s.27)","Void, except the sale of goodwill within reasonable local limits. Even partial restraints are void in India."],
+ ["Wagering agreement (s.30)","A promise to pay on an uncertain event in which neither party has any other interest. Void, but not illegal (Gherulal Parakh)."],
+ ["Contingent contract (s.31)","A contract to do or not do something if an event collateral to the contract does or does not happen – e.g. insurance."],
+ ["Anticipatory breach (s.39)","A party refuses before the due date to perform; the other may end the contract at once and sue."],
+ ["Frustration (s.56)","An act that becomes impossible or unlawful after the contract is made becomes void (Satyabrata Ghose, 1954)."],
+ ["Novation (s.62)","Substituting a new contract for the old one; the old one need not be performed."],
+ ["Section 73","Compensation for loss which naturally arose in the usual course of things, or which both parties knew was likely – not remote or indirect loss."],
+ ["Section 74","Where a sum is named for breach, reasonable compensation not exceeding that sum – whether it is a penalty or a pre-estimate."],
+ ["Quasi-contract","Obligations the law imposes to prevent unjust enrichment, though no contract exists (ss.68–72)."],
+ ["Quantum meruit","'As much as he has earned' – payment for work done when the contract is cut short (Planche v Colburn)."],
+ ["Specific performance","Court orders the party to actually do what was promised. Since 2018 it is the rule, not a discretion (SRA s.10)."],
+ ["Substituted performance (SRA s.20)","After notice, the injured party gets the work done by someone else and recovers the cost from the party in breach."]
+];
+
+const MAXIMS = [
+ ["Consensus ad idem","Agreement on the same thing in the same sense","The parties must mean the same thing; otherwise there is no agreement (s.13)."],
+ ["Ex nudo pacto non oritur actio","No action arises from a bare promise","A promise without consideration cannot be enforced (s.25)."],
+ ["Quid pro quo","Something for something","The idea behind consideration."],
+ ["Pacta sunt servanda","Agreements must be kept","The basic principle of contract law."],
+ ["Caveat emptor","Let the buyer beware","Silence about facts is not fraud unless there is a duty to speak (s.17 Explanation)."],
+ ["Suppressio veri, suggestio falsi","Suppressing the truth is suggesting a falsehood","Where there is a duty to disclose, silence can amount to fraud."],
+ ["Ignorantia juris non excusat","Ignorance of law is no excuse","A mistake about Indian law does not make a contract voidable (s.21)."],
+ ["Ignorantia facti excusat","Ignorance of fact is excused","A mutual mistake of essential fact makes the agreement void (s.20)."],
+ ["Ex turpi causa non oritur actio","No action arises from a base cause","Courts will not enforce an illegal agreement (s.23)."],
+ ["In pari delicto potior est conditio defendentis","Where both are equally at fault, the defendant's position is stronger","Money paid under an illegal agreement usually cannot be recovered."],
+ ["Lex non cogit ad impossibilia","The law does not compel the impossible","The basis of frustration (s.56)."],
+ ["Quantum meruit","As much as he has earned","Reasonable payment for work done under a contract that ends early."],
+ ["Restitutio in integrum","Restoration to the original position","When a contract is rescinded, benefits received must be returned (ss.64–65)."],
+ ["Ubi jus ibi remedium","Where there is a right there is a remedy","The basis of damages and specific relief."],
+ ["Uberrimae fidei","Of the utmost good faith","Contracts such as insurance require full disclosure of material facts."],
+ ["Void ab initio","Void from the beginning","A minor's agreement is void ab initio – it was never a contract."],
+ ["Non est factum","It is not my deed","A person who signed a document of a totally different nature, without negligence, is not bound."]
+];
+
+const CASES = [
+ {n:"Balfour v Balfour", c:"[1919] 2 KB 571", u:1, in:0, p:"A husband's promise of a monthly allowance to his wife was a domestic arrangement with no intention to create legal relations – not enforceable."},
+ {n:"Carlill v Carbolic Smoke Ball Co", c:"[1893] 1 QB 256", u:1, in:0, p:"Advertised reward to anyone who caught flu after using the smoke ball was a general offer, accepted by performing the conditions; notice of acceptance waived."},
+ {n:"Lalman Shukla v Gauri Dutt", c:"(1913) 11 ALJ 489", u:1, in:1, p:"A servant who traced a missing boy without knowing of the reward could not claim it – acceptance needs knowledge of the offer."},
+ {n:"Harvey v Facey", c:"[1893] AC 552", u:1, in:0, p:"'Lowest price for Bumper Hall Pen £900' was information in reply to a question, not an offer."},
+ {n:"Pharmaceutical Society of GB v Boots Cash Chemists", c:"[1953] 1 QB 401", u:1, in:0, p:"Goods on a self-service shelf are an invitation to treat; the customer offers at the cash desk."},
+ {n:"Hyde v Wrench", c:"(1840) 3 Beav 334", u:1, in:0, p:"A counter-offer of a lower price rejected the original offer, which could not later be accepted."},
+ {n:"Felthouse v Bindley", c:"(1862) 11 CB (NS) 869", u:1, in:0, p:"Silence cannot be imposed as acceptance; an uncommunicated mental decision is not acceptance."},
+ {n:"Entores Ltd v Miles Far East Corp", c:"[1955] 2 QB 327", u:1, in:0, p:"For instantaneous communication (telex, phone) the contract is made where acceptance is received."},
+ {n:"Bhagwandas Goverdhandas Kedia v Girdharilal Parshottamdas", c:"AIR 1966 SC 543", u:1, in:1, p:"Acceptance over the telephone completes the contract where it is heard by the proposer – there, the courts had jurisdiction."},
+ {n:"Trimex International FZE v Vedanta Aluminium", c:"(2010) 3 SCC 1", u:1, in:1, p:"A contract concluded through exchange of emails is binding even if a formal document is to be signed later."},
+ {n:"Durga Prasad v Baldeo", c:"(1880) ILR 3 All 221", u:2, in:1, p:"Shops built at the Collector's order, not at the defendant's desire, were no consideration for his promise of commission."},
+ {n:"Chinnaya v Ramayya", c:"(1882) ILR 4 Mad 137", u:2, in:1, p:"Consideration moving from the mother was good for the daughter's promise to pay her aunt – in India consideration may come from a third person."},
+ {n:"Tweddle v Atkinson", c:"(1861) 1 B & S 393", u:2, in:0, p:"A son-in-law could not sue on a promise between the two fathers – a stranger to the contract cannot sue."},
+ {n:"Kedarnath Bhattacharji v Gorie Mahomed", c:"(1886) ILR 14 Cal 64", u:2, in:1, p:"A subscriber to a town-hall fund was liable once the commissioners had entered into contracts relying on the subscriptions."},
+ {n:"Abdul Aziz v Masum Ali", c:"(1914) ILR 36 All 268", u:2, in:1, p:"A promise to contribute to rebuilding a mosque was not enforceable – nothing was done on the strength of it."},
+ {n:"Mohori Bibee v Dharmodas Ghose", c:"(1903) ILR 30 Cal 539 (PC)", u:2, in:1, p:"A minor's mortgage was void ab initio; the lender could not recover the money advanced."},
+ {n:"Khan Gul v Lakha Singh", c:"AIR 1928 Lah 609", u:2, in:1, p:"A minor who obtained money by lying about his age could be ordered to restore what he received, though the contract itself was void."},
+ {n:"Nash v Inman", c:"[1908] 2 KB 1", u:2, in:0, p:"Fancy waistcoats for an undergraduate already well supplied were not necessaries."},
+ {n:"Chikham Amiraju v Chikham Seshamma", c:"(1917) ILR 41 Mad 33", u:3, in:1, p:"A threat to commit suicide, made to force a release of property, was coercion."},
+ {n:"Mannu Singh v Umadat Pande", c:"(1890) ILR 12 All 523", u:3, in:1, p:"A religious adviser who induced a disciple to gift property for spiritual benefit used undue influence."},
+ {n:"Subhas Chandra Das Mushib v Ganga Prasad Das Mushib", c:"AIR 1967 SC 878", u:3, in:1, p:"For undue influence, prove first that the other could dominate your will, and then that he used it to get an unfair advantage."},
+ {n:"Derry v Peek", c:"(1889) 14 App Cas 337", u:3, in:0, p:"Fraud needs a false statement made knowingly, without belief in its truth, or recklessly. An honest belief is not fraud."},
+ {n:"Couturier v Hastie", c:"(1856) 5 HLC 673", u:3, in:0, p:"Corn sold while at sea had already been sold off; the subject matter did not exist – the agreement was void (compare s.20)."},
+ {n:"Cundy v Lindsay", c:"(1878) 3 App Cas 459", u:3, in:0, p:"A rogue posing as a known firm: mistake as to the identity of the party made the contract void."},
+ {n:"Raffles v Wichelhaus", c:"(1864) 2 H & C 906", u:3, in:0, p:"Two ships named 'Peerless': the parties meant different ships, so there was no consensus ad idem."},
+ {n:"Gherulal Parakh v Mahadeodas Maiya", c:"AIR 1959 SC 781", u:4, in:1, p:"Wagering agreements are void but not illegal; a partnership to carry on wagering business could be enforced between the partners."},
+ {n:"Madhub Chunder v Raj Coomar Doss", c:"(1874) 14 Beng LR 76", u:4, in:1, p:"An agreement to close a shop in a locality was void – in India even a partial restraint of trade is void under s.27."},
+ {n:"Niranjan Shankar Golikari v Century Spinning", c:"AIR 1967 SC 1098", u:4, in:1, p:"A negative covenant not to work elsewhere during the term of employment is valid."},
+ {n:"Superintendence Co of India v Krishan Murgai", c:"(1981) 2 SCC 246", u:4, in:1, p:"A restraint operating after the employment ends is void under s.27."},
+ {n:"Percept D'Mark (India) v Zaheer Khan", c:"(2006) 4 SCC 227", u:4, in:1, p:"A right of first refusal binding the cricketer after the contract ended was a restraint of trade and void."},
+ {n:"Central Inland Water Transport Corp v Brojo Nath Ganguly", c:"(1986) 3 SCC 156", u:4, in:1, p:"An unconscionable clause allowing dismissal on three months' notice, imposed on employees with no bargaining power, was against public policy."},
+ {n:"Satyabrata Ghose v Mugneeram Bangur", c:"AIR 1954 SC 44", u:5, in:1, p:"Temporary wartime requisition of land did not frustrate a contract to develop plots; 'impossible' in s.56 means impracticable, not literally impossible."},
+ {n:"Taylor v Caldwell", c:"(1863) 3 B & S 826", u:5, in:0, p:"A music hall burnt down before the concerts – the contract was discharged by impossibility."},
+ {n:"Krell v Henry", c:"[1903] 2 KB 740", u:5, in:0, p:"A flat hired to watch the coronation procession; when it was cancelled, the contract's foundation failed."},
+ {n:"Energy Watchdog v CERC", c:"(2017) 14 SCC 80", u:5, in:1, p:"A rise in the price of imported coal did not frustrate power purchase agreements – commercial hardship is not frustration."},
+ {n:"Hochster v De la Tour", c:"(1853) 2 E & B 678", u:5, in:0, p:"Where a party repudiates before the date for performance, the other may sue at once (anticipatory breach)."},
+ {n:"Hadley v Baxendale", c:"(1854) 9 Exch 341", u:6, in:0, p:"Lost profits from a stopped mill were too remote: the carrier was not told the mill had no spare shaft."},
+ {n:"Victoria Laundry v Newman Industries", c:"[1949] 2 KB 528", u:6, in:0, p:"Normal laundry profits lost from late delivery of a boiler were recoverable; exceptionally lucrative dyeing contracts were not."},
+ {n:"Fateh Chand v Balkishan Dass", c:"AIR 1963 SC 1405", u:6, in:1, p:"Under s.74 the court awards reasonable compensation up to the named sum; the English distinction between penalty and liquidated damages is not followed."},
+ {n:"Maula Bux v Union of India", c:"(1969) 2 SCC 554", u:6, in:1, p:"Forfeiture of security deposits is subject to s.74; where loss can be proved, only reasonable compensation can be kept."},
+ {n:"ONGC v Saw Pipes Ltd", c:"(2003) 5 SCC 705", u:6, in:1, p:"Where loss is difficult to prove, a genuine pre-estimate of damages in the contract can be awarded without proof of actual loss."},
+ {n:"Kailash Nath Associates v DDA", c:"(2015) 4 SCC 136", u:6, in:1, p:"Damage or loss is essential under s.74; where it can be proved, it must be. Where no loss is caused, no compensation is due."},
+ {n:"State of West Bengal v B.K. Mondal & Sons", c:"AIR 1962 SC 779", u:6, in:1, p:"Work done for the State without a valid contract, and accepted by it, must be paid for under s.70."},
+ {n:"Sales Tax Officer v Kanhaiya Lal Mukundlal Saraf", c:"AIR 1959 SC 135", u:6, in:1, p:"Tax paid under a law later held invalid can be recovered under s.72 – 'mistake' includes a mistake of law."},
+ {n:"Planche v Colburn", c:"(1831) 8 Bing 14", u:6, in:0, p:"An author whose series was abandoned by the publisher could recover a reasonable sum for work done – quantum meruit."},
+ {n:"Lumley v Wagner", c:"(1852) 1 De GM & G 604", u:7, in:0, p:"A singer could not be forced to sing, but an injunction enforced her promise not to sing elsewhere (now SRA s.42)."},
+ {n:"Katta Sujatha Reddy v Siddamsetty Infra Projects", c:"(2023) 1 SCC 355", u:7, in:1, p:"The 2018 amendments to the Specific Relief Act are substantive and apply only to transactions after 1 October 2018."},
+ {n:"Kamal Kumar v Premlata Joshi", c:"(2019) 3 SCC 704", u:7, in:1, p:"A plaintiff seeking specific performance must prove readiness and willingness to perform throughout."}
+];
+
+const QUIZ = [
+ [1,"Under s.2(h), a contract is…",["Any promise","An agreement enforceable by law","An agreement in writing","A promise made under seal"],1,"All contracts are agreements; only enforceable ones are contracts."],
+ [1,"Goods displayed in a shop window with price tags are…",["An offer","An invitation to treat","A contract","A general offer"],1,"Boots and Fisher v Bell: customers make the offer."],
+ [1,"Under s.4, acceptance by post is complete against the proposer when…",["The proposer reads it","It is put in course of transmission to him","It reaches the proposer's address","The acceptor decides to accept"],1,"From that moment the proposer is bound."],
+ [1,"A proposal may be revoked…",["At any time","Before acceptance is complete against the proposer","Only in writing","Never, once communicated"],1,"Section 5: before the acceptor posts the acceptance."],
+ [1,"Lalman Shukla v Gauri Dutt held that…",["Silence is acceptance","Acceptance needs knowledge of the offer","A general offer is invalid","Telephone contracts are made where spoken"],1,"The servant did not know of the reward."],
+ [1,"A reply 'I accept if you lower the price' is…",["Acceptance","A counter-offer","A conditional contract","Fraud"],1,"Acceptance must be absolute and unqualified (s.7)."],
+ [2,"Which is NOT an exception in s.25?",["Natural love and affection, in writing and registered","Compensation for past voluntary service","Promise to pay a time-barred debt, in writing","A promise made to a charity"],3,"Charitable promises need consideration (unless the promisee acted on them)."],
+ [2,"Inadequacy of consideration…",["Makes the agreement void","Does not by itself make it void, but is evidence of free consent","Makes it voidable","Is irrelevant to everything"],1,"Explanation 2 to s.25."],
+ [2,"Mohori Bibee v Dharmodas Ghose decided that a minor's agreement is…",["Voidable","Void ab initio","Valid if beneficial","Valid if ratified"],1,"The Privy Council held it void from the start."],
+ [2,"Durga Prasad v Baldeo shows that consideration must be given…",["In money","At the desire of the promisor","Before the promise","In writing"],1,"The shops were built at the Collector's desire."],
+ [2,"A supplier of necessaries to a minor can recover…",["From the minor personally","From the minor's property","From the minor's parents always","Nothing"],1,"Section 68 – the minor is not personally liable."],
+ [3,"A threat to commit suicide to obtain a release deed is…",["Undue influence","Coercion","Misrepresentation","Not a vitiating factor"],1,"Chikham Amiraju – attempted suicide was an offence under the IPC."],
+ [3,"A contract induced by fraud is…",["Void","Voidable","Illegal","Valid"],1,"Section 19 – at the option of the deceived party."],
+ [3,"Both parties believe the goods exist, but they had perished before the contract. The agreement is…",["Voidable","Void under s.20","Valid","Illegal"],1,"Bilateral mistake of an essential fact."],
+ [3,"Mere silence as to facts likely to affect the other's decision is…",["Always fraud","Not fraud, unless there is a duty to speak","Misrepresentation","Coercion"],1,"Explanation to s.17."],
+ [3,"A mistake as to a law in force in India…",["Makes the contract void","Does not make it voidable","Makes it voidable","Makes it illegal"],1,"Section 21."],
+ [4,"Gherulal Parakh v Mahadeodas Maiya held that wagering agreements are…",["Illegal","Void but not illegal","Valid","Voidable"],1,"So collateral transactions are not tainted."],
+ [4,"An employee's promise not to compete after leaving the job is…",["Valid if reasonable","Void under s.27","Voidable","Valid always"],1,"Superintendence Co v Krishan Murgai."],
+ [4,"The seller of the goodwill of a business may agree not to carry on a similar business…",["Anywhere in India for ever","Within specified local limits, if reasonable","Never","Only for one month"],1,"Exception 1 to s.27."],
+ [4,"An agreement whose meaning is not certain and cannot be made certain is…",["Valid","Void – s.29","Voidable","Illegal"],1,"Section 29."],
+ [4,"A contract of insurance is an example of…",["A wagering agreement","A contingent contract","A quasi-contract","A void agreement"],1,"Section 31."],
+ [5,"In India, the doctrine of frustration is found in…",["Section 56","Section 73","Section 27","Section 10"],0,"Satyabrata Ghose: s.56 is exhaustive in India."],
+ [5,"A sharp rise in the price of raw materials…",["Frustrates the contract","Does not frustrate it","Makes it voidable","Makes it illegal"],1,"Energy Watchdog v CERC."],
+ [5,"Substituting a new contract for an existing one is…",["Remission","Novation","Rescission","Waiver"],1,"Section 62."],
+ [5,"A party refuses, before the due date, to perform. This is…",["Actual breach","Anticipatory breach","Frustration","Novation"],1,"Section 39."],
+ [5,"Under s.63, a creditor accepting part payment in full settlement…",["Can sue for the balance","Cannot – remission is valid without consideration","Must get it registered","Commits fraud"],1,"Unlike the English rule in Pinnel's case."],
+ [6,"Hadley v Baxendale established…",["The test of remoteness of damage","The postal rule","The doctrine of frustration","The rule on minors"],0,"The two limbs, reflected in s.73."],
+ [6,"Under s.74, where a sum is named as payable on breach, the court awards…",["Always the whole sum","Reasonable compensation not exceeding that sum","Double the sum","Nothing"],1,"Fateh Chand v Balkishan Dass."],
+ [6,"Section 70 applies where a person…",["Finds goods","Lawfully does something for another, not intending to do so gratuitously, and the other enjoys the benefit","Is coerced","Is a minor"],1,"B.K. Mondal: the State had to pay."],
+ [6,"Money paid by mistake of law can be recovered under s.72. This was decided in…",["Kanhaiya Lal Mukundlal Saraf","Mohori Bibee","Carlill","Krell v Henry"],0,"AIR 1959 SC 135."],
+ [6,"Quantum meruit means…",["Let the buyer beware","As much as he has earned","Something for something","Void from the beginning"],1,"Planche v Colburn."],
+ [7,"After the 2018 amendment, specific performance of a contract is…",["Discretionary","Enforced by the court, subject to ss.11(2), 14 and 16","Abolished","Only for land"],1,"Section 10 as amended."],
+ [7,"Substituted performance is in…",["SRA s.20","ICA s.20","SRA s.42","ICA s.56"],0,"Inserted in 2018."],
+ [7,"A contract to perform as a singer is…",["Specifically enforceable","Not specifically enforceable – depends on personal qualities","Void","Illegal"],1,"Section 14; a negative covenant may be enforced by injunction (s.42)."],
+ [7,"Katta Sujatha Reddy (2023) held that the 2018 amendments…",["Are retrospective","Apply only to transactions after 1 October 2018","Were struck down","Apply only to companies"],1,"They are substantive, so prospective."],
+ [7,"Correcting a written instrument that does not express the parties' real intention is…",["Rescission","Rectification","Cancellation","Declaration"],1,"SRA s.26."]
+];
+
+//@@VIEWS
+VIEWS.home = { html(){
+  const done=S.d.done;
+  return `<div class="hero"><h2>Law of Contracts I</h2>
+  <p>Every day you make contracts – buying a bus ticket, a phone recharge, college fees. This course studies the general principles of the Indian Contract Act, 1872 (sections 1–75) and the remedies under the Specific Relief Act, 1963.</p>
+  <p>Work through the seven units, try each lab, then revise with flashcards, leading cases and the quiz. Use the validity checker on every problem question.</p></div>
+  <div class="ucards">${UNITS.map(u=>`<a class="ucard" data-go="${u.id}"><span class="k">Unit ${u.n}</span><b>${u.title}</b><span>${u.short}</span>${done[u.id]?'<span class="st">✓ Done</span>':""}</a>`).join("")}
+  ${EXTRAS.map(x=>`<a class="ucard" data-go="${x.id}" style="border-top-color:var(--gold)"><span class="k" style="color:var(--gold)">${x.ic} ${x.id==="check"?"Practise":"Revise"}</span><b>${x.title}</b></a>`).join("")}</div>
+  <div class="two" style="margin-top:18px">
+   <div class="card"><h3>How to study contracts</h3>
+   <ol><li>Learn the <b>definitions in section 2</b> word for word – every answer starts there.</li><li>Read each section with its <b>illustrations</b>; they are part of the Act and examiners use them as problems.</li><li>Attach a leading case to every rule, and note where Indian law differs from English law (past consideration, privity, partial restraint, remission).</li><li>Answer problems in IRAC form: Issue, Rule (section + case), Application, Conclusion – and say whether the result is valid, void or voidable.</li></ol></div>
+   <div class="card"><h3>Keyboard</h3><table class="t">
+   <tr><td><span class="kbd">M</span></td><td>Show or hide the unit list</td></tr>
+   <tr><td><span class="kbd">P</span> / <span class="kbd">S</span> / <span class="kbd">X</span></td><td>Play, step, pause the animation on the page</td></tr>
+   <tr><td><span class="kbd">F</span></td><td>Full screen</td></tr>
+   <tr><td><span class="kbd">←</span> <span class="kbd">→</span> <span class="kbd">Space</span></td><td>Flashcards: previous, next, flip</td></tr>
+   <tr><td><span class="kbd">[</span> <span class="kbd">]</span></td><td>Previous or next unit</td></tr></table>
+   <p style="font-size:13.5px;color:var(--muted)">Works offline once opened. Sign in (top right) to keep progress and certificates on every device.</p></div></div>
+  <div class="card"><h3>About this syllabus</h3><p>The units follow the standard Contracts I course at Indian law universities: general principles (sections 1–75 of the Indian Contract Act, 1872) and the Specific Relief Act, 1963. Special contracts – indemnity, guarantee, bailment, pledge, agency – and the Sale of Goods and Partnership Acts usually come in Contracts II (Semester III). Compare with TNNLU's own course outline when it is issued.</p></div>
+  ${footer()}`;
+}};
+
+/* ---------------- UNIT 1 ---------------- */
+const POST_SVG = `<svg viewBox="0 0 640 370" class="lg" role="img" aria-label="Postal rule timeline">
+<defs><marker id="pa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<g class="node"><rect x="10" y="10" width="170" height="64" rx="12"/><text x="95" y="38" text-anchor="middle">A – proposer</text><text x="95" y="62" text-anchor="middle" class="sub">Delhi</text></g>
+<g class="node"><rect x="460" y="10" width="170" height="64" rx="12"/><text x="545" y="38" text-anchor="middle">B – acceptor</text><text x="545" y="62" text-anchor="middle" class="sub">Chennai</text></g>
+<g id="p0" class="fade"><path class="edge hi" d="M185 110 H452" marker-end="url(#pa)" style="color:var(--accent)"/><text x="320" y="100" text-anchor="middle" class="lbl">✉ offer posted · Mon</text></g>
+<g id="p1" class="fade"><circle cx="545" cy="110" r="9" class="dot"/><text x="630" y="140" text-anchor="end" class="lbl">reaches B · Wed</text></g>
+<g id="p2" class="fade"><path class="edge hi" d="M455 180 H188" marker-end="url(#pa)" style="color:var(--info)"/><text x="320" y="170" text-anchor="middle" class="lbl">✉ acceptance posted · Thu</text></g>
+<g id="p3" class="fade"><circle cx="95" cy="180" r="9" class="dot"/><text x="10" y="210" class="lbl">reaches A · Sat</text></g>
+<line x1="30" y1="300" x2="610" y2="300" class="axis"/>
+${["Mon","Tue","Wed","Thu","Fri","Sat"].map((d,i)=>`<g><line x1="${40+i*112}" y1="294" x2="${40+i*112}" y2="306" class="axis"/><text x="${40+i*112}" y="290" text-anchor="middle" class="lbl" style="font-size:14px">${d}</text></g>`).join("")}
+<g id="w1" class="fade"><rect x="40" y="246" width="336" height="24" rx="12" class="win1"/><text x="208" y="263" text-anchor="middle" class="wl">A may revoke the offer</text></g>
+<g id="w2" class="fade"><rect x="376" y="322" width="224" height="24" rx="12" class="win2"/><text x="488" y="339" text-anchor="middle" class="wl">B may revoke acceptance</text></g>
+<g id="k1" class="fade"><line x1="376" y1="226" x2="376" y2="300" class="edge hi" style="stroke:var(--accent)"/><text x="382" y="238" class="big">A bound</text></g>
+<g id="k2" class="fade"><line x1="600" y1="226" x2="600" y2="300" class="edge hi" style="stroke:var(--accent)"/><text x="594" y="238" text-anchor="end" class="big">B bound</text></g>
+</svg>`;
+const POST_STEPS = [
+ "<b>Monday.</b> A posts an offer to sell his car to B. A proposal is complete when it comes to the knowledge of the person to whom it is made (s.4).",
+ "<b>Wednesday.</b> The letter reaches B: communication of the proposal is complete. Until B accepts, A may revoke it – the revocation must reach B before B posts the acceptance.",
+ "<b>Thursday.</b> B posts an acceptance. Communication of acceptance is <b>complete against A</b> as soon as it is put in course of transmission. A is bound from now and can no longer revoke.",
+ "<b>Saturday.</b> The letter reaches A: acceptance is <b>complete against B</b>. Until then B could revoke the acceptance by a faster message (a phone call or email) that reaches A first.",
+ "<b>The two windows.</b> A can revoke the offer until B posts the acceptance; B can revoke the acceptance until it reaches A. For instant communication (phone, email chat) the contract is made where the acceptance is received – <i>Bhagwandas Kedia</i> (1966)."
+];
+const U1_ITEMS = [
+ ["Goods on a supermarket shelf with price tags.","INV","Invitation to treat – the customer makes the offer at the counter (Boots)."],
+ ["A newspaper advertisement: 'Rs 5,000 to anyone who finds and returns my lost dog.'","OFF","A general offer to the world, accepted by performing the conditions (Carlill; s.8)."],
+ ["In reply to 'What is your lowest price?', the owner writes 'Lowest price Rs 10 lakh.'","INV","Mere information about the price, not an offer to sell (Harvey v Facey)."],
+ ["A notice that an auction of furniture will be held next Sunday.","INT","A statement of intention – no one can sue if the auction is cancelled (Harris v Nickerson)."],
+ ["A bid made by a buyer at an auction.","OFF","The bidder makes the offer; the auctioneer accepts by the fall of the hammer."],
+ ["A government notice inviting tenders for building a road.","INV","Inviting offers; each tender is an offer."],
+ ["A letter: 'I will sell you my scooter for Rs 40,000. Reply by Friday.'","OFF","A definite offer to a specific person."]
+];
+const U1B_ITEMS = [
+ ["B replies, 'I accept if you include the helmet.'","NO","A counter-offer, not an acceptance – acceptance must be absolute (s.7; Hyde v Wrench)."],
+ ["A writes: 'If I hear nothing by Monday, the horse is mine.' B says nothing.","NO","Silence is not acceptance (Felthouse v Bindley)."],
+ ["A servant traces a missing boy, not knowing of the reward. He later claims it.","NO","No acceptance without knowledge of the offer (Lalman Shukla)."],
+ ["A buyer uses the smoke ball as directed and catches flu. She claims the advertised reward.","YES","Acceptance by performing the conditions (Carlill; s.8)."],
+ ["A posts a revocation on Monday. B posted the acceptance on Sunday; the revocation reaches B on Wednesday.","YES","Too late – A was bound once B posted the acceptance (ss.4–5)."],
+ ["B accepts by phone, but the line goes dead and A hears nothing.","NO","For instant communication, the acceptance must actually be heard (Entores; Bhagwandas Kedia)."],
+ ["The parties agree all terms by email; both say a formal agreement will be signed later.","YES","Binding once the essential terms are agreed (Trimex v Vedanta)."]
+];
+VIEWS.u1 = { html(){ return unitHead(1)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key"><b>Offer + acceptance = agreement.</b> An agreement enforceable by law is a contract (s.2(h)). Section 10 lists what makes it enforceable: free consent of competent parties, lawful consideration and object, and not expressly declared void.</div>
+ <h4>The chain of definitions (s.2)</h4><table class="t"><tr><th>Clause</th><th>Term</th><th>Meaning in one line</th></tr>
+ <tr><td>2(a)</td><td>Proposal</td><td>Willingness to do or abstain, made to get the other's assent</td></tr>
+ <tr><td>2(b)</td><td>Acceptance → promise</td><td>Assent to the proposal; the proposal becomes a promise</td></tr>
+ <tr><td>2(c)</td><td>Promisor, promisee</td><td>The one who proposes and the one who accepts</td></tr>
+ <tr><td>2(d)</td><td>Consideration</td><td>The price of the promise (Unit 2)</td></tr>
+ <tr><td>2(e)</td><td>Agreement</td><td>Promises forming consideration for each other</td></tr>
+ <tr><td>2(g), (h)</td><td>Void agreement, contract</td><td>Not enforceable; enforceable by law</td></tr>
+ <tr><td>2(i), (j)</td><td>Voidable, void contract</td><td>Enforceable at one party's option; ceases to be enforceable</td></tr></table>
+ <h4>Rules of a valid offer</h4><ul><li>It must be meant to create <b>legal relations</b> – a social or domestic promise is not (<i>Balfour v Balfour</i>).</li><li>Terms must be <b>certain</b>.</li><li>It must be <b>communicated</b>; acceptance needs knowledge of the offer (<i>Lalman Shukla</i>).</li><li>It may be <b>specific</b> (to a person) or <b>general</b> (to the world – <i>Carlill</i>).</li><li>An <b>invitation to treat</b> is not an offer: goods on display, catalogues, menus, tender notices, auction notices.</li></ul>
+ <h4>Rules of a valid acceptance (ss.7–9)</h4><ul><li><b>Absolute and unqualified</b> – a changed term is a counter-offer.</li><li>Expressed in the usual and reasonable manner, or as the proposer prescribes.</li><li>Communicated by the offeree or an authorised person (<i>Powell v Lee</i>); silence is not acceptance.</li><li>Performing the conditions of a proposal is acceptance (s.8).</li></ul>
+ <h4>How an offer ends (s.6)</h4><p>By notice of revocation; lapse of the time prescribed or a reasonable time; failure of a condition precedent; death or insanity of the proposer, if known to the acceptor before acceptance; and by rejection or counter-offer.</p>
+ <h4>E-contracts</h4><p>Section 10A of the Information Technology Act, 2000 says a contract is not unenforceable just because it was formed by electronic means. Click-wrap and email contracts are valid if the essentials of s.10 are met.</p></div>
+</div><div>
+ ${animBox("postAnim","Communication and revocation by post (ss.4–5)",POST_SVG)}
+ <div class="card lab"><h3>Offer or not?</h3><p>Classify each statement.</p><div id="lab1"></div></div>
+ <div class="card lab"><h3>Is there a contract?</h3><p>Decide whether a binding agreement was formed.</p><div id="lab1b"></div></div>
+</div></div>`+unitFoot(1)+footer(); },
+ init(){
+  anim = makeAnim("#postAnim", POST_STEPS, i=>{
+    ["p0","p1","p2","p3"].forEach((id,k)=>document.getElementById(id).classList.toggle("show",k<=i));
+    document.getElementById("w1").classList.toggle("show",i>=1);
+    document.getElementById("w2").classList.toggle("show",i>=2);
+    document.getElementById("k1").classList.toggle("show",i>=2);
+    document.getElementById("k2").classList.toggle("show",i>=3);
+  });
+  choiceLab("#lab1",U1_ITEMS,{OFF:"Offer",INV:"Invitation to treat / information",INT:"Statement of intention"});
+  choiceLab("#lab1b",U1B_ITEMS,{YES:"Contract formed",NO:"No contract"});
+  miniQuiz(1);
+ }};
+
+/* ---------------- UNIT 2 ---------------- */
+const U2_ITEMS = [
+ ["An uncle orally promises his nephew Rs 1 lakh for his wedding. Nothing is given in return.","NONE","A bare promise – no consideration and no s.25 exception (not written and registered)."],
+ ["A father signs and registers a deed promising land to his son out of natural love and affection.","EXC","Section 25(1): written, registered, near relation, natural love and affection."],
+ ["A finds B's lost purse and returns it. Later B promises A Rs 500.","EXC","Section 25(2): compensation for something already done voluntarily."],
+ ["A debtor signs a written promise to pay a debt that became time-barred last year.","EXC","Section 25(3)."],
+ ["Shops are built at the Collector's order; a trader later promises the builder a commission.","NONE","Not done at the desire of the promisor (Durga Prasad v Baldeo)."],
+ ["A agrees to sell a horse worth Rs 1,00,000 for Rs 10,000, freely and knowingly.","VALID","Inadequate consideration does not make the agreement void if consent was free (s.25, Expl. 2)."],
+ ["A promises to pay B Rs 2,000 if B gives up smoking for a year. B does.","VALID","Abstaining at the promisor's desire is consideration."]
+];
+const U2B_ITEMS = [
+ ["A 16-year-old mortgages his house to a moneylender for a loan.","VOID","A minor's agreement is void ab initio (Mohori Bibee)."],
+ ["A shop supplies school textbooks to a 15-year-old on credit.","NEC","Necessaries: the supplier is reimbursed from the minor's property, not from the minor personally (s.68)."],
+ ["A 17-year-old lies that he is 19 and borrows money.","VOID","Still void – no estoppel against a minor. The court may order him to restore what he got (Khan Gul v Lakha Singh)."],
+ ["On turning 18, the person signs a paper ratifying the loan taken at 16.","VOID","A void agreement cannot be ratified; a fresh contract with fresh consideration is needed."],
+ ["A patient in a mental hospital, who is at times of sound mind, makes a contract during such an interval.","VALID","Section 12, illustration (a)."],
+ ["A man is so drunk he cannot understand the terms of the deal he signs.","VOID","He is not of sound mind while drunk (s.12, illustration (b)); the agreement is void."]
+];
+VIEWS.u2 = { html(){ return unitHead(2)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key"><b>Consideration (s.2(d))</b>: when, at the desire of the promisor, the promisee <b>or any other person</b> has done or abstained from doing, or does or abstains, or promises to do or abstain from doing something – that act, abstinence or promise is consideration.</div>
+ <h4>Rules from the definition</h4><ol><li>It must move <b>at the desire of the promisor</b> (<i>Durga Prasad v Baldeo</i>).</li><li>It may move from the promisee <b>or any other person</b> (<i>Chinnaya v Ramayya</i>) – wider than English law.</li><li>It may be <b>past, present or future</b>. Past consideration is good in India.</li><li>It need not be <b>adequate</b>, but must be real and lawful.</li><li>Doing what one is already legally bound to do is no consideration.</li></ol>
+ <h4>No consideration, no contract – except (s.25)</h4><table class="t"><tr><th>Exception</th><th>Conditions</th></tr>
+ <tr><td>Natural love and affection</td><td>In writing, registered, between parties in near relation</td></tr>
+ <tr><td>Past voluntary service</td><td>Compensation for something the promisee did voluntarily, or something the promisor was legally compellable to do</td></tr>
+ <tr><td>Time-barred debt</td><td>Promise in writing, signed, to pay wholly or partly</td></tr></table>
+ <p>Also: s.185 – no consideration needed for creating an agency; gifts actually made are outside s.25.</p>
+ <h4>Privity</h4><p>Only parties to the contract can sue (<i>Tweddle v Atkinson</i>). Exceptions: trusts and charges on property, family arrangements and marriage provisions, acknowledgment or estoppel, and covenants running with land.</p></div>
+ <div class="card"><h3>Capacity (ss.11–12)</h3>
+ <p>Every person is competent who is of the <b>age of majority</b> (18, under the Indian Majority Act, 1875), of <b>sound mind</b>, and not <b>disqualified by law</b> (e.g. alien enemies, insolvents for some purposes).</p>
+ <h4>Minors – the rules</h4><ul><li>Agreement with a minor is <b>void ab initio</b> (<i>Mohori Bibee</i>, 1903).</li><li>No ratification on attaining majority.</li><li>No estoppel: a minor who lies about age is not bound, but equity may order restitution (<i>Khan Gul</i>; <i>Leslie v Sheill</i>).</li><li>Necessaries: the supplier is paid from the minor's property (s.68).</li><li>A minor can be a promisee or beneficiary – e.g. a minor can enforce a promissory note in his favour.</li><li>A minor can be admitted to the benefits of a partnership (Partnership Act, s.30).</li></ul>
+ <h4>Sound mind (s.12)</h4><p>Able to understand the contract and form a rational judgment of its effect on his interests at the time of contracting. A person usually of unsound mind may contract when of sound mind, and vice versa.</p></div>
+</div><div>
+ <div class="card lab"><h3>Is there consideration?</h3><div id="lab2"></div></div>
+ <div class="card lab"><h3>Minors and capacity</h3><div id="lab2b"></div></div>
+</div></div>`+unitFoot(2)+footer(); },
+ init(){
+  choiceLab("#lab2",U2_ITEMS,{VALID:"Valid consideration",NONE:"No consideration – void",EXC:"s.25 exception applies"});
+  choiceLab("#lab2b",U2B_ITEMS,{VALID:"Valid",VOID:"Void",NEC:"Necessaries – paid from minor's property"});
+  miniQuiz(2);
+ }};
+
+/* ---------------- UNIT 3 ---------------- */
+const U3_ITEMS = [
+ ["A husband threatens to kill himself unless his wife and son sign a release of their property.","CO","Coercion – attempted suicide was punishable under the IPC (Chikham Amiraju)."],
+ ["A spiritual guru persuades a disciple to gift his house to secure salvation.","UI","Undue influence – a position of spiritual dominance used for unfair advantage (s.16; Mannu Singh)."],
+ ["A seller paints over cracks in a car's chassis before showing it to a buyer.","FR","Fraud – active concealment of a fact (s.17(2))."],
+ ["A seller says the car has run 40,000 km, honestly relying on a tampered odometer he did not know about.","MR","Misrepresentation – a false statement he believed true (s.18)."],
+ ["Both parties sign a sale of a cargo which, unknown to both, had sunk the day before.","MI","Bilateral mistake of essential fact – void (s.20; Couturier v Hastie)."],
+ ["A seller says nothing about a defect the buyer could easily see on inspection.","OK","Mere silence is not fraud when there is no duty to speak (s.17, Explanation)."],
+ ["A moneylender, knowing a widow is in desperate need, lends at 75% interest.","UI","Unconscionable bargain – the burden shifts to the lender to show it was not induced by undue influence (s.16(3))."]
+];
+VIEWS.u3 = { html(){ return unitHead(3)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key"><b>Consent</b> means agreeing upon the same thing in the same sense (s.13). It is <b>free</b> when not caused by coercion, undue influence, fraud, misrepresentation or mistake (s.14). Without free consent, the contract is usually <b>voidable</b>; for a mutual mistake of fact it is <b>void</b>.</div>
+ <table class="t"><tr><th>Factor</th><th>Essence</th><th>Effect</th><th>Case</th></tr>
+ <tr><td><b>Coercion</b> (s.15)</td><td>Committing or threatening an act forbidden by the penal code, or unlawful detention of property, to make someone agree</td><td>Voidable (s.19)</td><td><i>Chikham Amiraju</i></td></tr>
+ <tr><td><b>Undue influence</b> (s.16)</td><td>Dominating position (real or apparent authority, fiduciary relation, mental distress) used to obtain unfair advantage</td><td>Voidable; court may set aside on terms (s.19A)</td><td><i>Subhas Chandra Das Mushib</i></td></tr>
+ <tr><td><b>Fraud</b> (s.17)</td><td>Intention to deceive: false statement knowingly made, active concealment, promise without intention to perform</td><td>Voidable + damages</td><td><i>Derry v Peek</i></td></tr>
+ <tr><td><b>Misrepresentation</b> (s.18)</td><td>Innocent false statement, or breach of duty, or causing a mistake innocently</td><td>Voidable (no damages for innocent misrep.)</td><td>–</td></tr>
+ <tr><td><b>Mistake of fact</b> (ss.20, 22)</td><td>Both parties mistaken about an essential fact → void. One party only → not voidable</td><td>Void / valid</td><td><i>Couturier v Hastie</i>; <i>Raffles v Wichelhaus</i></td></tr>
+ <tr><td><b>Mistake of law</b> (s.21)</td><td>Of Indian law – no relief. Of foreign law – treated as mistake of fact</td><td>Valid / void</td><td>–</td></tr></table>
+ <h4>Coercion vs undue influence</h4><table class="t"><tr><th></th><th>Coercion</th><th>Undue influence</th></tr><tr><td>Nature</td><td>Physical force or threat</td><td>Mental pressure</td></tr><tr><td>Relationship needed?</td><td>No – even a stranger can coerce</td><td>Yes – a relation of dominance</td></tr><tr><td>Criminal?</td><td>The act is an offence</td><td>Not necessarily</td></tr><tr><td>Who can use it?</td><td>Anyone, against anyone</td><td>Only by the dominant party</td></tr></table>
+ <h4>Presumed dominance (s.16(2))</h4><p>Parent and child, guardian and ward, doctor and patient, lawyer and client, spiritual adviser and disciple, trustee and beneficiary. Where the transaction looks unconscionable, the dominant party must prove it was fair (s.16(3)). Special care for <i>pardanashin</i> women.</p>
+ <h4>Fraud – exceptions</h4><p>Silence is not fraud unless there is a duty to speak (e.g. insurance – <i>uberrimae fidei</i>), or silence is itself equivalent to speech. If the deceived party could have discovered the truth with ordinary diligence, the contract is not voidable for misrepresentation or silent fraud (s.19, Exception).</p></div>
+</div><div>
+ <div class="card lab"><h3>Name the defect in consent</h3><div id="lab3"></div></div>
+ <div class="card"><h3>Remedies of the party whose consent was not free</h3><ul><li><b>Rescind</b> the contract within a reasonable time – before third parties acquire rights for value.</li><li>Or <b>affirm</b> it and insist on being put in the position he would have been in had the representation been true (s.19).</li><li>Claim <b>damages</b> for fraud (a tort of deceit).</li><li>On rescission, return any benefit received (s.64).</li></ul></div>
+</div></div>`+unitFoot(3)+footer(); },
+ init(){ choiceLab("#lab3",U3_ITEMS,{CO:"Coercion",UI:"Undue influence",FR:"Fraud",MR:"Misrepresentation",MI:"Mistake – void",OK:"Consent is free"}); miniQuiz(3); }};
+
+/* ---------------- UNIT 4 ---------------- */
+const U4_ITEMS = [
+ ["Two friends bet Rs 10,000 on the result of a cricket match.","VOID","Wagering agreement – void under s.30, but not illegal (Gherulal Parakh)."],
+ ["A pays B Rs 50,000 in return for B's promise never to marry.","VOID","Restraint of marriage – s.26."],
+ ["A sells his shop's goodwill and agrees not to run a similar shop in the same town for three years.","VALID","Exception 1 to s.27 – reasonable local limits."],
+ ["An employee agrees not to join any competitor for two years after leaving the company.","VOID","Post-employment restraint – void (Superintendence Co v Krishan Murgai)."],
+ ["An employee agrees not to work for anyone else during the five-year term of employment.","VALID","Negative covenant during employment (Niranjan Shankar Golikari)."],
+ ["A pays a government clerk Rs 1 lakh to get him a government job.","ILL","Object forbidden by law and opposed to public policy (s.23) – illegal and void."],
+ ["A agrees to sell B '100 tonnes of oil'. A deals in many kinds of oil.","VOID","Uncertain – s.29, illustration (a)."],
+ ["A, who deals only in coconut oil, agrees to sell B '100 tonnes of oil'.","VALID","The meaning is made certain by the circumstances – s.29, illustration (b)."],
+ ["A contract says disputes will be heard only by the Chennai courts, one of two places with jurisdiction.","VALID","Choosing one of the competent courts is not a restraint of legal proceedings (ABC Laminart v A.P. Agencies, 1989)."]
+];
+VIEWS.u4 = { html(){ return unitHead(4)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key">Even with offer, acceptance, consideration, capacity and free consent, an agreement is <b>void</b> if its <b>object or consideration is unlawful</b> (s.23) or the Act <b>expressly declares it void</b> (ss.24–30, 36, 56).</div>
+ <h4>Unlawful object or consideration (s.23)</h4><ol><li>Forbidden by law</li><li>Would defeat the provisions of any law</li><li>Fraudulent</li><li>Involves or implies injury to the person or property of another</li><li>Regarded by the court as immoral</li><li>Opposed to public policy – trading with an enemy, stifling prosecution, traffic in public offices, interfering with justice, unconscionable terms (<i>Brojo Nath Ganguly</i>)</li></ol>
+ <h4>Agreements expressly declared void</h4><table class="t"><tr><th>Section</th><th>Agreement</th><th>Exceptions</th></tr>
+ <tr><td>24</td><td>Part of consideration or object unlawful and inseparable</td><td>–</td></tr>
+ <tr><td>25</td><td>Without consideration</td><td>Three exceptions (Unit 2)</td></tr>
+ <tr><td>26</td><td>In restraint of marriage (other than of a minor)</td><td>–</td></tr>
+ <tr><td>27</td><td>In restraint of trade, profession or business</td><td>Sale of goodwill, within reasonable local limits</td></tr>
+ <tr><td>28</td><td>In restraint of legal proceedings; clauses cutting short limitation (as amended 1997)</td><td>Arbitration agreements; bank-guarantee time limits</td></tr>
+ <tr><td>29</td><td>Uncertain in meaning</td><td>If capable of being made certain</td></tr>
+ <tr><td>30</td><td>Wagering</td><td>Horse-race prizes of Rs 500 or more</td></tr>
+ <tr><td>36</td><td>Contingent on an impossible event</td><td>–</td></tr></table>
+ <h4>Void vs illegal</h4><p>Every illegal agreement is void, but not every void agreement is illegal. A wager is only void, so a loan to pay a wagering debt can be recovered; an illegal agreement taints collateral transactions too.</p></div>
+ <div class="card"><h3>Contingent contracts (ss.31–36)</h3><table class="t"><tr><th>Section</th><th>Rule</th></tr>
+ <tr><td>31</td><td>A contract to do something if an event collateral to it does or does not happen – e.g. insurance, indemnity, guarantee.</td></tr>
+ <tr><td>32</td><td>On the happening of a future uncertain event – enforceable only when it happens; void if it becomes impossible.</td></tr>
+ <tr><td>33</td><td>On the event not happening – enforceable when the happening becomes impossible.</td></tr>
+ <tr><td>34</td><td>On how a person will act at an unspecified time – impossible when that person makes it impossible (e.g. marries someone else).</td></tr>
+ <tr><td>35</td><td>Event within a fixed time – void if it does not happen within that time (or enforceable if it has not happened).</td></tr>
+ <tr><td>36</td><td>On an impossible event – void, whether or not the parties knew it was impossible.</td></tr></table>
+ <div class="ex">"I will pay you Rs 1 lakh if your ship returns by 31 March." If the ship sinks on 1 March, the contract becomes void (s.35).</div>
+ <p><b>Wager vs contingent contract:</b> every wager is a contingent contract, but not every contingent contract is a wager – an insurance policy covers a real interest (insurable interest).</p></div>
+</div><div>
+ <div class="card lab"><h3>Valid, void or illegal?</h3><div id="lab4"></div></div>
+</div></div>`+unitFoot(4)+footer(); },
+ init(){ choiceLab("#lab4",U4_ITEMS,{VALID:"Valid",VOID:"Void",ILL:"Illegal (and void)"}); miniQuiz(4); }};
+
+/* ---------------- UNIT 5 ---------------- */
+const U5_ITEMS = [
+ ["A hall hired for a concert burns down, without anyone's fault, before the concert.","FR","Subject matter destroyed (Taylor v Caldwell; s.56)."],
+ ["The price of imported coal doubles, making the power supply contract a loss for the supplier.","NF","Commercial hardship is not frustration (Energy Watchdog v CERC)."],
+ ["The government temporarily requisitions land for war; the developer can still build later.","NF","Temporary delay does not destroy the basis of the contract (Satyabrata Ghose)."],
+ ["A famous singer, engaged for a concert, dies a week before it.","FR","Personal performance has become impossible."],
+ ["After a contract to export rice, the government bans its export.","FR","Supervening illegality – the act has become unlawful (s.56)."],
+ ["A strike at the seller's factory delays delivery by two weeks.","NF","Foreseeable business risk; the seller must perform or pay damages."],
+ ["A flat is hired for two days solely to watch a procession, which is then cancelled.","FR","The foundation of the contract has failed (Krell v Henry)."]
+];
+const U5B_ITEMS = [
+ ["A, B and C agree that C will pay A the debt B owes, and B is released.","AGR","Novation – a new contract replaces the old (s.62)."],
+ ["A creditor accepts Rs 2,000 in full settlement of a Rs 5,000 debt.","AGR","Remission (s.63) – valid in India without fresh consideration."],
+ ["The seller delivers the goods on time and the buyer pays.","PERF","Discharge by performance."],
+ ["A month before the delivery date, the seller writes that he will not deliver.","BRE","Anticipatory breach (s.39) – the buyer may end the contract at once."],
+ ["The buyer sues four years after the breach of a simple contract.","LAP","Discharged by lapse of time – the Limitation Act, 1963 gives three years."],
+ ["Performance becomes unlawful after a new statute.","IMP","Supervening impossibility (s.56)."]
+];
+VIEWS.u5 = { html(){ return unitHead(5)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key">The parties must <b>perform or offer to perform</b> their promises unless performance is dispensed with or excused by the Act or any other law (s.37). A contract is <b>discharged</b> – comes to an end – by performance, agreement, impossibility, lapse of time, operation of law or breach.</div>
+ <h4>Performance (ss.37–67) – the main rules</h4><table class="t"><tr><th>Question</th><th>Rule</th></tr>
+ <tr><td>Tender of performance (s.38)</td><td>An unconditional offer to perform, at a proper time and place, that is refused – the promisor is not responsible for non-performance.</td></tr>
+ <tr><td>Who performs? (ss.40–41)</td><td>The promisor personally if the contract depends on personal skill; otherwise an agent may. If the promisee accepts performance by a third person, he cannot later enforce against the promisor.</td></tr>
+ <tr><td>Death of promisor (s.37)</td><td>Representatives are bound, unless the contract is personal.</td></tr>
+ <tr><td>Joint promisors (ss.42–44)</td><td>Each is liable for the whole; the one who pays may claim contribution.</td></tr>
+ <tr><td>Time (s.55)</td><td>If time is of the essence, failure lets the other party avoid the contract; if not, only compensation. In sale of land, time is generally not of the essence.</td></tr>
+ <tr><td>Reciprocal promises (ss.51–54)</td><td>Performed in the order agreed or that the nature of the transaction requires.</td></tr>
+ <tr><td>Appropriation of payments (ss.59–61)</td><td>The debtor decides which debt a payment is for; if not, the creditor; if neither, the debts in order of time.</td></tr></table>
+ <h4>Frustration – section 56</h4><p>(1) An agreement to do an impossible act is void. (2) A contract to do an act which, after it is made, becomes impossible or unlawful by an event the promisor could not prevent, becomes void when it becomes impossible or unlawful. (3) A promisor who knew of the impossibility must compensate the promisee who did not.</p>
+ <p>In India s.56 is a positive rule – not the English 'implied term' theory – and 'impossible' means <b>impracticable or useless from the point of view of the object</b> (<i>Satyabrata Ghose</i>, 1954). Not frustration: commercial hardship, price rise, strikes, self-induced impossibility.</p>
+ <h4>Discharge by agreement (ss.62–63)</h4><p><b>Novation</b> (new contract replaces old), <b>rescission</b> (cancelling), <b>alteration</b> (changing terms), <b>remission</b> (accepting less, or extending time), <b>waiver</b>.</p>
+ <h4>After the contract ends</h4><p>A void agreement or a contract that becomes void: anyone who received an advantage must restore it (s.65). On rescinding a voidable contract, benefits must be returned (s.64).</p></div>
+</div><div>
+ <div class="card lab"><h3>Frustrated or not?</h3><div id="lab5"></div></div>
+ <div class="card lab"><h3>How did the contract end?</h3><div id="lab5b"></div></div>
+</div></div>`+unitFoot(5)+footer(); },
+ init(){
+  choiceLab("#lab5",U5_ITEMS,{FR:"Frustrated – void (s.56)",NF:"Not frustrated"});
+  choiceLab("#lab5b",U5B_ITEMS,{PERF:"Performance",AGR:"Agreement",IMP:"Impossibility",BRE:"Breach",LAP:"Lapse of time"});
+  miniQuiz(5);
+ }};
+
+/* ---------------- UNIT 6 ---------------- */
+const HB_SVG = `<svg viewBox="0 0 640 440" class="lg" role="img" aria-label="Hadley v Baxendale">
+<defs><marker id="hb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+${["Shaft breaks","Sent by carrier","Carrier delays","Mill stands idle","Profits lost"].map((t,i)=>`<g id="h${i}" class="node fade"><rect x="120" y="${8+i*68}" width="400" height="52" rx="12"/><text x="320" y="${41+i*68}" text-anchor="middle">${t} <tspan class="sub">· ${["Gloucester mill","to engineers in Greenwich","several extra days","no spare shaft","the claim"][i]}</tspan></text></g>`).join("")}
+${[0,1,2,3].map(i=>`<path id="ha${i}" class="edge fade" d="M320 ${61+i*68} V${74+i*68}" marker-end="url(#hb)" style="color:var(--muted)"/>`).join("")}
+<g id="hq" class="fade"><rect x="20" y="346" width="600" height="34" rx="10" class="win1"/><text x="320" y="369" text-anchor="middle" class="wl">Limb 1: arises naturally?  ·  Limb 2: in both parties' contemplation?</text></g>
+<g id="hx" class="fade"><text x="320" y="420" text-anchor="middle" class="big">Carrier not told the mill was idle → profits too remote</text></g>
+</svg>`;
+const HB_STEPS = [
+ "<b>1854, Gloucester.</b> The crankshaft of Hadley's mill breaks. A new one must be made in Greenwich using the old one as a pattern.",
+ "Hadley's clerk hands the broken shaft to Baxendale's carriers, who promise next-day delivery. The clerk does not say the mill has no spare.",
+ "The carriers <b>delay delivery by several days</b> through neglect – a clear breach of contract.",
+ "The mill stays idle all that time, because there is <b>no spare shaft</b>.",
+ "Hadley sues for the <b>profits lost</b> while the mill was idle.",
+ "The court sets <b>two limbs</b>: damages are recoverable if they arise naturally from the breach in the usual course of things, OR if they were reasonably in the contemplation of both parties when they contracted. Section 73 says the same.",
+ "Most mills keep a spare shaft, and the carrier was not told of the special circumstances – so the lost profits were <b>too remote</b>. Hadley got only nominal damages."
+];
+const U6_ITEMS = [
+ ["A seller fails to deliver wheat; the buyer buys elsewhere at a higher market price.","L1","The extra cost (market price minus contract price) arises naturally (s.73, illustration)."],
+ ["A boiler is delivered late; the laundry loses its normal profits.","L1","Ordinary profits were foreseeable to a supplier of boilers (Victoria Laundry)."],
+ ["The same laundry also loses an exceptionally lucrative government dyeing contract nobody mentioned.","REM","Special, unforeseen loss – too remote (Victoria Laundry)."],
+ ["When contracting, the buyer told the seller the goods were needed for an export order at a premium price.","L2","Special circumstances known to both parties at the time of the contract – recoverable."],
+ ["A train runs late; a passenger misses a meeting and loses a business deal the railway knew nothing about.","REM","Indirect loss outside the parties' contemplation."]
+];
+const U6B_ITEMS = [
+ ["A trader supplies food and clothes suited to his condition to a person of unsound mind.","S68","Necessaries supplied to a person incapable of contracting – reimbursed from his property."],
+ ["A pays B's overdue land revenue to stop B's land, in which A has an interest, being sold.","S69","Payment by an interested person of money another is bound to pay."],
+ ["A delivers goods to B's house by mistake; B uses them.","S70","Lawful act, not intended to be gratuitous, benefit enjoyed – B must pay."],
+ ["A finds a lost watch and keeps it safely until the owner turns up.","S71","A finder of goods has the responsibilities of a bailee."],
+ ["Tax was paid under a law later declared unconstitutional.","S72","Money paid under mistake (including of law) must be repaid (Kanhaiya Lal)."]
+];
+VIEWS.u6 = { html(){ return unitHead(6)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key">The party who suffers by a breach is entitled to <b>compensation</b> for loss which <b>naturally arose in the usual course of things</b>, or which the parties <b>knew, when they made the contract, to be likely</b> to result. No compensation for remote and indirect loss (s.73).</div>
+ <h4>Kinds of damages</h4><table class="t"><tr><th>Kind</th><th>When</th></tr>
+ <tr><td><b>Ordinary</b> (general)</td><td>Loss arising naturally – market-price difference</td></tr>
+ <tr><td><b>Special</b></td><td>Loss due to special circumstances known to both parties</td></tr>
+ <tr><td><b>Nominal</b></td><td>Breach proved, but no real loss</td></tr>
+ <tr><td><b>Exemplary</b></td><td>Rare in contract – dishonour of a cheque by a bank with funds, breach of promise to marry</td></tr>
+ <tr><td><b>Liquidated</b></td><td>A sum fixed by the parties in the contract (s.74)</td></tr></table>
+ <h4>Duty to mitigate</h4><p>Explanation to s.73: the means of remedying the inconvenience that existed must be taken into account. The injured party must take reasonable steps to reduce the loss – e.g. buy substitute goods.</p>
+ <h4>Section 74 – liquidated damages and penalty</h4><p>If a sum is named, or a penalty stipulated, the injured party gets <b>reasonable compensation not exceeding that sum</b>, whether or not actual loss is proved. Indian law does not follow the English penalty/liquidated damages divide (<i>Fateh Chand</i>, 1963). But after <i>Kailash Nath</i> (2015), loss is essential: where loss can be proved it must be; only where it is hard to prove can a genuine pre-estimate be awarded (<i>ONGC v Saw Pipes</i>).</p>
+ <h4>Section 75</h4><p>A person who rightfully rescinds a contract is entitled to compensation for damage sustained through non-performance.</p></div>
+ <div class="card"><h3>Quasi-contracts (ss.68–72)</h3><p>"Certain relations resembling those created by contract." The law imposes an obligation to prevent <b>unjust enrichment</b>, though there is no agreement.</p>
+ <table class="t"><tr><th>Section</th><th>Situation</th></tr>
+ <tr><td>68</td><td>Necessaries supplied to a person incapable of contracting</td></tr>
+ <tr><td>69</td><td>Payment by an interested person of money due by another</td></tr>
+ <tr><td>70</td><td>Benefit of a non-gratuitous act enjoyed</td></tr>
+ <tr><td>71</td><td>Finder of goods – responsibilities of a bailee</td></tr>
+ <tr><td>72</td><td>Money paid or thing delivered by mistake or under coercion</td></tr></table>
+ <p><b>Quantum meruit</b> – reasonable payment for work done where a contract is discharged early by the other party, or is found void (<i>Planche v Colburn</i>).</p></div>
+</div><div>
+ ${animBox("hbAnim","Remoteness: Hadley v Baxendale",HB_SVG)}
+ <div class="card lab"><h3>Section 74 calculator</h3><p>Work out what a court would award under s.74 after <i>Fateh Chand</i>, <i>ONGC v Saw Pipes</i> and <i>Kailash Nath</i>.</p>
+  <div class="row"><label>Sum named in the contract (Rs) <input type="text" id="c74Sum" value="500000" inputmode="numeric" style="width:130px"></label></div>
+  <div class="row" style="margin-top:6px"><label>Nature of the clause <select id="c74Kind"><option value="pre">Genuine pre-estimate of loss</option><option value="pen">Penalty (in terrorem)</option></select></label></div>
+  <div class="row" style="margin-top:6px"><label>Loss caused by the breach <select id="c74Loss"><option value="proved">Loss proved in evidence</option><option value="hard">Real loss, but hard to prove in money</option><option value="none">No loss at all</option></select></label>
+  <label id="c74AmtL">Proved loss (Rs) <input type="text" id="c74Amt" value="320000" inputmode="numeric" style="width:130px"></label></div>
+  <div class="row" style="margin-top:8px"><button class="btn" id="c74Go">Work it out</button></div><div id="c74Out"></div></div>
+ <div class="card lab"><h3>Recoverable or too remote?</h3><div id="lab6"></div></div>
+ <div class="card lab"><h3>Which quasi-contract?</h3><div id="lab6b"></div></div>
+</div></div>`+unitFoot(6)+footer(); },
+ init(){
+  anim = makeAnim("#hbAnim", HB_STEPS, i=>{
+    for(let k=0;k<5;k++){ const g=document.getElementById("h"+k); g.classList.toggle("show",k<=i); g.classList.toggle("hi",k===i&&i<5); }
+    for(let k=0;k<4;k++) document.getElementById("ha"+k).classList.toggle("show",k<i);
+    document.getElementById("hq").classList.toggle("show",i>=5); document.getElementById("hx").classList.toggle("show",i>=6);
+  });
+  const num=v=>Math.max(0,+String(v).replace(/[^\d.]/g,"")||0), rs=n=>"Rs "+Math.round(n).toLocaleString("en-IN");
+  const sync=()=>{ $("#c74AmtL").style.display=$("#c74Loss").value==="proved"?"":"none"; };
+  $("#c74Loss").onchange=sync; sync();
+  $("#c74Go").onclick=()=>{
+    const sum=num($("#c74Sum").value), kind=$("#c74Kind").value, loss=$("#c74Loss").value, amt=num($("#c74Amt").value);
+    let award, why;
+    if(loss==="none"){ award=0; why="No loss was caused, so no compensation is due – loss or damage is essential under s.74 (Kailash Nath, 2015). Nominal damages at most."; }
+    else if(loss==="proved"){ award=Math.min(amt,sum); why=amt>sum?`The proved loss (${rs(amt)}) is more than the named sum, but s.74 caps compensation at the sum named.`:`Where loss can be proved, it must be; the court awards reasonable compensation – the proved loss – capped at the named sum.`; }
+    else if(kind==="pre"){ award=sum; why="Loss is real but hard to prove, and the clause is a genuine pre-estimate: the named sum can be awarded without proof of the exact loss (ONGC v Saw Pipes)."; }
+    else { award=null; why=`Loss is hard to prove and the clause is a penalty: the court fixes <b>reasonable compensation</b> on the evidence it has, <b>not more than ${rs(sum)}</b>. It will not simply award the whole penalty (Fateh Chand).`; }
+    $("#c74Out").innerHTML=`<div class="fb info"><b>Award: ${award==null?"reasonable compensation, up to "+rs(sum):rs(award)}</b><br>${why}</div>`;
+  };
+  choiceLab("#lab6",U6_ITEMS,{L1:"Recoverable – arises naturally",L2:"Recoverable – special circumstances known",REM:"Too remote"});
+  choiceLab("#lab6b",U6B_ITEMS,{S68:"s.68",S69:"s.69",S70:"s.70",S71:"s.71",S72:"s.72"});
+  miniQuiz(6);
+ }};
+
+/* ---------------- UNIT 7 ---------------- */
+const U7_ITEMS = [
+ ["A buyer agreed to buy a flat, paid an advance, and has always been ready and willing to pay. The seller refuses to complete.","SP","After 2018, specific performance is enforced as the rule (SRA s.10)."],
+ ["A singer refuses to sing at the concert she agreed to perform at.","NO","A contract dependent on personal qualities is not specifically enforceable (s.14)."],
+ ["The same singer had also promised not to sing anywhere else that week, and now plans to sing at a rival show.","INJ","The negative covenant can be enforced by injunction (s.42; Lumley v Wagner)."],
+ ["A contract to build and maintain a complex over 20 years, needing constant supervision.","NO","Continuous duty the court cannot supervise (s.14)."],
+ ["The buyer cannot prove he was ready and willing to perform his part.","NO","Personal bar under s.16(c) (Kamal Kumar v Premlata Joshi)."],
+ ["The injured party has already got the work done by another contractor under s.20 and recovered the cost.","NO","After substituted performance, specific performance is barred (s.14(a))."],
+ ["A partnership contract that either party can end at will.","NO","A contract which is in its nature determinable (s.14)."]
+];
+VIEWS.u7 = { html(){ return unitHead(7)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key">Damages are not always enough. The <b>Specific Relief Act, 1963</b> lets the court order the actual performance of a contract, stop a wrongful act by injunction, or correct or cancel documents. The <b>2018 amendment</b> made specific performance the <b>rule</b> rather than a discretion.</div>
+ <h4>The kinds of specific relief</h4><table class="t"><tr><th>Sections</th><th>Relief</th></tr>
+ <tr><td>5–8</td><td>Recovering possession of property; s.6 – summary suit within six months of dispossession without due process</td></tr>
+ <tr><td>9–25</td><td>Specific performance of contracts</td></tr>
+ <tr><td>26</td><td>Rectification of instruments</td></tr>
+ <tr><td>27–30</td><td>Rescission of contracts</td></tr>
+ <tr><td>31–33</td><td>Cancellation of instruments</td></tr>
+ <tr><td>34–35</td><td>Declaratory decrees</td></tr>
+ <tr><td>36–42</td><td>Injunctions – temporary, perpetual, mandatory; s.42 negative agreements</td></tr></table>
+ <h4>What changed in 2018 (Act 18 of 2018, in force 1 October 2018)</h4><table class="t"><tr><th>Before</th><th>After</th></tr>
+ <tr><td>Specific performance was discretionary (old s.20); damages were the normal remedy</td><td>Courts <b>shall</b> enforce specific performance, subject only to ss.11(2), 14 and 16</td></tr>
+ <tr><td>No self-help remedy</td><td><b>Substituted performance</b> (s.20): after 30 days' written notice, get it done by a third party and recover the cost</td></tr>
+ <tr><td>Injunctions could stall public projects</td><td>No injunction that would impede an <b>infrastructure project</b> (s.20A); special courts (s.20B); suits to be decided within 12 months (s.20C)</td></tr>
+ <tr><td>Plaintiff had to 'aver and prove' readiness</td><td>Must <b>prove</b> readiness and willingness (s.16(c))</td></tr></table>
+ <p>The amendments are prospective – they apply to transactions after 1 October 2018 (<i>Katta Sujatha Reddy</i>, 2023).</p>
+ <h4>Contracts not specifically enforceable (s.14)</h4><ul><li>Where substituted performance has been obtained under s.20</li><li>Contracts involving a continuous duty the court cannot supervise</li><li>Contracts so dependent on the personal qualifications of the parties that the court cannot enforce material terms</li><li>Contracts which are in their nature determinable</li></ul>
+ <h4>Personal bars (s.16)</h4><p>Relief is refused to a person who has obtained substituted performance, who has become incapable of performing or violates an essential term, who acts in fraud of the contract, or who fails to prove he has performed or has always been ready and willing to perform his essential terms.</p>
+ <h4>Injunctions in short</h4><p><b>Temporary</b> – during the suit, under the CPC (Order XXXIX): prima facie case, balance of convenience, irreparable injury. <b>Perpetual</b> – by decree after hearing (s.38). <b>Mandatory</b> – to compel acts (s.39). Section 41 lists when an injunction will be refused.</p></div>
+</div><div>
+ <div class="card lab"><h3>What will the court order?</h3><div id="lab7"></div></div>
+ <div class="card"><h3>Remedies at a glance</h3><table class="t"><tr><th>Remedy</th><th>Source</th><th>Use it when</th></tr>
+ <tr><td>Damages</td><td>ICA ss.73–75</td><td>Money can make good the loss</td></tr>
+ <tr><td>Specific performance</td><td>SRA ss.10–16</td><td>You want the thing itself – land, a flat, rare goods</td></tr>
+ <tr><td>Substituted performance</td><td>SRA s.20</td><td>Someone else can do the work; recover the cost</td></tr>
+ <tr><td>Injunction</td><td>SRA ss.36–42; CPC O.XXXIX</td><td>Stop a breach, or enforce a negative promise</td></tr>
+ <tr><td>Rescission</td><td>SRA s.27; ICA ss.64–65</td><td>Undo a voidable contract</td></tr>
+ <tr><td>Quantum meruit</td><td>ICA ss.65, 70</td><td>Paid for work done before the contract ended</td></tr></table></div>
+</div></div>`+unitFoot(7)+footer(); },
+ init(){ choiceLab("#lab7",U7_ITEMS,{SP:"Specific performance",INJ:"Injunction",NO:"Not specifically enforceable"}); miniQuiz(7); }};
+
+/* ---------------- VALIDITY CHECKER ---------------- */
+const CHECK = [
+ {q:"Is there a definite <b>offer</b>, and an <b>acceptance</b> that is absolute, unqualified and communicated?", no:"<b>No agreement at all</b> – there is nothing to enforce (ss.2(a), 2(b), 3–9).", u:"u1"},
+ {q:"Did the parties intend to create <b>legal relations</b>? (Social and domestic arrangements are presumed not to.)", no:"<b>Not a contract</b> – a social or domestic arrangement (<i>Balfour v Balfour</i>).", u:"u1"},
+ {q:"Is there <b>consideration</b> (s.2(d)), or does one of the <b>s.25 exceptions</b> apply?", no:"<b>Void</b> – an agreement without consideration (s.25).", u:"u2"},
+ {q:"Are both parties <b>competent</b> – 18 or over, of sound mind, not disqualified by law (ss.11–12)?", no:"<b>Void</b> – a minor's agreement is void ab initio (<i>Mohori Bibee</i>); so is one by a person of unsound mind (s.12). Check s.68 for necessaries.", u:"u2"},
+ {q:"Are the <b>object and consideration lawful</b> – not forbidden by law, fraudulent, injurious, immoral or against public policy (s.23)?", no:"<b>Void</b> (and illegal) – unlawful object or consideration (s.23).", u:"u4"},
+ {q:"Is it free of the agreements the Act <b>expressly declares void</b> – restraint of marriage, trade or legal proceedings, uncertainty, wagering, impossible acts (ss.26–30, 36, 56)?", no:"<b>Void</b> – expressly declared void by the Act.", u:"u4"},
+ {q:"Did both parties agree on the same thing, with <b>no mutual mistake</b> about a fact essential to the agreement (s.20)?", no:"<b>Void</b> – bilateral mistake of fact (s.20).", u:"u3"},
+ {q:"Was consent <b>free</b> – no coercion, undue influence, fraud or misrepresentation (s.14)?", no:"<b>Voidable</b> at the option of the party whose consent was not free (ss.19, 19A). He may rescind or affirm.", u:"u3"},
+ {q:"If the law requires <b>writing, registration or stamping</b> for this kind of agreement, has it been done?", no:"<b>Not enforceable</b> until the formality is met – e.g. s.25(1) needs registration; sale of immovable property needs a registered deed.", u:"u2"}
+];
+VIEWS.check = { html(){ return `<div class="unitban"><div class="k">Practise</div><h2>Is it a valid contract?</h2><p>Answer the questions in order for any problem. The checker follows section 10 and stops at the first defect.</p></div>
+ <div class="two"><div class="card"><h3>Your problem</h3><textarea id="ckFacts" placeholder="Optional: paste or type the facts of the problem here, so you can see them while you answer." style="min-height:110px"></textarea><div id="ckBox" style="margin-top:12px"></div></div>
+ <div class="card"><h3>Section 10 in one sentence</h3><div class="key">All agreements are contracts if they are made by the <b>free consent</b> of parties <b>competent</b> to contract, for a <b>lawful consideration</b> and with a <b>lawful object</b>, and are <b>not expressly declared to be void</b>.</div>
+ <table class="t"><tr><th>Result</th><th>Meaning</th></tr><tr><td><b>Valid</b></td><td>Enforceable by both parties</td></tr><tr><td><b>Voidable</b></td><td>Valid until the aggrieved party rescinds it</td></tr><tr><td><b>Void</b></td><td>No legal effect from the start</td></tr><tr><td><b>Illegal</b></td><td>Void, and taints collateral transactions too</td></tr><tr><td><b>Unenforceable</b></td><td>Valid in substance but lacks a formality</td></tr></table></div></div>`+footer(); },
+ init(){ this.step(0); },
+ step(i){
+  const box=$("#ckBox"), done=CHECK.slice(0,i).map((c,k)=>`<div class="fb ok" style="margin:4px 0">✔ ${k+1}. ${c.q.replace(/<[^>]+>/g,"")}</div>`).join("");
+  if(i>=CHECK.length){ box.innerHTML=done+`<div class="fb info" style="margin-top:10px;font-size:16px"><b>Valid contract</b> – all the essentials of s.10 are met. Now check performance and breach (Units 5–7).</div><button class="btn sec sm" id="ckAgain" style="margin-top:8px">Start again</button>`; $("#ckAgain").onclick=()=>this.step(0); return; }
+  const c=CHECK[i];
+  box.innerHTML=done+`<div class="q"><div class="qt">${i+1}. ${c.q}</div><div class="row"><button class="btn sm" id="ckY">✔ Yes</button><button class="btn sm sec" id="ckN">✖ No</button></div></div>`;
+  $("#ckY").onclick=()=>this.step(i+1);
+  $("#ckN").onclick=()=>{ box.innerHTML=done+`<div class="fb bad" style="margin-top:10px;font-size:16px">✖ ${c.no}</div><div class="row" style="margin-top:8px"><button class="btn sm sec" data-go="${c.u}">Read the unit →</button><button class="btn sm sec" id="ckAgain">Start again</button></div>`; $("#ckAgain").onclick=()=>this.step(0); };
+ }};
+
+/* ---------------- REFERENCES ---------------- */
+VIEWS.refs = { html(){ return `<div class="unitban"><div class="k">Read further</div><h2>References</h2><p>Books are in the TNNLU library; online sources need internet.</p></div>
+ <div class="two"><div class="card"><h3>Books</h3><table class="t"><tr><th>Book</th><th>Use it for</th></tr>
+ <tr><td>Avtar Singh, <i>Contract &amp; Specific Relief</i>, Eastern Book Company</td><td>The standard student textbook; clear, with Indian cases</td></tr>
+ <tr><td>R.K. Bangia, <i>Indian Contract Act</i>, Allahabad Law Agency</td><td>First reading in simple language</td></tr>
+ <tr><td><i>Pollock &amp; Mulla, The Indian Contract and Specific Relief Acts</i>, LexisNexis</td><td>The authoritative commentary, section by section</td></tr>
+ <tr><td>Nilima Bhadbhade, <i>Contract Law in India</i>, Wolters Kluwer</td><td>Analytical; compares English and Indian law</td></tr>
+ <tr><td><i>Anson's Law of Contract</i>, Oxford University Press</td><td>Classic English text for principles and English cases</td></tr>
+ <tr><td><i>Cheshire, Fifoot and Furmston's Law of Contract</i>, Oxford University Press</td><td>English law in depth; for projects</td></tr>
+ <tr><td>Avtar Singh, <i>Law of Contract (Bare Act with notes)</i> or any current Bare Act</td><td>Keep the Act with illustrations at hand in every class</td></tr></table></div>
+ <div><div class="card"><h3>Statutes</h3><ul>
+ <li>Indian Contract Act, 1872 – sections 1–75 (this course); 124–238 come in Contracts II</li>
+ <li>Specific Relief Act, 1963, as amended by the Specific Relief (Amendment) Act, 2018</li>
+ <li>Information Technology Act, 2000 – section 10A (electronic contracts)</li>
+ <li>Indian Majority Act, 1875</li>
+ <li>Limitation Act, 1963 – Article 54 (specific performance), Articles 55 and 113</li>
+ <li>Registration Act, 1908 – section 17; Indian Stamp Act, 1899</li>
+ <li>Code of Civil Procedure, 1908 – Order XXXIX (temporary injunctions)</li></ul></div>
+ <div class="card"><h3>Online sources</h3><ul>
+ <li><a href="https://www.indiacode.nic.in" target="_blank" rel="noopener">India Code</a> – official text of the Contract and Specific Relief Acts</li>
+ <li><a href="https://indiankanoon.org" target="_blank" rel="noopener">Indian Kanoon</a> – free search of Indian judgments</li>
+ <li><a href="https://www.bailii.org" target="_blank" rel="noopener">BAILII</a> – the English cases</li>
+ <li><a href="https://www.sci.gov.in" target="_blank" rel="noopener">Supreme Court of India</a> – judgments</li>
+ <li><a href="https://lawcommissionofindia.nic.in" target="_blank" rel="noopener">Law Commission of India</a> – 13th Report (Contract Act) and reports on specific relief</li>
+ <li><a href="https://www.tnnlulibrary.net" target="_blank" rel="noopener">TNNLU Library</a> – SCC Online, Manupatra and other e-resources</li></ul></div></div></div>`+footer(); }};
+
+function footer(){ return `<div class="foot">Law of Contracts I explorer · v1.0.0 · Reference material for second-semester law students, based on the standard Contracts I syllabus at Indian law universities. Always check against your own course outline and the current text of the law.</div>`; }

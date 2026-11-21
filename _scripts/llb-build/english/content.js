@@ -1,0 +1,381 @@
+/*
+TOOL:    english/content.js — course data and unit pages, assembled by build.py
+FAMILY:  law-explorers
+VERSION: 1.0.0
+DATE:    2026-11-22
+CHAT:    Kaavya Study Materials – TNNLU B.Com. LL.B. Semester II explorers (claude.ai, 2026-11-22)
+CHANGES: 1.0.0 - first version
+*/
+const UNITS = [
+ {id:"u1", n:1, title:"Persuasive and Difficult Messages", short:"Direct and indirect plans, bad-news and complaint replies, persuasive letters, cover letters and résumés."},
+ {id:"u2", n:2, title:"Reports, Proposals and Referencing", short:"Analytical reports, executive summaries, describing data, proposals, citation styles."},
+ {id:"u3", n:3, title:"Speaking: Presentations, GDs, Interviews", short:"Structuring a talk, group discussion, interviews, chairing meetings, courtroom manners."},
+ {id:"u4", n:4, title:"Legal Writing and Drafting", short:"Shall and may, definitions and provisos, gender-neutral language, notices and affidavits."},
+ {id:"u5", n:5, title:"Critical Reading and Vocabulary", short:"Arguments, assumptions and fallacies; reading a passage closely; words lawyers confuse."}
+];
+const EXTRAS = [
+ {id:"drill", ic:"🔁", title:"Practice drill"},
+ {id:"flash", ic:"🃏", title:"Flashcards"},
+ {id:"quiz", ic:"✅", title:"Quiz"},
+ {id:"refs", ic:"📚", title:"References"}
+];
+const CASES = [], MAXIMS = [];
+
+const FLASH = [
+ ["Direct plan","Main point first, then details – for good news, routine requests and replies."],
+ ["Indirect plan","Buffer and reasons before the main point – for bad news and persuasion of a resistant reader."],
+ ["Buffer","A neutral, relevant opening that does not mislead – e.g. thanking the reader for the order."],
+ ["You-attitude","Writing from the reader's point of view: 'You will receive' rather than 'We are sending'."],
+ ["AIDA letter","Attention, Interest, Desire, Action – the plan of a sales or persuasive letter."],
+ ["Executive summary","A one-page stand-alone summary of a report's purpose, findings and recommendations for busy readers."],
+ ["Proposal","A document that persuades a reader to approve a plan, project or purchase – problem, solution, cost, schedule."],
+ ["OSCOLA","Oxford University Standard for the Citation of Legal Authorities – footnote style widely used in Indian law schools."],
+ ["Plagiarism","Presenting another's words or ideas as your own; avoid by quoting, paraphrasing and citing."],
+ ["Signposting","Words that guide a listener: 'First…', 'Turning now to…', 'To sum up…'."],
+ ["Group discussion","A structured debate judged on content, clarity, listening, leadership and team behaviour."],
+ ["STAR method","Interview answers: Situation, Task, Action, Result."],
+ ["Shall","Imposes a duty – 'The tenant shall pay rent' (though courts sometimes read it as directory)."],
+ ["May","Gives a discretion or permission – 'The court may adjourn'."],
+ ["Must not / shall not","Prohibition."],
+ ["Proviso","A clause beginning 'Provided that…' which carves an exception out of the main provision."],
+ ["Notwithstanding","'In spite of' – gives a provision overriding effect: 'Notwithstanding anything in section 5…'."],
+ ["Ejusdem generis","General words following specific ones are read as limited to the same kind."],
+ ["Gender-neutral drafting","Use 'they', 'the person', repeat the noun, or restructure – avoid 'he' as the default."],
+ ["Handbook on Combating Gender Stereotypes","Supreme Court of India, 2023 – lists stereotyping words in judgments and alternatives."],
+ ["Legal notice","A formal letter stating facts, the legal claim and the demand, with a time to comply before legal action."],
+ ["Affidavit","A written statement of facts sworn or affirmed before an authorised officer; ends with a verification."],
+ ["Argument","A claim supported by reasons (premises). Ask: are the premises true, and do they support the claim?"],
+ ["Assumption","An unstated premise the argument needs."],
+ ["Ad hominem","Attacking the person instead of the argument."],
+ ["Straw man","Distorting the opponent's argument to make it easier to attack."],
+ ["Slippery slope","Claiming one step will inevitably lead to extreme consequences without showing why."],
+ ["False dilemma","Presenting only two options when more exist."],
+ ["Appeal to authority","Relying on an authority outside their field, or as if authority alone proves the point."],
+ ["Imply vs infer","The speaker implies; the listener infers."],
+ ["Apprise vs appraise","Apprise = inform ('apprise the court'); appraise = assess value."],
+ ["Discreet vs discrete","Discreet = careful, tactful; discrete = separate, distinct."],
+ ["Flout vs flaunt","Flout = openly disregard a rule; flaunt = show off."],
+ ["Censure vs censor","Censure = formal criticism; censor = suppress content."]
+];
+
+const QUIZ = [
+ [1,"Bad news to a customer is usually best written in the…",["Direct plan","Indirect plan","AIDA plan","Chronological plan"],1,"Buffer, reasons, then the news."],
+ [1,"'You will receive your refund within five days' shows…",["Passive voice","You-attitude","Jargon","Ambiguity"],1,"Reader-centred."],
+ [1,"A sales letter usually follows…",["SWOT","AIDA","IRAC","STAR"],1,"Attention, Interest, Desire, Action."],
+ [1,"A good buffer in a refusal letter is…",["'Unfortunately, we cannot…'","'Thank you for your detailed proposal on campus recycling.'","'As you should have known…'","'We regret to inform you…'"],1,"Neutral, relevant and not misleading."],
+ [1,"A résumé for a law internship should list experience in…",["Alphabetical order","Reverse chronological order","Random order","Order of length"],1,"Most recent first."],
+ [2,"The part of a report a busy manager reads first is the…",["Appendix","Executive summary","Bibliography","Methodology"],1,"It must stand alone."],
+ [2,"In OSCOLA, citations are normally given in…",["Footnotes","Brackets in the text","Endnotes only","The title"],0,"Footnote style."],
+ [2,"'Sales rose sharply from Rs 20 lakh to Rs 35 lakh' describes data that rose by…",["15%","75%","35%","57%"],1,"15 ÷ 20 = 75%."],
+ [2,"A proposal differs from a report mainly because it…",["Has no headings","Seeks approval for a plan","Has no data","Is always oral"],1,"It persuades."],
+ [2,"Using another student's project paragraphs without credit is…",["Paraphrasing","Plagiarism","Summarising","Citation"],1,"Academic misconduct."],
+ [3,"'Turning now to the second issue…' is an example of…",["Filler","Signposting","Jargon","Hedging"],1,"Guides the listener."],
+ [3,"In a group discussion, the best way to enter is…",["Interrupt loudly","Build on a point: 'Adding to what Priya said…'","Stay silent","Read from notes"],1,"Shows listening and adds value."],
+ [3,"STAR stands for…",["Situation, Task, Action, Result","Start, Talk, Ask, Respond","Skill, Talent, Ability, Role","Speak, Think, Act, Review"],0,"Behavioural interview answers."],
+ [3,"In Indian courts, a respectful way to address the bench is…",["'Hey judge'","'Your Honour' or 'the Hon'ble Court'","'Sir/Madam friend'","First name"],1,"Many High Courts and the Bar Council encourage 'Your Honour'."],
+ [3,"The 10-20-30 rule for slides means…",["10 slides, 20 minutes, 30-point font","10 words, 20 slides, 30 seconds","10 colours, 20 fonts, 30 images","None"],0,"Guy Kawasaki's rule of thumb."],
+ [4,"In legislation, 'may' generally…",["Imposes a duty","Confers a discretion","Prohibits","Defines"],1,"Permissive."],
+ [4,"A clause beginning 'Provided that…' is a…",["Preamble","Proviso","Definition","Schedule"],1,"Carves out an exception."],
+ [4,"The Supreme Court's 2023 handbook suggests replacing 'housewife' with…",["'Lady of the house'","'Homemaker'","'Dependent'","'Wife only'"],1,"Avoiding stereotypes."],
+ [4,"An affidavit ends with a…",["Prayer","Verification","Proviso","Preamble"],1,"Stating which paragraphs are true to knowledge or belief."],
+ [4,"'Notwithstanding anything contained in this Act' gives a provision…",["No effect","Overriding effect","Retrospective effect","A definition"],1,"A non-obstante clause."],
+ [5,"'His argument for a new law is wrong because he failed his exams' is…",["Straw man","Ad hominem","Slippery slope","False dilemma"],1,"Attacks the person."],
+ [5,"'Either we ban all phones in class or students will never learn' is…",["A false dilemma","An analogy","A valid deduction","An assumption"],0,"Ignores other options."],
+ [5,"Choose the correct word: 'Please ____ the court of the new facts.'",["appraise","apprise","appease","approve"],1,"Apprise = inform."],
+ [5,"Choose the correct word: 'The company openly ____ the pollution rules.'",["flaunted","flouted","floated","flattered"],1,"Flout = disregard."],
+ [5,"From 'Only members may vote; Ravi voted', you can infer…",["Ravi is a member (if the rule was followed)","Ravi is not a member","Everyone voted","Nothing at all"],0,"Inference from a premise – assuming the rule was obeyed."]
+];
+
+const DRILL = [
+ ["The lawyer ____ that the witness was lying, without saying so directly.",["implied","inferred"],0],
+ ["From the evidence the judge ____ that the deed was forged.",["implied","inferred"],1],
+ ["Please keep this matter ____; do not tell the press.",["discrete","discreet"],1],
+ ["The data fall into three ____ groups.",["discrete","discreet"],0],
+ ["The Bar Council may ____ an advocate for misconduct.",["censure","censor"],0],
+ ["The board tried to ____ the documentary before release.",["censure","censor"],1],
+ ["Kindly ____ me of the hearing date.",["appraise","apprise"],1],
+ ["The valuer will ____ the property next week.",["appraise","apprise"],0],
+ ["He ____ the traffic rules every day.",["flaunts","flouts"],1],
+ ["She likes to ____ her new car.",["flaunt","flout"],0],
+ ["A judge must be ____ – with no personal stake in the case.",["disinterested","uninterested"],0],
+ ["The students looked ____ in the lecture.",["disinterested","uninterested"],1],
+ ["The new policy will ____ the company's profits.",["affect","effect"],0],
+ ["The amendment comes into ____ on 1 April.",["affect","effect"],1],
+ ["The tenant must ____ with the terms of the lease.",["comply","complain"],0],
+ ["Both parties agreed to ____ by the arbitrator's award.",["abide","abode"],0],
+ ["The company paid cash in ____ of shares.",["lieu","leu"],0],
+ ["The minister's remarks ____ the tension in the room.",["diffused","defused"],1],
+ ["The ____ of the school addressed the parents.",["principle","principal"],1],
+ ["Equality before law is a constitutional ____.",["principle","principal"],0],
+ ["The plaintiff sought ____ from a senior advocate.",["council","counsel"],1],
+ ["The municipal ____ meets every Tuesday.",["council","counsel"],0],
+ ["The prosecution tried to ____ a confession from the accused.",["elicit","illicit"],0],
+ ["The police seized ____ liquor.",["elicit","illicit"],1],
+ ["You should ____ that the documents are signed.",["ensure","insure"],0]
+];
+
+//@@VIEWS
+VIEWS.home = { html(){
+  const done=S.d.done;
+  return `<div class="hero"><h2>Business English II</h2>
+  <p>Semester I built the basics – grammar, vocabulary, précis, letters and minutes. This course moves to the writing and speaking a law student uses every week: persuasive and difficult messages, reports and proposals, presentations and group discussions, legal drafting, and critical reading.</p>
+  <p>Each unit has practice labs; the drill gives a fresh set of commonly confused words every time.</p></div>
+  <div class="ucards">${UNITS.map(u=>`<a class="ucard" data-go="${u.id}"><span class="k">Unit ${u.n}</span><b>${u.title}</b><span>${u.short}</span>${done[u.id]?'<span class="st">✓ Done</span>':""}</a>`).join("")}
+  ${EXTRAS.map(x=>`<a class="ucard" data-go="${x.id}" style="border-top-color:var(--gold)"><span class="k" style="color:var(--gold)">${x.ic} Revise</span><b>${x.title}</b></a>`).join("")}</div>
+  <div class="two" style="margin-top:18px">
+   <div class="card"><h3>How to improve quickly</h3>
+   <ol><li>Read one good judgment or editorial a day and note three useful phrases.</li><li>Rewrite your own paragraphs shorter: cut every word that does no work.</li><li>Speak in every tutorial – one clear point, one reason, one example.</li><li>Keep a 'confused words' list and test yourself with the drill.</li><li>Ask for feedback on every project draft, not only the final one.</li></ol></div>
+   <div class="card"><h3>Keyboard</h3><table class="t">
+   <tr><td><span class="kbd">M</span></td><td>Show or hide the unit list</td></tr>
+   <tr><td><span class="kbd">P</span> / <span class="kbd">S</span> / <span class="kbd">X</span></td><td>Play, step, pause the animation on the page</td></tr>
+   <tr><td><span class="kbd">F</span></td><td>Full screen</td></tr>
+   <tr><td><span class="kbd">←</span> <span class="kbd">→</span> <span class="kbd">Space</span></td><td>Flashcards: previous, next, flip</td></tr>
+   <tr><td><span class="kbd">[</span> <span class="kbd">]</span></td><td>Previous or next unit</td></tr></table>
+   <p style="font-size:13.5px;color:var(--muted)">Works offline once opened. Sign in (top right) to keep progress and certificates on every device.</p></div></div>
+  <div class="card"><h3>About this syllabus</h3><p>The units follow the usual second-semester Business or Legal English course in integrated law programmes and build on the <a href="/tools/llb-business-english.html">Business English I explorer</a>. Compare with TNNLU's own course outline when it is issued.</p></div>
+  ${footer()}`;
+}};
+
+/* ---------------- ordering helper ---------------- */
+function orderLab(sel, items, note){
+  const box=$(sel); let cur=shuffle(items.map((t,i)=>i));
+  const draw=(checked)=>{
+    box.innerHTML=`<ol class="order">${cur.map((k,pos)=>`<li class="${checked?(k===pos?"ok":"bad"):""}"><span>${checked?(k===pos?"✔ ":"✖ "):""}${esc(items[k])}</span><button class="btn sm sec" data-up="${pos}" ${pos===0?"disabled":""}>↑</button><button class="btn sm sec" data-dn="${pos}" ${pos===cur.length-1?"disabled":""}>↓</button></li>`).join("")}</ol>
+    <div class="row"><button class="btn" data-chk>Check order</button><button class="btn sec sm" data-shuf>Shuffle</button></div>${checked?`<div class="fb ${cur.every((k,i)=>k===i)?"ok":"info"}">${cur.every((k,i)=>k===i)?"✔ Correct order.":"Not quite – ✔ marks items in the right place."} ${note||""}</div>`:""}`;
+    $$("[data-up]",box).forEach(b=>b.onclick=()=>{ const i=+b.dataset.up; [cur[i-1],cur[i]]=[cur[i],cur[i-1]]; draw(false); });
+    $$("[data-dn]",box).forEach(b=>b.onclick=()=>{ const i=+b.dataset.dn; [cur[i+1],cur[i]]=[cur[i],cur[i+1]]; draw(false); });
+    $("[data-chk]",box).onclick=()=>draw(true);
+    $("[data-shuf]",box).onclick=()=>{ cur=shuffle(cur); draw(false); };
+  };
+  draw(false);
+}
+
+/* ---------------- UNIT 1 ---------------- */
+const BN_SVG=`<svg viewBox="0 0 640 400" class="lg" role="img" aria-label="Indirect plan for bad news">
+<defs><marker id="bn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+${[["Buffer","Thank you for choosing us for your moot."],["Reasons","Our hall is booked for exams that week…"],["Bad news, clearly","…so we cannot host the round on 12 March."],["Alternative","We can offer the seminar room, or 19 March."],["Goodwill close","We look forward to welcoming your team."]].map((t,i)=>`<g id="n${i}" class="node fade"><rect x="70" y="${8+i*76}" width="500" height="58" rx="12"/><text x="320" y="${33+i*76}" text-anchor="middle">${t[0]}</text><text x="320" y="${55+i*76}" text-anchor="middle" class="sub">${t[1]}</text></g>`).join("")}
+${[0,1,2,3].map(i=>`<path id="na${i}" class="edge fade" d="M320 ${67+i*76} V${82+i*76}" marker-end="url(#bn)" style="color:var(--muted)"/>`).join("")}
+</svg>`;
+const BN_STEPS=[
+ "<b>Buffer.</b> Open with something neutral and relevant – thanks, agreement, appreciation. Not a false hint of good news.",
+ "<b>Reasons.</b> Explain the facts that lead to the decision, so the reader understands before hearing it.",
+ "<b>The bad news</b> – stated clearly, once, preferably in the middle of a paragraph and without blaming the reader. Never so vague that they think it is a yes.",
+ "<b>An alternative or compromise</b> where possible – shows goodwill and keeps the relationship.",
+ "<b>Goodwill close.</b> Forward-looking and friendly. Do not apologise again or repeat the refusal."
+];
+VIEWS.u1 = { html(){ return unitHead(1)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key">Every message has a reader who will react – pleased, neutral, disappointed or resistant. Choose the <b>plan</b> to fit the reaction: <b>direct</b> (main point first) for good or neutral news, <b>indirect</b> (reasons first) for bad news and persuasion.</div>
+ <h4>The 7 Cs revisited</h4><p>Clear, concise, concrete, correct, coherent, complete, courteous – plus the <b>you-attitude</b>: write from the reader's point of view and stress benefits to them.</p>
+ <h4>Kinds of difficult message</h4><table class="t"><tr><th>Message</th><th>Plan</th><th>Tip</th></tr>
+ <tr><td>Refusing a request</td><td>Indirect</td><td>Give a real reason; offer an alternative</td></tr>
+ <tr><td>Replying to a complaint (adjustment)</td><td>Direct if granting; indirect if refusing</td><td>Do not admit legal liability carelessly; be specific about what you will do</td></tr>
+ <tr><td>Persuasive request</td><td>Indirect (AIDA)</td><td>Lead with the reader's interest</td></tr>
+ <tr><td>Sales letter</td><td>AIDA</td><td>One clear call to action</td></tr>
+ <tr><td>Announcing a price rise</td><td>Indirect</td><td>Explain the reason and the value retained</td></tr></table>
+ <h4>Cover letter and résumé</h4><ul><li><b>Cover letter</b>: why this firm, what you offer (two concrete examples), a polite request for an interview. One page.</li><li><b>Résumé</b>: education, internships (reverse chronological), moots and publications, skills, positions of responsibility. Use action verbs – drafted, researched, organised. No photos or personal details beyond contact unless asked.</li></ul>
+ <h4>Email in a professional setting</h4><p>Specific subject line ('Internship application – Sakthi Kaavya – TNNLU – June 2027'), formal salutation, short paragraphs, one request per email, attachments named sensibly, a proper signature. Reply-all only when everyone needs it.</p></div>
+</div><div>
+ ${animBox("bnAnim","The indirect plan for bad news",BN_SVG)}
+ <div class="card lab"><h3>Direct or indirect?</h3><div id="lab1"></div></div>
+ <div class="card lab"><h3>Which version is better?</h3><div id="lab1b"></div></div>
+</div></div>`+unitFoot(1)+footer(); },
+ init(){
+  anim = makeAnim("#bnAnim", BN_STEPS, i=>{
+    for(let k=0;k<5;k++){ const g=document.getElementById("n"+k); g.classList.toggle("show",k<=i); g.classList.toggle("hi",k===i); }
+    for(let k=0;k<4;k++) document.getElementById("na"+k).classList.toggle("show",k<i);
+  });
+  choiceLab("#lab1",[
+   ["Telling an applicant she has been selected for the internship.","D","Good news – say it first."],
+   ["Refusing a student's request to extend the project deadline.","I","Bad news – reasons first."],
+   ["Asking a busy senior advocate to judge your moot for free.","I","Persuasive request – build interest first."],
+   ["Confirming the time of tomorrow's meeting.","D","Routine and neutral."],
+   ["Telling a customer the warranty does not cover water damage.","I","Bad news – explain the terms, then refuse, then offer paid repair."]
+  ],{D:"Direct plan",I:"Indirect plan"});
+  choiceLab("#lab1b",[
+   ["A: 'Your complaint is rejected as you failed to read the terms.'   B: 'Thank you for writing to us about your phone. Under clause 4 of the warranty, damage caused by water is not covered, so we cannot replace it free of charge. We can, however, repair it at 30% off.'","B","B explains, refuses clearly without blame, and offers an alternative."],
+   ["A: 'We are pleased to announce that we have shipped your order.'   B: 'Your order is on its way and will reach you by Friday.'","B","B has the you-attitude and a concrete date."],
+   ["A: 'Kindly do the needful at the earliest.'   B: 'Please send the signed agreement by 5 p.m. on Monday.'","B","B is concrete and clear; A is vague jargon."],
+   ["A: 'Dear Sir, I am writing to apply for the summer internship advertised on your website. I am a first-year student…'   B: 'Hi, I want an internship. CV attached.'","A","A is professional and specific."]
+  ],{A:"Version A",B:"Version B"});
+  miniQuiz(1);
+ }};
+
+/* ---------------- UNIT 2 ---------------- */
+VIEWS.u2 = { html(){ return unitHead(2)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key">A <b>report</b> presents facts and analysis so a reader can decide; a <b>proposal</b> persuades a reader to approve a plan. Both need a clear structure, accurate data described in words, and honest <b>referencing</b> of sources.</div>
+ <h4>Structure of an analytical report</h4><ol><li>Title page</li><li>Executive summary (purpose, key findings, recommendations – one page)</li><li>Contents</li><li>Introduction: background, terms of reference, scope, method</li><li>Findings, with tables and charts</li><li>Conclusions</li><li>Recommendations</li><li>References and appendices</li></ol>
+ <h4>Describing data in words</h4><p>Lead with the main trend, then give key figures, then exceptions: 'Pending cases in the district rose steadily from 2019 to 2023, peaking at 41,000; the only fall came in 2021.' Useful verbs: rose, increased, climbed, peaked, levelled off, dipped, fell, declined, fluctuated. Adverbs: sharply, steadily, slightly, marginally.</p>
+ <h4>Proposals</h4><p>Problem or need → objectives → proposed solution and method → timeline → budget → qualifications of the team → expected benefits → call to action. Internship, research-grant and legal-aid-camp proposals all follow this pattern.</p>
+ <h4>Referencing and plagiarism</h4><p>Cite every source you rely on – cases, statutes, books, articles, websites. Law schools usually use <b>OSCOLA</b> (footnotes) or <b>Bluebook</b>; follow your faculty's choice and be consistent. Quote exact words in quotation marks; paraphrase in your own words and still cite. UGC Regulations, 2018 set penalties for plagiarism in academic work.</p></div>
+</div><div>
+ <div class="card lab"><h3>OSCOLA-style reference builder</h3>
+  <div class="row"><label>Type <select id="osT"><option value="case">Indian case (SCC)</option><option value="book">Book</option><option value="stat">Statute</option><option value="art">Journal article</option></select></label></div>
+  <div id="osF" style="margin-top:6px"></div><div class="row" style="margin-top:6px"><button class="btn" id="osGo">Format</button></div><div id="osOut"></div></div>
+ <div class="card lab"><h3>Which sentence describes the data best?</h3><p><b>Data</b>: internship applications received – 2023: 400; 2024: 520; 2025: 510.</p><div id="lab2"></div></div>
+</div></div>`+unitFoot(2)+footer(); },
+ init(){
+  const F={case:[["Case name","Kesavananda Bharati v State of Kerala"],["Year","1973"],["Volume","4"],["Report","SCC"],["First page","225"],["Pinpoint (para)","para 300"]],
+    book:[["Author","Avtar Singh"],["Title","Contract and Specific Relief"],["Edition","13th edn"],["Publisher","Eastern Book Company"],["Year","2022"],["Pinpoint (page)","45"]],
+    stat:[["Short title","Indian Contract Act"],["Year","1872"],["Section","s 10"]],
+    art:[["Author","Upendra Baxi"],["Title","Taking Suffering Seriously: Social Action Litigation in the Supreme Court of India"],["Year","1985"],["Volume","4"],["Journal","Third World Legal Studies"],["First page","107"]]};
+  const show=()=>{ const t=$("#osT").value; $("#osF").innerHTML=F[t].map((f,i)=>`<div class="row" style="margin-top:4px"><label style="min-width:130px">${f[0]}</label><input type="text" id="osI${i}" value="${esc(f[1])}" style="flex:1"></div>`).join(""); };
+  $("#osT").onchange=()=>{ show(); $("#osOut").innerHTML=""; }; show();
+  $("#osGo").onclick=()=>{ const t=$("#osT").value, v=i=>esc(($("#osI"+i)||{}).value||"").trim(); let r;
+    if(t==="case") r=`<i>${v(0)}</i> (${v(1)}) ${v(2)} ${v(3)} ${v(4)}${v(5)?", "+v(5):""}.`;
+    if(t==="book") r=`${v(0)}, <i>${v(1)}</i> (${v(2)}, ${v(3)} ${v(4)})${v(5)?" "+v(5):""}.`;
+    if(t==="stat") r=`${v(0)} ${v(1)}${v(2)?", "+v(2):""}.`;
+    if(t==="art") r=`${v(0)}, '${v(1)}' (${v(2)}) ${v(3)} ${v(4)} ${v(5)}.`;
+    $("#osOut").innerHTML=`<div class="fb info" style="font-family:Georgia,serif;font-size:16px">${r}</div><p style="font-size:13px;color:var(--muted)">OSCOLA (4th edn) pattern: case names in italics; years in round brackets when the volume number identifies the report. Check your faculty's style sheet for Indian reports.</p>`; };
+  $("#osGo").click();
+  choiceLab("#lab2",[
+   ["A: 'Applications increased by 30% in 2024 and then dipped slightly to 510 in 2025.'   B: 'Applications went up and down a lot.'","A","Precise trend, figures and size of change."],
+   ["A: 'Applications fell sharply in 2025.'   B: 'Applications fell marginally in 2025, by about 2%.'","B","10 out of 520 is a marginal fall – 'sharply' overstates it."],
+   ["A: 'Applications peaked in 2024 at 520.'   B: 'Applications peaked in 2025.'","A","The highest value was in 2024."]
+  ],{A:"Version A",B:"Version B"});
+  miniQuiz(2);
+ }};
+
+/* ---------------- UNIT 3 ---------------- */
+VIEWS.u3 = { html(){ return unitHead(3)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key">Speaking well is planned, not improvised. Know your <b>purpose</b> and <b>audience</b>, build a clear <b>structure</b>, and use <b>signposts</b> so listeners always know where they are. Listening is half of every discussion.</div>
+ <h4>Presentations</h4><ul><li><b>Opening</b>: a hook (question, fact, short story), purpose, roadmap.</li><li><b>Body</b>: two to four points, each with evidence and an example.</li><li><b>Close</b>: summary, the one thing to remember, invitation to questions.</li><li>Slides support you, not replace you: one idea per slide, few words, large fonts (the 10-20-30 rule).</li><li>Delivery: eye contact, pause, vary pace, avoid reading; rehearse with a timer.</li></ul>
+ <h4>Group discussion</h4><p>Assessed on content, communication, listening, leadership and team behaviour. Open with a definition or framing if you can; build on others ('Adding to Arjun's point…'); disagree politely ('I see it differently, because…'); bring the group back to the topic; summarise if no one else does. Never dominate or interrupt aggressively.</p>
+ <h4>Interviews</h4><p>Research the organisation; prepare answers using <b>STAR</b> (Situation, Task, Action, Result); have two questions to ask them. For law-firm interviews, expect questions on your projects, a recent judgment and why that practice area.</p>
+ <h4>Meetings</h4><p>A chair opens, confirms quorum, follows the agenda, invites views, keeps time, states decisions ('So we agree that…') and closes. Minutes record decisions and action points with names and dates.</p>
+ <h4>In court and moots</h4><p>Begin: 'May it please the Court, I appear for the Petitioner.' Address the bench as 'Your Honour' or 'Your Lordship/Ladyship' as the court prefers, refer to opponents as 'my learned friend', and answer judges' questions directly before returning to your outline.</p></div>
+</div><div>
+ <div class="card lab"><h3>Put the presentation in order</h3><div id="lab3"></div></div>
+ <div class="card lab"><h3>Good GD behaviour?</h3><div id="lab3b"></div></div>
+</div></div>`+unitFoot(3)+footer(); },
+ init(){
+  orderLab("#lab3",["Hook: a question – 'How long should justice take?'","State the purpose and give a roadmap of three points","Point 1 with evidence and an example","Point 2 with evidence and an example","Point 3 with evidence and an example","Summary of the three points","The one thing to remember, and an invitation to questions"],"A clear beginning, middle and end – the audience always knows where they are.");
+  choiceLab("#lab3b",[
+   ["Opening by defining the topic and suggesting how the group might approach it.","G","Shows initiative and helps the group."],
+   ["'That is a completely stupid point.'","B","Attacks the person; disagree with reasons instead."],
+   ["'Building on what Meera said about data privacy, there is also a cost issue…'","G","Listening and adding value."],
+   ["Talking for four minutes without pause so others cannot speak.","B","Dominating – evaluators mark this down."],
+   ["Noticing the discussion has drifted and saying, 'Shall we come back to the question of regulation?'","G","Leadership without dominance."],
+   ["Staying silent throughout to avoid making mistakes.","B","No contribution can be assessed."]
+  ],{G:"Good",B:"Avoid"});
+  miniQuiz(3);
+ }};
+
+/* ---------------- UNIT 4 ---------------- */
+VIEWS.u4 = { html(){ return unitHead(4)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key">Legal writing must be <b>precise</b> because it will be read by someone looking for another meaning. Use the modern plain-English approach: short sentences, active voice, consistent terms, and words chosen for exact legal effect.</div>
+ <h4>Words of obligation</h4><table class="t"><tr><th>Word</th><th>Effect</th><th>Example</th></tr>
+ <tr><td>shall / must</td><td>Duty</td><td>The Buyer shall pay within 30 days.</td></tr>
+ <tr><td>may</td><td>Discretion or permission</td><td>The Seller may terminate on notice.</td></tr>
+ <tr><td>shall not / must not</td><td>Prohibition</td><td>The Licensee shall not sub-license.</td></tr>
+ <tr><td>is entitled to</td><td>Right</td><td>The Employee is entitled to 30 days' leave.</td></tr>
+ <tr><td>will</td><td>Future fact (avoid for duties)</td><td>The office will be closed on Sunday.</td></tr></table>
+ <p>Courts decide whether 'shall' is mandatory or directory by looking at the purpose and consequences – so drafters should be deliberate.</p>
+ <h4>Drafting devices</h4><ul><li><b>Definitions</b>: '"Premises" means…' (exhaustive) vs 'includes' (extends the ordinary meaning).</li><li><b>Provisos</b>: 'Provided that…' – an exception to the main rule.</li><li><b>Non-obstante clauses</b>: 'Notwithstanding anything contained in…' – overriding effect.</li><li><b>Explanations and illustrations</b> – as in the Contract Act.</li><li>Avoid 'and/or', 'said', 'aforesaid', 'hereinafter' where plain words work.</li></ul>
+ <h4>Gender-neutral and respectful language</h4><p>Use 'they', 'the person', 'the applicant'; 'chairperson' not 'chairman'. The Supreme Court's <b>Handbook on Combating Gender Stereotypes</b> (2023) recommends, for example, 'homemaker' for 'housewife', 'street sexual harassment' for 'eve-teasing', 'sex worker' for 'prostitute', and 'mother' for 'unwed mother'.</p>
+ <h4>Common formats</h4><p><b>Legal notice</b>: sender and advocate details, date, mode of delivery, addressee, facts in numbered paragraphs, the legal basis, the demand, the time to comply, consequences, costs of notice. <b>Affidavit</b>: title, deponent's details, numbered paragraphs of facts, verification ('verified at … that the contents of paras 1 to 5 are true to my knowledge…'), signature before the notary or oath commissioner.</p></div>
+</div><div>
+ <div class="card lab"><h3>Shall, may or shall not?</h3><div id="lab4"></div></div>
+ <div class="card lab"><h3>Respectful wording</h3><div id="lab4b"></div></div>
+ <div class="card lab"><h3>Legal notice builder (practice format)</h3>
+  <div class="row"><label>Your client <input type="text" id="lnC" value="Ms R. Meena, 12 Anna Nagar, Tiruchirappalli" style="width:300px"></label></div>
+  <div class="row" style="margin-top:6px"><label>Addressee <input type="text" id="lnA" value="M/s Speedy Builders, 45 Cantonment Road, Tiruchirappalli" style="width:300px"></label></div>
+  <div class="row" style="margin-top:6px"><label>What happened <input type="text" id="lnF" value="paid an advance of Rs 2,00,000 on 10 January 2026 for renovation work which you have not started" style="width:100%"></label></div>
+  <div class="row" style="margin-top:6px"><label>Demand <input type="text" id="lnD" value="refund Rs 2,00,000 with interest at 12% per annum" style="width:300px"></label><label>Days to comply <input type="text" id="lnT" value="15" style="width:50px"></label><button class="btn" id="lnGo">Draft</button></div>
+  <div id="lnOut"></div></div>
+</div></div>`+unitFoot(4)+footer(); },
+ init(){
+  choiceLab("#lab4",[
+   ["The tenant ____ pay the rent on or before the 5th of each month.","SH","A duty."],
+   ["The landlord ____ inspect the premises after giving 24 hours' notice.","MA","A permission, not a duty."],
+   ["The employee ____ disclose confidential information to any third party.","SN","A prohibition."],
+   ["The Tribunal ____ extend the time for filing for sufficient cause.","MA","A discretion."]
+  ],{SH:"shall",MA:"may",SN:"shall not"});
+  choiceLab("#lab4b",[
+   ["'Eve-teasing'","B","Trivialises the conduct; use 'street sexual harassment'."],
+   ["'Homemaker'","G","Recommended in place of 'housewife'."],
+   ["'The chairman shall convene the meeting.'","B","Use 'chairperson' or 'the Chair'."],
+   ["'Each applicant must submit their documents.'","G","Singular 'they' is accepted in modern drafting."],
+   ["'Unwed mother'","B","The handbook suggests simply 'mother'."]
+  ],{G:"Good usage",B:"Replace it"});
+  $("#lnGo").onclick=()=>{ const v=id=>esc($("#"+id).value.trim());
+    const d=new Date().toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"});
+    $("#lnOut").innerHTML=`<div class="act" style="white-space:normal;line-height:1.6;margin-top:10px"><p style="text-align:right">Date: ${d}</p><p><b>By Registered Post A.D. / Email</b></p><p>To,<br>${v("lnA")}</p><p><b>Sub: Legal notice for ${v("lnD")}</b></p><p>Under instructions from and on behalf of my client, ${v("lnC")}, I serve you with the following notice:</p><ol><li>My client ${v("lnF")}.</li><li>Despite repeated requests, you have failed to perform your obligations, which is a breach of the contract between you and my client, entitling her to compensation under section 73 of the Indian Contract Act, 1872.</li><li>I therefore call upon you to ${v("lnD")} within ${v("lnT")} days of receipt of this notice.</li><li>If you fail to do so, my client will be constrained to initiate appropriate civil and other proceedings against you, at your risk as to costs and consequences.</li></ol><p>A copy of this notice is retained in my office for further action.</p><p style="text-align:right">Advocate for ${v("lnC").split(",")[0]}</p></div><p style="font-size:13px;color:var(--muted)">A classroom practice format only. Real notices depend on the facts, the contract and the law that applies.</p>`; };
+  $("#lnGo").click();
+  miniQuiz(4);
+ }};
+
+/* ---------------- UNIT 5 ---------------- */
+const PASSAGE=`<p>Courts in India decide millions of cases every year, yet the number of cases waiting for a decision keeps growing. Some observers blame the shortage of judges; others point to frequent adjournments, the government's own appetite for litigation, and procedures that reward delay. Each explanation contains some truth, which is why no single reform has solved the problem.</p>
+<p>Technology is often presented as the answer. Electronic filing and virtual hearings, widely adopted after 2020, have certainly made it easier for a lawyer in a district town to appear before a distant High Court. But technology speeds up only those steps that were slow because of distance or paper. A hearing adjourned because a witness did not turn up is not rescued by a video link.</p>
+<p>The more difficult work lies in changing habits. When adjournments cost the party seeking them nothing, they will be sought. When governments appeal routinely, even in cases they are unlikely to win, the higher courts fill up. Reform, therefore, must make delay expensive for those who cause it, and patience less necessary for those who suffer it.</p>`;
+const COMP=[
+ [5,"The main idea of the passage is that…",["Technology has solved court delays","Court delays have several causes, and changing incentives matters more than technology alone","Judges are lazy","Virtual hearings should be stopped"],1,"Paragraphs 1–3 build to the conclusion in the last sentence."],
+ [5,"According to the passage, technology helps mainly with delays caused by…",["Absent witnesses","Distance and paperwork","Government appeals","Shortage of judges"],1,"Paragraph 2."],
+ [5,"The phrase 'the government's own appetite for litigation' suggests the government…",["Avoids courts","Files and appeals many cases","Has too few lawyers","Funds the courts"],1,"Inference from paragraph 3."],
+ [5,"The author's tone is best described as…",["Angry","Balanced and analytical","Humorous","Indifferent"],1,"Weighs several explanations fairly."],
+ [5,"Which reform would the author most likely support?",["More video-conferencing screens only","Costs imposed on parties who seek unnecessary adjournments","Abolishing appeals","Closing district courts"],1,"'Make delay expensive for those who cause it.'"]
+];
+VIEWS.u5 = { html(){ return unitHead(5)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key"><b>Critical reading</b> means asking of every text: what is the claim, what reasons support it, what is assumed, and do the reasons really support the claim? Lawyers read this way every day – judgments, contracts, the other side's pleadings.</div>
+ <h4>Reading strategies</h4><p><b>Skim</b> for the gist (headings, first sentences); <b>scan</b> for specific facts; read <b>closely</b> for argument. SQ3R: Survey, Question, Read, Recite, Review.</p>
+ <h4>Analysing an argument</h4><ol><li>Find the <b>conclusion</b> (signals: therefore, hence, so, it follows).</li><li>Find the <b>premises</b> (because, since, given that).</li><li>Spot the <b>assumptions</b> – unstated links the argument needs.</li><li>Test: are the premises true? Is the reasoning valid? Are there counter-examples?</li></ol>
+ <h4>Common fallacies</h4><table class="t"><tr><th>Fallacy</th><th>What it does</th></tr>
+ <tr><td>Ad hominem</td><td>Attacks the person, not the argument</td></tr><tr><td>Straw man</td><td>Misrepresents the opposing view</td></tr>
+ <tr><td>Slippery slope</td><td>Assumes one step leads inevitably to disaster</td></tr><tr><td>False dilemma</td><td>Only two options offered when more exist</td></tr>
+ <tr><td>Hasty generalisation</td><td>Broad conclusion from a few cases</td></tr><tr><td>Appeal to popularity</td><td>'Everyone thinks so, so it is true'</td></tr>
+ <tr><td>Post hoc</td><td>'After this, therefore because of this'</td></tr><tr><td>Circular reasoning</td><td>The conclusion is hidden in the premise</td></tr></table>
+ <h4>Words lawyers confuse</h4><p>imply/infer, apprise/appraise, discreet/discrete, censure/censor, flout/flaunt, disinterested/uninterested, elicit/illicit, council/counsel, principal/principle, ensure/insure, adverse/averse, precede/proceed. Practise with the drill.</p></div>
+ <div class="card"><h3>Read the passage</h3><div class="act" style="white-space:normal">${PASSAGE}</div></div>
+</div><div>
+ <div class="card lab"><h3>Comprehension questions</h3><div id="compBox"></div><div class="row"><span class="score" id="compScore" style="font-size:17px"></span></div></div>
+ <div class="card lab"><h3>Name the fallacy</h3><div id="lab5"></div></div>
+</div></div>`+unitFoot(5)+footer(); },
+ init(){
+  let got=0, n=0;
+  $("#compBox").innerHTML=COMP.map((q,i)=>qHTML(q,"c"+i)).join("");
+  bindQ($("#compBox"), ok=>{ n++; if(ok) got++; $("#compScore").textContent=`${got} / ${n} correct`; });
+  choiceLab("#lab5",[
+   ["'We should not listen to her views on tax law – she has never paid much tax herself.'","AH","Ad hominem."],
+   ["'My opponent wants some regulation of social media; clearly he wants to ban free speech altogether.'","SM","Straw man."],
+   ["'If we allow students to submit one day late, soon no one will submit anything at all.'","SS","Slippery slope."],
+   ["'Either we build a new highway or the city's economy will collapse.'","FD","False dilemma."],
+   ["'I met two lawyers who were rude, so lawyers are rude people.'","HG","Hasty generalisation."],
+   ["'The crime rate fell after the new police chief joined, so she caused the fall.'","PH","Post hoc."]
+  ],{AH:"Ad hominem",SM:"Straw man",SS:"Slippery slope",FD:"False dilemma",HG:"Hasty generalisation",PH:"Post hoc"});
+  miniQuiz(5);
+ }};
+
+/* ---------------- PRACTICE DRILL ---------------- */
+VIEWS.drill = { html(){ return `<div class="unitban"><div class="k">Practise</div><h2>Practice drill</h2><p>Ten sentences from a bank of ${DRILL.length}; choose the word that fits. A fresh mix every time.</p></div>
+ <div class="card"><div id="drBox"></div><div class="row" style="margin-top:10px"><span class="score" id="drScore"></span><button class="btn" id="drNew">New set</button></div></div>`+footer(); },
+ init(){
+  const run=()=>{ let got=0,n=0; const set=shuffle(DRILL).slice(0,10);
+    $("#drBox").innerHTML=set.map((d,i)=>qHTML([0,d[0],d[1],d[2],`Correct word: "${d[1][d[2]]}".`],"d"+i)).join("");
+    $("#drScore").textContent="0 / 10";
+    bindQ($("#drBox"), ok=>{ n++; if(ok) got++; $("#drScore").textContent=`${got} / 10`+(n===10?(got>=8?" – excellent!":" – try a new set"):""); }); };
+  $("#drNew").onclick=run; run();
+ }};
+
+/* ---------------- REFERENCES ---------------- */
+VIEWS.refs = { html(){ return `<div class="unitban"><div class="k">Read further</div><h2>References</h2><p>Books are in the TNNLU library; online sources need internet.</p></div>
+ <div class="two"><div class="card"><h3>Books</h3><table class="t"><tr><th>Book</th><th>Use it for</th></tr>
+ <tr><td>Courtland Bovée and John Thill, <i>Business Communication Today</i>, Pearson</td><td>Messages, reports, presentations</td></tr>
+ <tr><td>Meenakshi Raman and Prakash Singh, <i>Business Communication</i>, Oxford University Press</td><td>Indian examples, GDs and interviews</td></tr>
+ <tr><td>Bryan Garner, <i>Legal Writing in Plain English</i>, University of Chicago Press</td><td>Clear legal prose</td></tr>
+ <tr><td>S.C. Tripathi, <i>Legal Language, Legal Writing and General English</i>, Central Law Publications</td><td>Indian formats – notices, affidavits, legal terms</td></tr>
+ <tr><td>Glanville Williams, <i>Learning the Law</i>, Sweet &amp; Maxwell</td><td>Reading cases, writing answers, study skills</td></tr>
+ <tr><td>Anthony Weston, <i>A Rulebook for Arguments</i>, Hackett</td><td>Short guide to argument and fallacies</td></tr>
+ <tr><td><i>OSCOLA: Oxford University Standard for the Citation of Legal Authorities</i> (4th edn)</td><td>Footnote citation (free PDF from Oxford)</td></tr></table></div>
+ <div><div class="card"><h3>Official and useful sources</h3><ul>
+ <li><a href="https://main.sci.gov.in" target="_blank" rel="noopener">Supreme Court of India</a> – Handbook on Combating Gender Stereotypes (2023)</li>
+ <li><a href="https://www.law.ox.ac.uk/oscola" target="_blank" rel="noopener">OSCOLA</a> – citation guide and quick reference</li>
+ <li><a href="https://www.indiacode.nic.in" target="_blank" rel="noopener">India Code</a> – read how statutes are drafted</li>
+ <li><a href="https://www.ugc.gov.in" target="_blank" rel="noopener">UGC</a> – Regulations on academic integrity and plagiarism, 2018</li>
+ <li><a href="/tools/llb-business-english.html">Business English I explorer</a> – grammar, précis, letters, minutes</li></ul></div></div></div>`+footer(); }};
+
+function footer(){ return `<div class="foot">Business English II explorer · v1.0.0 · Reference material for second-semester B.Com. LL.B. students, based on the usual second-semester Business and Legal English syllabus. Always check against your own course outline.</div>`; }

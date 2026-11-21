@@ -1,10 +1,12 @@
 /*
 TOOL:    assets/js/reader.js — reading settings ("Aa") and mobile text wrapping for every article on haivijayanand.github.io
 FAMILY:  SITE
-VERSION: 1.0.0
-DATE:    2026-11-07
-CHAT:    Make all GitHub blog articles mobile friendly, with font size and font choice on the phone
-CHANGES: 1.0.0 - first release: floating Aa button (bottom right) opens reading settings - theme (Auto / Light / Dark),
+VERSION: 1.1.0
+DATE:    2026-11-21
+CHAT:    Make light theme by default in home page also; give option to change light / dark theme in every individual page
+CHANGES: 1.1.0 - theme chips are now Light / Dark and drive the one site-wide theme (assets/js/site-theme.js, light by default);
+                 the old Auto setting, which followed the phone and overrode the site default, is gone
+         1.0.0 - first release: floating Aa button (bottom right) opens reading settings - theme (Auto / Light / Dark),
                  text size 80-200 %,
                  seven fonts (English + Tamil), line spacing, wrap long code lines; choices remembered for the whole
                  site on this device; always-on wrapping fixes so text, tables, code, maths and pictures never run
@@ -38,7 +40,7 @@ Fonts come from Google Fonts and are only fetched when the reader picks one; "Or
   ];
   var SPACING = [{ v: 0, n: "Original" }, { v: 1.6, n: "Normal" }, { v: 1.9, n: "Relaxed" }, { v: 2.2, n: "Loose" }];
   var narrow = window.matchMedia && matchMedia("(max-width: 768px)").matches;
-  var THEMES = [{ v: "auto", n: "Auto" }, { v: "light", n: "\u2600 Light" }, { v: "dark", n: "\u263E Dark" }];
+  var THEMES = [{ v: "light", n: "\u2600 Light" }, { v: "dark", n: "\u263E Dark" }];
   var DEF = { size: 100, font: "orig", lh: 0, wrap: narrow, theme: "auto" };
   var S = load();
 
@@ -184,7 +186,14 @@ Fonts come from Google Fonts and are only fetched when the reader picks one; "Or
   /* theme: data-theme for the site's own pages, data-mode for Chirpy posts; the pages' own theme keys are kept in step
      so their early scripts pick the same theme on the next visit and their own toggle buttons agree */
   var PAGE_KEYS = ["zen-theme", "papers-theme", "mode"];
+  function siteTheme() {
+    return window.SiteTheme ? window.SiteTheme.get() : (S.theme === "dark" ? "dark" : "light");
+  }
   function applyTheme(user) {
+    if (window.SiteTheme) {                  // one theme for the whole site: site-theme.js owns it
+      if (user && (S.theme === "light" || S.theme === "dark")) window.SiteTheme.set(S.theme);
+      return;
+    }
     if (S.theme === "light" || S.theme === "dark") {
       html.setAttribute("data-theme", S.theme);
       html.setAttribute("data-mode", S.theme);
@@ -264,7 +273,7 @@ Fonts come from Google Fonts and are only fetched when the reader picks one; "Or
   plus.addEventListener("click", function () { setSize(S.size + 10); });
   range.addEventListener("input", function () { setSize(+range.value); });
   wrapIn.addEventListener("change", function () { S.wrap = wrapIn.checked; save(); applyWrap(); });
-  reset.addEventListener("click", function () { S = { size: 100, font: "orig", lh: 0, wrap: DEF.wrap, theme: "auto" }; save(); applyAll(); sync(); });
+  reset.addEventListener("click", function () { S = { size: 100, font: "orig", lh: 0, wrap: DEF.wrap, theme: siteTheme() }; save(); applyFont(); applyLh(); applyWrap(); applySize(); sync(); });
 
   function sync() {
     out.textContent = S.size + "%";
@@ -272,7 +281,7 @@ Fonts come from Google Fonts and are only fetched when the reader picks one; "Or
     minus.disabled = S.size <= 80; plus.disabled = S.size >= 200;
     wrapIn.checked = !!S.wrap;
     fontsBox.querySelectorAll(".rd-c").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-font") === S.font)); });
-    themeBox.querySelectorAll(".rd-c").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-theme-v") === S.theme)); });
+    themeBox.querySelectorAll(".rd-c").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-theme-v") === siteTheme())); });
     lhBox.querySelectorAll(".rd-c").forEach(function (b) { b.setAttribute("aria-pressed", String(+b.getAttribute("data-lh") === +S.lh)); });
   }
   function open(on) {

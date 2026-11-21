@@ -2,14 +2,15 @@
 """
 TOOL:    differential-equations-2/_src/build.py — builds the 10 chapter pages and the atlas hub of "Differential Equations Part II: 100 Equations That Run the World" from _src/ch01–ch10.html
 FAMILY:  differential-equations
-VERSION: 1.0.0
+VERSION: 1.1.0
 DATE:    2026-11-21
 CHAT:    As a continuation as part 2, discuss the most famous 100 useful differential equations that are being used in different applications with worked out examples
-CHANGES: 1.0.0 - first version, modelled on differential-equations/_src/build.py 1.0.0: <eq> cards rendered to sections, lab specs validated, filterable atlas of all 100 on the hub
+CHANGES: 1.1.0 - every page loads assets/js/site-theme.js (site-wide light / dark)
+         1.0.0 - first version, modelled on differential-equations/_src/build.py 1.0.0: <eq> cards rendered to sections, lab specs validated, filterable atlas of all 100 on the hub
 STATUS:  working
 """
 import json, re, os, html
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.dirname(HERE)
 DATE = "2026-11-21"
 CHAT = "As a continuation as part 2, discuss the most famous 100 useful differential equations that are being used in different applications with worked out examples"
@@ -118,6 +119,7 @@ def page(n, src):
     return header(fn(n), SHORT + ", Chapter %02d: %s" % (n, title)) + f'''
 <html lang="en" data-theme="light">
 <head>
+<script src="/assets/js/site-theme.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chapter {n}: {html.escape(title)} — {SHORT} — K Vijay Anand</title>
@@ -169,6 +171,7 @@ def hub(days):
     return header("index.html", COURSE + ": hub page with chapters, progress and a filterable atlas of all 100 equations") + f'''
 <html lang="en" data-theme="light">
 <head>
+<script src="/assets/js/site-theme.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{COURSE} — interactive — K Vijay Anand</title>

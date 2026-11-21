@@ -2,15 +2,16 @@
 """
 TOOL:    manufacturing/_src/build.py — builds the 30 day pages and the hub of the 30-Day Manufacturing Course from _src/week1-5.html
 FAMILY:  manufacturing
-VERSION: 1.0.0
-DATE:    2026-11-17
+VERSION: 1.1.0
+DATE:    2026-11-21
 CHAT:    Prepare a 30 days course on manufacturing aspects for engineers and managers (flexible packaging in mind, generic for all)
-CHANGES: 1.0.0 - first version, adapted from machine-design/_src/build.py 1.0.0: manufacturing syllabus of 30 days in 5 weeks,
+CHANGES: 1.1.0 - every page loads assets/js/site-theme.js (site-wide light / dark)
+         1.0.0 - first version, adapted from machine-design/_src/build.py 1.0.0: manufacturing syllabus of 30 days in 5 weeks,
                  day pages with a flexible-packaging example box, worked example, lab and quiz; hub index.html
 STATUS:  working
 """
 import json, re, os, html
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.dirname(HERE)
 DATE = "2026-11-17"
 CHAT = "Prepare a 30 days course on manufacturing aspects for engineers and managers"
@@ -111,6 +112,7 @@ def page(n, src):
     out = header(fn(n), "Manufacturing Course, Day %02d: %s" % (n, title)) + f'''
 <html lang="en" data-theme="light">
 <head>
+<script src="/assets/js/site-theme.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Day {n}: {html.escape(title)} — Manufacturing Course — K Vijay Anand</title>
@@ -152,6 +154,7 @@ def hub():
     return header("index.html", COURSE + ": hub page with schedule and progress") + f'''
 <html lang="en" data-theme="light">
 <head>
+<script src="/assets/js/site-theme.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{COURSE} — interactive — K Vijay Anand</title>

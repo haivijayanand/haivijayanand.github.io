@@ -2,16 +2,17 @@
 """
 TOOL:    business-admin/_src/build.py — builds Business Administration chapter pages and hub from _src/NN.html
 FAMILY:  business-admin
-VERSION: 1.2.0
-DATE:    2026-11-16
+VERSION: 1.3.0
+DATE:    2026-11-21
 CHAT:    Business Administration series — 50 chapters, three levels (school, working, expert), interactive
-CHANGES: 1.2.0 - every page loads assets/js/site-progress.js (sign-in, reading progress, activity log)
+CHANGES: 1.3.0 - every page loads assets/js/site-theme.js (site-wide light / dark)
+         1.2.0 - every page loads assets/js/site-progress.js (sign-in, reading progress, activity log)
          1.1.0 - injects shared Kaveri Foods data (kf.js) into Part D chapters; 1.0.0 - syllabus of 50 chapters in 6 parts; wraps chapter sources with header block, toolbar,
                  level switch, contents, pager and footer; writes hub index.html
 STATUS:  working
 """
 import json, re, os, html, sys
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.dirname(HERE)
 DATE = "2026-11-14"
 PARTS = {
@@ -63,6 +64,7 @@ STATUS:  working
 -->
 <html lang="en" data-theme="light">
 <head>
+<script src="/assets/js/site-theme.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title} — Business Administration in Three Levels — K Vijay Anand</title>
@@ -112,6 +114,7 @@ STATUS:  working
 -->
 <html lang="en" data-theme="light">
 <head>
+<script src="/assets/js/site-theme.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Business Administration in Three Levels — K Vijay Anand</title>

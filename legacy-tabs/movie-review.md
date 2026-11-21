@@ -1,0 +1,14 @@
+---
+# TOOL: legacy-tabs/movie-review.md | FAMILY: SITE | VERSION: 1.2.0 | DATE: 2026-11-21
+# CHAT: Movie Review section — first film, Nayagan (Kamal Haasan)
+# CHANGES: 1.2.0 - moved out of the sidebar into legacy-tabs/ (sidebar now shows five section groups); kept only so old -tab links still redirect; 1.1.0 - renamed to Movie & TV Review (TV series added); 1.0.0 - sidebar tab that opens the /movie-review/ page
+layout: page
+title: Movie & TV Review
+icon: fas fa-film
+sitemap: false
+permalink: /movie-review-tab/
+---
+
+The reviews live on their own page: **[open Movie Review →](/movie-review/)**
+
+<script>window.location.replace("/movie-review/");</script>

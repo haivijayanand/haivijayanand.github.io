@@ -2,10 +2,11 @@
 """
 TOOL:    _scripts/build_search_index.py — site search index + side-panel data for the standalone HTML pages
 FAMILY:  SITE
-VERSION: 1.1.0
-DATE:    2026-11-16
-CHAT:    Combine Engineering Articles with Technical Papers (home search not searching fully)
-CHANGES: 1.1.0 - also writes _data/site_panel.json: Recently Added (date each page first entered git, posts + pages, max 2
+VERSION: 1.2.0
+DATE:    2026-11-21
+CHAT:    GitHub home page layout change - classify into sections for better readability and browsing
+CHANGES: 1.2.0 - section names now come from _data/sections.json (the sidebar shows five groups, not one tab per section)
+         1.1.0 - also writes _data/site_panel.json: Recently Added (date each page first entered git, posts + pages, max 2
                  per section) and Trending Topics (sections ranked by pages added in the last 30 days); bulk
                  site-wide edits therefore do not reshuffle either list
          1.0.0 - first version: walks every public .html page (tools, courses, series, papers, reviews),
@@ -15,7 +16,7 @@ The Chirpy search only knows Jekyll posts. Everything else on this site is a pla
 invisible to the search box. Run this before `jekyll build` (the Pages workflow does it on every push):
     python3 _scripts/build_search_index.py
 """
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 import datetime as dt
 import json
@@ -79,12 +80,12 @@ class Extract(HTMLParser):
 
 
 def section_names():
-    """folder -> sidebar tab title, from _tabs/<folder>.md"""
+    """folder -> short section name, from _data/sections.json (groups -> [subgroups ->] items)"""
     names = {}
-    for t in (ROOT / "_tabs").glob("*.md"):
-        m = re.search(r"^title:\s*(.+)$", t.read_text(encoding="utf-8"), re.M)
-        if m:
-            names[t.stem] = m.group(1).strip().strip("'\"")
+    for g in json.loads((ROOT / "_data" / "sections.json").read_text(encoding="utf-8"))["groups"]:
+        for s in g.get("subgroups", [g]):
+            for i in s["items"]:
+                names[i["folder"]] = i["name"]
     return names
 
 

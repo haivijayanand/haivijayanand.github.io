@@ -1,10 +1,13 @@
 {%- comment -%}
 TOOL:    _includes/signin-box.html — home page box: sign in to keep progress, and where the reader left off
 FAMILY:  SITE
-VERSION: 1.2.0
+VERSION: 1.3.0
 DATE:    2026-11-21
-CHAT:    Home page progress improvements: progress per course, on course cards
-CHANGES: 1.2.0 - "Where you left off" grouped by course: days / chapters done of the total with a bar, the next page to
+CHAT:    Home page progress: section pages, certificates, start here, study streak
+CHANGES: 1.3.0 - script moved to assets/js/home-progress.js (loaded by section-cards.html); adds a line for the study
+                 streak and certificates earned, and "Start here" suggestions (_data/sections.json start_here) for readers
+                 with no progress yet; card progress styles moved to section-cards.html
+         1.2.0 - "Where you left off" grouped by course: days / chapters done of the total with a bar, the next page to
                  open and a Continue link (up to 4 courses or series, latest first); × hides a course until it is used
                  again; reading progress (n / total done) added to the course cards below; links sit on one line
                  (the old "row" class clashed with the theme's grid); "Opened" instead of "0% read"; titles cut to two lines;
@@ -16,7 +19,7 @@ CHANGES: 1.2.0 - "Where you left off" grouped by course: days / chapters done of
          1.0.0 - first release: sign-in reasons with a Sign in with Google button; signed in, a greeting with My Progress and
                  My Certificates; driven by window.SiteProgress (assets/js/site-progress.js)
 STATUS:  working
-NOTE:    no line comments in the script below: the page is compressed onto one line when published.
+NOTE:    keep scripts out of this file (assets/js/home-progress.js): the page is compressed onto one line when published.
 {%- endcomment -%}
 <style>
 .sib{--a:#2f6fd0;border:1px solid color-mix(in srgb,var(--a) 45%,transparent);border-left:5px solid var(--a);border-radius:8px;
@@ -43,14 +46,22 @@ NOTE:    no line comments in the script below: the page is compressed onto one l
 .sib-left .x{position:absolute;top:4px;right:6px;border:0;background:none;color:inherit;opacity:.5;font-size:1.05rem;line-height:1;
   cursor:pointer;padding:2px 4px}
 .sib-left .x:hover{opacity:1}
-.sib-bar{display:block;height:5px;border-radius:3px;background:color-mix(in srgb,var(--a) 18%,transparent);overflow:hidden;margin:3px 0 1px}
-.sib-bar i{display:block;height:100%;background:var(--a)}
 .sib-left .done{margin:8px 0 0;font-size:.9rem;opacity:.85}
-.sc-card .sc-prog{display:block;margin-top:8px;font-size:.82rem;font-weight:600;font-style:normal;opacity:.9}
-.sc-card .sc-prog .sib-bar{margin-top:4px}
+.sib-extra{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 8px}
+.sib-chip{display:inline-block;font-size:.86rem;padding:3px 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--a) 40%,transparent);
+  background:color-mix(in srgb,var(--a) 10%,transparent);color:inherit!important;text-decoration:none!important}
+a.sib-chip:hover{background:color-mix(in srgb,var(--a) 20%,transparent)}
+.sib-start li{padding:0;border:0;background:none}
+.sib-start ol{list-style:none;margin:0 0 12px;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.sib-start a{display:block;height:100%;padding:8px 12px;border-radius:6px;border:1px solid color-mix(in srgb,var(--a) 30%,transparent);
+  background:color-mix(in srgb,var(--a) 5%,transparent);color:inherit!important;text-decoration:none!important}
+.sib-start a:hover{background:color-mix(in srgb,var(--a) 14%,transparent)}
+.sib-start .f{display:block;font-size:.78rem;font-weight:700;opacity:.8}
+.sib-start .t{display:block;font-weight:600;line-height:1.35;margin:2px 0}
+.sib-start .m{display:block;font-size:.8rem;opacity:.75}
 @media (max-width:600px){.sib{padding:12px 14px}.sib-left li:nth-child(n+3){display:none}}
 </style>
-<section class="sib" id="signin-box" aria-label="Your progress on this site">
+<section class="sib" id="signin-box" aria-label="Your progress on this site" data-dash="{{ '/my-progress/' | relative_url }}">
   <div data-in hidden>
     <h3><i class="fas fa-user-check"></i>Welcome back<span data-name></span></h3>
   </div>
@@ -58,7 +69,18 @@ NOTE:    no line comments in the script below: the page is compressed onto one l
     <h3><i class="fas fa-user-check"></i>Taking a course? Sign in to keep your progress</h3>
   </div>
 
+  <div class="sib-extra" data-extra hidden></div>
+
   <div class="sib-left" data-left hidden></div>
+
+  <div class="sib-left sib-start" data-start hidden>
+    <h4>New here? Good places to start</h4>
+    <ol>
+      {%- for x in site.data.sections.start_here %}
+      <li><a href="{{ x.url | relative_url }}"><span class="f">{{ x.for | escape }}</span><span class="t">{{ x.title | escape }} →</span><span class="m">{{ x.meta | escape }}</span></a></li>
+      {%- endfor %}
+    </ol>
+  </div>
 
   <div data-in hidden>
     <div class="sib-links">
@@ -81,140 +103,3 @@ NOTE:    no line comments in the script below: the page is compressed onto one l
     </div>
   </div>
 </section>
-<script>
-(function () {
-  var COURSES = {
-    {%- for g in site.data.sections.groups -%}{%- if g.subgroups -%}{%- assign sets = g.subgroups -%}{%- else -%}{%- assign sets = "" | split: "" | push: g -%}{%- endif -%}
-    {%- for s in sets -%}{%- for c in s.items -%}{%- if c.total %}
-    "{{ c.folder }}": { total: {{ c.total }}, unit: "{{ c.unit }}", url: "{{ c.url | relative_url }}", name: "{{ c.name | escape }}" },
-    {%- endif -%}{%- endfor -%}{%- endfor -%}{%- endfor %}
-  };
-  var HIDE_KEY = 'sib-hidden';
-  var box = document.getElementById('signin-box');
-  var left = box.querySelector('[data-left]');
-  box.querySelector('[data-signin]').onclick = function () { location.href = '{{ "/my-progress/" | relative_url }}'; };
-
-  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); }
-  function ago(t) {
-    var m = Math.round((Date.now() - (t || 0)) / 60000);
-    if (m < 2) return 'just now';
-    if (m < 60) return m + ' min ago';
-    var h = Math.round(m / 60); if (h < 24) return h + (h === 1 ? ' hour ago' : ' hours ago');
-    var d = Math.round(h / 24); if (d < 31) return d + (d === 1 ? ' day ago' : ' days ago');
-    return new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
-  }
-  function cleanTitle(t) { return String(t || '').split(/\s+[—|–]\s+/)[0] || 'Untitled page'; }
-  function readHidden() { try { return JSON.parse(localStorage.getItem(HIDE_KEY) || '{}'); } catch (e) { return {}; } }
-  function hide(series, t) {
-    var h = readHidden(); h[series] = t;
-    try { localStorage.setItem(HIDE_KEY, JSON.stringify(h)); } catch (e) { }
-  }
-  function bar(pct) { return '<span class="sib-bar"><i style="width:' + Math.max(0, Math.min(100, Math.round(pct))) + '%"></i></span>'; }
-  function isUnit(p) { return /\/(day|chapter)-/.test(p.path || ''); }
-  function state(p) {
-    if (p.step != null) return p.stepLabel ? 'At ' + p.stepLabel : 'Step ' + p.step;
-    var pct = Math.round(p.scrollPct || 0);
-    return pct > 0 ? pct + '% read' : 'Opened';
-  }
-
-  function summarise(all, names) {
-    var by = {}, totalDone = 0;
-    Object.keys(all || {}).forEach(function (k) {
-      var p = all[k]; if (!p || !p.series) return;
-      var g = by[p.series] || (by[p.series] = { series: p.series, last: 0, done: 0, open: null });
-      var c = COURSES[p.series];
-      if (p.status === 'completed') { totalDone++; if (!c || isUnit(p)) g.done++; }
-      else if (!g.open || (p.updatedAt || 0) > (g.open.updatedAt || 0)) g.open = p;
-      g.last = Math.max(g.last, p.updatedAt || 0);
-    });
-    var groups = Object.keys(by).map(function (k) {
-      var g = by[k], c = COURSES[k];
-      g.course = c || null;
-      g.name = (c && c.name) || names[k] || k;
-      g.url = (c && c.url) || '/' + k + '/';
-      return g;
-    }).sort(function (a, b) { return b.last - a.last; });
-    return { groups: groups, totalDone: totalDone };
-  }
-
-  function renderLeft(sum, u) {
-    var hidden = readHidden();
-    var shown = sum.groups.filter(function (g) { return !(hidden[g.series] >= g.last); }).slice(0, 4);
-    if (!shown.length && !sum.totalDone) { left.hidden = true; return; }
-    var h = '<h4>Where you left off' + (u ? '' : ' (on this device)') + '</h4>';
-    if (shown.length) {
-      h += '<ol>';
-      shown.forEach(function (g) {
-        var c = g.course, line, meta, go = g.url, goText = 'Open contents →';
-        if (g.open) { go = g.open.path; goText = 'Continue →'; }
-        if (c) {
-          var all = g.done >= c.total;
-          line = g.open ? 'Next: ' + cleanTitle(g.open.title) : (all ? 'All ' + c.total + ' ' + c.unit + ' done' : 'Pick the next ' + c.unit.replace(/s$/, ''));
-          meta = g.done + ' of ' + c.total + ' ' + c.unit + ' done' + (g.open ? ' · ' + state(g.open) : '') + ' · ' + ago(g.last) +
-            bar(100 * g.done / c.total);
-        } else {
-          line = g.open ? cleanTitle(g.open.title) : 'Nothing open right now';
-          meta = (g.open ? state(g.open) + ' · ' : '') + (g.done ? g.done + ' completed · ' : '') + ago(g.last) +
-            (g.open && g.open.step == null && g.open.scrollPct ? bar(g.open.scrollPct) : '');
-        }
-        h += '<li><button type="button" class="x" data-x="' + esc(g.series) + '" data-t="' + g.last + '" title="Hide until I open it again" aria-label="Hide ' + esc(g.name) + '">×</button>' +
-          '<span class="s">' + esc(g.name) + '</span><span class="t">' + esc(line) + '</span>' +
-          '<span class="m">' + meta + '</span><a class="go" href="' + esc(go) + '">' + goText + '</a></li>';
-      });
-      h += '</ol>';
-    }
-    if (sum.totalDone) h += '<p class="done">✓ ' + sum.totalDone + (sum.totalDone === 1 ? ' page' : ' pages') + ' completed so far.</p>';
-    left.innerHTML = h;
-    left.hidden = false;
-    if (!u) {
-      box.querySelector('[data-pitch]').hidden = true;
-      box.querySelector('[data-perks]').hidden = true;
-      box.querySelector('[data-pitch2]').hidden = false;
-    }
-    left.querySelectorAll('[data-x]').forEach(function (b) {
-      b.onclick = function () { hide(b.getAttribute('data-x'), +b.getAttribute('data-t')); renderLeft(sum, u); };
-    });
-  }
-
-  function renderCards(sum) {
-    document.querySelectorAll('.sc-card .sc-prog').forEach(function (e) { e.remove(); });
-    sum.groups.forEach(function (g) {
-      var c = g.course; if (!c || (!g.done && !g.open)) return;
-      document.querySelectorAll('.sc-card[data-folder="' + g.series + '"]').forEach(function (card) {
-        var e = document.createElement('em');
-        e.className = 'sc-prog';
-        e.innerHTML = g.done ? 'You: ' + g.done + ' / ' + c.total + ' ' + c.unit + ' done' + bar(100 * g.done / c.total) : 'You: started';
-        card.appendChild(e);
-      });
-    });
-  }
-
-  function show(u) {
-    var sp = window.SiteProgress;
-    box.querySelectorAll('[data-out]').forEach(function (e) { e.hidden = !!u; });
-    box.querySelectorAll('[data-in]').forEach(function (e) { e.hidden = !u; });
-    if (u) {
-      var n = (u.displayName || '').split(' ')[0];
-      box.querySelector('[data-name]').textContent = n ? ', ' + n : '';
-    }
-    box.classList.add('ready');
-    if (!sp) return;
-    sp.loadAllProgress().then(function (all) {
-      var sum = summarise(all, (sp.SITE && sp.SITE.series) || {});
-      renderLeft(sum, u);
-      renderCards(sum);
-    }).catch(function () { left.hidden = true; });
-  }
-  function hook() {
-    var sp = window.SiteProgress;
-    if (!sp) return false;
-    box.querySelector('[data-signin]').onclick = function () { sp.signIn(); };
-    sp.onUser(show);
-    return true;
-  }
-  if (!hook()) {
-    window.addEventListener('sp:loaded', hook, { once: true });
-    setTimeout(function () { if (!box.classList.contains('ready')) show(null); }, 4000);
-  }
-})();
-</script>

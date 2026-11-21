@@ -1,10 +1,12 @@
 {%- comment -%}
 TOOL:    _includes/section-cards.html — grouped section cards for the home page and the group hub tabs
 FAMILY:  SITE
-VERSION: 1.1.0
+VERSION: 1.2.0
 DATE:    2026-11-21
-CHAT:    Home page progress improvements: progress per course, on course cards
-CHANGES: 1.1.0 - each card carries data-folder so the home page can add the reader's progress to it
+CHAT:    Home page progress: section pages, certificates, start here, study streak
+CHANGES: 1.2.0 - cards also carry data-total / data-unit / data-name and the page loads assets/js/home-progress.js, so the
+                 reader's progress shows on the course cards here and on the section pages
+         1.1.0 - each card carries data-folder so the home page can add the reader's progress to it
          1.0.0 - renders the groups in _data/sections.json as headed card grids; {% include section-cards.html %} shows
                  every group with jump chips (home page), {% include section-cards.html group="courses" %} shows one (hub tab)
 STATUS:  working
@@ -33,6 +35,10 @@ named by a heading and an icon, so nothing depends on telling colours apart.
 .sc-card b{display:block;font-size:1.06rem;margin:0 0 5px;line-height:1.35}
 .sc-card span{display:block;line-height:1.55;font-size:.93rem;flex:1}
 .sc-card small{display:block;margin-top:8px;opacity:.72;font-size:.82rem}
+.sc-card .sc-prog{display:block;margin-top:8px;font-size:.82rem;font-weight:600;font-style:normal;opacity:.9}
+.sib-bar{display:block;height:5px;border-radius:3px;background:color-mix(in srgb,var(--a,#2f6fd0) 18%,transparent);overflow:hidden;margin:3px 0 1px}
+.sib-bar i{display:block;height:100%;background:var(--a,#2f6fd0)}
+.sc-card .sc-prog .sib-bar{margin-top:4px}
 .sc-badge{position:absolute;top:-9px;right:10px;background:var(--a);color:#fff;font-size:.7rem;font-weight:700;
   letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:2px 7px}
 </style>
@@ -61,7 +67,7 @@ named by a heading and an icon, so nothing depends on telling colours apart.
   {%- if g.subgroups %}<div class="sc-sub">{{ s.title | escape }}</div>{% endif %}
   <div class="sc-grid">
     {%- for c in s.items %}
-    <a class="sc-card" href="{{ c.url | relative_url }}" data-folder="{{ c.folder }}">
+    <a class="sc-card" href="{{ c.url | relative_url }}" data-folder="{{ c.folder }}"{% if c.total %} data-total="{{ c.total }}" data-unit="{{ c.unit }}" data-name="{{ c.name | escape }}"{% endif %}>
       {%- if c.badge %}<em class="sc-badge">{{ c.badge }}</em>{% endif %}
       <b>{{ c.title | escape }} →</b>
       <span>{{ c.blurb | escape }}</span>
@@ -72,3 +78,4 @@ named by a heading and an icon, so nothing depends on telling colours apart.
   {%- endfor %}
 </section>
 {%- endfor %}
+<script src="{{ '/assets/js/home-progress.js' | relative_url }}" defer></script>

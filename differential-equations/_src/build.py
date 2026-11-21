@@ -2,15 +2,16 @@
 """
 TOOL:    differential-equations/_src/build.py — builds the 15 day pages and the hub of the 15-Day Differential Equations Course from _src/week1-3.html
 FAMILY:  differential-equations
-VERSION: 1.0.1
+VERSION: 1.0.2
 DATE:    2026-11-21
 CHAT:    Differential equations are fascinating — make a 15 days course to deeper understanding of differential equations
-CHANGES: 1.0.1 - footer no longer says "nothing is sent anywhere" (sign-in saves progress and certificates); pages rebuilt with review corrections
+CHANGES: 1.0.2 - hub links to Part II (100 Equations That Run the World)
+         1.0.1 - footer no longer says "nothing is sent anywhere" (sign-in saves progress and certificates); pages rebuilt with review corrections
          1.0.0 - first version, adapted from machine-design/_src/build.py 1.0.0: 15 days in 3 weeks, de.css/de.js, hub page
 STATUS:  working
 """
 import json, re, os, html
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.dirname(HERE)
 DATE = "2026-11-21"
 CHAT = "Differential equations are fascinating — make a 15 days course to deeper understanding of differential equations"
@@ -157,6 +158,7 @@ def hub():
 <div class="hubw">
 <div id="hubprog"></div>
 <div class="cols" style="margin-top:18px">
+<div class="box" style="grid-column:1/-1;border-left:5px solid #d9822b"><b class="t">Next: Part II — 100 Equations That Run the World →</b>Finished the course? <a href="/differential-equations-2/">Part II</a> is an atlas of the hundred most useful differential equations in engineering, physics, biology, medicine and economics — from the Jeffcott rotor and the Reynolds bearing equation to SIR and Black–Scholes — each with worked examples and a live lab.</div>
 <div class="box"><b class="t">How each day works</b>1 Meet the process and its rates · 2 Build the equation · 3 Solve it, or read its behaviour · 4 Follow the worked example · 5 Play with the lab and watch the solution and its derivative move · 6 Try the practice problems · 7 Take the quiz and mark the day complete.</div>
 <div class="box"><b class="t">What you need</b>Calculus at Class XII or first-year engineering level: derivatives, integrals, e<sup>x</sup>, sin and cos, and a little matrix algebra (it is revised on Day 8). Complex numbers appear from Day 5 and are explained where they come in. Boyce & DiPrima, Strogatz (<i>Nonlinear Dynamics and Chaos</i>) and Kreyszig are good companions.</div>
 <div class="box"><b class="t">Keyboard</b><kbd>M</kbd> contents · <kbd>F</kbd> full screen · <kbd>T</kbd> light/dark · <kbd>P</kbd> play · <kbd>S</kbd> step · <kbd>X</kbd> pause · <kbd>[</kbd> <kbd>]</kbd> previous / next day.</div>

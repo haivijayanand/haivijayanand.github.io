@@ -1,0 +1,134 @@
+<!--
+TOOL:    differential-equations-2/_src/ch06.html — Part II source, Chapter 6: Circuits, Control and Signals (equations 51–60)
+FAMILY:  differential-equations
+VERSION: 1.0.0
+DATE:    2026-11-21
+CHAT:    As a continuation as part 2, discuss the most famous 100 useful differential equations that are being used in different applications with worked out examples
+CHANGES: 1.0.0 - first version
+STATUS:  working
+-->
+<day n="6">
+<summary>The equations of electrical engineering and automatic control: the RLC tank, transmission lines, Maxwell's equations, the DC motor, the PID loop, state-space models, the Kalman filter's Riccati equation, the phase-locked loop and two famous oscillators — Van der Pol's valve circuit and Chua's chaotic circuit.</summary>
+<goals><li>Map circuits onto mass–spring–damper analogies</li><li>Compute resonance, Q, characteristic impedance and skin depth</li><li>Model a DC motor and tune a PI controller by pole placement</li><li>Understand state space and the Kalman filter as differential equations</li><li>Explain locking (PLL, grid synchronisation) and self-sustained electronic oscillation</li></goals>
+<intro><p>Kirchhoff's laws turn every circuit into ODEs: inductors contribute L·di/dt, capacitors C·dv/dt. Control engineering then wraps those equations in feedback. Part I, Day 7 (Laplace transforms and poles) is the key tool for most of this chapter.</p></intro>
+
+<eq n="51" name="Series RLC circuit" tags="ODE,linear,second order" who="Kelvin 1853 (Leyden-jar oscillation)" p1="5" short="L·q″ + R·q′ + q/C = V(t)">
+<f>L·d²q/dt² + R·dq/dt + q/C = V(t)      ω₀ = 1/√(LC),   ζ = (R/2)·√(C/L),   Q = (1/R)·√(L/C)</f>
+<sym><b>q</b> charge on the capacitor (i = dq/dt) · <b>L, R, C</b> inductance, resistance, capacitance · <b>Q</b> quality factor</sym>
+<idea><p>The electrical twin of the spring–mass–damper: inductance is mass (it resists change of current), 1/C is stiffness, resistance is damping. A low-resistance circuit rings at ω₀ and responds sharply to signals at that frequency — the basis of every radio tuner and filter.</p></idea>
+<ex t="A medium-wave tuner with L = 250 µH must receive 1 MHz. Capacitance? With 10 Ω of coil resistance, Q and bandwidth?">C = 1/((2πf)²L) = 1/(3.95e13 × 2.5e-4) = 101 pF
+Q = (1/R)√(L/C) = (1/10) × √(2.5e-4/1.01e-10) = 157
+Bandwidth = f/Q = 6.4 kHz — just right for AM stations 9 kHz apart.</ex>
+<app>Radio tuning and filters, switch-mode power supplies, wireless charging coils, induction heating, ignition circuits, ringing on PCB traces and long sensor cables.</app>
+<lab>{"t":"ode","v":["q","i"],"f":["i","(V-R*i-q/(C*1e-6))/(L*1e-3)"],"p":{"L":[1,100,10,"L","mH"],"C":[1,100,10,"C","µF"],"R":[0,100,5,"R","Ω"],"V":[0,10,5,"step voltage","V"]},"init":[0,0],"T":0.02,"n":3000,"tl":"t, s","der":{"vC":"q/(C*1e-6)"},"show":[["vC"],["i"]],"cap":["capacitor voltage, V","current, A"],"out":[["f₀","1/(2*pi*sqrt(L*1e-3*C*1e-6))","Hz",1],["Q","1/R*sqrt(L*1e-3/(C*1e-6))","",2],["ζ","R/2*sqrt(C*1e-6/(L*1e-3))","",3]]}</lab>
+</eq>
+
+<eq n="52" name="Telegrapher's equations (transmission lines)" tags="PDE,linear,hyperbolic" who="Heaviside 1876; Kirchhoff 1857" p1="13" short="V_x = −L·I_t − R·I, I_x = −C·V_t − G·V">
+<f>∂V/∂x = −L′·∂I/∂t − R′·I      ∂I/∂x = −C′·∂V/∂t − G′·V      lossless:  v = 1/√(L′C′),   Z₀ = √(L′/C′)</f>
+<sym><b>L′, C′, R′, G′</b> per-metre inductance, capacitance, resistance and leakage · <b>Z₀</b> characteristic impedance</sym>
+<idea><p>A long cable is a chain of tiny inductors and capacitors. In the limit, voltage and current obey a wave equation: signals travel at a finite speed and reflect wherever the impedance changes. Heaviside showed that adding inductance (loading coils) makes a lossy line distortionless — which made long-distance telephony possible.</p></idea>
+<ex t="A 50 Ω coaxial cable has a velocity factor 0.66. Per-metre L′ and C′? A 10 m cable to an unterminated sensor: reflection and delay?">v = 0.66 × 3×10⁸ = 1.98×10⁸ m/s
+L′ = Z₀/v = 253 nH/m,  C′ = 1/(Z₀v) = 101 pF/m
+Open end: reflection coefficient +1 (the voltage doubles); round trip 2 × 10/1.98e8 = 101 ns.
+For signals slower than about 10× that (below a few MHz) the line looks like plain 1 nF of capacitance.</ex>
+<app>Coaxial and twisted-pair cables, PCB traces at high speed, power lines (lightning surges), time-domain reflectometry for fault finding, charge-amplifier cable length limits for piezo accelerometers.</app>
+<lab>{"t":"pde","wave":true,"c":"1","g":"loss","p":{"loss":[0,10,0.5,"line loss"]},"ics":[["pulse","exp(-(((x-0.2)/0.03)^2))"]],"bc":"dir","x":[0,1],"T":3,"pre":0,"u":[-1,1],"xl":"position along the line","ul":"V","out":[["peak","umax","",3]],"note":"Both ends shorted (V = 0): the pulse reflects inverted at each end and fades with line loss."}</lab>
+</eq>
+
+<eq n="53" name="Maxwell's equations and the electromagnetic wave" tags="PDE,linear,system" who="Maxwell 1865" short="∇×E = −B_t, ∇×H = J + D_t → ∇²E = με·E_tt">
+<f>∇·<b>D</b> = ρ   ∇·<b>B</b> = 0   ∇×<b>E</b> = −∂<b>B</b>/∂t   ∇×<b>H</b> = <b>J</b> + ∂<b>D</b>/∂t<br>In vacuum:  ∇²<b>E</b> = μ₀ε₀·∂²<b>E</b>/∂t²,   c = 1/√(μ₀ε₀)<br>In a conductor:  skin depth δ = √(2ρ/(ωμ))</f>
+<sym><b>E, H</b> electric and magnetic fields · <b>D = εE, B = μH</b> · <b>J</b> current density · <b>ρ</b> resistivity (in δ)</sym>
+<idea><p>Four equations unify electricity, magnetism and light. Maxwell's added displacement current ∂D/∂t made the set consistent — and predicted waves travelling at 1/√(μ₀ε₀), which he recognised as the speed of light. In a conductor the same equations become a diffusion equation: alternating current crowds into a skin of depth δ.</p></idea>
+<ex t="Compute c from μ₀ and ε₀. Then the skin depth of copper (ρ = 1.7×10⁻⁸ Ω·m) at 50 Hz and at 1 MHz.">c = 1/√(4π×10⁻⁷ × 8.854×10⁻¹²) = 2.998×10⁸ m/s
+δ(50 Hz) = √(2 × 1.7e-8/(2π·50 × 4π×10⁻⁷)) = 9.3 mm — busbars thicker than ~2δ waste copper
+δ(1 MHz) = 9.3 mm/√(20 000) = 66 µm — hence Litz wire in RF coils and induction heaters</ex>
+<app>Antennas and radio, radar, optics and fibres, motors and transformers, induction heating and hardening (case depth ≈ δ), eddy-current testing and proximity probes on rotating shafts, EMC.</app>
+<lab>{"t":"fn","x":[0,30,"depth into the conductor, mm"],"c":[["exp(-x/(sqrt(2*rho*1e-8/(2*pi*f*4*pi*1e-7*mur))*1000))","current density J/J₀"]],"p":{"f":[1,10000,50,"frequency","Hz"],"rho":[1,100,1.7,"resistivity","×10⁻⁸ Ω·m"],"mur":[1,1000,1,"relative permeability"]},"y":[0,1.05],"out":[["skin depth δ","sqrt(2*rho*1e-8/(2*pi*f*4*pi*1e-7*mur))*1000","mm",3]],"note":"Steel (μ_r ≈ 100–1000, ρ ≈ 10–20×10⁻⁸) has a skin depth under 1 mm at mains frequency — the basis of induction hardening."}</lab>
+</eq>
+
+<eq n="54" name="DC motor dynamics" tags="ODE,linear,system" who="classical electromechanics" short="L·i′ = V − R·i − Kₑω, J·ω′ = Kₜ·i − b·ω − T_L">
+<f>L·di/dt = V − R·i − K<sub>e</sub>·ω      J·dω/dt = K<sub>t</sub>·i − b·ω − T<sub>L</sub></f>
+<sym><b>i</b> armature current · <b>ω</b> speed · <b>K<sub>e</sub></b> back-EMF constant (V·s/rad) = <b>K<sub>t</sub></b> torque constant (N·m/A) in SI · <b>J</b> inertia · <b>b</b> viscous friction · <b>T<sub>L</sub></b> load torque</sym>
+<idea><p>Two coupled first-order equations: the electrical circuit (with back-EMF proportional to speed) and Newton's law for rotation. Usually the electrical time constant L/R is much shorter than the mechanical one J·R/(K<sub>t</sub>K<sub>e</sub>), so the motor behaves like a first-order lag from voltage to speed — with a stall current V/R that can be ten times the running current.</p></idea>
+<ex t="A small motor: K = 0.05, R = 1 Ω, L = 1 mH, J = 1×10⁻⁴ kg·m², b = 1×10⁻⁵, 12 V, no load. Final speed, mechanical time constant, starting current?">ω∞ = K·V/(R·b + K²) = 0.6/0.00251 = 239 rad/s (2280 rpm)
+τ_m = J·R/(K² + R·b) = 1e-4/0.00251 = 40 ms;  τ_e = L/R = 1 ms ≪ τ_m
+Starting current = 12/1 = 12 A; running current ≈ b·ω/K = 0.05 A</ex>
+<app>Servo drives, robots, electric vehicles, dynamometer speed control, cooling fans and pumps; the same structure (with three phases and a transform) describes induction and permanent-magnet AC motors.</app>
+<lab>{"t":"ode","v":["i","w"],"f":["(V-R*i-K*w)/(L*1e-3)","(K*i-b*1e-5*w-TL)/(J*1e-4)"],"p":{"V":[0,24,12,"voltage","V"],"K":[0.01,0.2,0.05,"K_t = K_e"],"R":[0.1,5,1,"R","Ω"],"L":[0.1,10,1,"L","mH"],"J":[0.2,10,1,"J","×10⁻⁴ kg·m²"],"b":[0,10,1,"b","×10⁻⁵"],"TL":[0,0.3,0,"load torque","N·m"]},"init":[0,0],"T":0.3,"n":4000,"tl":"t, s","show":[["w"],["i"]],"cap":["speed ω, rad/s","current i, A"],"out":[["final speed","wT*30/pi","rpm",0],["τ_m","J*1e-4*R/(K^2+R*b*1e-5)*1000","ms",1],["stall current","V/R","A",1]]}</lab>
+</eq>
+
+<eq n="55" name="PID feedback loop" tags="ODE,linear,system,control" who="Minorsky 1922; Ziegler–Nichols 1942" p1="7" short="u = Kp·e + Ki·∫e + Kd·e′">
+<f>Plant:  τ·y′ + y = K·u      Controller:  u = K<sub>p</sub>·e + K<sub>i</sub>·∫e dt + K<sub>d</sub>·de/dt,   e = r − y<br>PI closed loop:  τ·s² + (1 + K·K<sub>p</sub>)·s + K·K<sub>i</sub> = 0</f>
+<sym><b>r</b> set-point · <b>e</b> error · <b>K<sub>p</sub>, K<sub>i</sub>, K<sub>d</sub></b> proportional, integral and derivative gains</sym>
+<idea><p>Measure the error, push back in proportion to it (P), to its accumulated history (I — removes steady error) and to its rate of change (D — adds damping). Over 90 % of industrial loops are PI or PID. Writing the loop as ODEs shows exactly where the closed-loop poles go, so gains can be chosen by pole placement instead of trial and error.</p></idea>
+<ex t="A plant with K = 1, τ = 10 s. With P control K_p = 2, what steady error remains? Choose K_i for ζ = 0.7.">P only: error = 1/(1 + K·K_p) = 33 %
+With PI: τs² + 3s + K_i = 0 → ω_n = √(K_i/τ), 2ζω_n = 3/τ
+ζ = 0.7 → ω_n = 3/(2 × 0.7 × 10) = 0.214 rad/s → K_i = τω_n² = 0.46 per s
+No steady error; overshoot ≈ 5 %, settling ≈ 4/(ζω_n) = 27 s.</ex>
+<app>Temperature, speed, pressure, level and position control everywhere: dynamometer torque control on test rigs, oven and climate control, cruise control, drones, process plants.</app>
+<lab>{"t":"ode","v":["y","z"],"f":["(K*(Kp*(1-y)+Ki*z)-y)/tau","1-y"],"p":{"K":[0.2,5,1,"plant gain K"],"tau":[1,30,10,"plant τ","s"],"Kp":[0,10,2,"K_p"],"Ki":[0,2,0.46,"K_i","1/s"]},"init":[0,0],"T":80,"tl":"t, s","show":[["y"]],"lab":{"y":"output y (set-point 1)"},"out":[["overshoot","(ymax-1)*100","%",1],["final","yT","",3],["closed-loop ζ","(1+K*Kp)/(2*sqrt(tau*K*Ki+1e-12))","",2]]}</lab>
+</eq>
+
+<eq n="56" name="State-space model" tags="ODE,linear,system,control" who="Kalman 1960" p1="8" short="x′ = A·x + B·u, y = C·x">
+<f>d<b>x</b>/dt = A·<b>x</b> + B·<b>u</b>      <b>y</b> = C·<b>x</b> + D·<b>u</b>      <b>x</b>(t) = e<sup>At</sup>·<b>x</b>(0) + ∫₀ᵗ e<sup>A(t−τ)</sup>·B·<b>u</b>(τ) dτ</f>
+<sym><b>x</b> state vector · <b>u</b> inputs · <b>y</b> measured outputs · <b>e<sup>At</sup></b> matrix exponential (state-transition matrix)</sym>
+<idea><p>Write any linear system of any order as first-order equations in a vector. The eigenvalues of A are the poles; the matrix exponential gives the whole solution; controllability and observability say whether inputs can steer every state and outputs can reveal it. Modern control (pole placement, LQR, Kalman filters, model-predictive control) all live here.</p></idea>
+<ex t="A = [[0, 1], [−2, −3]], B = [0, 1]ᵀ, C = [1, 0]. Poles and impulse response?">det(sI − A) = s² + 3s + 2 = (s + 1)(s + 2) → poles −1, −2
+G(s) = C(sI − A)⁻¹B = 1/((s + 1)(s + 2))  →  impulse response y = e^(−t) − e^(−2t)
+Controllability matrix [B, AB] = [[0, 1], [1, −3]] has rank 2 → fully controllable.</ex>
+<app>Flight control and autopilots, robotics, vehicle dynamics control, power-electronics converters, observers and digital twins, any multi-input multi-output plant.</app>
+<lab>{"t":"ode","v":["x1","x2"],"f":["a*x1+b*x2","c*x1+d*x2+u"],"p":{"a":[-3,3,0,"a₁₁"],"b":[-3,3,1,"a₁₂"],"c":[-5,3,-2,"a₂₁"],"d":[-5,3,-3,"a₂₂"],"u":[0,2,1,"step input u"]},"init":[0,0],"T":10,"show":[["x1","x2"]],"ph":["x1","x2"],"out":[["trace","a+d","",2],["det","a*d-b*c","",2],["final x₁","x1T","",3]]}</lab>
+</eq>
+
+<eq n="57" name="Kalman filter (Riccati equation)" tags="ODE,nonlinear,matrix" who="Kalman and Bucy 1961" short="P′ = AP + PAᵀ − PCᵀR⁻¹CP + Q">
+<f>dP/dt = A·P + P·Aᵀ − P·Cᵀ·R⁻¹·C·P + Q      gain K = P·Cᵀ·R⁻¹      estimate:  x̂′ = A·x̂ + K·(y − C·x̂)</f>
+<sym><b>P</b> error covariance (how uncertain the estimate is) · <b>Q</b> process noise · <b>R</b> measurement noise · <b>K</b> Kalman gain</sym>
+<idea><p>The best estimate of a noisy system blends prediction from the model with correction from measurements. How much to trust each is governed by a matrix Riccati differential equation for the uncertainty P: it grows with process noise and shrinks with measurements, settling to a steady value. The filter navigated Apollo to the Moon and runs in every GPS receiver and phone.</p></idea>
+<ex t="Estimating a slowly drifting temperature (A = 0) from a sensor with σ = 0.5 °C (R = 0.25) and drift noise Q = 0.01 per s. Steady accuracy and filter speed?">P′ = Q − P²/R = 0  →  P∞ = √(QR) = 0.05  →  σ_estimate = 0.22 °C (better than the sensor)
+K = P/R = 0.2 per s → the estimate follows real changes with a 5 s time constant.
+More noise R → smaller K → smoother but slower: the filter's built-in trade-off.</ex>
+<app>GPS/INS navigation, phone attitude estimation, target tracking, sensor fusion in test rigs, battery state-of-charge, economics forecasting, weather data assimilation.</app>
+<lab>{"t":"ode","v":["P"],"f":["2*a*P+Q-P^2/R"],"p":{"Q":[0.001,0.1,0.01,"process noise Q"],"R":[0.01,1,0.25,"measurement noise R"],"a":[-0.5,0.5,0,"system pole a"]},"y0":{"P0":[0,2,1,"initial uncertainty P(0)"]},"init":["P0"],"T":40,"tl":"t, s","show":[["P"]],"out":[["steady P","PT","",4],["steady gain K","PT/R","1/s",3],["σ of the estimate","sqrt(PT)","",3]]}</lab>
+</eq>
+
+<eq n="58" name="Phase-locked loop and synchronisation (Adler equation)" tags="ODE,nonlinear,first order" who="Adler 1946; Bellescize 1932" p1="3" short="φ′ = Δω − K·sin φ">
+<f>dφ/dt = Δω − K·sin φ      locks (φ′ = 0) if |Δω| ≤ K;   otherwise slips with beat period 2π/√(Δω² − K²)</f>
+<sym><b>φ</b> phase difference between oscillator and reference · <b>Δω</b> frequency mismatch · <b>K</b> loop (coupling) gain</sym>
+<idea><p>A one-dimensional flow on a circle. If the coupling is strong enough, there is a stable equilibrium phase and the oscillator locks to the reference; if not, the phase slips round, slowly near the bottleneck and fast elsewhere — a saddle-node on a circle (Part I, Day 3). The same equation describes a generator synchronising to the grid, a pendulum with a torque, and the Josephson junction.</p></idea>
+<ex t="A PLL with loop gain K = 2π × 1000 rad/s. Lock range? If the input is 1.2 kHz off, how often does it slip a cycle?">Lock range |Δf| ≤ K/2π = 1 kHz
+Δω = 2π × 1200: beat period = 2π/√(Δω² − K²) = 1/√(1200² − 1000²) = 1/663 s = 1.5 ms
+Locked at Δf = 500 Hz: sin φ = 0.5 → steady phase error 30°.</ex>
+<app>Radio and clock recovery (PLL), frequency synthesisers, generator synchronisation (synchroscope), motor drives (grid-tied inverters), injection locking of lasers, the swing equation of power systems.</app>
+<lab>{"t":"ode","v":["ph"],"f":["dw-K*sin(ph)"],"p":{"dw":[0,3,1.2,"mismatch Δω"],"K":[0,3,1,"coupling K"]},"init":[0],"T":40,"show":[["ph"]],"lab":{"ph":"phase difference φ, rad"},"out":[["locked?","dw<=K?1:0","(1 = yes)",0],["locked phase","dw<=K?asin(dw/K)*180/pi:0","°",1],["slip period","dw>K?2*pi/sqrt(dw^2-K^2):0","",2]]}</lab>
+</eq>
+
+<eq n="59" name="Van der Pol oscillator (electronic)" tags="ODE,nonlinear,second order" who="van der Pol 1926" p1="10" short="v″ − μ(1 − v²)v′ + v = 0">
+<f>d²v/dt² − μ·(1 − v²)·dv/dt + v = 0      large μ: relaxation period T ≈ (3 − 2 ln 2)·μ + 7.01·μ<sup>−1/3</sup></f>
+<sym><b>v</b> voltage (scaled) · <b>μ</b> strength of the nonlinear negative resistance</sym>
+<idea><p>A triode (or tunnel diode, or op-amp circuit) supplies negative resistance for small signals and positive resistance for large ones. Small oscillations grow, large ones shrink, and every start ends on the same limit cycle. For small μ it is a near-sine; for large μ it becomes a relaxation oscillation — slow charging, sudden jumps — the model of heartbeats, neon blinkers and multivibrators.</p></idea>
+<ex t="Van der Pol with μ = 10. Estimate the period and compare with the small-μ value.">Large-μ formula: T ≈ 1.614 × 10 + 7.01 × 10^(−1/3) = 16.1 + 3.3 = 19.4 (exact numerical value 19.08)
+Small μ: T ≈ 2π = 6.28 — strong nonlinearity triples the period.
+Amplitude ≈ 2 for any μ: set by the nonlinearity, not the start.</ex>
+<app>Valve and transistor oscillators, astable multivibrators, heart pacemaker models (it was first proposed for the heartbeat), stick-slip friction, flutter, biological rhythms.</app>
+<lab>{"t":"ode","v":["v","w"],"f":["w","mu*(1-v^2)*w-v"],"p":{"mu":[0,10,2,"μ"]},"y0":{"v0":[0.01,4,0.5,"v(0)"]},"init":["v0",0],"T":60,"n":6000,"show":[["v"]],"ph":["v","w"],"field":true,"out":[["amplitude","vmax","",3]]}</lab>
+</eq>
+
+<eq n="60" name="Chua's circuit (chaos in electronics)" tags="ODE,nonlinear,system" who="Leon Chua 1983" p1="11" short="x′ = α(y − x − f(x)), y′ = x − y + z, z′ = −βy">
+<f>x′ = α·(y − x − f(x))   y′ = x − y + z   z′ = −β·y<br>f(x) = m₁x + ½(m₀ − m₁)(|x + 1| − |x − 1|)</f>
+<sym><b>x, y</b> capacitor voltages · <b>z</b> inductor current (scaled) · <b>f</b> piecewise-linear "Chua diode" · α ≈ 15.6, β ≈ 28, m₀ = −8/7, m₁ = −5/7</sym>
+<idea><p>The simplest real electronic circuit that is chaotic: two capacitors, an inductor, a resistor and one nonlinear resistor. Its "double scroll" attractor was the first chaos proven in a physical circuit, and it can be built on a breadboard for a few rupees. Varying α takes it through period doubling into chaos, exactly as Part I's Day 11 described.</p></idea>
+<ex t="Where are the equilibria of Chua's circuit (α = 15.6, β = 28)?">z′ = 0 → y = 0;  y′ = 0 → z = −x;  x′ = 0 → x = −f(x)
+Outer segments: x + m₁x + (m₀ − m₁) = 0 → x = ±(m₁ − m₀)/(1 + m₁) = ±(3/7)/(2/7) = ±1.5
+So equilibria at (0, 0, 0) and (±1.5, 0, ∓1.5) — the centres of the two scrolls.</ex>
+<app>Chaos demonstrations, random-number generation, secure communication by chaos synchronisation, modelling of other chaotic oscillators.</app>
+<lab>{"t":"ode","v":["x","y","z"],"f":["al*(y-x-(-5/7*x+0.5*(-3/7)*(abs(x+1)-abs(x-1))))","x-y+z","-be*y"],"p":{"al":[8,16,15.6,"α"],"be":[20,35,28,"β"]},"init":[0.1,0,0],"T":100,"n":20000,"show":[["x"]],"ph":["x","z"],"phcap":"x against z: the double scroll","out":[["max x","xmax","",2]]}</lab>
+</eq>
+
+<quiz>[
+{"q":"In the RLC–mass-spring analogy, inductance corresponds to","o":["Stiffness","Mass","Damping","Force"],"a":1,"e":"L resists change of current as mass resists change of velocity."},
+{"q":"The characteristic impedance of a lossless line is","o":["L′C′","√(L′/C′)","1/√(L′C′)","R′/G′"],"a":1,"e":"Z₀ = √(L′/C′); 1/√(L′C′) is the wave speed."},
+{"q":"The integral term in a PI controller","o":["Speeds up the response","Removes steady-state error","Adds damping","Filters noise"],"a":1,"e":"It keeps acting until the accumulated error is zero."},
+{"q":"A phase-locked loop with gain K locks to inputs whose frequency mismatch is","o":["Less than K","Greater than K","Exactly K","Any"],"a":0,"e":"φ′ = Δω − K sin φ has an equilibrium only if |Δω| ≤ K."},
+{"q":"The amplitude of a Van der Pol limit cycle is set by","o":["The initial voltage","The nonlinearity (≈ 2 in scaled units)","The supply voltage only","The damping resistor alone"],"a":1,"e":"Limit cycles have an amplitude fixed by the nonlinear terms."}
+]</quiz>
+</day>

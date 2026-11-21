@@ -1,0 +1,159 @@
+<!--
+TOOL:    differential-equations-2/_src/ch10.html — Part II source, Chapter 10: Economics, Society and Chaos (equations 91–100) + final assessment and certificate
+FAMILY:  differential-equations
+VERSION: 1.0.0
+DATE:    2026-11-21
+CHAT:    As a continuation as part 2, discuss the most famous 100 useful differential equations that are being used in different applications with worked out examples
+CHANGES: 1.0.0 - first version
+STATUS:  working
+-->
+<day n="10">
+<summary>Differential equations beyond physics: option pricing (Black–Scholes), random prices and interest rates (stochastic DEs), economic growth (Solow), the adoption of new products (Bass), battles (Lanchester), business cycles (Goodwin), and three icons of nonlinear science — Lorenz, Rössler and Kuramoto. Then the final assessment and your certificate.</summary>
+<goals><li>See how randomness enters through stochastic differential equations</li><li>Price an option with Black–Scholes and understand why volatility matters</li><li>Find steady states of growth and adoption models</li><li>Recognise predator–prey structure in economics and combat</li><li>Revisit chaos and synchronisation as general laws of complex systems</li></goals>
+<intro><p>Economic and social models are rougher than physical laws — people are not particles — but the same mathematics applies: balances, feedbacks, thresholds and cycles. Two new ideas appear: <b>stochastic</b> equations, where a random term dW is added and we track distributions rather than single paths; and equations used to <b>price</b> things rather than predict them.</p></intro>
+
+<eq n="91" name="Black–Scholes equation" tags="PDE,linear,parabolic,finance" who="Black, Scholes and Merton 1973 (Nobel 1997)" short="V_t + ½σ²S²V_SS + rSV_S − rV = 0">
+<f>∂V/∂t + ½·σ²·S²·∂²V/∂S² + r·S·∂V/∂S − r·V = 0<br>European call:  C = S·N(d₁) − K·e<sup>−rT</sup>·N(d₂),   d₁ = [ln(S/K) + (r + σ²/2)T]/(σ√T),   d₂ = d₁ − σ√T</f>
+<sym><b>V</b> option value · <b>S</b> share price · <b>K</b> strike · <b>T</b> time to expiry · <b>σ</b> volatility · <b>r</b> risk-free rate · <b>N</b> normal distribution</sym>
+<idea><p>Hold an option and continuously trade the share to cancel its risk; the hedged portfolio must earn the risk-free rate. That argument removes the investor's expected return from the problem and leaves a PDE — which, by a change of variables, is the heat equation (Part I, Day 12). Volatility plays the role of diffusivity: more uncertainty, more option value.</p></idea>
+<ex t="Share ₹100, strike ₹100, 1 year, r = 5 %, σ = 20 %. Value of a call option?">d₁ = (0 + 0.07)/0.2 = 0.35,  d₂ = 0.15,  N(d₁) = 0.637,  N(d₂) = 0.560
+C = 100 × 0.637 − 100 × e^(−0.05) × 0.560 = 63.7 − 53.2 = ₹10.45
+Raise σ to 40 %: C = ₹18.0 — the option is worth more when the future is less certain.</ex>
+<app>Options and derivatives pricing, corporate finance (real options in project appraisal), insurance, risk management (the "Greeks" are its derivatives).</app>
+<lab>{"t":"fn","x":[50,150,"share price S, ₹"],"c":[["x*Phi((log(x/K)+(r/100+(s/100)^2/2)*T)/(s/100*sqrt(T)))-K*exp(-r/100*T)*Phi((log(x/K)+(r/100-(s/100)^2/2)*T)/(s/100*sqrt(T)))","call value"],["max(x-K,0)","payoff at expiry"]],"p":{"K":[60,140,100,"strike K","₹"],"T":[0.05,3,1,"time to expiry T","years"],"s":[5,80,20,"volatility σ","%"],"r":[0,15,5,"interest r","%"]},"out":[["call at S = 100","100*Phi((log(100/K)+(r/100+(s/100)^2/2)*T)/(s/100*sqrt(T)))-K*exp(-r/100*T)*Phi((log(100/K)+(r/100-(s/100)^2/2)*T)/(s/100*sqrt(T)))","₹",2]]}</lab>
+</eq>
+
+<eq n="92" name="Geometric Brownian motion" tags="SDE,linear,stochastic" who="Samuelson 1965; Osborne 1959" short="dS = μS·dt + σS·dW">
+<f>dS = μ·S·dt + σ·S·dW      E[S(t)] = S₀·e<sup>μt</sup>,   median = S₀·e<sup>(μ − σ²/2)t</sup></f>
+<sym><b>μ</b> drift (expected return) · <b>σ</b> volatility · <b>dW</b> Brownian increment (random, variance dt)</sym>
+<idea><p>The standard model of share prices: the percentage change in each instant is a drift plus a random shock. Prices stay positive and are log-normally distributed. A surprising consequence: the typical (median) outcome grows more slowly than the average, by σ²/2 per year — the "volatility drag" that makes high-volatility investments disappoint most holders even when their average is good.</p></idea>
+<ex t="μ = 12 % a year, σ = 30 %, over 10 years. Mean and median growth?">Mean: e^(1.2) = 3.32×
+Median: e^((0.12 − 0.045) × 10) = e^(0.75) = 2.12×
+Half of all paths end below 2.12× even though the average is 3.32× — a few very lucky paths pull the mean up.</ex>
+<app>Share-price models and Monte-Carlo risk simulation, the Black–Scholes derivation, commodity prices, population growth with environmental noise, Brownian motion of particles.</app>
+<lab>{"t":"sde","mu":"m/100*X","sg":"s/100*X","x0":100,"p":{"m":[-5,25,12,"drift μ","% / year"],"s":[1,80,30,"volatility σ","% / year"]},"T":10,"n":250,"paths":300,"tl":"t, years","yl":"value","out":[["mean at 10 y","mean","",1],["median","median","",1],["theory: mean","100*exp(m/100*10)","",1],["theory: median","100*exp((m/100-(s/100)^2/2)*10)","",1]]}</lab>
+</eq>
+
+<eq n="93" name="Solow growth model" tags="ODE,nonlinear,first order" who="Solow 1956 (Nobel 1987)" p1="3" short="k′ = s·k^α − (n + δ)k">
+<f>dk/dt = s·k<sup>α</sup> − (n + δ)·k      steady state  k* = (s/(n + δ))<sup>1/(1−α)</sup>,   output y* = k*<sup>α</sup></f>
+<sym><b>k</b> capital per worker · <b>s</b> saving (investment) rate · <b>α</b> capital share (≈ ⅓) · <b>n</b> population growth · <b>δ</b> depreciation</sym>
+<idea><p>Investment adds capital, depreciation and a growing workforce dilute it. Because returns to capital diminish (α &lt; 1), every economy converges to a steady state where investment just replaces wear and dilution. Saving more raises the level of income but not its long-run growth — only technology does that. The "golden rule" saving rate (s = α) maximises consumption.</p></idea>
+<ex t="s = 30 %, n = 1 %, δ = 5 %, α = ⅓. Steady capital and output per worker? What if saving rises to 40 %?">k* = (0.30/0.06)^(1.5) = 5^1.5 = 11.2,  y* = 11.2^(1/3) = 2.24
+s = 40 %: k* = (6.67)^1.5 = 17.2, y* = 2.58 — output up 15 %, but growth returns to zero once there.</ex>
+<app>Development economics and growth accounting, policy debates on saving and investment, capital-intensive industries, any process with diminishing returns and steady depreciation (machine fleets, infrastructure).</app>
+<lab>{"t":"ode","v":["k"],"f":["s/100*k^al-(n+d)/100*k"],"p":{"s":[5,60,30,"saving rate","%"],"al":[0.2,0.6,0.333,"capital share α"],"n":[0,4,1,"population growth","%"],"d":[1,10,5,"depreciation","%"]},"y0":{"k0":[0.5,30,2,"k(0)"]},"init":["k0"],"T":150,"tl":"t, years","show":[["k"]],"der":{"y":"k^al"},"out":[["steady k*","(s/(n+d))^(1/(1-al))","",2],["steady output y*","(s/(n+d))^(al/(1-al))","",3]]}</lab>
+</eq>
+
+<eq n="94" name="Vasicek interest-rate model (Ornstein–Uhlenbeck)" tags="SDE,linear,stochastic" who="Vasicek 1977; Ornstein and Uhlenbeck 1930" short="dr = a(b − r)dt + σ·dW">
+<f>dr = a·(b − r)·dt + σ·dW      E[r(t)] = b + (r₀ − b)·e<sup>−at</sup>,   long-run s.d. = σ/√(2a)</f>
+<sym><b>r</b> short interest rate · <b>b</b> long-run mean · <b>a</b> speed of mean reversion · <b>σ</b> volatility</sym>
+<idea><p>A first-order lag (Part I, Day 2) driven by noise. Rates wander but are pulled back towards a long-run level; the pull strength a sets how fast. The same Ornstein–Uhlenbeck process models the velocity of a Brownian particle, sensor drift, temperature anomalies and mean-reverting commodity spreads.</p></idea>
+<ex t="a = 0.5 per year, b = 6 %, r₀ = 10 %, σ = 1 %. Expected rate after 2 years? Long-run spread?">E[r(2)] = 6 + 4·e^(−1) = 7.47 %
+Long-run standard deviation = 1/√(2 × 0.5) = 1 % → 95 % of the time between about 4 % and 8 %.</ex>
+<app>Interest-rate and bond pricing, currency and commodity spreads, sensor noise and drift models, the velocity of particles in a fluid, neuron membrane noise.</app>
+<lab>{"t":"sde","mu":"a*(b-X)","sg":"s","x0":"r0","p":{"a":[0.05,3,0.5,"mean reversion a","1/year"],"b":[1,12,6,"long-run mean b","%"],"s":[0.1,4,1,"volatility σ","%"],"r0":[0,15,10,"r₀","%"]},"T":10,"n":300,"paths":300,"tl":"t, years","yl":"rate, %","out":[["mean at 10 y","mean","%",2],["5–95 % band","p95-p5","%",2],["theory long-run ±2σ width","4*s/sqrt(2*a)","%",2]]}</lab>
+</eq>
+
+<eq n="95" name="Bass diffusion of innovations" tags="ODE,nonlinear,first order" who="Frank Bass 1969" short="F′ = (p + qF)(1 − F)">
+<f>dF/dt = (p + q·F)·(1 − F)      peak adoption at  t* = ln(q/p)/(p + q)</f>
+<sym><b>F</b> fraction of the market that has adopted · <b>p</b> innovation (adoption from advertising) · <b>q</b> imitation (word of mouth)</sym>
+<idea><p>Some people adopt a new product spontaneously (p), most because others have (q·F). When q ≫ p the curve is a logistic S with a sharp sales peak; when p is large it is closer to exponential saturation. Fitted to the first few years of sales it forecasts the peak — used for TVs, mobile phones, solar panels and electric vehicles.</p></idea>
+<ex t="Typical consumer-durable values p = 0.03, q = 0.38 per year. When do sales peak? What share has adopted by then?">t* = ln(0.38/0.03)/0.41 = 2.54/0.41 = 6.2 years
+F(t*) = (q − p)/(2q) = 0.35/0.76 = 46 % — sales peak just before half the market has bought</ex>
+<app>Product launch forecasting, technology adoption (EVs, UPI payments, solar), spread of farming practices, social-media growth, capacity planning for new plants.</app>
+<lab>{"t":"ode","v":["F"],"f":["(p/100+q/100*F)*(1-F)"],"p":{"p":[0.1,10,3,"innovation p","% / year"],"q":[5,80,38,"imitation q","% / year"]},"init":[0],"T":20,"tl":"t, years","der":{"sales":"(p/100+q/100*F)*(1-F)"},"show":[["F"],["sales"]],"cap":["cumulative adoption F","adoption rate (sales)"],"out":[["peak year","log(q/p)/((p+q)/100)","",2],["peak sales rate","salesmax","per year",3]]}</lab>
+</eq>
+
+<eq n="96" name="Lanchester's combat laws" tags="ODE,linear,system" who="Lanchester 1916; Osipov 1915" short="x′ = −a·y, y′ = −b·x">
+<f>dx/dt = −a·y      dy/dt = −b·x      conserved:  b·x² − a·y² = constant  (the square law)</f>
+<sym><b>x, y</b> force strengths · <b>a, b</b> effectiveness of y against x and of x against y</sym>
+<idea><p>In aimed-fire combat each side's losses are proportional to the size of the other side. The conserved quantity shows that fighting strength goes as <b>effectiveness × numbers²</b>: doubling numbers is worth quadrupling quality. It explains concentration of force — Nelson's plan at Trafalgar — and is used, with care, in business strategy for market battles.</p></idea>
+<ex t="Equal effectiveness, 40 units against 30. Who wins, and how many survive?">Square law: x_final = √(40² − 30²) = √700 = 26.5 units survive
+The larger force loses only about a third of its strength while destroying the smaller one entirely.
+To draw, the smaller side would need (40/30)² = 1.78 times the effectiveness.</ex>
+<app>Military operations research, war-gaming, competitive strategy (market share battles), and as a lesson in why concentration beats dispersal in any contest with simultaneous engagement.</app>
+<lab>{"t":"ode","v":["x","y"],"f":["x>0&&y>0?-a*y:0","x>0&&y>0?-b*x:0"],"p":{"a":[0.2,2,1,"effectiveness of y (a)"],"b":[0.2,2,1,"effectiveness of x (b)"]},"y0":{"x0":[5,100,40,"x(0)"],"y0":[5,100,30,"y(0)"]},"init":["x0","y0"],"T":3,"show":[["x","y"]],"ph":["x","y"],"out":[["square-law survivors of x","b*x0^2>a*y0^2?sqrt(x0^2-a/b*y0^2):0","",1],["survivors of y","a*y0^2>b*x0^2?sqrt(y0^2-b/a*x0^2):0","",1]]}</lab>
+</eq>
+
+<eq n="97" name="Goodwin growth cycle" tags="ODE,nonlinear,system" who="Richard Goodwin 1967" p1="10" short="v′ = v((1 − u)/σ − α − β), u′ = u(−γ + ρv − α)">
+<f>dv/dt = v·[ (1 − u)/σ − (α + β) ]      du/dt = u·[ −γ + ρ·v − α ]<br>equilibrium  v* = (α + γ)/ρ,   u* = 1 − σ(α + β)</f>
+<sym><b>v</b> employment rate · <b>u</b> wage share of output · <b>σ</b> capital–output ratio · <b>α</b> productivity growth · <b>β</b> labour-force growth · <b>γ, ρ</b> wage response (Phillips curve)</sym>
+<idea><p>Predator–prey in economics. High profits (low wage share) mean high investment and rising employment; high employment strengthens workers and raises wages; rising wages squeeze profits and investment; employment falls; wages weaken — and the cycle repeats. The wage share plays predator, employment prey. A classic of business-cycle theory.</p></idea>
+<ex t="σ = 3, α = 2 %, β = 1 %, γ = 0.6, ρ = 0.7. Equilibrium employment and wage share?">v* = (0.02 + 0.6)/0.7 = 0.886 → 88.6 % employment
+u* = 1 − 3 × 0.03 = 0.91 → wages take 91 % of output at the centre of the cycle
+Cycles about these values have periods of several years (lab).</ex>
+<app>Business-cycle and macroeconomic theory, labour economics, illustrating feedback loops in organisations and markets.</app>
+<lab>{"t":"ode","v":["v","u"],"f":["v*((1-u)/3-0.03)","u*(-0.6+rho*v-0.02)"],"p":{"rho":[0.6,1.2,0.7,"wage response ρ"]},"y0":{"v0":[0.8,0.99,0.9,"employment v(0)"],"u0":[0.8,0.99,0.85,"wage share u(0)"]},"init":["v0","u0"],"T":100,"tl":"t, years","show":[["v","u"]],"ph":["v","u"],"lab":{"v":"employment v","u":"wage share u"},"out":[["equilibrium v*","0.62/rho","",3],["equilibrium u*","0.91","",2]]}</lab>
+</eq>
+
+<eq n="98" name="Lorenz equations" tags="ODE,nonlinear,system,chaos" who="Edward Lorenz 1963" p1="11" short="x′ = σ(y − x), y′ = x(ρ − z) − y, z′ = xy − βz">
+<f>x′ = σ(y − x)      y′ = x(ρ − z) − y      z′ = xy − βz      σ = 10, β = 8/3, ρ = 28</f>
+<sym><b>x</b> convection speed · <b>y, z</b> temperature differences · <b>ρ</b> heating (Rayleigh ratio)</sym>
+<idea><p>The equation that launched chaos theory, met in Part I, Day 11. It belongs in any list of the hundred most useful because it changed how we think about prediction: weather forecasting, ensemble forecasts and the "butterfly effect" all trace back to it. It also models lasers, waterwheels and dynamos.</p></idea>
+<ex t="At ρ = 28, where are the two non-trivial equilibria? Are they stable?">C± = (±√(β(ρ − 1)), ±√(β(ρ − 1)), ρ − 1) = (±8.49, ±8.49, 27)
+They lose stability at ρ = σ(σ + β + 3)/(σ − β − 1) = 24.74 < 28 → unstable: the flow orbits around them without settling, hopping between the two lobes.</ex>
+<app>Weather and climate predictability, ensemble forecasting, lasers (Haken), chaotic waterwheels and dynamos, chaos-based encryption, teaching sensitivity to initial conditions.</app>
+<lab w="lorenz"></lab>
+</eq>
+
+<eq n="99" name="Rössler system" tags="ODE,nonlinear,system,chaos" who="Otto Rössler 1976" short="x′ = −y − z, y′ = x + ay, z′ = b + z(x − c)">
+<f>x′ = −y − z      y′ = x + a·y      z′ = b + z·(x − c)      classic a = b = 0.2, c = 5.7</f>
+<sym>One nonlinear term (zx) only · <b>c</b> controls the route to chaos</sym>
+<idea><p>Rössler designed the simplest possible chaotic flow: a spiral in the x–y plane that occasionally lifts off and folds back (the z term) — a direct picture of "stretch and fold". As c increases the orbit doubles its period again and again (1, 2, 4 … loops) before becoming chaotic, the same Feigenbaum cascade seen in dripping taps and in the Duffing oscillator of Part I.</p></idea>
+<ex t="Follow the period-doubling route with a = b = 0.2.">c = 2.5: a single loop (period 1)
+c = 3.5: two distinct loops (period 2)
+c = 4.0: four loops (period 4)
+c = 5.7: chaotic band — a strange attractor with a one-dimensional return map.</ex>
+<app>A standard test case for chaos analysis (Lyapunov exponents, return maps), models of chemical oscillators, and teaching the period-doubling route.</app>
+<lab>{"t":"ode","v":["x","y","z"],"f":["-y-z","x+0.2*y","0.2+z*(x-c)"],"p":{"c":[2,7,5.7,"c"]},"init":[1,1,0],"T":300,"n":30000,"show":[["x"]],"ph":["x","y"],"phcap":"x–y projection: count the loops","out":[["max z","zmax","",2]]}</lab>
+</eq>
+
+<eq n="100" name="Kuramoto model (synchronisation)" tags="ODE,nonlinear,system" who="Yoshiki Kuramoto 1975" short="θᵢ′ = ωᵢ + (K/N)·Σ sin(θⱼ − θᵢ)">
+<f>dθ<sub>i</sub>/dt = ω<sub>i</sub> + (K/N)·Σ<sub>j</sub> sin(θ<sub>j</sub> − θ<sub>i</sub>)      order parameter  r·e<sup>iψ</sup> = (1/N)·Σ e<sup>iθ<sub>j</sub></sup></f>
+<sym><b>θ<sub>i</sub></b> phase of oscillator i · <b>ω<sub>i</sub></b> natural frequency · <b>K</b> coupling · <b>r</b> coherence (0 to 1)</sym>
+<idea><p>Many oscillators, each with its own natural pace, each nudged towards the others. Below a critical coupling they run independently; above it a synchronised cluster appears suddenly and grows — a phase transition in time. For a Lorentzian spread of half-width γ the threshold is K<sub>c</sub> = 2γ and r = √(1 − K<sub>c</sub>/K) above it. A fitting end: equation 58's single locking oscillator, multiplied a thousand times.</p></idea>
+<ex t="Natural frequencies spread with half-width γ = 0.5 rad/s (Lorentzian). Critical coupling? Coherence at K = 2?">K_c = 2γ = 1.0
+At K = 2: r = √(1 − 1/2) = 0.71 — about 70 % coherent
+The London Millennium Bridge (2000): pedestrians' steps locked to the bridge's sway once the crowd exceeded a critical number — Kuramoto in action.</ex>
+<app>Power-grid stability (generators as coupled oscillators), fireflies and crickets, heart pacemaker cells, circadian clocks, laser arrays, neuronal rhythms, synchronised metronomes, applause.</app>
+<lab w="kuramoto"></lab>
+</eq>
+
+<quiz>[
+{"q":"In the Black–Scholes model, higher volatility makes a call option","o":["Cheaper","More valuable","Unchanged","Worthless"],"a":1,"e":"Volatility acts like diffusivity; more spread means more chance of a large payoff."},
+{"q":"For geometric Brownian motion the median grows at","o":["μ","μ + σ²/2","μ − σ²/2","σ"],"a":2,"e":"Volatility drag: ln S has drift μ − σ²/2."},
+{"q":"In the Solow model, a higher saving rate raises","o":["Long-run growth rate","The steady-state level of income","Depreciation","Population growth"],"a":1,"e":"Growth returns to zero (without technology); the level rises."},
+{"q":"Lanchester's square law says fighting strength scales with","o":["Numbers","Numbers squared","√numbers","Effectiveness squared"],"a":1,"e":"b·x² − a·y² is conserved."},
+{"q":"Above the critical coupling, the Kuramoto order parameter r","o":["Stays zero","Jumps to exactly 1","Grows from zero as a cluster synchronises","Oscillates randomly"],"a":2,"e":"r = √(1 − K_c/K) for a Lorentzian spread."}
+]</quiz>
+<extra><section id="exam"><h2><span class="n">🎓</span>Final assessment</h2>
+<p>Twenty questions across all hundred equations. Your best score is kept and appears on the certificate.</p>
+<script type="application/json" id="exam-data">[
+{"q":"The half-life of a process with y′ = −0.1y (per hour) is","o":["0.69 h","6.9 h","10 h","23 h"],"a":1,"e":"ln 2/0.1."},
+{"q":"Torricelli's tank empties in finite time because the outflow is proportional to","o":["h","√h","h²","a constant"],"a":1,"e":"dh/dt ∝ −√h."},
+{"q":"Quadratic air drag gives a terminal velocity proportional to","o":["m","√m","m²","1/m"],"a":1,"e":"v_t = √(2mg/(ρC_dA))."},
+{"q":"A Jeffcott rotor running well above its critical speed","o":["Whirls with ever-growing radius","Self-centres, whirling with radius close to the eccentricity","Stops whirling","Locks at half speed"],"a":1,"e":"|r|/e → 1 as Ω/ω_n → ∞."},
+{"q":"Oil whip in plain journal bearings appears above about","o":["Half the first critical speed","The first critical speed","Twice the first critical speed","Ten times"],"a":2,"e":"Ω = 2ω_n in the simple cross-coupled model."},
+{"q":"In EI·y⁗ = q the shear force is","o":["EI·y″","−EI·y‴","EI·y′","q"],"a":1,"e":"V = dM/dx = −EI·y‴ (sign convention)."},
+{"q":"Euler buckling load is proportional to","o":["1/L","1/L²","L","1/L⁴"],"a":1,"e":"P_cr = π²EI/(KL)²."},
+{"q":"Gear-mesh stiffness variation acts as","o":["A constant force","A parametric (Mathieu-type) excitation","Pure damping","A mass change"],"a":1,"e":"k(t) multiplies the displacement."},
+{"q":"The diffusion length after time t is about","o":["αt","√(αt)","α/t","t/α"],"a":1,"e":"Heat and mass penetrate as √(αt)."},
+{"q":"Thermal runaway (Semenov) happens when generation's slope exceeds cooling's at","o":["Every temperature","No crossing point exists","Ambient only","Melting point"],"a":1,"e":"No equilibrium when P₀β/hA > 1/e."},
+{"q":"Laminar pipe flow rate scales with radius as","o":["R","R²","R³","R⁴"],"a":3,"e":"Hagen–Poiseuille."},
+{"q":"The Reynolds equation of lubrication neglects","o":["Viscosity","Pressure","Fluid inertia","Film thickness"],"a":2,"e":"Thin-film, viscous-dominated flow."},
+{"q":"The Joukowsky surge ΔH = aV/g applies when the valve closes","o":["Slower than 2L/a","Faster than 2L/a","Exactly at L/a","Only for gas"],"a":1,"e":"Rapid closure, within one round trip."},
+{"q":"The Q factor of a series RLC circuit is","o":["R√(L/C)","(1/R)√(L/C)","LC","1/(RC)"],"a":1,"e":"Q = (1/R)√(L/C)."},
+{"q":"The Kalman gain at steady state for P′ = Q − P²/R is","o":["Q/R","√(Q/R)","QR","R/Q"],"a":1,"e":"P∞ = √(QR), K = P/R."},
+{"q":"A drum's first two frequencies are in the ratio","o":["1 : 2","1 : 1.59","1 : 3","1 : 1.41"],"a":1,"e":"3.832/2.405 = 1.59."},
+{"q":"Δv from the rocket equation is","o":["u·m₀/m_f","u·ln(m₀/m_f)","u·(m₀ − m_f)","u²/2"],"a":1,"e":"Tsiolkovsky."},
+{"q":"The herd-immunity threshold for R₀ = 5 is","o":["20 %","50 %","80 %","95 %"],"a":2,"e":"1 − 1/R₀."},
+{"q":"Fisher–KPP fronts travel at","o":["2√(rD)","rD","√(D/r)","D"],"a":0,"e":"The minimal wave speed."},
+{"q":"Black–Scholes reduces, after a change of variables, to","o":["The wave equation","The heat equation","Laplace's equation","Schrödinger's equation"],"a":1,"e":"Volatility plays the role of diffusivity."}
+]</script>
+<div class="widget" data-w="exam" data-src="exam-data" data-key="exam"></div>
+</section>
+<section id="cert"><h2><span class="n">★</span>Your certificate</h2>
+<p>Type your name. The certificate counts the chapters you have marked complete and your best final-assessment score. Print it, or — when signed in and finished — save it to your account with a verifiable certificate ID.</p>
+<div class="widget" data-w="cert" data-from="1" data-to="10" data-key="exam" data-title="Differential Equations Part II: 100 Equations That Run the World" data-course="differential-equations-2" data-path="/differential-equations-2/" data-topics="the hundred most useful differential equations of engineering, physics, biology, medicine, economics and society, with their derivations, worked examples and live models"></div>
+</section></extra>
+</day>

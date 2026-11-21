@@ -1,0 +1,126 @@
+<!--
+TOOL:    differential-equations-2/_src/ch08.html — Part II source, Chapter 8: Space, Flight and Vehicles (equations 71–80)
+FAMILY:  differential-equations
+VERSION: 1.0.0
+DATE:    2026-11-21
+CHAT:    As a continuation as part 2, discuss the most famous 100 useful differential equations that are being used in different applications with worked out examples
+CHANGES: 1.0.0 - first version
+STATUS:  working
+-->
+<day n="8">
+<summary>Equations that fly and drive: Kepler orbits and the three-body problem, the rocket equation, atmospheric re-entry, the structure of stars (Lane–Emden), Euler's spinning-body equations, and the vehicle models every automotive engineer uses — longitudinal dynamics, the bicycle model, the quarter-car — ending with the aircraft phugoid.</summary>
+<goals><li>Compute orbits, orbital periods and launch Δv</li><li>Explain why staging is necessary and what limits re-entry deceleration</li><li>See the intermediate-axis instability of a spinning body</li><li>Model vehicle acceleration, top speed, cornering paths and ride</li><li>Find the period and damping of an aircraft's phugoid</li></goals>
+<intro><p>Newton's second law again, now in three dimensions, with gravity falling off as 1/r², with mass that changes (rockets), with air density that changes with height, and with rotation. Most of these systems have no closed-form solution, which is why spaceflight and vehicle engineering were early adopters of numerical integration (Part I, Day 4).</p></intro>
+
+<eq n="71" name="Kepler two-body problem" tags="ODE,nonlinear,system" who="Kepler 1609–1619; Newton 1687" short="r″ = −μ·r/|r|³">
+<f>d²<b>r</b>/dt² = −μ·<b>r</b>/|<b>r</b>|³      orbit: conic section;   period T = 2π·√(a³/μ)</f>
+<sym><b>r</b> position relative to the planet · <b>μ = GM</b> (Earth 3.986×10¹⁴ m³/s²) · <b>a</b> semi-major axis</sym>
+<idea><p>Inverse-square gravity gives exactly closed ellipses (or parabolas and hyperbolas for escape). Angular momentum conservation makes the satellite sweep equal areas in equal times — fast at perigee, slow at apogee. Kepler's third law follows: T² ∝ a³.</p></idea>
+<ex t="Find the radius of a geostationary orbit (period one sidereal day, 86 164 s). Then the speed and period of a 400 km orbit.">r = (μT²/4π²)^(1/3) = (3.986e14 × 86164²/39.48)^(1/3) = 42 164 km (35 786 km altitude)
+400 km: r = 6771 km, v = √(μ/r) = 7.67 km/s, T = 92 minutes (the ISS)</ex>
+<app>Satellite orbits (communication, navigation, imaging), planetary motion, mission design, binary stars, the trajectory of the Chandrayaan probes.</app>
+<lab>{"t":"ode","v":["x","y","vx","vy"],"f":["vx","vy","-x/(x^2+y^2)^1.5","-y/(x^2+y^2)^1.5"],"y0":{"v0":[0.3,1.5,1,"speed at start / circular speed"]},"init":[1,0,0,"v0"],"T":40,"n":8000,"ph":["x","y"],"xy":true,"phr":[[-3,3],[-3,3]],"show":[["x","y"]],"phcap":"Orbit (planet at the origin)","marks":[[0,0]],"der":{"r":"sqrt(x^2+y^2)"},"out":[["eccentricity","abs(v0^2-1)","",3],["apoapsis / start radius","rmax","",3]],"note":"Units: start radius 1, μ = 1. Speed 1 = circular; √2 ≈ 1.414 = escape."}</lab>
+</eq>
+
+<eq n="72" name="Restricted three-body problem" tags="ODE,nonlinear,system" who="Euler 1767; Lagrange 1772; Poincaré 1890" p1="11" short="x″ − 2y′ = ∂Ω/∂x, y″ + 2x′ = ∂Ω/∂y">
+<f>x″ − 2y′ = x − (1−μ)(x+μ)/r₁³ − μ(x−1+μ)/r₂³      y″ + 2x′ = y − (1−μ)y/r₁³ − μy/r₂³</f>
+<sym>Rotating frame with the two big bodies fixed · <b>μ</b> mass ratio (Earth–Moon 0.01215) · <b>r₁, r₂</b> distances to them · five Lagrange points L1–L5</sym>
+<idea><p>Add a third, tiny body to two that orbit each other. Poincaré proved there is no general formula — and in trying, discovered chaos. In the rotating frame there are five equilibrium (Lagrange) points; L4 and L5 are stable (Trojan asteroids sit there), L1 and L2 unstable but ideal for observatories (James Webb sits near Sun–Earth L2). Low-energy transfers ride the chaotic tangle near them.</p></idea>
+<ex t="How far from Earth is the Earth–Moon L1 point (where a spacecraft can hover between them)?">Approximation r ≈ R·(μ/3)^(1/3) from the Moon = 384 400 × (0.01215/3)^(1/3) = 61 500 km
+So L1 is about 323 000 km from Earth (exact: 326 400 km).</ex>
+<app>Lunar transfer trajectories and Apollo free-return paths, halo orbits for observatories at L1/L2, Trojan asteroids, the Aditya-L1 solar mission at Sun–Earth L1, gravity-assist design.</app>
+<lab w="threebody"></lab>
+</eq>
+
+<eq n="73" name="Tsiolkovsky rocket equation" tags="ODE,linear,first order" who="Tsiolkovsky 1903" short="m·v′ = −u·m′ − m·g">
+<f>m·dv/dt = −u<sub>e</sub>·dm/dt − m·g      →      Δv = u<sub>e</sub>·ln(m₀/m<sub>f</sub>) − g·t<sub>burn</sub></f>
+<sym><b>u<sub>e</sub></b> exhaust speed (= I<sub>sp</sub>·g₀) · <b>m₀, m<sub>f</sub></b> initial and final mass · gravity loss g·t<sub>burn</sub></sym>
+<idea><p>A rocket throws mass backwards; momentum conservation gives speed growing with the logarithm of the mass ratio. The logarithm is merciless: to double Δv you must square the mass ratio. That is why rockets are mostly propellant and why they drop empty tanks (staging) — and why exhaust speed (I<sub>sp</sub>) is the most valuable property of an engine.</p></idea>
+<ex t="A stage with u_e = 3000 m/s and mass ratio 5. Δv? Orbit needs about 9.4 km/s including losses — how many such stages?">Δv = 3000 × ln 5 = 4.83 km/s per stage (ignoring gravity loss)
+A single stage would need m₀/m_f = e^(9400/3000) = 23 — structurally impossible.
+Two stages of ratio ≈ 4.8 each (Δv 4.7 km/s each) do it — the logic behind every launcher.</ex>
+<app>Launch vehicles (PSLV, GSLV, Falcon), spacecraft manoeuvre budgets, missiles, ion thrusters (huge u_e, tiny thrust), even a garden hose pushing back.</app>
+<lab>{"t":"ode","v":["m","v"],"f":["m>mf?-mdot:0","m>mf?ue*mdot/m-9.81*g:-9.81*g"],"p":{"ue":[1000,4500,3000,"exhaust speed","m/s"],"mf":[5,50,20,"dry mass","% of start"],"mdot":[0.2,5,1,"burn rate","% per s"],"g":[0,1,1,"gravity on (1) / off (0)","",1]},"init":[100,0],"T":120,"tl":"t, s","show":[["v"],["m"]],"cap":["speed, m/s","mass, % of start"],"out":[["ideal Δv","ue*log(100/mf)","m/s",0],["achieved (with gravity loss)","vmax","m/s",0]]}</lab>
+</eq>
+
+<eq n="74" name="Atmospheric re-entry (Allen–Eggers)" tags="ODE,nonlinear,system" who="Allen and Eggers 1953" short="v′ = −ρ(h)v²/(2β) + g·sinγ, h′ = −v·sinγ">
+<f>dv/dt = −ρ₀·e<sup>−h/H</sup>·v²/(2β) + g·sin γ      dh/dt = −v·sin γ      peak deceleration ≈ v₀²·sin γ/(2eH)</f>
+<sym><b>β = m/(C<sub>D</sub>A)</b> ballistic coefficient · <b>H</b> scale height (≈ 7.2 km) · <b>γ</b> flight-path angle below horizontal</sym>
+<idea><p>Air density grows exponentially as the vehicle descends, while speed falls. Deceleration peaks at a height where these trade off. Remarkably, the peak g-load depends only on entry speed and angle — not on the vehicle's mass or shape — while the <i>height</i> of the peak depends on β. Allen and Eggers' insight that blunt bodies (low β) shed heat into the air led to every capsule's shape.</p></idea>
+<ex t="A capsule enters at 7.5 km/s and 10° below horizontal. Peak deceleration?">a_max = v²·sin γ/(2eH) = 7500² × 0.1736/(2 × 2.718 × 7200) = 250 m/s² ≈ 25 g
+Too steep for humans: crewed capsules use shallow entry (≈ 1–2°) plus lift to keep below about 5–8 g.</ex>
+<app>Spacecraft and capsule re-entry (Gaganyaan), meteors, ballistic missiles, Mars landers (thin atmosphere, so parachutes and retro-rockets), aerobraking.</app>
+<lab>{"t":"ode","v":["h","v"],"f":["-v*sin(gm*pi/180)","-1.225*exp(-h/7200)*v^2/(2*b)+9.81*sin(gm*pi/180)"],"p":{"gm":[1,60,10,"entry angle γ","°"],"b":[50,2000,300,"ballistic coeff. β","kg/m²"]},"init":[120000,7500],"T":300,"n":6000,"tl":"t, s","stop":"h<0","der":{"dec":"1.225*exp(-h/7200)*v^2/(2*b)/9.81","hk":"h/1000"},"show":[["dec"],["hk"]],"cap":["deceleration, g","height, km"],"out":[["peak deceleration","decmax","g",1],["Allen–Eggers estimate","7500^2*sin(gm*pi/180)/(2*e*7200)/9.81","g",1]]}</lab>
+</eq>
+
+<eq n="75" name="Lane–Emden equation (stars)" tags="ODE,nonlinear,second order" who="Lane 1870; Emden 1907" short="(1/ξ²)(ξ²θ′)′ + θⁿ = 0">
+<f>(1/ξ²)·d/dξ( ξ²·dθ/dξ ) + θ<sup>n</sup> = 0,   θ(0) = 1, θ′(0) = 0      n = 1: θ = sin ξ/ξ</f>
+<sym><b>θ</b> scaled density<sup>1/n</sup> · <b>ξ</b> scaled radius · <b>n</b> polytropic index (n = 3 ≈ the Sun, 1.5 ≈ white dwarfs and gas giants)</sym>
+<idea><p>A self-gravitating ball of gas in hydrostatic equilibrium, with pressure ∝ density<sup>1+1/n</sup>, satisfies this nonlinear ODE. Its first zero ξ₁ is the star's surface. Only n = 0, 1 and 5 have closed forms; everything else is numerical — Emden's tables (1907) were an early triumph of hand computation.</p></idea>
+<ex t="Surface positions (first zero ξ₁) for n = 0, 1 and 3?">n = 0: θ = 1 − ξ²/6 → ξ₁ = √6 = 2.449
+n = 1: θ = sin ξ/ξ → ξ₁ = π = 3.142
+n = 3 (numerical): ξ₁ = 6.897 — a more centrally condensed star, like the Sun</ex>
+<app>Stellar structure, gas giants, white dwarfs (Chandrasekhar limit), isothermal gas spheres, and analogous problems in chemical reactors (Frank-Kamenetskii) and electrostatics.</app>
+<lab>{"t":"ode","v":["th","dth"],"f":["dth","-(th>0?th:0)^n-2*dth/t"],"p":{"n":[0,4.5,3,"index n"]},"t0":1e-6,"init":[1,0],"T":10,"n":4000,"tl":"ξ","stop":"th<0","show":[["th"]],"lab":{"th":"θ(ξ)"},"out":[["surface ξ₁","T","",3]]}</lab>
+</eq>
+
+<eq n="76" name="Euler's rigid-body equations (the tennis-racket flip)" tags="ODE,nonlinear,system" who="Euler 1758" short="I₁ω₁′ = (I₂ − I₃)ω₂ω₃ …">
+<f>I₁·ω₁′ = (I₂ − I₃)·ω₂·ω₃      I₂·ω₂′ = (I₃ − I₁)·ω₃·ω₁      I₃·ω₃′ = (I₁ − I₂)·ω₁·ω₂</f>
+<sym><b>ω₁, ω₂, ω₃</b> angular velocities about the principal axes · <b>I₁ &lt; I₂ &lt; I₃</b> principal moments of inertia</sym>
+<idea><p>A body spinning freely is stable about its axes of largest and smallest inertia but <b>unstable about the intermediate axis</b>: a tiny wobble grows and the body flips over periodically. Toss a phone or a tennis racket about its middle axis and it turns over every time. The cosmonaut Dzhanibekov filmed a wing nut doing it in orbit (1985). Satellites must spin about their major axis — Explorer 1 (1958) did not, and tumbled.</p></idea>
+<ex t="A body with I = (1, 2, 3) spins at ω₂ = 1 about the middle axis with a 1 % wobble. Rough time to the first flip?">Linearising about the middle axis: growth rate λ = ω·√((I₃ − I₂)(I₂ − I₁)/(I₁I₃)) = √(1 × 1/3) = 0.58 per unit time
+From 0.01 to order 1: t ≈ ln(100)/0.58 ≈ 8 time units — then the flip repeats periodically.</ex>
+<app>Satellite attitude stability (spin about the major axis), spinning projectiles, gyroscopes, gymnastics and diving twists, molecules, the free precession of the Earth (Chandler wobble).</app>
+<lab>{"t":"ode","v":["w1","w2","w3"],"f":["(I2-I3)*w2*w3/1","(I3-1)*w3*w1/I2","(1-I2)*w1*w2/I3"],"p":{"I2":[1.1,2.9,2,"I₂ (I₁ = 1)"],"I3":[3,5,3,"I₃"]},"y0":{"ax":[1,3,2,"spin about axis","",1]},"init":["ax==1?1:0.01","ax==2?1:0.01","ax==3?1:0.01"],"T":60,"n":6000,"show":[["w1","w2","w3"]],"lab":{"w1":"ω₁","w2":"ω₂","w3":"ω₃"},"der":{"nw2":"-w2"},"out":[["lowest ω₂ (negative = flipped)","-nw2max","",2]],"note":"Spin about axis 2 (intermediate) and ω₂ reverses again and again; about axis 1 or 3 the wobble stays small."}</lab>
+</eq>
+
+<eq n="77" name="Vehicle longitudinal dynamics" tags="ODE,nonlinear,first order" who="automotive engineering" short="m·v′ = F − ½ρC_dAv² − C_rr·mg − mg·sinθ">
+<f>m·dv/dt = F<sub>tr</sub> − ½·ρ·C<sub>d</sub>A·v² − C<sub>rr</sub>·m·g − m·g·sin θ      F<sub>tr</sub> = min(F<sub>max</sub>, P/v)</f>
+<sym><b>F<sub>tr</sub></b> tractive force (traction-limited at low speed, power-limited above) · <b>C<sub>rr</sub></b> rolling resistance · <b>θ</b> gradient</sym>
+<idea><p>Thrust minus aerodynamic drag, rolling resistance and grade. At low speed the tyres limit force; above a crossover the engine's power limits it (F = P/v). Top speed is where power equals drag × speed: P = (½ρC<sub>d</sub>Av² + C<sub>rr</sub>mg)·v — a cubic, so 20 % more top speed needs 70 % more power.</p></idea>
+<ex t="A 1200 kg car, C_dA = 0.65 m², C_rr = 0.012, 60 kW at the wheels. Top speed on the level?">0.5 × 1.225 × 0.65 × v³ + 0.012 × 1200 × 9.81 × v = 60 000
+Solve: v = 51.0 m/s = 184 km/h (aero takes 88 % of the power there)
+At 100 km/h the same car needs only 11.7 kW.</ex>
+<app>Vehicle performance and fuel/energy consumption, EV range estimation, drive-cycle simulation, gear-ratio selection, chassis dynamometer road-load settings, trucks on gradients.</app>
+<lab>{"t":"ode","v":["x","v"],"f":["v","(min(Fm*1000,P*1000/max(v,0.1))-0.5*1.225*CdA*v^2-0.012*m*9.81-m*9.81*gr/100)/m"],"p":{"m":[800,3000,1200,"mass","kg"],"P":[20,300,60,"power at wheels","kW"],"CdA":[0.3,2,0.65,"C_d·A","m²"],"Fm":[2,15,6,"max tractive force","kN"],"gr":[0,15,0,"gradient","%"]},"init":[0,0],"T":60,"tl":"t, s","der":{"kmh":"v*3.6"},"show":[["kmh"]],"cap":["speed, km/h"],"out":[["speed after 60 s","kmhT","km/h",1],["distance","xT","m",0]]}</lab>
+</eq>
+
+<eq n="78" name="Kinematic bicycle model (car steering)" tags="ODE,nonlinear,system" who="Rajamani; standard in motion planning" short="x′ = v·cosψ, y′ = v·sinψ, ψ′ = v·tanδ/L">
+<f>dx/dt = v·cos ψ      dy/dt = v·sin ψ      dψ/dt = (v/L)·tan δ      turning radius R = L/tan δ</f>
+<sym><b>ψ</b> heading · <b>δ</b> front-wheel steer angle · <b>L</b> wheelbase · (rear-axle reference, no tyre slip)</sym>
+<idea><p>Collapse the two front and two rear wheels into one each and assume they roll without slipping: three nonlinear ODEs give the car's path for any steering input. It is the workhorse of path planning in autonomous driving and parking assistants. At higher speeds tyres slip and the dynamic bicycle model (with cornering stiffness) takes over — understeer and oversteer.</p></idea>
+<ex t="A car with a 2.7 m wheelbase and maximum steer 30°. Minimum turning radius? Lateral acceleration if driven round it at 20 km/h?">R = L/tan δ = 2.7/0.577 = 4.68 m (rear axle centre)
+a = v²/R = 5.56²/4.68 = 6.6 m/s² ≈ 0.67 g — already near the tyre limit, so tight turns must be slow.</ex>
+<app>Autonomous-vehicle path planning and parking, robot and AGV navigation, lane-change manoeuvre design, forklift and tractor-trailer steering, game physics.</app>
+<lab>{"t":"ode","v":["x","y","ps"],"f":["v*cos(ps)","v*sin(ps)","v/L*tan(d0*pi/180*sin(2*pi*t/Tp))"],"p":{"v":[1,30,10,"speed","m/s"],"L":[1,6,2.7,"wheelbase","m"],"d0":[0,30,5,"steer amplitude","°"],"Tp":[1,20,4,"steer period","s"]},"init":[0,0,0],"T":8,"ph":["x","y"],"xy":true,"phcap":"Path of the car (sinusoidal steering = lane change / slalom)","show":[["ps"]],"lab":{"ps":"heading ψ, rad"},"out":[["min turning radius at that steer","L/tan(max(d0,0.1)*pi/180)","m",2],["lateral offset","yT","m",2]]}</lab>
+</eq>
+
+<eq n="79" name="Quarter-car suspension" tags="ODE,linear,system" who="vehicle dynamics, 1950s" p1="8" short="m_s·z_s″ = −k_s(z_s − z_u) − c_s(…), m_u·z_u″ = … − k_t(z_u − z_r)">
+<f>m<sub>s</sub>·z<sub>s</sub>″ = −k<sub>s</sub>(z<sub>s</sub> − z<sub>u</sub>) − c<sub>s</sub>(z<sub>s</sub>′ − z<sub>u</sub>′)<br>m<sub>u</sub>·z<sub>u</sub>″ = k<sub>s</sub>(z<sub>s</sub> − z<sub>u</sub>) + c<sub>s</sub>(z<sub>s</sub>′ − z<sub>u</sub>′) − k<sub>t</sub>(z<sub>u</sub> − z<sub>r</sub>)</f>
+<sym><b>z<sub>s</sub></b> body (sprung mass) · <b>z<sub>u</sub></b> wheel (unsprung mass) · <b>z<sub>r</sub></b> road profile · <b>k<sub>t</sub></b> tyre stiffness</sym>
+<idea><p>A two-degree-of-freedom system (Part I, Day 8) with base excitation from the road: two modes, body bounce (≈ 1–1.5 Hz) and wheel hop (≈ 10–12 Hz). Comfort needs a soft spring and moderate damping; road holding needs the tyre force to stay steady. The damper is the compromise — and the reason for semi-active and active suspensions.</p></idea>
+<ex t="Sprung mass 300 kg, spring 20 kN/m, unsprung 40 kg, tyre 200 kN/m. The two natural frequencies?">Body: k_eq = k_s·k_t/(k_s + k_t) = 18.2 kN/m → f = √(18 200/300)/2π = 1.24 Hz
+Wheel hop: f ≈ √((k_s + k_t)/m_u)/2π = √(220 000/40)/2π = 11.8 Hz
+Unsprung mass matters: heavier wheels hop lower and transmit more to the body.</ex>
+<app>Car and truck suspensions, motorcycle forks, aircraft landing gear, seat suspensions, railway bogies, rough-road test rigs and four-poster shakers.</app>
+<lab w="quartercar"></lab>
+</eq>
+
+<eq n="80" name="Aircraft phugoid (Lanchester)" tags="ODE,nonlinear,system" who="Lanchester 1908" short="v′ = −sinγ − v²/(L/D), γ′ = (v² − cosγ)/v">
+<f>dv/dt = −sin γ − D(v)      dγ/dt = (v² − cos γ)/v   (scaled; trim speed = 1)<br>ω<sub>ph</sub> ≈ √2·g/V,   ζ<sub>ph</sub> ≈ 1/(√2·L/D)</f>
+<sym><b>v</b> airspeed / trim speed · <b>γ</b> flight-path angle · <b>L/D</b> lift-to-drag ratio</sym>
+<idea><p>Disturb an aircraft's speed and it trades height for speed and back again in a slow, lightly damped oscillation — climbing, slowing, diving, speeding up. Lanchester found it by flying paper gliders. Its period depends only on speed; its damping falls as aerodynamic efficiency rises, so clean, efficient gliders and airliners have barely damped phugoids that pilots and autopilots quietly correct.</p></idea>
+<ex t="An airliner cruising at 100 m/s (low altitude, for simplicity) with L/D = 15. Phugoid period and damping?">ω_ph = √2 × 9.81/100 = 0.139 rad/s → period 2π/0.139 = 45 s
+ζ = 1/(√2 × 15) = 0.047 — barely damped; it takes about 3/(ζω) ≈ 460 s to fade.</ex>
+<app>Aircraft longitudinal stability and autopilot design, gliders and paper planes, drones, airships, re-entry vehicles with lift.</app>
+<lab>{"t":"ode","v":["v","g"],"f":["-sin(g)-v^2/LD","(v^2-cos(g))/v"],"p":{"LD":[3,40,15,"L/D"]},"y0":{"v0":[0.6,1.4,1.2,"start speed / trim"]},"init":["v0",0],"T":60,"n":4000,"tl":"t (units of V/g)","show":[["v"],["g"]],"ph":["v","g"],"cap":["airspeed v","flight-path angle γ, rad"],"out":[["predicted period √2·π (units V/g)","sqrt(2)*pi","",3],["predicted ζ","1/(sqrt(2)*LD)","",3]]}</lab>
+</eq>
+
+<quiz>[
+{"q":"Kepler's third law says the orbital period scales with semi-major axis as","o":["a","a^1.5","a²","√a"],"a":1,"e":"T = 2π√(a³/μ)."},
+{"q":"To double a rocket's Δv with the same engine you must","o":["Double the mass ratio","Square the mass ratio","Halve the payload","Double the thrust"],"a":1,"e":"Δv ∝ ln(m₀/m_f)."},
+{"q":"The peak deceleration of a ballistic re-entry depends on","o":["The vehicle's mass","Its ballistic coefficient","Entry speed and angle","Its heat shield"],"a":2,"e":"a_max ≈ v²·sinγ/(2eH)."},
+{"q":"A free rigid body spinning about its intermediate principal axis","o":["Is stable","Flips over periodically","Stops","Spins faster"],"a":1,"e":"The intermediate-axis (tennis-racket) instability."},
+{"q":"An aircraft's phugoid period mainly depends on","o":["Altitude only","Airspeed","Wing area","Engine thrust"],"a":1,"e":"ω_ph ≈ √2·g/V."}
+]</quiz>
+</day>

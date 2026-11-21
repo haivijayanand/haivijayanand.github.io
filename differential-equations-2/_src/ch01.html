@@ -1,0 +1,140 @@
+<!--
+TOOL:    differential-equations-2/_src/ch01.html — Part II source, Chapter 1: Growth, Decay and First-Order Processes (equations 1–10)
+FAMILY:  differential-equations
+VERSION: 1.0.0
+DATE:    2026-11-21
+CHAT:    As a continuation as part 2, discuss the most famous 100 useful differential equations that are being used in different applications with worked out examples
+CHANGES: 1.0.0 - first version
+STATUS:  working
+-->
+<day n="1">
+<summary>Ten first-order equations that appear everywhere: growth and decay, decay chains, cooling, logistic and Gompertz growth, RC and RL circuits, draining tanks, mixing tanks and loans. One state, one rate law — yet they run medicine, electronics, chemistry and finance.</summary>
+<goals><li>Recognise the "rate ∝ amount" and "rate ∝ distance from target" patterns at a glance</li><li>Solve each equation and read its time constant or half-life</li><li>Work real problems: dating, forensic cooling, debounce circuits, tank drain times, loan payments</li><li>Know when a first-order model is enough and when it is not</li></goals>
+<intro><p>All ten share the form y′ = f(t, y) with one state. Seven of them are linear (Part I, Day 2) and their solutions are exponentials; three — logistic, Gompertz and Torricelli — are nonlinear but still separable. Read the time constant of each: it is the one number that tells you how fast the process happens.</p></intro>
+
+<eq n="1" name="Exponential growth and decay" tags="ODE,linear,first order" who="Malthus 1798; Rutherford 1900" p1="2" short="y′ = k·y">
+<f>dy/dt = k·y      →      y(t) = y₀·e<sup>kt</sup></f>
+<sym><b>y</b> amount · <b>k</b> rate constant (per unit time; k &gt; 0 growth, k &lt; 0 decay) · doubling time ln 2/k, half-life ln 2/|k|</sym>
+<idea><p>The simplest law in nature: the rate of change is proportional to how much there is. Each unit of the quantity produces (or loses) more of itself at the same rate — bacteria divide, interest earns interest, nuclei decay independently. The signature is a <b>constant doubling or halving time</b>, and a straight line when ln y is plotted against t.</p></idea>
+<ex t="Bacteria double every 20 minutes. Starting from 1000, how many after 3 hours?">k = ln 2 / 20 = 0.0347 per min
+3 h = 180 min = 9 doublings  →  y = 1000 × 2⁹ = 512 000
+(e^(0.0347 × 180) = e^6.24 = 512 ✓)</ex>
+<ex t="Carbon dating: charcoal has 30 % of the C-14 of living wood (half-life 5730 years). How old is it?">k = ln 2/5730 = 1.21 × 10⁻⁴ per year
+0.30 = e^(−k·t)  →  t = ln(1/0.30)/k = 1.204/1.21e-4 = 9950 years</ex>
+<app>Bacterial cultures, nuclear decay, continuous interest, drug elimination, the early phase of every epidemic, light absorption in a medium (Beer–Lambert), capacitor discharge.</app>
+<lab>{"t":"ode","v":["y"],"f":["k*y"],"p":{"k":[-1,1,0.3,"k","per unit time"]},"y0":{"y0":[0.2,5,1,"y(0)"]},"init":["y0"],"T":10,"show":[["y"]],"out":[["doubling / half-life","log(2)/abs(k)","",3],["y at the end","yT","",4]]}</lab>
+</eq>
+
+<eq n="2" name="Radioactive decay chain (Bateman equations)" tags="ODE,linear,system" who="Bateman 1910" p1="8" short="A′ = −λ₁A, B′ = λ₁A − λ₂B">
+<f>dA/dt = −λ₁·A      dB/dt = λ₁·A − λ₂·B      dC/dt = λ₂·B</f>
+<sym><b>A</b> parent, <b>B</b> daughter, <b>C</b> stable end product · <b>λ</b> decay constants = ln 2 / half-life</sym>
+<idea><p>A parent decays into a daughter that itself decays. The daughter first builds up, peaks, then follows the parent down. If the daughter lives much shorter than the parent, the two settle into <b>transient equilibrium</b>: their activities stay in a fixed ratio. The same equations describe any chain of first-order steps — a drug and its metabolite, a pollutant and its breakdown product.</p></idea>
+<deep t="Derivation of B(t)"><p>Solve A = A₀e<sup>−λ₁t</sup>, then B′ + λ₂B = λ₁A₀e<sup>−λ₁t</sup> is linear. With integrating factor e<sup>λ₂t</sup> and B(0) = 0: B = A₀·λ₁/(λ₂ − λ₁)·(e<sup>−λ₁t</sup> − e<sup>−λ₂t</sup>). Setting B′ = 0 gives the peak time t<sub>max</sub> = ln(λ₂/λ₁)/(λ₂ − λ₁).</p></deep>
+<ex t="Hospital Tc-99m generator: Mo-99 (half-life 66 h) decays to Tc-99m (6.0 h). When should the generator be 'milked' again?">λ₁ = 0.693/66 = 0.0105 per h,   λ₂ = 0.693/6.0 = 0.1155 per h
+t_max = ln(λ₂/λ₁)/(λ₂ − λ₁) = ln(11)/0.105 = 2.398/0.105 = 22.8 h
+→ the familiar "elute once a day" schedule.</ex>
+<app>Nuclear medicine generators, reactor decay heat, uranium-series dating, drug–metabolite kinetics, consecutive chemical reactions A → B → C.</app>
+<lab>{"t":"ode","v":["A","B","Cc"],"f":["-log(2)/h1*A","log(2)/h1*A-log(2)/h2*B","log(2)/h2*B"],"p":{"h1":[1,100,66,"parent half-life","h"],"h2":[0.5,50,6,"daughter half-life","h"]},"init":[1,0,0],"T":120,"tl":"t, h","show":[["A","B","Cc"]],"lab":{"A":"parent A","B":"daughter B","Cc":"stable C"},"out":[["daughter peak at","Btmax","h",1],["peak amount","Bmax","",3]]}</lab>
+</eq>
+
+<eq n="3" name="Newton's law of cooling" tags="ODE,linear,first order" who="Newton 1701" p1="2" short="T′ = −k(T − Tₐ)">
+<f>dT/dt = −k·(T − T<sub>a</sub>)      →      T = T<sub>a</sub> + (T₀ − T<sub>a</sub>)·e<sup>−kt</sup></f>
+<sym><b>T</b> temperature · <b>T<sub>a</sub></b> surroundings · <b>k = hA/(mc)</b> cooling constant, 1/k = time constant</sym>
+<idea><p>A body loses heat at a rate proportional to how much hotter it is than its surroundings. The <i>difference</i> decays exponentially. Valid when convection dominates and the body is small enough to be at one temperature (Biot number below 0.1 — see equation 33).</p></idea>
+<ex t="Forensic estimate: a body is at 32 °C at 10 pm and 30 °C at 11 pm in a 20 °C room. When did death occur (body at 37 °C)?">12 → 10 °C excess in 1 h:  k = ln(12/10) = 0.182 per h
+From 17 °C excess (37 °C) to 12 °C excess:  t = ln(17/12)/0.182 = 0.348/0.182 = 1.91 h
+→ about 1 h 55 min before 10 pm, i.e. around 8:05 pm.</ex>
+<app>Gearbox and motor cool-down, quench timing, food safety (cooling cooked food below 5 °C), forensic medicine, coffee cups, electronics heat sinks.</app>
+<lab>{"t":"ode","v":["T"],"f":["-k*(T-Ta)"],"p":{"k":[0.01,1,0.182,"k","per h"],"Ta":[0,40,20,"room","°C"]},"y0":{"T0":[20,100,37,"T(0)","°C"]},"init":["T0"],"T":24,"tl":"t, h","show":[["T"]],"out":[["time constant","1/k","h",2],["T after 24 h","TT","°C",2]]}</lab>
+</eq>
+
+<eq n="4" name="Logistic growth" tags="ODE,nonlinear,first order" who="Verhulst 1838" p1="3" short="P′ = rP(1 − P/K)">
+<f>dP/dt = r·P·(1 − P/K)      →      P = K / (1 + (K/P₀ − 1)·e<sup>−rt</sup>)</f>
+<sym><b>P</b> population · <b>r</b> intrinsic growth rate · <b>K</b> carrying capacity</sym>
+<idea><p>Growth that slows as resources run out. Near zero it is exponential; as P approaches K the brake (1 − P/K) takes over. The curve is an S, steepest at P = K/2 where the growth rate peaks at rK/4 — the "maximum sustainable yield" of fisheries.</p></idea>
+<deep t="Solving by partial fractions"><p>Separate: dP/(P(1 − P/K)) = r dt. Since 1/(P(1 − P/K)) = 1/P + 1/(K − P), integrating gives ln(P/(K − P)) = rt + C. Exponentiate and solve for P. The inflection point follows from P″ = r(1 − 2P/K)·P′ = 0 → P = K/2.</p></deep>
+<ex t="A fish pond holds at most 1000 fish; r = 0.5 per month; 100 fish are stocked. When does it reach 500, and what is the best sustainable catch?">500 = 1000/(1 + 9·e^(−0.5t))  →  e^(−0.5t) = 1/9  →  t = ln 9/0.5 = 4.39 months
+Maximum growth rate at P = 500:  rK/4 = 0.5 × 1000/4 = 125 fish per month</ex>
+<app>Populations and fisheries, sales of a new product, spread of a rumour or technology, tumour growth (early phase), autocatalytic reactions, the "S-curve" of project progress.</app>
+<lab>{"t":"ode","v":["P"],"f":["r*P*(1-P/K)"],"p":{"r":[0.05,2,0.5,"r","per month"],"K":[100,2000,1000,"K"]},"y0":{"P0":[1,500,100,"P(0)"]},"init":["P0"],"T":20,"show":[["P"]],"der":{"rate":"r*P*(1-P/K)"},"cap":["P(t)"],"out":[["time to K/2","log(K/P0-1)/r","",2],["max rate rK/4","r*K/4","",1]]}</lab>
+</eq>
+
+<eq n="5" name="Gompertz growth" tags="ODE,nonlinear,first order" who="Gompertz 1825" short="N′ = aN·ln(K/N)">
+<f>dN/dt = a·N·ln(K/N)      →      N = K·exp( ln(N₀/K)·e<sup>−at</sup> )</f>
+<sym><b>N</b> size (cells, volume) · <b>K</b> plateau · <b>a</b> rate at which growth decelerates</sym>
+<idea><p>Like logistic growth, but the brake acts sooner and more gently: the inflection comes at K/e ≈ 37 % of the plateau instead of 50 %. Gompertz invented it for human mortality (death rate rising exponentially with age); oncologists use it because solid tumours grow fast when small and slow as they outgrow their blood supply.</p></idea>
+<ex t="A tumour model with K = 100 (arbitrary units), N₀ = 1, a = 0.2 per week. Size after 10 weeks? When is growth fastest?">ln(N₀/K) = ln 0.01 = −4.605
+t = 10:  N = 100·exp(−4.605 × e^(−2)) = 100·exp(−0.623) = 53.6
+Fastest growth at N = K/e = 36.8:  −4.605·e^(−0.2t) = −1  →  t = ln(4.605)/0.2 = 7.6 weeks</ex>
+<app>Tumour growth, human mortality tables (actuaries), growth of animals and crops, market penetration of mobile phones, reliability growth in testing.</app>
+<lab>{"t":"ode","v":["N"],"f":["a*N*log(K/N)"],"p":{"a":[0.05,1,0.2,"a","per week"],"K":[10,200,100,"K"]},"y0":{"N0":[0.1,50,1,"N(0)"]},"init":["N0"],"T":40,"tl":"t, weeks","show":[["N"]],"der":{"rate":"a*N*log(K/N)"},"out":[["inflection at K/e","K/e","",2],["fastest growth at t","ratetmax","weeks",2]]}</lab>
+</eq>
+
+<eq n="6" name="RC circuit" tags="ODE,linear,first order" who="Kirchhoff 1845" p1="2" short="RC·V′ + V = Vₛ">
+<f>R·C·dV/dt + V = V<sub>s</sub>      →      V = V<sub>s</sub> + (V₀ − V<sub>s</sub>)·e<sup>−t/RC</sup></f>
+<sym><b>V</b> capacitor voltage · <b>R</b> resistance (Ω) · <b>C</b> capacitance (F) · <b>τ = RC</b> (s)</sym>
+<idea><p>Kirchhoff's voltage law around the loop: V<sub>s</sub> = iR + V with i = C·dV/dt. The capacitor charges along a first-order lag. RC circuits set timing (555 timers), filter noise (low-pass cut-off f<sub>c</sub> = 1/(2πRC)) and debounce switches.</p></idea>
+<ex t="Switch debounce: R = 10 kΩ, C = 1 µF, 5 V supply, logic HIGH threshold 3.0 V. How long after the switch closes does the input read HIGH?">τ = RC = 10⁴ × 10⁻⁶ = 10 ms
+3.0 = 5(1 − e^(−t/τ))  →  t = −τ·ln(1 − 0.6) = 10 × 0.916 = 9.2 ms
+Contact bounce (typically 1–5 ms) is filtered out.</ex>
+<ex t="Anti-aliasing filter: what RC gives a cut-off of 1 kHz with C = 100 nF?">R = 1/(2π·f_c·C) = 1/(2π × 1000 × 10⁻⁷) = 1592 Ω  → use 1.6 kΩ</ex>
+<app>Timers, debounce, low-pass and high-pass filters, sample-and-hold, defibrillator charging, camera flash, the time constant of a thermocouple amplifier input.</app>
+<lab>{"t":"ode","v":["V"],"f":["(Vs-V)/(R*C*1e-3)"],"p":{"R":[0.1,100,10,"R","kΩ"],"C":[0.1,10,1,"C","µF"],"Vs":[0,12,5,"supply","V"]},"init":[0],"T":50,"tl":"t, ms","show":[["V"]],"out":[["τ = RC","R*C","ms",2],["time to 3 V","-R*C*log(1-3/Vs)","ms",2]]}</lab>
+</eq>
+
+<eq n="7" name="RL circuit (inductor)" tags="ODE,linear,first order" who="Henry 1832; Faraday" p1="2" short="L·i′ + R·i = V">
+<f>L·di/dt + R·i = V      →      i = (V/R)·(1 − e<sup>−Rt/L</sup>)</f>
+<sym><b>i</b> current · <b>L</b> inductance (H) · <b>R</b> resistance · <b>τ = L/R</b></sym>
+<idea><p>An inductor resists changes of current: its voltage is L·di/dt. Switch on, and the current rises with time constant L/R. Switch off suddenly and di/dt is huge — the inductor generates a large voltage spike, which is why relay and solenoid coils need a flyback diode.</p></idea>
+<ex t="A 24 V solenoid valve coil: L = 0.5 H, R = 10 Ω. Current after 100 ms? Energy stored? Spike if the current is cut in 1 µs without a diode?">i∞ = 24/10 = 2.4 A,   τ = 0.5/10 = 50 ms
+i(100 ms) = 2.4·(1 − e^(−2)) = 2.08 A
+Energy = ½·L·i² = ½ × 0.5 × 2.4² = 1.44 J
+Spike ≈ L·Δi/Δt = 0.5 × 2.4/10⁻⁶ = 1.2 MV in theory — in practice an arc or a dead transistor.</ex>
+<app>Solenoids and relays, motor windings (electrical time constant), switch-mode power supplies, ignition coils, magnetic bearing coils, inrush current of transformers.</app>
+<lab>{"t":"ode","v":["i"],"f":["(V-R*i)/L"],"p":{"L":[0.05,2,0.5,"L","H"],"R":[1,50,10,"R","Ω"],"V":[1,48,24,"V","V"]},"init":[0],"T":0.5,"tl":"t, s","show":[["i"]],"der":{"vL":"V-R*i"},"out":[["τ = L/R","L/R*1000","ms",1],["final current","V/R","A",2],["energy","0.5*L*(V/R)^2","J",3]]}</lab>
+</eq>
+
+<eq n="8" name="Torricelli's draining tank" tags="ODE,nonlinear,first order" who="Torricelli 1643" p1="1" short="A·h′ = −C_d·a·√(2gh)">
+<f>A·dh/dt = −C<sub>d</sub>·a·√(2gh)      →      √h = √h₀ − (C<sub>d</sub>·a/2A)·√(2g)·t</f>
+<sym><b>h</b> water depth · <b>A</b> tank area · <b>a</b> hole area · <b>C<sub>d</sub></b> discharge coefficient (≈ 0.6 sharp hole, 1 ideal)</sym>
+<idea><p>Water leaves the hole at the free-fall speed √(2gh). The outflow slows as the tank empties, so √h — not h — falls linearly and the tank empties in finite time. Unlike exponential decay, there is a definite "empty" moment.</p></idea>
+<ex t="A 1 m diameter tank, 2 m deep, drains through a 25 mm hole. How long to empty (ideal, then with C_d = 0.6)?">A/a = (1000/25)² = 1600
+t = (A/(C_d·a))·√(2h₀/g) = 1600 × √(4/9.81) = 1600 × 0.639 = 1022 s ≈ 17 min (ideal)
+With C_d = 0.6:  1022/0.6 = 1700 s ≈ 28 min
+Half the depth drains in only 29 % of the time: t(1 m)/t(2 m) = 1 − 1/√2 = 0.29.</ex>
+<app>Emptying fuel and water tanks, clepsydras (water clocks), hour-glass design, gravity-fed lube tanks, dam reservoirs, the time to drain a sump through a plug.</app>
+<lab>{"t":"ode","v":["h"],"f":["h>0?-Cd*(d/1000)^2/D^2*sqrt(2*9.81*h):0"],"p":{"D":[0.3,3,1,"tank diameter","m"],"d":[5,100,25,"hole diameter","mm"],"Cd":[0.5,1,0.6,"C_d"]},"y0":{"h0":[0.2,5,2,"h(0)","m"]},"init":["h0"],"T":3000,"tl":"t, s","show":[["h"]],"out":[["time to empty","D^2/(Cd*(d/1000)^2)*sqrt(2*h0/9.81)/60","min",1]]}</lab>
+</eq>
+
+<eq n="9" name="Mixing tank (well-stirred reactor)" tags="ODE,linear,first order" who="chemical engineering, 1920s" p1="1" short="V·c′ = Q(c_in − c)">
+<f>V·dc/dt = Q·(c<sub>in</sub> − c)      →      c = c<sub>in</sub> + (c₀ − c<sub>in</sub>)·e<sup>−Qt/V</sup></f>
+<sym><b>c</b> concentration in the tank (= in the outflow) · <b>V</b> volume · <b>Q</b> flow rate · <b>τ = V/Q</b> residence time</sym>
+<idea><p>Salt in = Q·c<sub>in</sub>, salt out = Q·c (perfect mixing). The concentration approaches the inlet value with the residence time V/Q as time constant. It is the basic model of a continuous stirred-tank reactor, a room's ventilation, a lake's pollution and the flushing of a lubricating oil system.</p></idea>
+<ex t="A 1000 L tank of 20 g/L brine is flushed with fresh water at 50 L/min. When is it down to 1 g/L?">τ = V/Q = 1000/50 = 20 min
+1 = 20·e^(−t/20)  →  t = 20·ln 20 = 59.9 min (three residence times)</ex>
+<ex t="Oil flushing: a 400 L gearbox lube system circulates 40 L/min through a filter that removes 90 % of particles per pass. Time to cut contamination tenfold?">Effective removal flow = 0.9 × 40 = 36 L/min  →  τ = 400/36 = 11.1 min
+t = 11.1 × ln 10 = 25.6 min</ex>
+<app>Chemical reactors, room ventilation (air changes per hour), lake and river pollution, oil flushing and filtration, blood dialysis, dye-dilution measurement of cardiac output.</app>
+<lab>{"t":"ode","v":["c"],"f":["Q/V*(cin-c)"],"p":{"V":[100,5000,1000,"V","L"],"Q":[5,200,50,"Q","L/min"],"cin":[0,30,0,"c_in","g/L"]},"y0":{"c0":[0,40,20,"c(0)","g/L"]},"init":["c0"],"T":120,"tl":"t, min","show":[["c"]],"out":[["residence time","V/Q","min",1],["c at the end","cT","g/L",3]]}</lab>
+</eq>
+
+<eq n="10" name="Loan and annuity balance" tags="ODE,linear,first order" who="continuous compounding, Bernoulli 1683" short="A′ = r·A − P">
+<f>dA/dt = r·A − P      →      A = P/r + (A₀ − P/r)·e<sup>rt</sup></f>
+<sym><b>A</b> balance owed · <b>r</b> interest rate (per year, continuous) · <b>P</b> repayment rate (per year)</sym>
+<idea><p>Interest adds r·A, repayments remove P. If P &gt; r·A₀ the balance falls and reaches zero; if P = r·A₀ you only ever pay interest; if less, debt grows. The same equation with the sign of P reversed is a savings plan or a pension pot.</p></idea>
+<ex t="A ₹10 lakh loan at 9 % a year, repaid continuously over 10 years. What yearly (and monthly) payment?">A(10) = 0  →  P = r·A₀/(1 − e^(−rT)) = 0.09 × 10,00,000/(1 − e^(−0.9))
+= 90,000/0.5934 = ₹1,51,670 per year ≈ ₹12,640 per month
+(The bank's monthly-compounding EMI formula gives ₹12,668 — almost the same.)
+Total paid ₹15.17 lakh: ₹5.17 lakh is interest.</ex>
+<app>Home and vehicle loans, sinking funds, pension accumulation, inventory with constant demand and proportional spoilage, drug infusion with first-order elimination (same equation).</app>
+<lab>{"t":"ode","v":["A"],"f":["r/100*A-P"],"p":{"r":[1,20,9,"interest","% per year"],"P":[50000,300000,151670,"repayment","₹ per year"]},"y0":{"A0":[100000,3000000,1000000,"loan","₹"]},"init":["A0"],"T":20,"tl":"t, years","show":[["A"]],"stop":"A<0","out":[["paid off after","T","years",2],["interest-only payment","r/100*A0","₹/yr",0]]}</lab>
+</eq>
+
+<quiz>[
+{"q":"A quantity halves every 8 hours. Its decay constant is about","o":["0.087 per h","0.125 per h","0.693 per h","8 per h"],"a":0,"e":"k = ln 2/8 = 0.0866 per h."},
+{"q":"In a parent → daughter decay chain the daughter amount","o":["Always decreases","Rises, peaks, then decays","Grows for ever","Equals the parent"],"a":1,"e":"It is fed by the parent and drained by its own decay; the peak is at ln(λ₂/λ₁)/(λ₂ − λ₁)."},
+{"q":"Logistic growth is fastest when P equals","o":["K/e","K/4","K/2","K"],"a":2,"e":"P″ = 0 at P = K/2; the rate there is rK/4."},
+{"q":"Torricelli's tank empties in a finite time because","o":["The outflow is constant","√h falls linearly with time","It is an exponential decay","The hole grows"],"a":1,"e":"dh/dt ∝ −√h gives √h = √h₀ − ct, which reaches zero."},
+{"q":"A 2000 L tank flushed at 100 L/min has a residence time of","o":["2 min","20 min","200 min","0.05 min"],"a":1,"e":"τ = V/Q = 20 min."}
+]</quiz>
+</day>

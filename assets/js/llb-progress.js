@@ -67,6 +67,7 @@ The page must use the explorer globals: UNITS, VIEWS, S (S.d.done, S.d.best), cu
     ".llbp-cert input{width:100%;margin:6px 0}" +
     ".llbp-home .row{margin-top:6px}" +
     "@media (max-width:900px){#llbpBtn .w{display:none}}" +
+    "@media (max-width:600px){#fsBtn{display:none}#top{gap:6px;padding:8px 10px}#top .tbtn{padding:4px 8px;font-size:13px;white-space:nowrap}#top h1{font-size:16px;min-width:0}}" +
     "@media print{#llbpStrip,#llbpBtn,#llbpModal{display:none!important}}";
   document.head.appendChild(css);
 

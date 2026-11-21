@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Research Tools for Business Decision Making – B.Com. LL.B. Semester II
+FAMILY:  law-explorers
+VERSION: 1.0.0
+DATE:    2026-11-22
+CHAT:    Kaavya Study Materials – TNNLU B.Com. LL.B. Semester II explorers (claude.ai, 2026-11-22)
+CHANGES: 1.0.0 - first release: 6 units, sampling simulator (central limit theorem), statistics calculator with box plot, consistency (CV) lab, click-to-add scatter and regression, DNA evidence Bayes calculator, normal-curve areas, chi-square 2x2 test, price index calculator, standard deviation and hypothesis-test animations, formula sheet, 37 flashcards, 30-question quiz, references, progress bar and certificate
+STATUS:  Complete for Semester II reference syllabus; replace unit details when TNNLU's official course outline is issued
+-->
+<html lang="en">
+<head>
+<script src="/assets/js/site-theme.js"></script>
+<meta charset="utf-8">
+<meta name="sp-track" content="off">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Offline interactive Research Tools for Business Decision Making explorer for second-semester B.Com. LL.B. students: research design, sampling, averages, dispersion, correlation and regression, probability and Bayes, hypothesis tests, index numbers – with calculators, simulators, animations, formula sheet, quiz and certificate.">
+<title>Research Tools for Business Decision Making – Semester II</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+<style>
+:root{
+  --bg:#f5f1e8; --card:#fffdf8; --ink:#1f1b16; --muted:#6b6257; --rule:#e2d9c8;
+  --accent:#7a1f2b; --accent2:#a8462f; --gold:#9a7412; --ok:#2e7d4f; --bad:#b3261e; --info:#2c5d8a;
+  --side:#2a1d1f; --side-ink:#f3e9e4; --side-muted:#c9b6ae; --hl:#f6e7c1; --chip:#efe6d6;
+  --shadow:0 1px 3px rgba(40,25,10,.08); --bar:#7a1f2b; --bar2:#a8462f;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17130f; --card:#211b16; --ink:#efe7dc; --muted:#a99c8c; --rule:#3a3129;
+  --accent:#e0828d; --accent2:#e59a7c; --gold:#e0bf5a; --ok:#6cc58e; --bad:#ff8a80; --info:#8ab8e6;
+  --side:#0f0b09; --side-ink:#efe7dc; --side-muted:#a99c8c; --hl:#4a3b1c; --chip:#2c241d; --bar:#4e1520; --bar2:#6e2a1f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17130f; --card:#211b16; --ink:#efe7dc; --muted:#a99c8c; --rule:#3a3129;
+  --accent:#e0828d; --accent2:#e59a7c; --gold:#e0bf5a; --ok:#6cc58e; --bad:#ff8a80; --info:#8ab8e6;
+  --side:#0f0b09; --side-ink:#efe7dc; --side-muted:#a99c8c; --hl:#4a3b1c; --chip:#2c241d; --bar:#4e1520; --bar2:#6e2a1f; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 "Segoe UI",system-ui,-apple-system,sans-serif}
+h1,h2,h3,h4{font-family:Georgia,"Times New Roman",serif;line-height:1.25}
+a{color:var(--info)}
+button{font:inherit;cursor:pointer}
+#top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--bar);color:#fff;box-shadow:var(--shadow)}
+#top h1{margin:0;font-size:19px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#top h1 small{font-family:"Segoe UI",system-ui,sans-serif;font-weight:400;opacity:.85;font-size:13px;margin-left:8px}
+.tbtn{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:5px 11px;font-size:14px}
+.tbtn:hover{background:rgba(255,255,255,.26)}
+.tbtn kbd{font-size:11px;opacity:.8;margin-left:4px}
+#prog{font-size:13px;opacity:.9;white-space:nowrap}
+#wrap{display:flex;min-height:calc(100vh - 50px)}
+#side{width:270px;flex:0 0 270px;background:var(--side);color:var(--side-ink);padding:14px 10px 30px;position:sticky;top:50px;height:calc(100vh - 50px);overflow:auto}
+body.sb-hidden #side{display:none}
+#side .grp{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--side-muted);margin:16px 8px 6px}
+#side a{display:flex;align-items:center;gap:8px;color:var(--side-ink);text-decoration:none;padding:7px 10px;border-radius:8px;font-size:14.5px}
+#side a:hover{background:rgba(255,255,255,.08)}
+#side a.on{background:rgba(255,255,255,.16);font-weight:600}
+#side a .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.12);font-size:12px;flex:0 0 22px}
+#side a .done{margin-left:auto;color:#8fd6a8;font-size:13px}
+#main{flex:1;min-width:0;padding:22px 32px 60px}
+.inner{max-width:1500px;margin:0 auto}
+@media (max-width:900px){
+  #side{position:fixed;left:0;top:50px;z-index:30;box-shadow:4px 0 20px rgba(0,0,0,.3)}
+  body:not(.sb-open) #side{display:none}
+  body.sb-open.sb-hidden #side{display:block}
+  #main{padding:16px}
+  #top h1 small,#prog{display:none}
+}
+.hero{background:linear-gradient(120deg,var(--bar),var(--bar2));color:#fff;border-radius:14px;padding:22px 26px;margin-bottom:20px}
+.hero h2{margin:0 0 6px;font-size:28px}
+.hero p{margin:4px 0;opacity:.95;max-width:900px}
+.unitban{border-left:6px solid var(--accent);background:var(--card);border-radius:10px;padding:16px 20px;margin-bottom:18px;box-shadow:var(--shadow)}
+.unitban .k{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);font-weight:700}
+.unitban h2{margin:2px 0 6px;font-size:26px}
+.unitban p{margin:0;color:var(--muted)}
+.two{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1150px){.two{grid-template-columns:minmax(0,1fr)}} .two>*{min-width:0}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:16px 20px;margin-bottom:18px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 8px;font-size:20px;color:var(--accent)}
+.card{overflow-x:auto} .row>*{max-width:100%} select{max-width:100%} .q,.qt,.opt{overflow-wrap:anywhere}
+.card h4{margin:14px 0 6px;font-size:17px}
+.lab{border-top:4px solid var(--gold)}
+.lab h3{color:var(--gold)}
+.lab h3::before{content:"LAB · ";font-family:"Segoe UI",system-ui,sans-serif;font-size:12px;letter-spacing:.1em;vertical-align:middle}
+.key{background:var(--hl);border-radius:10px;padding:12px 16px;margin:10px 0;border-left:4px solid var(--gold)}
+.key b:first-child{color:var(--gold)}
+.ex{background:var(--chip);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:15px}
+.ex::before{content:"Example  ";font-weight:700;color:var(--info);font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:15px}
+table.t th,table.t td{border:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+table.t th{background:var(--chip)}
+.chip{display:inline-block;background:var(--chip);border-radius:999px;padding:1px 10px;font-size:13px;margin:2px 3px 2px 0}
+.btn{background:var(--bar);color:#fff;border:0;border-radius:8px;padding:7px 14px;margin:3px 4px 3px 0;font-size:14.5px}
+.btn:hover{filter:brightness(1.1)}
+.btn.sec{background:var(--chip);color:var(--ink);border:1px solid var(--rule)}
+.btn.sm{padding:4px 10px;font-size:13.5px}
+.btn:disabled{opacity:.45;cursor:default}
+.fb{margin-top:8px;padding:8px 12px;border-radius:8px;font-size:15px}
+.fb.ok{background:color-mix(in srgb,var(--ok) 15%,transparent);border-left:4px solid var(--ok)}
+.fb.bad{background:color-mix(in srgb,var(--bad) 13%,transparent);border-left:4px solid var(--bad)}
+.fb.info{background:color-mix(in srgb,var(--info) 13%,transparent);border-left:4px solid var(--info)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,input[type=text],textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--rule);border-radius:8px;padding:6px 9px}
+textarea{width:100%;min-height:64px;resize:vertical}
+input[type=text]{min-width:0}
+.ucards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.ucard{background:var(--card);border:1px solid var(--rule);border-top:4px solid var(--accent);border-radius:12px;padding:14px 16px;cursor:pointer;box-shadow:var(--shadow);color:var(--ink);text-decoration:none;display:block}
+.ucard:hover{border-color:var(--accent);transform:translateY(-1px)}
+.ucard .k{font-size:12px;color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.ucard b{display:block;font-family:Georgia,serif;font-size:18px;margin:2px 0 4px}
+.ucard span{color:var(--muted);font-size:14px}
+.ucard .st{display:block;margin-top:6px;font-size:13px;color:var(--ok)}
+.anim .stage{background:var(--bg);border:1px solid var(--rule);border-radius:10px;padding:8px;overflow:auto}
+.anim svg{width:100%;height:auto;display:block;max-height:560px}
+.anim .cap{min-height:3.2em;margin:8px 2px;font-size:15.5px}
+.anim .hint{font-size:12.5px;color:var(--muted)}
+.anim .hint kbd,.kbd{color:var(--ink);background:var(--chip);border:1px solid var(--rule);border-radius:4px;padding:0 5px;font-size:12px;font-family:ui-monospace,Consolas,monospace}
+svg .node rect{fill:var(--card);stroke:var(--rule);stroke-width:1.5}
+svg .node text{fill:var(--ink);font:600 20px "Segoe UI",system-ui,sans-serif}
+svg .node .sub{fill:var(--muted);font:15px "Segoe UI",system-ui,sans-serif;font-weight:400}
+svg .node.hi rect{stroke:var(--accent);stroke-width:3;fill:var(--hl)}
+svg .edge{stroke:var(--muted);stroke-width:1.6;fill:none}
+svg .edge.hi{stroke:var(--accent);stroke-width:3.5}
+svg .fade{opacity:0;transition:opacity .45s}
+svg .show{opacity:1}
+.sentence{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:10px;align-items:start;padding:7px 0;border-bottom:1px dashed var(--rule)}
+.sentence.ok select{border-color:var(--ok);outline:2px solid color-mix(in srgb,var(--ok) 40%,transparent)}
+.sentence.bad select{border-color:var(--bad);outline:2px solid color-mix(in srgb,var(--bad) 40%,transparent)}
+.sentence .why{grid-column:1/-1;font-size:14px;color:var(--muted)}
+.act{background:var(--bg);border:1px solid var(--rule);border-radius:10px;padding:14px 18px;font-family:Georgia,serif;font-size:15.5px}
+.act .part{cursor:pointer;border-radius:4px;padding:1px 2px;transition:background .15s}
+.act .part:hover{background:var(--hl)}
+.act .part.sel{background:var(--hl);outline:2px solid var(--gold)}
+.act .c{text-align:center}
+.order li{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--rule);border-radius:8px;padding:6px 10px;margin:5px 0}
+.order li span{flex:1}
+.order li.ok{border-color:var(--ok)} .order li.bad{border-color:var(--bad)}
+.flash{perspective:1200px;max-width:720px;margin:10px auto}
+.fc{position:relative;height:260px;transition:transform .5s;transform-style:preserve-3d;cursor:pointer}
+.fc.flip{transform:rotateY(180deg)}
+.fc>div{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;border:1px solid var(--rule);box-shadow:var(--shadow)}
+.fc .front{background:var(--card)}
+.fc .front b{font-family:Georgia,serif;font-size:30px;color:var(--accent)}
+.fc .back{background:var(--hl);transform:rotateY(180deg);font-size:18px}
+.fc small{color:var(--muted);margin-top:10px;font-size:13px}
+.q{margin:12px 0;padding:12px 16px;background:var(--bg);border:1px solid var(--rule);border-radius:10px}
+.q .qt{font-weight:600;margin-bottom:6px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+@media (max-width:700px){.opts{grid-template-columns:1fr}}
+.opt{text-align:left;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:8px 12px;color:var(--ink)}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--card))}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--card))}
+.score{font-size:22px;font-family:Georgia,serif}
+.btn.right{background:color-mix(in srgb,var(--ok) 28%,var(--card));border-color:var(--ok);color:var(--ink);opacity:1}
+.btn.wrong{background:color-mix(in srgb,var(--bad) 24%,var(--card));border-color:var(--bad);color:var(--ink);opacity:1}
+.casecards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+.cc{background:var(--card);border:1px solid var(--rule);border-left:5px solid var(--accent);border-radius:10px;padding:12px 14px}
+.cc b{font-family:Georgia,serif;font-size:16.5px}
+.cc .cit{font:13px ui-monospace,Consolas,monospace;color:var(--muted);display:block;margin:2px 0 6px}
+.cc p{margin:4px 0;font-size:14.5px}
+.search{width:100%;max-width:420px}
+.foot{margin-top:30px;color:var(--muted);font-size:13px;border-top:1px solid var(--rule);padding-top:10px}
+.decode{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:10px}
+.decode div{background:var(--chip);border-radius:8px;padding:8px 10px}
+.decode div small{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.decode div b{font-size:17px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:50}
+.toast.on{opacity:1}
+@media print{#top,#side,.noprint{display:none!important}#main{padding:0}.card{break-inside:avoid;box-shadow:none}}
+svg .lbl{fill:var(--ink);font:15px "Segoe UI",system-ui,sans-serif}
+svg .wl{fill:var(--ink);font:600 13.5px "Segoe UI",system-ui,sans-serif}
+svg .big{fill:var(--accent);font:700 18px "Segoe UI",system-ui,sans-serif}
+svg .dot{fill:var(--gold)}
+svg .axis{stroke:var(--muted);stroke-width:1.5}
+svg .win1{fill:color-mix(in srgb,var(--info) 28%,transparent);stroke:var(--info)}
+svg .win2{fill:color-mix(in srgb,var(--gold) 30%,transparent);stroke:var(--gold)}
+label{font-size:14.5px}
+svg.lg .node text{font-size:21px} svg.lg .node .sub{font-size:16px}
+svg.lg .lbl{font-size:18px} svg.lg .wl{font-size:15px} svg.lg .big{font-size:18px}
+svg.graph .plotbg{fill:var(--card);stroke:var(--rule)}
+svg .tick{fill:var(--muted);font:14px "Segoe UI",system-ui,sans-serif}
+svg .cD,svg .cTP,svg .cAC{fill:none;stroke:var(--info);stroke-width:3.5}
+svg .cS,svg .cAP,svg .cAVC{fill:none;stroke:var(--gold);stroke-width:3.5;stroke-dasharray:10 6}
+svg .cMP,svg .cMC{fill:none;stroke:#6b4fa3;stroke-width:3.5;stroke-dasharray:3 5}
+svg .cDl,svg .cTPl,svg .cACl{fill:var(--info);font:700 20px "Segoe UI",sans-serif}
+svg .cSl,svg .cAPl,svg .cAVCl{fill:var(--gold);font:700 20px "Segoe UI",sans-serif}
+svg .cMPl,svg .cMCl{fill:#6b4fa3;font:700 20px "Segoe UI",sans-serif}
+svg .guide{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:4 4}
+svg .eq{fill:var(--accent);stroke:var(--card);stroke-width:2}
+svg .ctl{stroke:var(--accent);stroke-width:2.5}
+svg .ctlt{fill:var(--accent);font:600 15px "Segoe UI",sans-serif}
+svg .gap{stroke:var(--accent);stroke-width:9;opacity:.35}
+svg .stg1{fill:color-mix(in srgb,var(--info) 12%,transparent)} svg .stg2{fill:color-mix(in srgb,var(--gold) 18%,transparent)} svg .stg3{fill:color-mix(in srgb,#6b4fa3 14%,transparent)}
+:root[data-theme="dark"] svg .cMP,:root[data-theme="dark"] svg .cMC{stroke:#b9a3e8} :root[data-theme="dark"] svg .cMPl,:root[data-theme="dark"] svg .cMCl{fill:#b9a3e8}
+input[type=range]{vertical-align:middle;accent-color:var(--accent)}
+svg .bar{fill:color-mix(in srgb,var(--info) 55%,transparent);stroke:var(--info)}
+svg .dotp{fill:var(--info);stroke:var(--card);stroke-width:1.5}
+svg .boxp{fill:color-mix(in srgb,var(--gold) 32%,transparent);stroke:var(--gold);stroke-width:1.5}
+svg .gapl{stroke:var(--gold);stroke-width:4}
+
+</style>
+  <script type="module" src="/assets/js/site-progress.js"></script>
+</head>
+<body>
+<header id="top">
+  <button class="tbtn" id="sbBtn" title="Show or hide the unit list (M)">☰<kbd>M</kbd></button>
+  <h1>📊 Research Tools for Business Decision Making <small>B.Com. LL.B. (Hons.) · Semester II</small></h1>
+  <span id="prog"></span>
+  <a class="tbtn" href="/llb/" title="All B.Com. LL.B. courses" style="text-decoration:none">⌂ Courses</a>
+  <button class="tbtn" id="themeBtn" title="Light or dark theme">☾ Theme</button>
+  <button class="tbtn" id="fsBtn" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<div id="wrap">
+  <nav id="side" aria-label="Units"></nav>
+  <main id="main"><div class="inner" id="view"></div></main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+"use strict";
+/* ============================================================
+   DATA AND UNIT PAGES (Research Tools for Business Decision Making)
+   ============================================================ */
+const UNITS = [
+ {id:"u1", n:1, title:"Research, Data and Sampling", short:"Research process and design, data sources, questionnaires, scales, sampling methods and errors."},
+ {id:"u2", n:2, title:"Describing Data and Averages", short:"Frequency tables and charts; mean, median, mode, quartiles – and when to use which."},
+ {id:"u3", n:3, title:"Dispersion and Shape", short:"Range, quartile deviation, standard deviation, coefficient of variation, skewness, box plots."},
+ {id:"u4", n:4, title:"Correlation and Regression", short:"Scatter diagrams, Pearson's r, Spearman's rank, least-squares lines and prediction."},
+ {id:"u5", n:5, title:"Probability and Distributions", short:"Rules of probability, Bayes' theorem and the prosecutor's fallacy, binomial, Poisson, normal."},
+ {id:"u6", n:6, title:"Hypothesis Tests, Index Numbers, Time Series", short:"Type I and II errors, p-values, z, t and chi-square tests; price indices; trends."}
+];
+const EXTRAS = [
+ {id:"formulas", ic:"🧮", title:"Formula sheet"},
+ {id:"flash", ic:"🃏", title:"Flashcards"},
+ {id:"quiz", ic:"✅", title:"Quiz"},
+ {id:"refs", ic:"📚", title:"References"}
+];
+const CASES = [], MAXIMS = [];
+
+const FLASH = [
+ ["Research","Systematic, objective collection and analysis of information to answer a question or solve a problem."],
+ ["Exploratory research","Early research to understand a problem and form hypotheses – interviews, focus groups, literature review."],
+ ["Descriptive research","Describes characteristics of a population – surveys, census data."],
+ ["Causal research","Tests cause and effect, usually by experiment."],
+ ["Hypothesis","A testable statement about a relationship – e.g. 'online ads increase sales'."],
+ ["Primary data","Collected first-hand for the present study – survey, interview, observation, experiment."],
+ ["Secondary data","Already collected by others – Census, RBI, NSO, company reports, case law databases."],
+ ["Likert scale","Agreement on a scale, typically 1 (strongly disagree) to 5 (strongly agree)."],
+ ["Levels of measurement","Nominal (labels), ordinal (order), interval (equal gaps, no true zero), ratio (true zero)."],
+ ["Population and sample","Population: everyone of interest. Sample: the part actually studied."],
+ ["Simple random sampling","Every member has an equal chance of selection – lottery or random numbers."],
+ ["Stratified sampling","Divide the population into groups (strata) and sample randomly from each."],
+ ["Systematic sampling","Pick every k-th item from a list after a random start."],
+ ["Cluster sampling","Randomly select whole groups (e.g. colleges) and study everyone in them."],
+ ["Sampling error","Difference between a sample result and the population value, due only to chance – falls as sample size grows."],
+ ["Non-sampling error","Errors from bad questions, non-response, recording mistakes, bias – not reduced by a bigger sample."],
+ ["Arithmetic mean","Sum of values ÷ number of values. Affected by extreme values."],
+ ["Median","Middle value of ordered data. Not affected by outliers – best for incomes."],
+ ["Mode","Most frequent value. Useful for sizes, preferences, nominal data."],
+ ["Standard deviation","Square root of the average squared deviation from the mean – the typical distance from the mean."],
+ ["Coefficient of variation","SD ÷ mean × 100. Compares consistency across data sets with different units or means."],
+ ["Skewness","Lack of symmetry. Positive: long right tail, mean > median (e.g. incomes)."],
+ ["Correlation coefficient r","Strength and direction of a linear relationship, from −1 to +1."],
+ ["Correlation is not causation","Two variables can move together because of a third factor or by chance."],
+ ["Regression line","Least-squares line used to predict Y from X: Y = a + bX."],
+ ["Coefficient of determination r²","Share of the variation in Y explained by X."],
+ ["Bayes' theorem","Updates a probability in the light of new evidence: P(A|B) = P(B|A)·P(A) ÷ P(B)."],
+ ["Prosecutor's fallacy","Confusing P(evidence | innocent) with P(innocent | evidence)."],
+ ["Normal distribution","Symmetric bell curve. 68% within 1 SD, 95% within 2 SD, 99.7% within 3 SD."],
+ ["Null hypothesis H0","The default claim of no effect or no difference – like the presumption of innocence."],
+ ["Type I error","Rejecting a true null hypothesis – convicting an innocent person. Probability α."],
+ ["Type II error","Failing to reject a false null hypothesis – acquitting a guilty person. Probability β."],
+ ["p-value","Probability of results at least as extreme as observed, if H0 were true. Small p → reject H0."],
+ ["Chi-square test","Tests whether two categorical variables are independent, or whether data fit an expected pattern."],
+ ["Index number","Measures relative change over time from a base period = 100 – e.g. CPI, Sensex."],
+ ["Laspeyres index","Price index weighted by base-year quantities."],
+ ["Time series components","Trend, seasonal, cyclical and irregular variation."]
+];
+
+const QUIZ = [
+ [1,"Data from the Census of India used in your project are…",["Primary data","Secondary data","Experimental data","Ordinal data"],1,"Collected by someone else."],
+ [1,"Selecting every 20th name from a roll list after a random start is…",["Stratified sampling","Systematic sampling","Quota sampling","Cluster sampling"],1,"Systematic."],
+ [1,"Which is a non-probability method?",["Simple random","Stratified","Convenience","Cluster"],2,"Choosing whoever is easy to reach."],
+ [1,"Ranking of law schools (1st, 2nd, 3rd) is measured on which scale?",["Nominal","Ordinal","Interval","Ratio"],1,"Order without equal gaps."],
+ [1,"A bigger sample reduces…",["Non-sampling error","Sampling error","Bias in questions","Non-response"],1,"Sampling error falls roughly with √n."],
+ [2,"For data 2, 4, 4, 5, 15 the median is…",["4","5","6","4.5"],0,"The middle (3rd) value."],
+ [2,"The best average for household incomes is usually the…",["Mean","Median","Mode","Range"],1,"Not distorted by a few very rich households."],
+ [2,"The most common shoe size sold is the…",["Mean","Median","Mode","Quartile"],2,"Mode."],
+ [2,"The mean of 10, 20, 30, 40 is…",["20","25","30","100"],1,"100 ÷ 4."],
+ [2,"Q1 is the value below which lies…",["10% of data","25% of data","50% of data","75% of data"],1,"First quartile."],
+ [3,"Which measure uses every observation and squares deviations?",["Range","Quartile deviation","Standard deviation","Mode"],2,"SD."],
+ [3,"To compare consistency of two cricketers with different averages, use…",["Range","Coefficient of variation","Mean","Median"],1,"Lower CV = more consistent."],
+ [3,"If mean > median > mode, the distribution is…",["Symmetric","Positively skewed","Negatively skewed","Normal"],1,"Long right tail."],
+ [3,"Variance is…",["The square of the standard deviation","Half the range","The mean deviation","The square root of SD"],0,"SD = √variance."],
+ [3,"A box plot shows…",["Mean and SD","Median, quartiles and extremes","Only outliers","Correlation"],1,"Five-number summary."],
+ [4,"r = −0.9 means…",["Weak positive","Strong negative linear relationship","No relationship","X causes Y"],1,"Strong and negative."],
+ [4,"Ice-cream sales and drowning deaths are correlated because of…",["Causation","A third factor – hot weather","Chance only","Regression"],1,"A lurking variable."],
+ [4,"The regression line minimises…",["The sum of X values","The sum of squared vertical errors","r","The number of points"],1,"Least squares."],
+ [4,"If r = 0.8, the share of variation explained is…",["80%","64%","8%","40%"],1,"r² = 0.64."],
+ [4,"Spearman's rank correlation is used for…",["Ratio data only","Ranked (ordinal) data","Nominal data","Time series"],1,"Ranks."],
+ [5,"P(A or B) for mutually exclusive events is…",["P(A) × P(B)","P(A) + P(B)","P(A) − P(B)","1"],1,"Addition rule."],
+ [5,"A DNA profile matches 1 in a million people. The prosecutor's fallacy says…",["The chance the accused is innocent is 1 in a million","The match is weak evidence","The test is wrong","Nothing"],0,"It confuses P(match | innocent) with P(innocent | match)."],
+ [5,"In a normal distribution about what share lies within 2 SD of the mean?",["68%","95%","99.7%","50%"],1,"Empirical rule."],
+ [5,"The number of accidents at a junction per week usually follows a…",["Normal distribution","Poisson distribution","Uniform distribution","Binomial with p = 0.5"],1,"Rare events in a fixed interval."],
+ [5,"A z-score of 2 means the value is…",["2 units above the mean","2 standard deviations above the mean","2% above the mean","Twice the mean"],1,"Standardised."],
+ [6,"Convicting an innocent person corresponds to…",["Type I error","Type II error","A correct decision","Sampling error"],0,"Rejecting a true H0."],
+ [6,"With α = 0.05 and p = 0.02, you…",["Accept H0","Reject H0","Need more data always","Reject α"],1,"p < α."],
+ [6,"Testing whether gender and choice of elective are related uses…",["t-test","Chi-square test","Correlation","Index number"],1,"Two categorical variables."],
+ [6,"A price index using base-year quantities as weights is…",["Paasche","Laspeyres","Fisher","Simple aggregate"],1,"Laspeyres."],
+ [6,"Higher sales every Diwali season is which time-series component?",["Trend","Seasonal","Cyclical","Irregular"],1,"Repeats within a year."]
+];
+
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const KEY = "llb_stats_v1", SBKEY = "llb_stats_v1_sidebar";
+const S = {d:{done:{}, best:{}, briefs:[]},
+  load(){try{const s=localStorage.getItem(KEY); if(s) Object.assign(this.d, JSON.parse(s));}catch(e){}},
+  save(){try{localStorage.setItem(KEY, JSON.stringify(this.d));}catch(e){}}};
+S.load();
+let cur = "home";
+let anim = null;          // active animation controller for P/S/X
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function toast(m){const t=$("#toast"); t.textContent=m; t.classList.add("on"); clearTimeout(toast.h); toast.h=setTimeout(()=>t.classList.remove("on"),1800);}
+function shuffle(a){a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a;}
+
+/* ============================================================
+   SIDEBAR / CHROME
+   ============================================================ */
+function renderSide(){
+  const done = S.d.done;
+  let h = `<a href="#home" data-go="home" class="${cur==="home"?"on":""}"><span class="n">⌂</span>Home</a><div class="grp">Units</div>`;
+  for(const u of UNITS) h += `<a href="#${u.id}" data-go="${u.id}" class="${cur===u.id?"on":""}"><span class="n">${u.n}</span>${u.title}${done[u.id]?'<span class="done">✓</span>':""}</a>`;
+  h += `<div class="grp">Practise and revise</div>`;
+  for(const x of EXTRAS) h += `<a href="#${x.id}" data-go="${x.id}" class="${cur===x.id?"on":""}"><span class="n">${x.ic}</span>${x.title}</a>`;
+  $("#side").innerHTML = h;
+  const nd = UNITS.filter(u=>done[u.id]).length;
+  $("#prog").textContent = `${nd} of ${UNITS.length} units done`;
+}
+function setSidebar(hidden, save){
+  if(window.innerWidth<=900){ document.body.classList.toggle("sb-open", !hidden); document.body.classList.remove("sb-hidden"); }
+  else { document.body.classList.toggle("sb-hidden", hidden); }
+  if(save) try{localStorage.setItem(SBKEY, hidden?"1":"0");}catch(e){}
+}
+function sidebarHidden(){ return window.innerWidth<=900 ? !document.body.classList.contains("sb-open") : document.body.classList.contains("sb-hidden"); }
+function toggleFS(){ if(!document.fullscreenElement){ (document.documentElement.requestFullscreen||function(){}).call(document.documentElement); } else document.exitFullscreen(); }
+function setTheme(t){ if(t) document.documentElement.setAttribute("data-theme",t); else document.documentElement.removeAttribute("data-theme"); try{localStorage.setItem("llb_theme", t||"");}catch(e){} }
+
+/* ============================================================
+   ROUTER
+   ============================================================ */
+function go(id, push=true){
+  if(anim){ anim.stop(); anim=null; }
+  cur = id;
+  const V = VIEWS[id] || VIEWS.home;
+  $("#view").innerHTML = V.html();
+  if(V.init) V.init();
+  renderSide();
+  if(push) try{ history.replaceState(null,"","#"+id);}catch(e){}
+  $("#main").scrollTop = 0; window.scrollTo(0,0);
+  if(window.innerWidth<=900) setSidebar(true,false);
+}
+function unitHead(n){ const u=UNITS[n-1]; return `<div class="unitban"><div class="k">Unit ${u.n} of ${UNITS.length}</div><h2>${u.title}</h2><p>${u.short}</p></div>`; }
+function unitFoot(n){
+  const u=UNITS[n-1], prev=UNITS[n-2], next=UNITS[n];
+  const d=S.d.done[u.id];
+  return `<div class="card noprint"><h3>Check yourself</h3><div id="qs${n}"></div>
+  <div class="row" style="margin-top:10px"><button class="btn" data-done="${u.id}">${d?"✓ Marked as done":"Mark this unit as done"}</button>
+  ${prev?`<button class="btn sec" data-go="${prev.id}">← Unit ${prev.n}</button>`:""}
+  ${next?`<button class="btn sec" data-go="${next.id}">Unit ${next.n} →</button>`:`<button class="btn sec" data-go="quiz">Take the full quiz →</button>`}</div></div>`;
+}
+function miniQuiz(n){
+  const box=$("#qs"+n); if(!box) return;
+  const qs = shuffle(QUIZ.filter(q=>q[0]===n)).slice(0,3);
+  box.innerHTML = qs.map((q,i)=>qHTML(q,"m"+n+"_"+i)).join("");
+  bindQ(box);
+}
+function qHTML(q,id){
+  const order = shuffle(q[2].map((t,i)=>i));
+  return `<div class="q" data-q="${id}" data-ans="${q[3]}"><div class="qt">${esc(q[1])}</div><div class="opts">${order.map(i=>`<button class="opt" data-i="${i}">${esc(q[2][i])}</button>`).join("")}</div><div class="exp" hidden></div><div data-expl="${esc(q[4])}" hidden></div></div>`;
+}
+function bindQ(root, onAns){
+  $$(".q",root).forEach(qd=>{
+    $$(".opt",qd).forEach(b=>b.addEventListener("click",()=>{
+      const ans=+qd.dataset.ans, i=+b.dataset.i;
+      $$(".opt",qd).forEach(o=>{o.disabled=true; if(+o.dataset.i===ans) o.classList.add("right");});
+      if(i!==ans) b.classList.add("wrong");
+      const ex=$(".exp",qd); ex.hidden=false; ex.className="exp fb "+(i===ans?"ok":"bad");
+      ex.textContent=(i===ans?"Correct. ":"Not quite. ")+$("[data-expl]",qd).dataset.expl;
+      if(onAns) onAns(i===ans);
+    }));
+  });
+}
+
+/* ============================================================
+   STEP ANIMATION ENGINE  (P play · S step · X pause)
+   ============================================================ */
+function makeAnim(rootSel, steps, apply){
+  const root=$(rootSel); let i=-1, timer=null;
+  const cap=$(".cap",root), ctr=$(".ctr",root);
+  function show(k){ i=Math.max(-1,Math.min(steps.length-1,k)); apply(i); cap.innerHTML = i<0?"Press <b>P</b> to play or <b>S</b> to step through.":steps[i]; ctr.textContent=(i+1)+" / "+steps.length; }
+  const ctl = {
+    step(){ if(i>=steps.length-1){ this.pause(); return;} show(i+1); },
+    back(){ show(i-1); },
+    play(){ if(timer) return; if(i>=steps.length-1) show(-1); timer=setInterval(()=>{ if(i>=steps.length-1){ctl.pause();return;} show(i+1);},2200); ctl.step(); },
+    pause(){ clearInterval(timer); timer=null; },
+    reset(){ this.pause(); show(-1); },
+    stop(){ this.pause(); }
+  };
+  $$("[data-a]",root).forEach(b=>b.addEventListener("click",()=>ctl[b.dataset.a]()));
+  show(-1);
+  return ctl;
+}
+function animBox(id,title,svg){
+  return `<div class="card anim" id="${id}"><h3>${title}</h3><div class="stage">${svg}</div><div class="cap"></div>
+  <div class="row"><button class="btn sm" data-a="play">▶ Play <span class="kbd">P</span></button><button class="btn sm sec" data-a="step">Step <span class="kbd">S</span></button><button class="btn sm sec" data-a="pause">❚❚ Pause <span class="kbd">X</span></button><button class="btn sm sec" data-a="back">◀ Back</button><button class="btn sm sec" data-a="reset">↺ Reset</button><span class="hint ctr" style="margin-left:auto"></span></div></div>`;
+}
+
+/* ============================================================
+   VIEWS
+   ============================================================ */
+const VIEWS = {};
+/* Generic scenario lab: each scenario answered by one button */
+function choiceLab(sel, items, opts){
+  const box=$(sel);
+  box.innerHTML = items.map((it,i)=>`<div class="q" data-i="${i}"><div class="qt">${i+1}. ${esc(it[0])}</div><div class="row">${Object.entries(opts).map(([k,v])=>`<button class="btn sm sec" data-k="${k}">${v}</button>`).join("")}</div><div class="out"></div></div>`).join("")
+   + `<div class="row"><span class="score" style="font-size:17px" id="${sel.slice(1)}Score"></span><button class="btn sm sec" id="${sel.slice(1)}Again">Try again</button></div>`;
+  let got=0, ans=0;
+  $$(".q",box).forEach(q=>$$("[data-k]",q).forEach(b=>b.onclick=()=>{
+    const it=items[+q.dataset.i]; if(q.dataset.answered) return; q.dataset.answered=1; ans++;
+    const ok=b.dataset.k===it[1]; if(ok) got++;
+    $$("[data-k]",q).forEach(x=>{ x.disabled=true; if(x.dataset.k===it[1]) x.classList.add("right"); });
+    if(!ok) b.classList.add("wrong");
+    $(".out",q).innerHTML=`<div class="fb ${ok?"ok":"bad"}">${ok?"Correct.":"Answer: "+opts[it[1]]+"."} ${esc(it[2])}</div>`;
+    $("#"+sel.slice(1)+"Score").textContent=`${got} / ${ans} correct` + (ans===items.length?" – all done":"");
+  }));
+  $("#"+sel.slice(1)+"Again").onclick=()=>choiceLab(sel,items,opts);
+}
+
+
+VIEWS.home = { html(){
+  const done=S.d.done;
+  return `<div class="hero"><h2>Research Tools for Business Decision Making</h2>
+  <p>Good decisions – in business and in court – rest on evidence. This course teaches how to plan research, collect and summarise data, measure relationships, reason with probability and test claims with statistics.</p>
+  <p>Every unit has calculators and simulators: type in your own data, watch samples behave, and see why a DNA match is not proof of guilt.</p></div>
+  <div class="ucards">${UNITS.map(u=>`<a class="ucard" data-go="${u.id}"><span class="k">Unit ${u.n}</span><b>${u.title}</b><span>${u.short}</span>${done[u.id]?'<span class="st">✓ Done</span>':""}</a>`).join("")}
+  ${EXTRAS.map(x=>`<a class="ucard" data-go="${x.id}" style="border-top-color:var(--gold)"><span class="k" style="color:var(--gold)">${x.ic} Revise</span><b>${x.title}</b></a>`).join("")}</div>
+  <div class="two" style="margin-top:18px">
+   <div class="card"><h3>Statistics in law</h3>
+   <ol><li><b>Evidence</b> – DNA, fingerprints and forensic probabilities; the prosecutor's fallacy.</li><li><b>Discrimination cases</b> – does a pattern of hiring or admissions show bias?</li><li><b>Empirical legal research</b> – case pendency, bail, sentencing data (National Judicial Data Grid).</li><li><b>Regulation</b> – consumer surveys in trade-mark disputes, market share in competition cases.</li><li><b>Your projects and dissertation</b> – questionnaires, sampling, tables and tests.</li></ol></div>
+   <div class="card"><h3>Keyboard</h3><table class="t">
+   <tr><td><span class="kbd">M</span></td><td>Show or hide the unit list</td></tr>
+   <tr><td><span class="kbd">P</span> / <span class="kbd">S</span> / <span class="kbd">X</span></td><td>Play, step, pause the animation on the page</td></tr>
+   <tr><td><span class="kbd">F</span></td><td>Full screen</td></tr>
+   <tr><td><span class="kbd">←</span> <span class="kbd">→</span> <span class="kbd">Space</span></td><td>Flashcards: previous, next, flip</td></tr>
+   <tr><td><span class="kbd">[</span> <span class="kbd">]</span></td><td>Previous or next unit</td></tr></table>
+   <p style="font-size:13.5px;color:var(--muted)">Works offline once opened. Sign in (top right) to keep progress and certificates on every device.</p></div></div>
+  <div class="card"><h3>About this syllabus</h3><p>The units follow the standard Business Statistics and Research Methodology course in B.Com. programmes. Compare with TNNLU's own course outline when it is issued – some universities also include SPSS or Excel practicals.</p></div>
+  ${footer()}`;
+}};
+
+/* ---------------- shared graph helpers ---------------- */
+const GX=60, GY=20, GW=520, GH=300;   // plot box inside a 640 x 380 svg
+const px=q=>GX+q/100*GW, py=p=>GY+GH-p/100*GH;
+function axes(xl,yl){ return `<rect x="${GX}" y="${GY}" width="${GW}" height="${GH}" class="plotbg"/>
+ ${[0,20,40,60,80,100].map(v=>`<line x1="${px(v)}" y1="${GY+GH}" x2="${px(v)}" y2="${GY+GH+5}" class="axis"/><text x="${px(v)}" y="${GY+GH+20}" text-anchor="middle" class="tick">${v}</text><line x1="${GX-5}" y1="${py(v)}" x2="${GX}" y2="${py(v)}" class="axis"/><text x="${GX-9}" y="${py(v)+5}" text-anchor="end" class="tick">${v}</text>`).join("")}
+ <line x1="${GX}" y1="${GY+GH}" x2="${GX+GW}" y2="${GY+GH}" class="axis"/><line x1="${GX}" y1="${GY}" x2="${GX}" y2="${GY+GH}" class="axis"/>
+ <text x="${GX+GW/2}" y="${GY+GH+42}" text-anchor="middle" class="lbl">${xl}</text><text x="18" y="${GY+GH/2}" text-anchor="middle" class="lbl" transform="rotate(-90 18 ${GY+GH/2})">${yl}</text>`; }
+
+/* ---------------- maths helpers ---------------- */
+const parseNums=s=>String(s).split(/[\s,;]+/).map(Number).filter(v=>isFinite(v)&&String(v)!=="");
+const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const qtile=(a,p)=>{ const b=[...a].sort((x,y)=>x-y), i=(b.length-1)*p, lo=Math.floor(i), hi=Math.ceil(i); return b[lo]+(b[hi]-b[lo])*(i-lo); };
+const sdev=(a,sample)=>{ const m=mean(a); return Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/(a.length-(sample?1:0))); };
+function erf(x){ const t=1/(1+0.3275911*Math.abs(x)); const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x); return x>=0?y:-y; }
+const Phi=z=>0.5*(1+erf(z/Math.SQRT2));
+const fmt=(v,d=2)=>Number.isFinite(v)?(+v.toFixed(d)).toLocaleString("en-IN"):"–";
+let seed=7; const rnd=()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; };
+
+/* ---------------- UNIT 1 ---------------- */
+const POP=(()=>{ const a=[]; for(let i=0;i<1000;i++){ const u=rnd(); a.push(Math.round(4000+12000*(-Math.log(1-u*0.995))/1.2)); } return a; })();  // skewed monthly spending (Rs)
+VIEWS.u1 = { html(){ return unitHead(1)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key"><b>Research</b> is a careful, step-by-step search for answers. We rarely study everyone, so we study a <b>sample</b> and infer about the <b>population</b>. How the sample is chosen decides whether that inference can be trusted.</div>
+ <h4>The research process</h4><ol><li>Identify and define the problem</li><li>Review literature</li><li>Form objectives and hypotheses</li><li>Choose a research design – exploratory, descriptive or causal</li><li>Decide data sources and sampling</li><li>Collect data</li><li>Analyse and interpret</li><li>Report – with limitations</li></ol>
+ <h4>Collecting primary data</h4><p>Questionnaire, interview (structured or unstructured), observation, experiment, focus group. A good questionnaire is short, uses simple words, asks one thing per question, avoids leading questions, and is pilot-tested first.</p>
+ <h4>Scales of measurement</h4><table class="t"><tr><th>Scale</th><th>What you can do</th><th>Example</th></tr>
+ <tr><td>Nominal</td><td>Count, mode</td><td>State of domicile, gender</td></tr><tr><td>Ordinal</td><td>Rank, median</td><td>Likert 1–5, NIRF rank</td></tr>
+ <tr><td>Interval</td><td>Add, subtract, mean</td><td>Temperature in °C</td></tr><tr><td>Ratio</td><td>All operations, true zero</td><td>Income, age, marks</td></tr></table>
+ <h4>Sampling methods</h4><table class="t"><tr><th>Probability</th><th>Non-probability</th></tr>
+ <tr><td>Simple random, systematic, stratified, cluster, multi-stage</td><td>Convenience, judgment (purposive), quota, snowball</td></tr>
+ <tr><td>Each unit has a known chance; results generalise</td><td>Quick and cheap; results may be biased</td></tr></table>
+ <h4>Errors</h4><p><b>Sampling error</b> is the chance difference between sample and population; it shrinks as the sample grows. <b>Non-sampling errors</b> – poor questions, non-response, interviewer bias, data entry mistakes – do not shrink with size and can be worse in big surveys.</p>
+ <h4>Ethics</h4><p>Informed consent, confidentiality, honest reporting, no plagiarism – and approval from the university's ethics committee for research with people.</p></div>
+</div><div>
+ <div class="card lab"><h3>Sampling simulator</h3><p>A population of 1,000 students' monthly spending (skewed, like most money data). Draw random samples and see how close the sample mean gets to the true mean.</p>
+  <div class="row"><label>Sample size <select id="smN"><option>5</option><option selected>30</option><option>100</option><option>300</option></select></label><button class="btn" id="sm1">Draw 1 sample</button><button class="btn sec" id="sm100">Draw 100 samples</button><button class="btn sec sm" id="smClr">Clear</button></div>
+  <svg viewBox="0 0 640 300" class="lg graph" id="smSvg"></svg><div id="smOut"></div></div>
+ <div class="card lab"><h3>Which sampling method?</h3><div id="lab1"></div></div>
+</div></div>`+unitFoot(1)+footer(); },
+ init(){
+  const mu=mean(POP); let means=[];
+  const lo=4000, hi=24000, bins=40, X=v=>40+(Math.min(Math.max(v,lo),hi)-lo)/(hi-lo)*560;
+  const draw=(last)=>{
+    const cnt=new Array(bins).fill(0); means.forEach(m=>{ const b=Math.min(bins-1,Math.floor((m-lo)/(hi-lo)*bins)); if(b>=0) cnt[b]++; });
+    const mx=Math.max(4,...cnt);
+    let h=`<line x1="40" y1="250" x2="600" y2="250" class="axis"/>${[4000,8000,12000,16000,20000,24000].map(v=>`<text x="${X(v)}" y="270" text-anchor="middle" class="tick">${v/1000}k</text>`).join("")}<text x="320" y="292" text-anchor="middle" class="tick">sample means (Rs per month)</text>`;
+    cnt.forEach((c,i)=>{ if(c) h+=`<rect x="${40+i*14+1}" y="${250-c/mx*200}" width="12" height="${c/mx*200}" class="bar"/>`; });
+    h+=`<line x1="${X(mu)}" y1="30" x2="${X(mu)}" y2="250" class="ctl"/><text x="${X(mu)+5}" y="44" class="ctlt">true mean ${Math.round(mu)}</text>`;
+    if(last!=null) h+=`<circle cx="${X(last)}" cy="250" r="7" class="eq"/>`;
+    $("#smSvg").innerHTML=h;
+    const s = means.length>1 ? sdev(means,true) : null;
+    $("#smOut").innerHTML=`<div class="fb info">${means.length} sample means drawn.${last!=null?` Last sample mean: Rs ${Math.round(last)} (error ${Math.round(last-mu)}).`:""}${s?`<br>Spread of the sample means (standard error) ≈ Rs ${Math.round(s)}. Try n = 5 and then n = 300: the means bunch closer to the truth as n grows, and their histogram looks bell-shaped even though spending is skewed – the <b>central limit theorem</b>.`:""}</div>`;
+  };
+  const one=()=>{ const n=+$("#smN").value; let t=0; for(let i=0;i<n;i++) t+=POP[Math.floor(Math.random()*POP.length)]; const m=t/n; means.push(m); return m; };
+  $("#sm1").onclick=()=>draw(one());
+  $("#sm100").onclick=()=>{ let m; for(let k=0;k<100;k++) m=one(); draw(m); };
+  $("#smClr").onclick=()=>{ means=[]; draw(null); };
+  $("#smN").onchange=()=>{ means=[]; draw(null); };
+  draw(null);
+  choiceLab("#lab1",[
+   ["Names of all 1,200 students are put in a box and 100 drawn by lot.","SRS","Simple random sampling."],
+   ["The population is split into first, second … fifth year, and 20 are chosen at random from each year.","STR","Stratified – each stratum is represented."],
+   ["Five colleges are chosen at random and every student in them is surveyed.","CLU","Cluster sampling."],
+   ["You interview whoever is in the canteen at lunch.","CON","Convenience – easy, but biased."],
+   ["Each interviewer must find 10 men and 10 women of any kind.","QUO","Quota sampling – non-random within the quotas."],
+   ["Victims of a rare fraud are asked to refer other victims they know.","SNO","Snowball – useful for hidden populations."],
+   ["Every 25th case file in the court register is selected after a random start.","SYS","Systematic sampling."]
+  ],{SRS:"Simple random",STR:"Stratified",SYS:"Systematic",CLU:"Cluster",CON:"Convenience",QUO:"Quota",SNO:"Snowball"});
+  miniQuiz(1);
+ }};
+
+/* ---------------- UNIT 2 ---------------- */
+VIEWS.u2 = { html(){ return unitHead(2)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key">Raw data must be <b>organised</b> (tables, frequency distributions, charts) and <b>summarised</b>. An <b>average</b> (measure of central tendency) gives one value that represents the whole set.</div>
+ <h4>Organising data</h4><ul><li><b>Classification</b>: by attribute (qualitative), by size (quantitative), by time, by place.</li><li><b>Frequency distribution</b>: class intervals (exclusive 10–20, 20–30 or inclusive 10–19, 20–29), frequencies, cumulative frequencies.</li><li><b>Charts</b>: bar and pie (categories), histogram and frequency polygon (grouped numbers), ogive (cumulative), line chart (time).</li></ul>
+ <h4>Averages compared</h4><table class="t"><tr><th></th><th>Mean</th><th>Median</th><th>Mode</th></tr>
+ <tr><td>Definition</td><td>Sum ÷ count</td><td>Middle of ordered data</td><td>Most frequent</td></tr>
+ <tr><td>Uses all values</td><td>Yes</td><td>No</td><td>No</td></tr>
+ <tr><td>Affected by outliers</td><td>Strongly</td><td>Hardly</td><td>No</td></tr>
+ <tr><td>Further algebra</td><td>Yes</td><td>Limited</td><td>No</td></tr>
+ <tr><td>Best for</td><td>Marks, symmetric data</td><td>Incomes, house prices</td><td>Sizes, opinions, nominal data</td></tr></table>
+ <h4>Grouped data formulas</h4><p><b>Mean</b> = Σfx ÷ Σf (x = class mid-point). <b>Median</b> = L + [(N/2 − cf) ÷ f] × h. <b>Mode</b> = L + [(f1 − f0) ÷ (2f1 − f0 − f2)] × h. Empirical relation: Mode ≈ 3 Median − 2 Mean.</p>
+ <h4>Other averages</h4><p><b>Weighted mean</b> (CGPA from credits); <b>geometric mean</b> (average growth rates); <b>harmonic mean</b> (average speeds). <b>Quartiles</b> split ordered data into four equal parts; deciles into ten; percentiles into a hundred.</p></div>
+</div><div>
+ <div class="card lab"><h3>Statistics calculator</h3><p>Type or paste numbers separated by spaces or commas – marks, prices, case durations.</p>
+  <textarea id="scIn">42 55 61 48 72 55 90 38 55 67 74 59 51 63 88</textarea>
+  <div class="row"><button class="btn" id="scGo">Calculate</button><button class="btn sec sm" id="scOut1">Add an outlier (500)</button></div>
+  <div id="scRes"></div><svg viewBox="0 0 640 150" class="lg graph" id="scSvg"></svg></div>
+ <div class="card lab"><h3>Which average?</h3><div id="lab2"></div></div>
+</div></div>`+unitFoot(2)+footer(); },
+ init(){
+  const run=()=>{
+    const a=parseNums($("#scIn").value); if(a.length<2){ $("#scRes").innerHTML=`<div class="fb bad">Enter at least two numbers.</div>`; return; }
+    const b=[...a].sort((x,y)=>x-y), m=mean(a), md=qtile(a,.5), q1=qtile(a,.25), q3=qtile(a,.75);
+    const f={}; a.forEach(v=>f[v]=(f[v]||0)+1); const mf=Math.max(...Object.values(f)); const modes=mf>1?Object.keys(f).filter(k=>f[k]===mf).join(", "):"none (all values occur once)";
+    const sd=sdev(a,false), ssd=sdev(a,true);
+    $("#scRes").innerHTML=`<table class="t"><tr><td>Count</td><td>${a.length}</td><td>Sum</td><td>${fmt(a.reduce((x,y)=>x+y,0))}</td></tr>
+     <tr><td><b>Mean</b></td><td><b>${fmt(m)}</b></td><td><b>Median</b></td><td><b>${fmt(md)}</b></td></tr>
+     <tr><td><b>Mode</b></td><td>${modes}</td><td>Range</td><td>${fmt(b[0])} – ${fmt(b[b.length-1])} (${fmt(b[b.length-1]-b[0])})</td></tr>
+     <tr><td>Q1, Q3</td><td>${fmt(q1)}, ${fmt(q3)}</td><td>Quartile deviation</td><td>${fmt((q3-q1)/2)}</td></tr>
+     <tr><td>SD (population σ)</td><td>${fmt(sd)}</td><td>SD (sample s)</td><td>${fmt(ssd)}</td></tr>
+     <tr><td>Coefficient of variation</td><td>${fmt(sd/m*100)}%</td><td>Skewness (Pearson, 3(mean−median)/σ)</td><td>${fmt(3*(m-md)/sd)}</td></tr></table>`;
+    const lo=b[0], hi=b[b.length-1], X=v=>40+(hi===lo?280:(v-lo)/(hi-lo)*560);
+    $("#scSvg").innerHTML=`<line x1="40" y1="60" x2="600" y2="60" class="axis"/>${b.map(v=>`<circle cx="${X(v)}" cy="60" r="6" class="dotp"/>`).join("")}
+     <rect x="${X(q1)}" y="90" width="${Math.max(1,X(q3)-X(q1))}" height="34" class="boxp"/><line x1="${X(md)}" y1="90" x2="${X(md)}" y2="124" class="ctl"/>
+     <line x1="${X(lo)}" y1="107" x2="${X(q1)}" y2="107" class="axis"/><line x1="${X(q3)}" y1="107" x2="${X(hi)}" y2="107" class="axis"/>
+     <path d="M${X(m)} 40 l-7 -12 h14 z" class="eq"/><text x="${X(m)}" y="22" text-anchor="middle" class="tick">mean</text><text x="${X(md)}" y="144" text-anchor="middle" class="tick">median</text>
+     <text x="${X(lo)}" y="82" text-anchor="middle" class="tick">${fmt(lo,1)}</text><text x="${X(hi)}" y="82" text-anchor="middle" class="tick">${fmt(hi,1)}</text>`;
+  };
+  $("#scGo").onclick=run; $("#scOut1").onclick=()=>{ $("#scIn").value+=" 500"; run(); };
+  run();
+  choiceLab("#lab2",[
+   ["Typical monthly income of households in Tiruchirappalli.","MED","Incomes are skewed by a few rich households – the median is fairer."],
+   ["The collar size a shirt maker should produce most of.","MOD","The most frequent size."],
+   ["The class average in a Contracts test with no extreme scores.","MEA","Symmetric data – the mean uses every mark."],
+   ["Average time a case takes, when a few cases have lasted 20 years.","MED","Outliers would inflate the mean."],
+   ["The CGPA from grades in courses with different credits.","WM","Weighted mean – credits are the weights."]
+  ],{MEA:"Mean",MED:"Median",MOD:"Mode",WM:"Weighted mean"});
+  miniQuiz(2);
+ }};
+
+/* ---------------- UNIT 3 ---------------- */
+const SD_DATA=[4,6,8,10,12];
+const SD_SVG=`<svg viewBox="0 0 640 330" class="lg" role="img" aria-label="Building the standard deviation">
+<line x1="40" y1="120" x2="600" y2="120" class="axis"/>${[2,4,6,8,10,12,14].map(v=>`<text x="${40+v*40}" y="142" text-anchor="middle" class="tick">${v}</text>`).join("")}
+${SD_DATA.map((v,i)=>`<circle cx="${40+v*40}" cy="120" r="10" class="dotp"/>`).join("")}
+<g id="d0" class="fade"><line x1="${40+8*40}" y1="40" x2="${40+8*40}" y2="150" class="ctl"/><text x="${40+8*40}" y="32" text-anchor="middle" class="ctlt">mean = 8</text></g>
+<g id="d1" class="fade">${SD_DATA.map((v,i)=>`<line x1="${40+8*40}" y1="${70+i*8}" x2="${40+v*40}" y2="${70+i*8}" class="gapl"/>`).join("")}</g>
+<g id="d2" class="fade"><text x="320" y="190" text-anchor="middle" class="lbl">deviations: −4, −2, 0, +2, +4  (they always add to 0)</text></g>
+<g id="d3" class="fade"><text x="320" y="225" text-anchor="middle" class="lbl">squared: 16, 4, 0, 4, 16 → sum 40</text></g>
+<g id="d4" class="fade"><text x="320" y="260" text-anchor="middle" class="lbl">variance σ² = 40 ÷ 5 = 8</text></g>
+<g id="d5" class="fade"><text x="320" y="300" text-anchor="middle" class="big">σ = √8 ≈ 2.83 – the typical distance from the mean</text></g>
+</svg>`;
+const SD_STEPS=[
+ "Five values: 4, 6, 8, 10, 12. First find the <b>mean</b>: 40 ÷ 5 = 8.",
+ "Measure each value's <b>deviation</b> from the mean – the horizontal lines.",
+ "The deviations are −4, −2, 0, +2, +4. Their sum is always zero, so we cannot just average them.",
+ "<b>Square</b> each deviation to remove the signs: 16, 4, 0, 4, 16. The sum of squares is 40.",
+ "Average the squares: <b>variance</b> = 40 ÷ 5 = 8. (For a sample, divide by n − 1 = 4, giving 10.)",
+ "Take the square root to return to the original units: <b>standard deviation ≈ 2.83</b>. Values typically lie about 2.8 away from the mean."
+];
+VIEWS.u3 = { html(){ return unitHead(3)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key">Two classes can have the same average but very different spreads. <b>Dispersion</b> measures how widely values scatter around the centre; <b>skewness</b> and <b>kurtosis</b> describe the shape.</div>
+ <table class="t"><tr><th>Measure</th><th>Formula</th><th>Notes</th></tr>
+ <tr><td>Range</td><td>Max − Min</td><td>Quick; depends only on two values</td></tr>
+ <tr><td>Quartile deviation</td><td>(Q3 − Q1) ÷ 2</td><td>Ignores the extreme quarters; good for open-ended classes</td></tr>
+ <tr><td>Mean deviation</td><td>Σ|x − mean| ÷ n</td><td>Uses all values; ignores signs</td></tr>
+ <tr><td>Standard deviation</td><td>√[Σ(x − mean)² ÷ n]</td><td>The most used; basis of tests</td></tr>
+ <tr><td>Variance</td><td>σ²</td><td>Adds across independent sources</td></tr>
+ <tr><td>Coefficient of variation</td><td>σ ÷ mean × 100</td><td>Relative – compares consistency</td></tr></table>
+ <h4>Absolute and relative measures</h4><p>Absolute measures are in the units of the data (rupees, marks). Relative measures – coefficient of range, of quartile deviation, of variation – are pure numbers, so different data sets can be compared.</p>
+ <h4>Shape</h4><ul><li><b>Positive skew</b>: long right tail; mean &gt; median &gt; mode (incomes, case durations).</li><li><b>Negative skew</b>: long left tail; mean &lt; median &lt; mode (marks in an easy test).</li><li>Karl Pearson's coefficient: Sk = (Mean − Mode) ÷ σ, or 3(Mean − Median) ÷ σ.</li><li><b>Kurtosis</b>: peakedness – leptokurtic (peaked), mesokurtic (normal), platykurtic (flat).</li></ul>
+ <h4>Box plot</h4><p>The five-number summary – minimum, Q1, median, Q3, maximum. Points beyond 1.5 × IQR from the box are flagged as outliers. Try it in the Unit 2 calculator.</p></div>
+</div><div>
+ ${animBox("sdAnim","Building a standard deviation",SD_SVG)}
+ <div class="card lab"><h3>Who is more consistent?</h3><p>Scores of two batters over six innings. Enter your own if you like.</p>
+  <div class="row"><label>Batter A <input type="text" id="cvA" value="45 60 52 48 55 50" style="width:230px"></label></div>
+  <div class="row" style="margin-top:6px"><label>Batter B <input type="text" id="cvB" value="10 120 5 95 30 70" style="width:230px"></label><button class="btn" id="cvGo">Compare</button></div><div id="cvOut"></div></div>
+</div></div>`+unitFoot(3)+footer(); },
+ init(){
+  anim = makeAnim("#sdAnim", SD_STEPS, i=>{ for(let k=0;k<6;k++) document.getElementById("d"+k).classList.toggle("show",k<=i); });
+  $("#cvGo").onclick=()=>{
+    const A=parseNums($("#cvA").value), B=parseNums($("#cvB").value);
+    if(A.length<2||B.length<2){ $("#cvOut").innerHTML=`<div class="fb bad">Enter at least two scores for each.</div>`; return; }
+    const r=a=>({m:mean(a),s:sdev(a,false)}), a=r(A), b=r(B), ca=a.s/a.m*100, cb=b.s/b.m*100;
+    $("#cvOut").innerHTML=`<div class="fb info">A: mean ${fmt(a.m)}, SD ${fmt(a.s)}, CV <b>${fmt(ca)}%</b><br>B: mean ${fmt(b.m)}, SD ${fmt(b.s)}, CV <b>${fmt(cb)}%</b><br>${ca<cb?"<b>A</b>":"<b>B</b>"} is more consistent (lower CV)${a.m>b.m?", and A also scores more on average.":b.m>a.m?"; B scores more on average – a captain must weigh both.":"."}</div>`;
+  };
+  $("#cvGo").click();
+  miniQuiz(3);
+ }};
+
+/* ---------------- UNIT 4 ---------------- */
+VIEWS.u4 = { html(){ return unitHead(4)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key"><b>Correlation</b> measures how closely two variables move together; <b>regression</b> fits a line to predict one from the other. Neither proves that one causes the other.</div>
+ <h4>Karl Pearson's coefficient</h4><p>r = Σ(x − x̄)(y − ȳ) ÷ √[Σ(x − x̄)² · Σ(y − ȳ)²]. It ranges from −1 (perfect negative) through 0 (no linear relation) to +1 (perfect positive). Rough guide: above 0.7 strong, 0.3–0.7 moderate, below 0.3 weak.</p>
+ <h4>Spearman's rank correlation</h4><p>For ranks or ordinal data: R = 1 − 6Σd² ÷ [n(n² − 1)], where d is the difference in ranks. Example: do two judges rank moot-court teams similarly?</p>
+ <h4>Regression</h4><ul><li>Line of Y on X: Y = a + bX, with b = Σ(x − x̄)(y − ȳ) ÷ Σ(x − x̄)² and a = ȳ − b x̄.</li><li>It minimises the sum of squared vertical distances (<b>least squares</b>).</li><li>r² (coefficient of determination) = share of variation in Y explained by X.</li><li>Predict only within the range of the data – extrapolation is risky.</li></ul>
+ <h4>Correlation is not causation</h4><p>A third factor may drive both (ice-cream sales and drownings both rise in summer), the direction may be reversed, or the link may be chance in a small sample. In law, a statistical association – say between a community and arrests – needs careful explanation before it is called proof of anything.</p></div>
+</div><div>
+ <div class="card lab"><h3>Scatter lab: click to add points</h3><p>Click on the chart to add points; the correlation and regression line update. Hours of study (x) against marks (y).</p>
+  <svg viewBox="0 0 640 380" class="lg graph" id="rgSvg" style="cursor:crosshair"></svg>
+  <div class="row"><button class="btn sec sm" data-rg="pos">Strong positive</button><button class="btn sec sm" data-rg="neg">Negative</button><button class="btn sec sm" data-rg="none">No relation</button><button class="btn sec sm" data-rg="out">Add an outlier</button><button class="btn sec sm" data-rg="clr">Clear</button></div>
+  <div id="rgOut"></div></div>
+ <div class="card lab"><h3>What explains the correlation?</h3><div id="lab4"></div></div>
+</div></div>`+unitFoot(4)+footer(); },
+ init(){
+  let P=[];
+  const svg=$("#rgSvg");
+  const draw=()=>{
+    let h=axes("hours of study (×0.1)","marks");
+    P.forEach(p=>h+=`<circle cx="${px(p[0])}" cy="${py(p[1])}" r="7" class="dotp"/>`);
+    let msg="Add at least three points.";
+    if(P.length>=3){
+      const xs=P.map(p=>p[0]), ys=P.map(p=>p[1]), mx=mean(xs), my=mean(ys);
+      let sxy=0,sxx=0,syy=0; P.forEach(([x,y])=>{ sxy+=(x-mx)*(y-my); sxx+=(x-mx)**2; syy+=(y-my)**2; });
+      if(sxx>0&&syy>0){
+        const r=sxy/Math.sqrt(sxx*syy), b=sxy/sxx, a=my-b*mx;
+        const y0=a, y1=a+b*100;
+        h+=`<line x1="${px(0)}" y1="${py(y0)}" x2="${px(100)}" y2="${py(y1)}" class="cD" clip-path="url(#rgClip)"/>`;
+        const str=Math.abs(r)>=0.7?"strong":Math.abs(r)>=0.3?"moderate":"weak";
+        msg=`n = ${P.length} · <b>r = ${r.toFixed(3)}</b> (${str} ${r>0?"positive":r<0?"negative":""}) · r² = ${(r*r).toFixed(3)} → ${(r*r*100).toFixed(0)}% of the variation in marks is explained.<br>Regression line: <b>marks = ${a.toFixed(1)} ${b>=0?"+":"−"} ${Math.abs(b).toFixed(2)} × x</b>. Predicted marks at x = 50: ${(a+b*50).toFixed(1)}.`;
+      }
+    }
+    svg.innerHTML=`<defs><clipPath id="rgClip"><rect x="${GX}" y="${GY}" width="${GW}" height="${GH}"/></clipPath></defs>`+h;
+    $("#rgOut").innerHTML=`<div class="fb info">${msg}</div>`;
+  };
+  svg.addEventListener("click",e=>{
+    const pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY; const q=pt.matrixTransform(svg.getScreenCTM().inverse());
+    const x=(q.x-GX)/GW*100, y=(GY+GH-q.y)/GH*100; if(x<0||x>100||y<0||y>100) return; P.push([x,y]); draw();
+  });
+  const gen=(f)=>{ P=[]; for(let i=0;i<14;i++){ const x=5+Math.random()*90; P.push([x,Math.max(2,Math.min(98,f(x)))]); } };
+  $$("[data-rg]").forEach(b=>b.onclick=()=>{ const k=b.dataset.rg;
+    if(k==="pos") gen(x=>20+0.7*x+(Math.random()-.5)*16); if(k==="neg") gen(x=>90-0.7*x+(Math.random()-.5)*16); if(k==="none") gen(()=>10+Math.random()*80);
+    if(k==="out") P.push([95,5]); if(k==="clr") P=[]; draw(); });
+  gen(x=>20+0.7*x+(Math.random()-.5)*16); draw();
+  choiceLab("#lab4",[
+   ["Towns with more police stations report more crimes.","THIRD","Population size drives both – and more police also record more crime."],
+   ["Students who attend more classes score higher marks.","CAUSE","Plausibly causal, though motivation also plays a part – a classic question for research design."],
+   ["Over ten years, mobile phone sales and life expectancy both rose in India.","TIME","Both trend upward over time – a spurious correlation from common trends."],
+   ["A study of 6 people finds that tall people are better at chess.","CHANCE","Tiny sample – likely chance."]
+  ],{CAUSE:"Possibly causal",THIRD:"A third factor",TIME:"Common trend over time",CHANCE:"Chance (small sample)"});
+  miniQuiz(4);
+ }};
+
+/* ---------------- UNIT 5 ---------------- */
+VIEWS.u5 = { html(){ return unitHead(5)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key"><b>Probability</b> measures uncertainty on a scale from 0 (impossible) to 1 (certain). Business forecasts, insurance premiums and forensic evidence all rest on it – and on not misreading it.</div>
+ <h4>Approaches</h4><p><b>Classical</b> (equally likely outcomes – a die), <b>relative frequency</b> (past data – 2% of parcels are lost), <b>subjective</b> (expert judgment), <b>axiomatic</b> (Kolmogorov).</p>
+ <h4>Rules</h4><table class="t"><tr><th>Rule</th><th>Formula</th></tr>
+ <tr><td>Complement</td><td>P(not A) = 1 − P(A)</td></tr><tr><td>Addition</td><td>P(A or B) = P(A) + P(B) − P(A and B)</td></tr>
+ <tr><td>Multiplication (independent)</td><td>P(A and B) = P(A) × P(B)</td></tr><tr><td>Conditional</td><td>P(A | B) = P(A and B) ÷ P(B)</td></tr>
+ <tr><td>Bayes' theorem</td><td>P(A | B) = P(B | A) P(A) ÷ P(B)</td></tr></table>
+ <h4>The prosecutor's fallacy</h4><p>"Only 1 in a million people would match this DNA, so there is a 1 in a million chance the accused is innocent." Wrong: in a city of 10 million, about 10 innocent people would match. Without other evidence, the matching accused is just one of about 11 people who match. Courts must weigh such evidence with the rest of the case – the famous English example is <i>R v Sally Clark</i> (2003), where misused statistics led to a wrongful conviction.</p>
+ <h4>Distributions</h4><table class="t"><tr><th>Distribution</th><th>Use</th><th>Mean, variance</th></tr>
+ <tr><td>Binomial</td><td>Number of successes in n independent trials (defective items in a batch)</td><td>np, npq</td></tr>
+ <tr><td>Poisson</td><td>Count of rare events in an interval (accidents per week, calls per minute)</td><td>m, m</td></tr>
+ <tr><td>Normal</td><td>Continuous, symmetric – heights, measurement errors, sample means</td><td>μ, σ²</td></tr></table>
+ <p><b>z-score</b> = (x − μ) ÷ σ. About 68% of values lie within 1σ, 95% within 2σ (more exactly 1.96σ) and 99.7% within 3σ.</p></div>
+</div><div>
+ <div class="card lab"><h3>DNA evidence – Bayes calculator</h3>
+  <div class="row"><label>People who could have committed the crime <input type="text" id="byN" value="1000000" style="width:110px"></label></div>
+  <div class="row" style="margin-top:6px"><label>Random match probability: 1 in <input type="text" id="byR" value="100000" style="width:100px"></label></div>
+  <div class="row" style="margin-top:6px"><label>Other evidence makes the accused <select id="byO"><option value="1">no more likely than anyone else</option><option value="100">100 times more likely</option><option value="10000">10,000 times more likely</option></select></label><button class="btn" id="byGo">Work it out</button></div>
+  <div id="byOut"></div></div>
+ <div class="card lab"><h3>Normal curve: area under the curve</h3>
+  <div class="row"><label>Mean <input type="text" id="nzM" value="60" style="width:60px"></label><label>SD <input type="text" id="nzS" value="10" style="width:60px"></label><label>Between <input type="text" id="nzA" value="50" style="width:60px"></label><label>and <input type="text" id="nzB" value="80" style="width:60px"></label><button class="btn" id="nzGo">Shade</button></div>
+  <svg viewBox="0 0 640 230" class="lg graph" id="nzSvg"></svg><div id="nzOut"></div></div>
+</div></div>`+unitFoot(5)+footer(); },
+ init(){
+  const n=id=>+String($("#"+id).value).replace(/[^\d.\-]/g,"")||0;
+  $("#byGo").onclick=()=>{
+    const N=Math.max(2,n("byN")), R=Math.max(1,n("byR")), O=+$("#byO").value;
+    const innocentMatches=(N-1)/R;            // expected innocent people who match
+    const prior=O/(O+(N-1));                    // prior that accused is the source
+    const post=prior/(prior+(1-prior)/R);
+    $("#byOut").innerHTML=`<div class="fb info">Expected innocent people who would also match: <b>${fmt(innocentMatches,1)}</b>.<br>Probability the accused is the source, given the match and the other evidence: <b>${fmt(post*100,1)}%</b>.<br>The fallacy would claim ${fmt(100-100/R,4)}% – confusing 'chance of a match if innocent' with 'chance of innocence given a match'.</div>`;
+  };
+  $("#byGo").click();
+  const draw=()=>{
+    const m=n("nzM"), s=Math.max(0.0001,n("nzS")); let a=n("nzA"), b=n("nzB"); if(a>b) [a,b]=[b,a];
+    const lo=m-4*s, hi=m+4*s, X=v=>30+(v-lo)/(hi-lo)*580, Y=v=>200-v*170, pdf=x=>Math.exp(-0.5*((x-m)/s)**2);
+    let curve="", area=`M${X(Math.max(a,lo))},200 `;
+    for(let i=0;i<=200;i++){ const x=lo+(hi-lo)*i/200; curve+=`${X(x)},${Y(pdf(x))} `; }
+    for(let i=0;i<=100;i++){ const x=Math.max(a,lo)+(Math.min(b,hi)-Math.max(a,lo))*i/100; area+=`L${X(x)},${Y(pdf(x))} `; }
+    area+=`L${X(Math.min(b,hi))},200 Z`;
+    const p=Phi((b-m)/s)-Phi((a-m)/s);
+    $("#nzSvg").innerHTML=`<path d="${area}" class="boxp"/><polyline points="${curve}" class="cD"/><line x1="30" y1="200" x2="610" y2="200" class="axis"/>${[-3,-2,-1,0,1,2,3].map(k=>`<text x="${X(m+k*s)}" y="220" text-anchor="middle" class="tick">${fmt(m+k*s,1)}</text>`).join("")}`;
+    $("#nzOut").innerHTML=`<div class="fb info">z for ${a} = ${fmt((a-m)/s)}, z for ${b} = ${fmt((b-m)/s)}. <b>Area = ${fmt(p*100,1)}%</b> of values lie between ${a} and ${b}.</div>`;
+  };
+  $("#nzGo").onclick=draw; draw();
+  miniQuiz(5);
+ }};
+
+/* ---------------- UNIT 6 ---------------- */
+const HT_SVG=`<svg viewBox="0 0 640 380" class="lg" role="img" aria-label="Hypothesis test as a trial">
+<defs><marker id="ht" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+${[["H0: no effect","presumed innocent"],["Choose α = 0.05","standard of proof"],["Collect data, compute test statistic","evidence"],["Find p-value","how surprising if innocent?"],["p < α → reject H0","convict"],["p ≥ α → do not reject","acquit (not 'innocent')"]].map((t,i)=>`<g id="h${i}" class="node fade"><rect x="${i<4?110:(i===4?30:340)}" y="${i<4?8+i*68:290}" width="${i<4?420:270}" height="54" rx="12"/><text x="${i<4?320:(i===4?165:475)}" y="${i<4?33+i*68:315}" text-anchor="middle" style="font-size:18px">${t[0]}</text><text x="${i<4?320:(i===4?165:475)}" y="${i<4?54+i*68:336}" text-anchor="middle" class="sub">${t[1]}</text></g>`).join("")}
+${[0,1,2].map(i=>`<path id="ha${i}" class="edge fade" d="M320 ${63+i*68} V${76+i*68}" marker-end="url(#ht)" style="color:var(--muted)"/>`).join("")}
+<path id="ha3" class="edge fade" d="M260 268 L180 288" marker-end="url(#ht)" style="color:var(--muted)"/><path id="ha4" class="edge fade" d="M380 268 L460 288" marker-end="url(#ht)" style="color:var(--muted)"/>
+</svg>`;
+const HT_STEPS=[
+ "<b>Null hypothesis H0</b>: no effect, no difference – like the presumption of innocence. The alternative H1 is what we suspect (the drug works; the groups differ).",
+ "Fix the <b>significance level α</b> before looking at the data – usually 5%. It is the risk of a Type I error we accept, like a standard of proof.",
+ "Collect the sample and compute a <b>test statistic</b> – z, t or χ² – measuring how far the data are from what H0 predicts.",
+ "The <b>p-value</b> is the probability of data at least this extreme if H0 were true. A small p-value means the data would be surprising under H0.",
+ "If p < α, <b>reject H0</b> – the result is 'statistically significant'. Risk: a Type I error (convicting the innocent).",
+ "If p ≥ α, we <b>fail to reject H0</b> – not proof that H0 is true, just like an acquittal is not a declaration of innocence. Risk: a Type II error (letting the guilty go)."
+];
+VIEWS.u6 = { html(){ return unitHead(6)+`
+<div class="two"><div>
+ <div class="card"><h3>Key idea</h3><div class="key">A <b>hypothesis test</b> asks whether a sample result is too large to be explained by chance alone. Its logic mirrors a criminal trial: assume H0, look at the evidence, and reject H0 only if the evidence is strong enough.</div>
+ <h4>Errors</h4><table class="t"><tr><th></th><th>H0 true (innocent)</th><th>H0 false (guilty)</th></tr><tr><td>Reject H0 (convict)</td><td>Type I error (α)</td><td>Correct (power = 1 − β)</td></tr><tr><td>Do not reject (acquit)</td><td>Correct</td><td>Type II error (β)</td></tr></table>
+ <h4>Which test?</h4><table class="t"><tr><th>Test</th><th>Use</th></tr>
+ <tr><td>z-test</td><td>Mean or proportion, large sample (n ≥ 30) or known σ</td></tr>
+ <tr><td>t-test</td><td>Mean, small sample, σ unknown; paired t for before-and-after</td></tr>
+ <tr><td>Chi-square (χ²)</td><td>Independence of two categorical variables; goodness of fit</td></tr>
+ <tr><td>F-test / ANOVA</td><td>Comparing variances, or means of three or more groups</td></tr></table>
+ <h4>Index numbers</h4><p>Measure change relative to a base period = 100. <b>Laspeyres</b> = Σp1q0 ÷ Σp0q0 × 100 (base-year quantities); <b>Paasche</b> = Σp1q1 ÷ Σp0q1 × 100 (current quantities); <b>Fisher</b> = √(L × P), the 'ideal' index. India's CPI (base 2012) is published monthly by the NSO; dearness allowance and rent clauses often link to it.</p>
+ <h4>Time series</h4><p>Components: <b>trend</b> (long-term direction), <b>seasonal</b> (within a year – festival sales), <b>cyclical</b> (business cycles), <b>irregular</b> (floods, pandemics). Trend is found by moving averages or the least-squares method.</p></div>
+ <div class="card lab"><h3>Price index calculator</h3><table class="t" id="ixTab"><tr><th>Item</th><th>Base price</th><th>Base qty</th><th>Current price</th><th>Current qty</th></tr>
+ ${[["Rice (kg)",40,50,52,48],["Milk (litre)",48,30,58,32],["Bus pass (month)",500,1,650,1]].map((r,i)=>`<tr><td>${r[0]}</td>${r.slice(1).map((v,j)=>`<td><input type="text" id="ix${i}_${j}" value="${v}" style="width:70px"></td>`).join("")}</tr>`).join("")}</table>
+ <div class="row"><button class="btn" id="ixGo">Calculate</button></div><div id="ixOut"></div></div>
+</div><div>
+ ${animBox("htAnim","A hypothesis test is like a trial",HT_SVG)}
+ <div class="card lab"><h3>Chi-square test of independence (2 × 2)</h3><p>Is preferring an online class related to year of study? Enter counts.</p>
+  <table class="t"><tr><th></th><th>Prefer online</th><th>Prefer offline</th></tr>
+  <tr><td>First year</td><td><input type="text" id="cs00" value="30" style="width:70px"></td><td><input type="text" id="cs01" value="20" style="width:70px"></td></tr>
+  <tr><td>Final year</td><td><input type="text" id="cs10" value="15" style="width:70px"></td><td><input type="text" id="cs11" value="35" style="width:70px"></td></tr></table>
+  <div class="row"><button class="btn" id="csGo">Test at 5%</button></div><div id="csOut"></div></div>
+ <div class="card lab"><h3>Type I or Type II?</h3><div id="lab6"></div></div>
+</div></div>`+unitFoot(6)+footer(); },
+ init(){
+  anim = makeAnim("#htAnim", HT_STEPS, i=>{
+    for(let k=0;k<6;k++) document.getElementById("h"+k).classList.toggle("show",k<=i);
+    for(let k=0;k<5;k++) document.getElementById("ha"+k).classList.toggle("show",k<i);
+  });
+  const v=id=>Math.max(0,+$("#"+id).value||0);
+  $("#csGo").onclick=()=>{
+    const o=[[v("cs00"),v("cs01")],[v("cs10"),v("cs11")]], R=[o[0][0]+o[0][1],o[1][0]+o[1][1]], C=[o[0][0]+o[1][0],o[0][1]+o[1][1]], N=R[0]+R[1];
+    if(!N||!R[0]||!R[1]||!C[0]||!C[1]){ $("#csOut").innerHTML=`<div class="fb bad">Every row and column needs some counts.</div>`; return; }
+    let chi=0, ex=[]; for(let i=0;i<2;i++) for(let j=0;j<2;j++){ const e=R[i]*C[j]/N; ex.push(e.toFixed(1)); chi+=(o[i][j]-e)**2/e; }
+    const p=2*(1-Phi(Math.sqrt(chi)));
+    $("#csOut").innerHTML=`<div class="fb info">Expected counts if independent: ${ex.join(", ")}.<br>χ² = <b>${chi.toFixed(2)}</b> with 1 degree of freedom (critical value 3.84 at 5%). p = <b>${p<0.001?"&lt; 0.001":p.toFixed(3)}</b>.<br>${chi>3.84?"<b>Reject H0</b> – preference appears related to year of study.":"<b>Do not reject H0</b> – no significant relationship shown."}${ex.some(e=>e<5)?"<br>Caution: an expected count is below 5; the test is unreliable.":""}</div>`;
+  };
+  $("#csGo").click();
+  $("#ixGo").onclick=()=>{
+    let a=0,b=0,c=0,d=0; for(let i=0;i<3;i++){ const [p0,q0,p1,q1]=[0,1,2,3].map(j=>+$("#ix"+i+"_"+j).value||0); a+=p1*q0; b+=p0*q0; c+=p1*q1; d+=p0*q1; }
+    const L=a/b*100, P=c/d*100, F=Math.sqrt(L*P);
+    $("#ixOut").innerHTML=`<div class="fb info">Laspeyres <b>${L.toFixed(1)}</b> · Paasche <b>${P.toFixed(1)}</b> · Fisher <b>${F.toFixed(1)}</b><br>Prices have risen about ${(F-100).toFixed(1)}% since the base period. Laspeyres usually comes out a little higher because it ignores people switching to goods whose prices rose less.</div>`;
+  };
+  $("#ixGo").click();
+  choiceLab("#lab6",[
+   ["A court convicts a person who did not commit the crime.","T1","Rejecting a true H0 (innocence)."],
+   ["A quality check passes a batch of faulty medicines.","T2","Failing to detect a real problem."],
+   ["A study concludes a new teaching method works when in truth it has no effect.","T1","A false positive."],
+   ["A screening test misses a disease the patient actually has.","T2","A false negative."]
+  ],{T1:"Type I error",T2:"Type II error"});
+  miniQuiz(6);
+ }};
+
+/* ---------------- FORMULA SHEET ---------------- */
+VIEWS.formulas = { html(){ return `<div class="unitban"><div class="k">Revise</div><h2>Formula sheet</h2><p>All the formulas of the course. Print it (Ctrl+P) for revision.</p></div>
+ <div class="two"><div class="card"><h3>Averages and dispersion</h3><table class="t">
+ <tr><td>Mean</td><td>x̄ = Σx ÷ n; grouped: Σfx ÷ Σf</td></tr><tr><td>Weighted mean</td><td>Σwx ÷ Σw</td></tr>
+ <tr><td>Median (grouped)</td><td>L + [(N/2 − cf) ÷ f] × h</td></tr><tr><td>Mode (grouped)</td><td>L + [(f1 − f0) ÷ (2f1 − f0 − f2)] × h</td></tr>
+ <tr><td>Empirical relation</td><td>Mode ≈ 3 Median − 2 Mean</td></tr><tr><td>Geometric mean</td><td>(x1·x2·…·xn)^(1/n)</td></tr>
+ <tr><td>Quartile deviation</td><td>(Q3 − Q1) ÷ 2</td></tr><tr><td>Mean deviation</td><td>Σ|x − x̄| ÷ n</td></tr>
+ <tr><td>Standard deviation</td><td>σ = √[Σ(x − x̄)² ÷ n]; sample s uses n − 1</td></tr><tr><td>Coefficient of variation</td><td>σ ÷ x̄ × 100</td></tr>
+ <tr><td>Skewness (Pearson)</td><td>(Mean − Mode) ÷ σ or 3(Mean − Median) ÷ σ</td></tr></table>
+ <h3 style="margin-top:14px">Correlation and regression</h3><table class="t">
+ <tr><td>Pearson r</td><td>Σ(x − x̄)(y − ȳ) ÷ √[Σ(x − x̄)² Σ(y − ȳ)²]</td></tr><tr><td>Spearman R</td><td>1 − 6Σd² ÷ [n(n² − 1)]</td></tr>
+ <tr><td>Regression Y on X</td><td>b = Σ(x − x̄)(y − ȳ) ÷ Σ(x − x̄)²; a = ȳ − b x̄</td></tr><tr><td>Coefficient of determination</td><td>r²</td></tr></table></div>
+ <div class="card"><h3>Probability and distributions</h3><table class="t">
+ <tr><td>Addition</td><td>P(A ∪ B) = P(A) + P(B) − P(A ∩ B)</td></tr><tr><td>Multiplication</td><td>P(A ∩ B) = P(A) P(B | A)</td></tr>
+ <tr><td>Bayes</td><td>P(A | B) = P(B | A) P(A) ÷ P(B)</td></tr><tr><td>Binomial</td><td>P(x) = nCx p^x q^(n−x); mean np; variance npq</td></tr>
+ <tr><td>Poisson</td><td>P(x) = e^(−m) m^x ÷ x!; mean = variance = m</td></tr><tr><td>z-score</td><td>(x − μ) ÷ σ</td></tr>
+ <tr><td>Standard error of mean</td><td>σ ÷ √n</td></tr></table>
+ <h3 style="margin-top:14px">Tests and indices</h3><table class="t">
+ <tr><td>z for a mean</td><td>(x̄ − μ) ÷ (σ ÷ √n)</td></tr><tr><td>t for a mean</td><td>(x̄ − μ) ÷ (s ÷ √n), df = n − 1</td></tr>
+ <tr><td>Chi-square</td><td>Σ(O − E)² ÷ E; E = row total × column total ÷ N; df = (r − 1)(c − 1)</td></tr>
+ <tr><td>Laspeyres</td><td>Σp1q0 ÷ Σp0q0 × 100</td></tr><tr><td>Paasche</td><td>Σp1q1 ÷ Σp0q1 × 100</td></tr><tr><td>Fisher</td><td>√(Laspeyres × Paasche)</td></tr></table></div></div>`+footer(); }};
+
+/* ---------------- REFERENCES ---------------- */
+VIEWS.refs = { html(){ return `<div class="unitban"><div class="k">Read further</div><h2>References</h2><p>Books are in the TNNLU library; online sources need internet.</p></div>
+ <div class="two"><div class="card"><h3>Books</h3><table class="t"><tr><th>Book</th><th>Use it for</th></tr>
+ <tr><td>S.P. Gupta, <i>Statistical Methods</i>, Sultan Chand</td><td>The standard Indian textbook, many solved problems</td></tr>
+ <tr><td>Richard Levin and David Rubin, <i>Statistics for Management</i>, Pearson</td><td>Business decisions, clear examples</td></tr>
+ <tr><td>C.R. Kothari and Gaurav Garg, <i>Research Methodology: Methods and Techniques</i>, New Age</td><td>Research design, sampling, questionnaires</td></tr>
+ <tr><td>Donald Cooper and Pamela Schindler, <i>Business Research Methods</i>, McGraw-Hill</td><td>Business research in depth</td></tr>
+ <tr><td>David Freedman, Robert Pisani and Roger Purves, <i>Statistics</i>, W.W. Norton</td><td>Intuition behind the methods</td></tr>
+ <tr><td>Lee Epstein and Andrew Martin, <i>An Introduction to Empirical Legal Research</i>, OUP</td><td>Statistics for law projects</td></tr></table></div>
+ <div><div class="card"><h3>Data sources for projects</h3><ul>
+ <li><a href="https://www.mospi.gov.in" target="_blank" rel="noopener">MoSPI / NSO</a> – CPI, GDP, National Sample Surveys</li>
+ <li><a href="https://censusindia.gov.in" target="_blank" rel="noopener">Census of India</a></li>
+ <li><a href="https://njdg.ecourts.gov.in" target="_blank" rel="noopener">National Judicial Data Grid</a> – case pendency statistics</li>
+ <li><a href="https://ncrb.gov.in" target="_blank" rel="noopener">National Crime Records Bureau</a> – Crime in India reports</li>
+ <li><a href="https://data.gov.in" target="_blank" rel="noopener">Open Government Data Platform</a></li>
+ <li><a href="https://dbie.rbi.org.in" target="_blank" rel="noopener">RBI Database on Indian Economy</a></li></ul></div>
+ <div class="card"><h3>Software</h3><p>Excel or Google Sheets (AVERAGE, MEDIAN, STDEV.S, CORREL, LINEST, CHISQ.TEST), and free tools such as <a href="https://jasp-stats.org" target="_blank" rel="noopener">JASP</a> or R for projects. Many universities also teach SPSS.</p></div></div></div>`+footer(); }};
+
+function footer(){ return `<div class="foot">Research Tools explorer · v1.0.0 · Reference material for second-semester B.Com. LL.B. students, based on the standard Business Statistics and Research Methodology syllabus. Always check against your own course outline.</div>`; }
+
+/* ---------------- CASES (torts version: Indian cases → Indian Kanoon, English → BAILII search) ---------------- */
+VIEWS.cases = { html(){ return `<div class="unitban"><div class="k">Revise</div><h2>Leading cases</h2><p>${CASES.length} cases. Indian cases link to Indian Kanoon; English and other cases link to a web search (internet needed).</p></div>
+ <div class="card"><div class="row"><input type="text" id="csS" class="search" placeholder="Search cases…"><select id="csU"><option value="0">All units</option>${UNITS.map(u=>`<option value="${u.n}">Unit ${u.n}: ${u.title}</option>`).join("")}</select><select id="csI"><option value="">Indian and foreign</option><option value="1">Indian only</option><option value="0">Foreign only</option></select></div></div><div class="casecards" id="csB"></div>`+footer(); },
+ init(){ const draw=()=>{ const q=$("#csS").value.toLowerCase(), u=+$("#csU").value, ind=$("#csI").value; $("#csB").innerHTML=CASES.filter(c=>(c.n+c.c+c.p).toLowerCase().includes(q)&&(!u||c.u===u)&&(ind===""||String(c.in)===ind)).map(c=>`<div class="cc"><b><a href="${c.in?"https://indiankanoon.org/search/?formInput="+encodeURIComponent(c.n):"https://duckduckgo.com/?q="+encodeURIComponent(c.n+" "+c.c)}" target="_blank" rel="noopener">${esc(c.n)}</a></b><span class="cit">${esc(c.c)} · Unit ${c.u} · ${c.in?"India":"Foreign"}</span><p>${esc(c.p)}</p></div>`).join(""); }; draw(); $("#csS").oninput=draw; $("#csU").onchange=draw; $("#csI").onchange=draw; }};
+
+/* ---------------- FLASHCARDS ---------------- */
+let fIdx=0, fDeck=FLASH.slice();
+VIEWS.flash = { html(){ return `<div class="unitban"><div class="k">Revise</div><h2>Flashcards</h2><p>${FLASH.length} key terms. Click the card or press Space to flip; use ← → to move.</p></div>
+ <div class="card"><div class="flash"><div class="fc" id="fc"><div class="front"><b id="fFront"></b><small>Click or Space to see the meaning</small></div><div class="back"><div id="fBack"></div><small id="fCount"></small></div></div></div>
+ <div class="row" style="justify-content:center"><button class="btn sec" id="fPrev">← Previous</button><button class="btn" id="fFlip">Flip</button><button class="btn sec" id="fNext">Next →</button><button class="btn sec" id="fShuf">Shuffle</button><span id="fPos" style="margin-left:10px;color:var(--muted)"></span></div></div>`+footer(); },
+ init(){ fIdx=0; this.show(); $("#fc").onclick=()=>$("#fc").classList.toggle("flip"); $("#fFlip").onclick=()=>$("#fc").classList.toggle("flip"); $("#fPrev").onclick=()=>this.move(-1); $("#fNext").onclick=()=>this.move(1); $("#fShuf").onclick=()=>{fDeck=shuffle(FLASH); fIdx=0; this.show();}; },
+ show(){ const c=fDeck[fIdx]; $("#fc").classList.remove("flip"); $("#fFront").textContent=c[0]; $("#fBack").textContent=c[1]; $("#fPos").textContent=`${fIdx+1} / ${fDeck.length}`; },
+ move(d){ fIdx=(fIdx+d+fDeck.length)%fDeck.length; this.show(); }
+};
+
+/* ---------------- MAXIMS ---------------- */
+VIEWS.maxims = { html(){ return `<div class="unitban"><div class="k">Revise</div><h2>Latin maxims and terms</h2><p>Phrases you will meet in judgments from the first week. Search to filter.</p></div>
+ <div class="card"><input type="text" id="mxS" class="search" placeholder="Search maxims…"><table class="t" style="margin-top:10px"><thead><tr><th>Maxim</th><th>Literal meaning</th><th>How it is used</th></tr></thead><tbody id="mxB"></tbody></table></div>`+footer(); },
+ init(){ const draw=q=>{ q=(q||"").toLowerCase(); $("#mxB").innerHTML=MAXIMS.filter(m=>m.join(" ").toLowerCase().includes(q)).map(m=>`<tr><td><b><i>${esc(m[0])}</i></b></td><td>${esc(m[1])}</td><td>${esc(m[2])}</td></tr>`).join(""); }; draw(); $("#mxS").oninput=e=>draw(e.target.value); }};
+
+/* ---------------- QUIZ ---------------- */
+VIEWS.quiz = { html(){ return `<div class="unitban"><div class="k">Test yourself</div><h2>Quiz</h2><p>${QUIZ.length} questions in the bank. Pick a unit or take a mixed set of 10.</p></div>
+ <div class="card"><div class="row"><select id="qU"><option value="0">All units (10 random)</option>${UNITS.map(u=>`<option value="${u.n}">Unit ${u.n}: ${u.title}</option>`).join("")}</select><button class="btn" id="qStart">Start</button><span id="qBest" style="color:var(--muted)"></span></div></div>
+ <div class="card" id="qBox" hidden><div id="qList"></div><div class="row" style="margin-top:10px"><span class="score" id="qScore"></span></div></div>`+footer(); },
+ init(){
+  const best=()=>{ const b=S.d.best, u=$("#qU").value; $("#qBest").textContent = b[u]!=null ? `Best: ${b[u]}%` : ""; };
+  $("#qU").onchange=best; best();
+  $("#qStart").onclick=()=>{
+    const u=+$("#qU").value; const pool = u? QUIZ.filter(q=>q[0]===u) : QUIZ; const set = shuffle(pool).slice(0, u?pool.length:10);
+    let got=0, ans=0; $("#qBox").hidden=false; $("#qList").innerHTML=set.map((q,i)=>qHTML(q,"q"+i)).join(""); $("#qScore").textContent=`0 / ${set.length}`;
+    bindQ($("#qList"), ok=>{ ans++; if(ok) got++; $("#qScore").textContent=`${got} / ${set.length}` + (ans===set.length?`  ·  ${Math.round(100*got/set.length)}%`:"");
+      if(ans===set.length){ const pct=Math.round(100*got/set.length), k=String(u); if(S.d.best[k]==null||pct>S.d.best[k]){S.d.best[k]=pct; S.save();} best(); toast(pct>=80?"Excellent!":pct>=50?"Good – revise the ones you missed.":"Revisit the units and try again."); } });
+  };
+ }};
+
+/* ---------------- CASE BRIEF BUILDER ---------------- */
+const BF = [["name","Case name"],["cit","Citation"],["court","Court and bench (judges)"],["facts","Facts (material facts only)"],["issues","Issues"],["argsP","Arguments – petitioner / appellant"],["argsR","Arguments – respondent"],["held","Held (decision)"],["ratio","Ratio decidendi"],["obiter","Obiter dicta"],["notes","My comments – do I agree? Is it still good law?"]];
+let briefEdit = -1;
+VIEWS.brief = { html(){ return `<div class="unitban"><div class="k">Practise</div><h2>Case brief builder</h2><p>Brief every judgment taught in class. Briefs are saved in this browser; download them as text to keep a copy.</p></div>
+ <div class="two"><div class="card"><h3 id="bfTitle">New brief</h3>${BF.map(([k,l])=>`<label style="display:block;margin:8px 0 2px;font-weight:600;font-size:14px">${l}</label>${k==="name"||k==="cit"||k==="court"?`<input type="text" id="bf_${k}" style="width:100%">`:`<textarea id="bf_${k}"></textarea>`}`).join("")}
+ <div class="row" style="margin-top:10px"><button class="btn" id="bfSave">Save brief</button><button class="btn sec" id="bfNew">Clear</button><button class="btn sec" id="bfDl">Download as .txt</button><button class="btn sec" onclick="window.print()">Print</button></div></div>
+ <div class="card"><h3>Saved briefs</h3><div id="bfList"></div><div class="key" style="margin-top:14px"><b>Tip.</b> Keep each brief to one page. If you cannot state the ratio in two sentences, read the judgment's analysis again.</div></div></div>`+footer(); },
+ init(){ briefEdit=-1; this.list(); $("#bfSave").onclick=()=>this.save(); $("#bfNew").onclick=()=>{briefEdit=-1; BF.forEach(([k])=>$("#bf_"+k).value=""); $("#bfTitle").textContent="New brief";}; $("#bfDl").onclick=()=>this.dl(); },
+ collect(){ const o={}; BF.forEach(([k])=>o[k]=$("#bf_"+k).value.trim()); return o; },
+ save(){ const o=this.collect(); if(!o.name){toast("Add a case name first"); return;} if(briefEdit>=0) S.d.briefs[briefEdit]=o; else S.d.briefs.push(o); S.save(); briefEdit=S.d.briefs.indexOf(o); toast("Brief saved"); this.list(); },
+ list(){ const b=S.d.briefs; $("#bfList").innerHTML = b.length ? b.map((x,i)=>`<div class="row" style="border-bottom:1px solid var(--rule);padding:6px 0"><span style="flex:1"><b>${esc(x.name)}</b><br><small style="color:var(--muted)">${esc(x.cit||"")}</small></span><button class="btn sm sec" data-ed="${i}">Open</button><button class="btn sm sec" data-del="${i}">Delete</button></div>`).join("") : `<p style="color:var(--muted)">No briefs yet.</p>`;
+   $$("[data-ed]").forEach(btn=>btn.onclick=()=>{ briefEdit=+btn.dataset.ed; const x=S.d.briefs[briefEdit]; BF.forEach(([k])=>$("#bf_"+k).value=x[k]||""); $("#bfTitle").textContent="Editing: "+x.name; });
+   $$("[data-del]").forEach(btn=>btn.onclick=()=>{ S.d.briefs.splice(+btn.dataset.del,1); S.save(); briefEdit=-1; this.list(); }); },
+ dl(){ const o=this.collect(); const txt=BF.map(([k,l])=>l.toUpperCase()+"\n"+(o[k]||"-")+"\n").join("\n"); const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"})); a.download=(o.name||"case-brief").replace(/[^\w\- ]+/g,"").slice(0,60)+".txt"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); }
+};
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+document.addEventListener("click", e=>{
+  const g=e.target.closest("[data-go]"); if(g){ e.preventDefault(); go(g.dataset.go); return; }
+  const d=e.target.closest("[data-done]"); if(d){ const id=d.dataset.done; S.d.done[id]=!S.d.done[id]; S.save(); d.textContent=S.d.done[id]?"✓ Marked as done":"Mark this unit as done"; renderSide(); toast(S.d.done[id]?"Unit marked as done":"Unit unmarked"); }
+});
+document.addEventListener("keydown", e=>{
+  if(e.target.matches("input,textarea,select")||e.ctrlKey||e.metaKey||e.altKey) return;
+  const k=e.key.toLowerCase();
+  if(k==="m"){ setSidebar(!sidebarHidden(), true); }
+  else if(k==="f"){ toggleFS(); }
+  else if(anim && k==="p"){ anim.play(); }
+  else if(anim && k==="s"){ anim.pause(); anim.step(); }
+  else if(anim && k==="x"){ anim.pause(); }
+  else if(cur==="flash" && (e.key==="ArrowRight"||e.key==="ArrowLeft")){ VIEWS.flash.move(e.key==="ArrowRight"?1:-1); }
+  else if(cur==="flash" && e.key===" "){ e.preventDefault(); $("#fc").classList.toggle("flip"); }
+  else if(k==="["||k==="]"){ const i=UNITS.findIndex(u=>u.id===cur); const ni = i<0 ? (k==="]"?0:-1) : i+(k==="]"?1:-1); if(ni>=0&&ni<UNITS.length) go(UNITS[ni].id); }
+});
+$("#sbBtn").onclick=()=>setSidebar(!sidebarHidden(), true);
+$("#fsBtn").onclick=toggleFS;
+$("#themeBtn").onclick=()=>{ const dark = document.documentElement.getAttribute("data-theme")==="dark" || (!document.documentElement.getAttribute("data-theme") && matchMedia("(prefers-color-scheme:dark)").matches); setTheme(dark?"light":"dark"); };
+document.addEventListener("fullscreenchange",()=>{ $("#fsBtn").textContent = document.fullscreenElement ? "⛶ Exit full screen" : "⛶ Full screen"; });
+(function boot(){
+  try{ const t=localStorage.getItem("llb_theme"); if(t) setTheme(t); }catch(e){}
+  let h=false; try{ h=localStorage.getItem(SBKEY)==="1"; }catch(e){}
+  setSidebar(window.innerWidth<=900 ? true : h, false);
+  const start=(location.hash||"").slice(1);
+  go(VIEWS[start]?start:"home", false);
+})();
+</script>
+<script src="/assets/js/llb-progress.js" data-course="Research Tools for Business Decision Making" data-sem="Semester II" data-slug="research-tools"></script>
+</body>
+</html>

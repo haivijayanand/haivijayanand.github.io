@@ -1,10 +1,10 @@
 /*
 TOOL:    class6_science_ch08
 FAMILY:  CBSE_REVISION / Class 6 Science (Curiosity)
-VERSION: 1.0.0
+VERSION: 1.0.1
 DATE:    2026-11-22
 CHAT:    CBSE Revision - Science kits Classes III to XII
-CHANGES: 1.0.0 - Ch 8 A Journey through States of Water (solid liquid gas, melting freezing evaporation condensation, factors affecting evaporation, water cycle) - revise, 2 explore panels, 5 generators, quiz, lesson plan, slides, key-ideas sheet
+CHANGES: 1.0.1 - beaker drawn with white fill (was rendering black); 1.0.0 - Ch 8 A Journey through States of Water (solid liquid gas, melting freezing evaporation condensation, factors affecting evaporation, water cycle) - revise, 2 explore panels, 5 generators, quiz, lesson plan, slides, key-ideas sheet
 */
 (function () {
   const { C } = G9;
@@ -27,7 +27,7 @@ CHANGES: 1.0.0 - Ch 8 A Journey through States of Water (solid liquid gas, melti
       { title: 'Heat or cool water', intro: 'Press heat or cool; watch water change state. <kbd>S</kbd> steps.',
         build(el, K) { const ST = [['ice (solid)', '#bfdbfe'], ['water (liquid)', '#3b82f6'], ['water vapour (gas)', '#e5e7eb']]; let k = 1; const row = K.row(el); const b = new K.Board(el, { xmin: -4, xmax: 4, ymin: -2.2, ymax: 2.2, axes: false, grid: 0, aspect: 0.45 }); const rd = K.read(el); let last = '';
           K.button(row, 'heat 🔥', () => { if (k < 2) { last = k === 0 ? 'melting' : 'evaporation'; k++; } b.redraw(); }); K.button(row, 'cool ❄', () => { if (k > 0) { last = k === 2 ? 'condensation' : 'freezing'; k--; } b.redraw(); });
-          b.onDraw = () => { b.clear(); b.rect(-1.5, -1.8, 3, 3, { fill: 'none', color: C.ink, w: 2 }); if (k === 0) { b.rect(-0.8, -1.8, 1.6, 1.4, { fill: ST[0][1], color: C.blue, w: 2 }); } else if (k === 1) { b.rect(-1.5, -1.8, 3, 1.5, { fill: ST[1][1], color: 'none' }); } else { for (let i = 0; i < 18; i++) b.dot(-1.3 + (i * 0.37) % 2.6, -1.6 + ((i * 1.31) % 2.6), { r: 3, color: C.purple }); }
+          b.onDraw = () => { b.clear(); b.rect(-1.5, -1.8, 3, 3, { fill: '#fff', color: C.ink, w: 2 }); if (k === 0) { b.rect(-0.8, -1.8, 1.6, 1.4, { fill: ST[0][1], color: C.blue, w: 2 }); } else if (k === 1) { b.rect(-1.5, -1.8, 3, 1.5, { fill: ST[1][1], color: 'none' }); } else { for (let i = 0; i < 18; i++) b.dot(-1.3 + (i * 0.37) % 2.6, -1.6 + ((i * 1.31) % 2.6), { r: 3, color: C.purple }); }
             b.text(2.8, 0, ST[k][0], { font: 'bold 14px' }); rd.innerHTML = `state: <b>${ST[k][0]}</b>${last ? ` · last change: <b>${last}</b>` : ''}`; };
           const step = () => { k = (k + 1) % 3; last = ''; b.redraw(); }; b.redraw(); return { step, play() {}, pause() {} }; } },
       { title: 'Water cycle', intro: 'Step through the water cycle. <kbd>P</kbd> play, <kbd>S</kbd> step.',

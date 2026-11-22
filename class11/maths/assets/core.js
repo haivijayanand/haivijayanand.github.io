@@ -1,10 +1,11 @@
 /*
 TOOL:    cbse_maths_core
 FAMILY:  CBSE_REVISION / Maths kits (shared engine for every class)
-VERSION: 2.1.0
+VERSION: 2.1.1
 DATE:    2026-11-22
 CHAT:    CBSE Revision - Class 9 Maths full build; Class X, XI, XII kits
-CHANGES: 2.1.0 - exam-focus card title from G9_CFG.boardTitle (Class 11/12 use "Exam focus")
+CHANGES: 2.1.1 - Practice: word questions get 4 answer options to tap (numeric ones keep the answer box); printable worksheet moved to a closed section below
+         2.1.0 - exam-focus card title from G9_CFG.boardTitle (Class 11/12 use "Exam focus")
          2.0.0 - class-neutral engine: all class/book text from G9_CFG (chapters/config.js), parts grouped from chapter data, optional old-book map, optional board-exam card on Revise
          1.1.0 - links to one-page formula sheets (sidebar, Revise tab, home); keys ignored on pages without the app shell
          1.0.0 - first release: app shell, routing, keyboard scheme (M/P/S/X/F), seeded RNG, maths board,
@@ -14,7 +15,7 @@ CHANGES: 2.1.0 - exam-focus card title from G9_CFG.boardTitle (Class 11/12 use "
 (function () {
   'use strict';
   const G9 = window.G9 = window.G9 || {};
-  G9.version = '2.1.0';
+  G9.version = '2.1.1';
   // per-kit settings come from chapters/config.js (window.G9_CFG); defaults keep the Class 9 kit working
   const CFG = G9.CFG = Object.assign({
     short: 'Class 9 Maths', roman: 'IX', brandSmall: 'Ganita Manjari · Revision &amp; Teaching Kit',
@@ -460,22 +461,44 @@ CHANGES: 2.1.0 - exam-focus card title from G9_CFG.boardTitle (Class 11/12 use "
   /* ---------------- practice: online + worksheet ---------------- */
   const LEVELS = ['Easy', 'Standard', 'HOTS'];
   function renderPractice(c, el) {
-    el.innerHTML = `<div class="grid2"><div class="card" id="pOnline"></div><div class="card" id="pSheet"></div></div>`;
+    el.innerHTML = `<div class="card" id="pOnline"></div>
+      <details class="card" id="pSheetBox" style="margin-top:14px"><summary style="cursor:pointer;font-weight:700;font-size:1.05em">🖨 Printable worksheet &amp; answer key (PDF) — for teachers and home practice</summary><div id="pSheet" style="margin-top:10px"></div></details>`;
     practiceOnline(c, el.querySelector('#pOnline'));
-    worksheetPanel([c.no], el.querySelector('#pSheet'), true);
+    const det = el.querySelector('#pSheetBox'); let built = false;
+    det.addEventListener('toggle', () => { if (det.open && !built) { built = true; worksheetPanel([c.no], el.querySelector('#pSheet'), true); } });
+  }
+  // answer options for questions without a numeric answer: the right answer plus up to 3 different
+  // answers made by the same question type with other seeds (or the generator's own Q.opts)
+  function practiceOptions(g, Q, lvl, seed) {
+    const plain = x => String(x).replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    const key = plain(Q.a); const seen = new Set([key]); const wrong = [];
+    (Q.opts || []).forEach(o => { const k = plain(o); if (!seen.has(k) && wrong.length < 3) { seen.add(k); wrong.push(G9.fixMinus(o)); } });
+    const isNum = x => /^[−\-]?[\d.,\/ ]+$/.test(x); const kind = isNum(key); const near = [], far = [];
+    for (let i = 1; i <= 60 && near.length + wrong.length < 3; i++) {
+      let Q2; try { Q2 = g.gen(G9.rng(seed + i * 7919), lvl); } catch (e) { continue; }
+      if (!Q2 || Q2.a == null) continue;
+      const k = plain(G9.fixMinus(Q2.a)); if (!k || seen.has(k)) continue;
+      seen.add(k); (isNum(k) === kind ? near : far).push(G9.fixMinus(Q2.a));   // same kind of answer first (word with words, number with numbers)
+    }
+    near.concat(far).forEach(t => { if (wrong.length < 3) wrong.push(t); });
+    if (!wrong.length) return null;
+    return G9.rng(seed + 17).shuffle([{ t: Q.a, ok: true }].concat(wrong.map(t => ({ t, ok: false }))));
   }
   function practiceOnline(c, box) {
     box.innerHTML = `<h2>Practise on screen</h2>`;
     const row = K.row(box);
-    let gi = -1, lvl = 2, seed = G9.newSeed();
+    let gi = -1, lvl = 2, seed = G9.newSeed(), done = 0, right = 0;
     K.select(row, 'Topic', ['All topics (mixed)'].concat(c.gens.map(g => g.title)), (i) => { gi = i - 1; next(); });
     const ls = K.select(row, 'Level', LEVELS, (i) => { lvl = i + 1; next(); }); ls.value = 1;
     const area = h('div'); box.appendChild(area);
     const row2 = K.row(box);
-    K.button(row2, 'New question ⟳', () => { seed = G9.newSeed(); next(); }, 'btn');
-    const bShow = K.button(row2, 'Show answer & steps', () => { ansDiv.style.display = 'block'; });
+    K.button(row2, 'Next question ⟳', () => { seed = G9.newSeed(); next(); }, 'btn');
+    K.button(row2, 'Show answer & steps', () => { ansDiv.style.display = 'block'; });
+    const tally = h('span', { cls: 'pill p' }); row2.appendChild(tally);
     const sl = h('span', { cls: 'muted' }); row2.appendChild(sl);
     let ansDiv;
+    const score = ok => { done++; if (ok) right++; tally.textContent = `Score ${right} / ${done}`; };
+    tally.textContent = 'Score 0 / 0';
     function next() {
       const R = G9.rng(seed);
       const gens = c.gens.filter(g => !g.levels || g.levels.includes(lvl));
@@ -483,16 +506,45 @@ CHANGES: 2.1.0 - exam-focus card title from G9_CFG.boardTitle (Class 11/12 use "
       const Q = g.gen(R, lvl); ['q', 'a', 's'].forEach(k => { Q[k] = G9.fixMinus(Q[k]); });
       sl.textContent = `question code ${c.no}-${lvl}-${seed}`;
       area.innerHTML = `<div class="pill p">${g.title}</div><div class="q">${Q.q}</div>`;
+      let marked = false;
       if (Q.ans != null) {
-        const r = h('div', { cls: 'ctrl' }, `<label>Your answer <input type="text" size="12" placeholder="e.g. 3.5 or 7/2"></label>`);
+        const r = h('div', { cls: 'ctrl' }, `<label>Your answer <input type="text" size="12" inputmode="decimal" placeholder="type a number"></label>`);
         const inp = r.querySelector('input'); const fb = h('span');
         K.button(r, 'Check', () => {
           const v = parseAns(inp.value); const tol = Q.tol ?? 0.011 * Math.max(1, Math.abs(Q.ans));
-          if (v == null) fb.innerHTML = '<span class="no">Type a number</span>';
-          else fb.innerHTML = Math.abs(v - Q.ans) <= tol ? '<span class="ok">✔ Correct!</span>' : '<span class="no">✘ Not yet — try again or see steps</span>';
+          if (v == null) { fb.innerHTML = '<span class="no">Type a number</span>'; return; }
+          const ok = Math.abs(v - Q.ans) <= tol;
+          fb.innerHTML = ok ? '<span class="ok">✔ Correct!</span>' : '<span class="no">✘ Not yet — try again or see steps</span>';
+          if (!marked) { marked = true; score(ok); }
         }, 'btn o');
         inp.addEventListener('keydown', e => { if (e.key === 'Enter') r.querySelector('.btn').click(); });
         r.appendChild(fb); area.appendChild(r);
+        setTimeout(() => inp.focus(), 0);
+      } else {
+        const opts = practiceOptions(g, Q, lvl, seed);
+        const wrap = h('div'); wrap.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin:10px 0';
+        const fb = h('div', { style: 'min-height:1.4em' });
+        if (opts) {
+          area.appendChild(h('div', { cls: 'muted' }, 'Choose the right answer:'));
+          opts.forEach((o, i) => {
+            const b = h('button', { cls: 'btn ghost', style: 'text-align:left;white-space:normal;height:auto;padding:10px 12px' }, `<b>${'ABCD'[i]}.</b> ${o.t}`);
+            b.onclick = () => {
+              if (marked) return; marked = true; score(o.ok);
+              wrap.querySelectorAll('button').forEach((x, j) => { if (opts[j].ok) { x.style.outline = '3px solid var(--blue,#1d4ed8)'; x.style.background = 'rgba(29,78,216,.10)'; } });
+              if (!o.ok) { b.style.outline = '3px solid var(--orange,#ea580c)'; b.style.background = 'rgba(234,88,12,.10)'; }
+              fb.innerHTML = o.ok ? '<span class="ok">✔ Correct!</span>' : `<span class="no">✘ Not this one — the right answer is outlined in blue.</span>`;
+              ansDiv.style.display = 'block';
+            };
+            wrap.appendChild(b);
+          });
+          area.appendChild(wrap); area.appendChild(fb);
+        } else {
+          // no different answers to offer: think first, then reveal and mark yourself
+          const r = h('div', { cls: 'ctrl' }, '<span class="muted">Work it out, then tap “Show answer & steps” and mark yourself:</span>');
+          K.button(r, '✔ I got it', () => { if (!marked) { marked = true; score(true); } ansDiv.style.display = 'block'; }, 'btn o');
+          K.button(r, '✘ Not yet', () => { if (!marked) { marked = true; score(false); } ansDiv.style.display = 'block'; }, 'btn ghost');
+          area.appendChild(r);
+        }
       }
       ansDiv = h('div', { cls: 'ans' }, `<b>Answer:</b> ${Q.a}${Q.s ? `<div style="margin-top:6px"><b>Steps:</b><br>${Q.s}</div>` : ''}`);
       ansDiv.style.display = 'none'; area.appendChild(ansDiv);

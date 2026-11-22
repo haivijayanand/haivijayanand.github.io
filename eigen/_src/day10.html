@@ -1,0 +1,119 @@
+<!--
+TOOL:    eigen/_src/day10.html — Day 10 source: Computing Eigenvalues, and the Final Assessment
+FAMILY:  eigen
+VERSION: 1.0.0
+DATE:    2026-11-22
+CHAT:    Another tutor on eigen vector and values, can you make it for GitHub. It's applications in different domains with examples. Make it as a 10 days interactive course with certificate
+CHANGES: 1.0.0 - first version
+STATUS:  working
+-->
+<day n="10">
+<summary>How do computers actually find eigenvalues of a 10-million-row finite-element model or the whole web? Not with determinants. Today: power and inverse iteration, the Rayleigh quotient, the QR algorithm inside every library, Lanczos for huge sparse problems, Gershgorin's quick bounds, and when eigenvalues can be trusted. Then the final assessment and your certificate.</summary>
+<goals><li>Run power, inverse and Rayleigh-quotient iteration and predict their convergence</li><li>Describe what the QR algorithm, Jacobi and Lanczos do and when each is used</li><li>Bound eigenvalues in seconds with Gershgorin discs</li><li>Know which eigenvalue problems are well- or ill-conditioned</li></goals>
+<body>
+<section id="power"><h2><span class="n">1</span>Power iteration and its relatives</h2>
+<p>Day 3 showed that repeated multiplication lines a vector up with the dominant eigenvector. Normalise each step to stop it overflowing and you have an algorithm:</p>
+<div class="fx">Power iteration:     v ← A v / |A v|,      λ ≈ vᵀAv / vᵀv   (the Rayleigh quotient)</div>
+<div class="eg"><b>Example 1 — A = [2 1; 1 2], start v = (1, 0)</b><span class="mono">Av: (2, 1) → (5, 4) → (14, 13) → (41, 40) → (122, 121)
+Rayleigh quotient: 2.80, 2.976, 2.9973, 2.99970 … → 3
+The error falls by (λ₂/λ₁)² = (1/3)² ≈ 1/9 per step (squared because A is symmetric).
+Rayleigh quotient at v = (1, 0.9): (2.9 + 2.52)/1.81 = 2.9945 — the vector is 5 % off but λ only 0.18 %.</span></div>
+<p>Two transformations from Day 2 turn power iteration into a tool for <b>any</b> eigenvalue:</p>
+<ul>
+<li><b>Inverse iteration</b>: apply the power method to (A − σI)⁻¹, whose eigenvalues are 1/(λ − σ). The one nearest σ becomes dominant. You never form the inverse — each step solves (A − σI)w = v. Convergence factor |λ_near − σ| / |λ_next − σ|: excellent when σ is a good guess.</li>
+<li><b>Rayleigh quotient iteration</b>: update σ to the current Rayleigh quotient every step. For symmetric matrices the number of correct digits roughly <b>triples</b> each step (cubic convergence).</li>
+</ul>
+<div class="widget" data-w="power"></div>
+<p>Try "Two close eigenvalues" with the power method: |λ₂/λ₁| = 0.91 and it crawls. Switch to inverse iteration with σ = 5.3, or to Rayleigh, and it finishes in a handful of steps. The orange dashed line keeps the previous run for comparison.</p>
+</section>
+
+<section id="qr"><h2><span class="n">2</span>What the libraries do</h2>
+<table><tr><th>Method</th><th>Idea</th><th>Used for</th></tr>
+<tr><td><b>QR algorithm</b> (Francis, Kublanovskaya, 1961)</td><td>Factor A = QR, form RQ, repeat. Each step is a similarity transform (same eigenvalues); the matrix converges to triangular form with the eigenvalues on the diagonal. Practical versions first reduce to Hessenberg/tridiagonal form and use shifts — about 10n³ operations for all eigenvalues.</td><td>Dense matrices up to a few thousand: NumPy/LAPACK <code>eig</code>, MATLAB <code>eig</code>. This course's labs use it for non-symmetric matrices.</td></tr>
+<tr><td><b>Jacobi</b> (1846)</td><td>Rotate away the largest off-diagonal entry, again and again, until the symmetric matrix is diagonal. Slow but very accurate and simple.</td><td>Small symmetric matrices; this course's labs use it for stresses, modes, PCA and the Laplacian.</td></tr>
+<tr><td><b>Lanczos / Arnoldi</b></td><td>Build an orthonormal basis from v, Av, A²v, … (a Krylov space) and solve a small projected problem. Needs only matrix–vector products.</td><td>Huge sparse problems where you want a few eigenvalues: FE modal and buckling analysis (Block Lanczos in ANSYS, Lanczos in NASTRAN), PageRank-type and quantum problems. SciPy <code>eigsh</code> / <code>eigs</code>.</td></tr>
+<tr><td><b>Subspace iteration</b></td><td>Power iteration on a block of vectors at once, orthogonalised each step.</td><td>Classic structural dynamics codes; the first 20–100 modes of a building or vehicle.</td></tr>
+</table>
+<div class="note"><b>Practical rule for FE modal analysis:</b> you never need all million modes of a model — the lowest few dozen contain almost all the mass participation, and they are exactly what shift-and-invert Lanczos delivers fastest. Ask for modes up to 1.5–2 × the highest excitation frequency of interest.</div>
+<details class="deep"><summary>Why the QR algorithm converges</summary><div><p>QR iteration is secretly power iteration on a whole set of vectors at once. After k steps, the first column of the accumulated Q is Aᵏe₁ normalised — power iteration — and the first m columns span the same space as m vectors after k power steps, orthogonalised. So the columns line up with the eigenvectors in order of |λ|, and the sub-diagonal entries shrink like |λᵢ₊₁/λᵢ|ᵏ. Shifting by a good estimate of an eigenvalue (as in inverse iteration) makes the last sub-diagonal entry vanish quadratically or cubically, then the problem deflates to a smaller one.</p></div></details>
+</section>
+
+<section id="gersh"><h2><span class="n">3</span>Gershgorin discs: bounds for free</h2>
+<div class="def"><b>Gershgorin circle theorem.</b> Every eigenvalue of A lies in at least one of the discs centred at a diagonal entry aᵢᵢ with radius Rᵢ = Σⱼ≠ᵢ |aᵢⱼ| (the rest of row i).</div>
+<div class="eg"><b>Example 2 — A = [10 1 −2 ; 1 6 1 ; 0.5 −1 2]</b><span class="mono">Row 1: centre 10, radius 3   → [7, 13]
+Row 2: centre 6,  radius 2   → [4, 8]
+Row 3: centre 2,  radius 1.5 → [0.5, 3.5]
+0 lies in no disc → A is invertible. Actual eigenvalues: 10.18, 5.27, 2.54 — one in each disc.
+(When discs do not overlap, each contains exactly one eigenvalue.)</span></div>
+<div class="widget" data-w="gersh"></div>
+<div class="app"><b>Why engineers like it</b>A strictly diagonally dominant stiffness matrix is positive definite without solving anything; if every disc of a system matrix lies in the left half-plane, the system is stable (Day 6); it gives the starting interval for bisection and a quick sanity check on any eigen-solver output.</div>
+</section>
+
+<section id="trust"><h2><span class="n">4</span>When can you trust an eigenvalue?</h2>
+<p><b>Symmetric matrices are safe</b>: a perturbation of size ε moves every eigenvalue by at most ε (Weyl's theorem). Stresses, modes, PCA and Laplacians are well-conditioned eigenproblems.</p>
+<p><b>Non-symmetric matrices can be treacherous.</b> When eigenvectors are nearly parallel, tiny changes in the matrix move the eigenvalues a lot:</p>
+<div class="eg"><b>Example 3 — A = [1 1; ε 1]</b><span class="mono">Eigenvalues 1 ± √ε
+ε = 0        → 1, 1 (defective)
+ε = 10⁻¹⁰    → 1 ± 10⁻⁵
+A change of 10⁻¹⁰ in one entry moved the eigenvalues by 10⁻⁵ — 100 000 times larger.
+For x′ = Ax stability margins of such systems should be judged with care (pseudospectra),
+not by eigenvalues alone: transient growth can be large even when all Re λ &lt; 0.</span></div>
+<p>The other lesson of the course in one line: <b>compute eigenvalues from the matrix, never from the characteristic polynomial</b>, and prefer symmetric formulations (K φ = ω²Mφ, covariance, Laplacian) whenever the physics allows.</p>
+</section>
+
+<section id="review"><h2><span class="n">5</span>The whole course on one page</h2>
+<div class="domgrid">
+<div><b>A v = λ v</b><span>Directions a matrix only stretches. Σλ = trace, Πλ = det. (Days 1–2)</span></div>
+<div><b>A = P D P⁻¹</b><span>Powers, long-run behaviour, Markov steady states, population growth. (Day 3)</span></div>
+<div><b>A = Q Λ Qᵀ</b><span>Symmetric: real λ, perpendicular axes. Principal stresses, inertia, quadratic forms. (Day 4)</span></div>
+<div><b>K φ = ω² M φ</b><span>Natural frequencies and mode shapes. (Day 5)</span></div>
+<div><b>x′ = A x</b><span>Stable ⇔ all Re λ &lt; 0. Damping and frequency from λ, pole placement. (Day 6)</span></div>
+<div><b>C u = λ u, A = U Σ Vᵀ</b><span>PCA and SVD: variance, compression, denoising. (Day 7)</span></div>
+<div><b>G r = r, L v = λ v</b><span>PageRank, connectivity, communities. (Day 8)</span></div>
+<div><b>−y″ = λ y, H ψ = E ψ</b><span>Buckling, harmonics, heat decay, energy levels. (Day 9)</span></div>
+</div>
+</section>
+</body>
+<quiz>[
+{"q":"Power iteration converges to the eigenvector of","o":["The smallest |λ|","The largest |λ|","λ nearest 1","A random λ"],"a":1,"e":"The others shrink like (λᵢ/λ₁)ᵏ."},
+{"q":"Inverse iteration with shift σ finds the eigenvalue","o":["Largest in size","Nearest to σ","Equal to σ exactly","Smallest in size always"],"a":1,"e":"(A − σI)⁻¹ has eigenvalues 1/(λ − σ)."},
+{"q":"The power method is slow when","o":["|λ₂/λ₁| is close to 1","The matrix is small","λ₁ is large","The matrix is symmetric"],"a":0,"e":"Error shrinks by |λ₂/λ₁| per step."},
+{"q":"LAPACK / NumPy find all eigenvalues of a dense matrix mainly with","o":["The characteristic polynomial","The QR algorithm","Gershgorin discs","Random guessing"],"a":1,"e":"After Hessenberg or tridiagonal reduction."},
+{"q":"For the first 50 modes of a million-DOF FE model you would use","o":["The full QR algorithm","Lanczos (shift-and-invert)","Cramer's rule","The characteristic polynomial"],"a":1,"e":"Only matrix–vector products or sparse solves are needed."},
+{"q":"Row 2 of a matrix is (1, 6, −2). Its Gershgorin disc has","o":["Centre 6, radius 3","Centre 1, radius 8","Centre 6, radius 1","Centre 5, radius 2"],"a":0,"e":"Centre = diagonal, radius = |1| + |−2|."},
+{"q":"Which eigenproblems are always well-conditioned?","o":["Defective ones","Symmetric ones","Non-symmetric ones with parallel eigenvectors","None"],"a":1,"e":"Weyl: eigenvalues move no more than the perturbation."},
+{"q":"For a symmetric matrix, Rayleigh quotient iteration converges","o":["Linearly","Quadratically","Cubically","Not at all"],"a":2,"e":"Correct digits roughly triple per step."}
+]</quiz>
+<extra>
+<section id="exam"><h2><span class="n">🎓</span>Final assessment</h2>
+<p>Twenty questions from all ten days. Your best score is kept and printed on the certificate. Take it as often as you like.</p>
+<script type="application/json" id="exam-data">[
+{"q":"A v = λ v means that the matrix A","o":["Rotates v by λ degrees","Only scales v, by the factor λ","Adds λ to every component","Projects v onto λ"],"a":1,"e":"Day 1."},
+{"q":"The eigenvalues of [6 2; 2 3] are","o":["6 and 3","7 and 2","8 and 1","5 and 4"],"a":1,"e":"trace 9, det 14: λ² − 9λ + 14 = (λ − 7)(λ − 2)."},
+{"q":"An eigenvector of [6 2; 2 3] for λ = 7 is","o":["(1, 2)","(2, 1)","(1, −2)","(1, 1)"],"a":1,"e":"(A − 7I) = [−1 2; 2 −4] → v = (2, 1)."},
+{"q":"A 3 × 3 matrix has trace 6 and eigenvalues 1 and 2. The third eigenvalue is","o":["3","6","2","0"],"a":0,"e":"Σλ = trace."},
+{"q":"If det A = 0, then A has","o":["All eigenvalues zero","At least one zero eigenvalue","Only complex eigenvalues","No eigenvectors"],"a":1,"e":"Πλ = det."},
+{"q":"A¹⁰⁰ x is dominated by","o":["The smallest eigenvalue","The eigenvector of the largest |λ|","The trace","The first column of A"],"a":1,"e":"Day 3."},
+{"q":"A Markov chain's steady state is the eigenvector with eigenvalue","o":["0","1","−1","Its largest diagonal entry"],"a":1,"e":"P x = x."},
+{"q":"σx = 40, σy = 40, τxy = 30 MPa. The principal stresses are","o":["70 and 10 MPa","40 and 40 MPa","100 and −20 MPa","30 and 0 MPa"],"a":0,"e":"40 ± √(0² + 30²) = 40 ± 30."},
+{"q":"The principal directions of a stress tensor are always","o":["Parallel","Perpendicular","At 45°","Undefined"],"a":1,"e":"Symmetric matrix → perpendicular eigenvectors."},
+{"q":"A square equal-angle section buckles most easily about","o":["Its axis of symmetry","The minor principal axis (smallest eigenvalue of the inertia matrix)","Any axis equally","The x-axis"],"a":1,"e":"I_v is the smallest eigenvalue."},
+{"q":"In K φ = ω² M φ, doubling all masses multiplies each natural frequency by","o":["2","√2","1/√2","1/2"],"a":2,"e":"ω² ∝ k/m."},
+{"q":"The highest mode of a 4-storey shear building has how many sign changes in its shape?","o":["0","1","2","3"],"a":3,"e":"Mode n has n − 1 nodes."},
+{"q":"x′ = Ax with eigenvalues −1 and +0.01 is","o":["Stable","Unstable","Marginally stable","Oscillatory"],"a":1,"e":"One eigenvalue in the right half-plane is enough."},
+{"q":"Eigenvalues −2 ± 2i correspond to a damping ratio of","o":["0.25","0.5","0.707","1"],"a":2,"e":"ζ = −Re λ/|λ| = 2/√8."},
+{"q":"Covariance eigenvalues of three sensors are 7, 2 and 1. Two principal components explain","o":["70 %","80 %","90 %","100 %"],"a":2,"e":"(7 + 2)/10."},
+{"q":"The singular values of A are the square roots of the eigenvalues of","o":["A","A + Aᵀ","AᵀA","A⁻¹"],"a":2,"e":"Day 7."},
+{"q":"A graph Laplacian with two zero eigenvalues means the network","o":["Has two nodes","Is in two disconnected pieces","Has two hubs","Is a ring"],"a":1,"e":"Day 8."},
+{"q":"Changing a pinned column to fixed–fixed multiplies the buckling load by","o":["2","4","1/4","π"],"a":1,"e":"Effective length L/2."},
+{"q":"Atoms emit light at sharp wavelengths because energy levels are","o":["Random","Eigenvalues of the Hamiltonian","Always equal","Determinants"],"a":1,"e":"Day 9."},
+{"q":"To find the 20 lowest modes of a large sparse FE model, the method of choice is","o":["The characteristic polynomial","Lanczos with shift-and-invert","Gershgorin discs","Full power iteration on A"],"a":1,"e":"Day 10."}
+]</script>
+<div class="widget" data-w="exam" data-src="exam-data" data-key="exam"></div>
+</section>
+<section id="cert"><h2><span class="n">★</span>Your certificate</h2>
+<p>Type your name. The certificate counts the days you have marked complete and your best final-assessment score. Print it — or, when you are signed in and have finished, save it to your account with a certificate ID that anyone can verify.</p>
+<div class="widget" data-w="cert" data-from="1" data-to="10" data-key="exam" data-title="Eigenvalues and Eigenvectors: A 10-Day Course" data-course="eigen" data-path="/eigen/" data-topics="eigenvalues and eigenvectors and their applications — principal stresses, vibration modes, stability, Markov chains, PCA and SVD, PageRank, buckling and quantum states"></div>
+</section>
+</extra>
+</day>

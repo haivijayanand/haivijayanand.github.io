@@ -1,0 +1,89 @@
+<!--
+TOOL:    eigen/_src/day01.html — Day 1 source: What an Eigenvector Is
+FAMILY:  eigen
+VERSION: 1.0.0
+DATE:    2026-11-22
+CHAT:    Another tutor on eigen vector and values, can you make it for GitHub. It's applications in different domains with examples. Make it as a 10 days interactive course with certificate
+CHANGES: 1.0.0 - first version
+STATUS:  working
+-->
+<day n="1">
+<summary>A matrix moves every vector somewhere else — except a few special directions that it only stretches. Those are the eigenvectors, and the stretch factors are the eigenvalues. Today you find them by eye, by dragging, and by thinking about stretching, shearing, rotating and reflecting.</summary>
+<goals><li>Read A v = λ v as a sentence: "A does nothing to v except scale it by λ"</li><li>Find eigenvectors of simple transformations by geometry alone</li><li>Know what λ &gt; 1, 0 &lt; λ &lt; 1, λ = 0 and λ &lt; 0 mean physically</li><li>See why a rotation has no real eigenvectors and a shear has only one</li></goals>
+<body>
+<section id="idea"><h2><span class="n">1</span>A matrix is a machine that moves vectors</h2>
+<p>Multiply a 2 × 2 matrix by a vector and you get a new vector. Do it for every vector in the plane and the whole plane is <b>transformed</b>: squares become parallelograms, circles become ellipses. Take</p>
+<div class="big">A = [ 2 1 ; 1 2 ]</div>
+<p>and feed it a few vectors:</p>
+<table><tr><th>x</th><th>A x</th><th>What happened</th></tr>
+<tr><td>(1, 0)</td><td>(2, 1)</td><td>stretched <b>and turned</b> by 26.6°</td></tr>
+<tr><td>(0, 1)</td><td>(1, 2)</td><td>stretched and turned the other way</td></tr>
+<tr><td>(1, 1)</td><td>(3, 3)</td><td>exactly 3 × the input — <b>not turned at all</b></td></tr>
+<tr><td>(1, −1)</td><td>(1, −1)</td><td>exactly 1 × the input — untouched</td></tr>
+</table>
+<p>Most vectors get knocked off their line. Two directions do not. Those directions are the <b>eigenvectors</b> of A, and the factors 3 and 1 are its <b>eigenvalues</b>.</p>
+<div class="def"><b>Definition.</b> A non-zero vector v is an eigenvector of the square matrix A, with eigenvalue λ, when
+<div class="big">A v = λ v</div>
+In words: A acting on v gives back v, only scaled by λ. "Eigen" is German for "own" or "characteristic" — these are the matrix's own directions.</div>
+<p>Two things follow at once. Any multiple of an eigenvector is also an eigenvector (A(2v) = 2Av = 2λv), so it is really a <b>direction</b>, a whole line through the origin. And the zero vector is excluded, because A·0 = λ·0 for every λ and would tell us nothing.</p>
+</section>
+
+<section id="lab1"><h2><span class="n">2</span>Lab: hunt for the directions that do not turn</h2>
+<p>Drag the blue vector x around. The orange dashed arrow is A x. Watch the angle between them: when it drops to 0° (or 180°) you are sitting on an eigenvector, and the length ratio is the eigenvalue. Press <kbd>P</kbd> to sweep x round the circle automatically, <kbd>X</kbd> to stop. Then try the other presets.</p>
+<div class="widget" data-w="transform"></div>
+<p>Notice the black ellipse — the image of the unit circle. For the symmetric preset its longest and shortest radii lie exactly along the eigenvectors, and their lengths are the eigenvalues 3 and 1. That is no accident; Day 4 is about it.</p>
+</section>
+
+<section id="meaning"><h2><span class="n">3</span>What the eigenvalue tells you</h2>
+<table><tr><th>λ</th><th>Along the eigenvector the matrix…</th><th>Typical meaning</th></tr>
+<tr><td>λ &gt; 1</td><td>stretches</td><td>growth, amplification, an unstable direction when repeated</td></tr>
+<tr><td>λ = 1</td><td>leaves it alone</td><td>an equilibrium, a steady state, a rotation axis</td></tr>
+<tr><td>0 &lt; λ &lt; 1</td><td>shrinks</td><td>decay, damping, forgetting the starting point</td></tr>
+<tr><td>λ = 0</td><td>flattens it to nothing</td><td>information lost; the matrix is singular (det A = 0)</td></tr>
+<tr><td>λ &lt; 0</td><td>flips it round and scales</td><td>reflection, an alternating sequence</td></tr>
+<tr><td>complex λ</td><td>no real direction survives</td><td>rotation, oscillation (Days 2 and 6)</td></tr>
+</table>
+<p>Two quick rules you can check in the lab: the eigenvalues add up to the <b>trace</b> (a + d) and multiply to the <b>determinant</b> (ad − bc). For [2 1; 1 2]: 3 + 1 = 4 = 2 + 2 and 3 × 1 = 3 = 4 − 1. The determinant is the factor by which areas change, so it is natural that it equals the product of the stretches.</p>
+</section>
+
+<section id="geometry"><h2><span class="n">4</span>Eigenvectors you can see without algebra</h2>
+<div class="eg"><b>Example 1 — reflection in the line y = x: A = [0 1; 1 0]</b><span class="mono">Vectors ON the mirror line, e.g. (1, 1), stay put           →  λ = +1
+Vectors PERPENDICULAR to it, e.g. (1, −1), flip to (−1, 1)  →  λ = −1
+Every other vector is turned. Check: trace 0 = 1 + (−1),  det −1 = 1 × (−1).</span></div>
+<div class="eg"><b>Example 2 — projection onto the x-axis (a shadow from overhead light): A = [1 0; 0 0]</b><span class="mono">(1, 0) already lies on the axis   →  A(1, 0) = (1, 0),  λ = 1
+(0, 1) points straight up          →  A(0, 1) = (0, 0),  λ = 0
+λ = 0 means a whole direction is crushed: the projection cannot be undone, det A = 0.</span></div>
+<div class="eg"><b>Example 3 — shear (a deck of cards pushed sideways): A = [1 1; 0 1]</b><span class="mono">Horizontal vectors slide along themselves: A(1, 0) = (1, 0), λ = 1.
+Any vector with a vertical part is pushed sideways and turned.
+Only ONE eigen-direction for a 2 × 2 matrix → a "defective" matrix (Day 2).</span></div>
+<div class="eg"><b>Example 4 — rotation by 36.9°: A = [0.8 −0.6; 0.6 0.8]</b><span class="mono">Every vector is turned by 36.9°, so no real direction is kept.
+The eigenvalues are complex: 0.8 ± 0.6i = e^(±i·36.9°).
+Their size |λ| = 1 says "no stretching", their angle is the rotation angle.</span></div>
+<div class="note"><b>In three dimensions a rotation DOES have a real eigenvector:</b> its axis. Euler's rotation theorem says that any orientation of a rigid body can be reached from another by a single rotation about one fixed axis — and that axis is the eigenvector of the 3 × 3 rotation matrix with λ = 1. Robotics, spacecraft attitude control and camera calibration extract the rotation axis exactly this way.</div>
+</section>
+
+<section id="why"><h2><span class="n">5</span>Why anyone cares</h2>
+<p>If you know the eigenvectors, a complicated matrix becomes simple: along each eigen-direction it is just multiplication by a number. Write any vector as a mix of eigenvectors, and A acts on each part separately. Apply A a hundred times and each part is multiplied by λ¹⁰⁰ — the parts with |λ| &gt; 1 explode, those with |λ| &lt; 1 die away, and the largest |λ| takes over. That single idea runs through the whole course:</p>
+<div class="domgrid">
+<div><b>Stress in a part</b><span>The stress matrix has three eigenvectors: the principal directions, where there is no shear. A crack opens along the largest eigenvalue (Day 4).</span></div>
+<div><b>Vibration</b><span>Each eigenvector is a mode shape — a pattern the structure vibrates in on its own — and each eigenvalue gives a natural frequency (Day 5).</span></div>
+<div><b>Stability</b><span>A system x′ = Ax is stable exactly when every eigenvalue has a negative real part. Aircraft, rotors, control loops (Day 6).</span></div>
+<div><b>Long-run behaviour</b><span>Markets, weather and populations settle onto the eigenvector with λ = 1 or the largest λ (Day 3).</span></div>
+<div><b>Data</b><span>The eigenvectors of a covariance matrix are the directions in which the data varies most — the principal components (Day 7).</span></div>
+<div><b>Ranking</b><span>Google's PageRank is the eigenvector with λ = 1 of a matrix built from the links of the web (Day 8).</span></div>
+</div>
+<div class="app"><b>Where you meet it in a test lab</b>On a gearbox test rig the three accelerometer axes, the two proximity probes of a shaft and the stress gauges of a rosette all give you a vector at each instant. The "natural" axes in which these vectors look simplest — principal stresses, major axis of the shaft orbit, the direction of maximum vibration — are always eigenvectors of some symmetric matrix built from the readings.</div>
+<details class="deep"><summary>Why eigenvectors for different eigenvalues are independent</summary><div><p>Suppose v₁ and v₂ have different eigenvalues λ₁ ≠ λ₂ and c₁v₁ + c₂v₂ = 0. Apply A: c₁λ₁v₁ + c₂λ₂v₂ = 0. Subtract λ₂ times the first equation: c₁(λ₁ − λ₂)v₁ = 0. Since λ₁ ≠ λ₂ and v₁ ≠ 0, c₁ = 0, and then c₂ = 0. So they point in genuinely different directions. The same argument, by induction, shows that n eigenvectors with n different eigenvalues are independent — they form a basis, which is what makes them so useful.</p></div></details>
+</section>
+</body>
+<quiz>[
+{"q":"For A = [2 1; 1 2], which vector is an eigenvector?","o":["(1, 0)","(1, 2)","(1, 1)","(2, 1)"],"a":2,"e":"A(1, 1) = (3, 3) = 3·(1, 1). The others are turned."},
+{"q":"If v is an eigenvector of A with eigenvalue 4, then 5v is","o":["An eigenvector with eigenvalue 20","An eigenvector with eigenvalue 4","Not an eigenvector","An eigenvector with eigenvalue 4/5"],"a":1,"e":"A(5v) = 5Av = 5·4v = 4·(5v). The direction matters, not the length."},
+{"q":"A projection matrix (shadow onto a plane) always has the eigenvalue","o":["−1","0","2","i"],"a":1,"e":"The direction it flattens is sent to zero: λ = 0, and det = 0."},
+{"q":"A 2-D rotation by 90° has","o":["Two real eigenvalues ±1","One eigenvalue 0","Complex eigenvalues ±i","Eigenvalue 90"],"a":2,"e":"No real direction survives a 90° turn; λ = ±i, with |λ| = 1."},
+{"q":"For a 3-D rotation matrix, the eigenvector with λ = 1 is","o":["The rotation axis","Any vector in the plane of rotation","The zero vector","There is none"],"a":0,"e":"Vectors along the axis are not moved — Euler's rotation theorem."},
+{"q":"The eigenvalues of [5 2; 2 1] add up to","o":["5","6","1","10"],"a":1,"e":"Sum of eigenvalues = trace = 5 + 1 = 6."},
+{"q":"The eigenvalues of [5 2; 2 1] multiply to","o":["1","5","6","9"],"a":0,"e":"Product = determinant = 5·1 − 2·2 = 1."},
+{"q":"A shear [1 1; 0 1] has how many independent eigenvectors?","o":["None","One","Two","Infinitely many independent ones"],"a":1,"e":"Only horizontal vectors keep their direction. It is 'defective'."}
+]</quiz>
+</day>

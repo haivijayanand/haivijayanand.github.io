@@ -2,10 +2,11 @@
 """
 TOOL:    _scripts/add_theme_tag.py — add the site-wide light / dark theme script to standalone HTML pages and page builders
 FAMILY:  SITE
-VERSION: 1.0.0
-DATE:    2026-11-21
+VERSION: 1.1.0
+DATE:    2026-11-22
 CHAT:    Make light theme by default in home page also; give option to change light / dark theme in every individual page
-CHANGES: 1.0.0 - first release: puts <script src="/assets/js/site-theme.js"></script> right after <head> of every standalone
+CHANGES: 1.1.0 - eigen/_src/build.py added to the page builders
+         1.0.0 - first release: puts <script src="/assets/js/site-theme.js"></script> right after <head> of every standalone
                  page (and in the <head> templates of the page builders), bumping each file's own header; dry run by default
 STATUS:  working
 
@@ -15,7 +16,7 @@ Usage (from the repo root):
 Skips Jekyll pages (front matter: the Chirpy layout loads the script), redirect stubs, files under _ folders, and pages
 that already load it. Run again after adding a new section; pages made by a builder get the tag from the builder.
 """
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 import argparse
 import re
@@ -35,7 +36,8 @@ SKIP_TOP = {".git", ".github", "assets", "node_modules", "vendor"}
 BUILDERS = ["book-review/_build.py", "life-books/_build.py", "papers/_build.py", "speaks/_build.py",
             "business-admin/_src/build.py", "software-history/_src/build.py", "solidworks/_src/build.py",
             "creo/_src/build.py", "machine-design/_src/build.py", "manufacturing/_src/build.py",
-            "differential-equations/_src/build.py", "differential-equations-2/_src/build.py", "tools/_update_index.py"]
+            "differential-equations/_src/build.py", "differential-equations-2/_src/build.py", "eigen/_src/build.py",
+            "tools/_update_index.py"]
 
 
 def add_after_head(text: str) -> str | None:

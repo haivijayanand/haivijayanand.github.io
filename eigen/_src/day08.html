@@ -1,0 +1,73 @@
+<!--
+TOOL:    eigen/_src/day08.html — Day 8 source: Networks: PageRank and Spectral Clustering
+FAMILY:  eigen
+VERSION: 1.0.0
+DATE:    2026-11-22
+CHAT:    Another tutor on eigen vector and values, can you make it for GitHub. It's applications in different domains with examples. Make it as a 10 days interactive course with certificate
+CHANGES: 1.0.0 - first version
+STATUS:  working
+-->
+<day n="8">
+<summary>A network — web pages, people, substations, machines on a plant floor — is a matrix of links. Its leading eigenvector says who is important (PageRank, eigenvector centrality); the eigenvectors of its Laplacian say where it falls naturally into groups and how well-connected it is.</summary>
+<goals><li>Write a network as an adjacency matrix and a link (transition) matrix</li><li>Compute PageRank as the eigenvector with λ = 1 of the Google matrix, by power iteration</li><li>Build the graph Laplacian and interpret λ₂ (algebraic connectivity) and the Fiedler vector</li><li>Split a network into communities by the sign of the Fiedler vector</li></goals>
+<body>
+<section id="graphs"><h2><span class="n">1</span>Networks as matrices</h2>
+<p>Number the nodes 1…n. The <b>adjacency matrix</b> has Aᵢⱼ = 1 when there is a link between i and j (for one-way links, from j to i). Matrix powers count walks: (A²)ᵢⱼ is the number of two-step routes from j to i. Eigenvalues summarise the whole structure in a few numbers — the "spectrum" of the graph.</p>
+<p>A first measure of importance is <b>eigenvector centrality</b>: a node is important if important nodes link to it. Writing xᵢ ∝ Σⱼ Aᵢⱼxⱼ gives A x = λ x — importance is the leading eigenvector. Google's PageRank is a carefully repaired version of this idea.</p>
+</section>
+
+<section id="pagerank"><h2><span class="n">2</span>PageRank: the random surfer</h2>
+<p>Imagine a surfer who clicks a random link on each page. Page j with Lⱼ outgoing links passes 1/Lⱼ of its "vote" to each page it links to; this gives a column-stochastic matrix M (Day 3!). Two repairs make it well-behaved:</p>
+<ul><li><b>Dead ends</b> (no outgoing links) would leak probability; treat them as linking to every page.</li>
+<li><b>Teleporting</b>: with probability 1 − d (d ≈ 0.85, the damping factor) the surfer gets bored and jumps to a random page. This makes every entry positive, so Perron–Frobenius guarantees a unique positive ranking.</li></ul>
+<div class="fx">G = d·M + (1 − d)/n · 𝟙𝟙ᵀ          PageRank r:   G r = r,   Σ rᵢ = 1</div>
+<p>It is a Markov steady state: the fraction of time the surfer spends on each page. Google computed it for billions of pages by <b>power iteration</b>, r ← G r, which needs only matrix–vector products with a very sparse M. Every other eigenvalue of G satisfies |λ| ≤ d, so the error shrinks by at least 0.85 per pass — about 85 passes for six digits, whatever the size of the web.</p>
+<div class="eg"><b>Example 1 — three pages: A → B, A → C, B → C, C → A</b><span class="mono">M (column = from):        A    B    C
+                   A  [   0    0    1 ]
+                   B  [ 1/2    0    0 ]
+                   C  [ 1/2    1    0 ]
+Without teleporting (d = 1): solve Mr = r → r = (0.4, 0.2, 0.4)
+With d = 0.85: G = 0.85 M + 0.05 · ones   →   r = (0.388, 0.215, 0.397)
+C ranks first: it receives A's half-vote and ALL of B's vote. A is close behind because
+C's entire vote flows to A. B, fed only by half of A, comes last.</span></div>
+<div class="widget" data-w="pagerank"></div>
+<p>Try the "link farm" network: many pages pointing at A push A up, but its rank is capped because the farm pages themselves have only the teleport rank to pass on. That is the whole point — votes from unimportant pages count for little.</p>
+</section>
+
+<section id="laplacian"><h2><span class="n">3</span>The graph Laplacian and how connected a network is</h2>
+<p>For an undirected network let D be the diagonal matrix of degrees (number of links per node). The <b>Laplacian</b> is</p>
+<div class="fx">L = D − A          xᵀ L x = Σ over links (i, j) of (xᵢ − xⱼ)²</div>
+<p>The quadratic form shows that L is symmetric and positive semi-definite, so its eigenvalues are 0 = λ₁ ≤ λ₂ ≤ … ≤ λₙ. Their meaning:</p>
+<ul>
+<li>λ₁ = 0 always, with eigenvector (1, 1, …, 1): a constant "x" costs nothing.</li>
+<li>The <b>number of zero eigenvalues equals the number of disconnected pieces</b>.</li>
+<li>λ₂, the <b>algebraic connectivity</b> (Fiedler, 1973), measures how hard the network is to cut in two. Small λ₂ = a bottleneck. It also sets how fast diffusion, consensus or synchronisation spreads across the network (rate ∝ e^(−λ₂t)).</li>
+</ul>
+<div class="eg"><b>Example 2 — a chain of four nodes 1–2–3–4</b><span class="mono">L = [1 −1 0 0 ; −1 2 −1 0 ; 0 −1 2 −1 ; 0 0 −1 1]
+Eigenvalues: 0, 0.586, 2, 3.414
+Fiedler vector v₂ = (0.65, 0.27, −0.27, −0.65): positive on {1, 2}, negative on {3, 4}
+→ the natural cut is the middle link — exactly the weakest place to split a chain.</span></div>
+<div class="eg"><b>Example 3 — two triangles joined by a single link</b><span class="mono">Nodes {1, 2, 3} fully linked, {4, 5, 6} fully linked, plus the bridge 3–4
+λ₂ = 0.438 (small: one bridge holds it together)
+v₂ = (−0.46, −0.46, −0.26, 0.26, 0.46, 0.46): sign splits the two triangles exactly,
+and the bridge nodes 3 and 4 have the smallest |v₂| — they sit "between" the groups.</span></div>
+</section>
+
+<section id="cluster"><h2><span class="n">4</span>Lab: find hidden communities with the Fiedler vector</h2>
+<p>The lab hides two groups of 12 nodes, links nodes inside a group with one probability and across groups with another, then shuffles them round a circle so you cannot see the groups. The sign of the Fiedler vector finds them. Press <kbd>P</kbd> to morph into the "spectral layout", which uses v₂ and v₃ as x–y coordinates. Push the "between groups" slider up and watch λ₂ grow and the split fail as the groups stop being real.</p>
+<div class="widget" data-w="fiedler"></div>
+<div class="app"><b>Where network eigenvectors are used</b>Web search and citation ranking; influence in social networks; splitting a finite-element mesh across processors (spectral partitioning); image segmentation (pixels as nodes); power grids — λ₂ indicates how robust the grid is to losing lines and how well generators stay synchronised; epidemics on networks spread only if the infection-to-recovery ratio exceeds 1/λmax(A); grouping machines into cells by the parts they share (cellular manufacturing); vibration of molecules and of truss structures, which are networks of springs whose stiffness matrix is a weighted Laplacian.</div>
+<details class="deep"><summary>Why the Fiedler vector finds a good cut</summary><div><p>Label each node xᵢ = +1 or −1 for the two sides of a cut. Then xᵀLx = Σ over links (xᵢ − xⱼ)² = 4 × (number of links cut). Minimising cut links subject to a balanced split (Σxᵢ = 0) is a hard combinatorial problem. Relax it: allow any real xᵢ with Σxᵢ = 0 (perpendicular to the all-ones vector) and |x| fixed. The minimum of the Rayleigh quotient xᵀLx/xᵀx over that set is λ₂, reached at the Fiedler vector. Rounding its entries by sign gives an approximate best cut. This is spectral clustering; normalised versions (Shi–Malik, Ng–Jordan–Weiss) use D⁻½LD⁻½ to balance group sizes.</p></div></details>
+</section>
+</body>
+<quiz>[
+{"q":"PageRank is","o":["The number of links a page has","The eigenvector with eigenvalue 1 of the Google matrix","The largest entry of the adjacency matrix","The page's position in alphabetical order"],"a":1,"e":"G r = r, the random surfer's steady state."},
+{"q":"The damping (teleport) factor d makes PageRank","o":["Faster to compute and unique, because every entry of G becomes positive","Depend on the starting vector","Equal for all pages","Negative for some pages"],"a":0,"e":"Perron–Frobenius: a positive matrix has a unique positive eigenvector, and |λ₂| ≤ d."},
+{"q":"With d = 0.85, power iteration reduces the error per step by at least a factor of","o":["0.15","0.5","0.85","0.99"],"a":2,"e":"|λ₂| ≤ d."},
+{"q":"The graph Laplacian is","o":["A + D","D − A","A²","A − I"],"a":1,"e":"Degrees on the diagonal, −1 for each link."},
+{"q":"A network whose Laplacian has three zero eigenvalues","o":["Has three nodes","Is in three disconnected pieces","Has three links","Is fully connected"],"a":1,"e":"One zero eigenvalue per connected component."},
+{"q":"A small algebraic connectivity λ₂ indicates","o":["A very dense network","A bottleneck: the network is easy to cut in two","Many isolated nodes","A large number of links"],"a":1,"e":"λ₂ measures how hard it is to separate the network."},
+{"q":"Spectral clustering assigns nodes to groups by","o":["Their degree","The sign of the Fiedler vector","Their number","The largest eigenvalue of A"],"a":1,"e":"The relaxed minimum-cut solution."},
+{"q":"In a chain 1–2–3–4 the Fiedler vector splits the nodes into","o":["{1} and {2, 3, 4}","{1, 2} and {3, 4}","{1, 3} and {2, 4}","{1, 4} and {2, 3}"],"a":1,"e":"The middle link is the natural cut."}
+]</quiz>
+</day>

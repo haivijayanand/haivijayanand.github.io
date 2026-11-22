@@ -1,0 +1,77 @@
+<!--
+TOOL:    eigen/_src/day06.html — Day 6 source: Stability of Dynamic Systems
+FAMILY:  eigen
+VERSION: 1.0.0
+DATE:    2026-11-22
+CHAT:    Another tutor on eigen vector and values, can you make it for GitHub. It's applications in different domains with examples. Make it as a 10 days interactive course with certificate
+CHANGES: 1.0.0 - first version
+STATUS:  working
+-->
+<day n="6">
+<summary>For any linear system x′ = A x the solution is a sum of terms e^(λt)·v. So the eigenvalues decide everything: negative real parts decay, positive ones blow up, imaginary parts oscillate. One rule answers "is it stable?" for control loops, aircraft, rotors, circuits and ecosystems.</summary>
+<goals><li>Solve x′ = Ax with eigenvalues and eigenvectors</li><li>Classify equilibria (node, spiral, saddle, centre) from trace and determinant</li><li>Read damping ratio, frequency and time constants straight from λ</li><li>Move eigenvalues with feedback, and linearise nonlinear systems to test their stability</li></goals>
+<body>
+<section id="solve"><h2><span class="n">1</span>Why eigenvalues decide stability</h2>
+<p>Try x(t) = e^(λt)v in x′ = Ax: λe^(λt)v = Ae^(λt)v, i.e. Av = λv. So each eigenpair gives one solution, and the general solution is</p>
+<div class="fx">x(t) = c₁ e^(λ₁t) v₁ + c₂ e^(λ₂t) v₂ + … + cₙ e^(λₙt) vₙ</div>
+<p>With λ = σ + iω, e^(λt) = e^(σt)(cos ωt + i sin ωt). The real part σ sets growth or decay, the imaginary part ω sets oscillation.</p>
+<div class="def"><b>Stability rule.</b> The equilibrium x = 0 of x′ = Ax is asymptotically stable <b>if and only if every eigenvalue of A has a negative real part</b>. One eigenvalue in the right half-plane is enough for instability. For discrete steps xₖ₊₁ = Axₖ (Day 3) the rule is |λ| &lt; 1 instead.</div>
+<p>For a 2 × 2 system the eigenvalues are trace/2 ± √(trace²/4 − det), so the whole zoo of behaviours fits on one map: the <b>trace–determinant plane</b>. Stable ⇔ trace &lt; 0 and det &gt; 0.</p>
+</section>
+
+<section id="lab"><h2><span class="n">2</span>Lab: phase portraits and the trace–determinant map</h2>
+<p>Each curve is one trajectory of x′ = Ax (solid forward in time, dashed backward). The purple dotted lines are the eigenvector directions — trajectories that start on them stay on them and move straight in or out. Press <kbd>P</kbd> to watch the dots flow; click to add your own starting points. Move the sliders and watch the orange dot travel across the trace–determinant map.</p>
+<div class="widget" data-w="phase"></div>
+<table><tr><th>Eigenvalues</th><th>Picture</th><th>Example</th></tr>
+<tr><td>both real, negative</td><td>stable node</td><td>overdamped door closer, RC circuit pair</td></tr>
+<tr><td>real, opposite signs</td><td>saddle</td><td>inverted pendulum, a pencil on its tip</td></tr>
+<tr><td>complex, negative real part</td><td>stable spiral</td><td>car suspension, a struck bell</td></tr>
+<tr><td>complex, positive real part</td><td>unstable spiral</td><td>flutter, oil whip, squeal, a feedback howl</td></tr>
+<tr><td>purely imaginary</td><td>centre</td><td>undamped oscillator, ideal LC circuit</td></tr>
+</table>
+</section>
+
+<section id="osc"><h2><span class="n">3</span>Reading engineering numbers from λ</h2>
+<p>For an oscillator m x″ + c x′ + k x = 0 in state form x′ = [0 1; −k/m −c/m]x, the eigenvalues are</p>
+<div class="fx">λ = −ζωₙ ± iωₙ√(1 − ζ²)         ωₙ = √(k/m) = √det,   ζ = c/(2√(km)) = −trace/(2ωₙ)</div>
+<div class="eg"><b>Example 1 — m = 1 kg, c = 1 N·s/m, k = 4 N/m (the lab's default)</b><span class="mono">trace = −1, det = 4
+λ = −0.5 ± 1.936 i
+ωₙ = √4 = 2 rad/s,  ζ = 1/(2·2) = 0.25,  damped frequency ω_d = 1.936 rad/s
+envelope e^(−0.5t): time constant 2 s, amplitude halves every 1.39 s
+logarithmic decrement δ = 2πζ/√(1 − ζ²) = 1.62 → each peak is e^(−1.62) = 20 % of the previous</span></div>
+<p>Aircraft engineers describe longitudinal motion by two eigenvalue pairs of the 4 × 4 flight-dynamics matrix: the <b>short-period</b> mode (typically λ ≈ −2 ± 2.5i for a light aircraft: a quick, well-damped pitch bob of about 2.5 s period) and the <b>phugoid</b> (λ ≈ −0.01 ± 0.15i: a slow, lightly damped exchange of height and speed with a period of about 40 s). Handling-quality standards are written as limits on these eigenvalues' damping ratios and frequencies.</p>
+</section>
+
+<section id="control"><h2><span class="n">4</span>Feedback moves eigenvalues</h2>
+<p>A controller measures the state and pushes back: u = −Kx. Then x′ = Ax + Bu = (A − BK)x. The closed-loop eigenvalues — the <b>poles</b> — are those of A − BK, and choosing K to put them where you want is called <b>pole placement</b>.</p>
+<div class="eg"><b>Example 2 — balancing an inverted pendulum (linearised, g/L = 2 s⁻²)</b><span class="mono">θ″ = 2θ + u     state x = (θ, θ′)
+Open loop: A = [0 1; 2 0], λ = ±1.414 → a saddle: it falls over, e-folding in 0.71 s
+Feedback u = −k₁θ − k₂θ′:  A − BK = [0 1; 2 − k₁  −k₂]
+Characteristic equation: λ² + k₂λ + (k₁ − 2) = 0
+Want both poles at −2:  (λ + 2)² = λ² + 4λ + 4  →  k₂ = 4,  k₁ = 6
+Closed loop: critically damped, settles (within 2 %) in about 3 s. Put the poles at −4 instead and k₁ = 18, k₂ = 8:
+faster, but needs larger motor torque and amplifies sensor noise — the classic trade-off.</span></div>
+<div class="app"><b>Where you meet it</b>Autopilots and fly-by-wire laws, Segways and rockets (inverted pendulums), servo and dynamometer speed loops, power-system stability studies (eigenvalues of grid models with hundreds of generators), chatter in machining, brake squeal and clutch judder, and the rotor-dynamics stability check of fluid-film bearings: cross-coupled bearing stiffness can push a rotor's whirl eigenvalue into the right half-plane — oil whip.</div>
+</section>
+
+<section id="linearise"><h2><span class="n">5</span>Nonlinear systems: linearise, then take eigenvalues</h2>
+<p>Most real systems are nonlinear, x′ = f(x). Near an equilibrium x*, small deviations obey x′ ≈ J·(x − x*), where J is the <b>Jacobian matrix</b> of partial derivatives ∂fᵢ/∂xⱼ at x*. The eigenvalues of J tell you whether small disturbances die out (Hartman–Grobman theorem, valid unless an eigenvalue sits exactly on the imaginary axis).</p>
+<div class="eg"><b>Example 3 — fish and sharks (predator–prey with crowding), linearised at coexistence</b><span class="mono">J = [−0.1  −0.5 ; 0.2  0]   (per month)
+trace = −0.1, det = 0.1
+λ = −0.05 ± 0.312 i
+→ stable spiral: after a disturbance, fish and sharks oscillate with period 2π/0.312 ≈ 20 months,
+  each cycle smaller by e^(−0.05 × 20) ≈ 0.37, settling back to coexistence.</span></div>
+<details class="deep"><summary>Why stability needs trace &lt; 0 and det &gt; 0 (and the Routh–Hurwitz idea)</summary><div><p>For 2 × 2: det = λ₁λ₂ and trace = λ₁ + λ₂. If both λ are real and negative, their product is positive and sum negative. If they are a complex pair σ ± iω, det = σ² + ω² &gt; 0 always and trace = 2σ, so trace &lt; 0 ⇔ σ &lt; 0. Conversely det &lt; 0 forces opposite-sign real roots (a saddle). For larger systems the Routh–Hurwitz criterion tests the characteristic-polynomial coefficients without solving for the roots — historically important, now mostly replaced by computing the eigenvalues directly.</p></div></details>
+</section>
+</body>
+<quiz>[
+{"q":"x′ = Ax is asymptotically stable when","o":["All eigenvalues are positive","All eigenvalues have negative real parts","det A = 0","A is symmetric"],"a":1,"e":"Each term e^(λt) then decays."},
+{"q":"A 2 × 2 system with det A < 0 is always","o":["A stable node","A saddle (unstable)","A centre","A stable spiral"],"a":1,"e":"det = λ₁λ₂ < 0 means one positive and one negative real eigenvalue."},
+{"q":"Eigenvalues −3 ± 4i describe","o":["A growing oscillation","A decaying oscillation at 4 rad/s","Pure decay without oscillation","A saddle"],"a":1,"e":"Real part −3 decays; imaginary part 4 rad/s oscillates."},
+{"q":"For λ = −0.5 ± 1.936i, the undamped natural frequency ωₙ is","o":["0.5 rad/s","1.936 rad/s","2 rad/s","4 rad/s"],"a":2,"e":"ωₙ = |λ| = √(0.25 + 3.75) = 2."},
+{"q":"Flutter of a wing or oil whip of a rotor corresponds to","o":["Eigenvalues crossing into the right half-plane as a complex pair","A zero eigenvalue","All eigenvalues becoming real","The determinant becoming 1"],"a":0,"e":"A growing oscillation: unstable spiral."},
+{"q":"State feedback u = −Kx changes the system matrix to","o":["A + K","A − BK","KA","A⁻¹"],"a":1,"e":"x′ = Ax + Bu = (A − BK)x."},
+{"q":"To check the stability of a nonlinear system at an equilibrium you take the eigenvalues of","o":["The identity matrix","The Jacobian at that equilibrium","The mass matrix","f(x) itself"],"a":1,"e":"Linearisation: x′ ≈ J(x − x*)."},
+{"q":"For the discrete system xₖ₊₁ = Axₖ, stability requires","o":["Re λ < 0","|λ| < 1 for every eigenvalue","λ = 1","det A > 1"],"a":1,"e":"Each step multiplies by λ."}
+]</quiz>
+</day>

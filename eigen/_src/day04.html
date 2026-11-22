@@ -1,0 +1,84 @@
+<!--
+TOOL:    eigen/_src/day04.html — Day 4 source: Symmetric Matrices: Principal Stresses and Axes
+FAMILY:  eigen
+VERSION: 1.0.0
+DATE:    2026-11-22
+CHAT:    Another tutor on eigen vector and values, can you make it for GitHub. It's applications in different domains with examples. Make it as a 10 days interactive course with certificate
+CHANGES: 1.0.0 - first version
+STATUS:  working
+-->
+<day n="4">
+<summary>Symmetric matrices are the best-behaved matrices there are: real eigenvalues, perpendicular eigenvectors, always diagonalisable. Nature hands them to engineers everywhere — stress, strain, inertia, stiffness, covariance — and their eigenvectors are the "principal axes" in which the physics becomes simple.</summary>
+<goals><li>State the spectral theorem A = Q Λ Qᵀ and what it means geometrically</li><li>Find principal stresses and directions as eigenvalues and eigenvectors, and connect them to Mohr's circle</li><li>Find principal axes of a section and of a rigid body</li><li>Use eigenvalues to test positive definiteness and to read the shape of a quadratic form</li></goals>
+<body>
+<section id="spectral"><h2><span class="n">1</span>The spectral theorem</h2>
+<div class="def"><b>Spectral theorem.</b> If A is real and symmetric (A = Aᵀ) then
+<ol><li>all its eigenvalues are <b>real</b>;</li><li>eigenvectors for different eigenvalues are <b>perpendicular</b>;</li><li>it always has a full set of n perpendicular unit eigenvectors, so
+<div class="big">A = Q Λ Qᵀ,   QᵀQ = I</div>
+where the columns of Q are the unit eigenvectors and Λ is diagonal.</li></ol></div>
+<p>Q is a rotation (possibly with a reflection), so the theorem says: <b>every symmetric matrix is a pure stretch along some set of perpendicular axes.</b> No shear, no twisting — just turn to the right axes, stretch by λ₁, λ₂, …, turn back. That is why the image of a circle under a symmetric matrix is an ellipse whose axes are the eigenvectors (you saw it on Day 1).</p>
+<details class="deep"><summary>Proof of the first two statements</summary><div><p><b>Real eigenvalues.</b> Let Av = λv with v possibly complex, and let v̄ be its conjugate. Then v̄ᵀAv = λ v̄ᵀv = λ|v|². Taking the conjugate transpose of the scalar v̄ᵀAv and using A = Aᵀ real gives the same scalar, so it is real; |v|² is real and positive; hence λ is real.</p><p><b>Perpendicular eigenvectors.</b> Let Av₁ = λ₁v₁, Av₂ = λ₂v₂. Then λ₁ v₂ᵀv₁ = v₂ᵀAv₁ = (Av₂)ᵀv₁ = λ₂ v₂ᵀv₁. If λ₁ ≠ λ₂ then v₂ᵀv₁ = 0. The third statement (a complete set even with repeated λ) is proved by induction: take one unit eigenvector, the subspace perpendicular to it is mapped into itself by A, and repeat there.</p></div></details>
+</section>
+
+<section id="stress"><h2><span class="n">2</span>Principal stresses — the eigenproblem of solid mechanics</h2>
+<p>The state of stress at a point is the symmetric matrix of normal and shear stresses. In 2-D:</p>
+<div class="fx">S = [σx τxy ; τxy σy]        traction on a face with unit normal n:  t = S n</div>
+<p>Ask: is there a face on which the force is purely normal — no shear at all? That means S n = σ n. It is exactly the eigenproblem. The eigenvalues are the <b>principal stresses</b> σ₁ ≥ σ₂ (largest and smallest normal stress at that point) and the eigenvectors are the <b>principal directions</b>. Because S is symmetric they are always real and always 90° apart.</p>
+<div class="fx">σ₁,₂ = (σx + σy)/2 ± √( ((σx − σy)/2)² + τxy² )        tan 2θp = 2τxy / (σx − σy)</div>
+<p>That formula is just the 2 × 2 eigenvalue formula trace/2 ± √(trace²/4 − det). <b>Mohr's circle</b> is its picture: centre at the mean stress, radius equal to the maximum shear, and the two points where it crosses the σ axis are the eigenvalues.</p>
+<div class="eg"><b>Example 1 — a point on a bracket: σx = 80 MPa, σy = −20 MPa, τxy = 40 MPa</b><span class="mono">mean = 30,  R = √(50² + 40²) = 64.0 MPa
+σ₁ = 30 + 64.0 = 94.0 MPa,   σ₂ = 30 − 64.0 = −34.0 MPa
+θp = ½·atan(80/100) = 19.3°  (σ₁ direction)
+max in-plane shear = R = 64.0 MPa on faces at 45° to the principal directions
+von Mises = √(94.0² − 94.0·(−34.0) + 34.0²) = 114.9 MPa</span></div>
+<div class="eg"><b>Example 2 — a gearbox shaft in bending + torsion: σ = 60 MPa, τ = 40 MPa</b><span class="mono">S = [60 40; 40 0]  →  σ₁,₂ = 30 ± √(30² + 40²) = 30 ± 50 = 80 and −20 MPa
+von Mises = √(80² + 80·20 + 20²) = √8400 = 91.7 MPa = √(σ² + 3τ²) ✓
+A brittle shaft cracks perpendicular to σ₁ — on a helix at 45° to the axis in pure torsion,
+which is exactly how a chalk stick or a cast-iron shaft breaks when twisted.</span></div>
+<div class="widget" data-w="mohr"></div>
+<div class="eg"><b>Example 3 — a full 3-D stress state</b><span class="mono">S = [50 30 0 ; 30 −20 0 ; 0 0 40] MPa
+z is already principal (no shear on z faces): σ = 40
+The x–y block [50 30; 30 −20] gives 15 ± √(35² + 30²) = 15 ± 46.1
+Principal stresses: σ₁ = 61.1, σ₂ = 40.0, σ₃ = −31.1 MPa
+Absolute max shear = (σ₁ − σ₃)/2 = 46.1 MPa (Tresca)</span></div>
+<div class="app"><b>Where you meet it</b>Strain-gauge rosettes (three gauges → strain tensor → principal strains), FEA post-processing ("max principal" plots are eigenvalues at every node), fatigue of shafts and welds, rock mechanics and tunnelling, crack-direction prediction, photoelasticity fringe patterns.</div>
+</section>
+
+<section id="inertia"><h2><span class="n">3</span>Principal axes of sections and bodies</h2>
+<p>The second moment of area about an axis in direction a is a quadratic form I(a) = aᵀ J a with the symmetric matrix J = [Ix −Ixy; −Ixy Iy]. Its eigenvectors are the <b>principal axes</b>; about them the product of inertia is zero and bending in one plane does not cause deflection in the other.</p>
+<div class="eg"><b>Example 4 — equal angle 100 × 100 × 10 mm (sharp corners)</b><span class="mono">Centroid 28.7 mm from the back of each leg
+Ix = Iy = 180.0 cm⁴,  Ixy = −106.6 cm⁴
+J = [180.0 106.6 ; 106.6 180.0] cm⁴
+Eigenvalues: Iu = 180.0 + 106.6 = 286.6 cm⁴ (about the axis of symmetry, at 45°)
+             Iv = 180.0 − 106.6 = 73.4 cm⁴  (the weak axis, perpendicular to it)
+An angle used as a strut buckles about v–v, with Iv only 41 % of Ix —
+which is why steel tables list I_v and r_v separately.</span></div>
+<p>In 3-D the same applies to the 3 × 3 <b>inertia tensor</b> of a rigid body: its eigenvectors are the principal axes of rotation and its eigenvalues the principal moments of inertia. A body spinning about a principal axis spins steadily; about any other axis it wobbles and loads its bearings — the reason rotors are dynamically balanced so that their spin axis coincides with a principal axis. Spinning is stable about the axes of largest and smallest moment and unstable about the middle one (try it with a book or a phone tossed in the air).</p>
+</section>
+
+<section id="definite"><h2><span class="n">4</span>Quadratic forms and positive definiteness</h2>
+<p>Energy, variance and cost functions are often quadratic: E(x) = ½ xᵀ K x. In eigen-coordinates y = Qᵀx it becomes a plain sum of squares:</p>
+<div class="fx">xᵀ A x = λ₁y₁² + λ₂y₂² + … + λₙyₙ²</div>
+<ul>
+<li><b>All λ &gt; 0</b> → positive definite: the energy is positive for any deformation. A properly supported structure's stiffness matrix is like this.</li>
+<li><b>A zero λ</b> → a mechanism or rigid-body motion (an unsupported structure, a free shaft): deformation without energy. FE solvers report "singular stiffness matrix".</li>
+<li><b>Mixed signs</b> → a saddle: the shape of an unstable equilibrium, or a minimum in some directions and a maximum in others.</li>
+</ul>
+<div class="eg"><b>Example 5 — the ellipse 5x² + 4xy + 2y² = 1</b><span class="mono">A = [5 2; 2 2] (the 4xy is split as 2 + 2)
+λ = 6 along (2, 1)/√5,   λ = 1 along (1, −2)/√5
+In eigen-coordinates: 6u² + 1·w² = 1  →  semi-axes 1/√6 = 0.408 and 1/√1 = 1
+The long axis lies along the SMALL eigenvalue's eigenvector.</span></div>
+<p>The same picture explains why gradient descent is slow on "narrow valleys": the contours of a quadratic cost are ellipses whose axis ratio is √(λmax/λmin), the square root of the condition number.</p>
+</section>
+</body>
+<quiz>[
+{"q":"Which property does NOT hold for every real symmetric matrix?","o":["Real eigenvalues","Perpendicular eigenvectors for distinct eigenvalues","Diagonalisable by a rotation","All eigenvalues positive"],"a":3,"e":"Positivity needs positive definiteness, an extra condition."},
+{"q":"Principal stresses are","o":["The diagonal entries σx, σy","The eigenvalues of the stress matrix","The maximum shear stresses","The von Mises stress"],"a":1,"e":"On principal faces S n = σ n: no shear."},
+{"q":"σx = 100, σy = 0, τxy = 0 MPa. The principal stresses are","o":["100 and 0","50 and 50","100 and −100","70.7 and 29.3"],"a":0,"e":"Already diagonal: the axes are principal."},
+{"q":"Pure shear τ = 50 MPa (σx = σy = 0) has principal stresses","o":["50 and 0","+50 and −50 at 45°","0 and 0","100 and 0"],"a":1,"e":"S = [0 50; 50 0] has λ = ±50 along (1, ±1)."},
+{"q":"The radius of Mohr's circle equals","o":["The mean stress","The maximum in-plane shear stress","σ₁","The von Mises stress"],"a":1,"e":"R = (σ₁ − σ₂)/2."},
+{"q":"A stiffness matrix with a zero eigenvalue indicates","o":["A very stiff structure","A mechanism or unrestrained rigid-body motion","A material failure","Nothing important"],"a":1,"e":"Deformation with zero strain energy."},
+{"q":"For the ellipse xᵀAx = 1 with eigenvalues 9 and 1, the semi-axes are","o":["9 and 1","3 and 1","1/3 and 1","1/9 and 1"],"a":2,"e":"Semi-axis = 1/√λ."},
+{"q":"A rigid body spins steadily without wobble about","o":["Any axis through the centre of mass","A principal axis of its inertia tensor","Only the vertical axis","The axis of smallest dimension"],"a":1,"e":"About principal axes angular momentum is parallel to the spin."}
+]</quiz>
+</day>

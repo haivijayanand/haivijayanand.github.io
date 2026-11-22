@@ -1,0 +1,70 @@
+<!--
+TOOL:    eigen/_src/day07.html — Day 7 source: Data: PCA, SVD and Compression
+FAMILY:  eigen
+VERSION: 1.0.0
+DATE:    2026-11-22
+CHAT:    Another tutor on eigen vector and values, can you make it for GitHub. It's applications in different domains with examples. Make it as a 10 days interactive course with certificate
+CHANGES: 1.0.0 - first version
+STATUS:  working
+-->
+<day n="7">
+<summary>A cloud of measurements has its own principal axes: the eigenvectors of its covariance matrix. Principal component analysis turns many correlated channels into a few independent ones, and the singular value decomposition — eigenvalues in disguise — compresses images, removes noise and powers recommendation engines.</summary>
+<goals><li>Build a covariance matrix and explain why its eigenvectors are the directions of greatest variance</li><li>Carry out PCA by hand on two channels and read "variance explained"</li><li>Relate the SVD A = UΣVᵀ to the eigenvalues of AᵀA</li><li>Use low-rank approximation for compression and denoising, and know its limits</li></goals>
+<body>
+<section id="cov"><h2><span class="n">1</span>The covariance matrix</h2>
+<p>Take N samples of a vector of measurements — for instance the x and y readings of two proximity probes on a shaft, or the three axes of an accelerometer. Subtract the mean of each channel and form</p>
+<div class="fx">C = (1/(N − 1)) Σ (xₖ − x̄)(xₖ − x̄)ᵀ        C = [var(x)  cov(x,y) ; cov(x,y)  var(y)]</div>
+<p>C is symmetric and positive semi-definite, so (Day 4) it has real eigenvalues λᵢ ≥ 0 and perpendicular eigenvectors. The variance of the data along any unit direction u is uᵀCu — a quadratic form — and it is largest along the eigenvector of the largest eigenvalue. So:</p>
+<div class="def"><b>Principal component analysis.</b> The eigenvectors of the covariance matrix are the <b>principal components</b> (PC1, PC2, …), ordered by eigenvalue. λᵢ is the variance along PCᵢ, and λᵢ / Σλ is the fraction of the total variance it "explains". In PC coordinates the channels are uncorrelated.</div>
+<div class="eg"><b>Example 1 — two vibration channels</b><span class="mono">var(x) = 9, var(y) = 4, cov(x, y) = 4.8   (mm/s)²
+C = [9 4.8 ; 4.8 4]:  trace 13, det 36 − 23.04 = 12.96
+λ = 6.5 ± √(6.5² − 12.96) = 6.5 ± 5.41  →  λ₁ = 11.91, λ₂ = 1.09
+PC1: (C − 11.91 I)u = 0 → u ∝ (4.8, 2.91) → 31.2° from the x-probe
+PC1 explains 11.91 / 13 = 91.6 % of the vibration energy:
+the shaft is vibrating mainly along a line 31° from the x-probe — the direction
+to look for a stiffness asymmetry, a misalignment or a soft foot.</span></div>
+</section>
+
+<section id="lab1"><h2><span class="n">2</span>Lab: find the principal axes of a data cloud</h2>
+<p>Set the true spread and angle; the lab draws a random sample, computes C and its eigenvectors, and plots the data in PC coordinates on the right, where the tilt (correlation) is gone. Switch to "shaft orbit" for the rotor-dynamics view. Draw a new sample to see how a finite sample wobbles around the truth.</p>
+<div class="widget" data-w="pca"></div>
+<div class="app"><b>Where PCA is used</b>Condition monitoring (dozens of correlated channels → a few health indicators; Hotelling T² alarms), process control in chemical plants and film extrusion lines, face recognition ("eigenfaces"), genetics (population structure from DNA markers), finance (a handful of factors drive hundreds of stocks), climate science (empirical orthogonal functions), sensor alignment of triaxial accelerometers, and every machine-learning pipeline as a first step to reduce dimensions.</div>
+</section>
+
+<section id="svd"><h2><span class="n">3</span>The singular value decomposition</h2>
+<p>Eigenvectors need a square matrix. Data tables, images and measurement matrices are rectangular. The SVD extends the idea to any m × n matrix:</p>
+<div class="big">A = U Σ Vᵀ</div>
+<p>U (m × m) and V (n × n) are orthogonal, Σ is diagonal with the <b>singular values</b> σ₁ ≥ σ₂ ≥ … ≥ 0. The connection to eigenvalues is direct:</p>
+<div class="fx">AᵀA = V Σ² Vᵀ    → the vᵢ are eigenvectors of AᵀA, σᵢ² its eigenvalues
+AAᵀ = U Σ² Uᵀ    → the uᵢ are eigenvectors of AAᵀ        and  A vᵢ = σᵢ uᵢ</div>
+<p>Geometrically: every matrix maps the unit sphere to an ellipsoid; the vᵢ are the input directions, the uᵢ the axes of the ellipsoid, and the σᵢ their lengths. If the data matrix has its mean removed, the right singular vectors are exactly the principal components and σᵢ²/(N − 1) are the PCA eigenvalues — software does PCA through the SVD because it is more accurate than forming C.</p>
+<div class="eg"><b>Example 2 — SVD of A = [3 0 ; 4 5]</b><span class="mono">AᵀA = [25 20 ; 20 25]  → eigenvalues 45 and 5, eigenvectors (1, 1)/√2 and (1, −1)/√2
+σ₁ = √45 = 6.708,   σ₂ = √5 = 2.236
+u₁ = A v₁ / σ₁ = (3, 9)/(√2 · 6.708) = (0.316, 0.949)
+Check: σ₁σ₂ = 15 = |det A| ✓  (areas scale by the product of the singular values)</span></div>
+</section>
+
+<section id="compress"><h2><span class="n">4</span>Low rank: keep the big σ, drop the rest</h2>
+<p>The SVD writes A as a sum of rank-one layers, A = σ₁u₁v₁ᵀ + σ₂u₂v₂ᵀ + … Keeping only the first k layers gives the <b>best possible</b> rank-k approximation (Eckart–Young theorem), with error equal to the dropped singular values. When the σᵢ fall off quickly, a few layers carry almost everything.</p>
+<div class="widget" data-w="svd"></div>
+<div class="eg"><b>Example 3 — what the lab shows for the 64 × 64 gear image</b><span class="mono">Full image: 4096 numbers.  Rank k costs k·(64 + 64 + 1) numbers.
+k = 8  →  1032 numbers (25 %) — gear outline and bore clearly visible
+k = 16 →  2064 numbers (50 %) — teeth sharp
+"Random noise" image: σᵢ hardly fall, so low rank keeps almost nothing —
+compression works only because real signals have structure.</span></div>
+<p>The same truncation removes noise: random noise spreads thinly over all singular values while the signal sits in the first few, so dropping the small σᵢ removes mostly noise. In vibration analysis this is the idea behind singular spectrum analysis and SVD-based order tracking; in modal testing, the SVD of the matrix of frequency-response functions (complex mode indicator function) shows how many modes are present at each frequency.</p>
+<div class="app"><b>More SVD at work</b>Recommendation systems (the Netflix-prize ratings matrix is approximately low rank), latent semantic analysis of text, least-squares curve fitting and the pseudo-inverse (σᵢ → 1/σᵢ), robot-arm manipulability (the ellipsoid of achievable hand speeds), the condition number σ₁/σₙ that tells you how many digits a linear solve loses.</div>
+<details class="deep"><summary>Why the leading eigenvector maximises variance</summary><div><p>Maximise uᵀCu subject to uᵀu = 1. With a Lagrange multiplier: ∇(uᵀCu − λ(uᵀu − 1)) = 2Cu − 2λu = 0, so Cu = λu — the stationary directions are exactly the eigenvectors, and at each the variance equals uᵀCu = λ. The maximum is the largest eigenvalue. The next component maximises variance among directions perpendicular to the first, giving the second eigenvector, and so on. The ratio uᵀCu/uᵀu is the Rayleigh quotient, which returns on Day 10.</p></div></details>
+</section>
+</body>
+<quiz>[
+{"q":"The principal components of a data set are","o":["The largest data points","The eigenvectors of its covariance matrix","The mean of each channel","The raw channels sorted by size"],"a":1,"e":"Ordered by eigenvalue = variance along them."},
+{"q":"Covariance eigenvalues 8 and 2 mean PC1 explains","o":["25 %","50 %","80 %","100 %"],"a":2,"e":"8/(8 + 2)."},
+{"q":"In principal-component coordinates the channels are","o":["Perfectly correlated","Uncorrelated","Identical","Always zero"],"a":1,"e":"The covariance matrix becomes diagonal."},
+{"q":"The singular values of A are","o":["The eigenvalues of A","The square roots of the eigenvalues of AᵀA","The diagonal entries of A","The determinants of its rows"],"a":1,"e":"AᵀA = VΣ²Vᵀ."},
+{"q":"The SVD exists for","o":["Only square matrices","Only symmetric matrices","Every real matrix of any shape","Only invertible matrices"],"a":2,"e":"That is its great advantage over the eigendecomposition."},
+{"q":"Keeping the first k terms of the SVD gives","o":["A random approximation","The best rank-k approximation in the least-squares sense","The exact matrix","The inverse"],"a":1,"e":"Eckart–Young theorem."},
+{"q":"A 100 × 100 image stored at rank 10 needs about how many numbers?","o":["10","1 000","2 010","10 000"],"a":2,"e":"10 × (100 + 100 + 1) = 2010, against 10 000."},
+{"q":"Why does low-rank truncation remove noise?","o":["Noise has no singular values","Noise spreads over all singular values while the signal concentrates in the first few","Noise is always negative","It does not"],"a":1,"e":"Dropping small σᵢ removes mostly noise."}
+]</quiz>
+</day>

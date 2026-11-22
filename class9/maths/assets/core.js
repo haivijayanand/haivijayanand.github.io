@@ -1,10 +1,11 @@
 /*
-TOOL:    class9_maths_core
-FAMILY:  CBSE_REVISION / Class 9 Maths (Ganita Manjari)
-VERSION: 1.1.0
+TOOL:    cbse_maths_core
+FAMILY:  CBSE_REVISION / Maths kits (shared engine for every class)
+VERSION: 2.0.0
 DATE:    2026-11-22
-CHAT:    CBSE Revision - Class 9 Maths full build
-CHANGES: 1.1.0 - links to one-page formula sheets (sidebar, Revise tab, home); keys ignored on pages without the app shell
+CHAT:    CBSE Revision - Class 9 Maths full build; Class X, XI, XII kits
+CHANGES: 2.0.0 - class-neutral engine: all class/book text from G9_CFG (chapters/config.js), parts grouped from chapter data, optional old-book map, optional board-exam card on Revise
+         1.1.0 - links to one-page formula sheets (sidebar, Revise tab, home); keys ignored on pages without the app shell
          1.0.0 - first release: app shell, routing, keyboard scheme (M/P/S/X/F), seeded RNG, maths board,
          animation controller, online practice, seeded worksheet + answer-key printing (class sets),
          quiz, teacher lesson plans and full-screen slide presenter, old-to-new syllabus map
@@ -12,7 +13,13 @@ CHANGES: 1.1.0 - links to one-page formula sheets (sidebar, Revise tab, home); k
 (function () {
   'use strict';
   const G9 = window.G9 = window.G9 || {};
-  G9.version = '1.1.0';
+  G9.version = '2.0.0';
+  // per-kit settings come from chapters/config.js (window.G9_CFG); defaults keep the Class 9 kit working
+  const CFG = G9.CFG = Object.assign({
+    short: 'Class 9 Maths', roman: 'IX', brandSmall: 'Ganita Manjari · Revision &amp; Teaching Kit',
+    heroTitle: 'Class 9 Mathematics — Ganita Manjari (2026–27)', book: 'the NCERT textbook', site: 'haivijayanand.github.io/class9/',
+    oldMap: null, oldMapIntro: '', homeNote: ''
+  }, window.G9_CFG || {});
   G9.chapters = [];
   G9.register = c => { G9.chapters.push(c); G9.chapters.sort((a, b) => a.no - b.no); };
 
@@ -281,23 +288,7 @@ CHANGES: 1.1.0 - links to one-page formula sheets (sidebar, Revise tab, home); k
   G9.K = K;
 
   /* ================= old -> new syllabus map ================= */
-  const OLDMAP = [
-    ['1 Number Systems', 'Ch 3 The World of Numbers', 'Rationals, irrationals, number line, density, proofs of irrationality, √ spiral.'],
-    ['2 Polynomials', 'Ch 2 Linear Polynomials + Ch 4 Algebraic Identities', 'Linear polynomials from patterns and graphs; identities, expansion and factorisation now have their own chapter.'],
-    ['3 Coordinate Geometry', 'Ch 1 Orienting Yourself: The Use of Coordinates', 'Now the opening chapter, and it also includes the distance and midpoint formulas.'],
-    ['4 Linear Equations in Two Variables', 'Ch 13 Two Variables, One Line (built on Ch 2)', 'Standard form, solutions, graphs, slope and intercepts.'],
-    ['5 Introduction to Euclid\'s Geometry', 'Spread across Ch 5, 6, 9, 12, 13', 'Axioms and reasoning now appear where they are used; Ch 9 teaches propositions, converses and proof.'],
-    ['6 Lines and Angles', 'Ch 9 Propositions and their Converses + Ch 12 Quadrilaterals', 'Basics were already done in Class 6 (Ganita Prakash); used inside proofs here.'],
-    ['7 Triangles (congruence)', 'Used inside proofs in Ch 9 and Ch 12', 'Congruence rules are tools for proving properties of parallelograms, midpoint theorem etc.'],
-    ['8 Quadrilaterals', 'Ch 12 Quadrilaterals', 'Parallelogram properties and tests, midpoint theorem, centroid, Varignon parallelogram, tiling.'],
-    ['9 Circles', 'Ch 5 I\'m Up and Down, and Round and Round', 'Chords, arcs, angles subtended, cyclic figures.'],
-    ['10 Heron\'s Formula', 'Ch 6 Measuring Space: Perimeter and Area', 'Areas of plane figures and derivations of the formulas.'],
-    ['11 Surface Areas and Volumes', 'Ch 14 Math of Space: Surface Area and Volume', 'Cubes, cuboids, cylinders and curved solids, estimation.'],
-    ['12 Statistics', 'Ch 10 How Quantities Combine: Understanding Data', 'Weighted and combined averages, mixtures, stacked and 100% stacked bar charts.'],
-    ['— (new)', 'Ch 7 The Mathematics of Maybe: Probability', 'Empirical and theoretical probability, outcome tables, tree diagrams.'],
-    ['— (new; AP was Class 10)', 'Ch 8 Sequences and Progressions', 'Arithmetic and geometric progressions, recursive and explicit rules.'],
-    ['— (new)', 'Ch 11 The World of Algorithms', 'Step-by-step procedures, why they work, and how many steps they take.']
-  ];
+  const OLDMAP = () => CFG.oldMap || [];
 
   /* ================= state + routing ================= */
   const S = { ch: null, tab: 'revise', active: null };
@@ -318,7 +309,7 @@ CHANGES: 1.1.0 - links to one-page formula sheets (sidebar, Revise tab, home); k
     app.innerHTML = `
       <div id="top">
         <button class="tbtn" id="bSide" title="Show/hide chapter list (M)">☰ <kbd>M</kbd></button>
-        <div class="brand">Class 9 Maths <small>Ganita Manjari · Revision &amp; Teaching Kit</small></div>
+        <div class="brand">${CFG.short} <small>${CFG.brandSmall}</small></div>
         <div class="crumb" id="crumb"></div>
         <button class="tbtn" id="bPresent" title="Present this chapter's slides">🎓 Present</button>
         <button class="tbtn" id="bTheme" title="Light/dark theme">Dark/Light</button>
@@ -358,11 +349,12 @@ CHANGES: 1.1.0 - links to one-page formula sheets (sidebar, Revise tab, home); k
   }
   function buildSide() {
     const s = $('#side'); let html = `<a href="#/home" data-k="home"><span class="n">⌂</span>Home</a>
-      <a href="#/map" data-k="map"><span class="n">⇄</span>Old book → New book map</a>
+      ${CFG.oldMap ? '<a href="#/map" data-k="map"><span class="n">⇄</span>Old book → New book map</a>' : ''}
       <a href="#/sheets" data-k="sheets"><span class="n">✎</span>Worksheet maker (mixed)</a>
-      <a href="formulas.html#all" target="_blank"><span class="n">∑</span>One-page formula sheets</a><h4>Part I</h4>`;
+      <a href="formulas.html#all" target="_blank"><span class="n">∑</span>One-page formula sheets</a>`;
+    let lastPart = null;
     G9.chapters.forEach(c => {
-      if (c.no === 9) html += '<h4>Part II</h4>';
+      if (c.part !== lastPart) { html += `<h4>${c.part}</h4>`; lastPart = c.part; }
       html += `<a href="#/ch/${c.no}/${S.tab}" data-k="ch${c.no}"><span class="n">${c.no}</span>${c.short || c.title}</a>`;
     });
     s.innerHTML = html;
@@ -390,17 +382,13 @@ CHANGES: 1.1.0 - links to one-page formula sheets (sidebar, Revise tab, home); k
   /* ================= home + map ================= */
   function renderHome(v) {
     const best = (no) => { const b = store.get('best' + no, null); return b ? `<span class="pill">Quiz best ${b}</span>` : ''; };
-    let cards1 = '', cards2 = '';
-    G9.chapters.forEach(c => {
-      const card = `<div class="chcard ${c.no > 8 ? 'p2' : ''}" onclick="G9.go('#/ch/${c.no}/revise')"><div class="no2">CHAPTER ${c.no}</div><h3>${c.title}</h3><div class="muted" style="font-size:14px">${c.blurb}</div><div style="margin-top:6px">${best(c.no)}</div></div>`;
-      if (c.no <= 8) cards1 += card; else cards2 += card;
-    });
-    v.innerHTML = `<div class="hero"><h1>Class 9 Mathematics — Ganita Manjari (2026–27)</h1>
+    const parts = []; G9.chapters.forEach(c => { let g = parts.find(p => p.name === c.part); if (!g) parts.push(g = { name: c.part, cards: '' });
+      g.cards += `<div class="chcard ${parts.indexOf(g) % 2 ? 'p2' : ''}" onclick="G9.go('#/ch/${c.no}/revise')"><div class="no2">CHAPTER ${c.no}</div><h3>${c.title}</h3><div class="muted" style="font-size:14px">${c.blurb}</div><div style="margin-top:6px">${best(c.no)}</div></div>`; });
+    v.innerHTML = `<div class="hero"><h1>${CFG.heroTitle}</h1>
       <div>A revision supplement for students and a teaching kit for class teachers. Every chapter has five tabs:
       <b>Revise</b> (one-page summary) · <b>Explore</b> (interactive figures) · <b>Practice</b> (fresh numbers every time) · <b>Check</b> (10-question quiz) · <b>Teach</b> (lesson plan + slides).</div>
-      <div style="margin-top:10px;opacity:.9">Works fully offline. Use alongside the NCERT textbook — not a replacement for it.</div></div>
-      <h2>Part I</h2><div class="chgrid">${cards1}</div>
-      <h2 style="margin-top:22px">Part II</h2><div class="chgrid">${cards2}</div>
+      <div style="margin-top:10px;opacity:.9">Works fully offline. Use alongside ${CFG.book} — not a replacement for it.${CFG.homeNote ? ' ' + CFG.homeNote : ''}</div></div>
+      ${parts.map((g, i) => `<h2${i ? ' style="margin-top:22px"' : ''}>${g.name}</h2><div class="chgrid">${g.cards}</div>`).join('')}
       <div class="grid2" style="margin-top:22px">
         <div class="card"><h2>For students</h2><ol>
           <li>Read <b>Revise</b> before and after the class.</li>
@@ -414,13 +402,13 @@ CHANGES: 1.1.0 - links to one-page formula sheets (sidebar, Revise tab, home); k
           <li>Each sheet carries a <b>code</b>; type it back in to regenerate exactly the same sheet.</li></ol></div>
       </div>
       <p><a class="btn o" style="text-decoration:none" href="formulas.html#all" target="_blank">∑ One-page formula sheets — all 14 chapters</a></p>
-      <p class="muted">Not sure where an old-syllabus chapter went? See <a href="#/map">Old book → New book map</a>. Press <kbd>?</kbd> for keyboard shortcuts.</p>`;
+      <p class="muted">${CFG.oldMap ? 'Not sure where an old-syllabus chapter went? See <a href="#/map">Old book → New book map</a>. ' : ''}Press <kbd>?</kbd> for keyboard shortcuts.</p>`;
   }
   function renderMap(v) {
     v.innerHTML = `<div class="chhead"><h1>Old book → New book</h1></div>
-      <p class="muted">From 2026–27 the Class 9 book is <b>Ganita Manjari</b> (Part I: Ch 1–8, Part II: Ch 9–14). NCERT has said no topic was dropped — some old chapters were merged into others. Use this table if you learnt from (or have notes for) the earlier book.</p>
-      <div class="card"><table class="t"><tr><th>Earlier NCERT Class 9 chapter</th><th>Where it is now</th><th>Notes</th></tr>
-      ${OLDMAP.map(r => `<tr><td>${r[0]}</td><td><b>${r[1]}</b></td><td>${r[2]}</td></tr>`).join('')}</table></div>`;
+      <p class="muted">${CFG.oldMapIntro}</p>
+      <div class="card"><table class="t"><tr><th>Earlier NCERT chapter</th><th>Where it is now</th><th>Notes</th></tr>
+      ${OLDMAP().map(r => `<tr><td>${r[0]}</td><td><b>${r[1]}</b></td><td>${r[2]}</td></tr>`).join('')}</table></div>`;
   }
 
   /* ================= chapter page ================= */
@@ -445,6 +433,7 @@ CHANGES: 1.1.0 - links to one-page formula sheets (sidebar, Revise tab, home); k
     if (R.formulas && R.formulas.length) html += `<div class="card"><h2>Key results &amp; formulas</h2><div class="formula">${R.formulas.map(f => `<div class="fn">${f[0]}</div><div class="fx">${f[1]}</div>`).join('')}</div></div>`;
     if (R.terms) html += `<div class="card"><h2>Key terms</h2><table class="t">${R.terms.map(t => `<tr><td><b>${t[0]}</b></td><td>${t[1]}</td></tr>`).join('')}</table></div>`;
     if (R.traps) html += `<div class="card"><h2>Common mistakes</h2>${R.traps.map(t => `<div class="box o">${t}</div>`).join('')}</div>`;
+    if (R.board) html += `<div class="card"><h2>Board exam focus</h2>${R.board}</div>`;
     if (R.bridge) html += `<div class="card"><h2>Connections</h2>${R.bridge}</div>`;
     html += `</div></div>`;
     el.innerHTML = html;
@@ -580,7 +569,7 @@ CHANGES: 1.1.0 - links to one-page formula sheets (sidebar, Revise tab, home); k
       let sheets = '', key = '';
       for (let roll = from; roll <= to; roll++) {
         const seed = seed0 + (roll - from); const code = sheetCode(chs, lvl, n, seed); const Qs = G9.makeSheet(chs, lvl, n, seed);
-        sheets += `<div class="sheet"><span class="code">${code}</span><h2>${school ? school + ' — ' : ''}Class IX Mathematics</h2>
+        sheets += `<div class="sheet"><span class="code">${code}</span><h2>${school ? school + ' — ' : ''}Class ${CFG.roman} Mathematics</h2>
           <div><b>${title}</b> · Worksheet (${LEVELS[lvl - 1]})</div>
           <div class="hd"><div>Name: ______________________</div><div>Roll no: ${to > from ? roll : '______'}</div><div>Date: __________</div></div>
           ${Qs.map((q, i) => `<div class="sq"><b>Q${i + 1}.</b> ${q.q}${'<div class="sp"></div>'.repeat(space)}</div>`).join('')}</div>`;

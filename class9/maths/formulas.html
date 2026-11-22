@@ -2,10 +2,10 @@
 <!--
 TOOL:    class9_maths_formula_sheets
 FAMILY:  CBSE_REVISION / Class 9 Maths (Ganita Manjari)
-VERSION: 1.1.0
+VERSION: 1.2.0
 DATE:    2026-11-22
 CHAT:    CBSE Revision - Class 9 Maths full build
-CHANGES: 1.1.0 - first release: one A4 formula sheet per chapter (14), view one or all, print / save as PDF, works offline
+CHANGES: 1.2.0 - names from G9_CFG so the same page serves every class; sheet data from chapter.fs or G9.FS; 1.1.0 - first release: one A4 formula sheet per chapter (14), view one or all, print / save as PDF, works offline
 -->
 <html lang="en">
 <head>
@@ -62,13 +62,14 @@ td.f{font-family:"Cambria Math",Cambria,"Times New Roman",serif;font-size:16.4px
 </head>
 <body>
 <div class="bar">
-  <b>Class 9 Maths · One-page formula sheets</b>
+  <b id="ttl">One-page formula sheets</b>
   <select id="sel"><option value="all">All 14 chapters</option></select>
   <button id="pr" title="Print, or choose Save as PDF">🖨 Print / Save PDF</button>
   <a href="index.html">← Back to the kit</a>
   <button id="fs" title="Full screen (F)">Full screen (F)</button>
 </div>
 <div class="wrap" id="wrap"></div>
+<script src="chapters/config.js"></script>
 <script src="assets/core.js"></script>
 <script src="chapters/ch01.js"></script><script src="chapters/ch02.js"></script><script src="chapters/ch03.js"></script><script src="chapters/ch04.js"></script>
 <script src="chapters/ch05.js"></script><script src="chapters/ch06.js"></script><script src="chapters/ch07.js"></script><script src="chapters/ch08.js"></script>
@@ -78,26 +79,27 @@ td.f{font-family:"Cambria Math",Cambria,"Times New Roman",serif;font-size:16.4px
 <script>
 (function () {
   const wrap = document.getElementById('wrap'), sel = document.getElementById('sel');
+  document.getElementById('ttl').textContent = G9.CFG.short.replace(/&amp;/g, '&') + ' · One-page formula sheets';
   G9.chapters.forEach(c => {
-    const S = G9.FS[c.no]; if (!S) return;
+    const S = c.fs || (G9.FS || {})[c.no]; if (!S) return;
     sel.insertAdjacentHTML('beforeend', `<option value="${c.no}">Ch ${c.no}: ${c.title}</option>`);
     const allG = S.groups.concat(c.revise.terms ? [['Key terms', c.revise.terms]] : []);
     const groups = allG.map(([h, rows]) => `<div class="grp"><h2>${h}</h2><table>${rows.map(r => `<tr><td class="l">${r[0]}</td><td class="f">${r[1]}</td></tr>`).join('')}</table></div>`).join('');
     wrap.insertAdjacentHTML('beforeend', `<section class="sheet" data-ch="${c.no}">
-      <div class="hd"><div class="badge">${c.no}</div><div><h1>${c.title}</h1><div class="sub">Class IX Mathematics · Ganita Manjari ${c.part} · Chapter ${c.no} · One-page formula sheet</div></div></div>
+      <div class="hd"><div class="badge">${c.no}</div><div><h1>${c.title}</h1><div class="sub">${G9.CFG.sheetSub || ("Class " + G9.CFG.roman + " Mathematics")} · ${c.part} · Chapter ${c.no} · One-page formula sheet</div></div></div>
       <div class="one">${c.revise.oneLine}</div>
       <div class="cols">${groups}</div>
       <div class="foot">
         <div class="box ex"><h3>Worked examples</h3><ol>${S.ex.map(e => `<li>${e[0]}: <span class="ans">${e[1]}</span></li>`).join('')}</ol></div>
         <div class="box rem"><h3>Remember</h3><ul>${S.rem.map(r => `<li>${r}</li>`).join('')}</ul></div>
       </div>
-      <div class="pf"><span>Class 9 Maths revision kit · haivijayanand.github.io/class9/</span><span>Use with the NCERT textbook</span></div>
+      <div class="pf"><span>${G9.CFG.short} revision kit · ${G9.CFG.site}</span><span>Use with ${G9.CFG.book}</span></div>
     </section>`);
   });
   const show = (v) => { document.querySelectorAll('.sheet').forEach(s => s.classList.toggle('hide', v !== 'all' && s.dataset.ch !== v)); sel.value = v; if (location.hash.slice(1) !== v) history.replaceState(null, '', '#' + v); };
   sel.onchange = () => show(sel.value);
-  const h = location.hash.slice(1); show(G9.FS[h] ? h : 'all');
-  window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (G9.FS[v] || v === 'all') show(v); });
+  const ok = (v) => G9.chapters.some(c => String(c.no) === v); const h = location.hash.slice(1); show(ok(h) ? h : 'all');
+  window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (ok(v) || v === 'all') show(v); });
   document.getElementById('pr').onclick = () => window.print();
   const fs = document.getElementById('fs'), tf = () => { if (!document.fullscreenElement) document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(() => {}); else document.exitFullscreen(); };
   fs.onclick = tf;

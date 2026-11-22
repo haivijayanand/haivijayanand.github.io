@@ -1,9 +1,9 @@
 TOOL:    class9_maths_readme
 FAMILY:  CBSE_REVISION / Class 9 Maths (Ganita Manjari)
-VERSION: 1.1.0
+VERSION: 1.2.0
 DATE:    2026-11-22
 CHAT:    CBSE Revision - Class 9 Maths full build
-CHANGES: 1.1.0 - one-page formula sheets (formulas.html + Class9_Maths_Formula_Sheets.pdf); 1.0.0 - first release
+CHANGES: 1.2.0 - shared engine 2.0.0 with chapters/config.js; 1.1.0 - one-page formula sheets (formulas.html + Class9_Maths_Formula_Sheets.pdf); 1.0.0 - first release
 
 CLASS 9 MATHEMATICS - GANITA MANJARI (NCERT 2026-27)
 Revision supplement for students + teaching kit for class teachers. Works fully offline.

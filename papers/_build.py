@@ -2,10 +2,11 @@
 """
 TOOL:    papers/_build.py
 FAMILY:  papers
-VERSION: 1.8.0
-DATE:    2026-11-21
+VERSION: 1.8.1
+DATE:    2026-11-22
 CHAT:    Exoskeleton technical paper — Technical Papers section
-CHANGES: 1.8.0 - every page loads assets/js/site-theme.js (site-wide light / dark)
+CHANGES: 1.8.1 - PAGE_VERSION/DATE/CHANGES brought in step with the pages (1.5.1) so rebuilds no longer roll page headers back
+         1.8.0 - every page loads assets/js/site-theme.js (site-wide light / dark)
          1.7.1 - numbers removed from all existing papers too (manifest, texts, PDFs)
          1.7.0 - paper numbers are optional (new papers carry none); "articles" in _papers.json lists the longer
                  site articles (former Engineering Articles page) on the same index, newest first
@@ -36,11 +37,11 @@ Adding a paper:
      Optional "pdf": "supplied" — put your own pdf/<slug>.pdf (e.g. IEEE two-column) and the build will not overwrite it.
   3. run this script, then git add papers/ && git commit && git push
 """
-__version__ = "1.8.0"
+__version__ = "1.8.1"
 
-PAGE_VERSION = "1.5.0"
-PAGE_DATE = "2026-11-16"
-PAGE_CHANGES = "1.5.0 - no paper number on new papers; previous/next links by short title; index lists papers and articles together; 1.4.0 - Aa button: theme, text size, font, line spacing, wraps to phone screen; 1.3.0 - Listen button reads the paper aloud; 1.2.0 - numbered figures with credits (click to enlarge) and a Figure credits list; 1.1.0 - side panel can be hidden from inside it (Hide) or the top bar (Hide/Show contents, M); choice remembered; 1.0.0 - first page template: title block, contents sidebar (M), theme, full screen, A4 PDF download"
+PAGE_VERSION = "1.5.1"
+PAGE_DATE = "2026-11-21"
+PAGE_CHANGES = "1.5.1 - loads assets/js/site-theme.js (light by default, one light / dark choice for the whole site); 1.5.0 - no paper number on new papers; previous/next links by short title; index lists papers and articles together; 1.4.0 - Aa button: theme, text size, font, line spacing, wraps to phone screen; 1.3.0 - Listen button reads the paper aloud; 1.2.0 - numbered figures with credits (click to enlarge) and a Figure credits list; 1.1.0 - side panel can be hidden from inside it (Hide) or the top bar (Hide/Show contents, M); choice remembered; 1.0.0 - first page template: title block, contents sidebar (M), theme, full screen, A4 PDF download"
 
 import datetime as dt
 import html

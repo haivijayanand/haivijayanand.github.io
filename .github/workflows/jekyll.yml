@@ -1,3 +1,10 @@
+# TOOL:    .github/workflows/jekyll.yml — build and deploy the site to GitHub Pages
+# FAMILY:  SITE
+# VERSION: 1.1.0
+# DATE:    2026-11-22
+# CHAT:    Publicity - how people find the site on Google / GitHub; link previews and search tags site-wide
+# CHANGES: 1.1.0 - after `jekyll build`, _scripts/seo_tags.py adds search and link-preview tags to the plain HTML pages
+#          1.0.0 - search index step before the Jekyll build (earlier, unversioned)
 # This workflow uses actions that are not certified by GitHub.
 # They are provided by a third-party and are governed by
 # separate terms of service, privacy policy, and support
@@ -53,6 +60,8 @@ jobs:
         run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
         env:
           JEKYLL_ENV: production
+      - name: Add search and link-preview tags to the plain HTML pages
+        run: python3 _scripts/seo_tags.py _site
       - name: Upload artifact
         # Automatically uploads an artifact from the './_site' directory by default
         uses: actions/upload-pages-artifact@v3

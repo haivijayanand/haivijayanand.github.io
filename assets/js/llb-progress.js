@@ -1,10 +1,12 @@
 /*
-TOOL:    assets/js/llb-progress.js — progress bar and course certificate for the B.Com. LL.B. study explorers
+TOOL:    assets/js/llb-progress.js — progress bar and course certificate for the B.A. LL.B. and B.Com. LL.B. study explorers
 FAMILY:  law-explorers
-VERSION: 1.0.0
+VERSION: 1.1.0
 DATE:    2026-11-22
 CHAT:    Kaavya Study Materials – TNNLU B.Com. LL.B. Semester II explorers (claude.ai, 2026-11-22)
-CHANGES: 1.0.0 - first release: progress bar under the top bar (units read, labs tried, best quiz score), progress panel,
+CHANGES: 1.1.0 - programme-aware: data-prog="ba"|"bcom" fixes the programme; data-shared="1" (courses common to both)
+                 takes ?prog=ba|bcom from the URL or the reader's last choice; header subtitle, ⌂ Courses link and certificate follow it
+         1.0.0 - first release: progress bar under the top bar (units read, labs tried, best quiz score), progress panel,
                  certificate when every unit is done and the mixed quiz best is 70% or more, A4 certificate print,
                  sync with site-progress.js (Google sign-in) so progress follows the reader across devices
 STATUS:  working
@@ -17,6 +19,20 @@ The page must use the explorer globals: UNITS, VIEWS, S (S.d.done, S.d.best), cu
   "use strict";
   var me = document.currentScript, C = me.dataset;
   var COURSE = C.course || document.title, SEM = C.sem || "", SLUG = C.slug || location.pathname.replace(/.*\/|\.html?$/g, "");
+  /* programme: fixed by data-prog, or for shared courses taken from ?prog= / last choice (default B.Com.) */
+  var PROGS = { ba: "B.A. LL.B. (Hons.)", bcom: "B.Com. LL.B. (Hons.)" }, PK = "bcom";
+  try {
+    var qp = new URLSearchParams(location.search).get("prog");
+    if (C.prog && PROGS[C.prog]) PK = C.prog;
+    else if (C.shared) { if (qp && PROGS[qp]) { PK = qp; localStorage.setItem("llb_prog", qp); } else if (PROGS[localStorage.getItem("llb_prog")]) PK = localStorage.getItem("llb_prog"); }
+    else PK = "bcom";
+    if (C.prog && PROGS[C.prog]) localStorage.setItem("llb_prog", C.prog);
+  } catch (e) { }
+  var PROG = PROGS[PK];
+  try {
+    var sm = document.querySelector("header h1 small"); if (sm) sm.textContent = (C.shared ? PROG + " / " + PROGS[PK === "ba" ? "bcom" : "ba"].replace(" (Hons.)", "") : PROG) + (SEM ? " · " + SEM : "");
+    var hl = document.querySelector('header a[href^="/llb/"]'); if (hl) { hl.href = "/llb/#" + PK; hl.title = "All " + PROG + " courses"; }
+  } catch (e) { }
   var PASS = 70, W = { units: 60, labs: 20, quiz: 20 };
   var LKEY = "llbp_" + SLUG;
   var $ = function (s, r) { return (r || document).querySelector(s); };
@@ -217,7 +233,7 @@ The page must use the explorer globals: UNITS, VIEWS, S (S.d.done, S.d.best), cu
       printCert(rec); refresh();
     };
     if (sp && sp.user) {
-      sp.saveCertificate({ course: "llb/" + SLUG, title: COURSE + (SEM ? " – B.Com. LL.B. (Hons.) " + SEM : ""), holderName: name, score: "Quiz " + s.q + "%", reprint: true })
+      sp.saveCertificate({ course: "llb/" + SLUG, title: COURSE + (SEM ? " – " + PROG + " " + SEM : ""), holderName: name, score: "Quiz " + s.q + "%", reprint: true })
         .then(done).catch(function (e) { console.warn(e); done(null); });
     } else done(null);
   }
@@ -238,7 +254,7 @@ The page must use the explorer globals: UNITS, VIEWS, S (S.d.done, S.d.best), cu
       '</style></head><body><div class="pg"><div class="fr"><div class="seal">⚖️</div><div class="site">Law Study Explorers · haivijayanand.github.io</div>' +
       '<h1>Certificate of Completion</h1><div class="sub">This is to certify that</div><div class="nm">' + esc(c.holderName) + '</div>' +
       '<div class="sub">has worked through every unit of the interactive study explorer</div><div class="cr">' + esc(COURSE) + '</div>' +
-      '<div class="pr">B.Com. LL.B. (Hons.)' + (SEM ? " · " + esc(SEM) : "") + '</div>' +
+      '<div class="pr">' + esc(PROG) + (SEM ? " · " + esc(SEM) : "") + '</div>' +
       '<div class="sc">All ' + UNITS.length + ' units completed · Best score in the mixed quiz: ' + esc(c.score) + '</div>' +
       '<div class="ft"><div class="id">Issued: ' + esc(c.date) + '<br>' + (c.certId ? 'Certificate ID: <b>' + esc(c.certId) + '</b><br>Verify: ' + esc(verify) : 'Not registered – sign in on the site to get a verifiable ID') + '</div>' +
       '<div class="sg"><div class="ln">K Vijay Anand</div></div></div></div></div></body></html>';

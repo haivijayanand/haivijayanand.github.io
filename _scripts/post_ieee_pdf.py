@@ -2,10 +2,11 @@
 """
 TOOL:    _scripts/post_ieee_pdf.py
 FAMILY:  SITE
-VERSION: 1.0.0
+VERSION: 1.1.0
 DATE:    2026-11-24
 CHAT:    Flush valve post - downloadable IEEE two-column PDF with proper older / newer links
-CHANGES: 1.0.0 - converts a Jekyll post (_posts/<date-slug>.md) into an IEEE two-column A4 PDF in
+CHANGES: 1.1.0 - "In this series" box removed from the end of the PDF (older / newer links stay on the web page)
+         1.0.0 - converts a Jekyll post (_posts/<date-slug>.md) into an IEEE two-column A4 PDF in
                  assets/posts/<date-slug>/<slug>-ieee.pdf; numbered sections, captioned tables and figures,
                  Acknowledgment, References, and an "In this series" box with clickable links to the older and
                  newer items of the Papers & Articles list (papers/_papers.json, by date)
@@ -16,7 +17,7 @@ Needs: pip install markdown pypdf playwright  &&  python3 -m playwright install 
 Per-post settings (index terms, table titles, wide figures) are in POSTS below.
 Jekyll skips folders that start with "_", so this script is not published.
 """
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 import datetime as dt
 import html as H
@@ -194,7 +195,7 @@ def convert(slug, cfg):
 
     # wide tables / figures / series box sit between two-column blocks (Chromium leaves page 1 empty when
     # column-span:all elements sit inside a multi-page multicol block)
-    body_html = f'<div class="cols">{h}{box}</div>'
+    body_html = f'<div class="cols">{h}</div>'
     body_html = re.sub(r'((?:<h2>[^<]*</h2>\s*)?<div class="tblock wide">.*?</table></div>|(?:<h2>[^<]*</h2>\s*)?<figure class="wide">.*?</figure>|<div class="seriesbox">.*?</table></div>)',
                        r'</div>\1<div class="cols">', body_html, flags=re.S)
     body_html = body_html.replace('<div class="cols"></div>', '')

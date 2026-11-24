@@ -257,7 +257,7 @@ python code/generate_figures.py
 
 | File | Description |
 |------|-------------|
-| [📄 IEEE two-column PDF](/assets/posts/2026-05-14-flush-valve-design/flush-valve-design-ieee.pdf) | This article in IEEE two-column format, A4, with clickable links |
+| [📄 IEEE two-column PDF](/assets/posts/2026-05-14-flush-valve-design/flush-valve-design-ieee.pdf) | This article in IEEE two-column format, A4 |
 
 ---
 

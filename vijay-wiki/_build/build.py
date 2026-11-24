@@ -39,7 +39,7 @@ everything = EXTRA + arts
 for a in arts:
     rel = [b for b in everything if b["group"] == a["group"] and b["slug"] != a["slug"]]
     rel_html = " · ".join(f'<a href="{b["slug"]}.html">{wiki.esc(b["title"])}</a>' for b in rel)
-    a.setdefault("feat", f'{a["body"].count("<figure")} diagrams · {len(a["calcs"])} calculator{"s" if len(a["calcs"])!=1 else ""} · {len(a["quiz"])}-question self-test')
+    a.setdefault("feat", f'{a["body"].count("<figure")} diagram{"s" if a["body"].count("<figure")!=1 else ""} · {len(a["calcs"])} calculator{"s" if len(a["calcs"])!=1 else ""} · {len(a["quiz"])}-question self-test')
     with open(os.path.join(OUT, a["slug"] + ".html"), "w", encoding="utf-8") as fh:
         fh.write(wiki.page(a, rel_html))
 

@@ -3,9 +3,17 @@ layout: post
 title: "Salt-Resistant Flush Valve Design for Hard-Water Regions"
 date: 2026-05-14
 tags: [mechanical-design, hard-water, materials, python, matplotlib, analysis]
+nav_newer:
+  title: "Exoskeletons: History, Commercialisation, Industry Landscape and Future Outlook"
+  url: /papers/exoskeletons-history-industry-future.html
 ---
 
 *K Vijay Anand*
+
+<!-- web-only -->
+> **📄 [Download PDF — IEEE two-column format (A4)](/assets/posts/2026-05-14-flush-valve-design/flush-valve-design-ieee.pdf)**
+{: .prompt-info }
+<!-- /web-only -->
 
 ---
 
@@ -244,4 +252,20 @@ python code/generate_figures.py
 
 ---
 
-*This is the second article in the author's applied engineering design series. The first article covered [orbital mechanics visualisation]({{ site.baseurl }}{% post_url 2026-05-07-earth-jupiter-dance %}).*
+<!-- web-only -->
+## Download
+
+| File | Description |
+|------|-------------|
+| [📄 IEEE two-column PDF](/assets/posts/2026-05-14-flush-valve-design/flush-valve-design-ieee.pdf) | This article in IEEE two-column format, A4, with clickable links |
+
+---
+
+*This is the second article in the author's applied engineering design series.*
+
+| | |
+|---|---|
+| **← Older** | [The Earth–Jupiter Dance: How Two Planets Draw a Star in Space](/2026/05/07/earth-jupiter-dance.html) — orbital mechanics visualisation |
+| **Newer →** | [Exoskeletons: History, Commercialisation, Industry Landscape and Future Outlook](/papers/exoskeletons-history-industry-future.html) — Technical Papers |
+| **All** | [Technical Papers & Articles](/papers/) |
+<!-- /web-only -->

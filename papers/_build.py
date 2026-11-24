@@ -2,10 +2,12 @@
 """
 TOOL:    papers/_build.py
 FAMILY:  papers
-VERSION: 1.8.1
-DATE:    2026-11-22
-CHAT:    Exoskeleton technical paper — Technical Papers section
-CHANGES: 1.8.1 - PAGE_VERSION/DATE/CHANGES brought in step with the pages (1.5.1) so rebuilds no longer roll page headers back
+VERSION: 1.9.0
+DATE:    2026-11-24
+CHAT:    Flush valve post - downloadable IEEE two-column PDF with proper older / newer links
+CHANGES: 1.9.0 - the first paper's "previous" link goes to the newest article (Jekyll post) older than it, so
+                 articles and papers form one older / newer chain; falls back to "All technical papers"
+         1.8.1 - PAGE_VERSION/DATE/CHANGES brought in step with the pages (1.5.1) so rebuilds no longer roll page headers back
          1.8.0 - every page loads assets/js/site-theme.js (site-wide light / dark)
          1.7.1 - numbers removed from all existing papers too (manifest, texts, PDFs)
          1.7.0 - paper numbers are optional (new papers carry none); "articles" in _papers.json lists the longer
@@ -37,7 +39,7 @@ Adding a paper:
      Optional "pdf": "supplied" — put your own pdf/<slug>.pdf (e.g. IEEE two-column) and the build will not overwrite it.
   3. run this script, then git add papers/ && git commit && git push
 """
-__version__ = "1.8.1"
+__version__ = "1.9.0"
 
 PAGE_VERSION = "1.5.1"
 PAGE_DATE = "2026-11-21"
@@ -585,7 +587,12 @@ def build(do_pdf=True):
     def page_for(i, pass_no):
         pp = papers[i]
         body, toc, words = render_md(apply_figures(pp["slug"], (CONTENT / f"{pp['slug']}.md").read_text(encoding="utf-8")))
-        prev = f'<a href="{papers[i-1]["slug"]}.html">← {esc(papers[i-1]["short"])}</a>' if i > 0 else '<a href="./">← All technical papers</a>'
+        if i > 0:
+            prev = f'<a href="{papers[i-1]["slug"]}.html">← {esc(papers[i-1]["short"])}</a>'
+        else:
+            older = sorted((a for a in data.get("articles", []) if a["date"] <= pp["date"]), key=lambda a: a["date"])
+            prev = (f'<a href="{older[-1]["url"]}">← {esc(older[-1]["title"])}</a>' if older
+                    else '<a href="./">← All technical papers</a>')
         nxt = f'<a href="{papers[i+1]["slug"]}.html">{esc(papers[i+1]["short"])} →</a>' if i + 1 < count else ""
         html_out = fill(PAGE, {
             "SLUG": pp["slug"], "NO": num(pp), "TITLE_TXT": pp["title"], "TITLE": esc(pp["title"]),

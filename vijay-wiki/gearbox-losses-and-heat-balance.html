@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Vijay_Wiki — Gearbox Losses, Efficiency and Heat Balance
+FAMILY:  vijay-wiki
+VERSION: 1.0.0
+DATE:    2026-11-24
+CHAT:    claude.ai — Vijay_Wiki: build all suggested topics in groups and upload (2026-11-24)
+CHANGES: 1.0.0 Initial release: article, diagrams, worked examples, calculators, self-test, references
+STATUS:  Published reference article
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gearbox Losses, Efficiency and Heat Balance — Vijay_Wiki</title>
+<meta name="description" content="Where gearbox power losses come from (mesh, bearings, churning, windage, seals), load-dependent versus no-load losses, efficiency across the load range, housing heat dissipation and when oil cooling is needed.">
+<style>
+:root{--bg:#f7f8fa;--panel:#ffffff;--ink:#1d2330;--muted:#5b6475;--line:#d9dde5;--blue:#1f5fbf;--blue2:#6f9de0;--blue3:#d6e4f7;--orange:#c96a12;--orange2:#f3c58f;--orange3:#fbe7d0;--purple:#6a4fb3;--purple3:#e6e0f5;--code:#eef1f6;--shadow:0 1px 3px rgba(0,0,0,.08)}
+[data-theme="dark"]{--bg:#12151b;--panel:#1b2029;--ink:#e6e9ef;--muted:#9aa3b2;--line:#2e3542;--blue:#7fb0ff;--blue2:#4d7fc9;--blue3:#1e3356;--orange:#ffad5c;--orange2:#a8661f;--orange3:#4a3016;--purple:#b8a3ff;--purple3:#2f2750;--code:#232a36;--shadow:none}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+a{color:var(--blue)}
+header.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+header.top .brand{font-weight:700;white-space:nowrap}header.top .brand span{color:var(--blue)}
+header.top .crumb{color:var(--muted);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:5px 10px;font:inherit;font-size:14px;cursor:pointer}
+.btn:hover{border-color:var(--blue)}.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}[data-theme="dark"] .btn.primary{color:#0d1117}
+.layout{display:grid;grid-template-columns:270px minmax(0,1fr);min-height:calc(100vh - 50px)}
+body.nosidebar .layout{grid-template-columns:0 minmax(0,1fr)}body.nosidebar nav.side{display:none}
+nav.side{position:sticky;top:50px;height:calc(100vh - 50px);overflow:auto;padding:16px 12px;border-right:1px solid var(--line);background:var(--panel);font-size:14px}
+nav.side h4{margin:4px 6px 8px;color:var(--muted);text-transform:uppercase;font-size:12px;letter-spacing:.06em}
+nav.side a{display:block;padding:4px 8px;border-radius:5px;text-decoration:none;color:var(--ink)}
+nav.side a:hover,nav.side a.active{background:var(--blue3)}nav.side a.sub{padding-left:22px;color:var(--muted)}
+main{padding:24px clamp(16px,3vw,48px) 80px;max-width:1500px}
+h1{font-size:2.05rem;line-height:1.2;margin:.2em 0 .2em}
+h2{font-size:1.5rem;margin:2.1em 0 .6em;padding-top:.4em;border-top:2px solid var(--line)}
+h3{font-size:1.16rem;margin:1.5em 0 .5em}
+.meta{color:var(--muted);font-size:14px}
+.tags span{display:inline-block;background:var(--blue3);border-radius:12px;padding:1px 10px;margin:2px 4px 2px 0;font-size:13px}
+.lead{font-size:1.07rem}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:14px 0;box-shadow:var(--shadow)}
+.box.key{border-left:5px solid var(--blue)}.box.warn{border-left:5px solid var(--orange)}.box.note{border-left:5px solid var(--purple)}
+.box h4{margin:0 0 6px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px}
+table{border-collapse:collapse;width:100%;margin:10px 0 16px;background:var(--panel);font-size:14.5px}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}th{background:var(--blue3)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}.tblwrap{overflow-x:auto}
+figure{margin:16px 0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+figure svg{width:100%;height:auto;display:block}figcaption{color:var(--muted);font-size:13.5px;margin-top:6px}
+code{font-family:Consolas,"Courier New",monospace;background:var(--code);padding:1px 5px;border-radius:4px;font-size:.93em}
+pre,.formula{font-family:Consolas,"Courier New",monospace;background:var(--code);border-radius:8px;padding:10px 14px;margin:8px 0;overflow-x:auto;white-space:pre;font-size:14px}
+svg text{fill:var(--ink);font-family:"Segoe UI",Roboto,Arial,sans-serif}svg .mut{fill:var(--muted)}
+svg .ax{stroke:var(--muted);stroke-width:1.5}svg .grid{stroke:var(--line);stroke-width:1}
+.calc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin:16px 0;box-shadow:var(--shadow)}
+.calc h3{margin-top:0}
+.inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px 14px}
+.inputs label{display:flex;flex-direction:column;font-size:13.5px;color:var(--muted)}
+.inputs input,.inputs select,.inputs textarea{margin-top:3px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit;font-size:15px}
+.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:14px}
+.res{border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--bg)}
+.res .k{font-size:12.5px;color:var(--muted)}.res .v{font-size:1.22rem;font-weight:700;font-variant-numeric:tabular-nums}.res .s{font-size:12.5px;color:var(--muted)}
+.verdict{margin-top:12px;padding:10px 14px;border-radius:8px;font-weight:600;border:2px solid}
+.verdict.ok{border-color:var(--blue);background:var(--blue3)}.verdict.caution{border-color:var(--purple);background:var(--purple3)}.verdict.bad{border-color:var(--orange);background:var(--orange3)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
+.q{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:12px 0}
+.q .qt{font-weight:600}.q label.opt{display:block;padding:5px 8px;margin:3px 0;border-radius:6px;border:1px solid transparent;cursor:pointer}
+.q label.opt:hover{background:var(--bg)}.q label.opt.right{border:2px solid var(--blue);background:var(--blue3)}.q label.opt.wrong{border:2px dashed var(--orange);background:var(--orange3)}
+.q .fb{display:none;margin-top:8px;padding:8px 10px;border-radius:6px;background:var(--bg);font-size:14.5px}.q .fb.show{display:block}
+.q input[type=number]{padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit;width:180px}
+.score{position:sticky;bottom:10px;display:inline-block;background:var(--panel);border:2px solid var(--blue);border-radius:20px;padding:6px 16px;font-weight:700;box-shadow:var(--shadow)}
+ol.refs li{margin:6px 0}
+.related a{display:inline-block;margin:3px 8px 3px 0}
+footer{margin-top:50px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+@media (max-width:900px){.layout{grid-template-columns:1fr}nav.side{display:none}body.showside nav.side{display:block;position:fixed;left:0;top:50px;width:270px;z-index:30}.grid2{grid-template-columns:1fr}}
+@media print{header.top,nav.side,.calc,.presets,.quizsec,.score{display:none!important}.layout{display:block}main{max-width:none;padding:0}}
+</style>
+</head>
+<body>
+<header class="top">
+  <button class="btn" id="btnSide" title="Show / hide contents (M)">☰ Contents</button>
+  <div class="brand"><a href="index.html" style="text-decoration:none;color:inherit">Vijay<span>_Wiki</span></a></div>
+  <div class="crumb">/ Tribology and lubrication / Gearbox heat balance</div>
+  <button class="btn" id="btnTheme" title="Light / dark theme">◐ Theme</button>
+  <button class="btn" id="btnFull" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<div class="layout">
+<nav class="side" id="side"><h4>Contents</h4><a href="#summary">Key takeaways</a><a href="#losses">1. Loss components</a><a href="#heat">2. Heat balance</a><a href="#example">3. Worked example</a><a href="#calculators">4. Calculators</a><a href="#references">6. References and further reading</a></nav>
+<main>
+<h1>Gearbox Losses, Efficiency and Heat Balance</h1>
+<div class="meta">K Vijay Anand · Vijay_Wiki quick-reference article · 24 November 2026</div>
+<div class="tags"><span>Gearboxes</span><span>Efficiency</span><span>Heat transfer</span><span>Lubrication</span></div>
+<p class="lead">Even an efficient gearbox turns a few percent of its power into heat. Some losses grow with load (tooth friction, bearing friction under load); others depend mainly on speed and oil (churning, windage, seals, pump drag). The balance between the heat generated and what the housing can dissipate sets the oil temperature, and decides whether a cooler is needed.</p>
+<div class="box key" id="summary"><h4>Key takeaways</h4><ul><li>Spur/helical meshes lose about 0.5–1 % each; bearings 0.1–0.5 %; churning and windage can dominate at high speed and light load.</li><li>No-load losses make efficiency poor at part load even when full-load efficiency is 98–99 %.</li><li>Natural-convection housings dissipate roughly 15–25 W/m²K; fan cooling roughly doubles this.</li><li>Check: generated loss ≤ h·A·ΔT at the allowable oil temperature; otherwise add oil cooling (ISO/TR 14179 gives detailed methods).</li><li>Reduce churning with lower oil level, jet lubrication, baffles and lower viscosity where film thickness allows.</li></ul></div>
+
+<h2 id="losses">1. Loss components</h2>
+<div class="tblwrap"><table><tr><th>Loss</th><th>Depends on</th><th>Typical size</th></tr><tr><td>Tooth mesh (sliding friction)</td><td>Load, speed, μ, geometry</td><td>0.5–1 % per mesh</td></tr><tr><td>Bearings (load-dependent)</td><td>Load, bearing type</td><td>0.1–0.5 % total</td></tr><tr><td>Churning / oil drag</td><td>Immersion depth, viscosity, speed</td><td>Can reach 1–3 % at high speed</td></tr><tr><td>Windage</td><td>Peripheral speed, enclosure</td><td>Significant above ~ 25 m/s</td></tr><tr><td>Seals</td><td>Shaft speed, seal type</td><td>Tens to hundreds of W</td></tr><tr><td>Oil pump (if driven)</td><td>Flow and pressure</td><td>Small–moderate</td></tr></table></div>
+<figure><svg viewBox="0 0 900 280" role="img" aria-label="loss (kW) against load (% of rated)"><line x1="80" y1="225.0" x2="870" y2="225.0" class="grid"/><text x="72" y="229.0" text-anchor="end" font-size="12">0</text><line x1="80" y1="193.0" x2="870" y2="193.0" class="grid"/><text x="72" y="197.0" text-anchor="end" font-size="12">0.5</text><line x1="80" y1="160.9" x2="870" y2="160.9" class="grid"/><text x="72" y="164.9" text-anchor="end" font-size="12">1</text><line x1="80" y1="128.9" x2="870" y2="128.9" class="grid"/><text x="72" y="132.9" text-anchor="end" font-size="12">1.5</text><line x1="80" y1="96.9" x2="870" y2="96.9" class="grid"/><text x="72" y="100.9" text-anchor="end" font-size="12">2</text><line x1="80" y1="64.8" x2="870" y2="64.8" class="grid"/><text x="72" y="68.8" text-anchor="end" font-size="12">2.5</text><line x1="80" y1="32.8" x2="870" y2="32.8" class="grid"/><text x="72" y="36.8" text-anchor="end" font-size="12">3</text><line x1="80.0" y1="225" x2="80.0" y2="230" class="ax"/><text x="80.0" y="245" text-anchor="middle" font-size="12">0</text><line x1="159.0" y1="225" x2="159.0" y2="230" class="ax"/><text x="159.0" y="245" text-anchor="middle" font-size="12">10</text><line x1="238.0" y1="225" x2="238.0" y2="230" class="ax"/><text x="238.0" y="245" text-anchor="middle" font-size="12">20</text><line x1="317.0" y1="225" x2="317.0" y2="230" class="ax"/><text x="317.0" y="245" text-anchor="middle" font-size="12">30</text><line x1="396.0" y1="225" x2="396.0" y2="230" class="ax"/><text x="396.0" y="245" text-anchor="middle" font-size="12">40</text><line x1="475.0" y1="225" x2="475.0" y2="230" class="ax"/><text x="475.0" y="245" text-anchor="middle" font-size="12">50</text><line x1="554.0" y1="225" x2="554.0" y2="230" class="ax"/><text x="554.0" y="245" text-anchor="middle" font-size="12">60</text><line x1="633.0" y1="225" x2="633.0" y2="230" class="ax"/><text x="633.0" y="245" text-anchor="middle" font-size="12">70</text><line x1="712.0" y1="225" x2="712.0" y2="230" class="ax"/><text x="712.0" y="245" text-anchor="middle" font-size="12">80</text><line x1="791.0" y1="225" x2="791.0" y2="230" class="ax"/><text x="791.0" y="245" text-anchor="middle" font-size="12">90</text><line x1="870.0" y1="225" x2="870.0" y2="230" class="ax"/><text x="870.0" y="245" text-anchor="middle" font-size="12">100</text><line x1="80" y1="225" x2="870" y2="225" class="ax"/><line x1="80" y1="20" x2="80" y2="225" class="ax"/><text x="475.0" y="268" text-anchor="middle" font-size="13">load (% of rated)</text><text x="18" y="122.5" text-anchor="middle" font-size="13" transform="rotate(-90 18 122.5)">loss (kW)</text><path d="M80.0 160.9 L119.5 156.8 L159.0 152.6 L198.5 148.4 L238.0 144.3 L277.5 140.1 L317.0 136.0 L356.5 131.8 L396.0 127.6 L435.5 123.5 L475.0 119.3 L514.5 115.1 L554.0 111.0 L593.5 106.8 L633.0 102.6 L672.5 98.5 L712.0 94.3 L751.5 90.1 L791.0 86.0 L830.5 81.8 L870.0 77.7" fill="none" stroke="var(--blue)" stroke-width="3.5" stroke-dasharray=""/><text x="560.0" y="103.0" font-size="13" font-weight="700" style="fill:var(--blue)">total loss</text><path d="M80.0 160.9 L119.5 160.9 L159.0 160.9 L198.5 160.9 L238.0 160.9 L277.5 160.9 L317.0 160.9 L356.5 160.9 L396.0 160.9 L435.5 160.9 L475.0 160.9 L514.5 160.9 L554.0 160.9 L593.5 160.9 L633.0 160.9 L672.5 160.9 L712.0 160.9 L751.5 160.9 L791.0 160.9 L830.5 160.9 L870.0 160.9" fill="none" stroke="var(--orange)" stroke-width="2" stroke-dasharray="12 7"/><text x="244.0" y="152.9" font-size="13" font-weight="700" style="fill:var(--orange)">no-load part (churning, windage, seals)</text></svg><figcaption>Figure 1. Losses against load for the example: the no-load part stays constant.</figcaption></figure>
+<figure><svg viewBox="0 0 900 260" role="img" aria-label="efficiency (%) against load (% of rated)"><line x1="80" y1="205.0" x2="870" y2="205.0" class="grid"/><text x="72" y="209.0" text-anchor="end" font-size="12">80</text><line x1="80" y1="158.8" x2="870" y2="158.8" class="grid"/><text x="72" y="162.8" text-anchor="end" font-size="12">85</text><line x1="80" y1="112.5" x2="870" y2="112.5" class="grid"/><text x="72" y="116.5" text-anchor="end" font-size="12">90</text><line x1="80" y1="66.2" x2="870" y2="66.2" class="grid"/><text x="72" y="70.2" text-anchor="end" font-size="12">95</text><line x1="80" y1="20.0" x2="870" y2="20.0" class="grid"/><text x="72" y="24.0" text-anchor="end" font-size="12">100</text><line x1="80.0" y1="205" x2="80.0" y2="210" class="ax"/><text x="80.0" y="225" text-anchor="middle" font-size="12">0</text><line x1="159.0" y1="205" x2="159.0" y2="210" class="ax"/><text x="159.0" y="225" text-anchor="middle" font-size="12">10</text><line x1="238.0" y1="205" x2="238.0" y2="210" class="ax"/><text x="238.0" y="225" text-anchor="middle" font-size="12">20</text><line x1="317.0" y1="205" x2="317.0" y2="210" class="ax"/><text x="317.0" y="225" text-anchor="middle" font-size="12">30</text><line x1="396.0" y1="205" x2="396.0" y2="210" class="ax"/><text x="396.0" y="225" text-anchor="middle" font-size="12">40</text><line x1="475.0" y1="205" x2="475.0" y2="210" class="ax"/><text x="475.0" y="225" text-anchor="middle" font-size="12">50</text><line x1="554.0" y1="205" x2="554.0" y2="210" class="ax"/><text x="554.0" y="225" text-anchor="middle" font-size="12">60</text><line x1="633.0" y1="205" x2="633.0" y2="210" class="ax"/><text x="633.0" y="225" text-anchor="middle" font-size="12">70</text><line x1="712.0" y1="205" x2="712.0" y2="210" class="ax"/><text x="712.0" y="225" text-anchor="middle" font-size="12">80</text><line x1="791.0" y1="205" x2="791.0" y2="210" class="ax"/><text x="791.0" y="225" text-anchor="middle" font-size="12">90</text><line x1="870.0" y1="205" x2="870.0" y2="210" class="ax"/><text x="870.0" y="225" text-anchor="middle" font-size="12">100</text><line x1="80" y1="205" x2="870" y2="205" class="ax"/><line x1="80" y1="20" x2="80" y2="205" class="ax"/><text x="475.0" y="248" text-anchor="middle" font-size="13">load (% of rated)</text><text x="18" y="112.5" text-anchor="middle" font-size="13" transform="rotate(-90 18 112.5)">efficiency (%)</text><path d="M159.0 124.5 L198.5 93.7 L238.0 78.3 L277.5 69.0 L317.0 62.9 L356.5 58.5 L396.0 55.1 L435.5 52.6 L475.0 50.5 L514.5 48.8 L554.0 47.4 L593.5 46.3 L633.0 45.2 L672.5 44.4 L712.0 43.6 L751.5 42.9 L791.0 42.3 L830.5 41.8 L870.0 41.3" fill="none" stroke="var(--blue)" stroke-width="3.5" stroke-dasharray=""/><text x="560.0" y="39.4" font-size="13" font-weight="700" style="fill:var(--blue)">efficiency</text></svg><figcaption>Figure 2. Efficiency against load: high at full load, falling sharply below about 30 % load as no-load losses dominate.</figcaption></figure>
+<h2 id="heat">2. Heat balance</h2>
+<div class="formula">Generated:  P_loss = P_in·(1 − η)
+Dissipated by housing:  Q = h·A·(T_oil − T_ambient)       h ≈ 15–25 W/m²K natural, 30–50 forced air
+If P_loss &gt; Q at the allowable oil temperature: add cooler with Q_cooler = P_loss − Q</div>
+<h2 id="example">3. Worked example</h2>
+<p>Two-stage gearbox, 100 kW, 0.5 % per mesh, 0.3 % bearings, 1 kW no-load loss; housing area 2 m², h = 18 W/m²K, allowable rise 50 K.</p>
+<div class="tblwrap"><table><tr><th>Quantity</th><th class=num>Value</th></tr><tr><td>Mesh losses</td><td class=num>1.0 kW</td></tr><tr><td>Bearing losses</td><td class=num>0.3 kW</td></tr><tr><td>No-load losses</td><td class=num>1.0 kW</td></tr><tr><td>Total</td><td class=num><b>2.3 kW</b> (η = 97.7 %)</td></tr><tr><td>Housing dissipation</td><td class=num>1.80 kW</td></tr><tr><td>Cooler needed</td><td class=num><b>0.5 kW</b></td></tr></table></div>
+<h2 id="calculators">4. Calculators</h2><div class="calc" id="calc-gh"><h3>Gearbox loss and heat balance</h3><div class="presets"><button class="btn" data-preset="0">Worked example</button></div><div class="inputs"><label>Rated power (kW)<input id="gh_P" type="number" step="any" value="100"></label><label>Number of meshes<input id="gh_st" type="number" step="any" value="2"></label><label>Loss per mesh (%)<input id="gh_m" type="number" step="any" value="0.5"></label><label>Bearing loss (%)<input id="gh_b" type="number" step="any" value="0.3"></label><label>No-load loss (kW)<input id="gh_p0" type="number" step="any" value="1"></label><label>Housing area (m²)<input id="gh_A" type="number" step="any" value="2"></label><label>h (W/m²K)<input id="gh_h" type="number" step="any" value="18"></label><label>Allowable oil rise (K)<input id="gh_dT" type="number" step="any" value="50"></label><label>Load (%)<input id="gh_load" type="number" step="any" value="100"></label></div><div class="results"></div><div class="verdict" style="display:none"></div><div class="tbl"></div><figure class="chart" style="display:none"><div class="svgbox"></div><figcaption></figcaption></figure></div><h2 id="quiz" class="quizsec">5. Self-test: check your understanding</h2><p class="quizsec">Pick an answer to see the explanation. Numerical answers are accepted within the stated tolerance (±3 % unless noted).</p><div id="quizBox" class="quizsec"></div><div class="quizsec" style="display:flex;gap:10px;align-items:center;margin-top:10px"><span class="score" id="score">Score</span><button class="btn" id="btnReset">Reset quiz</button></div><h2 id="references">6. References and further reading</h2><ol class="refs"><li>ISO/TR 14179-1 and -2, Gears — Thermal capacity.</li><li>ISO/TR 14179-2: Thermal load-carrying capacity (loss calculation).</li><li>Höhn, B.-R., Michaelis, K. and Hinterstoißer, M., 'Optimization of gearbox efficiency', Goriva i maziva, 2009.</li><li>AGMA 6123 / AGMA 925 (lubrication and losses).</li></ol><h3>Web pages</h3><ul><li><a href="https://en.wikipedia.org/wiki/Transmission_(mechanical_device)" target="_blank" rel="noopener">Wikipedia — Gearbox</a></li></ul><div class="box warn"><h4>Disclaimer</h4>This article is for education and quick reference. Formulas are simplified first estimates and examples use typical data. For design, safety and maintenance decisions use manufacturers' data and the applicable standards.</div><h3>Related Vijay_Wiki articles</h3><p class="related"><a href="grease-and-high-speed-bearings.html">Grease: History, Nomenclature and High-Speed Bearings</a> · <a href="journal-bearings-hydrodynamic.html">Hydrodynamic Journal Bearings: Sommerfeld Number, Eccentricity and Minimum Film</a> · <a href="lubrication-systems-and-oil-cleanliness.html">Circulating Oil Systems: Heat Balance, Filtration and ISO 4406 Cleanliness</a></p>
+<footer>
+<p><b>K Vijay Anand</b> · Vijay_Wiki · Version 1.0.0, 24 November 2026</p>
+<p>Acknowledgement: this article was drafted with the assistance of Claude, a large language model by Anthropic, and reviewed by the author. Worked-example numbers were computed by script.</p>
+<p><a href="index.html">← Vijay_Wiki home</a> · <a href="#">Back to top ↑</a></p>
+</footer>
+</main>
+</div>
+<script>(function(){var s={"id": "gh", "inputs": [{"id": "P"}, {"id": "st"}, {"id": "m"}, {"id": "b"}, {"id": "p0"}, {"id": "A"}, {"id": "h"}, {"id": "dT"}, {"id": "load"}], "presets": [{"v": {"P": 100, "st": 2, "m": 0.5, "b": 0.3, "p0": 1, "A": 2, "h": 18, "dT": 50, "load": 100}}]};s.compute=function(v){var l=v.load/100,L=v.p0+l*v.P*(v.st*v.m+v.b)/100,Q=v.h*v.A*v.dT/1000,eta=l>0?100*(1-L/(l*v.P)):0,Tr=L*1000/(v.h*v.A);
+return {rows:[["Total loss",fmt(L,2)+" kW"],["Efficiency",fmt(eta,2)+" %"],["Housing dissipation at allowable rise",fmt(Q,2)+" kW"],["Oil rise without cooler",fmt(Tr,0)+" K"],["Cooler duty",fmt(Math.max(L-Q,0),2)+" kW"]],
+verdict:L>Q?["caution","Housing alone cannot hold the oil temperature: add a cooler or forced cooling."]:["ok","Natural cooling sufficient."]};};window.CALCS=window.CALCS||[];window.CALCS.push(s);})();window.QUIZ=[{"q": "Which losses exist even with no load?", "o": ["Tooth friction", "Churning, windage and seal losses", "Bearing load losses", "None"], "a": 1, "e": "Speed and oil dependent."}, {"q": "Typical loss per spur/helical mesh:", "o": ["0.01 %", "0.5\u20131 %", "5 %", "10 %"], "a": 1, "e": "Good gears \u2248 98\u201399.5 % per mesh."}, {"q": "Why is part-load efficiency lower?", "o": ["Gears slip", "Fixed no-load losses are a larger share", "Oil thins", "Less speed"], "a": 1, "e": "Constant losses over smaller power."}, {"q": "Churning losses can be reduced by:", "o": ["Raising oil level", "Jet lubrication with low oil level and baffles", "Higher viscosity", "Faster speed"], "a": 1, "e": "Less immersion drag."}, {"q": "Natural-convection housing heat transfer coefficient is about:", "o": ["1\u20132 W/m\u00b2K", "15\u201325 W/m\u00b2K", "500 W/m\u00b2K", "5000 W/m\u00b2K"], "a": 1, "e": "Order of tens."}, {"q": "If losses exceed housing dissipation, oil temperature:", "o": ["Falls", "Rises until balance or limit", "Stays constant", "Oscillates"], "a": 1, "e": "Needs cooling."}, {"q": "150 kW gearbox at 98 % efficiency. Heat loss (kW)?", "num": 3, "unit": "kW", "e": "150 \u00d7 0.02 = 3 kW."}, {"q": "h = 20 W/m\u00b2K, A = 1.5 m\u00b2, \u0394T = 40 K. Dissipation (W)?", "num": 1200, "unit": "W", "e": "20 \u00d7 1.5 \u00d7 40 = 1,200 W."}];</script>
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id);};
+window.fmt=function(x,dp){if(x===null||x===undefined||!isFinite(x))return "—";dp=(dp===undefined)?2:dp;return Number(x).toLocaleString("en-IN",{maximumFractionDigits:dp,minimumFractionDigits:dp});};
+window.sig=function(x,n){if(!isFinite(x))return "—";if(x===0)return "0";n=n||3;var d=Math.max(0,n-1-Math.floor(Math.log10(Math.abs(x))));return fmt(x,Math.min(d,6));};
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
+if(store("vw-theme")==="dark")document.documentElement.setAttribute("data-theme","dark");
+$("btnTheme").onclick=function(){var d=document.documentElement.getAttribute("data-theme")==="dark";document.documentElement.setAttribute("data-theme",d?"light":"dark");store("vw-theme",d?"light":"dark");};
+function toggleSide(){if(window.innerWidth<=900)document.body.classList.toggle("showside");else document.body.classList.toggle("nosidebar");}
+$("btnSide").onclick=toggleSide;
+function toggleFull(){if(!document.fullscreenElement){if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen();}else if(document.exitFullscreen)document.exitFullscreen();}
+$("btnFull").onclick=toggleFull;
+document.addEventListener("keydown",function(e){var t=e.target.tagName;if(t==="INPUT"||t==="SELECT"||t==="TEXTAREA")return;if(e.key==="m"||e.key==="M")toggleSide();if(e.key==="f"||e.key==="F")toggleFull();});
+var links=[].slice.call(document.querySelectorAll("nav.side a"));
+var secs=links.map(function(a){return document.querySelector(a.getAttribute("href"));});
+window.addEventListener("scroll",function(){var y=window.scrollY+120,cur=0;secs.forEach(function(s,i){if(s&&s.offsetTop<=y)cur=i;});links.forEach(function(a,i){a.classList.toggle("active",i===cur);});});
+
+/* ---- small dynamic plot helper for calculators ---- */
+window.plotSVG=function(series,o){
+  o=o||{};var W=o.w||560,H=o.h||260,L=62,R=W-18,T=16,B=H-42;
+  var xs=[],ys=[];series.forEach(function(s){s.pts.forEach(function(p){if(isFinite(p[0])&&isFinite(p[1])){xs.push(p[0]);ys.push(p[1]);}});});
+  if(!xs.length)return "";
+  var x0=o.xmin!==undefined?o.xmin:Math.min.apply(null,xs),x1=o.xmax!==undefined?o.xmax:Math.max.apply(null,xs);
+  var y0=o.ymin!==undefined?o.ymin:Math.min(0,Math.min.apply(null,ys)),y1=o.ymax!==undefined?o.ymax:Math.max.apply(null,ys)*1.08;
+  if(x1===x0)x1=x0+1;if(y1===y0)y1=y0+1;
+  var X=function(x){return L+(R-L)*(x-x0)/(x1-x0);},Y=function(y){return B-(B-T)*(Math.min(Math.max(y,y0),y1)-y0)/(y1-y0);};
+  var s='<svg viewBox="0 0 '+W+' '+H+'">';
+  for(var i=0;i<=4;i++){var yv=y0+(y1-y0)*i/4;s+='<line x1="'+L+'" y1="'+Y(yv)+'" x2="'+R+'" y2="'+Y(yv)+'" class="grid"/><text x="'+(L-6)+'" y="'+(Y(yv)+4)+'" text-anchor="end" font-size="11">'+sig(yv,3)+'</text>';}
+  for(var j=0;j<=5;j++){var xv=x0+(x1-x0)*j/5;s+='<text x="'+X(xv)+'" y="'+(B+16)+'" text-anchor="middle" font-size="11">'+sig(xv,3)+'</text>';}
+  s+='<line x1="'+L+'" y1="'+B+'" x2="'+R+'" y2="'+B+'" class="ax"/><line x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+B+'" class="ax"/>';
+  s+='<text x="'+((L+R)/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="12">'+(o.xlabel||"")+'</text>';
+  s+='<text x="14" y="'+((T+B)/2)+'" text-anchor="middle" font-size="12" transform="rotate(-90 14 '+((T+B)/2)+')">'+(o.ylabel||"")+'</text>';
+  var cols=["var(--blue)","var(--orange)","var(--purple)","var(--ink)"],dash=["","10 6","4 5","2 4"];
+  series.forEach(function(se,k){var d="";se.pts.forEach(function(p,i){if(isFinite(p[1]))d+=(d?"L":"M")+X(p[0]).toFixed(1)+" "+Y(p[1]).toFixed(1)+" ";});
+    s+='<path d="'+d+'" fill="none" stroke="'+cols[k%4]+'" stroke-width="3" stroke-dasharray="'+dash[k%4]+'"/>';
+    if(se.label){var q=se.pts[Math.floor(se.pts.length*0.75)];if(q)s+='<text x="'+(X(q[0])+5)+'" y="'+(Y(q[1])-7)+'" font-size="12" font-weight="700" style="fill:'+cols[k%4]+'">'+se.label+'</text>';}});
+  (o.marks||[]).forEach(function(m){s+='<rect x="'+(X(m[0])-6)+'" y="'+(Y(m[1])-6)+'" width="12" height="12" fill="var(--orange)"/><text x="'+Math.min(X(m[0])+9,R-110)+'" y="'+(Y(m[1])-9)+'" font-size="12" font-weight="700">'+(m[2]||"")+'</text>';});
+  return s+'</svg>';
+};
+
+/* ---- calculators ---- */
+function card(r){return '<div class="res"><div class="k">'+r[0]+'</div><div class="v">'+r[1]+'</div><div class="s">'+(r[2]||"")+'</div></div>';}
+(window.CALCS||[]).forEach(function(c){
+  var root=$("calc-"+c.id); if(!root)return;
+  var ids=c.inputs.map(function(i){return i.id;});
+  function read(){var v={};c.inputs.forEach(function(i){var e=$(c.id+"_"+i.id);v[i.id]=(i.options||i.text)?e.value:parseFloat(e.value);});return v;}
+  function run(){var out;try{out=c.compute(read());}catch(err){out={rows:[],verdict:["bad","Check the inputs ("+err.message+")"]};}
+    root.querySelector(".results").innerHTML=(out.rows||[]).map(card).join("");
+    var vd=root.querySelector(".verdict");if(out.verdict){vd.style.display="";vd.className="verdict "+out.verdict[0];vd.textContent=({ok:"✔ ",caution:"◆ ",bad:"✖ "}[out.verdict[0]]||"")+out.verdict[1];}else vd.style.display="none";
+    var ch=root.querySelector(".chart");if(out.svg){ch.style.display="";ch.querySelector(".svgbox").innerHTML=out.svg;ch.querySelector("figcaption").textContent=out.caption||"";}else ch.style.display="none";
+    var tb=root.querySelector(".tbl");tb.innerHTML=out.html||"";}
+  ids.forEach(function(id){var e=$(c.id+"_"+id);e.addEventListener("input",run);e.addEventListener("change",run);});
+  [].forEach.call(root.querySelectorAll("[data-preset]"),function(b){b.onclick=function(){var p=c.presets[+b.getAttribute("data-preset")].v;for(var k in p){$(c.id+"_"+k).value=p[k];}run();};});
+  run();
+});
+
+/* ---- quiz ---- */
+var Q=window.QUIZ||[],state=[];
+function render(){var box=$("quizBox");if(!box)return;box.innerHTML="";state=Q.map(function(){return null;});
+  Q.forEach(function(it,i){var d=document.createElement("div");d.className="q";
+    var h='<div class="qt">'+(i+1)+". "+it.q+"</div>";
+    if(it.num!==undefined){h+='<div style="margin-top:6px"><input type="number" step="any" id="qn'+i+'"> '+(it.unit||"")+' <button class="btn primary" data-qn="'+i+'">Check</button></div>';}
+    else it.o.forEach(function(o,j){h+='<label class="opt"><input type="radio" name="q'+i+'" value="'+j+'"> '+o+"</label>";});
+    h+='<div class="fb" id="fb'+i+'"></div>';d.innerHTML=h;box.appendChild(d);
+    function show(ok){var fb=$("fb"+i);fb.className="fb show";fb.style.border="2px "+(ok?"solid var(--blue)":"dashed var(--orange)");fb.innerHTML=(ok?"<b>✔ Correct.</b> ":"<b>✖ Not quite.</b> "+(it.num===undefined?"The right answer is highlighted. ":""))+it.e;score();}
+    if(it.num!==undefined){d.querySelector("[data-qn]").onclick=function(){var v=parseFloat($("qn"+i).value);if(!isFinite(v))return;var tol=it.tol||0.03;var ok=Math.abs(v-it.num)<=Math.abs(it.num)*tol+1e-12;state[i]=ok;show(ok);};}
+    else[].forEach.call(d.querySelectorAll("input[type=radio]"),function(r){r.onchange=function(){if(state[i]!==null)return;var j=+r.value,ok=j===it.a;state[i]=ok;var labs=d.querySelectorAll("label.opt");labs[it.a].classList.add("right");if(!ok)labs[j].classList.add("wrong");[].forEach.call(d.querySelectorAll("input[type=radio]"),function(x){x.disabled=true;});show(ok);};});
+  });score();}
+function score(){var s=$("score");if(!s)return;var done=state.filter(function(x){return x!==null;}).length,ok=state.filter(function(x){return x===true;}).length;s.textContent="Score: "+ok+" / "+done+(done===Q.length?"  — finished ("+Math.round(100*ok/Q.length)+" %)":"  (of "+Q.length+")");}
+if($("btnReset"))$("btnReset").onclick=render;render();
+})();
+</script>
+</body>
+</html>

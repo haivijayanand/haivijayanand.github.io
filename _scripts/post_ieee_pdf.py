@@ -5,7 +5,8 @@ FAMILY:  SITE
 VERSION: 1.1.0
 DATE:    2026-11-24
 CHAT:    Flush valve post - downloadable IEEE two-column PDF with proper older / newer links
-CHANGES: 1.1.0 - "In this series" box removed from the end of the PDF (older / newer links stay on the web page)
+CHANGES: 1.1.0 - "In this series" box removed from the end of the PDF (older / newer links stay on the web page);
+                 wide figures at 80 % so the article ends on page 5
          1.0.0 - converts a Jekyll post (_posts/<date-slug>.md) into an IEEE two-column A4 PDF in
                  assets/posts/<date-slug>/<slug>-ieee.pdf; numbered sections, captioned tables and figures,
                  Acknowledgment, References, and an "In this series" box with clickable links to the older and
@@ -84,7 +85,7 @@ tbody tr:last-child td { border-bottom: 1px solid #000; }
 tr { break-inside: avoid; }
 figure { margin: 6px 0 8px; text-align: center; break-inside: avoid; }
 figure img { width: 92%; }
-figure.wide img { width: 88%; }
+figure.wide img { width: 80%; }
 figcaption { font-size: 8pt; text-align: justify; margin-top: 3px; line-height: 1.2; }
 .refs { font-size: 7.8pt; text-indent: 0; }
 .refs ol { list-style: none; padding-left: 0; counter-reset: r; margin: 0; }

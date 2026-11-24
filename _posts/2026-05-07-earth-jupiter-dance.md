@@ -2,6 +2,7 @@
 layout: post
 title: "The Earth–Jupiter Dance: How Two Planets Draw a Star in Space"
 date: 2026-05-07 09:00:00 +0530
+permalink: /2026/05/07/earth-jupiter-dance.html
 categories: [Science Visualisation, Orbital Mechanics]
 tags: [python, astronomy, matplotlib, orbital-mechanics, visualisation, pdf]
 math: true

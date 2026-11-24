@@ -155,7 +155,7 @@ def main():
 <!--
 TOOL:    papers/_content/{SLUG}.ieee.html
 FAMILY:  papers
-VERSION: 1.0.0
+VERSION: 1.1.0
 DATE:    2026-11-24
 CHAT:    Data centre power surge and efficiency technical paper
 CHANGES: 1.1.0 - long tables may break across pages (less white space); case figure spans both columns

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Interesting Math Problems #4 — The 99 % Accurate Test
+FAMILY:  interesting-math-problems
+VERSION: 1.0.0
+DATE:    2026-11-25
+CHAT:    Interesting Math Problems group — build all 25 problems in groups and upload
+CHANGES: 1.0.0 — first release
+STATUS:  public — haivijayanand.github.io/math-problems/false-positives.html
+-->
+<html lang="en" data-theme="light">
+<head>
+<script src="/assets/js/site-theme.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The 99 % Accurate Test — Interesting Math Problems — K Vijay Anand</title>
+<meta name="description" content="A test is 99 % accurate and you test positive for a 1-in-1,000 disease. The chance you are ill is only about 9 %.">
+<link rel="stylesheet" href="mp.css">
+<script type="module" src="/assets/js/site-progress.js"></script>
+</head>
+<body>
+<header class="mp">
+  <button id="btnSide" title="Show / hide contents (M)">☰</button>
+  <h1>The 99 % Accurate Test<br><span class="crumb"><a href="/">Home</a> · <a href="./">Interesting Math Problems</a> · Problem 4 · Probability traps</span></h1>
+  <button id="themeBtn" title="Light / dark theme">◐ Theme</button>
+  <button id="btnFull" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<div class="wrap">
+<nav id="side"></nav>
+<main>
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p>A disease affects <b>1 person in 1,000</b>. A screening test is <b>99 % accurate</b>: it catches 99 % of people who have the disease, and correctly clears 99 % of people who don't. You test positive.</p>
+  <p>How likely is it that you actually have the disease? Most people — including many doctors in published surveys — answer "about 99 %".</p>
+</section>
+<section id="answer">
+  <h2>2. The answer</h2>
+  <div class="answer">
+    <div class="card a"><div class="big">≈ 9 %</div>chance that a positive result means you are ill (9.02 %).</div>
+    <div class="card b"><div class="big">≈ 91 %</div>of positive results are <b>false alarms</b> — healthy people the test flagged.</div>
+  </div>
+  <p class="note">The test is good; the disease is rare. Among many healthy people, a 1 % error rate produces far more false positives than there are sick people to find.</p>
+</section>
+<section id="count">
+  <h2>3. Count people, not percentages</h2>
+  <p>Imagine 100,000 people tested:</p>
+  <table>
+    <tr><th></th><th>Test positive</th><th>Test negative</th><th>Total</th></tr>
+    <tr><td><b>Ill</b></td><td class="a">99</td><td>1</td><td>100</td></tr>
+    <tr><td><b>Healthy</b></td><td class="b">999</td><td>98,901</td><td>99,900</td></tr>
+    <tr><td><b>Total</b></td><td>1,098</td><td>98,902</td><td>100,000</td></tr>
+  </table>
+  <p>Of the 1,098 positives only 99 are ill: 99 / 1,098 = <b>9.0 %</b>. In formula form (Bayes' theorem):</p>
+  <div class="eq">P(ill | positive) = <i>s</i>·<i>r</i> / [ <i>s</i>·<i>r</i> + (1 − <i>c</i>)(1 − <i>r</i>) ]</div>
+  <p>where <i>r</i> is how common the disease is (prevalence), <i>s</i> the sensitivity (ill people caught) and <i>c</i> the specificity (healthy people cleared).</p>
+</section>
+<section id="calc">
+  <h2>4. Try your own numbers</h2>
+  <div class="row">Disease affects 1 in <input type="number" id="r" value="1000" min="2"> · Sensitivity <input type="number" id="s" value="99" step="0.1"> % · Specificity <input type="number" id="c" value="99" step="0.1"> %</div>
+  <div class="grid3">
+    <div class="card a"><b>After 1 positive test</b><div class="big" id="p1">–</div></div>
+    <div class="card c"><b>After 2 positive tests</b><div class="big" id="p2">–</div><span>(independent repeat test)</span></div>
+    <div class="card b"><b>After 1 negative test</b><div class="big" id="pn">–</div><span>chance you are still ill</span></div>
+  </div>
+  <h3>1,000 people who tested positive</h3>
+  <p><span class="ca">■ actually ill</span> &nbsp; <span class="cb">■ false alarm</span></p>
+  <canvas id="dots"></canvas>
+  <h3>How the answer depends on how rare the disease is</h3>
+  <canvas id="cv"></canvas>
+</section>
+<section id="sim">
+  <h2>5. Simulation</h2>
+  <p>Random people are tested one by one with the settings above.</p>
+  <div class="row"><button class="primary" onclick="MP.ctl.play()">▶ Play (P)</button><button onclick="MP.ctl.step()">Step (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button></div>
+  <p class="stat">People tested: <b id="sN">0</b> · positives: <b id="sP">0</b> · positives who are ill: <b id="sI">0</b> → <b class="ca" id="sR">–</b></p>
+  <p id="last" class="note">Press S to test one person.</p>
+</section>
+<section id="fine">
+  <h2>6. Fine print</h2>
+  <ul>
+    <li>This is the <b>base-rate fallacy</b>. The same arithmetic applies to fraud alarms, security screening, spam filters and machine-condition alarms: a rare fault plus a slightly noisy alarm means most alarms are false.</li>
+    <li>A second, <b>independent</b> test fixes it quickly: each positive multiplies the odds by <i>s</i>/(1 − <i>c</i>) = 99. Odds 1 : 999 become 99 : 999, then 9,801 : 999 — about 91 %.</li>
+    <li>If you were tested because you already had symptoms, your starting probability is much higher than the population rate, and a positive means much more. Medical decisions belong with a doctor.</li>
+  </ul>
+</section>
+<footer class="mp"><a href="tuesday-boy.html">← 3. The Boy Born on a Tuesday</a><a href="./">All problems</a><a href="coupon-collector.html">5. Collecting All the Cards →</a></footer>
+</main>
+</div>
+<script src="mp.js"></script>
+<script>
+const $=MP.$;
+function P(){ return {r:1/Math.max(2,+$("r").value||1000), s:Math.min(1,(+$("s").value||0)/100), c:Math.min(1,(+$("c").value||0)/100)}; }
+function post(r,s,c){ return s*r/(s*r+(1-c)*(1-r)); }
+function calc(){ const {r,s,c}=P(), p1=post(r,s,c); $("p1").textContent=MP.pct(p1); $("p2").textContent=MP.pct(post(p1,s,c));
+  $("pn").textContent=MP.pct((1-s)*r/((1-s)*r+c*(1-r))); dots(); chart(); }
+function dots(){ const {r,s,c}=P(), p1=post(r,s,c), ill=Math.round(p1*1000), {g,W}=MP.canvas($("dots"),220);
+  const cols=50, sz=Math.min((W-10)/cols,20);
+  for(let i=0;i<1000;i++){ const x=5+(i%cols)*sz+sz/2, y=6+Math.floor(i/cols)*sz*0.52*2/2+sz/2; g.fillStyle=i<ill?MP.css("--a"):MP.css("--b");
+    g.beginPath(); g.arc(x,6+Math.floor(i/cols)*10+5,Math.min(4,sz/2-1),0,7); g.fill(); }
+  g.fillStyle=MP.css("--ink"); g.font="14px Segoe UI"; g.textAlign="left"; g.fillText(`${ill} ill, ${1000-ill} false alarms`,6,214); }
+function chart(){ const {s,c}=P(), k=Math.max(2,+$("r").value||1000), pts=[]; for(let i=0;i<=240;i++){ const kk=Math.pow(10,0.3+i*(6-0.3)/240); pts.push([kk,post(1/kk,s,c)]); }
+  MP.chart($("cv"),{height:300,x:{min:2,max:1e6,log:true,label:"Disease affects 1 in … (log scale)"},y:{min:0,max:1,pct:true},series:[{pts,color:"--a"}],
+    points:[{x:k,y:post(1/k,s,c),color:"--b",label:MP.pct(post(1/k,s,c)),dy:-12}]}); }
+let S={n:0,p:0,i:0};
+function one(show){ const {r,s,c}=P(), ill=Math.random()<r, pos=ill?Math.random()<s:Math.random()>c; S.n++; if(pos){S.p++; if(ill) S.i++;}
+  if(show) $("last").innerHTML=`Person #${S.n}: ${ill?"<b>ill</b>":"healthy"}, test ${pos?"<b>positive</b>":"negative"}`+(pos&&!ill?" → a false alarm":""); }
+MP.ctl=MP.loop(one,{batch:()=>Math.max(1,Math.floor(S.n/8)),after:()=>{ $("sN").textContent=S.n.toLocaleString(); $("sP").textContent=S.p; $("sI").textContent=S.i; $("sR").textContent=S.p?MP.pct(S.i/S.p):"–"; }});
+["r","s","c"].forEach(k=>$(k).oninput=()=>{calc(); S={n:0,p:0,i:0};}); MP.onRedraw(()=>{dots();chart();}); calc();
+</script>
+</body>
+</html>

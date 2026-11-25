@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<!--
+TOOL: Trigonometry Distance Explorer — from a tree to the stars
+FAMILY: math-explorers
+VERSION: 1.0.1
+DATE: 2026-11-25
+CHAT: Measuring distances with trigonometry — interactive HTML for GitHub tools (tree height to Earth radius to planets)
+CHANGES: 1.0.1 — site build: loads site-theme.js (one light / dark choice for the whole site) and site-progress.js
+         1.0.0 — first release: 12 chapters (basics, tree, river, mountain, horizon, Eratosthenes, Al-Biruni, Moon parallax, Aristarchus, inner planets, stellar parallax, distance ladder); live sliders, step-by-step working, P/S/X animation keys, M sidebar, light/dark, full screen
+STATUS: public — haivijayanand.github.io/tools/
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Measuring Distances with Trigonometry — Tree to Stars</title>
+<script src="/assets/js/site-theme.js"></script>
+<style>
+:root{
+  --bg:#f4f6f9; --panel:#ffffff; --ink:#1b1f24; --muted:#5b6570; --line:#d3d9e0;
+  --c1:#0b5cd5; --c2:#d9730d; --c3:#7a3fd1; --c4:#b88a00;
+  --cv:#fbfcfe; --ground:#d5d8dd; --water:#cfe2f8; --tree:#a9bfd6; --treeS:#3f5f80;
+  --mount:#c6cbd3; --earth:#dfe8f3; --sun:#f4c20d; --hl:#fff3c4; --accent:#0b5cd5;
+}
+body.dark{
+  --bg:#0d1117; --panel:#161b22; --ink:#e6edf3; --muted:#9aa5b1; --line:#30363d;
+  --c1:#5ea0ff; --c2:#ffa94d; --c3:#bb93ff; --c4:#ffd43b;
+  --cv:#0f141a; --ground:#3a4048; --water:#1c3452; --tree:#3f5873; --treeS:#9db7d3;
+  --mount:#3b424c; --earth:#1d2a3a; --sun:#ffd43b; --hl:#3a3418; --accent:#5ea0ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line);flex:0 0 auto}
+header h1{font-size:18px;margin:0;font-weight:650;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header h1 small{font-weight:400;color:var(--muted);font-size:14px;margin-left:8px}
+button{font:inherit;font-size:14px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 11px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.pri{background:var(--accent);color:#fff;border-color:var(--accent)}
+body.dark button.pri{color:#0d1117}
+button.pri kbd{color:var(--ink)}
+kbd{font:12px ui-monospace,Consolas,monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;background:var(--bg)}
+#app{flex:1;display:flex;min-height:0}
+#sb{width:270px;flex:0 0 270px;background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;padding:8px 0}
+body.nosb #sb{display:none}
+#sb .it{display:flex;gap:10px;padding:8px 14px;cursor:pointer;border-left:4px solid transparent}
+#sb .it:hover{background:var(--bg)}
+#sb .it.on{background:var(--hl);border-left-color:var(--accent)}
+#sb .n{font-weight:700;color:var(--accent);min-width:22px}
+#sb .t{font-weight:600;font-size:14px;line-height:1.3}
+#sb .s{font-size:12.5px;color:var(--muted);line-height:1.3}
+#sb .grp{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:12px 14px 4px;font-weight:700}
+#main{flex:1;display:grid;grid-template-columns:minmax(0,1.75fr) minmax(360px,1fr);min-width:0;min-height:0}
+#stage{position:relative;min-height:0;display:flex;flex-direction:column;border-right:1px solid var(--line)}
+#cvwrap{flex:1;position:relative;min-height:300px}
+#cv{position:absolute;inset:0;display:block}
+#bar{display:flex;gap:8px;align-items:center;padding:8px 12px;background:var(--panel);border-top:1px solid var(--line);flex-wrap:wrap}
+#bar .sp{flex:1}
+#stepind{color:var(--muted);font-size:13.5px}
+#panel{overflow-y:auto;padding:14px 18px 40px;background:var(--panel);min-height:0}
+#panel h2{margin:0 0 6px;font-size:21px}
+#intro{color:var(--ink);margin-bottom:12px}
+.sec{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin:16px 0 6px}
+.ctl{margin:8px 0 12px}
+.ctl label{display:flex;justify-content:space-between;font-size:14px;font-weight:600}
+.ctl .row{display:flex;gap:10px;align-items:center}
+.ctl input[type=range]{flex:1;accent-color:var(--accent);height:26px}
+.ctl input[type=number]{width:110px;font:inherit;font-size:14px;padding:3px 6px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px}
+.ctl .u{color:var(--muted);font-size:13px;min-width:34px}
+#presets{display:flex;flex-wrap:wrap;gap:6px}
+#presets button{font-size:13px;padding:4px 9px}
+#result{font-size:24px;font-weight:700;color:var(--accent);margin:4px 0 2px}
+#result .warn{color:var(--c2);font-size:17px}
+#result .cmp{display:block;font-size:14px;font-weight:500;color:var(--muted)}
+#work{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14.5px}
+#work .ln{margin:3px 0}
+#work .eq{font-family:ui-monospace,Consolas,"Cascadia Mono",monospace;font-size:14px}
+#work table{border-collapse:collapse;width:100%;font-size:14px}
+#work td,#work th{border-bottom:1px solid var(--line);padding:3px 6px;text-align:left}
+#work th{color:var(--muted);font-weight:600}
+#steps{margin:0;padding-left:22px}
+#steps li{margin:4px 0;color:var(--muted);padding:2px 6px;border-radius:6px}
+#steps li.done{color:var(--ink)}
+#steps li.cur{background:var(--hl);color:var(--ink);font-weight:600}
+#note{font-size:14px;border-left:4px solid var(--c3);padding:6px 12px;background:var(--bg);border-radius:0 8px 8px 0}
+#note p{margin:6px 0}
+.keys{font-size:12.5px;color:var(--muted);margin-top:18px;line-height:1.9}
+b.c1{color:var(--c1)} b.c2{color:var(--c2)} b.c3{color:var(--c3)} b.c4{color:var(--c4)}
+@media (max-width:980px){
+  #main{grid-template-columns:1fr;overflow-y:auto}
+  #stage{border-right:0;height:62vh}
+  #panel{overflow:visible}
+  #sb{position:fixed;z-index:5;top:50px;bottom:0;box-shadow:0 0 20px rgba(0,0,0,.25)}
+}
+</style>
+<script type="module" src="/assets/js/site-progress.js"></script>
+</head>
+<body>
+<header>
+  <button id="bSb" title="Show / hide chapters (M)">☰</button>
+  <h1>Measuring Distances with Trigonometry<small>from a tree to the stars</small></h1>
+  <button id="themeBtn" title="Light / dark theme">◐ Theme</button>
+  <button id="bFs" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<div id="app">
+  <nav id="sb"></nav>
+  <div id="main">
+    <div id="stage">
+      <div id="cvwrap"><canvas id="cv"></canvas></div>
+      <div id="bar">
+        <button class="pri" id="bPlay" title="Play (P)">▶ Play <kbd>P</kbd></button>
+        <button id="bStep" title="Next step (S)">⏭ Step <kbd>S</kbd></button>
+        <button id="bPause" title="Pause (X)">⏸ Pause <kbd>X</kbd></button>
+        <button id="bReset" title="Reset values">↺ Reset values</button>
+        <span class="sp"></span>
+        <span id="stepind"></span>
+        <button id="bPrev" title="Previous chapter (←)">◀</button>
+        <button id="bNext" title="Next chapter (→)">▶</button>
+      </div>
+    </div>
+    <div id="panel">
+      <h2 id="chTitle"></h2>
+      <div id="intro"></div>
+      <div class="sec">Measurements</div>
+      <div id="ctls"></div>
+      <div id="presets"></div>
+      <div class="sec">Result</div>
+      <div id="result"></div>
+      <div class="sec">Working</div>
+      <div id="work"></div>
+      <div class="sec">Construction steps — press <kbd>P</kbd> to play, <kbd>S</kbd> to step</div>
+      <ol id="steps"></ol>
+      <div class="sec">Notes &amp; try it yourself</div>
+      <div id="note"></div>
+      <div class="keys">Keys: <kbd>M</kbd> chapters · <kbd>P</kbd> play · <kbd>S</kbd> next step · <kbd>X</kbd> pause · <kbd>←</kbd>/<kbd>→</kbd> chapter · <kbd>F</kbd> full screen</div>
+    </div>
+  </div>
+</div>
+<script>
+"use strict";
+const __version__ = "1.0.1";
+const $ = s => document.querySelector(s);
+const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+const R_E = 6371000, AU_KM = 149597870.7, MOON_KM = 384400;
+const sind = a => Math.sin(a * D2R), cosd = a => Math.cos(a * D2R), tand = a => Math.tan(a * D2R);
+
+/* ---------- formatting ---------- */
+function f(x, d = 2) { if (!isFinite(x)) return '—'; return x.toLocaleString('en-US', { maximumFractionDigits: d, minimumFractionDigits: 0 }); }
+function f4(x) { return isFinite(x) ? x.toFixed(4) : '—'; }
+function sup(n) { const m = '⁰¹²³⁴⁵⁶⁷⁸⁹'; return String(n).split('').map(c => c === '-' ? '⁻' : m[+c]).join(''); }
+function sci(x, sig = 3) {
+  if (!isFinite(x)) return '—';
+  const a = Math.abs(x);
+  if (a === 0) return '0';
+  if (a < 1e7 && a >= 0.01) return f(x, a < 10 ? 3 : a < 1000 ? 2 : 0);
+  const e = Math.floor(Math.log10(a)); return (x / 10 ** e).toFixed(sig - 1) + ' × 10' + sup(e);
+}
+function dist(m) { return Math.abs(m) >= 1000 ? f(m / 1000, Math.abs(m) < 1e5 ? 2 : 0) + ' km' : f(m, 2) + ' m'; }
+function pct(a, b) { return f(100 * (a - b) / b, 1) + ' %'; }
+const ln = (s) => `<div class="ln">${s}</div>`;
+const eq = (s) => `<div class="ln eq">${s}</div>`;
+
+/* ---------- colours (read from CSS so theme switch works) ---------- */
+let K = {};
+function loadColors() {
+  const cs = getComputedStyle(document.body);
+  ['ink','muted','line','c1','c2','c3','c4','cv','ground','water','tree','treeS','mount','earth','sun','panel'].forEach(k => K[k] = cs.getPropertyValue('--' + k).trim());
+}
+
+/* ---------- canvas & drawing helpers ---------- */
+const cv = $('#cv'), ctx = cv.getContext('2d');
+let W = 800, H = 500;
+function resize() {
+  const r = cv.parentElement.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  W = Math.max(200, r.width); H = Math.max(200, r.height);
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); render();
+}
+function view(xmin, xmax, ymin, ymax, pad = 56) {
+  const s = Math.min((W - 2 * pad) / (xmax - xmin), (H - 2 * pad) / (ymax - ymin));
+  const ox = (W - (xmax - xmin) * s) / 2, oy = (H - (ymax - ymin) * s) / 2;
+  return { s, X: x => ox + (x - xmin) * s, Y: y => oy + (ymax - y) * s, ux: sx => xmin + (sx - ox) / s, uy: sy => ymax - (sy - oy) / s };
+}
+function L(v, x1, y1, x2, y2, col, w = 2.5, dash) {
+  ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.setLineDash(dash || []);
+  ctx.beginPath(); ctx.moveTo(v.X(x1), v.Y(y1)); ctx.lineTo(v.X(x2), v.Y(y2)); ctx.stroke(); ctx.restore();
+}
+function T(txt, sx, sy, col, o = {}) {
+  ctx.save(); ctx.font = (o.bold ? '650 ' : '') + (o.size || 14) + 'px system-ui,-apple-system,Segoe UI,sans-serif';
+  ctx.textAlign = o.align || 'center'; ctx.textBaseline = 'middle';
+  if (o.bg !== false) {
+    const w = ctx.measureText(txt).width, hgt = (o.size || 14) + 6;
+    const lx = ctx.textAlign === 'center' ? sx - w / 2 : ctx.textAlign === 'right' ? sx - w : sx;
+    ctx.globalAlpha = 0.82; ctx.fillStyle = K.cv; ctx.fillRect(lx - 4, sy - hgt / 2, w + 8, hgt); ctx.globalAlpha = 1;
+  }
+  ctx.fillStyle = col || K.ink; ctx.fillText(txt, sx, sy); ctx.restore();
+}
+function Tw(v, txt, x, y, col, o = {}) { T(txt, v.X(x) + (o.dx || 0), v.Y(y) + (o.dy || 0), col, o); }
+function dot(v, x, y, r, col, label, o = {}) {
+  ctx.save(); ctx.fillStyle = col; ctx.beginPath(); ctx.arc(v.X(x), v.Y(y), r, 0, 7); ctx.fill(); ctx.restore();
+  if (label) Tw(v, label, x, y, o.lc || K.ink, { dx: o.dx ?? 0, dy: o.dy ?? -18, bold: true, align: o.align });
+}
+function circ(v, cx, cy, R, stroke, fill, w = 2, dash) {
+  ctx.save(); ctx.beginPath(); ctx.arc(v.X(cx), v.Y(cy), R * v.s, 0, 2 * Math.PI);
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = w; ctx.setLineDash(dash || []); ctx.stroke(); }
+  ctx.restore();
+}
+function poly(v, pts, fill, stroke, w = 2) {
+  ctx.save(); ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(v.X(p[0]), v.Y(p[1])) : ctx.moveTo(v.X(p[0]), v.Y(p[1])));
+  ctx.closePath(); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = w; ctx.stroke(); } ctx.restore();
+}
+function bandY(v, y1, y2, fill) { // horizontal band across the whole canvas between world y1<y2
+  ctx.save(); ctx.fillStyle = fill; const a = v.Y(y2), b = v.Y(y1); ctx.fillRect(0, a, W, b - a); ctx.restore();
+}
+function ang(v, vx, vy, ax, ay, bx, by, col, label, r = 42) {
+  const sx = v.X(vx), sy = v.Y(vy);
+  const a1 = Math.atan2(v.Y(ay) - sy, v.X(ax) - sx), a2 = Math.atan2(v.Y(by) - sy, v.X(bx) - sx);
+  let d = a2 - a1; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
+  ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(sx, sy, r, a1, a1 + d, d < 0); ctx.stroke(); ctx.restore();
+  if (label) { const m = a1 + d / 2, rr = r + 12 + label.length * 3; T(label, sx + Math.cos(m) * rr, sy + Math.sin(m) * rr, col, { bold: true }); }
+}
+function rightA(v, vx, vy, ax, ay, bx, by, col, sz = 13) {
+  const sx = v.X(vx), sy = v.Y(vy);
+  const n = (x, y) => { const l = Math.hypot(x, y) || 1; return [x / l, y / l]; };
+  const u = n(v.X(ax) - sx, v.Y(ay) - sy), w = n(v.X(bx) - sx, v.Y(by) - sy);
+  ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath();
+  ctx.moveTo(sx + u[0] * sz, sy + u[1] * sz); ctx.lineTo(sx + (u[0] + w[0]) * sz, sy + (u[1] + w[1]) * sz); ctx.lineTo(sx + w[0] * sz, sy + w[1] * sz);
+  ctx.stroke(); ctx.restore();
+}
+function arrowHead(x1, y1, x2, y2, col, sz = 9) {
+  const a = Math.atan2(y2 - y1, x2 - x1);
+  ctx.save(); ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - sz * Math.cos(a - 0.4), y2 - sz * Math.sin(a - 0.4)); ctx.lineTo(x2 - sz * Math.cos(a + 0.4), y2 - sz * Math.sin(a + 0.4));
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+function dim(v, x1, y1, x2, y2, off, label, col, o = {}) {
+  const a = [v.X(x1), v.Y(y1)], b = [v.X(x2), v.Y(y2)];
+  const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1, nx = -dy / len * off, ny = dx / len * off;
+  const A = [a[0] + nx, a[1] + ny], B = [b[0] + nx, b[1] + ny];
+  ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 2;
+  if (off) { ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(A[0], A[1]); ctx.moveTo(b[0], b[1]); ctx.lineTo(B[0], B[1]); ctx.stroke(); ctx.setLineDash([]); }
+  ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.stroke(); ctx.restore();
+  if (len > 24) { arrowHead(B[0], B[1], A[0], A[1], col); arrowHead(A[0], A[1], B[0], B[1], col); }
+  if (label) { const lo = o.lo ?? 16, sg = Math.sign(off || 1); T(label, (A[0] + B[0]) / 2 + (-dy / len) * lo * sg, (A[1] + B[1]) / 2 + (dx / len) * lo * sg, col, { bold: true, align: o.align }); }
+}
+function sight(v, x1, y1, x2, y2, col, w = 3) {
+  L(v, x1, y1, x2, y2, col, w); arrowHead(v.X(x1), v.Y(y1), v.X(x2), v.Y(y2), col, 11);
+}
+function person(v, x, e, col) {
+  const sx = v.X(x), feet = v.Y(0), eye = v.Y(e), h = feet - eye, hr = Math.max(3, h * 0.09);
+  ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(sx, eye, hr, 0, 7); ctx.stroke();
+  const sh = eye + h * 0.25, hip = feet - h * 0.45;
+  ctx.beginPath(); ctx.moveTo(sx, eye + hr); ctx.lineTo(sx, hip);
+  ctx.moveTo(sx, hip); ctx.lineTo(sx - h * 0.12, feet); ctx.moveTo(sx, hip); ctx.lineTo(sx + h * 0.12, feet);
+  ctx.moveTo(sx - h * 0.13, sh + h * 0.12); ctx.lineTo(sx, sh); ctx.lineTo(sx + h * 0.15, sh - h * 0.02); ctx.stroke(); ctx.restore();
+}
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function starField(v, x1, x2, y1, y2, n, seed) {
+  const r = rng(seed); ctx.save(); ctx.fillStyle = K.muted;
+  for (let i = 0; i < n; i++) { const x = x1 + r() * (x2 - x1), y = y1 + r() * (y2 - y1), s = 1 + r() * 2; ctx.beginPath(); ctx.arc(v.X(x), v.Y(y), s, 0, 7); ctx.fill(); }
+  ctx.restore();
+}
+function starShape(sx, sy, r, col) {
+  ctx.save(); ctx.fillStyle = col; ctx.beginPath();
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r; ctx.lineTo(sx + rr * Math.cos(a), sy + rr * Math.sin(a)); }
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+
+/* =================== CHAPTERS =================== */
+const CH = [];
+
+/* 1 — basics */
+CH.push({ id: 'basics', grp: 'On the ground', title: 'One triangle does it all', sub: 'sin, cos, tan — the measuring stick',
+  intro: `Every method in this tool rests on one fact: in a right triangle the <b>ratios</b> of the sides depend only on the angle, not on the size of the triangle. Measure one angle and one side you can reach, and the ratio gives you the side you can't reach.`,
+  params: [{ k: 'th', label: 'Angle θ', min: 5, max: 85, step: 0.5, val: 35, unit: '°' }, { k: 'a', label: 'Adjacent side (the one you can measure)', min: 1, max: 20, step: 0.1, val: 8, unit: 'm' }],
+  presets: [{ label: '30°', set: { th: 30 } }, { label: '45°', set: { th: 45 } }, { label: '60°', set: { th: 60 } }],
+  steps: ['Lay the adjacent side along the ground from A to C.', 'Measure the angle θ at A.', 'The opposite side rises at right angles at C.', 'The hypotenuse closes the triangle from A to B.', 'Read off the three ratios: sin θ, cos θ, tan θ.'],
+  draw(p, st) {
+    const a = p.a, o = a * tand(p.th), v = view(-0.12 * a, a * 1.2, -0.15 * a, Math.max(o, 0.3 * a) * 1.08, 70);
+    L(v, -0.12 * a, 0, a * 1.2, 0, K.line, 1.5);
+    dot(v, 0, 0, 5, K.ink, 'A', { dx: -14, dy: 14 }); dot(v, a, 0, 5, K.ink, 'C', { dx: 14, dy: 14 });
+    if (st >= 1) { L(v, 0, 0, a, 0, K.c1, 5); Tw(v, 'adjacent = ' + f(a) + ' m', a / 2, 0, K.c1, { dy: 24, bold: true }); }
+    if (st >= 2) ang(v, 0, 0, a, 0, a, o, K.c3, 'θ = ' + p.th + '°', 52);
+    if (st >= 3) { L(v, a, 0, a, o, K.c2, 5); rightA(v, a, 0, 0, 0, a, o, K.ink); Tw(v, 'opposite = ' + f(o) + ' m', a, o / 2, K.c2, { dx: 16, align: 'left', bold: true }); dot(v, a, o, 5, K.ink, 'B', { dy: -16 }); }
+    if (st >= 4) { L(v, 0, 0, a, o, K.ink, 3.5); const hy = Math.hypot(a, o), sx = v.X(a / 2), sy = v.Y(o / 2), nx = -o / hy, ny = -a / hy; T('hypotenuse = ' + f(hy) + ' m', sx + nx * 34 - 30, sy + ny * 34, K.ink, { bold: true }); }
+    if (st >= 5) {
+      const hy = Math.hypot(a, o);
+      T('sin θ = opposite / hypotenuse = ' + f4(o / hy), 20, 28, K.ink, { align: 'left', size: 15 });
+      T('cos θ = adjacent / hypotenuse = ' + f4(a / hy), 20, 52, K.ink, { align: 'left', size: 15 });
+      T('tan θ = opposite / adjacent = ' + f4(o / a), 20, 76, K.ink, { align: 'left', size: 15, bold: true });
+    }
+  },
+  calc(p) {
+    const a = p.a, t = tand(p.th), o = a * t, hy = a / cosd(p.th);
+    return { res: `opposite = ${f(o)} m<span class="cmp">hypotenuse = ${f(hy)} m</span>`,
+      work: eq(`tan θ = opposite / adjacent`) + eq(`opposite = a × tan θ = ${f(a)} × ${f4(t)} = ${f(o)} m`) +
+        eq(`hypotenuse = a / cos θ = ${f(a)} / ${f4(cosd(p.th))} = ${f(hy)} m`) +
+        ln(`sin ${p.th}° = ${f4(sind(p.th))}, cos ${p.th}° = ${f4(cosd(p.th))}, tan ${p.th}° = ${f4(t)}`) +
+        ln(`Check: sin²θ + cos²θ = ${f4(sind(p.th) ** 2 + cosd(p.th) ** 2)}`) };
+  },
+  note: `<p><b>Why it works:</b> all right triangles with the same angle θ are <i>similar</i> — scaled copies of each other. So a tiny triangle drawn on paper tells you the shape of a huge triangle reaching a treetop, a mountain peak or a planet.</p><p>Change the adjacent side: the ratios do not move. Change θ: everything changes. That is the whole trick behind surveying and astronomy.</p>` });
+
+/* 2 — tree */
+CH.push({ id: 'tree', grp: 'On the ground', title: 'Height of a tree', sub: 'angle of elevation',
+  intro: `Stand a known distance from a tree and measure the <b>angle of elevation</b> of its top. The height above your eye is <i>distance × tan(angle)</i>; add your eye height and you have the tree.`,
+  params: [{ k: 'd', label: 'Distance to the trunk, d', min: 2, max: 80, step: 0.1, val: 20, unit: 'm' }, { k: 'al', label: 'Angle of elevation, α', min: 5, max: 80, step: 0.5, val: 40, unit: '°' }, { k: 'e', label: 'Eye height, e', min: 0.5, max: 2, step: 0.01, val: 1.6, unit: 'm' }],
+  presets: [{ label: '45° trick (H = d + e)', set: { al: 45 } }, { label: 'Child, eye 1.1 m', set: { e: 1.1 } }],
+  steps: ['Pace or tape the distance d from your feet to the trunk.', 'Sight the treetop with a clinometer: the angle of elevation α above the horizontal.', 'Height above your eye = d × tan α.', 'Add your eye height e — the total is the tree height H.'],
+  draw(p, st) {
+    const d = p.d, e = p.e, rise = d * tand(p.al), Ht = e + rise, cw = Math.min(Ht * 0.2, d * 0.25);
+    const v = view(-Math.max(2, 0.1 * d), d + cw + Math.max(3, 0.25 * d), -Math.max(0.6, 0.07 * Ht), Ht * 1.1, 56);
+    bandY(v, -1e6, 0, K.ground); L(v, -1e6, 0, 1e6, 0, K.muted, 1.5);
+    const tw = Math.max(0.15, Ht * 0.03);
+    poly(v, [[d - tw, 0], [d + tw, 0], [d + tw, Ht * 0.4], [d - tw, Ht * 0.4]], K.muted);
+    poly(v, [[d - cw, Ht * 0.25], [d + cw, Ht * 0.25], [d, Ht * 0.75]], K.tree, K.treeS);
+    poly(v, [[d - cw * 0.8, Ht * 0.5], [d + cw * 0.8, Ht * 0.5], [d, Ht]], K.tree, K.treeS);
+    Tw(v, 'Tree', d - cw, Ht * 0.3, K.muted, { dx: -8, align: 'right' });
+    person(v, 0, e, K.ink); Tw(v, 'You', 0, 0, K.muted, { dy: 16 });
+    if (st >= 1) dim(v, 0, 0, d, 0, 30, 'd = ' + f(d) + ' m', K.c1);
+    if (st >= 2) { L(v, 0, e, d, e, K.muted, 1.8, [6, 5]); sight(v, 0, e, d, Ht, K.c2); ang(v, 0, e, d, e, d, Ht, K.c3, 'α = ' + p.al + '°', 56); Tw(v, 'line of sight', d * 0.45, e + rise * 0.45, K.c2, { dy: -16, dx: -20 }); }
+    if (st >= 3) { L(v, d, e, d, Ht, K.c3, 5); rightA(v, d, e, 0, e, d, Ht, K.ink); Tw(v, 'd·tan α = ' + f(rise) + ' m', d, e + rise / 2, K.c3, { dx: -14, align: 'right', bold: true }); }
+    if (st >= 4) { L(v, d, 0, d, e, K.c4, 6); Tw(v, 'e = ' + f(e) + ' m', d, e / 2, K.c4, { dx: -14, align: 'right', bold: true }); dim(v, d + cw * 1.25, 0, d + cw * 1.25, Ht, 0, 'H = ' + f(Ht) + ' m', K.ink, { lo: -18, align: 'left' }); }
+  },
+  calc(p) {
+    const t = tand(p.al), rise = p.d * t, Ht = p.e + rise, lo = p.e + p.d * tand(p.al - 1), hi = p.e + p.d * tand(p.al + 1);
+    return { res: `H = ${f(Ht)} m<span class="cmp">±1° reading error → ${f(lo)} to ${f(hi)} m</span>`,
+      work: eq(`rise = d × tan α = ${f(p.d)} × tan ${p.al}° = ${f(p.d)} × ${f4(t)} = ${f(rise)} m`) + eq(`H = e + rise = ${f(p.e)} + ${f(rise)} = ${f(Ht)} m`) +
+        ln(`A 1° error in α changes H by about ${f(100 * (hi - lo) / 2 / Ht, 1)} %. The error is smallest (in %) near α ≈ 45°, so stand about as far from the tree as it is tall.`) };
+  },
+  note: `<p><b>Make a clinometer:</b> tape a drinking straw along the straight edge of a protractor, hang a thread with a small weight from the centre hole. Sight the treetop through the straw; the thread reads 90° − α (or α directly, depending on how your protractor is marked).</p><p><b>No protractor?</b> Walk back until the top is at 45° (a folded square of paper gives you 45°). Then the tree height is simply your distance + eye height.</p><p><b>Shadow method</b> (no trigonometry, just similar triangles): tree height = tree shadow × (stick height ÷ stick shadow).</p>` });
+
+/* 3 — river */
+CH.push({ id: 'river', grp: 'On the ground', title: 'Width of a river', sub: 'triangulation from a baseline',
+  intro: `You cannot tape across a river, but you can measure a <b>baseline</b> along your own bank and two angles. The <b>sine rule</b> does the rest. This is <i>triangulation</i> — the method that mapped whole countries.`,
+  params: [{ k: 'b', label: 'Baseline AB, b', min: 10, max: 500, step: 1, val: 100, unit: 'm' }, { k: 'al', label: 'Angle at A, α (between AB and AT)', min: 15, max: 90, step: 0.5, val: 70, unit: '°' }, { k: 'be', label: 'Angle at B, β (between BA and BT)', min: 15, max: 85, step: 0.5, val: 55, unit: '°' }],
+  presets: [{ label: 'T straight across (α = 90°)', set: { al: 90 } }, { label: 'β = 45° with α = 90° → w = b', set: { al: 90, be: 45 } }],
+  steps: ['Mark a baseline AB along your bank and measure its length b.', 'From A, sight a tree T on the far bank: angle α between AB and AT.', 'From B, sight the same tree: angle β between BA and BT.', 'The third angle is γ = 180° − α − β. The sine rule gives AT, and the width w = AT · sin α.'],
+  geom(p) { const g = 180 - p.al - p.be, AT = p.b * sind(p.be) / sind(g), BT = p.b * sind(p.al) / sind(g); return { g, AT, BT, w: AT * sind(p.al), Tx: AT * cosd(p.al) }; },
+  draw(p, st) {
+    const { w, Tx } = this.geom(p), b = p.b, m = 0.28 * Math.max(w, b * 0.4);
+    const v = view(Math.min(0, Tx) - 0.15 * b, Math.max(b, Tx) + 0.15 * b, -m, w + m, 56);
+    bandY(v, -1e6, 0, K.ground); bandY(v, 0, w, K.water); bandY(v, w, 1e6, K.ground);
+    T('Top view (map)', 14, 20, K.muted, { align: 'left' });
+    Tw(v, 'near bank', Math.max(b, Tx) + 0.12 * b, 0, K.muted, { dy: 18, align: 'right' }); Tw(v, 'far bank', Math.max(b, Tx) + 0.12 * b, w, K.muted, { dy: -18, align: 'right' }); Tw(v, 'RIVER', (Math.min(0, Tx) + Math.max(b, Tx)) / 2 + b * 0.25, w / 2, K.c1, { bold: true, bg: false });
+    circ(v, Tx, w, 10 / v.s, K.treeS, K.tree, 2); Tw(v, 'T (tree)', Tx, w, K.ink, { dy: -24, bold: true });
+    dot(v, 0, 0, 6, K.ink, 'A', { dy: 22 }); dot(v, b, 0, 6, K.ink, 'B', { dy: 22 });
+    if (st >= 1) { L(v, 0, 0, b, 0, K.c1, 5); dim(v, 0, 0, b, 0, 44, 'b = ' + f(b) + ' m', K.c1); }
+    if (st >= 2) { L(v, 0, 0, Tx, w, K.c2, 3); ang(v, 0, 0, b, 0, Tx, w, K.c3, 'α = ' + p.al + '°', 46); }
+    if (st >= 3) { L(v, b, 0, Tx, w, K.c2, 3); ang(v, b, 0, 0, 0, Tx, w, K.c3, 'β = ' + p.be + '°', 46); }
+    if (st >= 4) { L(v, Tx, 0, Tx, w, K.c4, 4, [8, 6]); rightA(v, Tx, 0, Tx, w, b, 0, K.c4); Tw(v, 'w = ' + f(w) + ' m', Tx, w / 2, K.c4, { dx: 12, align: 'left', bold: true }); ang(v, Tx, w, 0, 0, b, 0, K.muted, 'γ', 30); }
+  },
+  calc(p) {
+    const { g, AT, BT, w } = this.geom(p);
+    return { res: `width w = ${f(w)} m<span class="cmp">AT = ${f(AT)} m, BT = ${f(BT)} m</span>`,
+      work: eq(`γ = 180° − ${p.al}° − ${p.be}° = ${f(g, 2)}°`) + eq(`Sine rule: AT / sin β = b / sin γ`) +
+        eq(`AT = ${f(p.b)} × sin ${p.be}° / sin ${f(g, 2)}° = ${f(AT)} m`) + eq(`w = AT × sin α = ${f(AT)} × ${f4(sind(p.al))} = ${f(w)} m`) +
+        ln(`One-line form: w = b · sin α · sin β / sin(α + β)`) };
+  },
+  note: `<p>If you choose A directly opposite the tree (α = 90°) the formula collapses to <b>w = b · tan β</b> — and with β = 45° the river is exactly as wide as your baseline.</p><p>The <b>Great Trigonometrical Survey of India</b> (from 1802) chained thousands of such triangles from Cape Comorin to the Himalaya, starting from carefully measured baselines like the one near Madras.</p><p><b>Try it:</b> on a playground, use two friends as A and B and a pole as T. Measure angles with a protractor on a clipboard; then tape AT and check.</p>` });
+
+/* 4 — mountain */
+CH.push({ id: 'mountain', grp: 'On the ground', title: 'Height of a mountain', sub: 'two angles, unreachable base',
+  intro: `With a mountain, you cannot reach the point directly under the peak. Measure the angle of elevation from <b>two stations</b> a known distance apart on a line towards the peak; two equations remove the unknown distance.`,
+  params: [{ k: 'd', label: 'Distance walked between stations, d', min: 50, max: 3000, step: 10, val: 800, unit: 'm' }, { k: 'al', label: 'Angle at first station, α', min: 3, max: 60, step: 0.1, val: 16, unit: '°' }, { k: 'be', label: 'Angle at second (nearer) station, β', min: 4, max: 85, step: 0.1, val: 27, unit: '°' }],
+  presets: [{ label: 'Hill: d 500 m, 20° → 35°', set: { d: 500, al: 20, be: 35 } }, { label: 'Big peak: d 3 km, 10° → 14°', set: { d: 3000, al: 10, be: 14 } }],
+  steps: ['At station P₁ measure the angle of elevation α to the peak.', 'Walk a known distance d straight towards the mountain to P₂.', 'At P₂ measure the larger angle β.', 'The foot F under the peak is inside the mountain, but h = (x + d)·tan α = x·tan β solves for both x and h.'],
+  geom(p) { const ta = tand(p.al), tb = tand(p.be), h = p.d * ta * tb / (tb - ta), x2 = h / tb; return { h, x2, x1: x2 + p.d, ok: p.be > p.al }; },
+  draw(p, st) {
+    const g = this.geom(p); if (!g.ok) { T('β must be larger than α — you walked closer, so the peak looks higher.', W / 2, H / 2, K.c2, { bold: true, size: 16 }); return; }
+    const { h, x2, x1 } = g, d = p.d;
+    const v = view(-0.06 * x1, x1 + x2 * 1.05, -0.12 * h, h * 1.12, 56);
+    bandY(v, -1e6, 0, K.ground); L(v, -1e6, 0, 1e6, 0, K.muted, 1.5);
+    poly(v, [[x1 - 0.7 * x2, 0], [x1 - 0.45 * x2, 0.4 * h], [x1 - 0.32 * x2, 0.36 * h], [x1 - 0.12 * x2, 0.8 * h], [x1, h], [x1 + 0.22 * x2, 0.72 * h], [x1 + 0.4 * x2, 0.62 * h], [x1 + 0.95 * x2, 0]], K.mount, K.muted);
+    Tw(v, 'Peak', x1, h, K.ink, { dy: -16, bold: true });
+    dot(v, 0, 0, 6, K.ink, 'P₁', { dy: 20 }); dot(v, d, 0, 6, K.ink, 'P₂', { dy: 20 });
+    if (st >= 1) { sight(v, 0, 0, x1, h, K.c2); ang(v, 0, 0, x1, 0, x1, h, K.c3, 'α = ' + p.al + '°', 60); }
+    if (st >= 2) dim(v, 0, 0, d, 0, 42, 'd = ' + dist(d), K.c1);
+    if (st >= 3) { sight(v, d, 0, x1, h, K.c2); ang(v, d, 0, x1, 0, x1, h, K.c3, 'β = ' + p.be + '°', 48); }
+    if (st >= 4) { L(v, x1, 0, x1, h, K.c4, 4, [8, 6]); rightA(v, x1, 0, d, 0, x1, h, K.c4); dot(v, x1, 0, 5, K.ink, 'F', { dy: 20 }); Tw(v, 'h = ' + dist(h), x1, h * 0.5, K.c4, { dx: 12, align: 'left', bold: true }); dim(v, d, 0, x1, 0, 42, 'x = ' + dist(x2), K.muted); }
+  },
+  calc(p) {
+    const g = this.geom(p); if (!g.ok) return { res: `<span class="warn">β must be larger than α</span>`, work: ln('From the nearer station the peak always looks higher. Increase β or reduce α.') };
+    const ta = tand(p.al), tb = tand(p.be);
+    return { res: `h = ${dist(g.h)}<span class="cmp">horizontal distance from P₂ to the foot of the peak: ${dist(g.x2)}</span>`,
+      work: eq(`h = x · tan β   and   h = (x + d) · tan α`) + eq(`x · tan β = x · tan α + d · tan α`) + eq(`x = d · tan α / (tan β − tan α)`) +
+        eq(`  = ${f(p.d)} × ${f4(ta)} / (${f4(tb)} − ${f4(ta)}) = ${dist(g.x2)}`) + eq(`h = x · tan β = ${dist(g.h)}`) +
+        ln(`Formula: h = d · tan α · tan β / (tan β − tan α)`) };
+  },
+  note: `<p>When α and β are close together the denominator (tan β − tan α) is tiny, so small reading errors blow up. Surveyors keep the two angles well apart.</p><p>In the 1850s the Survey of India worked out the height of <b>Peak XV</b> — Mount Everest — this way, from stations over 100 km away on the plains. At those distances they also had to correct for the curvature of the Earth (next chapter) and for the bending of light in the air.</p><p>This is the same method Al-Biruni used to find the height of his hill before measuring the Earth (chapter 7).</p>` });
+
+/* 5 — horizon */
+CH.push({ id: 'horizon', grp: 'The Earth', title: 'How far is the horizon?', sub: 'tangent meets radius at 90°',
+  intro: `Your line of sight to the horizon just grazes the curved Earth. A <b>tangent</b> is always perpendicular to the <b>radius</b>, so the centre of the Earth, the horizon and your eye form a right triangle — Pythagoras gives the distance.`,
+  params: [{ k: 'h', label: 'Eye height above sea, h', min: 1, max: 10000, val: 30, unit: 'm', log: true }, { k: 'Ht', label: 'Height of a far object (ship mast, lighthouse)', min: 0, max: 500, step: 1, val: 0, unit: 'm' }],
+  presets: [{ label: 'On the beach, 1.7 m', set: { h: 1.7 } }, { label: '10-storey building, 30 m', set: { h: 30 } }, { label: 'Hilltop, 500 m', set: { h: 500 } }, { label: 'Airliner, 10 km', set: { h: 10000 } }, { label: 'Lighthouse 50 m from beach', set: { h: 1.7, Ht: 50 } }],
+  steps: ['You stand at P, a height h above the surface.', 'Your line of sight grazes the Earth at the horizon point T.', 'Radius OT is perpendicular to the sight line: right angle at T.', 'Pythagoras: (R + h)² = R² + d², so d = √(2Rh + h²).'],
+  caption: 'Not to scale — heights hugely exaggerated',
+  draw(p, st) {
+    const hdOf = x => 0.06 + 0.3 * Math.log10(Math.max(1, x)) / 4, hd = hdOf(p.h), dd = Math.acos(1 / (1 + hd));
+    const T0 = [Math.sin(dd), Math.cos(dd)], P0 = [0, 1 + hd];
+    const v = view(-1.15, 1.75, -1.08, 1 + hd + 0.12, 40);
+    circ(v, 0, 0, 1, K.muted, K.earth, 2); dot(v, 0, 0, 5, K.ink, 'O (centre)', { dy: 18 });
+    L(v, 0, 1, 0, 1 + hd, K.ink, 5); dot(v, 0, 1 + hd, 6, K.ink, 'P (you)', { dx: -12, dy: -16, align: 'right' });
+    if (st >= 1) dim(v, 0, 1, 0, 1 + hd, -26, 'h', K.c4);
+    let end = [T0[0] + (T0[0] - P0[0]) * 0.55, T0[1] + (T0[1] - P0[1]) * 0.55];
+    let Q = null;
+    if (p.Ht > 0 && st >= 4) { const h2 = hdOf(p.Ht), a2 = Math.acos(1 / (1 + h2)), base = [Math.sin(dd + a2), Math.cos(dd + a2)]; Q = { base, top: [base[0] * (1 + h2), base[1] * (1 + h2)] }; end = Q.top; }
+    if (st >= 2) { sight(v, P0[0], P0[1], end[0], end[1], K.c2); dot(v, T0[0], T0[1], 6, K.c2, 'T (horizon)', { dx: 14, dy: -14, align: 'left', lc: K.c2 }); Tw(v, 'd', (P0[0] + T0[0]) / 2, (P0[1] + T0[1]) / 2, K.c2, { dy: -16, bold: true, size: 16 }); }
+    if (st >= 3) { L(v, 0, 0, T0[0], T0[1], K.c1, 3.5); rightA(v, T0[0], T0[1], 0, 0, P0[0], P0[1], K.ink, 14); Tw(v, 'R', T0[0] / 2, T0[1] / 2, K.c1, { dx: 14, bold: true, size: 16 }); L(v, 0, 0, 0, 1 + hd, K.c3, 3, [8, 6]); Tw(v, 'R + h', 0, 0.5, K.c3, { dx: -12, align: 'right', bold: true }); }
+    if (Q) { L(v, Q.base[0], Q.base[1], Q.top[0], Q.top[1], K.c4, 6); Tw(v, 'far object tip just visible', Q.top[0], Q.top[1], K.c4, { dx: 12, align: 'left', bold: true }); }
+  },
+  calc(p) {
+    const h = p.h, d1 = Math.sqrt(2 * R_E * h + h * h), d2 = Math.sqrt(2 * R_E * p.Ht + p.Ht * p.Ht), dip = Math.acos(R_E / (R_E + h)) * R2D;
+    let w = eq(`(R + h)² = R² + d²   ⇒   d = √(2Rh + h²)`) + eq(`d = √(2 × 6,371,000 × ${f(h, 2)} + ${f(h, 2)}²) = ${dist(d1)}`) +
+      eq(`Shortcut: d ≈ 3.57 × √h km = 3.57 × √${f(h, 2)} = ${f(3.57 * Math.sqrt(h), 2)} km`) + eq(`Dip of the horizon below level: δ = cos⁻¹(R/(R+h)) = ${f(dip, 3)}° (${f(dip * 60, 1)}′)`);
+    if (p.Ht > 0) w += eq(`Far object visible up to d₁ + d₂ = ${dist(d1)} + ${dist(d2)} = ${dist(d1 + d2)}`);
+    return { res: `horizon d = ${dist(d1)}` + (p.Ht > 0 ? `<span class="cmp">object of ${f(p.Ht)} m visible up to ${dist(d1 + d2)}</span>` : `<span class="cmp">horizon lies ${f(dip, 3)}° below level</span>`), work: w };
+  },
+  note: `<p>Because d grows only as √h, climbing 4× higher just doubles your view. From a 1.7 m eye on a beach the horizon is only about 4.7 km away.</p><p>The air bends light slightly downward, so in practice you see roughly 7–8 % farther than the pure geometry says. Surveyors include this <i>refraction</i> correction.</p><p>The <b>dip angle</b> δ is the key to chapter 7 — Al-Biruni turned this triangle around to find R from a measured dip.</p>` });
+
+/* 6 — Eratosthenes */
+CH.push({ id: 'eratos', grp: 'The Earth', title: 'Eratosthenes measures the Earth', sub: 'shadows in two cities, ~240 BCE',
+  intro: `At noon on midsummer day the Sun stood straight overhead at Syene (Aswan) — sunlight reached the bottom of a well. At the same moment in Alexandria, about 5000 stadia (~800 km) north, a vertical stick cast a shadow at about <b>7.2°</b>, which is 1/50 of a circle.`,
+  params: [{ k: 'th', label: 'Shadow angle at the second city, θ', min: 1, max: 20, step: 0.05, val: 7.2, unit: '°' }, { k: 'D', label: 'Distance between the cities (north–south), D', min: 100, max: 3000, step: 5, val: 800, unit: 'km' }],
+  presets: [{ label: 'Eratosthenes: 7.2°, ~800 km', set: { th: 7.2, D: 800 } }, { label: '5° over 556 km', set: { th: 5, D: 556 } }],
+  steps: ['Noon at Syene: the Sun is overhead and a vertical stick casts no shadow.', 'Same moment at Alexandria: the stick casts a shadow; the sunray makes angle θ with the stick.', 'Extend both sticks to the Earth\'s centre. Sunrays are parallel, so the angle at the centre is also θ.', 'The arc D is θ/360 of the whole circle: C = (360/θ) × D.'],
+  caption: 'Angles exaggerated for clarity',
+  draw(p, st) {
+    const thd = Math.max(p.th, 9) * 2.2, A = [-sind(thd), cosd(thd)], Ls = 0.3, At = [A[0] * (1 + Ls), A[1] * (1 + Ls)];
+    const v = view(-1.05, 1.05, -0.12, 2.05, 40);
+    circ(v, 0, 0, 1, K.muted, K.earth, 2);
+    circ(v, 0, 1.92, 0.08, null, K.sun); Tw(v, 'Sun (very far, rays parallel)', 0.12, 1.92, K.ink, { align: 'left', dx: 6 });
+    for (let x = -1.0; x <= 1.01; x += 0.25) { const top = 1.8, bot = Math.abs(x) < 1 ? Math.sqrt(1 - x * x) : 0; if (Math.abs(x - At[0]) < 0.06) continue; L(v, x, top, x, bot, K.c4, 1.5, [5, 5]); }
+    L(v, 0, 1, 0, 1 + Ls, K.ink, 4); dot(v, 0, 1, 4, K.ink, 'Syene', { dx: 12, dy: 14, align: 'left' });
+    L(v, A[0], A[1], At[0], At[1], K.ink, 4); dot(v, A[0], A[1], 4, K.ink, 'Alexandria', { dx: -10, dy: 26, align: 'right' });
+    if (st >= 1) { L(v, 0, 1.8, 0, 1 + Ls, K.c4, 3); Tw(v, 'no shadow', 0, 1 + Ls, K.c4, { dx: 10, dy: -8, align: 'left' }); }
+    if (st >= 2) {
+      const sy = Math.sqrt(1 - At[0] * At[0]);
+      L(v, At[0], 1.8, At[0], At[1], K.c4, 3); L(v, At[0], At[1], At[0], sy, K.c4, 2, [4, 4]);
+      L(v, A[0], A[1], At[0], sy, K.muted, 5); Tw(v, 'shadow', At[0], sy, K.muted, { dx: -12, dy: -16, align: 'right' });
+      ang(v, At[0], At[1], A[0], A[1], At[0], At[1] - 1, K.c3, 'θ', 40);
+    }
+    if (st >= 3) { L(v, 0, 0, 0, 1, K.c1, 2.5, [8, 6]); L(v, 0, 0, A[0], A[1], K.c1, 2.5, [8, 6]); dot(v, 0, 0, 5, K.ink, 'centre', { dy: 18 }); ang(v, 0, 0, 0, 1, A[0], A[1], K.c3, 'θ', 56); }
+    if (st >= 4) {
+      ctx.save(); ctx.strokeStyle = K.c2; ctx.lineWidth = 6; ctx.beginPath(); const a0 = -Math.PI / 2, a1 = -Math.PI / 2 - thd * D2R; ctx.arc(v.X(0), v.Y(0), v.s, a0, a1, true); ctx.stroke(); ctx.restore();
+      const m = [-sind(thd / 2) * 0.9, cosd(thd / 2) * 0.84]; Tw(v, 'arc D = ' + f(p.D) + ' km', m[0], m[1], K.c2, { bold: true });
+    }
+  },
+  calc(p) {
+    const C = 360 / p.th * p.D, R = C / (2 * Math.PI);
+    return { res: `C = ${f(C, 0)} km<span class="cmp">radius R = ${f(R, 0)} km (modern: 40,075 km, R 6,371 km → ${pct(R, 6371)})</span>`,
+      work: eq(`θ / 360° = D / C`) + eq(`C = (360 / θ) × D = (360 / ${p.th}) × ${f(p.D)} = ${f(360 / p.th, 2)} × ${f(p.D)} = ${f(C, 0)} km`) + eq(`R = C / 2π = ${f(C, 0)} / 6.2832 = ${f(R, 0)} km`) };
+  },
+  note: `<p>The geometry is just <b>alternate angles</b> between parallel lines — the sunrays are parallel because the Sun is so far away.</p><p>How accurate was he? It depends on the length of the <i>stadion</i> he used, which historians still debate. With ~157.5 m per stadion his 250,000 stadia comes out close to the true value.</p><p><b>Try it:</b> team up with a school 500–1000 km due north or south of you. On the same day, both measure a vertical stick's shadow at <i>local noon</i> (shortest shadow). The difference in shadow angles is θ.</p>` });
+
+/* 7 — Al-Biruni */
+CH.push({ id: 'biruni', grp: 'The Earth', title: 'Al-Biruni: Earth from one hill', sub: 'dip of the horizon, ~1020 CE',
+  intro: `Al-Biruni first found the height of a hill near Nandana (in present-day Pakistan) using the two-angle method of chapter 4. From the top he measured how far the horizon <b>dipped</b> below the horizontal — about <b>34′</b> (0.567°). One right triangle then gives the radius of the Earth.`,
+  params: [{ k: 'h', label: 'Height of the hill, h', min: 50, max: 3000, step: 1, val: 305, unit: 'm' }, { k: 'dl', label: 'Dip of the horizon, δ', min: 0.1, max: 2, step: 0.005, val: 0.567, unit: '°' }],
+  presets: [{ label: 'Al-Biruni: ~305 m, 34′', set: { h: 305, dl: 0.567 } }, { label: 'Exact for Earth (305 m)', fn: p => ({ dl: Math.acos(R_E / (R_E + p.h)) * R2D }) }],
+  steps: ['Find the hill height h (two-angle method, chapter 4).', 'From the top P, the horizon T appears a small angle δ below the horizontal.', 'The sight line PT is tangent: right angle at T. The angle at the centre O is also δ.', 'cos δ = R / (R + h)  ⇒  R = h · cos δ / (1 − cos δ).'],
+  caption: 'Not to scale — hill hugely exaggerated',
+  draw(p, st) {
+    const hd = 0.35, dd = Math.acos(1 / (1 + hd)), T0 = [Math.sin(dd), Math.cos(dd)], P0 = [0, 1 + hd];
+    const v = view(-1.15, 1.6, -1.08, 1.5, 40);
+    circ(v, 0, 0, 1, K.muted, K.earth, 2);
+    poly(v, [[-sind(14), cosd(14)], [0, 1 + hd], [sind(14), cosd(14)], [0, 0.98]], K.mount, K.muted);
+    dot(v, 0, 1 + hd, 6, K.ink, 'P (hilltop)', { dx: -12, dy: -14, align: 'right' }); dot(v, 0, 0, 5, K.ink, 'O', { dx: -14, dy: 14 });
+    if (st >= 1) dim(v, 0, 1, 0, 1 + hd, -40, 'h', K.c4);
+    if (st >= 2) { L(v, 0, 1 + hd, 1.5, 1 + hd, K.muted, 2, [6, 5]); Tw(v, 'horizontal', 1.45, 1 + hd, K.muted, { dy: -14, align: 'right' }); sight(v, 0, 1 + hd, T0[0] * 1.25 - 0 * 0.25, T0[1] + (T0[1] - P0[1]) * 0.25, K.c2); dot(v, T0[0], T0[1], 6, K.c2, 'T (horizon)', { dx: 14, dy: 10, align: 'left', lc: K.c2 }); ang(v, 0, 1 + hd, 1.5, 1 + hd, T0[0], T0[1], K.c3, 'δ', 90); }
+    if (st >= 3) { L(v, 0, 0, T0[0], T0[1], K.c1, 3.5); L(v, 0, 0, 0, 1, K.c3, 3, [8, 6]); rightA(v, T0[0], T0[1], 0, 0, 0, 1 + hd, K.ink, 14); ang(v, 0, 0, 0, 1, T0[0], T0[1], K.c3, 'δ', 50); Tw(v, 'R', T0[0] / 2, T0[1] / 2, K.c1, { dx: 14, bold: true, size: 16 }); Tw(v, 'R + h', 0, 0.62, K.c3, { dx: -12, align: 'right', bold: true }); }
+    if (st >= 4) T('cos δ = R / (R + h)', W - 20, 30, K.ink, { align: 'right', bold: true, size: 17 });
+  },
+  calc(p) {
+    const c = cosd(p.dl), R = p.h * c / (1 - c), Rlo = p.h * cosd(p.dl + 1 / 60) / (1 - cosd(p.dl + 1 / 60)), Rhi = p.h * cosd(p.dl - 1 / 60) / (1 - cosd(p.dl - 1 / 60));
+    return { res: `R = ${f(R / 1000, 0)} km<span class="cmp">modern mean radius 6,371 km → ${pct(R / 1000, 6371)}</span>`,
+      work: eq(`δ = ${p.dl}° = ${f(p.dl * 60, 1)}′`) + eq(`cos δ = ${c.toFixed(8)}`) + eq(`R = h · cos δ / (1 − cos δ) = ${f(p.h)} × ${c.toFixed(6)} / ${(1 - c).toExponential(4)}`) +
+        eq(`R = ${f(R / 1000, 1)} km`) + ln(`A 1′ (1/60°) error in δ swings R from ${f(Rlo / 1000, 0)} to ${f(Rhi / 1000, 0)} km — the dip had to be read with great care.`) };
+  },
+  note: `<p>This is the horizon triangle of chapter 5 used <i>backwards</i>: there we knew R and found the dip; here we measure the dip and find R.</p><p>The angle at the centre equals the dip because the horizontal at P is perpendicular to OP, and the sight line is perpendicular to OT — two lines each turned by 90° keep the same angle between them.</p><p>Al-Biruni's result came remarkably close to the modern value. Without leaving his hill he did what Eratosthenes needed two cities for.</p>` });
+
+/* 8 — Moon parallax */
+CH.push({ id: 'moon', grp: 'The sky', title: 'Distance to the Moon', sub: 'parallax from two observers',
+  intro: `Hold up a finger and close each eye in turn — it jumps against the background. Two observers far apart on Earth see the Moon <b>shift against the distant stars</b> in the same way. That shift is the <b>parallax angle</b> p; with the baseline b between observers it gives the distance.`,
+  params: [{ k: 'b', label: 'Baseline between observers, b', min: 500, max: 12000, step: 10, val: 6000, unit: 'km' }, { k: 'p', label: 'Measured parallax shift, p', min: 0.1, max: 3, step: 0.001, val: 0.894, unit: '°' }],
+  presets: [{ label: 'Real Moon for this baseline', fn: p => ({ p: 2 * Math.atan(p.b / 2 / MOON_KM) * R2D }) }, { label: 'Berlin–Cape Town scale, ~9000 km', fn: () => ({ b: 9000, p: 2 * Math.atan(4500 / MOON_KM) * R2D }) }],
+  steps: ['Two observers A and B, a baseline b apart.', 'At the same instant each notes where the Moon sits against the far-away stars.', 'The two directions differ by the parallax angle p, measured at the Moon.', 'A long thin triangle: d = (b/2) / tan(p/2) ≈ b / p (p in radians).'],
+  caption: 'Not to scale — the Moon is really ~60 Earth radii away',
+  draw(p, st) {
+    const v = view(-1.3, 12.2, -1.9, 1.9, 36), A = [cosd(55), sind(55)], B = [cosd(55), -sind(55)], M = [7, 0], SX = 11.2;
+    const yAt = (P) => P[1] + (M[1] - P[1]) * (SX - P[0]) / (M[0] - P[0]);
+    starField(v, 10.4, 12.0, -1.8, 1.8, 40, 7); Tw(v, 'distant stars', 11.2, 1.75, K.muted, {});
+    circ(v, 0, 0, 1, K.muted, K.earth, 2); Tw(v, 'Earth', 0, 0, K.muted, { bg: false });
+    circ(v, M[0], M[1], 0.32, K.muted, K.mount, 2); Tw(v, 'Moon', M[0], -0.32, K.ink, { dy: 16, bold: true });
+    dot(v, A[0], A[1], 6, K.ink, 'A', { dy: -16 }); dot(v, B[0], B[1], 6, K.ink, 'B', { dy: 18 });
+    if (st >= 1) { L(v, A[0], A[1], B[0], B[1], K.c1, 4); Tw(v, 'b = ' + f(p.b) + ' km', A[0], 0.42, K.c1, { dx: 12, align: 'left', bold: true }); }
+    if (st >= 2) {
+      const ya = yAt(A), yb = yAt(B);
+      L(v, A[0], A[1], SX, ya, K.c2, 2.5); L(v, B[0], B[1], SX, yb, K.c2, 2.5);
+      circ(v, SX, ya, 0.14, K.c2, null, 3); circ(v, SX, yb, 0.14, K.c2, null, 3);
+      Tw(v, 'Moon seen from A', SX, ya, K.c2, { dx: -20, dy: -2, align: 'right', bold: true }); Tw(v, 'Moon seen from B', SX, yb, K.c2, { dx: -20, dy: 2, align: 'right', bold: true });
+    }
+    if (st >= 3) ang(v, M[0], M[1], A[0], A[1], B[0], B[1], K.c3, 'p', 70);
+    if (st >= 4) { L(v, (A[0] + B[0]) / 2, 0, M[0], 0, K.c4, 2.5, [8, 6]); Tw(v, 'd', (M[0] + A[0]) / 2, 0, K.c4, { dy: -14, bold: true, size: 16 }); }
+  },
+  calc(p) {
+    const d = p.b / 2 / tand(p.p / 2), ds = p.b / (p.p * D2R);
+    return { res: `d = ${f(d, 0)} km<span class="cmp">= ${f(d / 6371, 1)} Earth radii · real average 384,400 km → ${pct(d, MOON_KM)}</span>`,
+      work: eq(`Half the triangle: tan(p/2) = (b/2) / d`) + eq(`d = (${f(p.b)}/2) / tan(${f(p.p / 2, 4)}°) = ${f(d, 0)} km`) +
+        eq(`Small-angle shortcut: p = ${p.p}° = ${f(p.p * D2R, 5)} rad  →  d ≈ b / p = ${f(ds, 0)} km`) +
+        ln(`The angle is under 1° — the reason Moon parallax needs careful instruments and observers thousands of km apart.`) };
+  },
+  note: `<p>In 1751 Lalande in Berlin and Lacaille at the Cape of Good Hope — nearly on the same meridian — observed the Moon together to measure its parallax this way.</p><p>Long before that, <b>Hipparchus</b> (~150 BCE) estimated the Moon's distance at about 60 Earth radii using solar eclipses — very close to the truth.</p><p>Today lasers fired at reflectors left on the Moon by the Apollo missions time the round trip of light and give the distance to within millimetres to centimetres.</p>` });
+
+/* 9 — Aristarchus */
+CH.push({ id: 'sun', grp: 'The sky', title: 'Distance to the Sun', sub: 'Aristarchus and the half Moon',
+  intro: `When the Moon is <b>exactly half lit</b>, the Sun–Moon–Earth angle is a right angle. Measure the angle θ between the Moon and the Sun as seen from Earth, and cos θ gives how many times farther the Sun is than the Moon.`,
+  params: [{ k: 'th', label: 'Moon–Earth–Sun angle at half Moon, θ', min: 80, max: 89.95, step: 0.005, val: 87, unit: '°' }, { k: 'dm', label: 'Earth–Moon distance (chapter 8)', min: 100000, max: 500000, step: 100, val: 384400, unit: 'km' }],
+  presets: [{ label: 'Aristarchus: 87°', set: { th: 87 } }, { label: 'True value: 89.853°', set: { th: 89.853 } }],
+  steps: ['At exact half Moon, sunlight strikes the Moon at right angles to our line of sight: angle EMS = 90°.', 'From Earth, measure angle θ between the Moon and the Sun.', 'In the right triangle EMS: cos θ = EM / ES.', 'So ES = EM / cos θ — and the answer is very sensitive to θ.'],
+  draw(p, st) {
+    const thd = Math.min(p.th, 81), Sx = tand(thd), S = [Sx, 1], comp = p.th > thd;
+    const v = view(-0.6, Sx + 0.7, -0.35, 1.55, 44);
+    circ(v, S[0], S[1], 0.34, null, K.sun); Tw(v, 'Sun', S[0], S[1] + 0.34, K.ink, { dy: -14, bold: true });
+    circ(v, 0, 0, 0.13, K.c1, K.earth, 2.5); Tw(v, 'Earth', 0, -0.13, K.ink, { dy: 16, bold: true });
+    // half-lit Moon: lit half faces the Sun (to the right)
+    const mx = v.X(0), my = v.Y(1), mr = 0.11 * v.s;
+    ctx.save(); ctx.fillStyle = K.mount; ctx.beginPath(); ctx.arc(mx, my, mr, 0, 7); ctx.fill(); ctx.fillStyle = K.sun; ctx.beginPath(); ctx.arc(mx, my, mr, -Math.PI / 2, Math.PI / 2); ctx.fill(); ctx.strokeStyle = K.muted; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(mx, my, mr, 0, 7); ctx.stroke(); ctx.restore();
+    Tw(v, 'Moon (half lit)', 0, 1.11, K.ink, { dy: -14, bold: true });
+    if (st >= 1) { L(v, 0, 1, S[0], S[1], K.c4, 3); rightA(v, 0, 1, 0, 0, S[0], S[1], K.ink, 16); L(v, 0, 0, 0, 1, K.c1, 4); Tw(v, 'EM', 0, 0.5, K.c1, { dx: -12, align: 'right', bold: true }); }
+    if (st >= 2) { L(v, 0, 0, S[0], S[1], K.c2, 3.5); ang(v, 0, 0, 0, 1, S[0], S[1], K.c3, 'θ = ' + p.th + '°', 70); }
+    if (st >= 3) Tw(v, 'ES', S[0] / 2, 0.5, K.c2, { dy: 18, bold: true });
+    if (st >= 4) T('cos θ = EM / ES', W - 20, 28, K.ink, { align: 'right', bold: true, size: 17 });
+    if (comp) T('Picture compressed — at ' + p.th + '° the Sun is ' + f(1 / cosd(p.th), 0) + '× farther than the Moon', W / 2, H - 46, K.c2, { bold: true });
+  },
+  calc(p) {
+    const k = 1 / cosd(p.th), ds = p.dm * k, rows = [87, 88, 89, 89.5, 89.8, 89.853].map(t => `<tr><td>${t}°</td><td>${f(1 / cosd(t), 1)}×</td><td>${sci(MOON_KM / cosd(t))} km</td></tr>`).join('');
+    return { res: `Sun is ${f(k, 1)}× the Moon's distance<span class="cmp">ES = ${sci(ds)} km · true ≈ 1.496 × 10⁸ km (1 AU) → ${pct(ds, AU_KM)}</span>`,
+      work: eq(`ES = EM / cos θ = ${f(p.dm)} / cos ${p.th}° = ${f(p.dm)} / ${cosd(p.th).toFixed(5)} = ${sci(ds)} km`) +
+        `<table><tr><th>θ</th><th>ES / EM</th><th>ES (with EM = 384,400 km)</th></tr>${rows}</table>` +
+        ln(`Near 90° the cosine is almost zero: a tiny change in θ gives a huge change in distance.`) };
+  },
+  note: `<p><b>Aristarchus of Samos</b> (~270 BCE) measured θ ≈ 87° and concluded the Sun was about 19 times farther than the Moon. The method is perfect; the measurement is nearly impossible — the true angle is 89.85°, and the exact moment of half Moon is hard to judge by eye.</p><p>Even so, his 19× told him the Sun must be far bigger than the Earth — and he proposed that the Earth goes around the Sun, 1800 years before Copernicus.</p><p>Since the Sun and Moon look the same size in the sky (that is why total eclipses work), the same ratio tells you the Sun's diameter is about 400× the Moon's.</p>` });
+
+/* 10 — inner planets */
+CH.push({ id: 'planets', grp: 'The sky', title: 'Distances to the planets', sub: 'greatest elongation of Venus & Mercury',
+  intro: `Venus and Mercury orbit inside Earth's orbit, so they never stray far from the Sun in our sky. The largest angle between the planet and the Sun — its <b>greatest elongation ε</b> — happens when our line of sight just touches its orbit. That right triangle gives the orbit radius in <b>astronomical units</b> (AU, the Earth–Sun distance).`,
+  params: [{ k: 'eps', label: 'Greatest elongation, ε', min: 10, max: 80, step: 0.05, val: 46.3, unit: '°' }, { k: 'phi', label: 'Planet position on its orbit (press P to animate)', min: 0, max: 360, step: 0.5, val: 70, unit: '°' }],
+  presets: [{ label: 'Mercury (~22.8°)', set: { eps: 22.8 } }, { label: 'Venus (~46.3°)', set: { eps: 46.3 } }],
+  steps: ['Earth at 1 AU from the Sun; the inner planet circles closer in.', 'Elongation = angle Sun–Earth–planet. It changes as the planet moves — press P to watch it.', 'It is largest when the Earth–planet line is a tangent to the orbit: right angle at the planet.', 'In that triangle: sin ε = r / 1 AU, so r = sin ε AU.'],
+  tick(p, dt) { p.phi = (p.phi + dt * 35) % 360; },
+  draw(p, st) {
+    const r = sind(p.eps), Vp = [r * cosd(p.phi), r * sind(p.phi)], E = [1, 0];
+    const v = view(-1.2, 1.35, -1.15, 1.15, 40);
+    circ(v, 0, 0, 1, K.c1, null, 1.5, [6, 6]); circ(v, 0, 0, r, K.c2, null, 1.5, [6, 6]);
+    circ(v, 0, 0, 0.09, null, K.sun); Tw(v, 'Sun', 0, -0.09, K.ink, { dy: 16, bold: true });
+    dot(v, E[0], E[1], 8, K.c1, 'Earth', { dx: 14, dy: 0, align: 'left', lc: K.c1 });
+    Tw(v, "Earth's orbit (1 AU)", -0.72, 0.72, K.c1, { dx: -10, align: 'right' });
+    const el = Math.acos(-(Vp[0] - 1) / Math.hypot(Vp[0] - 1, Vp[1])) * R2D;
+    if (st >= 1) { dot(v, Vp[0], Vp[1], 7, K.c2, 'planet', { dy: -18, lc: K.c2 }); Tw(v, 'planet orbit, r = ?', -r * 0.7, -r * 0.7, K.c2, { dy: 14 }); }
+    if (st >= 2) { L(v, 1, 0, 0, 0, K.ink, 2); L(v, 1, 0, Vp[0], Vp[1], K.c2, 3); ang(v, 1, 0, 0, 0, Vp[0], Vp[1], K.c3, f(el, 1) + '°', 60); }
+    if (st >= 3) {
+      [1, -1].forEach(s => { const a = s * Math.acos(r), Q = [r * Math.cos(a), r * Math.sin(a)]; L(v, 1, 0, Q[0] + (Q[0] - 1) * 0.25, Q[1] + Q[1] * 0.25, K.c3, 2, [7, 5]); L(v, 0, 0, Q[0], Q[1], K.muted, 2); rightA(v, Q[0], Q[1], 0, 0, 1, 0, K.ink, 11); });
+      const a = Math.acos(r), Q = [r * Math.cos(a), r * Math.sin(a)]; Tw(v, 'r', Q[0] / 2, Q[1] / 2, K.ink, { dx: -12, bold: true }); T('dashed tangents: greatest elongation ε = ' + p.eps + '°', 20, 28, K.c3, { align: 'left', bold: true });
+    }
+    if (st >= 4) T('sin ε = r / 1 AU', W - 20, 28, K.ink, { align: 'right', bold: true, size: 17 });
+  },
+  calc(p) {
+    const r = sind(p.eps), Vp = [r * cosd(p.phi), r * sind(p.phi)], dEV = Math.hypot(Vp[0] - 1, Vp[1]);
+    const el = Math.acos(-(Vp[0] - 1) / dEV) * R2D;
+    return { res: `r = ${f(r, 3)} AU = ${sci(r * AU_KM)} km<span class="cmp">right now: elongation ${f(el, 1)}°, Earth–planet ${f(dEV, 3)} AU (${sci(dEV * AU_KM)} km)</span>`,
+      work: eq(`r = sin ε × 1 AU = sin ${p.eps}° = ${f(r, 4)} AU`) + eq(`r = ${f(r, 4)} × 149,597,871 km = ${sci(r * AU_KM)} km`) +
+        `<table><tr><th>Planet</th><th>Greatest elong.</th><th>Orbit radius (modern)</th></tr><tr><td>Mercury</td><td>18°–28° (eccentric orbit)</td><td>0.387 AU</td></tr><tr><td>Venus</td><td>45°–47°</td><td>0.723 AU</td></tr></table>` };
+  },
+  note: `<p><b>Copernicus</b> (1543) used exactly this for Mercury and Venus. For the outer planets (Mars, Jupiter, Saturn) he combined how long each takes to come back to the same place in our sky with angles at <i>quadrature</i>, getting about 1.5, 5.2 and 9.5 AU — remarkably close to today's values.</p><p>This gives the whole solar system <i>in AU</i>. Turning AU into kilometres needed one absolute distance: astronomers got it from the <b>transits of Venus</b> in 1761 and 1769 (a parallax measurement like chapter 8), and today from radar echoes off Venus and spacecraft tracking.</p>` });
+
+/* 11 — stellar parallax */
+CH.push({ id: 'stars', grp: 'The sky', title: 'Distances to the stars', sub: 'stellar parallax and the parsec',
+  intro: `For stars, even the whole Earth is too small a baseline. So we use <b>Earth's orbit</b>: observe a nearby star, wait six months, and observe again from the other side of the Sun. The nearby star shifts slightly against far-more-distant stars. Half that shift is the <b>parallax p</b>.`,
+  params: [{ k: 'p', label: 'Parallax, p (arcseconds; 1″ = 1/3600°)', min: 0.005, max: 1, step: 0.0005, val: 0.768, unit: '″' }, { k: 'psi', label: 'Earth position in its orbit (press P to animate)', min: 0, max: 360, step: 0.5, val: 90, unit: '°' }],
+  presets: [{ label: 'Proxima Centauri 0.768″', set: { p: 0.7685 } }, { label: "Barnard's Star 0.547″", set: { p: 0.5468 } }, { label: 'Sirius 0.379″', set: { p: 0.3792 } }, { label: 'Vega 0.130″', set: { p: 0.1302 } }],
+  steps: ['Earth circles the Sun: positions six months apart are 2 AU apart.', 'From each end, the nearby star appears in a different place against the far background.', 'The angle p at the star, between the Sun and Earth, is the parallax (half the total shift).', 'd = 1 AU / tan p. With p in arcseconds, d = 1/p parsecs.'],
+  caption: 'Hugely exaggerated — real parallaxes are under 1″',
+  tick(p, dt) { p.psi = (p.psi + dt * 50) % 360; },
+  draw(p, st) {
+    const v = view(-1.4, 10.4, -2.25, 2.25, 34), N = [4, 0], BX = 9.3, E = [cosd(p.psi), sind(p.psi)];
+    const yApp = (P) => P[1] + (N[1] - P[1]) * (BX - P[0]) / (N[0] - P[0]);
+    starField(v, 8.7, 10.2, -2.1, 2.1, 55, 3); Tw(v, 'very distant stars', 9.45, 2.15, K.muted, {});
+    circ(v, 0, 0, 1, K.c1, null, 1.5, [6, 6]); circ(v, 0, 0, 0.13, null, K.sun); Tw(v, 'Sun', 0.13, -0.13, K.ink, { dx: 6, dy: 12, align: 'left', bold: true });
+    starShape(v.X(N[0]), v.Y(N[1]), 13, K.c3); Tw(v, 'nearby star', N[0], 0, K.c3, { dy: -24, bold: true });
+    const E1 = [0, 1], E2 = [0, -1];
+    if (st >= 1) { L(v, 0, 1, 0, -1, K.c1, 3); dot(v, 0, 1, 6, K.c1, 'Earth (now)', { dy: -16, lc: K.c1 }); dot(v, 0, -1, 6, K.c1, '6 months later', { dy: 18, lc: K.c1 }); Tw(v, '2 AU', 0, 0.5, K.c1, { dx: -10, align: 'right', bold: true }); }
+    if (st >= 2) { [E1, E2].forEach((P, i) => { const y = yApp(P); L(v, P[0], P[1], BX, y, K.c2, 2.2); circ(v, BX, y, 0.16, K.c2, null, 3); Tw(v, i ? 'seen from 2' : 'seen from 1', BX, y, K.c2, { dx: -24, align: 'right', bold: true }); }); }
+    if (st >= 3) { L(v, 0, 0, N[0], N[1], K.muted, 2, [7, 5]); ang(v, N[0], N[1], 0, 0, 0, 1, K.c3, 'p', 64); }
+    if (st >= 4) { rightA(v, 0, 0, 0, 1, N[0], N[1], K.ink, 14); Tw(v, 'd', N[0] / 2, 0, K.ink, { dy: 16, bold: true, size: 16 }); }
+    // live Earth and its line of sight
+    const y = yApp(E); L(v, E[0], E[1], BX, y, K.c4, 1.8, [3, 4]); dot(v, E[0], E[1], 7, K.c4); starShape(v.X(BX), v.Y(y), 9, K.c4);
+    L(v, BX + 0.35, yApp(E1), BX + 0.35, yApp(E2), K.c4, 1.5, [3, 3]); Tw(v, 'apparent wobble ↕', BX + 0.35, -1.95, K.c4, { align: 'right', bold: true });
+  },
+  calc(p) {
+    const pc = 1 / p.p, au = 206265 / p.p, ly = 3.26156 / p.p, km = au * AU_KM;
+    return { res: `d = ${f(pc, 2)} parsecs = ${f(ly, 2)} light-years<span class="cmp">= ${sci(au)} AU = ${sci(km)} km · light takes ${f(ly, 2)} years</span>`,
+      work: eq(`p = ${p.p}″ = ${(p.p / 3600).toExponential(4)}° = ${(p.p / 206265).toExponential(4)} rad`) + eq(`d = 1 AU / tan p ≈ 1 AU / p(rad) = 206,265 / ${p.p} = ${sci(au)} AU`) +
+        eq(`1 parsec = 206,265 AU (the distance at which p = 1″)  ⇒  d = 1/p = ${f(pc, 3)} pc`) + eq(`1 pc = 3.2616 light-years = 3.086 × 10¹³ km`) };
+  },
+  note: `<p>The <b>parsec</b> ("parallax-second") is defined by this triangle: the distance at which 1 AU subtends 1 arcsecond.</p><p>The shift is so small that it was first measured only in <b>1838</b>, by Friedrich Bessel for the star 61 Cygni — over 2000 years after Aristarchus had predicted it must exist if the Earth moves.</p><p>The Gaia space telescope now measures parallaxes for more than a billion stars, to tiny fractions of a milli-arcsecond. Beyond that, astronomers climb further with "standard candles" — but every rung of that ladder is calibrated on parallax.</p>` });
+
+/* 12 — ladder */
+const RUNGS = [['Tree height', 20, 'Ch 2 · angle of elevation'], ['River width', 120, 'Ch 3 · triangulation'], ['Mountain height', 1500, 'Ch 4 · two angles'], ['Horizon from 100 m', 35700, 'Ch 5 · tangent'],
+  ['Earth radius', 6.371e6, 'Ch 6–7 · Eratosthenes, Biruni'], ['Moon', 3.844e8, 'Ch 8 · parallax'], ['Venus orbit', 1.082e11, 'Ch 10 · elongation'], ['Sun (1 AU)', 1.496e11, 'Ch 9 · Aristarchus / transits'], ['Proxima Centauri', 4.02e16, 'Ch 11 · stellar parallax']];
+CH.push({ id: 'ladder', grp: 'Summary', title: 'The distance ladder', sub: '17 powers of ten, one idea',
+  intro: `Each method stands on the one before: the baseline you tape gives the river, triangles give mountains, the mountain gives the Earth, the Earth's size gives the Moon, the Earth's orbit gives the stars. Press <kbd>P</kbd> to climb the ladder.`,
+  params: [], presets: [],
+  steps: RUNGS.map(r => `${r[0]} — ${r[2]}`),
+  caption: 'Logarithmic scale: each tick is 10× the previous',
+  draw(p, st) {
+    const v = view(-0.4, 17.4, -3.2, 3.2, 34);
+    L(v, 0, 0, 17, 0, K.ink, 3);
+    for (let i = 0; i <= 17; i++) { L(v, i, -0.12, i, 0.12, K.ink, 2); Tw(v, '10' + sup(i), i, 0, K.muted, { dy: 22, size: 12 }); }
+    Tw(v, 'metres →', 17, 0, K.muted, { dy: 42, align: 'right', size: 12 });
+    [['1 km', 3], ['1 AU', Math.log10(1.496e11)], ['1 light-year', Math.log10(9.461e15)]].forEach(u => { L(v, u[1], -0.35, u[1], 0.35, K.c1, 2, [3, 3]); Tw(v, u[0], u[1], -0.35, K.c1, { dy: 40, size: 12, bold: true }); });
+    RUNGS.forEach((r, i) => {
+      if (st < i + 1) return;
+      const x = Math.log10(r[1]), up = i % 2 === 0, lvl = (Math.floor(i / 2) % 2 ? 2.35 : 1.25) * (up ? 1 : -1) - (up ? 0 : 0.5);
+      L(v, x, 0, x, lvl, K.c2, 2); dot(v, x, 0, 6, K.c2);
+      Tw(v, r[0], x, lvl, K.ink, { dy: up ? -10 : 8, bold: true }); Tw(v, sci(r[1] >= 1000 ? r[1] / 1000 : r[1]) + (r[1] >= 1000 ? ' km' : ' m'), x, lvl, K.c2, { dy: up ? -28 : 26, size: 12 }); Tw(v, r[2], x, lvl, K.muted, { dy: up ? 8 : 44, size: 11.5 });
+    });
+  },
+  calc() {
+    return { res: `${f(Math.log10(4.02e16 / 20), 1)} powers of ten, from a tree to the nearest star`,
+      work: `<table><tr><th>Distance</th><th>Value</th><th>Method</th></tr>${RUNGS.map(r => `<tr><td>${r[0]}</td><td>${r[1] >= 1000 ? sci(r[1] / 1000) + ' km' : r[1] + ' m'}</td><td>${r[2]}</td></tr>`).join('')}</table>` };
+  },
+  note: `<p>Every result here came from <b>one angle and one known length</b> in a triangle. As the distances grow the angles shrink — 40° for a tree, 0.9° for the Moon, under 1/3600° for a star — so astronomy is largely the art of measuring very small angles very precisely.</p><p>Ideas to extend: build a clinometer and measure your school building; join a two-city shadow measurement on the equinox; time a lunar eclipse and repeat Hipparchus.</p>` });
+
+/* =================== UI =================== */
+const state = { ci: 0, p: {}, st: {}, playing: false, acc: 0, last: 0 };
+const chap = () => CH[state.ci];
+function P() { const c = chap(); if (!state.p[c.id]) { const o = {}; c.params.forEach(q => o[q.k] = q.val); state.p[c.id] = o; state.st[c.id] = c.steps.length; } return state.p[c.id]; }
+function rnd(q, x) { return q.log ? +x.toPrecision(4) : +(+x).toFixed(Math.max(0, (String(q.step).split('.')[1] || '').length)); }
+
+function buildSidebar() {
+  let g = '', h = '';
+  CH.forEach((c, i) => { if (c.grp !== g) { g = c.grp; h += `<div class="grp">${g}</div>`; } h += `<div class="it" data-i="${i}"><span class="n">${i + 1}</span><div><div class="t">${c.title}</div><div class="s">${c.sub}</div></div></div>`; });
+  $('#sb').innerHTML = h; $('#sb').querySelectorAll('.it').forEach(el => el.onclick = () => { go(+el.dataset.i); if (innerWidth <= 980) document.body.classList.add('nosb'); });
+}
+function buildPanel() {
+  const c = chap(), p = P();
+  $('#chTitle').textContent = `${state.ci + 1}. ${c.title}`; $('#intro').innerHTML = c.intro;
+  const box = $('#ctls'); box.innerHTML = c.params.length ? '' : '<div style="color:var(--muted)">No inputs — just press P.</div>';
+  c.params.forEach(q => {
+    const d = document.createElement('div'); d.className = 'ctl';
+    d.innerHTML = `<label>${q.label}</label><div class="row"><input type="range"><input type="number"><span class="u">${q.unit || ''}</span></div>`;
+    const r = d.querySelector('[type=range]'), n = d.querySelector('[type=number]');
+    if (q.log) { r.min = Math.log10(q.min); r.max = Math.log10(q.max); r.step = 0.005; n.step = 'any'; } else { r.min = q.min; r.max = q.max; r.step = q.step; n.step = q.step; }
+    n.min = q.min; n.max = q.max; q._r = r; q._n = n;
+    r.oninput = () => { p[q.k] = rnd(q, q.log ? 10 ** +r.value : +r.value); n.value = p[q.k]; changed(); };
+    n.onchange = () => { let x = +n.value; if (!isFinite(x)) x = q.val; x = Math.min(q.max, Math.max(q.min, x)); p[q.k] = x; syncControls(); changed(); };
+    box.appendChild(d);
+  });
+  const pr = $('#presets'); pr.innerHTML = '';
+  (c.presets || []).forEach(s => { const b = document.createElement('button'); b.textContent = s.label; b.onclick = () => { Object.assign(p, s.fn ? s.fn(p) : s.set); syncControls(); changed(); }; pr.appendChild(b); });
+  $('#steps').innerHTML = c.steps.map(s => `<li>${s}</li>`).join('');
+  $('#note').innerHTML = c.note;
+  syncControls(); updateResult(); updSteps();
+  document.querySelectorAll('#sb .it').forEach(el => el.classList.toggle('on', +el.dataset.i === state.ci));
+}
+function syncControls() { const p = P(); chap().params.forEach(q => { q._r.value = q.log ? Math.log10(p[q.k]) : p[q.k]; if (document.activeElement !== q._n) q._n.value = rnd(q, p[q.k]); }); }
+function updateResult() { const r = chap().calc(P()); $('#result').innerHTML = r.res; $('#work').innerHTML = r.work; }
+function updSteps() {
+  const c = chap(), s = state.st[c.id], n = c.steps.length;
+  $('#steps').querySelectorAll('li').forEach((li, i) => { li.className = i < s - 1 ? 'done' : i === s - 1 ? 'cur' : ''; });
+  $('#stepind').textContent = `Step ${s} / ${n}` + (state.playing ? ' · playing' : '');
+}
+function changed() { updateResult(); render(); }
+function render() {
+  if (!CH.length) return; loadColors();
+  ctx.clearRect(0, 0, W, H); ctx.fillStyle = K.cv; ctx.fillRect(0, 0, W, H);
+  const c = chap(); P(); c.draw(state.p[c.id], state.st[c.id]);
+  if (c.caption) T(c.caption, W - 12, H - 16, K.muted, { align: 'right', size: 12 });
+}
+function go(i) { pause(); state.ci = (i + CH.length) % CH.length; buildPanel(); render(); $('#panel').scrollTop = 0; try { history.replaceState(null, '', '#' + chap().id); } catch (e) { } }
+
+/* animation: P play, S step, X pause */
+function play() {
+  const c = chap(); P(); if (state.playing) return;
+  if (state.st[c.id] >= c.steps.length && !c.tick) state.st[c.id] = 0;
+  state.playing = true; state.acc = 0.9; state.last = performance.now(); updSteps(); render(); requestAnimationFrame(loop);
+}
+function loop(t) {
+  if (!state.playing) return;
+  const c = chap(), dt = Math.min(0.1, (t - state.last) / 1000), n = c.steps.length; state.last = t;
+  if (state.st[c.id] < n) { state.acc += dt; if (state.acc >= 1.4) { state.acc = 0; state.st[c.id]++; updSteps(); render(); } }
+  else if (c.tick) { c.tick(state.p[c.id], dt); syncControls(); updateResult(); render(); }
+  else { pause(); return; }
+  requestAnimationFrame(loop);
+}
+function pause() { state.playing = false; if (CH.length && state.st[chap().id] !== undefined) updSteps(); }
+function step() { pause(); const c = chap(); P(); const n = c.steps.length; state.st[c.id] = state.st[c.id] >= n ? 0 : state.st[c.id] + 1; updSteps(); render(); }
+function resetVals() { pause(); const c = chap(); delete state.p[c.id]; buildPanel(); render(); }
+
+/* theme, sidebar, fullscreen */
+function setTheme(d, quiet) {
+  document.body.classList.toggle('dark', d);
+  if (!quiet) { if (window.SiteTheme) SiteTheme.set(d ? 'dark' : 'light'); else try { localStorage.setItem('theme', d ? 'dark' : 'light'); } catch (e) { } }
+  render();
+}
+window.addEventListener('site-theme', e => setTheme(e.detail === 'dark', true));
+function toggleFs() { if (!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.(); }
+function toggleSb() { document.body.classList.toggle('nosb'); setTimeout(resize, 30); }
+$('#themeBtn').onclick = () => setTheme(!document.body.classList.contains('dark'));
+$('#bFs').onclick = toggleFs; $('#bSb').onclick = toggleSb;
+$('#bPlay').onclick = play; $('#bStep').onclick = step; $('#bPause').onclick = pause; $('#bReset').onclick = resetVals;
+$('#bPrev').onclick = () => go(state.ci - 1); $('#bNext').onclick = () => go(state.ci + 1);
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.altKey || e.metaKey) return;
+  const tg = e.target, typing = tg && (tg.type === 'number' || tg.tagName === 'TEXTAREA' || tg.type === 'text');
+  if (typing) return;
+  const k = e.key.toLowerCase();
+  if (k === 'm') toggleSb(); else if (k === 'p') play(); else if (k === 's') step(); else if (k === 'x') pause(); else if (k === 'f') toggleFs();
+  else if (tg.type !== 'range' && e.key === 'ArrowRight') go(state.ci + 1); else if (tg.type !== 'range' && e.key === 'ArrowLeft') go(state.ci - 1);
+  else return;
+  e.preventDefault();
+});
+
+/* start */
+try { const t = window.SiteTheme ? SiteTheme.get() : localStorage.getItem('theme'); if (t === 'dark') document.body.classList.add('dark'); } catch (e) { }
+if (innerWidth <= 980) document.body.classList.add('nosb');
+buildSidebar();
+const hi = CH.findIndex(c => '#' + c.id === location.hash); state.ci = hi >= 0 ? hi : 0;
+buildPanel();
+new ResizeObserver(resize).observe($('#cvwrap'));
+resize();
+</script>
+</body>
+</html>

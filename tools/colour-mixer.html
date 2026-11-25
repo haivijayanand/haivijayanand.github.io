@@ -2,10 +2,15 @@
 <!--
 TOOL    : colour-mixer.html — Colour Mixer & Pocket Colour Wheel
 FAMILY  : COLOUR
-VERSION : 1.0.0
+VERSION : 1.1.0
 DATE    : 2026-11-25
 CHAT    : Add pocket colour-wheel features (Art Summits video) to the colour mixer
-CHANGES : v1.0.0  first release: painter's RYB wheel (3 primary, 3 secondary, 6 tertiary), warm / cool; front side mixing dial
+CHANGES : v1.1.0  picture check: turning the wheel (arrows or click) highlights where the selected colour is in the picture,
+                  with its share of the picture; layers Original / 10 values / Highlight (or black-and-white mask); zoom in
+                  (buttons, mouse wheel, + / -, zoom to a dragged area), pan by dragging, Fit and 1:1; pixel read-out; click the
+                  picture to turn the wheel to that colour; colour picker: click the picture to pick an exact colour and highlight
+                  everything within a closeness (ΔE) you set, with its share, value and a button to mix it in the recipe
+          v1.0.0  first release: painter's RYB wheel (3 primary, 3 secondary, 6 tertiary), warm / cool; front side mixing dial
                   (A + B with ratio, + white, + black, mixing ladder); recipe mixer in % or litres (litres add up); back side
                   harmonies (complementary, split complementary, triad, tetrad, square, analogous, monochromatic) with pointer;
                   tint / tone / shade windows and strips; 10-step grey value scale with value check of colours and a picture;
@@ -103,8 +108,13 @@ td .dot{display:inline-block;width:18px;height:18px;border-radius:4px;border:1px
 .vmarks i{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.45);display:inline-block}
 .hist{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;align-items:end;height:90px;margin-top:6px;border-bottom:1px solid var(--line)}
 .hist div{background:var(--fg);opacity:.75;min-height:1px;border-radius:2px 2px 0 0}
-.imgs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
-.imgs canvas{width:100%;height:auto;border-radius:6px;border:1px solid var(--line);background:var(--panel2)}
+.vwrap{position:relative;height:min(64vh,680px);background:var(--surround);border-radius:8px;overflow:hidden;margin-top:6px}
+#viewer{width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+#viewer.drag{cursor:grabbing}
+#viewer.area{cursor:crosshair}
+.zlab{position:absolute;right:8px;top:8px;background:rgba(0,0,0,.6);color:#fff;font:12px var(--mono);padding:2px 7px;border-radius:5px;pointer-events:none}
+.pxinfo{font:12px var(--mono);min-height:18px;margin-top:4px}
+.pxinfo i{display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,.4);vertical-align:-2px;margin-right:5px}
 .harm{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
 .pal{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:6px}
 .comp{display:flex;height:70px;border-radius:8px;overflow:hidden;border:1px solid var(--line);margin-top:10px}
@@ -232,11 +242,35 @@ details summary{cursor:pointer;font-weight:600}
       <div class="vscale" id="vscale"></div>
       <div class="vmarks" id="vmarks"></div>
       <p class="note" id="vNote"></p>
-      <details>
-        <summary>Check the values in a picture</summary>
-        <p class="note">Load a photo of your painting. It is turned into the 10 grey values so you can see whether it has a good range from light to dark, or looks flat. The picture stays on your computer.</p>
+      <details id="imgDet">
+        <summary>Check a picture — values and where each colour is</summary>
+        <p class="note">Load a photo of your painting. See it in the 10 grey values (a good range from light to dark, or flat?), or turn the wheel with <span class="kbd">←</span><span class="kbd">→</span> to highlight where that colour is in the picture. The picture stays on your computer.</p>
         <input type="file" id="imgIn" accept="image/*">
-        <div class="imgs hidden" id="imgBox"><canvas id="imgOrig"></canvas><canvas id="imgVal"></canvas></div>
+        <div id="imgTools" class="hidden">
+          <div class="sidebar-row">
+            <span class="seggrp" id="layBtns"><button class="btn sm" type="button" data-lay="orig">Original</button><button class="btn sm" type="button" data-lay="val">10 values</button><button class="btn sm" type="button" data-lay="hi">Highlight colour</button></span>
+            <label title="Also highlight the two neighbours on the wheel"><input type="checkbox" id="hiNb"> + neighbours</label>
+            <label title="Matching parts black, the rest white"><input type="checkbox" id="hiMask"> as mask</label>
+            <span style="flex:1"></span>
+            <span class="seggrp"><button class="btn sm" id="zOut" type="button" title="Zoom out (-)">－</button><button class="btn sm" id="zIn" type="button" title="Zoom in (+)">＋</button></span>
+            <button class="btn sm" id="zArea" type="button" title="Drag a box on the picture to zoom into it (Z); Shift + drag also works">⬚ Zoom to area</button>
+            <button class="btn sm" id="zFit" type="button" title="Fit the whole picture (0, or double-click)">Fit</button>
+            <button class="btn sm" id="z100" type="button" title="One picture pixel per screen pixel">1:1</button>
+          </div>
+          <div class="sidebar-row">
+            <span>Highlight by</span>
+            <span class="seggrp" id="matchBtns"><button class="btn sm" type="button" data-m="hue" title="The colour the wheel is turned to (← →)">Wheel colour</button><button class="btn sm" type="button" data-m="pick" title="Click the picture to pick a colour">🎯 Picked colour</button></span>
+            <span id="pickBox" class="hidden" style="display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <span class="chip" id="pickChip"><i></i><span></span></span>
+              <label for="tol">closeness ΔE <b id="tolLab">12</b></label>
+              <input type="range" id="tol" min="2" max="50" step="1" value="12" style="width:150px">
+              <button class="btn sm" id="pickToRecipe" type="button" title="Add the picked colour to the recipe as a custom colour">→ Recipe</button>
+            </span>
+          </div>
+          <p class="note" id="hiNote" style="margin:2px 0"></p>
+          <div class="vwrap" id="vwrap"><canvas id="viewer"></canvas><span class="zlab" id="zLab"></span></div>
+          <div class="pxinfo" id="pxInfo">Move over the picture to read a colour; click to pick it (the wheel turns to it as well). Mouse wheel zooms, drag pans.</div>
+        </div>
         <div class="hist hidden" id="hist"></div>
         <div class="striplab hidden" id="histLab"><span>1 white</span><span>10 black</span></div>
         <p class="note" id="imgNote"></p>
@@ -558,7 +592,7 @@ function drawWheel() {
 function pickSegment(i) {
   if (S.side === "front") { if (S.target === "A") S.a = i; else S.b = i; }
   else S.pure = i;
-  render();
+  IMG.match = "hue"; render();
 }
 
 /* ===================== swatches ===================== */
@@ -769,27 +803,48 @@ function renderValue() {
     items.map(c => `${c.name} ${valueStep(c.rgb)}`).join(" · ") +
     `. Range ${span + 1} of 10 values` + (span <= 2 ? " — very close in value; add lighter tints or darker shades for contrast." : ".");
 }
+/* ===================== picture check: values, colour highlight, zoom ===================== */
+const IMG = { ok: false, w: 0, h: 0, data: null, seg: null, lv: null, lay: "hi", nb: false, mask: false,
+  cv: {}, z: 1, ox: 0, oy: 0, fitted: true, area: false, key: "", hiPct: 0, lab: null, match: "hue", pick: null, tol: 12 };
+const WHEEL_HUE = WHEEL.map(w => { const l = toLab(w.rgb); return Math.atan2(l[2], l[1]); });
+function hueSeg(a, b) {
+  if (Math.hypot(a, b) < 12) return 255;                  /* greys, whites, blacks: no hue */
+  const h = Math.atan2(b, a); let best = 0, bd = 9;
+  for (let i = 0; i < 12; i++) { let d = Math.abs(h - WHEEL_HUE[i]); if (d > Math.PI) d = 2 * Math.PI - d; if (d < bd) { bd = d; best = i; } }
+  return best;
+}
+function hiIndex() { return S.side === "front" ? (S.target === "A" ? S.a : S.b) : S.pure; }
+function hiLabel() { return WHEEL[hiIndex()].name + (S.side === "front" ? ` (Colour ${S.target})` : " (pure colour)"); }
 function checkImage(file) {
   const img = new Image(), url = URL.createObjectURL(file);
   img.onload = () => {
-    const mx = 520, sc = Math.min(1, mx / Math.max(img.width, img.height)), w = Math.max(1, Math.round(img.width * sc)), h = Math.max(1, Math.round(img.height * sc));
-    const c1 = $("imgOrig"), c2 = $("imgVal"); c1.width = c2.width = w; c1.height = c2.height = h;
-    const x1 = c1.getContext("2d"); x1.drawImage(img, 0, 0, w, h); URL.revokeObjectURL(url);
-    const d = x1.getImageData(0, 0, w, h), out = new ImageData(w, h), hist = new Array(10).fill(0);
-    const greys = Array.from({ length: 10 }, (_, k) => greyOfL(STEP_L(k + 1)).map(v => Math.round(v * 255)));
+    const mx = 1600, sc = Math.min(1, mx / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * sc)), h = Math.max(1, Math.round(img.height * sc));
+    const mk = () => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+    const co = mk(), x1 = co.getContext("2d"); x1.drawImage(img, 0, 0, w, h); URL.revokeObjectURL(url);
+    const d = x1.getImageData(0, 0, w, h), N = w * h, seg = new Uint8Array(N), lv = new Uint8Array(N), hist = new Array(10).fill(0), labA = new Float32Array(N * 3);
     const LUT = new Float32Array(256); for (let k = 0; k < 256; k++) LUT[k] = lin(k / 255);
-    for (let p = 0; p < d.data.length; p += 4) {
-      const Y = 0.2126729 * LUT[d.data[p]] + 0.7151522 * LUT[d.data[p + 1]] + 0.072175 * LUT[d.data[p + 2]];
-      const L = Y > 216 / 24389 ? 116 * Math.cbrt(Y) - 16 : 24389 / 27 * Y;
-      const s = Math.min(10, Math.max(1, Math.round((100 - L) / 100 * 9) + 1)); hist[s - 1]++;
-      const g = greys[s - 1]; out.data[p] = g[0]; out.data[p + 1] = g[1]; out.data[p + 2] = g[2]; out.data[p + 3] = 255;
+    const f = t => t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116;
+    const vo = new ImageData(w, h), greys = Array.from({ length: 10 }, (_, k) => greyOfL(STEP_L(k + 1)).map(v => Math.round(v * 255)));
+    for (let n = 0, p = 0; n < N; n++, p += 4) {
+      const r = LUT[d.data[p]], g = LUT[d.data[p + 1]], bb = LUT[d.data[p + 2]];
+      const X = (0.4124564 * r + 0.3575761 * g + 0.1804375 * bb) / 0.95047, Y = 0.2126729 * r + 0.7151522 * g + 0.072175 * bb, Z = (0.0193339 * r + 0.119192 * g + 0.9503041 * bb) / 1.08883;
+      const fx = f(X), fy = f(Y), fz = f(Z), L = 116 * fy - 16;
+      const A = 500 * (fx - fy), B2 = 200 * (fy - fz); labA[3 * n] = L; labA[3 * n + 1] = A; labA[3 * n + 2] = B2;
+      seg[n] = hueSeg(A, B2);
+      const st = Math.min(10, Math.max(1, Math.round((100 - L) / 100 * 9) + 1)); lv[n] = st; hist[st - 1]++;
+      const gg = greys[st - 1]; vo.data[p] = gg[0]; vo.data[p + 1] = gg[1]; vo.data[p + 2] = gg[2]; vo.data[p + 3] = 255;
     }
-    c2.getContext("2d").putImageData(out, 0, 0);
-    const tot = w * h, hb = $("hist"); hb.innerHTML = ""; const pk = Math.max(...hist);
-    hist.forEach((n, k) => { const b = document.createElement("div"); b.style.height = (n / pk * 100) + "%"; b.title = `value ${k + 1}: ${(n / tot * 100).toFixed(1)} %`; hb.appendChild(b); });
-    ["imgBox", "hist", "histLab"].forEach(id => $(id).classList.remove("hidden"));
-    const used = hist.map((n, k) => n / tot >= 0.01 ? k + 1 : 0).filter(Boolean);
-    const lo = Math.min(...used), hi = Math.max(...used), dark = hist.slice(7).reduce((a, b) => a + b, 0) / tot, light = hist.slice(0, 3).reduce((a, b) => a + b, 0) / tot;
+    const cvv = mk(); cvv.getContext("2d").putImageData(vo, 0, 0);
+    Object.assign(IMG, { ok: true, w, h, data: d, seg, lv, lab: labA, pick: null, match: "hue", cv: { orig: co, val: cvv, hi: mk() }, key: "", fitted: true });
+    $("imgTools").classList.remove("hidden"); $("imgIn").blur();
+    buildHi(); vFit();
+    /* value histogram and verdict */
+    const hb = $("hist"); hb.innerHTML = ""; const pk = Math.max(...hist);
+    hist.forEach((n, k) => { const b = document.createElement("div"); b.style.height = (n / pk * 100) + "%"; b.title = `value ${k + 1}: ${(n / N * 100).toFixed(1)} %`; hb.appendChild(b); });
+    ["hist", "histLab"].forEach(id => $(id).classList.remove("hidden"));
+    const used = hist.map((n, k) => n / N >= 0.01 ? k + 1 : 0).filter(Boolean);
+    const lo = Math.min(...used), hi = Math.max(...used), dark = hist.slice(7).reduce((a, b) => a + b, 0) / N, light = hist.slice(0, 3).reduce((a, b) => a + b, 0) / N;
     let msg = `Uses values ${lo} to ${hi} (${used.length} of 10 with at least 1 % of the picture). Lights (1–3): ${(light * 100).toFixed(0)} %, darks (8–10): ${(dark * 100).toFixed(0)} %.`;
     if (hi - lo < 5) msg += " The range is narrow, so the painting may look flat.";
     if (dark < 0.05) msg += " Very little in the darkest values — try adding darker versions of your colours.";
@@ -800,6 +855,147 @@ function checkImage(file) {
   img.onerror = () => { $("imgNote").textContent = "Could not read that picture."; };
   img.src = url;
 }
+function buildHi() {
+  if (!IMG.ok) return;
+  if (IMG.match === "pick" && !IMG.pick) IMG.match = "hue";
+  const byPick = IMG.match === "pick";
+  const i0 = hiIndex(), set = new Set(IMG.nb ? [mod12(i0 - 1), i0, mod12(i0 + 1)] : [i0]);
+  const key = (byPick ? "p" + IMG.pick.lab.join(",") + "~" + IMG.tol : [...set].join(",")) + "|" + IMG.mask;
+  if (key !== IMG.key) {
+    const { w, h, data, seg, lab } = IMG, out = new ImageData(w, h), sd = data.data, od = out.data; let cnt = 0;
+    const pl = byPick ? IMG.pick.lab : null, t2 = IMG.tol * IMG.tol;
+    for (let n = 0, p = 0; n < seg.length; n++, p += 4) {
+      let m;
+      if (byPick) { const a = lab[3 * n] - pl[0], b = lab[3 * n + 1] - pl[1], c = lab[3 * n + 2] - pl[2]; m = a * a + b * b + c * c <= t2; }
+      else m = set.has(seg[n]);
+      if (m) cnt++;
+      if (IMG.mask) { const v = m ? 0 : 255; od[p] = od[p + 1] = od[p + 2] = v; }
+      else if (m) { od[p] = sd[p]; od[p + 1] = sd[p + 1]; od[p + 2] = sd[p + 2]; }
+      else { const g = Math.round((0.2126 * sd[p] + 0.7152 * sd[p + 1] + 0.0722 * sd[p + 2]) * 0.3 + 160); od[p] = od[p + 1] = od[p + 2] = g; }
+      od[p + 3] = 255;
+    }
+    IMG.cv.hi.getContext("2d").putImageData(out, 0, 0); IMG.key = key; IMG.hiPct = cnt / seg.length * 100;
+  }
+  const names = [...set].map(i => WHEEL[i].name).join(" + ");
+  document.querySelectorAll("#matchBtns .btn").forEach(b => b.classList.toggle("on", b.dataset.m === IMG.match));
+  $("pickBox").classList.toggle("hidden", !IMG.pick); $("hiNb").parentElement.classList.toggle("hidden", byPick);
+  if (IMG.pick) {
+    const c = IMG.pick.rgb; $("pickChip").querySelector("i").style.background = toHex(c);
+    $("pickChip").querySelector("span").textContent = `${toHex(c).toUpperCase()} · ${describe(c)} · value ${valueStep(c)}`;
+    $("tol").value = IMG.tol; $("tolLab").textContent = IMG.tol;
+  }
+  $("hiNote").innerHTML = IMG.lay === "hi" && byPick
+    ? `Highlighting the <b>picked colour ${toHex(IMG.pick.rgb).toUpperCase()}</b> and everything within ΔE ${IMG.tol} of it: <b>${IMG.hiPct.toFixed(1)} %</b> of the picture. ${IMG.mask ? "Black = this colour." : "In colour = matching; the rest is faded grey."} Widen or narrow the closeness with the slider; click elsewhere to pick again.`
+    : IMG.lay === "hi"
+    ? `Highlighting <b>${IMG.nb ? names : hiLabel()}</b>: <b>${IMG.hiPct.toFixed(1)} %</b> of the picture. ${IMG.mask ? "Black = this colour." : "In colour = this colour; the rest is faded grey."} Turn the wheel with ← → to look for another colour.`
+    : IMG.lay === "val" ? "The picture in the 10 grey values of the scale above." : "The picture as loaded.";
+  document.querySelectorAll("#layBtns .btn").forEach(b => b.classList.toggle("on", b.dataset.lay === IMG.lay));
+  $("hiNb").checked = IMG.nb; $("hiMask").checked = IMG.mask;
+}
+let VSEL = null;
+function vSize() { const r = $("vwrap").getBoundingClientRect(); return [Math.max(1, r.width), Math.max(1, r.height)]; }
+function vFitZ() { const [W, H] = vSize(); return Math.min(W / IMG.w, H / IMG.h); }
+function vFit() { if (!IMG.ok) return; const [W, H] = vSize(), z = vFitZ(); IMG.z = z; IMG.ox = (W - IMG.w * z) / 2; IMG.oy = (H - IMG.h * z) / 2; IMG.fitted = true; vDraw(); }
+function vZoomAt(fac, cx, cy) {
+  if (!IMG.ok) return;
+  const [W, H] = vSize(); if (cx === undefined) { cx = W / 2; cy = H / 2; }
+  const nz = Math.min(40, Math.max(vFitZ() * 0.5, IMG.z * fac));
+  IMG.ox = cx - (cx - IMG.ox) * nz / IMG.z; IMG.oy = cy - (cy - IMG.oy) * nz / IMG.z; IMG.z = nz; IMG.fitted = false; vDraw();
+}
+function vDraw() {
+  if (!IMG.ok) return;
+  const cv = $("viewer"), [W, H] = vSize(), dpr = window.devicePixelRatio || 1;
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  const x = cv.getContext("2d");
+  x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, cv.width, cv.height);
+  x.setTransform(dpr * IMG.z, 0, 0, dpr * IMG.z, dpr * IMG.ox, dpr * IMG.oy);
+  x.imageSmoothingEnabled = IMG.z < 2;
+  x.drawImage(IMG.cv[IMG.lay], 0, 0);
+  if (VSEL) {
+    x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const rx = Math.min(VSEL.x0, VSEL.x1), ry = Math.min(VSEL.y0, VSEL.y1), rw = Math.abs(VSEL.x1 - VSEL.x0), rh = Math.abs(VSEL.y1 - VSEL.y0);
+    x.lineWidth = 3; x.strokeStyle = "#000"; x.strokeRect(rx, ry, rw, rh);
+    x.lineWidth = 1.5; x.strokeStyle = "#fff"; x.setLineDash([6, 4]); x.strokeRect(rx, ry, rw, rh); x.setLineDash([]);
+  }
+  $("zLab").textContent = (IMG.fitted ? "fit · " : "") + Math.round(IMG.z * 100 * (IMG.w ? 1 : 1)) + " %";
+  $("zArea").classList.toggle("on", IMG.area); cv.classList.toggle("area", IMG.area);
+}
+function vPixel(cx, cy) {
+  const ix = Math.floor((cx - IMG.ox) / IMG.z), iy = Math.floor((cy - IMG.oy) / IMG.z);
+  if (ix < 0 || iy < 0 || ix >= IMG.w || iy >= IMG.h) return null;
+  const n = iy * IMG.w + ix, p = n * 4, dd = IMG.data.data;
+  return { ix, iy, n, rgb: [dd[p] / 255, dd[p + 1] / 255, dd[p + 2] / 255], seg: IMG.seg[n], lv: IMG.lv[n] };
+}
+(function viewerEvents() {
+  const cv = $("viewer"); let drag = null;
+  const pos = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  cv.addEventListener("pointerdown", e => {
+    if (!IMG.ok) return; const [x, y] = pos(e); cv.setPointerCapture(e.pointerId);
+    if (IMG.area || e.shiftKey) { VSEL = { x0: x, y0: y, x1: x, y1: y }; drag = { sel: true }; }
+    else { drag = { x, y, ox: IMG.ox, oy: IMG.oy, moved: false }; cv.classList.add("drag"); }
+  });
+  cv.addEventListener("pointermove", e => {
+    if (!IMG.ok) return; const [x, y] = pos(e);
+    if (drag && drag.sel) { VSEL.x1 = x; VSEL.y1 = y; vDraw(); }
+    else if (drag) {
+      if (Math.abs(x - drag.x) + Math.abs(y - drag.y) > 4) drag.moved = true;
+      if (drag.moved) { IMG.ox = drag.ox + x - drag.x; IMG.oy = drag.oy + y - drag.y; IMG.fitted = false; vDraw(); }
+    }
+    const px = vPixel(x, y);
+    $("pxInfo").innerHTML = px ? `<i style="background:${toHex(px.rgb)}"></i>x ${px.ix}, y ${px.iy} · ${toHex(px.rgb).toUpperCase()} · ` +
+      (px.seg === 255 ? "neutral (no hue)" : `${WHEEL[px.seg].name}, ${WHEEL[px.seg].warm ? "warm" : "cool"}`) + ` · value ${px.lv} of 10` +
+      " — click to pick" : "&nbsp;";
+  });
+  const end = e => {
+    if (!drag) return; const [x, y] = pos(e); cv.classList.remove("drag");
+    if (drag.sel) {
+      const rx = Math.min(VSEL.x0, VSEL.x1), ry = Math.min(VSEL.y0, VSEL.y1), rw = Math.abs(VSEL.x1 - VSEL.x0), rh = Math.abs(VSEL.y1 - VSEL.y0);
+      VSEL = null; IMG.area = false;
+      if (rw > 8 && rh > 8) {
+        const [W, H] = vSize(), ix = (rx - IMG.ox) / IMG.z, iy = (ry - IMG.oy) / IMG.z, iw = rw / IMG.z, ih = rh / IMG.z;
+        const nz = Math.min(40, Math.min(W / iw, H / ih));
+        IMG.z = nz; IMG.ox = (W - iw * nz) / 2 - ix * nz; IMG.oy = (H - ih * nz) / 2 - iy * nz; IMG.fitted = false;
+      }
+      vDraw();
+    } else if (!drag.moved && e.type === "pointerup") {
+      const px = vPixel(x, y);
+      if (px) {
+        /* average a 3 x 3 patch so a single noisy pixel does not decide the colour */
+        const acc = [0, 0, 0]; let k = 0;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const xx = px.ix + dx, yy = px.iy + dy; if (xx < 0 || yy < 0 || xx >= IMG.w || yy >= IMG.h) continue;
+          const q = (yy * IMG.w + xx) * 4; acc[0] += IMG.data.data[q]; acc[1] += IMG.data.data[q + 1]; acc[2] += IMG.data.data[q + 2]; k++;
+        }
+        const rgb = acc.map(v => v / k / 255), lb = toLab(rgb);
+        IMG.pick = { rgb, lab: lb }; IMG.match = "pick"; IMG.lay = "hi";
+        const sg = hueSeg(lb[1], lb[2]);
+        if (sg !== 255) { if (S.side === "front") { if (S.target === "A") S.a = sg; else S.b = sg; } else S.pure = sg; }
+        render(); toast("Picked " + toHex(rgb).toUpperCase() + (sg !== 255 ? " · " + WHEEL[sg].name : " · neutral"));
+      }
+    }
+    drag = null;
+  };
+  cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end);
+  cv.addEventListener("wheel", e => { if (!IMG.ok) return; e.preventDefault(); const [x, y] = pos(e); vZoomAt(e.deltaY < 0 ? 1.25 : 0.8, x, y); }, { passive: false });
+  cv.addEventListener("dblclick", () => vFit());
+  $("zIn").onclick = () => vZoomAt(1.5); $("zOut").onclick = () => vZoomAt(1 / 1.5); $("zFit").onclick = vFit;
+  $("z100").onclick = () => { const [W, H] = vSize(); vZoomAt(1 / IMG.z, W / 2, H / 2); };
+  $("zArea").onclick = () => { IMG.area = !IMG.area; vDraw(); };
+  document.querySelectorAll("#layBtns .btn").forEach(b => b.onclick = () => { IMG.lay = b.dataset.lay; buildHi(); vDraw(); });
+  $("hiNb").onchange = e => { IMG.nb = e.target.checked; IMG.lay = "hi"; buildHi(); vDraw(); };
+  document.querySelectorAll("#matchBtns .btn").forEach(b => b.onclick = () => {
+    if (b.dataset.m === "pick" && !IMG.pick) { toast("Click on the picture to pick a colour"); return; }
+    IMG.match = b.dataset.m; IMG.lay = "hi"; buildHi(); vDraw();
+  });
+  $("tol").oninput = e => { IMG.tol = +e.target.value; buildHi(); vDraw(); };
+  $("pickToRecipe").onclick = () => {
+    if (!IMG.pick) return; const hex = toHex(IMG.pick.rgb);
+    S.ings.push({ kind: "custom", hex, amt: S.mode === "L" ? 1 : 0, idx: 0 });
+    if (S.side !== "front") S.side = "front"; render(); toast("Added " + hex.toUpperCase() + " to the recipe");
+  };
+  $("hiMask").onchange = e => { IMG.mask = e.target.checked; IMG.lay = "hi"; buildHi(); vDraw(); };
+  new ResizeObserver(() => { if (IMG.ok) { if (IMG.fitted) vFit(); else vDraw(); } }).observe($("vwrap"));
+})();
 
 /* ===================== PNG export ===================== */
 function savePng(title, rows, file) {
@@ -833,7 +1029,7 @@ function render() {
     : `Keys: <span class="kbd">←</span><span class="kbd">→</span> move the pointer · <span class="kbd">1</span>–<span class="kbd">7</span> relationship · <span class="kbd">T</span> turn over · <span class="kbd">G</span> value view · <span class="kbd">F</span> full screen`;
   drawWheel();
   if (S.side === "front") { renderDial(); renderRecipe(); renderTypes(); } else { renderHarm(); renderTTS(); }
-  renderValue(); save();
+  renderValue(); if (IMG.ok) { buildHi(); vDraw(); } save();
 }
 $("sideFront").onclick = () => { S.side = "front"; render(); };
 $("sideBack").onclick = () => { S.side = "back"; render(); };
@@ -883,7 +1079,7 @@ $("pngPal").onclick = () => savePng(`${HARM[S.harm].name} palette — ${WHEEL[S.
 $("optNames").onchange = e => { S.names = e.target.checked; render(); };
 $("optValue").onchange = e => { S.valueView = e.target.checked; render(); };
 $("optTemp").onchange = e => { S.temp = e.target.checked; render(); };
-$("imgIn").onchange = e => { if (e.target.files[0]) checkImage(e.target.files[0]); };
+$("imgIn").onchange = e => { if (e.target.files[0]) { checkImage(e.target.files[0]); e.target.blur(); } };
 
 /* theme: one site-wide choice through site-theme.js when present */
 function themeNow() { return (window.SiteTheme && SiteTheme.get()) || document.documentElement.getAttribute("data-theme") || "light"; }
@@ -915,12 +1111,16 @@ document.addEventListener("keydown", e => {
   if (k === "ArrowLeft" || k === "ArrowRight") {
     const d = k === "ArrowRight" ? 1 : -1;
     if (S.side === "front") { if (S.target === "A") S.a = mod12(S.a + d); else S.b = mod12(S.b + d); } else S.pure = mod12(S.pure + d);
-    render(); e.preventDefault();
+    IMG.match = "hue"; render(); e.preventDefault();
   } else if (k === "t" || k === "T") { S.side = S.side === "front" ? "back" : "front"; render(); }
   else if ((k === "a" || k === "A") && S.side === "front") { S.target = "A"; render(); }
   else if ((k === "b" || k === "B") && S.side === "front") { S.target = "B"; render(); }
   else if (k === "g" || k === "G") { S.valueView = !S.valueView; render(); }
   else if (k === "f" || k === "F") toggleFs();
+  else if (IMG.ok && (k === "+" || k === "=")) vZoomAt(1.5);
+  else if (IMG.ok && (k === "-" || k === "_")) vZoomAt(1 / 1.5);
+  else if (IMG.ok && k === "0") vFit();
+  else if (IMG.ok && (k === "z" || k === "Z")) { IMG.area = !IMG.area; vDraw(); }
   else if (S.side === "back" && k >= "1" && k <= "7") { S.harm = Object.keys(HARM)[+k - 1]; render(); }
 });
 

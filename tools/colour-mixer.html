@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<!--
+TOOL    : colour-mixer.html — Colour Mixer & Pocket Colour Wheel
+FAMILY  : COLOUR
+VERSION : 1.0.0
+DATE    : 2026-11-25
+CHAT    : Add pocket colour-wheel features (Art Summits video) to the colour mixer
+CHANGES : v1.0.0  first release: painter's RYB wheel (3 primary, 3 secondary, 6 tertiary), warm / cool; front side mixing dial
+                  (A + B with ratio, + white, + black, mixing ladder); recipe mixer in % or litres (litres add up); back side
+                  harmonies (complementary, split complementary, triad, tetrad, square, analogous, monochromatic) with pointer;
+                  tint / tone / shade windows and strips; 10-step grey value scale with value check of colours and a picture;
+                  definitions; PNG export; wide screen, full screen, light / dark, keyboard
+STATUS  : working; runs offline in any browser, no network
+-->
+<html lang="en">
+<head>
+<script src="/assets/js/site-theme.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Colour Mixer &amp; Pocket Colour Wheel</title>
+<style>
+/* Chrome is kept neutral grey so it does not bias colour judgement; emphasis is by weight, outline and inversion.
+   The only accent is a blue focus / active mark (safe for red-green colour vision). Every colour is also named in text. */
+:root{
+  --bg:#e9e9e9; --panel:#f7f7f7; --panel2:#ffffff; --line:#c4c4c4; --fg:#161616; --muted:#5c5c5c;
+  --surround:#808080; --act:#1f5fbf; --actfg:#ffffff; --warn:#8a4b00;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,"DejaVu Sans Mono",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;
+  color-scheme:light;
+}
+html[data-theme="dark"]{
+  --bg:#1b1b1b; --panel:#252525; --panel2:#2d2d2d; --line:#434343; --fg:#ececec; --muted:#a5a5a5;
+  --surround:#5a5a5a; --act:#5b9bf0; --actfg:#0d0d0d; --warn:#f0b35a;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--sans)}
+button,select,input{font:inherit;color:inherit}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{font-size:18px;margin:0 10px 0 0;letter-spacing:.2px}
+header .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:200px}
+.btn{border:1px solid var(--line);background:var(--panel2);border-radius:7px;padding:5px 11px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--fg)}
+.btn.on{background:var(--act);color:var(--actfg);border-color:var(--act);font-weight:600}
+.btn:focus-visible,.seg:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--act);outline-offset:2px}
+.btn.sm{padding:3px 8px;font-size:12.5px}
+.seggrp{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seggrp .btn{border:0;border-radius:0;border-right:1px solid var(--line)}
+.seggrp .btn:last-child{border-right:0}
+main{display:grid;grid-template-columns:minmax(380px,560px) 1fr;gap:16px;padding:14px 18px 40px;max-width:none}
+#wheelCol{position:sticky;top:10px;align-self:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.card h2{font-size:15px;margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 small{font-weight:400;color:var(--muted);font-size:12px}
+.note{color:var(--muted);font-size:12.5px;margin:6px 0}
+#panels{min-width:0;display:grid;grid-template-columns:minmax(0,1fr);gap:0 16px;align-content:start}
+@media (min-width:1500px){#panels{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.wide{grid-column:1/-1}}
+.wheelbox{background:var(--surround);border-radius:10px;padding:8px;display:flex;justify-content:center}
+#wheel{width:100%;max-width:540px;height:auto;display:block;touch-action:manipulation}
+#wheel .seg{cursor:pointer}
+#wheel text{font-family:var(--sans);pointer-events:none}
+.sidebar-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.kbd{font:11.5px var(--mono);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;background:var(--panel2)}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;padding:4px 9px 4px 4px;background:var(--panel2)}
+.chip i{width:26px;height:26px;border-radius:5px;display:inline-block;border:1px solid rgba(0,0,0,.25)}
+.chip.target{outline:3px solid var(--act);outline-offset:1px}
+.sw{border:1px solid rgba(0,0,0,.25);border-radius:6px;cursor:pointer;position:relative}
+.sw:focus-visible{outline:3px solid var(--act);outline-offset:2px}
+.windows{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin-top:8px}
+.win{display:flex;flex-direction:column;gap:4px;font-size:12px}
+.win .sw{height:70px}
+.win b{font-size:12.5px}
+.win span{color:var(--muted);font-family:var(--mono);font-size:11.5px}
+.big{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center;margin-top:10px}
+.big .sw{height:130px;border-radius:10px}
+.spec{font:12.5px var(--mono);line-height:1.6}
+.spec b{font-family:var(--sans)}
+.strip{display:grid;grid-template-columns:repeat(9,1fr);gap:3px;margin:6px 0 2px}
+.strip .sw{height:38px;border-radius:4px}
+.striplab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--act)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:left}
+th{font-weight:600;color:var(--muted);font-size:12px}
+tr.pick{cursor:pointer}
+tr.pick:hover td{background:var(--panel2)}
+tr.sel td{font-weight:700}
+td .dot{display:inline-block;width:18px;height:18px;border-radius:4px;border:1px solid rgba(0,0,0,.3);vertical-align:middle}
+.entry{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.entry .sw{height:44px}
+.erow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.erow select{padding:3px 4px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)}
+.erow input[type=number]{width:78px;padding:3px 5px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)}
+.erow input[type=range]{flex:1;min-width:120px}
+.erow .pct{font:12px var(--mono);color:var(--muted);min-width:58px}
+.erow input[type=color]{width:38px;height:28px;border:1px solid var(--line);border-radius:6px;padding:1px;background:var(--panel2)}
+.warn{color:var(--warn);font-weight:600}
+.total{font:600 14px var(--mono)}
+.vscale{display:grid;grid-template-columns:repeat(10,1fr);gap:0;margin-top:8px;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.vscale div{height:54px;display:flex;align-items:flex-end;justify-content:center;font:11px var(--mono);padding-bottom:3px}
+.vmarks{display:grid;grid-template-columns:repeat(10,1fr);gap:0;min-height:22px;margin-top:4px}
+.vmarks div{display:flex;flex-wrap:wrap;justify-content:center;gap:2px}
+.vmarks i{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.45);display:inline-block}
+.hist{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;align-items:end;height:90px;margin-top:6px;border-bottom:1px solid var(--line)}
+.hist div{background:var(--fg);opacity:.75;min-height:1px;border-radius:2px 2px 0 0}
+.imgs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.imgs canvas{width:100%;height:auto;border-radius:6px;border:1px solid var(--line);background:var(--panel2)}
+.harm{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
+.pal{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:6px}
+.comp{display:flex;height:70px;border-radius:8px;overflow:hidden;border:1px solid var(--line);margin-top:10px}
+dl{margin:0;display:grid;grid-template-columns:170px 1fr;gap:6px 14px;font-size:13px}
+dt{font-weight:700}
+dd{margin:0}
+details summary{cursor:pointer;font-weight:600}
+.hidden{display:none!important}
+.help{font-size:12px;color:var(--muted)}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:7px 14px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:50}
+#toast.show{opacity:1}
+@media (max-width:980px){
+  main{grid-template-columns:minmax(0,1fr);padding:10px}
+  #cTypes{overflow-x:auto}
+  #wheelCol{position:static}
+  dl{grid-template-columns:1fr}
+  .big{grid-template-columns:110px 1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{header .btn,#themeBtn{display:none}}
+</style>
+  <script type="module" src="/assets/js/site-progress.js"></script>
+</head>
+<body>
+<header>
+  <h1>Colour Mixer &amp; Pocket Colour Wheel</h1>
+  <div class="sub">Painter's red–yellow–blue wheel: mix colours, see colour relationships, tints, tones, shades and values.</div>
+  <span class="seggrp" role="group" aria-label="Wheel side">
+    <button class="btn" id="sideFront" type="button" title="Front side: mixing (T turns the wheel over)">Front · Mixing</button>
+    <button class="btn" id="sideBack" type="button" title="Back side: colour relationships (T turns the wheel over)">Back · Relationships</button>
+  </span>
+  <button class="btn" id="themeBtn" type="button">☾ Dark</button>
+  <button class="btn" id="fsBtn" type="button">⛶ Full screen</button>
+</header>
+
+<main>
+  <div id="wheelCol">
+    <div class="card" style="padding:10px">
+      <div class="wheelbox"><svg id="wheel" viewBox="0 0 540 540" role="img" aria-label="Colour wheel"></svg></div>
+      <div class="sidebar-row">
+        <label><input type="checkbox" id="optNames" checked> Names on wheel</label>
+        <label><input type="checkbox" id="optValue"> Value view (greys)</label>
+        <label><input type="checkbox" id="optTemp" checked> Warm / cool</label>
+      </div>
+      <div class="sidebar-row" id="frontTarget">
+        <span>Clicking the wheel sets</span>
+        <span class="seggrp"><button class="btn sm" id="tgtA" type="button">Colour A</button><button class="btn sm" id="tgtB" type="button">Colour B</button></span>
+      </div>
+      <div class="help" id="keysHelp"></div>
+    </div>
+  </div>
+
+  <div id="panels">
+    <!-- ================= FRONT SIDE ================= -->
+    <section class="card front" id="cDial">
+      <h2>Mixing dial <small>like the slider windows on the front of a pocket wheel</small></h2>
+      <div class="sidebar-row">
+        <span class="chip" id="chipA"><i></i><span></span></span>
+        <b>+</b>
+        <span class="chip" id="chipB"><i></i><span></span></span>
+        <span style="flex:1"></span>
+        <button class="btn sm" id="swapAB" type="button">⇄ Swap</button>
+        <button class="btn sm" id="dialToRecipe" type="button">→ Send to recipe</button>
+      </div>
+      <label class="note" for="ratio">Share of B in the mix: <b id="ratioLab">50 %</b></label>
+      <input type="range" id="ratio" min="0" max="100" step="5" value="50">
+      <div class="big"><div class="sw" id="dialRes" tabindex="0"></div><div class="spec" id="dialSpec"></div></div>
+      <div class="windows" id="dialWins"></div>
+      <div class="note" style="margin-top:10px"><b>Mixing ladder</b> — A to B in nine steps</div>
+      <div class="strip" id="ladder"></div>
+      <div class="striplab"><span id="ladA"></span><span id="ladB"></span></div>
+      <p class="note">A rough guide, like the paper wheel: the actual result depends on the pigments in your red, yellow or blue. Complements (opposites) cancel into a neutral brown-grey.</p>
+    </section>
+
+    <section class="card front" id="cTypes">
+      <h2>The twelve colours <small>primary · secondary · tertiary · warm / cool</small></h2>
+      <table><thead><tr><th></th><th>Colour</th><th>Type</th><th>Made from</th><th>Temp.</th><th>Value</th><th>Hex</th></tr></thead><tbody id="typeBody"></tbody></table>
+      <p class="note">Click a row to set it as Colour A. Warm and cool are a general guide: every red, blue or yellow paint has its own warm or cool bias.</p>
+    </section>
+
+    <section class="card front wide" id="cRecipe">
+      <h2>Recipe mixer <small>several colours, by proportion or by volume</small></h2>
+      <div class="sidebar-row">
+        <span class="seggrp"><button class="btn sm" id="modePct" type="button">Proportion %</button><button class="btn sm" id="modeL" type="button">Volume (litres)</button></span>
+        <span id="recTotal" class="total"></span>
+        <span style="flex:1"></span>
+        <button class="btn sm" id="normPct" type="button">Make total 100 %</button>
+        <button class="btn sm" id="addIng" type="button">＋ Add colour</button>
+        <button class="btn sm" id="copyRec" type="button">Copy recipe</button>
+        <button class="btn sm" id="pngRec" type="button">Save PNG</button>
+      </div>
+      <div id="ingList"></div>
+      <div class="big"><div class="sw" id="recRes" tabindex="0"></div><div class="spec" id="recSpec"></div></div>
+      <div class="note" style="margin-top:8px"><b>Tint</b> (toward white)</div><div class="strip" id="recTint"></div>
+      <div class="note"><b>Tone</b> (toward grey)</div><div class="strip" id="recTone"></div>
+      <div class="note"><b>Shade</b> (toward black)</div><div class="strip" id="recShade"></div>
+      <p class="note">In litres the amounts add up: 5 L of one colour and 3 L of another make 8 L of the mix (62.5 % and 37.5 %). A custom colour is matched to the nearest red–yellow–blue + white + black mix, so it can take part in the mixing.</p>
+    </section>
+
+    <!-- ================= BACK SIDE ================= -->
+    <section class="card back" id="cHarm">
+      <h2>Colour relationships <small>pointer on the wheel = pure colour</small></h2>
+      <div class="harm" id="harmBtns"></div>
+      <div class="sidebar-row" id="anaRow"><span>Analogous colours:</span>
+        <span class="seggrp"><button class="btn sm" data-n="2" type="button">2</button><button class="btn sm" data-n="3" type="button">3</button><button class="btn sm" data-n="4" type="button">4</button></span></div>
+      <p class="note" id="harmDesc"></p>
+      <div class="pal" id="palette"></div>
+      <div class="comp" id="comp" title="Sample 60 / 30 / 10 split of the palette"></div>
+      <div class="sidebar-row"><button class="btn sm" id="copyPal" type="button">Copy hex list</button><button class="btn sm" id="pngPal" type="button">Save PNG</button><button class="btn sm" id="palToRecipe" type="button">→ Mix these in recipe</button></div>
+    </section>
+
+    <section class="card back" id="cTTS">
+      <h2>Tint · tone · shade <small>of the pure colour</small></h2>
+      <div class="windows" id="ttsWins"></div>
+      <div class="note" style="margin-top:10px"><b>Tints</b> — add white, lighter</div><div class="strip" id="ttsTint"></div>
+      <div class="note"><b>Tones</b> — add grey, softer</div><div class="strip" id="ttsTone"></div>
+      <div class="note"><b>Shades</b> — add black, darker</div><div class="strip" id="ttsShade"></div>
+      <div class="striplab"><span>pure</span><span>more white / grey / black →</span></div>
+      <p class="note">A monochromatic scheme uses only these: one hue with its tints, tones and shades.</p>
+    </section>
+
+    <!-- ================= BOTH SIDES ================= -->
+    <section class="card wide" id="cValue">
+      <h2>Grey value scale <small>10 values from white to black</small></h2>
+      <div class="vscale" id="vscale"></div>
+      <div class="vmarks" id="vmarks"></div>
+      <p class="note" id="vNote"></p>
+      <details>
+        <summary>Check the values in a picture</summary>
+        <p class="note">Load a photo of your painting. It is turned into the 10 grey values so you can see whether it has a good range from light to dark, or looks flat. The picture stays on your computer.</p>
+        <input type="file" id="imgIn" accept="image/*">
+        <div class="imgs hidden" id="imgBox"><canvas id="imgOrig"></canvas><canvas id="imgVal"></canvas></div>
+        <div class="hist hidden" id="hist"></div>
+        <div class="striplab hidden" id="histLab"><span>1 white</span><span>10 black</span></div>
+        <p class="note" id="imgNote"></p>
+      </details>
+    </section>
+
+    <section class="card wide" id="cDefs">
+      <details>
+        <summary>How to read a pocket colour wheel — definitions</summary>
+        <dl style="margin-top:10px">
+          <dt>Primary colours</dt><dd>Red, yellow and blue. On the painter's wheel they cannot be mixed from other colours.</dd>
+          <dt>Secondary colours</dt><dd>Orange, green and violet, halfway between two primaries and mixed from them (red + yellow = orange, yellow + blue = green, blue + red = violet).</dd>
+          <dt>Tertiary colours</dt><dd>The six colours between a primary and a secondary, mixed from the two: yellow-orange, red-orange, red-violet, blue-violet, blue-green, yellow-green.</dd>
+          <dt>Warm colours</dt><dd>Reds, oranges and yellows (this half of the wheel). They tend to come forward.</dd>
+          <dt>Cool colours</dt><dd>Greens, blues and violets. They tend to recede. Each paint also has its own warm or cool bias.</dd>
+          <dt>Complementary</dt><dd>Two colours directly opposite. Side by side they make each other vivid; mixed together they neutralise to a grey or brown.</dd>
+          <dt>Split complementary</dt><dd>A colour and the two colours on either side of its complement (blue with yellow-orange and red-orange).</dd>
+          <dt>Triad</dt><dd>Three colours evenly spaced — the three primaries, or the three secondaries.</dd>
+          <dt>Tetrad</dt><dd>Four colours made of two complementary pairs (for example yellow and violet with red and green).</dd>
+          <dt>Square</dt><dd>Four colours evenly spaced around the wheel.</dd>
+          <dt>Analogous</dt><dd>Two to four neighbours on the same side of the wheel, such as yellow, yellow-green, green and blue-green. Usually calm and soothing.</dd>
+          <dt>Monochromatic</dt><dd>One hue only, with its tints, tones and shades.</dd>
+          <dt>Tint</dt><dd>The pure colour with white added — lighter (red becomes pink).</dd>
+          <dt>Tone</dt><dd>The pure colour with grey added — less bright, more neutral.</dd>
+          <dt>Shade</dt><dd>The pure colour with black added — darker and less saturated.</dd>
+          <dt>Value</dt><dd>How light or dark a colour is, regardless of hue. A painting with a wide range of values looks less flat.</dd>
+        </dl>
+        <p class="note">Features follow the walkthrough of a pocket colour wheel in <a href="https://www.youtube.com/watch?v=teVtNhFa_04" target="_blank" rel="noopener">this video</a>. Mixing here uses a red–yellow–blue paint model (trilinear interpolation in the RYB cube), so it behaves like paint rather than light.</p>
+      </details>
+    </section>
+  </div>
+</main>
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+/* ===================== colour maths ===================== */
+const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
+const hex2 = v => Math.round(clamp01(v) * 255).toString(16).padStart(2, "0");
+const toHex = c => "#" + hex2(c[0]) + hex2(c[1]) + hex2(c[2]);
+const fromHex = h => { h = h.replace("#", ""); return [0, 2, 4].map(i => parseInt(h.substr(i, 2), 16) / 255); };
+const lin = v => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+const gam = v => v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
+function toLab(c) {
+  const r = lin(c[0]), g = lin(c[1]), b = lin(c[2]);
+  const x = (0.4124564 * r + 0.3575761 * g + 0.1804375 * b) / 0.95047;
+  const y = 0.2126729 * r + 0.7151522 * g + 0.0721750 * b;
+  const z = (0.0193339 * r + 0.1191920 * g + 0.9503041 * b) / 1.08883;
+  const f = t => t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116;
+  const fx = f(x), fy = f(y), fz = f(z);
+  return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+}
+const Lstar = c => toLab(c)[0];
+function greyOfL(L) { const fy = (L + 16) / 116; const y = L > 8 ? fy * fy * fy : L / (24389 / 27); const g = gam(y); return [g, g, g]; }
+const dE = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+function toHsl(c) {
+  const [r, g, b] = c, mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+  let h = 0, s = 0;
+  if (d > 1e-9) {
+    s = d / (1 - Math.abs(2 * l - 1));
+    h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    h = (h * 60 + 360) % 360;
+  }
+  return [h, s * 100, l * 100];
+}
+function toCmyk(c) { const k = 1 - Math.max(...c); if (k >= 1) return [0, 0, 0, 100]; return [...c.map(v => (1 - v - k) / (1 - k) * 100), k * 100]; }
+const lerp = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+const WHITE = [1, 1, 1], BLACK = [0, 0, 0], GREY = [0.5, 0.5, 0.5];
+const textOn = c => Lstar(c) > 58 ? "#111" : "#fff";
+
+/* RYB cube corners (sRGB 0..1). Order: W, R, Y, B, O(R+Y), V(R+B), G(Y+B), K(R+Y+B = neutral "mud") */
+const CUBE = {
+  W: [1, 1, 1], R: [0.92, 0.12, 0.12], Y: [1.0, 0.9, 0.1], B: [0.12, 0.3, 0.7],
+  O: [0.98, 0.5, 0.08], V: [0.48, 0.16, 0.56], G: [0.1, 0.6, 0.25], K: [0.27, 0.22, 0.18]
+};
+function ryb2rgb(v) {
+  const [r, y, b] = v.map(clamp01), C = CUBE, out = [0, 0, 0];
+  const w = {
+    W: (1 - r) * (1 - y) * (1 - b), R: r * (1 - y) * (1 - b), Y: (1 - r) * y * (1 - b), B: (1 - r) * (1 - y) * b,
+    O: r * y * (1 - b), V: r * (1 - y) * b, G: (1 - r) * y * b, K: r * y * b
+  };
+  for (const k in w) for (let i = 0; i < 3; i++) out[i] += w[k] * C[k][i];
+  return out;
+}
+
+/* ===================== the twelve wheel colours ===================== */
+const WHEEL = [
+  ["Yellow", "YELLOW", "Y", "P", [0, 1, 0], "primary"],
+  ["Yellow-orange", "YEL-OR", "YO", "T", [0.5, 1, 0], "Yellow + Orange"],
+  ["Orange", "ORANGE", "O", "S", [1, 1, 0], "Red + Yellow"],
+  ["Red-orange", "RED-OR", "RO", "T", [1, 0.5, 0], "Red + Orange"],
+  ["Red", "RED", "R", "P", [1, 0, 0], "primary"],
+  ["Red-violet", "RED-VI", "RV", "T", [1, 0, 0.5], "Red + Violet"],
+  ["Violet", "VIOLET", "V", "S", [1, 0, 1], "Blue + Red"],
+  ["Blue-violet", "BLUE-VI", "BV", "T", [0.5, 0, 1], "Blue + Violet"],
+  ["Blue", "BLUE", "B", "P", [0, 0, 1], "primary"],
+  ["Blue-green", "BLUE-GR", "BG", "T", [0, 0.5, 1], "Blue + Green"],
+  ["Green", "GREEN", "G", "S", [0, 1, 1], "Yellow + Blue"],
+  ["Yellow-green", "YEL-GR", "YG", "T", [0, 1, 0.5], "Yellow + Green"]
+].map(([name, short, ab, type, ryb, from], i) => ({ i, name, short, ab, type, ryb, from, rgb: ryb2rgb(ryb), warm: i <= 5 }));
+const TYPE = { P: "Primary", S: "Secondary", T: "Tertiary" };
+const mod12 = n => ((n % 12) + 12) % 12;
+
+/* ===================== paint mixing model =====================
+   A pigment = chromatic RYB part (weight c) + white (w) + black (k), c + w + k = 1.
+   Chromatic parts are averaged in RYB, then rescaled to the average strength of the inputs (so red + yellow is a full
+   orange, and red + green reaches the neutral corner). White and black then dilute the result in sRGB. */
+const PIG = {
+  wheel: i => ({ ryb: WHEEL[i].ryb, c: 1, w: 0, k: 0 }),
+  white: () => ({ ryb: [0, 0, 0], c: 0, w: 1, k: 0 }),
+  black: () => ({ ryb: [0, 0, 0], c: 0, w: 0, k: 1 })
+};
+function mixPigments(list) {
+  let C = 0, W = 0, K = 0, m = 0; const acc = [0, 0, 0];
+  for (const { pig, parts } of list) {
+    if (!(parts > 0)) continue;
+    const pc = parts * pig.c; C += pc; W += parts * pig.w; K += parts * pig.k;
+    for (let j = 0; j < 3; j++) acc[j] += pc * pig.ryb[j];
+    m += pc * Math.max(...pig.ryb);
+  }
+  const T = C + W + K;
+  if (T <= 0) return null;
+  let base = [0, 0, 0], ryb = [0, 0, 0];
+  if (C > 0) {
+    const avg = acc.map(v => v / C), mx = Math.max(...avg), s = mx > 0 ? (m / C) / mx : 0;
+    ryb = avg.map(v => clamp01(v * s)); base = ryb2rgb(ryb);
+  }
+  const rgb = [0, 1, 2].map(j => (base[j] * C + 1 * W + 0 * K) / T);
+  return { rgb, ryb, c: C / T, w: W / T, k: K / T };
+}
+const mix2 = (pa, pb, tB) => mixPigments([{ pig: pa, parts: 1 - tB }, { pig: pb, parts: tB }]).rgb;
+
+/* custom colour -> nearest pigment (RYB grid x white x black), searched in L*a*b* */
+let FIT_GRID = null;
+function buildFitGrid() {
+  FIT_GRID = [];
+  const st = 0.1;
+  for (let r = 0; r <= 1.0001; r += st) for (let y = 0; y <= 1.0001; y += st) for (let b = 0; b <= 1.0001; b += st) {
+    const ryb = [r, y, b].map(v => Math.round(v * 10) / 10);
+    if (Math.max(...ryb) < 0.999) continue;               /* keep full-strength chromatic part; white / black do the rest */
+    const rgb = ryb2rgb(ryb);
+    for (let w = 0; w <= 0.91; w += 0.1) for (let k = 0; k + w <= 0.91; k += 0.1) {
+      const c = 1 - w - k, out = [0, 1, 2].map(j => rgb[j] * c + w);
+      FIT_GRID.push({ ryb, w: Math.round(w * 10) / 10, k: Math.round(k * 10) / 10, lab: toLab(out) });
+    }
+  }
+}
+function fitPigment(hex) {
+  if (!FIT_GRID) buildFitGrid();
+  const t = toLab(fromHex(hex)); let best = null, bd = 1e9;
+  for (const g of FIT_GRID) { const d = dE(t, g.lab); if (d < bd) { bd = d; best = g; } }
+  return { pig: { ryb: best.ryb, c: 1 - best.w - best.k, w: best.w, k: best.k }, dE: bd };
+}
+
+/* names and value steps */
+function valueStep(c) { const L = Lstar(c); return Math.min(10, Math.max(1, Math.round((100 - L) / 100 * 9) + 1)); }
+const STEP_L = i => 100 - (i - 1) * 100 / 9;
+function describe(rgb) {
+  const lab = toLab(rgb), ch = Math.hypot(lab[1], lab[2]);
+  let best = WHEEL[0], bd = 1e9;
+  for (const w of WHEEL) { const l2 = toLab(w.rgb); const d = Math.hypot(lab[1] - l2[1], lab[2] - l2[2]); if (d < bd) { bd = d; best = w; } }
+  if (ch < 12) return lab[0] > 85 ? "near white" : lab[0] < 20 ? "near black" : "neutral grey";
+  if (ch < 18) return "muted " + best.name.toLowerCase() + " (neutral-ish)";
+  const wl = toLab(best.rgb)[0];
+  const mod = lab[0] > wl + 12 ? "light " : lab[0] < wl - 12 ? "dark " : "";
+  return mod + best.name.toLowerCase();
+}
+function specHtml(rgb, extra) {
+  const hsl = toHsl(rgb), cm = toCmyk(rgb), lab = toLab(rgb), v = valueStep(rgb);
+  return (extra || "") +
+    `<b>${describe(rgb)}</b><br>HEX ${toHex(rgb).toUpperCase()}<br>` +
+    `RGB ${rgb.map(x => Math.round(x * 255)).join(", ")}<br>` +
+    `HSL ${Math.round(hsl[0])}°, ${Math.round(hsl[1])}%, ${Math.round(hsl[2])}%<br>` +
+    `CMYK ${cm.map(x => Math.round(x)).join(", ")} %<br>` +
+    `L* ${lab[0].toFixed(1)} · value ${v} of 10`;
+}
+
+/* ===================== state ===================== */
+const KEY = "cmx:state";
+const S = {
+  side: "front", a: 0, b: 4, ratio: 50, target: "B", pure: 8, harm: "comp", anaN: 3,
+  names: true, valueView: false, temp: true, mode: "pct",
+  ings: [{ kind: "wheel", idx: 0, amt: 50 }, { kind: "wheel", idx: 4, amt: 50 }]
+};
+try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+const $ = id => document.getElementById(id);
+function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove("show"), 1600); }
+function copy(t) { (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast("Copied"), () => { prompt("Copy:", t); }); }
+
+/* ===================== harmonies ===================== */
+const HARM = {
+  comp:  { name: "Complementary", off: [0, 6], desc: "Opposites on the wheel. Next to each other they look vivid; mixed, they neutralise each other to grey-brown." },
+  split: { name: "Split complementary", off: [0, 5, 7], desc: "The pure colour plus the two neighbours of its complement — the contrast of complementary with less tension." },
+  triad: { name: "Triad", off: [0, 4, 8], desc: "Three colours evenly spaced (a triangle): the primaries, the secondaries, or a set of tertiaries." },
+  tetrad:{ name: "Tetrad", off: [0, 4, 6, 10], desc: "Two complementary pairs (a rectangle). Rich; let one colour lead and use the others in smaller amounts." },
+  square:{ name: "Square", off: [0, 3, 6, 9], desc: "Four colours evenly spaced around the wheel." },
+  ana:   { name: "Analogous", off: null, desc: "Two to four neighbours on the same side of the wheel — calm and soothing palettes." },
+  mono:  { name: "Monochromatic", off: [0], desc: "One hue only, used as its tints, tones and shades." }
+};
+function harmIdx() {
+  const h = HARM[S.harm];
+  const off = h.off || ({ 2: [0, 1], 3: [-1, 0, 1], 4: [-1, 0, 1, 2] })[S.anaN];
+  return off.map(o => mod12(S.pure + o));
+}
+function harmColours() {
+  if (S.harm === "mono") {
+    const p = WHEEL[S.pure].rgb;
+    return [
+      { name: WHEEL[S.pure].name, rgb: p },
+      { name: "Tint", rgb: lerp(p, WHITE, 0.45) },
+      { name: "Light tint", rgb: lerp(p, WHITE, 0.75) },
+      { name: "Tone", rgb: lerp(p, GREY, 0.45) },
+      { name: "Shade", rgb: lerp(p, BLACK, 0.45) }
+    ];
+  }
+  return harmIdx().map(i => ({ name: WHEEL[i].name, rgb: WHEEL[i].rgb, i }));
+}
+
+/* ===================== wheel drawing ===================== */
+const CX = 270, CY = 270, RO = 205, RI = 128, NS = "http://www.w3.org/2000/svg";
+const ang = i => (-90 + i * 30) * Math.PI / 180;
+const pt = (r, a) => [CX + r * Math.cos(a), CY + r * Math.sin(a)];
+function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function arcPath(r1, r2, a1, a2) {
+  const [x1, y1] = pt(r2, a1), [x2, y2] = pt(r2, a2), [x3, y3] = pt(r1, a2), [x4, y4] = pt(r1, a1);
+  const lg = a2 - a1 > Math.PI ? 1 : 0;
+  return `M${x1},${y1} A${r2},${r2} 0 ${lg} 1 ${x2},${y2} L${x3},${y3} A${r1},${r1} 0 ${lg} 0 ${x4},${y4} Z`;
+}
+function shownRgb(c) { return S.valueView ? greyOfL(Lstar(c)) : c; }
+function drawWheel() {
+  const svg = $("wheel"); svg.innerHTML = "";
+  const defs = el("defs", {}, svg);
+  el("path", { id: "arcWarm", d: (() => { const a1 = ang(-0.5) , a2 = ang(5.5); const [x1, y1] = pt(238, a1), [x2, y2] = pt(238, a2); return `M${x1},${y1} A238,238 0 0 1 ${x2},${y2}`; })() }, defs);
+  el("path", { id: "arcCool", d: (() => { const a1 = ang(5.5), a2 = ang(11.5); const [x1, y1] = pt(238, a1), [x2, y2] = pt(238, a2); return `M${x1},${y1} A238,238 0 0 1 ${x2},${y2}`; })() }, defs);
+  el("circle", { cx: CX, cy: CY, r: 266, fill: "#ededed" }, svg);
+  /* warm / cool brackets */
+  if (S.temp) {
+    for (const [id, lab, a1, a2] of [["arcWarm", "WARM COLOURS", -0.42, 5.42], ["arcCool", "COOL COLOURS", 5.58, 11.42]]) {
+      const [x1, y1] = pt(226, ang(a1)), [x2, y2] = pt(226, ang(a2));
+      el("path", { d: `M${x1},${y1} A226,226 0 0 1 ${x2},${y2}`, fill: "none", stroke: "#333", "stroke-width": id === "arcWarm" ? 4 : 1.5, "stroke-dasharray": id === "arcWarm" ? "" : "6 4" }, svg);
+      const t = el("text", { "font-size": 13, "font-weight": 700, fill: "#222", "letter-spacing": 2 }, svg);
+      const tp = el("textPath", { href: "#" + id, startOffset: "50%", "text-anchor": "middle" }, t); tp.textContent = lab;
+    }
+  }
+  /* segments */
+  const hsel = S.side === "back" ? new Set(harmIdx()) : new Set([S.a, S.b]);
+  WHEEL.forEach(w => {
+    const a1 = ang(w.i - 0.5), a2 = ang(w.i + 0.5), fill = toHex(shownRgb(w.rgb));
+    const g = el("g", { class: "seg", tabindex: -1, "data-i": w.i }, svg);
+    const p = el("path", { d: arcPath(RI, RO, a1, a2), fill, stroke: "#2a2a2a", "stroke-width": 1.2 }, g);
+    el("title", {}, p).textContent = `${w.name} — ${TYPE[w.type]}${w.type === "P" ? "" : " (" + w.from + ")"} — ${w.warm ? "warm" : "cool"}`;
+    /* type badge just inside the outer edge */
+    const [bx, by] = pt(RO - 14, ang(w.i));
+    el("circle", { cx: bx, cy: by, r: 9, fill: "#fff", stroke: "#222", "stroke-width": 1 }, g);
+    const tb = el("text", { x: bx, y: by + 4, "font-size": 11, "font-weight": 700, "text-anchor": "middle", fill: "#111" }, g); tb.textContent = w.type;
+    if (S.names) {
+      const [tx, ty] = pt((RO + RI) / 2 - 8, ang(w.i));
+      const t = el("text", { x: tx, y: ty + 4, "font-size": 11.5, "font-weight": 700, "text-anchor": "middle", fill: textOn(shownRgb(w.rgb)) }, g);
+      t.textContent = w.ab;
+    }
+    g.addEventListener("click", () => pickSegment(w.i));
+  });
+  /* selection outlines (double black / white so they show on any colour) */
+  const mark = (i, label) => {
+    const a1 = ang(i - 0.5), a2 = ang(i + 0.5);
+    el("path", { d: arcPath(RI - 3, RO + 3, a1, a2), fill: "none", stroke: "#000", "stroke-width": 6 }, svg);
+    el("path", { d: arcPath(RI - 3, RO + 3, a1, a2), fill: "none", stroke: "#fff", "stroke-width": 2.5 }, svg);
+    if (label) {
+      const [lx, ly] = pt(RO + 22, ang(i));
+      el("circle", { cx: lx, cy: ly, r: 13, fill: "#111" }, svg);
+      const t = el("text", { x: lx, y: ly + 5, "font-size": 14, "font-weight": 800, "text-anchor": "middle", fill: "#fff" }, svg); t.textContent = label;
+    }
+  };
+  el("circle", { cx: CX, cy: CY, r: RI - 6, fill: "#f4f4f4", stroke: "#2a2a2a", "stroke-width": 1 }, svg);
+  if (S.side === "front") {
+    mark(S.a, "A"); if (S.b !== S.a) mark(S.b, "B"); else mark(S.b, null);
+    /* centre: result window, + white, + black windows */
+    const pa = PIG.wheel(S.a), pb = PIG.wheel(S.b), res = mix2(pa, pb, S.ratio / 100);
+    el("circle", { cx: CX, cy: CY - 12, r: 56, fill: toHex(shownRgb(res)), stroke: "#111", "stroke-width": 2 }, svg);
+    const tr = el("text", { x: CX, y: CY - 70 - 4, "font-size": 11, "text-anchor": "middle", fill: "#333", "font-weight": 700 }, svg); tr.textContent = "A + B";
+    const tint = mixPigments([{ pig: pa, parts: 1 - S.ratio / 100 }, { pig: pb, parts: S.ratio / 100 }, { pig: PIG.white(), parts: 1 }]).rgb;
+    const shade = mixPigments([{ pig: pa, parts: 1 - S.ratio / 100 }, { pig: pb, parts: S.ratio / 100 }, { pig: PIG.black(), parts: 0.6 }]).rgb;
+    for (const [x, c, lab] of [[CX - 36, tint, "+ WHITE"], [CX + 36, shade, "+ BLACK"]]) {
+      el("circle", { cx: x, cy: CY + 70, r: 22, fill: toHex(shownRgb(c)), stroke: "#111", "stroke-width": 1.5 }, svg);
+      const t = el("text", { x, y: CY + 104, "font-size": 9.5, "font-weight": 700, "text-anchor": "middle", fill: "#333" }, svg); t.textContent = lab;
+    }
+  } else {
+    const idx = harmIdx();
+    idx.forEach(i => { if (i !== S.pure) mark(i, null); });
+    mark(S.pure, null);
+    /* pointer "PURE COLOUR" */
+    const [px, py] = pt(RO + 6, ang(S.pure)), [qx, qy] = pt(RO + 30, ang(S.pure - 0.28)), [rx, ry] = pt(RO + 30, ang(S.pure + 0.28));
+    el("path", { d: `M${px},${py} L${qx},${qy} L${rx},${ry} Z`, fill: "#111" }, svg);
+    /* harmony figure */
+    const rr = RI - 16, pts = idx.map(i => pt(rr, ang(i)));
+    if (S.harm === "comp") {
+      const [a, b] = pts;
+      el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: "#111", "stroke-width": 7, "stroke-linecap": "round" }, svg);
+      for (const p of [a, b]) el("circle", { cx: p[0], cy: p[1], r: 8, fill: "#111" }, svg);
+    } else if (S.harm === "mono") {
+      el("circle", { cx: pts[0][0], cy: pts[0][1], r: 10, fill: "#111" }, svg);
+      el("line", { x1: CX, y1: CY, x2: pts[0][0], y2: pts[0][1], stroke: "#111", "stroke-width": 4 }, svg);
+    } else {
+      const order = S.harm === "ana" ? pts : pts.slice().sort((p, q) => Math.atan2(p[1] - CY, p[0] - CX) - Math.atan2(q[1] - CY, q[0] - CX));
+      el(S.harm === "ana" ? "polyline" : "polygon", { points: order.map(p => p.join(",")).join(" "), fill: S.harm === "ana" ? "none" : "rgba(0,0,0,.08)", stroke: "#111", "stroke-width": 4, "stroke-linejoin": "round" }, svg);
+      for (const p of pts) el("circle", { cx: p[0], cy: p[1], r: 6, fill: "#111" }, svg);
+      if (S.harm === "tetrad") {              /* show the two complementary pairs */
+        el("line", { x1: pts[0][0], y1: pts[0][1], x2: pts[2][0], y2: pts[2][1], stroke: "#111", "stroke-width": 1.5, "stroke-dasharray": "5 4" }, svg);
+        el("line", { x1: pts[1][0], y1: pts[1][1], x2: pts[3][0], y2: pts[3][1], stroke: "#111", "stroke-width": 1.5, "stroke-dasharray": "5 4" }, svg);
+      }
+    }
+    const t1 = el("text", { x: CX, y: CY + 4, "font-size": 13, "font-weight": 800, "text-anchor": "middle", fill: "#111" }, svg);
+    t1.textContent = HARM[S.harm].name.toUpperCase();
+    const t2 = el("text", { x: CX, y: CY + 20, "font-size": 11, "text-anchor": "middle", fill: "#333" }, svg);
+    t2.textContent = "pure colour: " + WHEEL[S.pure].name;
+  }
+}
+function pickSegment(i) {
+  if (S.side === "front") { if (S.target === "A") S.a = i; else S.b = i; }
+  else S.pure = i;
+  render();
+}
+
+/* ===================== swatches ===================== */
+function swatch(rgb, title, h) {
+  const d = document.createElement("div");
+  d.className = "sw"; d.style.background = toHex(rgb); d.tabIndex = 0;
+  if (h) d.style.height = h + "px";
+  d.title = (title ? title + " — " : "") + toHex(rgb).toUpperCase() + " · value " + valueStep(rgb) + " · click to copy";
+  d.addEventListener("click", () => copy(toHex(rgb).toUpperCase()));
+  d.addEventListener("keydown", e => { if (e.key === "Enter") copy(toHex(rgb).toUpperCase()); });
+  return d;
+}
+function win(rgb, title, sub) {
+  const w = document.createElement("div"); w.className = "win";
+  w.appendChild(swatch(rgb, title));
+  const b = document.createElement("b"); b.textContent = title; w.appendChild(b);
+  const s = document.createElement("span"); s.textContent = (sub ? sub + " · " : "") + toHex(rgb).toUpperCase() + " · V" + valueStep(rgb); w.appendChild(s);
+  return w;
+}
+function fillStrip(id, base, to, n) {
+  const box = $(id); box.innerHTML = ""; n = n || 9;
+  box.style.gridTemplateColumns = `repeat(${n},1fr)`;
+  for (let k = 0; k < n; k++) box.appendChild(swatch(lerp(base, to, k / n * 0.92), ""));
+}
+
+/* ===================== front: dial ===================== */
+function chip(id, i, target) {
+  const c = $(id); c.querySelector("i").style.background = toHex(WHEEL[i].rgb);
+  c.querySelector("span").innerHTML = `<b>${target}</b> ${WHEEL[i].name} <span class="help">(${TYPE[WHEEL[i].type].toLowerCase()})</span>`;
+  c.classList.toggle("target", S.target === target);
+}
+function mixVerdict(a, b, t) {
+  if (t === 0) return WHEEL[a].name + " alone";
+  if (t === 100) return WHEEL[b].name + " alone";
+  if (a === b) return "the same colour — no change";
+  const d = Math.min(mod12(a - b), mod12(b - a));
+  if (d === 6) return "complements — they neutralise toward grey-brown";
+  if (t === 50) {
+    const res = mixPigments([{ pig: PIG.wheel(a), parts: 1 }, { pig: PIG.wheel(b), parts: 1 }]);
+    const hit = WHEEL.find(w => w.ryb.every((v, j) => Math.abs(v - res.ryb[j]) < 1e-6));
+    if (hit) return `makes ${hit.name} (${TYPE[hit.type].toLowerCase()})`;
+  }
+  return d >= 4 ? "far apart — the mix gets duller" : "close neighbours — the mix stays bright";
+}
+function renderDial() {
+  chip("chipA", S.a, "A"); chip("chipB", S.b, "B");
+  $("tgtA").classList.toggle("on", S.target === "A"); $("tgtB").classList.toggle("on", S.target === "B");
+  $("ratio").value = S.ratio; $("ratioLab").textContent = `${S.ratio} % B · ${100 - S.ratio} % A`;
+  const pa = PIG.wheel(S.a), pb = PIG.wheel(S.b), t = S.ratio / 100, res = mix2(pa, pb, t);
+  $("dialRes").style.background = toHex(res); $("dialRes").title = toHex(res).toUpperCase();
+  $("dialRes").onclick = () => copy(toHex(res).toUpperCase());
+  $("dialSpec").innerHTML = specHtml(res, `${WHEEL[S.a].name} + ${WHEEL[S.b].name}: <i>${mixVerdict(S.a, S.b, S.ratio)}</i><br>`);
+  const box = $("dialWins"); box.innerHTML = "";
+  const parts = [{ pig: pa, parts: 1 - t }, { pig: pb, parts: t }];
+  box.append(
+    win(WHEEL[S.a].rgb, "A · " + WHEEL[S.a].name),
+    win(WHEEL[S.b].rgb, "B · " + WHEEL[S.b].name),
+    win(res, "A + B"),
+    win(mixPigments([...parts, { pig: PIG.white(), parts: 1 }]).rgb, "+ white", "tint"),
+    win(mixPigments([...parts, { pig: PIG.white(), parts: 1 }, { pig: PIG.black(), parts: 0.5 }]).rgb, "+ grey", "tone"),
+    win(mixPigments([...parts, { pig: PIG.black(), parts: 0.6 }]).rgb, "+ black", "shade")
+  );
+  const lad = $("ladder"); lad.innerHTML = "";
+  for (let k = 0; k <= 8; k++) { const tt = k / 8; lad.appendChild(swatch(mix2(pa, pb, tt), `${Math.round((1 - tt) * 100)} % A · ${Math.round(tt * 100)} % B`)); }
+  $("ladA").textContent = "100 % " + WHEEL[S.a].name; $("ladB").textContent = "100 % " + WHEEL[S.b].name;
+}
+
+/* ===================== front: recipe ===================== */
+const ING_OPTS = [...WHEEL.map(w => [`w${w.i}`, w.name]), ["white", "White"], ["black", "Black"], ["custom", "Custom colour…"]];
+function ingPig(g) {
+  if (g.kind === "wheel") return PIG.wheel(g.idx);
+  if (g.kind === "white") return PIG.white();
+  if (g.kind === "black") return PIG.black();
+  if (!g.fit || g.fitHex !== g.hex) { const f = fitPigment(g.hex); g.fit = f.pig; g.fitDE = f.dE; g.fitHex = g.hex; }
+  return g.fit;
+}
+function ingRgb(g) {
+  if (g.kind === "wheel") return WHEEL[g.idx].rgb;
+  if (g.kind === "white") return WHITE;
+  if (g.kind === "black") return BLACK;
+  return fromHex(g.hex);
+}
+function ingName(g) { return g.kind === "wheel" ? WHEEL[g.idx].name : g.kind === "white" ? "White" : g.kind === "black" ? "Black" : "Custom " + g.hex.toUpperCase(); }
+function recipeResult() { return mixPigments(S.ings.map(g => ({ pig: ingPig(g), parts: +g.amt || 0 }))); }
+function renderRecipe() {
+  const isL = S.mode === "L", max = isL ? 20 : 100, step = isL ? 0.1 : 1, unit = isL ? "L" : "%";
+  $("modePct").classList.toggle("on", !isL); $("modeL").classList.toggle("on", isL);
+  $("normPct").classList.toggle("hidden", isL);
+  const total = S.ings.reduce((s, g) => s + (+g.amt || 0), 0);
+  $("recTotal").innerHTML = isL ? `Total: ${total.toFixed(1)} L` :
+    (Math.abs(total - 100) < 0.05 ? `Total: 100 %` : `<span class="warn">Total ${total.toFixed(1)} % — should be 100 %</span>`);
+  const list = $("ingList"); list.innerHTML = "";
+  S.ings.forEach((g, n) => {
+    const row = document.createElement("div"); row.className = "entry";
+    row.appendChild(swatch(ingRgb(g), ingName(g)));
+    const box = document.createElement("div");
+    const r1 = document.createElement("div"); r1.className = "erow";
+    const sel = document.createElement("select"); sel.setAttribute("aria-label", "Colour " + (n + 1));
+    for (const [v, t] of ING_OPTS) { const o = document.createElement("option"); o.value = v; o.textContent = t; sel.appendChild(o); }
+    sel.value = g.kind === "wheel" ? "w" + g.idx : g.kind;
+    sel.onchange = () => {
+      const v = sel.value;
+      if (v[0] === "w") { g.kind = "wheel"; g.idx = +v.slice(1); }
+      else { g.kind = v; if (v === "custom" && !g.hex) g.hex = "#7a8f3c"; }
+      render();
+    };
+    r1.appendChild(sel);
+    if (g.kind === "custom") {
+      const ci = document.createElement("input"); ci.type = "color"; ci.value = g.hex; ci.title = "Pick the custom colour";
+      ci.onchange = () => { g.hex = ci.value; render(); };
+      r1.appendChild(ci);
+      ingPig(g);
+      const fn = document.createElement("span"); fn.className = "help";
+      fn.textContent = `matched as paint, ΔE ${g.fitDE.toFixed(1)}${g.fitDE > 6 ? " (out of reach of RYB + white + black; approximate)" : ""}`;
+      r1.appendChild(fn);
+    }
+    const sp = document.createElement("span"); sp.style.flex = "1"; r1.appendChild(sp);
+    const del = document.createElement("button"); del.className = "btn sm"; del.type = "button"; del.textContent = "✕"; del.title = "Remove";
+    del.disabled = S.ings.length <= 1; del.onclick = () => { S.ings.splice(n, 1); render(); };
+    r1.appendChild(del);
+    const r2 = document.createElement("div"); r2.className = "erow";
+    const rg = document.createElement("input"); rg.type = "range"; rg.min = 0; rg.max = max; rg.step = step; rg.value = g.amt;
+    const nu = document.createElement("input"); nu.type = "number"; nu.min = 0; nu.max = isL ? 9999 : 100; nu.step = step; nu.value = g.amt;
+    const pc = document.createElement("span"); pc.className = "pct";
+    const setPc = () => { const tot = S.ings.reduce((s, x) => s + (+x.amt || 0), 0); pc.textContent = isL ? (tot > 0 ? (g.amt / tot * 100).toFixed(1) + " %" : "–") : ""; };
+    rg.oninput = () => { g.amt = +rg.value; nu.value = g.amt; liveRecipe(); };
+    nu.onchange = () => { g.amt = Math.max(0, +nu.value || 0); rg.value = g.amt; render(); };
+    nu.onkeydown = e => { if (e.key === "Enter") nu.onchange(); };
+    rg.onchange = () => render();
+    const un = document.createElement("span"); un.textContent = unit;
+    r2.append(rg, nu, un, pc); setPc(); g._pc = setPc;
+    box.append(r1, r2); row.appendChild(box); list.appendChild(row);
+  });
+  liveRecipe(true);
+}
+function liveRecipe(full) {
+  const isL = S.mode === "L", total = S.ings.reduce((s, g) => s + (+g.amt || 0), 0);
+  if (!full) {
+    $("recTotal").innerHTML = isL ? `Total: ${total.toFixed(1)} L` :
+      (Math.abs(total - 100) < 0.05 ? `Total: 100 %` : `<span class="warn">Total ${total.toFixed(1)} % — should be 100 %</span>`);
+    S.ings.forEach(g => g._pc && g._pc());
+  }
+  const r = recipeResult();
+  if (!r) { $("recRes").style.background = "transparent"; $("recSpec").textContent = "Add an amount to mix."; ["recTint", "recTone", "recShade"].forEach(id => $(id).innerHTML = ""); return; }
+  const rgb = r.rgb;
+  $("recRes").style.background = toHex(rgb); $("recRes").onclick = () => copy(toHex(rgb).toUpperCase());
+  const parts = S.ings.filter(g => +g.amt > 0).map(g => `${ingName(g)} ${isL ? (+g.amt).toFixed(1) + " L" : (+g.amt) + " %"}`).join(" + ");
+  $("recSpec").innerHTML = specHtml(rgb, `${parts || "—"}${isL ? ` = <b>${total.toFixed(1)} L</b>` : ""}<br>`);
+  fillStrip("recTint", rgb, WHITE); fillStrip("recTone", rgb, GREY); fillStrip("recShade", rgb, BLACK);
+  save();
+}
+
+/* ===================== front: table ===================== */
+function renderTypes() {
+  const tb = $("typeBody"); tb.innerHTML = "";
+  WHEEL.forEach(w => {
+    const tr = document.createElement("tr"); tr.className = "pick" + (w.i === S.a ? " sel" : "");
+    tr.innerHTML = `<td><span class="dot" style="background:${toHex(w.rgb)}"></span></td><td>${w.name}</td><td>${TYPE[w.type]}</td>` +
+      `<td>${w.type === "P" ? "—" : w.from}</td><td>${w.warm ? "warm" : "cool"}</td><td>${valueStep(w.rgb)}</td><td style="font-family:var(--mono)">${toHex(w.rgb).toUpperCase()}</td>`;
+    tr.onclick = () => { S.a = w.i; render(); };
+    tb.appendChild(tr);
+  });
+}
+
+/* ===================== back side ===================== */
+function renderHarm() {
+  const hb = $("harmBtns"); hb.innerHTML = "";
+  Object.keys(HARM).forEach((k, n) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "btn sm" + (S.harm === k ? " on" : "");
+    b.textContent = HARM[k].name; b.title = "Key " + (n + 1); b.onclick = () => { S.harm = k; render(); };
+    hb.appendChild(b);
+  });
+  $("anaRow").classList.toggle("hidden", S.harm !== "ana");
+  $("anaRow").querySelectorAll("button").forEach(b => { b.classList.toggle("on", +b.dataset.n === S.anaN); b.onclick = () => { S.anaN = +b.dataset.n; render(); }; });
+  $("harmDesc").textContent = HARM[S.harm].desc;
+  const cols = harmColours(), pal = $("palette"); pal.innerHTML = "";
+  cols.forEach(c => pal.appendChild(win(c.rgb, c.name, c.i !== undefined ? TYPE[WHEEL[c.i].type].toLowerCase() : "")));
+  const comp = $("comp"); comp.innerHTML = "";
+  const shares = cols.length === 1 ? [100] : cols.length === 2 ? [70, 30] : cols.length === 3 ? [60, 30, 10] : cols.length === 4 ? [55, 25, 12, 8] : [40, 25, 15, 12, 8];
+  cols.forEach((c, k) => { const d = document.createElement("div"); d.style.flex = shares[k]; d.style.background = toHex(c.rgb); d.title = c.name; comp.appendChild(d); });
+}
+function renderTTS() {
+  const p = WHEEL[S.pure].rgb, box = $("ttsWins"); box.innerHTML = "";
+  box.append(win(p, "Pure · " + WHEEL[S.pure].name), win(lerp(p, WHITE, 0.5), "Tint", "+ white"), win(lerp(p, GREY, 0.5), "Tone", "+ grey"), win(lerp(p, BLACK, 0.5), "Shade", "+ black"));
+  fillStrip("ttsTint", p, WHITE); fillStrip("ttsTone", p, GREY); fillStrip("ttsShade", p, BLACK);
+}
+
+/* ===================== value scale ===================== */
+function renderValue() {
+  const vs = $("vscale"); vs.innerHTML = "";
+  for (let i = 1; i <= 10; i++) {
+    const g = greyOfL(STEP_L(i)), d = document.createElement("div");
+    d.style.background = toHex(g); d.style.color = textOn(g); d.textContent = i; d.title = `value ${i} · L* ${STEP_L(i).toFixed(0)} · ${Math.round((i - 1) / 9 * 100)} % grey`;
+    vs.appendChild(d);
+  }
+  let items;
+  if (S.side === "front") {
+    const r = recipeResult();
+    items = [{ name: WHEEL[S.a].name + " (A)", rgb: WHEEL[S.a].rgb }, { name: WHEEL[S.b].name + " (B)", rgb: WHEEL[S.b].rgb },
+      { name: "A + B", rgb: mix2(PIG.wheel(S.a), PIG.wheel(S.b), S.ratio / 100) }];
+    if (r) items.push({ name: "Recipe result", rgb: r.rgb });
+  } else items = harmColours();
+  const vm = $("vmarks"); vm.innerHTML = "";
+  const cells = Array.from({ length: 10 }, () => { const d = document.createElement("div"); vm.appendChild(d); return d; });
+  items.forEach(c => { const i = document.createElement("i"); i.style.background = toHex(c.rgb); i.title = c.name + " → value " + valueStep(c.rgb); cells[valueStep(c.rgb) - 1].appendChild(i); });
+  const vals = items.map(c => valueStep(c.rgb)), span = Math.max(...vals) - Math.min(...vals);
+  $("vNote").textContent = (S.side === "front" ? "Dots: colours A, B, their mix and the recipe result. " : "Dots: the colours of the palette. ") +
+    items.map(c => `${c.name} ${valueStep(c.rgb)}`).join(" · ") +
+    `. Range ${span + 1} of 10 values` + (span <= 2 ? " — very close in value; add lighter tints or darker shades for contrast." : ".");
+}
+function checkImage(file) {
+  const img = new Image(), url = URL.createObjectURL(file);
+  img.onload = () => {
+    const mx = 520, sc = Math.min(1, mx / Math.max(img.width, img.height)), w = Math.max(1, Math.round(img.width * sc)), h = Math.max(1, Math.round(img.height * sc));
+    const c1 = $("imgOrig"), c2 = $("imgVal"); c1.width = c2.width = w; c1.height = c2.height = h;
+    const x1 = c1.getContext("2d"); x1.drawImage(img, 0, 0, w, h); URL.revokeObjectURL(url);
+    const d = x1.getImageData(0, 0, w, h), out = new ImageData(w, h), hist = new Array(10).fill(0);
+    const greys = Array.from({ length: 10 }, (_, k) => greyOfL(STEP_L(k + 1)).map(v => Math.round(v * 255)));
+    const LUT = new Float32Array(256); for (let k = 0; k < 256; k++) LUT[k] = lin(k / 255);
+    for (let p = 0; p < d.data.length; p += 4) {
+      const Y = 0.2126729 * LUT[d.data[p]] + 0.7151522 * LUT[d.data[p + 1]] + 0.072175 * LUT[d.data[p + 2]];
+      const L = Y > 216 / 24389 ? 116 * Math.cbrt(Y) - 16 : 24389 / 27 * Y;
+      const s = Math.min(10, Math.max(1, Math.round((100 - L) / 100 * 9) + 1)); hist[s - 1]++;
+      const g = greys[s - 1]; out.data[p] = g[0]; out.data[p + 1] = g[1]; out.data[p + 2] = g[2]; out.data[p + 3] = 255;
+    }
+    c2.getContext("2d").putImageData(out, 0, 0);
+    const tot = w * h, hb = $("hist"); hb.innerHTML = ""; const pk = Math.max(...hist);
+    hist.forEach((n, k) => { const b = document.createElement("div"); b.style.height = (n / pk * 100) + "%"; b.title = `value ${k + 1}: ${(n / tot * 100).toFixed(1)} %`; hb.appendChild(b); });
+    ["imgBox", "hist", "histLab"].forEach(id => $(id).classList.remove("hidden"));
+    const used = hist.map((n, k) => n / tot >= 0.01 ? k + 1 : 0).filter(Boolean);
+    const lo = Math.min(...used), hi = Math.max(...used), dark = hist.slice(7).reduce((a, b) => a + b, 0) / tot, light = hist.slice(0, 3).reduce((a, b) => a + b, 0) / tot;
+    let msg = `Uses values ${lo} to ${hi} (${used.length} of 10 with at least 1 % of the picture). Lights (1–3): ${(light * 100).toFixed(0)} %, darks (8–10): ${(dark * 100).toFixed(0)} %.`;
+    if (hi - lo < 5) msg += " The range is narrow, so the painting may look flat.";
+    if (dark < 0.05) msg += " Very little in the darkest values — try adding darker versions of your colours.";
+    if (light < 0.05) msg += " Very little in the lightest values — a few lights would add sparkle.";
+    if (hi - lo >= 5 && dark >= 0.05 && light >= 0.05) msg += " A good spread from light to dark.";
+    $("imgNote").textContent = msg;
+  };
+  img.onerror = () => { $("imgNote").textContent = "Could not read that picture."; };
+  img.src = url;
+}
+
+/* ===================== PNG export ===================== */
+function savePng(title, rows, file) {
+  const sc = 2, W = 760, rowH = 64, H = 90 + rows.length * (rowH + 10) + 30;
+  const cv = document.createElement("canvas"); cv.width = W * sc; cv.height = H * sc;
+  const x = cv.getContext("2d"); x.scale(sc, sc);
+  x.fillStyle = "#f4f4f4"; x.fillRect(0, 0, W, H);
+  x.fillStyle = "#111"; x.font = "700 20px system-ui,sans-serif"; x.fillText(title, 24, 40);
+  x.font = "12px system-ui,sans-serif"; x.fillStyle = "#555"; x.fillText("Colour Mixer & Pocket Colour Wheel · haivijayanand.github.io · " + new Date().toISOString().slice(0, 10), 24, 62);
+  rows.forEach((r, k) => {
+    const y = 84 + k * (rowH + 10);
+    x.fillStyle = toHex(r.rgb); x.fillRect(24, y, 120, rowH); x.strokeStyle = "#333"; x.strokeRect(24, y, 120, rowH);
+    x.fillStyle = "#111"; x.font = "600 15px system-ui,sans-serif"; x.fillText(r.name, 160, y + 22);
+    const hsl = toHsl(r.rgb);
+    x.font = "12.5px ui-monospace,Consolas,monospace"; x.fillStyle = "#333";
+    x.fillText(`${toHex(r.rgb).toUpperCase()}   RGB ${r.rgb.map(v => Math.round(v * 255)).join(",")}   HSL ${Math.round(hsl[0])},${Math.round(hsl[1])}%,${Math.round(hsl[2])}%   value ${valueStep(r.rgb)}/10`, 160, y + 42);
+    if (r.note) { x.fillStyle = "#555"; x.fillText(r.note, 160, y + 58); }
+  });
+  const a = document.createElement("a"); a.download = file; a.href = cv.toDataURL("image/png"); a.click();
+}
+
+/* ===================== render / events ===================== */
+function render() {
+  document.querySelectorAll(".front").forEach(e => e.classList.toggle("hidden", S.side !== "front"));
+  document.querySelectorAll(".back").forEach(e => e.classList.toggle("hidden", S.side !== "back"));
+  $("frontTarget").classList.toggle("hidden", S.side !== "front");
+  $("sideFront").classList.toggle("on", S.side === "front"); $("sideBack").classList.toggle("on", S.side === "back");
+  $("optNames").checked = S.names; $("optValue").checked = S.valueView; $("optTemp").checked = S.temp;
+  $("keysHelp").innerHTML = S.side === "front"
+    ? `Keys: <span class="kbd">←</span><span class="kbd">→</span> turn Colour ${S.target} · <span class="kbd">A</span>/<span class="kbd">B</span> choose which · <span class="kbd">T</span> turn over · <span class="kbd">G</span> value view · <span class="kbd">F</span> full screen`
+    : `Keys: <span class="kbd">←</span><span class="kbd">→</span> move the pointer · <span class="kbd">1</span>–<span class="kbd">7</span> relationship · <span class="kbd">T</span> turn over · <span class="kbd">G</span> value view · <span class="kbd">F</span> full screen`;
+  drawWheel();
+  if (S.side === "front") { renderDial(); renderRecipe(); renderTypes(); } else { renderHarm(); renderTTS(); }
+  renderValue(); save();
+}
+$("sideFront").onclick = () => { S.side = "front"; render(); };
+$("sideBack").onclick = () => { S.side = "back"; render(); };
+$("tgtA").onclick = () => { S.target = "A"; render(); };
+$("tgtB").onclick = () => { S.target = "B"; render(); };
+$("chipA").onclick = () => { S.target = "A"; render(); };
+$("chipB").onclick = () => { S.target = "B"; render(); };
+$("swapAB").onclick = () => { [S.a, S.b] = [S.b, S.a]; S.ratio = 100 - S.ratio; render(); };
+$("ratio").oninput = e => { S.ratio = +e.target.value; drawWheel(); renderDial(); renderValue(); save(); };
+$("dialToRecipe").onclick = () => {
+  const isL = S.mode === "L", tot = isL ? 10 : 100;
+  S.ings = [{ kind: "wheel", idx: S.a, amt: +(tot * (100 - S.ratio) / 100).toFixed(1) }, { kind: "wheel", idx: S.b, amt: +(tot * S.ratio / 100).toFixed(1) }];
+  render(); $("cRecipe").scrollIntoView({ behavior: "smooth", block: "start" });
+};
+$("palToRecipe").onclick = () => {
+  const idx = S.harm === "mono" ? [S.pure] : harmIdx(), isL = S.mode === "L";
+  S.ings = idx.map(i => ({ kind: "wheel", idx: i, amt: isL ? 2 : +(100 / idx.length).toFixed(1) }));
+  if (!isL) { const s = S.ings.reduce((a, g) => a + g.amt, 0); S.ings[0].amt = +(S.ings[0].amt + 100 - s).toFixed(1); }
+  S.side = "front"; render(); $("cRecipe").scrollIntoView({ behavior: "smooth", block: "start" });
+};
+$("modePct").onclick = () => {
+  if (S.mode !== "pct") { const t = S.ings.reduce((s, g) => s + (+g.amt || 0), 0) || 1; S.ings.forEach(g => g.amt = +(g.amt / t * 100).toFixed(1)); }
+  S.mode = "pct"; render();
+};
+$("modeL").onclick = () => { if (S.mode !== "L") S.ings.forEach(g => g.amt = +(g.amt / 10).toFixed(1)); S.mode = "L"; render(); };
+$("normPct").onclick = () => {
+  const t = S.ings.reduce((s, g) => s + (+g.amt || 0), 0); if (t <= 0) return;
+  S.ings.forEach(g => g.amt = +(g.amt / t * 100).toFixed(1));
+  const s = S.ings.reduce((a, g) => a + g.amt, 0); S.ings[0].amt = +(S.ings[0].amt + 100 - s).toFixed(1); render();
+};
+$("addIng").onclick = () => { S.ings.push({ kind: "white", amt: S.mode === "L" ? 1 : 0 }); render(); };
+$("copyRec").onclick = () => {
+  const r = recipeResult(); if (!r) return;
+  const isL = S.mode === "L", tot = S.ings.reduce((s, g) => s + (+g.amt || 0), 0);
+  copy(S.ings.filter(g => +g.amt > 0).map(g => `${ingName(g)}: ${isL ? (+g.amt).toFixed(1) + " L (" + (g.amt / tot * 100).toFixed(1) + " %)" : g.amt + " %"}`).join("\n") +
+    `\n= ${isL ? tot.toFixed(1) + " L of " : ""}${toHex(r.rgb).toUpperCase()} (${describe(r.rgb)}, value ${valueStep(r.rgb)}/10)`);
+};
+$("pngRec").onclick = () => {
+  const r = recipeResult(); if (!r) return;
+  const isL = S.mode === "L", tot = S.ings.reduce((s, g) => s + (+g.amt || 0), 0);
+  const rows = S.ings.filter(g => +g.amt > 0).map(g => ({ name: ingName(g), rgb: ingRgb(g), note: isL ? `${(+g.amt).toFixed(1)} L · ${(g.amt / tot * 100).toFixed(1)} % of the mix` : `${g.amt} %` }));
+  rows.push({ name: "Result — " + describe(r.rgb), rgb: r.rgb, note: isL ? `${tot.toFixed(1)} L in total` : "" });
+  savePng("Colour recipe", rows, "colour-recipe.png");
+};
+$("copyPal").onclick = () => copy(harmColours().map(c => `${c.name} ${toHex(c.rgb).toUpperCase()}`).join("\n"));
+$("pngPal").onclick = () => savePng(`${HARM[S.harm].name} palette — ${WHEEL[S.pure].name}`, harmColours().map(c => ({ name: c.name, rgb: c.rgb })), "colour-palette.png");
+$("optNames").onchange = e => { S.names = e.target.checked; render(); };
+$("optValue").onchange = e => { S.valueView = e.target.checked; render(); };
+$("optTemp").onchange = e => { S.temp = e.target.checked; render(); };
+$("imgIn").onchange = e => { if (e.target.files[0]) checkImage(e.target.files[0]); };
+
+/* theme: one site-wide choice through site-theme.js when present */
+function themeNow() { return (window.SiteTheme && SiteTheme.get()) || document.documentElement.getAttribute("data-theme") || "light"; }
+function themeLabel() { $("themeBtn").textContent = themeNow() === "dark" ? "☀ Light" : "☾ Dark"; }
+$("themeBtn").onclick = () => {
+  if (window.SiteTheme) SiteTheme.toggle();
+  else document.documentElement.setAttribute("data-theme", themeNow() === "dark" ? "light" : "dark");
+  themeLabel();
+};
+window.addEventListener("site-theme", themeLabel);
+themeLabel();
+
+/* full screen */
+const fsOn = () => document.fullscreenElement || document.webkitFullscreenElement;
+function toggleFs() {
+  const r = document.documentElement;
+  if (fsOn()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  else if (r.requestFullscreen || r.webkitRequestFullscreen) (r.requestFullscreen || r.webkitRequestFullscreen).call(r);
+}
+$("fsBtn").onclick = toggleFs;
+const fsLab = () => { $("fsBtn").textContent = fsOn() ? "✕ Exit full screen" : "⛶ Full screen"; };
+document.addEventListener("fullscreenchange", fsLab); document.addEventListener("webkitfullscreenchange", fsLab);
+if (!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen)) $("fsBtn").classList.add("hidden");
+
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const tg = e.target.tagName; if (tg === "INPUT" || tg === "SELECT" || tg === "TEXTAREA") return;
+  const k = e.key;
+  if (k === "ArrowLeft" || k === "ArrowRight") {
+    const d = k === "ArrowRight" ? 1 : -1;
+    if (S.side === "front") { if (S.target === "A") S.a = mod12(S.a + d); else S.b = mod12(S.b + d); } else S.pure = mod12(S.pure + d);
+    render(); e.preventDefault();
+  } else if (k === "t" || k === "T") { S.side = S.side === "front" ? "back" : "front"; render(); }
+  else if ((k === "a" || k === "A") && S.side === "front") { S.target = "A"; render(); }
+  else if ((k === "b" || k === "B") && S.side === "front") { S.target = "B"; render(); }
+  else if (k === "g" || k === "G") { S.valueView = !S.valueView; render(); }
+  else if (k === "f" || k === "F") toggleFs();
+  else if (S.side === "back" && k >= "1" && k <= "7") { S.harm = Object.keys(HARM)[+k - 1]; render(); }
+});
+
+/* sanitise stored state */
+S.a = mod12(+S.a || 0); S.b = mod12(+S.b || 0); S.pure = mod12(+S.pure || 0);
+if (!HARM[S.harm]) S.harm = "comp"; if (![2, 3, 4].includes(S.anaN)) S.anaN = 3;
+if (!Array.isArray(S.ings) || !S.ings.length) S.ings = [{ kind: "wheel", idx: 0, amt: 50 }, { kind: "wheel", idx: 4, amt: 50 }];
+S.ings = S.ings.map(g => ({ kind: ["wheel", "white", "black", "custom"].includes(g.kind) ? g.kind : "white", idx: mod12(+g.idx || 0), amt: Math.max(0, +g.amt || 0), hex: /^#[0-9a-f]{6}$/i.test(g.hex || "") ? g.hex : "#7a8f3c" }));
+if (S.mode !== "L") S.mode = "pct";
+render();
+</script>
+</body>
+</html>

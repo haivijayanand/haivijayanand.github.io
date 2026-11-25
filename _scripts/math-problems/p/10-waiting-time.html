@@ -1,0 +1,72 @@
+<!--META {"num":10,"slug":"waiting-time","cat":"prob","title":"The Waiting-Time Paradox","tag":"Buses come every 10 minutes on average, yet you wait longer than 5 — up to 10 minutes if they come at random."} -->
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p>Buses on your route come <b>every 10 minutes on average</b>. You arrive at the stop at a random moment. How long do you expect to wait?</p>
+  <p>Half the gap, so 5 minutes? That is right only if the buses run like clockwork.</p>
+</section>
+<section id="answer">
+  <h2>2. The answer</h2>
+  <div class="grid3">
+    <div class="card c"><b>Perfectly regular buses</b><div class="big">5 min</div></div>
+    <div class="card a"><b>Bunched: gaps of 2 and 18 min</b><div class="big">8.2 min</div></div>
+    <div class="card b"><b>Completely random buses</b><div class="big">10 min</div>the full average gap!</div>
+  </div>
+  <p class="note">You are more likely to arrive during a <b>long</b> gap than a short one, simply because long gaps take up more of the clock. So the gap you land in is longer than the average gap.</p>
+</section>
+<section id="why">
+  <h2>3. Working it out</h2>
+  <p>A gap of length <i>g</i> catches your arrival with chance proportional to <i>g</i>, and if you land in it you wait <i>g</i>/2 on average. So</p>
+  <div class="eq">E[wait] = E[<i>g</i>²] / (2 E[<i>g</i>]) = (μ/2) · (1 + CV²)</div>
+  <p>where μ is the average gap and CV is the coefficient of variation (standard deviation ÷ mean) of the gaps. Regular buses: CV = 0, wait μ/2. Random (Poisson) buses: CV = 1, wait μ. Bunched 2 and 18: E[<i>g</i>²] = (4 + 324)/2 = 164, so wait = 164/20 = 8.2 min.</p>
+  <h3>The same trap elsewhere</h3>
+  <ul>
+    <li><b>Class size:</b> a college's average class may be 30, but the average student sits in a much bigger class, because big classes contain more students.</li>
+    <li><b>Friendship paradox:</b> on average, your friends have more friends than you do.</li>
+    <li><b>Machine downtime:</b> an inspector who arrives at random sees long repairs more often than short ones and overestimates the average repair time.</li>
+  </ul>
+</section>
+<section id="sim">
+  <h2>4. Simulate a day at the bus stop</h2>
+  <div class="row">Bus pattern: <select id="mode"><option value="reg">Regular, every 10 min</option><option value="uni">Gaps random between 5 and 15 min</option><option value="bun" selected>Bunched: 2 min then 18 min</option><option value="exp">Completely random (Poisson)</option></select>
+    <button class="primary" onclick="MP.ctl.play()">▶ Play (P)</button><button onclick="MP.ctl.step()">Step — one passenger (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button><button id="rs">Reset</button></div>
+  <canvas id="road"></canvas>
+  <div class="grid3">
+    <div class="card c"><b>Average gap between buses</b><div class="big" id="oG">–</div></div>
+    <div class="card a"><b>Passengers' average wait</b><div class="big" id="oW">–</div></div>
+    <div class="card b"><b>Formula</b><div class="big" id="oF">–</div></div>
+  </div>
+  <h3>Waits experienced by passengers</h3>
+  <canvas id="cv"></canvas>
+</section>
+<section id="fine">
+  <h2>5. Fine print</h2>
+  <ul>
+    <li>This is also called the <b>inspection paradox</b> or length-biased sampling.</li>
+    <li>Bus bunching is real: a late bus picks up more passengers, slows down further, and the bus behind catches up. Timetable "headway control" fights exactly this.</li>
+  </ul>
+</section>
+<script>
+const $=MP.$, T=600; // a 10-hour day, minutes
+let buses=[], S;
+function gap(){ const m=$("mode").value; if(m==="reg") return 10; if(m==="uni") return 5+10*Math.random(); if(m==="exp") return -10*Math.log(1-Math.random()); return null; }
+function makeBuses(){ buses=[]; let t=Math.random()*10, k=0; const m=$("mode").value;
+  while(t<T+60){ buses.push(t); t+= m==="bun" ? (k++%2?18:2) : gap(); } }
+function formula(){ const m=$("mode").value; return m==="reg"?5:m==="uni"?(100+100/12)/20:m==="bun"?8.2:10; }
+function reset(){ if(MP.ctl) MP.ctl.pause(); makeBuses(); S={w:[],arr:[]}; show(); }
+function pass(){ const t=Math.random()*T, b=buses.find(x=>x>=t); S.w.push(b-t); S.arr.push(t); if(S.arr.length>40) S.arr.shift(); }
+function show(){ const gs=[]; for(let i=1;i<buses.length;i++) if(buses[i]<=T) gs.push(buses[i]-buses[i-1]);
+  $("oG").textContent=(gs.reduce((a,b)=>a+b,0)/gs.length).toFixed(2)+" min"; $("oW").textContent=S.w.length?(S.w.reduce((a,b)=>a+b,0)/S.w.length).toFixed(2)+" min":"–";
+  $("oF").textContent=formula().toFixed(2)+" min"; road(); hist(); }
+function road(){ const {g,W,H}=MP.canvas($("road"),110), span=120, x=t=>10+t/span*(W-20);
+  g.strokeStyle=MP.css("--line"); g.lineWidth=2; g.beginPath(); g.moveTo(10,60); g.lineTo(W-10,60); g.stroke();
+  g.font="12px Segoe UI"; g.fillStyle=MP.css("--muted"); g.textAlign="center";
+  for(let t=0;t<=span;t+=10){ g.fillText(t+" min",x(t),100); }
+  buses.filter(b=>b<=span).forEach(b=>{ g.fillStyle=MP.css("--a"); g.fillRect(x(b)-5,40,10,20); g.font="18px Segoe UI"; g.fillText("🚌",x(b),34); g.font="12px Segoe UI"; });
+  S.arr.filter(a=>a<=span).forEach(a=>{ const b=buses.find(v=>v>=a); g.strokeStyle=MP.css("--b"); g.lineWidth=2; g.beginPath(); g.moveTo(x(a),70); g.lineTo(x(b),70); g.stroke();
+    g.fillStyle=MP.css("--b"); g.beginPath(); g.arc(x(a),70,4,0,7); g.fill(); }); }
+function hist(){ const bins=24, mx=24, w=mx/bins, c=new Array(bins).fill(0); S.w.forEach(v=>c[Math.min(bins-1,Math.floor(v/w))]++); const n=Math.max(1,S.w.length);
+  MP.chart($("cv"),{height:240,x:{min:0,max:mx,label:"Wait (min)"},y:{min:0,max:Math.max(0.05,...c.map(v=>v/n))*1.15,pct:true},
+    bars:c.map((v,i)=>({x0:i*w+0.05,x1:(i+1)*w-0.05,y:v/n,color:"--a"})),vlines:[{x:formula(),label:"formula",color:"--b"}]}); }
+MP.ctl=MP.loop(pass,{batch:()=>Math.max(1,Math.floor(S.w.length/15)),after:show});
+$("mode").onchange=reset; $("rs").onclick=reset; MP.onRedraw(show); reset();
+</script>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Interesting Math Problems #25 — Stacking Blocks Over the Edge
+FAMILY:  interesting-math-problems
+VERSION: 1.0.0
+DATE:    2026-11-25
+CHAT:    Interesting Math Problems group — build all 25 problems in groups and upload
+CHANGES: 1.0.0 — first release
+STATUS:  public — haivijayanand.github.io/math-problems/block-stacking.html
+-->
+<html lang="en" data-theme="light">
+<head>
+<script src="/assets/js/site-theme.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stacking Blocks Over the Edge — Interesting Math Problems — K Vijay Anand</title>
+<meta name="description" content="Stack identical blocks at a table&#x27;s edge. Four blocks can stick out more than a whole block length — and with enough blocks, the overhang has no limit.">
+<link rel="stylesheet" href="mp.css">
+<script type="module" src="/assets/js/site-progress.js"></script>
+</head>
+<body>
+<header class="mp">
+  <button id="btnSide" title="Show / hide contents (M)">☰</button>
+  <h1>Stacking Blocks Over the Edge<br><span class="crumb"><a href="/">Home</a> · <a href="./">Interesting Math Problems</a> · Problem 25 · Engineering & decisions</span></h1>
+  <button id="themeBtn" title="Light / dark theme">◐ Theme</button>
+  <button id="btnFull" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<div class="wrap">
+<nav id="side"></nav>
+<main>
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p>You have identical rectangular blocks (bricks, books, dominoes), each 1 unit long. Stacking one on top of another, with no glue, how far can the top block reach <b>beyond the edge of the table</b>?</p>
+  <p>Can the top block be entirely clear of the table? How many blocks would it take to overhang by 2 lengths? By 10?</p>
+</section>
+<section id="answer">
+  <h2>2. The answer</h2>
+  <div class="grid3">
+    <div class="card a"><b>Four blocks</b><div class="big">25/24</div>block lengths of overhang: the top block is completely past the edge.</div>
+    <div class="card c"><b>Two lengths</b><div class="big">31 blocks</div>Three lengths need 227.</div>
+    <div class="card b"><b>No limit</b><div class="big">½ H<sub>n</sub></div>grows without bound, but only like ½ ln <i>n</i> — painfully slowly.</div>
+  </div>
+</section>
+<section id="why">
+  <h2>3. Working it out</h2>
+  <p>Build from the top down. The top block can stick out ½ beyond the block below — its centre of mass sits right on that block's edge. The top two blocks together have their combined centre of mass ¼ in from the top block's offset, so they can overhang the third block by ¼. In general the top <i>k</i> blocks, as a group, balance on block <i>k</i> + 1 when shifted by 1/(2<i>k</i>):</p>
+  <div class="eq">Overhang of <i>n</i> blocks = ½ (1 + ½ + ⅓ + … + 1/<i>n</i>) = ½ H<sub><i>n</i></sub></div>
+  <p>The <b>harmonic series</b> H<sub><i>n</i></sub> diverges — it grows past any number, though only like ln <i>n</i> + 0.577. An overhang of 10 block lengths needs H<sub><i>n</i></sub> ≥ 20, so <i>n</i> ≈ e<sup>20 − 0.577</sup> ≈ 272 million blocks.</p>
+  <table><tr><th>Blocks <i>n</i></th><th>1</th><th>2</th><th>3</th><th>4</th><th>10</th><th>31</th><th>100</th><th>227</th><th>1,000</th></tr>
+  <tr><td>Overhang (block lengths)</td><td>0.500</td><td>0.750</td><td>0.917</td><td class="a">1.042</td><td>1.464</td><td class="a">2.014</td><td>2.594</td><td class="a">3.002</td><td>3.743</td></tr></table>
+</section>
+<section id="sim">
+  <h2>4. Build the stack</h2>
+  <div class="row"><button class="primary" onclick="MP.ctl.play()">▶ Add blocks (P)</button><button onclick="MP.ctl.step()">Add one block (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button><button id="rs">Clear</button>
+    Jump to <input type="number" id="jn" value="31" min="1" max="2000"> blocks <button id="jump">Go</button></div>
+  <canvas id="stack"></canvas>
+  <div class="grid3">
+    <div class="card c"><b>Blocks</b><div class="big" id="oN">0</div></div>
+    <div class="card a"><b>Overhang</b><div class="big" id="oO">–</div><span>block lengths</span></div>
+    <div class="card b"><b>Top block clear of the table?</b><div class="big" id="oC">–</div></div>
+  </div>
+  <h3>Overhang against number of blocks (log scale)</h3>
+  <canvas id="cv"></canvas>
+</section>
+<section id="fine">
+  <h2>5. Fine print</h2>
+  <ul>
+    <li>This is the best for a <b>single tower</b> with one block per level. If several blocks may share a level and act as counterweights, Paterson and Zwick (2006) showed the overhang can grow like <i>n</i><sup>1/3</sup> — enormously more than ln <i>n</i>.</li>
+    <li>Real stacks need a safety margin: at the harmonic limit each level is exactly balanced and the slightest tilt topples it.</li>
+    <li>The same centre-of-mass reasoning sizes counterweights for cantilevered loads and tells you how far a crane jib can reach before tipping.</li>
+  </ul>
+</section>
+<footer class="mp"><a href="braess-paradox.html">← 24. Braess's Paradox</a><a href="./">All problems</a><a href="kelly-criterion.html">26. The Kelly Criterion →</a></footer>
+</main>
+</div>
+<script src="mp.js"></script>
+<script>
+const $=MP.$; let n=0;
+const H=k=>{ let s=0; for(let i=1;i<=k;i++) s+=1/i; return s; };
+function show(){ $("oN").textContent=n; $("oO").textContent=n?(H(n)/2).toFixed(3):"–"; $("oC").textContent=n?(H(n)/2>=1?"Yes ✓":"Not yet"):"–"; draw(); chart(); }
+function draw(){ const {g,W,Hh}={...MP.canvas($("stack"),360),Hh:360};
+  if(!n){ g.fillStyle=MP.css("--muted"); g.font="14px Segoe UI"; g.fillText("Press S to place the first block.",20,30); return; }
+  const over=H(n)/2, spanL=1.2, spanR=over+0.3, s=Math.min((W-40)/(spanL+spanR),260), bh=Math.max(1.5,Math.min(30,(Hh-40)/n)), edgeX=20+spanL*s, base=Hh-20;
+  g.fillStyle=MP.css("--grey"); g.fillRect(0,base,edgeX,20); g.fillStyle=MP.css("--ink"); g.font="12px Segoe UI"; g.fillText("table",8,base+14);
+  // block k from top (1..n): right end position = over - sum_{j<k} 1/(2j)
+  let right=over; const pos=[]; for(let k=1;k<=n;k++){ pos.push(right); right-=1/(2*k); }
+  for(let k=n;k>=1;k--){ const r=pos[k-1], x=edgeX+(r-1)*s, y=base-(n-k+1)*bh; g.fillStyle=k===1?MP.css("--b"):MP.css("--a"); g.globalAlpha=0.55+0.45*((k%2)); g.fillRect(x,y,s,bh-(bh>4?1:0)); }
+  g.globalAlpha=1; g.strokeStyle=MP.css("--ink"); g.setLineDash([4,4]); g.beginPath(); g.moveTo(edgeX,base); g.lineTo(edgeX,10); g.stroke(); g.setLineDash([]);
+  g.strokeStyle=MP.css("--b"); g.beginPath(); g.moveTo(edgeX+over*s,base); g.lineTo(edgeX+over*s,10); g.stroke();
+  g.fillStyle=MP.css("--b"); g.font="bold 14px Segoe UI"; g.fillText("overhang "+over.toFixed(3),Math.min(W-150,edgeX+over*s+6),24); }
+function chart(){ const pts=[]; for(let i=0;i<=200;i++){ const k=Math.max(1,Math.round(Math.pow(10,i*4/200))); pts.push([k,H(k)/2]); }
+  MP.chart($("cv"),{height:260,x:{min:1,max:10000,log:true,label:"Blocks (log scale)"},y:{min:0,max:5,label:"overhang"},series:[{pts,color:"--a"}],
+    hlines:[{y:1,label:"one block length",color:"--b"}],points:n?[{x:n,y:H(n)/2,color:"--b",r:6}]:[]}); }
+MP.ctl=MP.loop(()=>{ if(n<2000) n++; },{interval:250,after:show});
+$("rs").onclick=()=>{MP.ctl.pause();n=0;show();}; $("jump").onclick=()=>{MP.ctl.pause(); n=Math.max(1,Math.min(2000,+$("jn").value||1)); show();}; MP.onRedraw(show); show();
+</script>
+</body>
+</html>

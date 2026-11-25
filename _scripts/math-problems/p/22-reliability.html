@@ -1,0 +1,72 @@
+<!--META {"num":22,"slug":"reliability","cat":"eng","title":"Series, Parallel and the 99 % Trap","tag":"A machine of 100 parts, each 99 % reliable, works only 37 % of the time. Two 90 % pumps side by side match one 99 % pump — until they share a weakness."} -->
+<section id="problem">
+  <h2>1. The problem</h2>
+  <ul>
+    <li><b>Part A.</b> A test rig has 100 parts. Every one must work for the rig to run, and each part is 99 % reliable over a test. How reliable is the rig?</li>
+    <li><b>Part B.</b> A cooling loop needs one pump. Is it better to fit one excellent pump (99 % reliable) or two ordinary pumps (90 % each) in parallel, either of which can do the job?</li>
+  </ul>
+</section>
+<section id="answer">
+  <h2>2. The answer</h2>
+  <div class="answer">
+    <div class="card b"><b>Part A: 100 parts in series</b><div class="big">36.6 %</div>0.99<sup>100</sup>. Excellent parts, unreliable machine.</div>
+    <div class="card a"><b>Part B: two 90 % pumps in parallel</b><div class="big">99 %</div>1 − 0.1² — the same as the expensive pump. Three of them give 99.9 %.</div>
+  </div>
+  <p class="note">Series multiplies <b>successes</b>, so reliability falls fast. Parallel multiplies <b>failures</b>, so it rises fast — but only if the failures are truly independent.</p>
+</section>
+<section id="why">
+  <h2>3. Working it out</h2>
+  <p>With independent parts of reliability <i>R</i> (and failure chance <i>F</i> = 1 − <i>R</i>):</p>
+  <div class="eq">Series of <i>n</i>: &nbsp;<i>R</i><sub>sys</sub> = <i>R</i><sup><i>n</i></sup> &nbsp;&nbsp;&nbsp;&nbsp; Parallel of <i>n</i>: &nbsp;<i>R</i><sub>sys</sub> = 1 − <i>F</i><sup><i>n</i></sup></div>
+  <div class="eq"><i>k</i>-out-of-<i>n</i> (e.g. 2-out-of-3 voting): &nbsp;<i>R</i><sub>sys</sub> = Σ<sub><i>i</i>=<i>k</i>…<i>n</i></sub> C(<i>n</i>, <i>i</i>) <i>R</i><sup><i>i</i></sup> <i>F</i><sup><i>n</i>−<i>i</i></sup></div>
+  <p>For a long series chain a handy estimate is <i>R</i><sup><i>n</i></sup> ≈ e<sup>−<i>nF</i></sup>: 100 parts with <i>F</i> = 1 % give e<sup>−1</sup> ≈ 37 %. To keep a 100-part machine at 99 %, each part needs 99.99 %.</p>
+  <h3>The catch: common-cause failure</h3>
+  <p>Two pumps fed from the same power supply, sharing the same strainer or built from the same faulty batch can fail together. In the simple <b>beta-factor</b> model a fraction β of each pump's failures hits both at once. With β = 10 %, the two-pump system drops from 99.0 % to about 98.2 %, and no number of extra pumps can push it above 1 − β<i>F</i> = 99 %.</p>
+</section>
+<section id="calc">
+  <h2>4. Calculator</h2>
+  <div class="row">Part reliability <i>R</i> (%) <input type="number" id="R" value="90" step="0.1" min="1" max="99.999"> · Parts <i>n</i> <input type="number" id="n" value="2" min="1" max="1000"> · Needed to work <i>k</i> <input type="number" id="k" value="1" min="1"> · Common-cause β (%) <input type="number" id="beta" value="0" min="0" max="100" step="1"></div>
+  <div class="grid3">
+    <div class="card b"><b>All <i>n</i> in series</b><div class="big" id="oS">–</div></div>
+    <div class="card c"><b><i>k</i>-out-of-<i>n</i></b><div class="big" id="oK">–</div><span id="oK2"></span></div>
+    <div class="card a"><b>Parallel (any 1 of <i>n</i>)</b><div class="big" id="oP">–</div><span id="oP2"></span></div>
+  </div>
+  <h3>System reliability against part reliability</h3>
+  <p><span class="ca">— parallel, 1 of n</span> &nbsp; <span class="cc">— k of n</span> &nbsp; <span class="cb">— series of n</span> &nbsp; (dashed: a single part)</p>
+  <canvas id="cv"></canvas>
+</section>
+<section id="sim">
+  <h2>5. Simulation: 200 systems</h2>
+  <p>Each tile is one system of <i>n</i> parts, tested once with the settings above (common cause included). Blue tiles work as a <i>k</i>-out-of-<i>n</i> system; orange tiles have failed.</p>
+  <div class="row"><button class="primary" onclick="MP.ctl.play()">▶ Play (P)</button><button onclick="MP.ctl.step()">Test once (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button></div>
+  <canvas id="tiles"></canvas>
+  <p class="stat">This test: <b id="sNow">–</b> working · running average over <b id="sR">0</b> tests: <b class="ca" id="sAvg">–</b></p>
+</section>
+<section id="fine">
+  <h2>6. Fine print</h2>
+  <ul>
+    <li>These formulas are for one mission or test of fixed length. Over time, reliability falls as <i>R</i>(<i>t</i>) = e<sup>−λ<i>t</i></sup> for parts with a constant failure rate λ; the series and parallel rules apply at each moment.</li>
+    <li>Redundant parts that are never checked can be failed already, unnoticed ("latent failures"). Regular proof tests are what keep parallel redundancy honest.</li>
+    <li>Voting (2-out-of-3) sensors are used where a false trip and a missed trip both matter, such as overspeed and over-temperature protection on test rigs.</li>
+  </ul>
+</section>
+<script>
+const $=MP.$;
+function P(){ const R=Math.min(0.99999,Math.max(0.01,(+$("R").value||90)/100)), n=Math.max(1,Math.min(1000,Math.round(+$("n").value||1))), k=Math.max(1,Math.min(n,Math.round(+$("k").value||1))), b=Math.min(1,Math.max(0,(+$("beta").value||0)/100)); return {R,n,k,b}; }
+function lc(n,i){ let s=0; for(let j=1;j<=i;j++) s+=Math.log(n-i+j)-Math.log(j); return s; }
+function kofn(R,n,k){ if(R>=1) return 1; let s=0; for(let i=k;i<=n;i++) s+=Math.exp(lc(n,i)+i*Math.log(R)+(n-i)*Math.log(1-R)); return Math.min(1,s); }
+function withBeta(R,n,k,b){ const F=1-R, Fc=b*F, Ri=1-(1-b)*F; return (1-Fc)*kofn(Ri,n,k); }
+function calc(){ const {R,n,k,b}=P(); $("k").max=n;
+  $("oS").textContent=MP.pct(Math.pow(R,n)); $("oK").textContent=MP.pct(withBeta(R,n,k,b)); $("oK2").textContent=`${k} of ${n}`+(b?" · with common cause":"");
+  $("oP").textContent=MP.pct(withBeta(R,n,1,b)); $("oP2").textContent=b?`without common cause: ${MP.pct(1-Math.pow(1-R,n))}`:""; chart(); }
+function chart(){ const {R,n,k,b}=P(), A=[],B=[],C=[]; for(let i=0;i<=200;i++){ const r=0.5+0.5*i/200; A.push([r,withBeta(r,n,1,b)]); B.push([r,withBeta(r,n,k,b)]); C.push([r,Math.pow(r,n)]); }
+  MP.chart($("cv"),{height:300,x:{min:0.5,max:1,label:"Part reliability",fmt:v=>(v*100).toFixed(0)+"%"},y:{min:0,max:1,pct:true},
+    series:[{pts:[[0.5,0.5],[1,1]],color:"--muted",dash:[4,4],width:1.5},{pts:C,color:"--b"},{pts:B,color:"--c",dash:[9,5]},{pts:A,color:"--a"}],points:[{x:R,y:withBeta(R,n,k,b),color:"--c",r:6}]}); }
+let S={t:0,sum:0};
+function test(){ const {R,n,k,b}=P(), F=1-R, cnt=200, res=[]; let ok=0;
+  for(let s=0;s<cnt;s++){ const common=Math.random()<b*F; let up=0; for(let i=0;i<n;i++) if(!common && Math.random()>(1-b)*F) up++; const w=up>=k; res.push(w); if(w) ok++; }
+  S.t++; S.sum+=ok/cnt; draw(res); $("sNow").textContent=ok+" / "+cnt; $("sR").textContent=S.t; $("sAvg").textContent=MP.pct(S.sum/S.t); }
+function draw(res){ const {g,W}=MP.canvas($("tiles"),170), cols=40, s=Math.min((W-10)/cols,32); (res||[]).forEach((w,i)=>{ g.fillStyle=w?MP.css("--a"):MP.css("--b"); g.fillRect(5+(i%cols)*s+1,5+Math.floor(i/cols)*s+1,s-2,s-2); }); }
+MP.ctl=MP.loop(test,{interval:250});
+["R","n","k","beta"].forEach(x=>$(x).oninput=()=>{calc(); S={t:0,sum:0};}); MP.onRedraw(()=>{chart();draw(null);}); calc();
+</script>

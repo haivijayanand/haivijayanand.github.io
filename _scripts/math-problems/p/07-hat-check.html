@@ -1,0 +1,63 @@
+<!--META {"num":7,"slug":"hat-check","cat":"prob","title":"The Hat-Check Problem","tag":"Hats are handed back at random. The chance nobody gets their own is 36.8 % — for 10 guests or 10,000."} -->
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p><i>n</i> guests leave their hats at a cloakroom. At the end of the evening the attendant, having lost all the tokens, hands the hats back <b>completely at random</b>. What is the chance that <b>nobody</b> gets their own hat back?</p>
+  <p>Intuition pulls two ways: with more guests each person is less likely to get their hat, but there are also more people who might.</p>
+</section>
+<section id="answer">
+  <h2>2. The answer</h2>
+  <div class="answer">
+    <div class="card a"><div class="big">1/e ≈ 36.8 %</div>chance that nobody gets their own hat — almost exactly the same for 7 guests as for 7 million.</div>
+    <div class="card b"><div class="big">1</div>person, on average, gets their own hat back, whatever <i>n</i> is.</div>
+  </div>
+</section>
+<section id="why">
+  <h2>3. Working it out</h2>
+  <p>An arrangement where nobody gets their own item is called a <b>derangement</b>. Count them with inclusion–exclusion: start with all <i>n</i>! orders, remove those where guest 1 is matched, guest 2 is matched…, add back the double removals, and so on:</p>
+  <div class="eq">D<sub><i>n</i></sub> = <i>n</i>! · [ 1 − 1/1! + 1/2! − 1/3! + … + (−1)<sup><i>n</i></sup>/<i>n</i>! ]</div>
+  <div class="eq">P(no match) = D<sub><i>n</i></sub> / <i>n</i>! → e<sup>−1</sup> = 0.367879…</div>
+  <p>The series converges ridiculously fast: from <i>n</i> = 7 onward the answer agrees with 1/e to four decimal places. The number of matches follows (nearly) a Poisson distribution with mean 1.</p>
+  <table id="tbl"><tr><th>Guests <i>n</i></th><th>Derangements D<sub>n</sub></th><th>All orders <i>n</i>!</th><th>P(nobody matched)</th></tr></table>
+</section>
+<section id="sim">
+  <h2>4. Hand back the hats</h2>
+  <div class="row">Guests: <input type="number" id="n" value="10" min="1" max="200"> <button class="primary" onclick="MP.ctl.play()">▶ Play (P)</button><button onclick="MP.ctl.step()">Step — one evening (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button><button id="rs">Reset</button></div>
+  <canvas id="hats"></canvas>
+  <p class="stat">Evenings: <b id="sN">0</b> · nobody matched: <b id="sZ">0</b> → <b class="ca" id="sP">–</b> · average matches: <b id="sM">–</b></p>
+  <h3>How many guests got their own hat</h3>
+  <p><span class="ca">■ simulated</span> &nbsp; <span class="cb">● exact</span></p>
+  <canvas id="cv"></canvas>
+</section>
+<section id="fine">
+  <h2>5. Fine print</h2>
+  <ul>
+    <li>Same maths: a Secret Santa draw where nobody draws themselves succeeds about 37 % of the time — re-draw about 2.7 times on average.</li>
+    <li>Pierre Rémond de Montmort posed it in 1708 as the card game <i>Treize</i>; it was one of the first problems to bring e into probability.</li>
+    <li>Exactly <i>k</i> matches has probability close to e<sup>−1</sup>/<i>k</i>!: one match 36.8 %, two 18.4 %, three 6.1 %.</li>
+  </ul>
+</section>
+<script>
+const $=MP.$;
+(function(){ let D=[1,0], f=1, h=""; for(let n=1;n<=12;n++){ f*=n; if(n>=2) D[n]=(n-1)*(D[n-1]+D[n-2]);
+  h+=`<tr><td>${n}</td><td>${D[n].toLocaleString()}</td><td>${f.toLocaleString()}</td><td>${(D[n]/f).toFixed(6)}</td></tr>`; } $("tbl").insertAdjacentHTML("beforeend",h+"<tr><td>∞</td><td></td><td></td><td><b>0.367879</b></td></tr>"); })();
+function nn(){ return Math.max(1,Math.min(200,Math.round(+$("n").value||10))); }
+// exact P(k fixed points) for n: C(n,k) D(n-k)/n! = (1/k!) * sum_{j=0}^{n-k} (-1)^j/j!
+function pk(n,k){ let s=0,t=1; for(let j=0;j<=n-k;j++){ s+=t; t*=-1/(j+1); } let kf=1; for(let i=2;i<=k;i++) kf*=i; return s/kf; }
+let S, last=null;
+function reset(){ if(MP.ctl) MP.ctl.pause(); S={n:0,z:0,m:0,h:new Array(201).fill(0)}; last=null; show(); }
+function eve(sh){ const n=nn(), p=MP.shuffle([...Array(n).keys()]); let m=0; for(let i=0;i<n;i++) if(p[i]===i) m++;
+  S.n++; S.m+=m; S.h[m]++; if(m===0) S.z++; if(sh) last=p; }
+function drawHats(){ const n=nn(), {g,W}=MP.canvas($("hats"),n<=30?120:Math.ceil(n/30)*38+20);
+  if(!last||last.length!==n){ g.fillStyle=MP.css("--muted"); g.font="14px Segoe UI"; g.fillText("Press S to hand the hats back once.",10,30); return; }
+  const cols=Math.min(n,30), w=(W-20)/cols, hh=n<=30?100:Math.ceil(n/30)*38;
+  for(let i=0;i<n;i++){ const x=10+(i%cols)*w, y=10+Math.floor(i/cols)*(n<=30?0:38), ok=last[i]===i;
+    g.fillStyle=ok?MP.css("--b"):MP.css("--code"); g.fillRect(x+2,y,w-4,n<=30?90:32);
+    g.fillStyle=MP.css("--ink"); g.textAlign="center"; g.font=(w<30?"10px":"13px")+" Segoe UI";
+    g.fillText("G"+(i+1),x+w/2,y+(n<=30?30:14)); g.fillText("🎩"+(last[i]+1),x+w/2,y+(n<=30?62:28)); } }
+function show(){ $("sN").textContent=S.n; $("sZ").textContent=S.z; $("sP").textContent=S.n?MP.pct(S.z/S.n):"–"; $("sM").textContent=S.n?(S.m/S.n).toFixed(3):"–"; drawHats(); chart(); }
+function chart(){ const n=nn(), K=Math.min(n,8), bars=[], pts=[];
+  for(let k=0;k<=K;k++){ bars.push({x0:k-0.35,x1:k+0.35,y:S.n?S.h[k]/S.n:0,color:"--a"}); pts.push({x:k,y:pk(n,k),color:"--b",r:6}); }
+  MP.chart($("cv"),{height:260,x:{min:-0.6,max:K+0.6,ticks:[...Array(K+1).keys()],label:"Guests who got their own hat"},y:{min:0,max:0.5,pct:true},bars,points:pts}); }
+MP.ctl=MP.loop(eve,{batch:()=>Math.max(1,Math.floor(S.n/10)),after:show});
+$("rs").onclick=reset; $("n").onchange=reset; MP.onRedraw(show); reset();
+</script>

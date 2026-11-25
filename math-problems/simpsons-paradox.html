@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Interesting Math Problems #23 — Simpson's Paradox
+FAMILY:  interesting-math-problems
+VERSION: 1.0.0
+DATE:    2026-11-25
+CHAT:    Interesting Math Problems group — build all 25 problems in groups and upload
+CHANGES: 1.0.0 — first release
+STATUS:  public — haivijayanand.github.io/math-problems/simpsons-paradox.html
+-->
+<html lang="en" data-theme="light">
+<head>
+<script src="/assets/js/site-theme.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simpson's Paradox — Interesting Math Problems — K Vijay Anand</title>
+<meta name="description" content="Treatment A beats B for small kidney stones and for large ones — yet B wins overall. Averages can reverse when groups are mixed unevenly.">
+<link rel="stylesheet" href="mp.css">
+<script type="module" src="/assets/js/site-progress.js"></script>
+</head>
+<body>
+<header class="mp">
+  <button id="btnSide" title="Show / hide contents (M)">☰</button>
+  <h1>Simpson's Paradox<br><span class="crumb"><a href="/">Home</a> · <a href="./">Interesting Math Problems</a> · Problem 23 · Engineering & decisions</span></h1>
+  <button id="themeBtn" title="Light / dark theme">◐ Theme</button>
+  <button id="btnFull" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<div class="wrap">
+<nav id="side"></nav>
+<main>
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p>A 1986 study compared two treatments for kidney stones. Here are the success rates:</p>
+  <table>
+    <tr><th></th><th>Treatment A (open surgery)</th><th>Treatment B (keyhole)</th></tr>
+    <tr><td>Small stones</td><td class="a">81 / 87 = 93 %</td><td>234 / 270 = 87 %</td></tr>
+    <tr><td>Large stones</td><td class="a">192 / 263 = 73 %</td><td>55 / 80 = 69 %</td></tr>
+    <tr><td><b>All patients</b></td><td>273 / 350 = 78 %</td><td class="b">289 / 350 = 83 %</td></tr>
+  </table>
+  <p>A is better for small stones and better for large stones. Yet B is better overall. Which treatment is better?</p>
+</section>
+<section id="answer">
+  <h2>2. The answer</h2>
+  <div class="answer">
+    <div class="card a"><div class="big">A is better</div>for every type of patient. The overall figure misleads.</div>
+    <div class="card b"><div class="big">Why B "wins"</div>B was mostly given the easy cases (270 of its 350 patients had small stones); A got mostly the hard ones (263 of 350 large).</div>
+  </div>
+  <p class="note">The overall rate is a weighted average, and the two treatments are averaged with very different weights. Stone size affects both which treatment was chosen and how well it worked — a <b>confounding variable</b>.</p>
+</section>
+<section id="why">
+  <h2>3. Working it out</h2>
+  <div class="eq">Overall rate = (share of small cases) × (small-case rate) + (share of large cases) × (large-case rate)</div>
+  <p>A: 0.25 × 93 % + 0.75 × 73 % = 78 %. &nbsp; B: 0.77 × 87 % + 0.23 × 69 % = 83 %.</p>
+  <p>Both of A's group rates are higher, but A's average leans towards its lower (large-stone) figure, and B's towards its higher (small-stone) figure. If both treatments had been given the same mix of patients, A would win.</p>
+  <h3>Which table to believe?</h3>
+  <p>Statistics alone cannot say. You need to know <b>how the data arose</b>. Here stone size came first and influenced the choice of treatment, so compare within each stone size. If the "groups" were instead something caused by the treatment, the combined table could be the right one. Judea Pearl's causal diagrams make this precise.</p>
+</section>
+<section id="calc">
+  <h2>4. Build your own</h2>
+  <div class="row">Preset: <select id="pre"><option value="kidney">Kidney stones (Charig et al., 1986)</option><option value="rig">Two test rigs, easy and hard gearboxes (illustrative)</option><option value="batting">Baseball: David Justice vs Derek Jeter, 1995–96</option></select></div>
+  <table>
+    <tr><th></th><th colspan="2" id="hA">A</th><th colspan="2" id="hB">B</th></tr>
+    <tr><th>Group</th><th>successes</th><th>trials</th><th>successes</th><th>trials</th></tr>
+    <tr><td id="g1">Group 1</td><td><input type="number" id="a1s"></td><td><input type="number" id="a1n"></td><td><input type="number" id="b1s"></td><td><input type="number" id="b1n"></td></tr>
+    <tr><td id="g2">Group 2</td><td><input type="number" id="a2s"></td><td><input type="number" id="a2n"></td><td><input type="number" id="b2s"></td><td><input type="number" id="b2n"></td></tr>
+  </table>
+  <p id="verdict" class="note"></p>
+  <canvas id="cv"></canvas>
+</section>
+<section id="mix">
+  <h2>5. Slide the mix</h2>
+  <p>Keep A's two group rates fixed and change only <b>what share of A's cases come from group 2</b>. A's overall rate slides between its two group rates. Press <kbd>P</kbd> to sweep the mix.</p>
+  <div class="row">Share of A's cases in group 2: <input type="range" id="w" min="0" max="100" value="75"> <b id="wv"></b>
+    <button class="primary" onclick="MP.ctl.play()">▶ Sweep (P)</button><button onclick="MP.ctl.step()">Step (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button></div>
+  <canvas id="cv2"></canvas>
+</section>
+<section id="fine">
+  <h2>6. Fine print</h2>
+  <ul>
+    <li>A famous real case: UC Berkeley graduate admissions in 1973 looked biased against women overall, but most departments admitted women at equal or higher rates; women had applied more to the departments that rejected most applicants.</li>
+    <li>The baseball preset is a classic: Justice had the higher batting average in both 1995 and 1996, Jeter over the two years combined.</li>
+    <li>In plant data the same trap appears when comparing scrap rates of two machines or shifts that run different product mixes. Compare like with like, or standardise to a common mix.</li>
+  </ul>
+</section>
+<footer class="mp"><a href="reliability.html">← 22. Series, Parallel and the 99 % Trap</a><a href="./">All problems</a><a href="braess-paradox.html">24. Braess's Paradox →</a></footer>
+</main>
+</div>
+<script src="mp.js"></script>
+<script>
+const $=MP.$, K=["a1s","a1n","b1s","b1n","a2s","a2n","b2s","b2n"];
+const PRE={kidney:{h:["Treatment A","Treatment B"],g:["Small stones","Large stones"],v:[81,87,234,270,192,263,55,80]},
+  rig:{h:["Rig A","Rig B"],g:["Easy gearboxes","Hard gearboxes"],v:[95,100,450,500,250,400,50,100]},
+  batting:{h:["Justice (hits / at-bats)","Jeter (hits / at-bats)"],g:["1995","1996"],v:[104,411,12,48,45,140,183,582]}};
+function load(){ const p=PRE[$("pre").value]; $("hA").textContent=p.h[0]; $("hB").textContent=p.h[1]; $("g1").textContent=p.g[0]; $("g2").textContent=p.g[1];
+  K.forEach((k,i)=>$(k).value=p.v[i]); $("w").value=Math.round(100*p.v[5]/(p.v[1]+p.v[5])); calc(); }
+function V(){ const o={}; K.forEach(k=>o[k]=Math.max(0,+$(k).value||0)); ["a1","a2","b1","b2"].forEach(g=>{ if(o[g+"n"]<1) o[g+"n"]=1; if(o[g+"s"]>o[g+"n"]) o[g+"s"]=o[g+"n"]; }); return o; }
+function calc(){ const o=V(), p=PRE[$("pre").value]; const r={a1:o.a1s/o.a1n,a2:o.a2s/o.a2n,b1:o.b1s/o.b1n,b2:o.b2s/o.b2n,a:(o.a1s+o.a2s)/(o.a1n+o.a2n),b:(o.b1s+o.b2s)/(o.b1n+o.b2n)};
+  const aW=(r.a1>r.b1)+(r.a2>r.b2), bW=(r.b1>r.a1)+(r.b2>r.a2), rev=(aW===2&&r.b>r.a)||(bW===2&&r.a>r.b);
+  $("verdict").innerHTML=rev?`<b>Simpson's paradox!</b> ${aW===2?p.h[0]:p.h[1]} wins in both groups but ${r.a>r.b?p.h[0]:p.h[1]} wins overall.`:"No reversal with these numbers — try making one side handle mostly the hard group.";
+  const bars=[], X=[["1",r.a1,r.b1],["2",r.a2,r.b2],["all",r.a,r.b]];
+  X.forEach(([_,a,b],i)=>{ bars.push({x0:i*3+0.2,x1:i*3+1.2,y:a,color:"--a"}); bars.push({x0:i*3+1.3,x1:i*3+2.3,y:b,color:"--b"}); });
+  MP.chart($("cv"),{height:280,x:{min:0,max:8.5,ticks:[1.25,4.25,7.25],fmt:v=>v<2?p.g[0]:v<5?p.g[1]:"All together",label:`blue = ${p.h[0]}, orange = ${p.h[1]}`},y:{min:0,max:1,pct:true},bars});
+  mix(); }
+function mix(){ const o=V(), a1=o.a1s/o.a1n, a2=o.a2s/o.a2n, b=(o.b1s+o.b2s)/(o.b1n+o.b2n), w=+$("w").value/100; $("wv").textContent=Math.round(w*100)+" %";
+  MP.chart($("cv2"),{height:260,x:{min:0,max:1,label:"Share of A's cases in group 2",fmt:v=>(v*100).toFixed(0)+"%"},y:{min:Math.min(a1,a2,b)-0.1,max:Math.min(1,Math.max(a1,a2,b)+0.08),pct:true},
+    series:[{pts:[[0,a1],[1,a2]],color:"--a"}],hlines:[{y:b,label:"B overall",color:"--b"}],points:[{x:w,y:(1-w)*a1+w*a2,color:"--a",r:7,label:"A overall "+MP.pct((1-w)*a1+w*a2,1)}]}); }
+let dir=1; MP.ctl=MP.loop(()=>{ let v=+$("w").value+dir*2; if(v>=100||v<=0) dir*=-1; $("w").value=Math.max(0,Math.min(100,v)); },{interval:60,after:mix});
+K.forEach(k=>$(k).oninput=calc); $("pre").onchange=load; $("w").oninput=mix; MP.onRedraw(calc); load();
+</script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!--META {"num":5,"slug":"coupon-collector","cat":"prob","title":"Collecting All the Cards","tag":"How many random packets to collect all 50 cricket cards? About 225 — and the last card alone costs 50."} -->
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p>Every packet of chips holds one cricket card, picked at random from a set of <b>50</b>, all equally likely. How many packets must you buy, on average, to complete the set?</p>
+  <p>Fifty packets is clearly not enough because of repeats. Maybe 70? 100?</p>
+</section>
+<section id="answer">
+  <h2>2. The answer</h2>
+  <div class="answer">
+    <div class="card a"><div class="big">≈ 225</div>packets on average for a set of 50 (exactly 224.96).</div>
+    <div class="card b"><div class="big">50</div>packets on average just for the <b>last</b> missing card.</div>
+  </div>
+  <p class="note">The early cards come free; the last few are expensive. The final two cards alone take about 75 packets — a third of the total.</p>
+</section>
+<section id="why">
+  <h2>3. Working it out</h2>
+  <p>Suppose you already hold <i>k</i> different cards. A new packet gives a new card with probability (<i>n</i> − <i>k</i>)/<i>n</i>, so on average you wait <i>n</i>/(<i>n</i> − <i>k</i>) packets for the next new one. Add the waits:</p>
+  <div class="eq">E[packets] = <i>n</i>/<i>n</i> + <i>n</i>/(<i>n</i>−1) + … + <i>n</i>/1 = <i>n</i> · (1 + 1/2 + 1/3 + … + 1/<i>n</i>) = <i>n</i> · H<sub><i>n</i></sub> ≈ <i>n</i>(ln <i>n</i> + 0.5772)</div>
+  <p>For <i>n</i> = 50: H<sub>50</sub> = 4.499, so 50 × 4.499 = 225. The spread is wide too: the standard deviation is about π<i>n</i>/√6 ≈ 62 packets.</p>
+</section>
+<section id="calc">
+  <h2>4. Calculator</h2>
+  <div class="row">Cards in the set <i>n</i>: <input type="number" id="n" value="50" min="2" max="2000"> · Packets you plan to buy: <input type="number" id="m" value="300" min="1"></div>
+  <div class="grid3">
+    <div class="card a"><b>Average packets needed</b><div class="big" id="oE">–</div></div>
+    <div class="card c"><b>Packets for a 90 % chance</b><div class="big" id="o90">–</div></div>
+    <div class="card b"><b>Chance <span id="mm"></span> packets complete the set</b><div class="big" id="oM">–</div></div>
+  </div>
+  <h3>Average extra packets needed for each new card</h3>
+  <canvas id="cv1"></canvas>
+  <h3>Chance of a full set after <i>m</i> packets</h3>
+  <canvas id="cv2"></canvas>
+</section>
+<section id="sim">
+  <h2>5. Simulation</h2>
+  <p>Each run buys packets until the set is complete. The bars show how many packets each run needed.</p>
+  <div class="row"><button class="primary" onclick="MP.ctl.play()">▶ Play (P)</button><button onclick="MP.ctl.step()">Step — one collector (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button><button id="rs">Reset</button></div>
+  <p class="stat">Collectors: <b id="sN">0</b> · average packets: <b id="sA">–</b> · fewest: <b id="sMin">–</b> · most: <b id="sMax">–</b></p>
+  <canvas id="cv3"></canvas>
+</section>
+<section id="fine">
+  <h2>6. Fine print</h2>
+  <ul>
+    <li><b>Swap with friends.</b> If several collectors share duplicates, the cost per person falls sharply — the reason card-swapping playgrounds exist.</li>
+    <li>Companies who make some cards rare push the expected cost much higher; the formula above is the best case of equal chances.</li>
+    <li>The same sum appears in testing: how many random test inputs until every branch is hit, or how many random samples until every bin of a histogram is filled.</li>
+  </ul>
+</section>
+<script>
+const $=MP.$;
+function nn(){ return Math.max(2,Math.min(2000,Math.round(+$("n").value||50))); }
+function H(n){ let s=0; for(let k=1;k<=n;k++) s+=1/k; return s; }
+// exact distribution of distinct cards after m packets, by DP; returns array cdf[m] = P(complete by m)
+function cdf(n,mMax){ let p=new Float64Array(n+1); p[0]=1; const out=[0];
+  for(let m=1;m<=mMax;m++){ const q=new Float64Array(n+1); for(let k=0;k<=n;k++){ if(!p[k]) continue; q[k]+=p[k]*k/n; if(k<n) q[k+1]+=p[k]*(n-k)/n; } p=q; out.push(p[n]); }
+  return out; }
+let C=null;
+function calc(){ const n=nn(), m=Math.max(1,+$("m").value||1), mMax=Math.max(m,Math.ceil(n*(Math.log(n)+5)));
+  C=n<=600?cdf(n,mMax):null;
+  $("oE").textContent=MP.num(n*H(n),1);
+  if(C){ $("o90").textContent=C.findIndex(v=>v>=0.9); $("oM").textContent=MP.pct(C[Math.min(m,C.length-1)]); }
+  else { // Gumbel approximation for big n
+    const g=x=>Math.exp(-Math.exp(-(x-n*Math.log(n))/n)); $("o90").textContent=Math.ceil(n*Math.log(n)-n*Math.log(-Math.log(0.9))); $("oM").textContent=MP.pct(g(m))+"*"; }
+  $("mm").textContent=m; charts(); resetSim(); }
+function charts(){ const n=nn(), pts=[]; for(let k=0;k<n;k++) pts.push([k+1,n/(n-k)]);
+  MP.chart($("cv1"),{height:260,x:{min:1,max:n,label:"Card number you are waiting for (1st new card … last card)"},y:{min:0,max:n*1.05,label:"packets"},
+    bars:pts.map(([k,v])=>({x0:k-0.45,x1:k+0.45,y:v,color:k>n*0.9?"--b":"--a"}))});
+  if(C){ const pts2=C.map((v,i)=>[i,v]); MP.chart($("cv2"),{height:260,x:{min:0,max:C.length-1,label:"Packets bought m"},y:{min:0,max:1,pct:true},series:[{pts:pts2,color:"--a"}],
+    vlines:[{x:n*H(n),label:"average "+Math.round(n*H(n))}],points:[{x:Math.min(+$("m").value,C.length-1),y:C[Math.min(+$("m").value,C.length-1)],color:"--b",r:5}]}); } }
+let S;
+function resetSim(){ if(MP.ctl) MP.ctl.pause(); S={runs:[],sum:0}; showSim(); }
+function oneRun(){ const n=nn(), have=new Uint8Array(n); let got=0,m=0; while(got<n){ m++; const c=MP.rand(n); if(!have[c]){have[c]=1;got++;} } S.runs.push(m); S.sum+=m; }
+function showSim(){ const r=S.runs; $("sN").textContent=r.length; $("sA").textContent=r.length?MP.num(S.sum/r.length,1):"–";
+  $("sMin").textContent=r.length?Math.min(...r):"–"; $("sMax").textContent=r.length?Math.max(...r):"–";
+  const n=nn(), hi=Math.ceil(n*(Math.log(n)+4)), bins=40, w=hi/bins, cnt=new Array(bins).fill(0); r.forEach(v=>cnt[Math.min(bins-1,Math.floor(v/w))]++);
+  const mx=Math.max(1,...cnt);
+  MP.chart($("cv3"),{height:260,x:{min:0,max:hi,label:"Packets needed to complete the set"},y:{min:0,max:mx*1.1,label:"collectors"},
+    bars:cnt.map((c,i)=>({x0:i*w,x1:(i+1)*w*0.98+i*w*0.02,y:c,color:"--a"})),vlines:[{x:n*H(n),label:"exact average",color:"--b"}]}); }
+MP.ctl=MP.loop(oneRun,{batch:()=>Math.max(1,Math.floor(2000/nn())),after:showSim});
+$("rs").onclick=resetSim; $("n").onchange=calc; $("m").oninput=()=>{ const m=+$("m").value; $("mm").textContent=m; if(C){ if(m>=C.length) calc(); else { $("oM").textContent=MP.pct(C[m]); charts(); } } };
+MP.onRedraw(()=>{charts(); showSim();}); S={runs:[],sum:0}; calc();
+</script>

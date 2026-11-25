@@ -1,0 +1,74 @@
+<!--META {"num":9,"slug":"penneys-game","cat":"prob","title":"Penney's Game","tag":"Pick any three-toss pattern of heads and tails; I can always pick one that beats it — up to 7 times in 8. No pattern is best."} -->
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p>A fair coin is tossed again and again. You choose a pattern of three tosses, say <b>HHH</b>. Then I choose a different pattern, say <b>THH</b>. Whoever's pattern turns up first in the run of tosses wins.</p>
+  <p>All eight patterns are equally likely in any three given tosses, so it should be a fair game. Is it?</p>
+</section>
+<section id="answer">
+  <h2>2. The answer</h2>
+  <div class="answer">
+    <div class="card a"><div class="big">Second player wins</div>Whatever you choose, there is a reply that beats it at least 2 times in 3, and against HHH or TTT, 7 times in 8.</div>
+    <div class="card b"><div class="big">No best pattern</div>THH beats HHT, HHT beats HTT, HTT beats TTH, TTH beats THH — a loop like rock–paper–scissors.</div>
+  </div>
+  <p class="note"><b>The winning reply:</b> take the middle toss of your opponent's pattern, flip it, put it in front, and drop their last toss. Against HHT (middle H → T): play <b>THH</b>.</p>
+</section>
+<section id="why">
+  <h2>3. Why the patterns are not equal</h2>
+  <p>Against HHH, THH wins unless the very first three tosses are HHH (chance 1/8). Any HHH that appears later must be preceded by a T — and that T-H-H already completed THH one toss earlier.</p>
+  <p>Patterns also differ in how long they take to appear on their own. A pattern that overlaps itself (HHH, HTH) wastes progress when it fails, so it takes longer:</p>
+  <table><tr><th>Pattern</th><th>HHH</th><th>HTH</th><th>HHT</th><th>HTT</th></tr><tr><td>Average tosses to appear</td><td>14</td><td>10</td><td>8</td><td>8</td></tr></table>
+  <h3>Conway's formula</h3>
+  <p>For patterns A and B, write L(X, Y) = sum of 2<sup><i>k</i>−1</sup> over every <i>k</i> for which the last <i>k</i> tosses of X equal the first <i>k</i> tosses of Y. Then</p>
+  <div class="eq">Odds that B appears before A = [ L(A, A) − L(A, B) ] : [ L(B, B) − L(B, A) ]</div>
+  <p>and the average wait for A alone is 2 · L(A, A).</p>
+</section>
+<section id="calc">
+  <h2>4. Play against the computer</h2>
+  <div class="row">Your pattern (H/T, length 2–8): <input type="text" id="A" value="HHT" maxlength="8" style="width:120px"> · Opponent: <input type="text" id="B" value="" maxlength="8" style="width:120px"> <button id="best">Use best reply</button></div>
+  <div class="grid3">
+    <div class="card b"><b>Your chance to win</b><div class="big" id="oA">–</div></div>
+    <div class="card a"><b>Opponent's chance</b><div class="big" id="oB">–</div></div>
+    <div class="card c"><b>Average tosses (alone)</b><div class="big" id="oW">–</div><span id="oW2"></span></div>
+  </div>
+  <h3>All three-toss match-ups: chance that the column pattern beats the row pattern</h3>
+  <div id="mat"></div>
+</section>
+<section id="sim">
+  <h2>5. Simulation</h2>
+  <div class="row"><button class="primary" onclick="MP.ctl.play()">▶ Play (P)</button><button onclick="MP.ctl.step()">Step — one game (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button><button id="rs">Reset</button></div>
+  <p class="stat">Games: <b id="sN">0</b> · you won: <b id="sA">0</b> · opponent won: <b id="sB">0</b> → opponent <b class="ca" id="sP">–</b></p>
+  <div class="log" id="log">Press S to play one game.</div>
+</section>
+<section id="fine">
+  <h2>6. Fine print</h2>
+  <ul>
+    <li>Walter Penney published the game in 1969; John Conway found the neat odds formula. Martin Gardner popularised both.</li>
+    <li>It is a good bar bet: always let the other person choose first.</li>
+    <li>Non-transitive relations appear in engineering too — in voting systems, tournament rankings and some dice (Efron's dice).</li>
+  </ul>
+</section>
+<script>
+const $=MP.$;
+const clean=s=>(s||"").toUpperCase().replace(/[^HT]/g,"").slice(0,8);
+function L(X,Y){ let s=0; const n=Math.min(X.length,Y.length); for(let k=1;k<=n;k++) if(X.slice(-k)===Y.slice(0,k)) s+=Math.pow(2,k-1); return s; }
+function pB(A,B){ // chance B beats A
+  if(A===B) return 0.5; if(A.includes(B)) return 1; if(B.includes(A)) return 0;
+  const num=L(A,A)-L(A,B), den=L(B,B)-L(B,A); return num/(num+den); }
+function bestReply(A){ if(A.length<2) return "T"; const m=A[1]==="H"?"T":"H"; return m+A.slice(0,-1); }
+function calc(){ let A=clean($("A").value); if(A.length<2){A="HHT";} if(!clean($("B").value)) $("B").value=bestReply(A);
+  const B=clean($("B").value), q=pB(A,B); $("oA").textContent=MP.pct(1-q); $("oB").textContent=MP.pct(q);
+  $("oW").textContent=2*L(A,A); $("oW2").textContent=`yours · opponent's: ${2*L(B,B)}`; reset(); }
+(function mat(){ const P=["HHH","HHT","HTH","HTT","THH","THT","TTH","TTT"]; let h="<table><tr><th>row ↓ vs col →</th>"+P.map(x=>`<th>${x}</th>`).join("")+"</tr>";
+  P.forEach(a=>{ h+=`<tr><th>${a}</th>`; P.forEach(b=>{ if(a===b){h+="<td>–</td>";return;} const v=pB(a,b), best=b===bestReply(a);
+    h+=`<td style="${best?"font-weight:700;color:var(--a)":v<0.5?"color:var(--muted)":""}">${(v*100).toFixed(0)}%</td>`; }); h+="</tr>"; });
+  $("mat").innerHTML=h+"</table><p>Bold blue = the best reply to the row pattern.</p>"; })();
+let S;
+function reset(){ if(MP.ctl) MP.ctl.pause(); S={n:0,a:0,b:0}; show(); }
+function game(sh){ const A=clean($("A").value)||"HHT", B=clean($("B").value)||bestReply(A); let s="";
+  while(true){ s+=Math.random()<0.5?"H":"T"; if(s.endsWith(B)){S.b++;break;} if(s.endsWith(A)){S.a++;break;} if(s.length>5000) break; }
+  S.n++; if(sh) $("log").textContent=`Game ${S.n}: ${s}  → ${s.endsWith(B)?"opponent's "+B:"your "+A} appeared first after ${s.length} tosses`; }
+function show(){ $("sN").textContent=S.n; $("sA").textContent=S.a; $("sB").textContent=S.b; $("sP").textContent=S.n?MP.pct(S.b/S.n):"–"; }
+MP.ctl=MP.loop(game,{batch:()=>Math.max(1,Math.floor(S.n/10)),after:show});
+$("A").oninput=()=>{ $("B").value=""; calc(); }; $("B").onchange=calc; $("best").onclick=()=>{ $("B").value=""; calc(); }; $("rs").onclick=reset;
+calc();
+</script>

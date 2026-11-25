@@ -1,0 +1,75 @@
+<!--META {"num":24,"slug":"braess-paradox","cat":"eng","title":"Braess's Paradox","tag":"Add a free, fast shortcut to a road network and every driver's trip gets slower — from 65 minutes to 80."} -->
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p>4,000 drivers travel from Start to End each morning. There are two routes:</p>
+  <ul>
+    <li><b>Top:</b> Start → A on a narrow road taking <i>T</i>/100 minutes (where <i>T</i> is the number of cars on it), then A → End on a wide highway, always 45 minutes.</li>
+    <li><b>Bottom:</b> Start → B on the wide highway, 45 minutes, then B → End on a narrow road, <i>T</i>/100 minutes.</li>
+  </ul>
+  <p>The city now builds a superb new link from A to B that takes <b>no time at all</b>. Every driver picks the fastest route for themselves. What happens to journey times?</p>
+</section>
+<section id="answer">
+  <h2>2. The answer</h2>
+  <div class="answer">
+    <div class="card a"><b>Before the shortcut</b><div class="big">65 min</div>2,000 cars on each route: 2,000/100 + 45 = 65 min.</div>
+    <div class="card b"><b>After the shortcut</b><div class="big">80 min</div>Everyone takes Start → A → B → End: 4,000/100 + 0 + 4,000/100 = 80 min.</div>
+  </div>
+  <p class="note">Every driver is now 15 minutes slower, and nobody can do better by changing route alone. Closing the shortcut would make everyone faster.</p>
+</section>
+<section id="why">
+  <h2>3. Working it out</h2>
+  <p>With the shortcut, the narrow road to A costs at most 4,000/100 = 40 min — always cheaper than the 45-minute highway to B. Likewise B → End (at most 40) beats A → End (45). So for each driver, whatever the others do, the zig-zag is at least as good. Everyone takes it, both narrow roads fill up, and each trip costs 80 min.</p>
+  <p>This is a <b>Nash equilibrium</b> (also called a Wardrop equilibrium in traffic): no driver can gain by switching alone. It is not the best outcome for the group. Selfish choices and the shared, congestible roads pull apart.</p>
+  <h3>It depends on the traffic</h3>
+  <p>For general <i>N</i> drivers: without the link, time = <i>N</i>/200 + 45. With it, time = <i>N</i>/50 when <i>N</i> ≤ 4,500, then 90 min between 4,500 and 9,000 drivers, then back to <i>N</i>/200 + 45. The link <b>helps</b> below 3,000 drivers and <b>hurts</b> from 3,000 to 9,000.</p>
+  <canvas id="cv"></canvas>
+</section>
+<section id="sim">
+  <h2>4. Watch drivers adapt</h2>
+  <div class="row">Drivers <input type="number" id="N" value="4000" min="100" max="12000" step="100"> · Shortcut A → B: <label><input type="checkbox" id="link" checked> open</label></div>
+  <div class="row"><button class="primary" onclick="MP.ctl.play()">▶ Morning after morning (P)</button><button onclick="MP.ctl.step()">One morning (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button><button id="rs">Start again (even split)</button></div>
+  <p>Each morning, 10 % of drivers on slower routes switch to the fastest one.</p>
+  <canvas id="net"></canvas>
+  <div class="grid3">
+    <div class="card a"><b>Morning</b><div class="big" id="oD">0</div></div>
+    <div class="card b"><b>Average trip</b><div class="big" id="oT">–</div></div>
+    <div class="card c"><b>Equilibrium (theory)</b><div class="big" id="oE">–</div></div>
+  </div>
+</section>
+<section id="fine">
+  <h2>5. Fine print</h2>
+  <ul>
+    <li>Dietrich Braess described it in 1968. Real-world examples often cited: closing 42nd Street in New York (1990) and removing Seoul's Cheonggyecheon elevated highway (2003) did not cause the expected jams.</li>
+    <li>The same effect appears in electrical and mechanical networks: adding a link between two springs-and-strings paths can make a weight hang <i>lower</i> — or adding a connection in a power grid can increase line loading.</li>
+    <li>It is a warning for plant layouts too: a new "shortcut" conveyor or shared resource can pull everyone into the same bottleneck.</li>
+  </ul>
+</section>
+<script>
+const $=MP.$; let f, day=0;
+function N(){ return Math.max(100,Math.min(12000,+$("N").value||4000)); }
+function times(x){ const SA=(x[0]+x[2])/100, BE=(x[1]+x[2])/100; return [SA+45,45+BE,SA+BE]; } // routes: top, bottom, zigzag
+function eqT(n,link){ if(!link) return n/200+45; if(n<=4500) return n/50; if(n<=9000) return 90; return n/200+45; }
+function reset(){ if(MP.ctl) MP.ctl.pause(); const n=N(); f=[n/2,n/2,0]; day=0; show(); }
+function morning(){ const n=N(), link=$("link").checked, t=times(f); const avail=link?[0,1,2]:[0,1];
+  let best=avail.reduce((a,b)=>t[b]<t[a]?b:a); if(!link && f[2]>0){ f[best]+=f[2]; f[2]=0; }
+  avail.forEach(r=>{ if(r!==best && t[r]>t[best]+1e-9){ const m=f[r]*0.10+ (f[r]<10?f[r]:0); f[r]-=m; f[best]+=m; } }); day++; }
+function show(){ const n=N(), link=$("link").checked, t=times(f), tot=f[0]+f[1]+f[2], avg=(f[0]*t[0]+f[1]*t[1]+f[2]*t[2])/tot;
+  $("oD").textContent=day; $("oT").textContent=avg.toFixed(1)+" min"; $("oE").textContent=eqT(n,link).toFixed(1)+" min"; net(t); }
+function net(t){ const {g,W,H}=MP.canvas($("net"),300), S=[60,H/2], E=[W-60,H/2], A=[W/2,50], B=[W/2,H-50];
+  const road=(p,q,cars,txt,col,wide)=>{ g.strokeStyle=col; g.lineWidth=2+cars/N()*22; g.beginPath(); g.moveTo(...p); g.lineTo(...q); g.stroke();
+    g.fillStyle=MP.css("--ink"); g.font="13px Segoe UI"; g.textAlign="center"; g.fillText(txt,(p[0]+q[0])/2+(wide?0:0),(p[1]+q[1])/2-10); };
+  const sa=f[0]+f[2], be=f[1]+f[2];
+  road(S,A,sa,`narrow: ${Math.round(sa)} cars, ${(sa/100).toFixed(1)} min`,MP.css("--b"));
+  road(A,E,f[0],`highway: ${Math.round(f[0])} cars, 45 min`,MP.css("--a"));
+  road(S,B,f[1],`highway: ${Math.round(f[1])} cars, 45 min`,MP.css("--a"));
+  road(B,E,be,`narrow: ${Math.round(be)} cars, ${(be/100).toFixed(1)} min`,MP.css("--b"));
+  if($("link").checked) road(A,B,f[2],`shortcut: ${Math.round(f[2])} cars, 0 min`,MP.css("--c"));
+  [[S,"Start"],[E,"End"],[A,"A"],[B,"B"]].forEach(([p,l])=>{ g.fillStyle=MP.css("--panel"); g.strokeStyle=MP.css("--ink"); g.lineWidth=2; g.beginPath(); g.arc(...p,20,0,7); g.fill(); g.stroke();
+    g.fillStyle=MP.css("--ink"); g.font="bold 13px Segoe UI"; g.fillText(l,p[0],p[1]+5); });
+  g.textAlign="left"; g.font="13px Segoe UI"; g.fillStyle=MP.css("--muted"); g.fillText(`Top ${t[0].toFixed(1)} · Bottom ${t[1].toFixed(1)}`+($("link").checked?` · Zig-zag ${t[2].toFixed(1)} min`:" min"),10,18); }
+function chart(){ const A=[],B=[]; for(let n=0;n<=12000;n+=50){ A.push([n,eqT(n,false)]); B.push([n,eqT(n,true)]); }
+  MP.chart($("cv"),{height:280,x:{min:0,max:12000,label:"Number of drivers"},y:{min:0,max:110,label:"minutes"},series:[{pts:A,color:"--a"},{pts:B,color:"--b",dash:[9,5]}],
+    vlines:[{x:3000,label:"3,000"},{x:9000,label:"9,000"}],points:[{x:4000,y:65,color:"--a",label:"65",dy:22},{x:4000,y:80,color:"--b",label:"80"}]}); }
+MP.ctl=MP.loop(morning,{interval:200,after:show});
+$("rs").onclick=reset; $("N").onchange=reset; $("link").onchange=show; MP.onRedraw(()=>{chart();show();}); chart(); reset();
+</script>

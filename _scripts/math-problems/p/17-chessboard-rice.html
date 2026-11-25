@@ -1,0 +1,69 @@
+<!--META {"num":17,"slug":"chessboard-rice","cat":"num","title":"Rice on the Chessboard","tag":"One grain on the first square, doubling on each of 64 squares. The total is about 460 billion tonnes — over 800 years of the world's rice harvest."} -->
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p>An old Indian legend: the inventor of chess asks the king for a modest reward — <b>one grain of rice on the first square</b> of the board, two on the second, four on the third, doubling on every square up to the 64th. The king laughs at such a small request.</p>
+  <p>How much rice is that?</p>
+</section>
+<section id="answer">
+  <h2>2. The answer</h2>
+  <div class="grid3">
+    <div class="card a"><b>Grains in total</b><div class="big">1.8 × 10<sup>19</sup></div>2<sup>64</sup> − 1 = 18,446,744,073,709,551,615</div>
+    <div class="card b"><b>Weight (25 mg a grain)</b><div class="big">≈ 461 billion t</div></div>
+    <div class="card c"><b>Today's world harvest</b><div class="big">≈ 840 years</div>at about 550 million tonnes of milled rice a year</div>
+  </div>
+  <p class="note">The first half of the board is harmless: squares 1 to 32 hold about 4.3 billion grains, roughly 107 tonnes — a few truckloads. Every square in the second half holds more than the whole board before it.</p>
+</section>
+<section id="why">
+  <h2>3. Working it out</h2>
+  <p>Square <i>k</i> holds 2<sup><i>k</i>−1</sup> grains. The total is a geometric series:</p>
+  <div class="eq">1 + 2 + 4 + … + 2<sup>63</sup> = 2<sup>64</sup> − 1</div>
+  <p>Why? Double the sum and subtract the original: everything cancels except 2<sup>64</sup> − 1. The same trick shows that each square holds <b>one more grain than all the previous squares together</b>.</p>
+  <p>A useful rule: 2<sup>10</sup> = 1,024 ≈ 10<sup>3</sup>. So 2<sup>64</sup> = 2<sup>4</sup> × (2<sup>10</sup>)<sup>6</sup> ≈ 16 × 10<sup>18</sup> — quick to estimate in your head.</p>
+</section>
+<section id="board">
+  <h2>4. Fill the board</h2>
+  <div class="row">Grain weight (mg) <input type="number" id="mg" value="25" min="1" step="1"> · World rice harvest (million t/yr) <input type="number" id="prod" value="550" min="1"></div>
+  <div class="row"><button class="primary" onclick="MP.ctl.play()">▶ Play (P)</button><button onclick="MP.ctl.step()">Next square (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button><button id="rs">Empty the board</button></div>
+  <div class="grid2">
+    <canvas id="cb"></canvas>
+    <div>
+      <div class="card a"><b>Square <span id="sq">0</span> holds</b><div class="big" id="oS">–</div><span id="oS2"></span></div><br>
+      <div class="card b"><b>Board total so far</b><div class="big" id="oT">–</div><span id="oT2"></span></div><br>
+      <div class="card c"><b>Equivalent to</b><div class="big" id="oY">–</div></div>
+    </div>
+  </div>
+  <h3>Grains per square (log scale)</h3>
+  <canvas id="cv"></canvas>
+</section>
+<section id="fine">
+  <h2>5. Fine print</h2>
+  <ul>
+    <li>"The second half of the chessboard" is used (after Ray Kurzweil) for the point where steady doubling — such as Moore's law in chips — starts producing changes too large to ignore.</li>
+    <li>Grain weight varies by variety, about 15–30 mg for milled rice; harvest figures are FAO estimates for milled rice. Change both above to see how little they matter.</li>
+    <li>The same doubling governs compound interest at 7 % (doubles in about 10 years), bacterial growth and the spread of an epidemic before it is checked.</li>
+  </ul>
+</section>
+<script>
+const $=MP.$; let k=0;
+function fmtMass(kg){ if(kg<1) return (kg*1000).toPrecision(3)+" g"; if(kg<1000) return kg.toPrecision(3)+" kg"; const t=kg/1000;
+  if(t<1e6) return MP.num(t,1)+" t"; if(t<1e9) return (t/1e6).toPrecision(3)+" million t"; return (t/1e9).toPrecision(3)+" billion t"; }
+function grains(n){ return n<=53?(Math.pow(2,n)-1).toLocaleString():Math.pow(2,n).toExponential(3).replace("e+"," × 10^"); }
+function equiv(kg){ const t=kg/1000, prod=(+$("prod").value||550)*1e6;
+  if(t<0.05) return "a few cups"; if(t<20) return MP.num(t/1,1)+" t — one lorry or less"; if(t<prod/365) return MP.num(t/20,0)+" lorries (20 t each)";
+  if(t<prod) return MP.num(t/(prod/365),1)+" days of world harvest"; return MP.num(t/prod,1)+" years of world harvest"; }
+function show(){ const mg=+$("mg").value||25, kgOne=mg*1e-6;
+  $("sq").textContent=k; $("oS").textContent=k?fmtMass(Math.pow(2,k-1)*kgOne):"–"; $("oS2").textContent=k?grains(k-1).replace(/^0$/,"1")+" grains":"";
+  if(k){ $("oS2").textContent=(k<=53?Math.pow(2,k-1).toLocaleString():Math.pow(2,k-1).toExponential(3).replace("e+"," × 10^"))+" grains"; }
+  const tot=(Math.pow(2,k)-1)*kgOne; $("oT").textContent=k?fmtMass(tot):"–"; $("oT2").textContent=k?grains(k)+" grains":""; $("oY").textContent=k?equiv(tot):"–"; board(); chart(); }
+function board(){ const cv=$("cb"), {g,W,H}=MP.canvas(cv,Math.min(480,cv.clientWidth)), s=Math.min(W,H)/8, ox=(W-8*s)/2;
+  for(let i=0;i<64;i++){ const r=7-Math.floor(i/8), c=Math.floor(i/8)%2?7-i%8:i%8, x=ox+c*s, y=r*s;
+    g.fillStyle=(r+c)%2?MP.css("--code"):MP.css("--panel"); g.fillRect(x,y,s,s);
+    if(i<k){ const f=(i+1)/64; g.fillStyle=i<32?MP.css("--a"):MP.css("--b"); g.globalAlpha=0.25+0.75*f; g.fillRect(x+2,y+2,s-4,s-4); g.globalAlpha=1; }
+    g.fillStyle=i<k?"#fff":MP.css("--muted"); g.font=(s>45?"12px":"9px")+" Segoe UI"; g.textAlign="center"; g.fillText(i+1,x+s/2,y+s/2+4); }
+  g.strokeStyle=MP.css("--ink"); g.strokeRect(ox,0,8*s,8*s); }
+function chart(){ const pts=[]; for(let i=1;i<=64;i++) pts.push([i,Math.pow(2,i-1)]);
+  MP.chart($("cv"),{height:260,x:{min:0.5,max:64.5,label:"Square"},y:{min:1,max:1e19,log:true,label:"grains",ticks:[1,1e3,1e6,1e9,1e12,1e15,1e18]},
+    bars:pts.map(([x,y])=>({x0:x-0.4,x1:x+0.4,y,color:x<=k?(x<=32?"--a":"--b"):"--line"}))}); }
+MP.ctl=MP.loop(()=>{ if(k<64) k++; else MP.ctl.pause(); },{interval:250,after:show});
+$("rs").onclick=()=>{MP.ctl.pause();k=0;show();}; $("mg").oninput=show; $("prod").oninput=show; MP.onRedraw(show); show();
+</script>

@@ -1,0 +1,70 @@
+<!--META {"num":3,"slug":"tuesday-boy","cat":"prob","title":"The Boy Born on a Tuesday","tag":"\"I have two children; one is a boy born on a Tuesday.\" The chance of two boys is 13/27 — the weekday changes the answer."} -->
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p>A stranger tells you: <b>"I have two children. At least one is a boy born on a Tuesday."</b> What is the probability that both children are boys?</p>
+  <p>The Tuesday sounds irrelevant. Surely the answer is the same as without it? Assume boys and girls are equally likely, the seven weekdays are equally likely, and the two children are independent.</p>
+</section>
+<section id="answer">
+  <h2>2. The answer — three versions</h2>
+  <div class="grid3">
+    <div class="card c"><b>"At least one is a boy"</b><div class="big">1/3</div></div>
+    <div class="card a"><b>"At least one is a boy born on a Tuesday"</b><div class="big">13/27</div>≈ 48.1 %</div>
+    <div class="card b"><b>"The elder child is a boy"</b><div class="big">1/2</div></div>
+  </div>
+  <p class="note">The more specific the description of the boy, the closer it is to pointing at one particular child — and the closer the answer moves from 1/3 towards 1/2.</p>
+</section>
+<section id="count">
+  <h2>3. Counting the cases</h2>
+  <p>Each child is one of 14 equally likely types (boy or girl × 7 days), so a two-child family is one of 14 × 14 = 196 equally likely pairs. Count the pairs that contain a Tuesday boy:</p>
+  <ul>
+    <li>Elder is a Tuesday boy: 14 pairs (younger anything).</li>
+    <li>Younger is a Tuesday boy: 14 pairs.</li>
+    <li>Both are Tuesday boys: counted twice, so subtract 1. Total <b>27</b> pairs.</li>
+  </ul>
+  <p>Pairs with two boys among these: elder Tuesday boy with any boy (7) + younger Tuesday boy with any boy (7) − 1 double count = <b>13</b>. So P = 13/27.</p>
+  <h3>The general formula</h3>
+  <p>If the boy has a trait with probability <i>p</i> (born on a Tuesday: <i>p</i> = 1/7; born on 1 January: <i>p</i> = 1/365):</p>
+  <div class="eq">P(two boys | at least one boy with the trait) = (2 − <i>p</i>) / (4 − <i>p</i>)</div>
+  <p><i>p</i> = 1 gives the plain "at least one boy" answer 1/3; <i>p</i> → 0 gives 1/2.</p>
+  <div class="row">Trait probability <i>p</i> = 1 / <input type="number" id="k" value="7" min="1" max="100000"> <span id="out" class="stat"></span></div>
+  <canvas id="cv"></canvas>
+</section>
+<section id="grid">
+  <h2>4. See the 196 families</h2>
+  <p>Rows: elder child; columns: younger child. Boys are days 1–7 (Mon–Sun), girls are the next 7. Highlighted cells contain a Tuesday boy: <span class="ca">■ two boys</span> &nbsp; <span class="cb">■ boy and girl</span>.</p>
+  <canvas id="gridCv"></canvas>
+</section>
+<section id="sim">
+  <h2>5. Simulation</h2>
+  <p>Random two-child families. We keep only families with at least one Tuesday boy and count how many have two boys.</p>
+  <div class="row"><button class="primary" onclick="MP.ctl.play()">▶ Play (P)</button><button onclick="MP.ctl.step()">Step (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button></div>
+  <p class="stat">Families made: <b id="sN">0</b> · with a Tuesday boy: <b id="sK">0</b> · of those, two boys: <b id="sB">0</b> → <b id="sP" class="ca">–</b> (exact 48.15 %)</p>
+  <p id="last" class="note">Press S to make one family.</p>
+</section>
+<section id="fine">
+  <h2>6. Fine print</h2>
+  <ul>
+    <li>The answer depends on <b>how</b> you learned the fact. If the parent picked one child at random and told you its sex and weekday, the answer is 1/2 whatever the day. 13/27 assumes the statement is a filter: "families having at least one Tuesday boy".</li>
+    <li>The puzzle was made famous by Gary Foshee at a 2010 puzzle-lovers' gathering; it sparked long arguments for exactly this reason.</li>
+  </ul>
+</section>
+<script>
+const $=MP.$, D=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+function f(p){ return (2-p)/(4-p); }
+function calc(){ const k=Math.max(1,+$("k").value||1), p=1/k; $("out").innerHTML=`→ P(two boys) = <b class="ca">${MP.pct(f(p))}</b>`; chart(); }
+function chart(){ const k=Math.max(1,+$("k").value||1), pts=[]; for(let i=0;i<=200;i++){ const kk=Math.pow(10,i/50); pts.push([kk,f(1/kk)]); }
+  MP.chart($("cv"),{height:280,x:{min:1,max:10000,log:true,label:"Trait is 1 in … (log scale)"},y:{min:0.3,max:0.52,pct:true},series:[{pts,color:"--a"}],
+    hlines:[{y:1/3,label:"1/3",color:"--c"},{y:0.5,label:"1/2",color:"--b"}],points:[{x:7,y:13/27,label:"Tuesday 13/27",color:"--a",dy:22},{x:k,y:f(1/k),color:"--b",r:5}]}); }
+function grid(){ const {g,W,H}=MP.canvas($("gridCv"),Math.min(560,MP.$("gridCv").clientWidth*0.6)); const n=14, s=Math.min((H-30)/n,(W-60)/n), x0=50, y0=24;
+  g.font="11px Segoe UI"; g.fillStyle=MP.css("--muted"); g.textAlign="center";
+  for(let i=0;i<n;i++){ g.fillText((i<7?"B":"G")+D[i%7].slice(0,2),x0+i*s+s/2,y0-6); g.textAlign="right"; g.fillText((i<7?"B":"G")+D[i%7].slice(0,2),x0-4,y0+i*s+s/2+4); g.textAlign="center"; }
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++){ const tb=(r===1||c===1), bb=r<7&&c<7;
+    g.fillStyle = tb ? (bb?MP.css("--a"):MP.css("--b")) : MP.css("--code"); g.fillRect(x0+c*s+1,y0+r*s+1,s-2,s-2); }
+  g.fillStyle=MP.css("--ink"); g.textAlign="left"; g.font="13px Segoe UI"; g.fillText("13 blue + 14 orange = 27 families",x0+n*s+10<W-150?x0+n*s+10:x0,y0+n*s+18>H?H-4:y0+n*s+18); }
+let S={n:0,k:0,b:0};
+function fam(show){ const c=[0,1].map(()=>({boy:Math.random()<0.5,d:MP.rand(7)})); S.n++; const tb=c.some(x=>x.boy&&x.d===1);
+  if(tb){S.k++; if(c[0].boy&&c[1].boy) S.b++;}
+  if(show) $("last").innerHTML=`Family #${S.n}: elder ${c[0].boy?"boy":"girl"} (${D[c[0].d]}), younger ${c[1].boy?"boy":"girl"} (${D[c[1].d]}) → `+(tb?"<b>kept</b>":"ignored (no Tuesday boy)"); }
+MP.ctl=MP.loop(fam,{batch:()=>Math.max(1,Math.floor(S.n/10)),after:()=>{ $("sN").textContent=S.n; $("sK").textContent=S.k; $("sB").textContent=S.b; $("sP").textContent=S.k?MP.pct(S.b/S.k):"–"; }});
+$("k").oninput=calc; MP.onRedraw(()=>{chart();grid();}); calc();
+</script>

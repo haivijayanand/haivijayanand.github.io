@@ -1,0 +1,69 @@
+<!--META {"num":11,"slug":"bertrand-paradox","cat":"prob","title":"Bertrand's Paradox","tag":"Draw a random chord in a circle. Is it longer than the side of the inscribed triangle? 1/3, 1/2 or 1/4 — all three are right."} -->
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p>Draw an equilateral triangle inside a circle. Now draw a <b>chord of the circle at random</b>. What is the chance the chord is longer than a side of the triangle?</p>
+  <p>Joseph Bertrand asked this in 1889 to show that "at random" is not a complete instruction.</p>
+</section>
+<section id="answer">
+  <h2>2. The answer — it depends how you choose</h2>
+  <div class="grid3">
+    <div class="card a"><b>Method 1: two random points on the circle</b><div class="big">1/3</div></div>
+    <div class="card b"><b>Method 2: random point on a random radius, chord square to it</b><div class="big">1/2</div></div>
+    <div class="card c"><b>Method 3: random midpoint anywhere inside the circle</b><div class="big">1/4</div></div>
+  </div>
+  <p class="note">Each method is a perfectly reasonable meaning of "random chord", and each gives a different answer. A probability is only defined once the way of choosing is fixed.</p>
+</section>
+<section id="why">
+  <h2>3. Working it out (circle of radius 1, triangle side √3)</h2>
+  <ul>
+    <li><b>Method 1:</b> fix one end of the chord at a vertex of the triangle. The chord is longer than a side when the other end falls on the arc opposite that vertex, which is 1/3 of the circle.</li>
+    <li><b>Method 2:</b> a chord is longer than √3 exactly when its distance from the centre is less than 1/2. A random distance along the radius is below 1/2 half the time.</li>
+    <li><b>Method 3:</b> the midpoint must lie inside a circle of radius 1/2, which has 1/4 of the area.</li>
+  </ul>
+  <p>Method 2 has a special property: it is the only one that gives the same answer if you shrink, move or rotate the circle — so physicists often call it the "natural" choice (throwing long straws onto a small circle gives method 2).</p>
+</section>
+<section id="sim">
+  <h2>4. Throw chords</h2>
+  <div class="row">Method: <button class="m on" data-m="1">1 · two points</button><button class="m" data-m="2">2 · random radius</button><button class="m" data-m="3">3 · random midpoint</button></div>
+  <div class="row"><button class="primary" onclick="MP.ctl.play()">▶ Play (P)</button><button onclick="MP.ctl.step()">Step (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button><button id="rs">Reset</button>
+    <span><span class="ca">— longer than a side</span> &nbsp; <span class="cb">— shorter</span></span></div>
+  <div class="grid2">
+    <canvas id="circ"></canvas>
+    <div>
+      <div class="card a"><b>Chords drawn</b><div class="big" id="sN">0</div></div><br>
+      <div class="card b"><b>Fraction longer than a side</b><div class="big" id="sP">–</div><span id="sX"></span></div><br>
+      <p>Look at the <b>midpoints</b> the methods produce: method 1 crowds them towards the edge, method 3 spreads them evenly, method 2 is in between. Tick to show midpoints only: <input type="checkbox" id="mid"></p>
+    </div>
+  </div>
+</section>
+<section id="fine">
+  <h2>5. Fine print</h2>
+  <ul>
+    <li>The lesson carries straight into engineering statistics: "pick a random sample" needs a sampling rule. Picking random points on a component's surface, along its length or by volume gives different defect statistics.</li>
+    <li>E. T. Jaynes (1973) argued that the invariance argument makes 1/2 the only consistent answer when nothing else is known.</li>
+  </ul>
+</section>
+<script>
+const $=MP.$; let M=1, S={n:0,l:0,ch:[]};
+const exact={1:1/3,2:1/2,3:1/4};
+function chord(){ let a,b;
+  if(M===1){ const t1=Math.random()*2*Math.PI, t2=Math.random()*2*Math.PI; a=[Math.cos(t1),Math.sin(t1)]; b=[Math.cos(t2),Math.sin(t2)]; }
+  else { let d,th; th=Math.random()*2*Math.PI;
+    if(M===2) d=Math.random(); else { let x,y; do{ x=2*Math.random()-1; y=2*Math.random()-1; }while(x*x+y*y>1); d=Math.hypot(x,y); th=Math.atan2(y,x); }
+    const h=Math.sqrt(1-d*d), cx=d*Math.cos(th), cy=d*Math.sin(th), ux=-Math.sin(th), uy=Math.cos(th); a=[cx+h*ux,cy+h*uy]; b=[cx-h*ux,cy-h*uy]; }
+  const len=Math.hypot(a[0]-b[0],a[1]-b[1]); return {a,b,long:len>Math.sqrt(3)}; }
+function step(){ const c=chord(); S.n++; if(c.long) S.l++; S.ch.push(c); if(S.ch.length>1500) S.ch.shift(); }
+function draw(){ const cv=$("circ"), {g,W,H}=MP.canvas(cv,Math.min(460,cv.clientWidth)), R=Math.min(W,H)/2-12, cx=W/2, cy=H/2, P=p=>[cx+p[0]*R,cy-p[1]*R];
+  const midOnly=$("mid").checked;
+  S.ch.forEach(c=>{ g.strokeStyle=c.long?MP.css("--a"):MP.css("--b"); g.fillStyle=g.strokeStyle; g.globalAlpha=midOnly?0.8:Math.max(0.08,Math.min(0.6,30/S.ch.length));
+    if(midOnly){ const m=P([(c.a[0]+c.b[0])/2,(c.a[1]+c.b[1])/2]); g.fillRect(m[0]-1,m[1]-1,2.5,2.5); }
+    else { const p=P(c.a), q=P(c.b); g.lineWidth=1; g.beginPath(); g.moveTo(...p); g.lineTo(...q); g.stroke(); } });
+  g.globalAlpha=1; g.strokeStyle=MP.css("--ink"); g.lineWidth=2; g.beginPath(); g.arc(cx,cy,R,0,7); g.stroke();
+  g.beginPath(); for(let k=0;k<=3;k++){ const t=Math.PI/2+k*2*Math.PI/3; const p=P([Math.cos(t),Math.sin(t)]); k?g.lineTo(...p):g.moveTo(...p); } g.stroke();
+  g.setLineDash([4,4]); g.beginPath(); g.arc(cx,cy,R/2,0,7); g.stroke(); g.setLineDash([]);
+  $("sN").textContent=S.n; $("sP").textContent=S.n?MP.pct(S.l/S.n):"–"; $("sX").textContent="exact for method "+M+": "+MP.pct(exact[M]); }
+function reset(){ if(MP.ctl) MP.ctl.pause(); S={n:0,l:0,ch:[]}; draw(); }
+document.querySelectorAll("button.m").forEach(b=>b.onclick=()=>{ document.querySelectorAll("button.m").forEach(x=>x.classList.remove("on")); b.classList.add("on"); M=+b.dataset.m; reset(); });
+MP.ctl=MP.loop(step,{batch:()=>S.n<200?1:20,interval:40,after:draw});
+$("rs").onclick=reset; $("mid").onchange=draw; MP.onRedraw(draw); reset();
+</script>

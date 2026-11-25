@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Interesting Math Problems #16 — The Ant on the Box
+FAMILY:  interesting-math-problems
+VERSION: 1.0.0
+DATE:    2026-11-25
+CHAT:    Interesting Math Problems group — build all 25 problems in groups and upload
+CHANGES: 1.0.0 — first release
+STATUS:  public — haivijayanand.github.io/math-problems/ant-on-a-box.html
+-->
+<html lang="en" data-theme="light">
+<head>
+<script src="/assets/js/site-theme.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Ant on the Box — Interesting Math Problems — K Vijay Anand</title>
+<meta name="description" content="An ant crawls from one corner of a room to the opposite corner. Unfold the walls flat and the shortest route becomes a straight line.">
+<link rel="stylesheet" href="mp.css">
+<script type="module" src="/assets/js/site-progress.js"></script>
+</head>
+<body>
+<header class="mp">
+  <button id="btnSide" title="Show / hide contents (M)">☰</button>
+  <h1>The Ant on the Box<br><span class="crumb"><a href="/">Home</a> · <a href="./">Interesting Math Problems</a> · Problem 16 · Geometry & measurement</span></h1>
+  <button id="themeBtn" title="Light / dark theme">◐ Theme</button>
+  <button id="btnFull" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<div class="wrap">
+<nav id="side"></nav>
+<main>
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p>A room is 5 m long, 4 m wide and 3 m high. An ant sits in one bottom corner and wants to reach the <b>opposite top corner</b>, crawling only on the walls, floor and ceiling. What is the shortest route?</p>
+  <p>Along the edges is 5 + 4 + 3 = 12 m. Across the floor diagonally and then straight up is √(5² + 4²) + 3 = 9.40 m. Can it do better?</p>
+</section>
+<section id="answer">
+  <h2>2. The answer</h2>
+  <div class="answer">
+    <div class="card a"><div class="big">8.60 m</div>Cross the floor and one wall in a single straight line on the unfolded net: √(5² + (4 + 3)²).</div>
+    <div class="card b"><div class="big">Rule</div>Keep the <b>longest</b> side on its own and add the two shorter ones: √(<i>l</i>² + (<i>w</i> + <i>h</i>)²), with <i>l</i> the largest.</div>
+  </div>
+</section>
+<section id="why">
+  <h2>3. Working it out</h2>
+  <p>A path that crosses two faces lies flat when you unfold those faces into one rectangle, and on a flat sheet the shortest path is a straight line. The ant must cross one edge between the start face and the end face; there are three essentially different choices, giving three rectangles:</p>
+  <div class="eq">√(<i>l</i>² + (<i>w</i> + <i>h</i>)²) , &nbsp; √(<i>w</i>² + (<i>l</i> + <i>h</i>)²) , &nbsp; √(<i>h</i>² + (<i>l</i> + <i>w</i>)²)</div>
+  <p>Expanding the squares, all three share <i>l</i>² + <i>w</i>² + <i>h</i>² and differ only in the cross term: 2<i>wh</i>, 2<i>lh</i> or 2<i>lw</i>. The smallest cross term leaves out the largest side — so pair up the two smaller sides.</p>
+  <h3>Dudeney's spider and fly (1903)</h3>
+  <p>Henry Dudeney's famous version: a room 30 ft long, 12 ft wide and 12 ft high. A spider is on one end wall, in the middle, 1 ft below the ceiling; a fly is on the opposite end wall, in the middle, 1 ft above the floor. The obvious route (up, along the ceiling, down) is 1 + 30 + 11 = 42 ft. The shortest route crosses <b>five</b> of the six faces and is exactly <b>40 ft</b>: on the right unfolding it is the hypotenuse of a 32 × 24 right triangle.</p>
+</section>
+<section id="calc">
+  <h2>4. Unfold your own box</h2>
+  <div class="row">Length (m) <input type="number" id="l" value="5" step="0.1" min="0.1"> · Width (m) <input type="number" id="w" value="4" step="0.1" min="0.1"> · Height (m) <input type="number" id="h" value="3" step="0.1" min="0.1"></div>
+  <table id="tbl"></table>
+  <div class="row"><button class="primary" onclick="MP.ctl.play()">▶ Ant crawls (P)</button><button onclick="MP.ctl.step()">Step (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button><button id="rs">Restart</button></div>
+  <p>The three unfolded nets. The ant's straight path is drawn on each; the shortest is in blue.</p>
+  <canvas id="nets"></canvas>
+</section>
+<section id="fine">
+  <h2>5. Fine print</h2>
+  <ul>
+    <li>Flying straight through the air (the space diagonal) is shorter still: √(<i>l</i>² + <i>w</i>² + <i>h</i>²).</li>
+    <li>The unfolding trick is used for routing cables and pipes along walls, and for finding the shortest belt or hose path around a machine housing.</li>
+    <li>For points that are not at corners (Dudeney's case), paths over three, four or five faces can win, so all unfoldings must be checked.</li>
+  </ul>
+</section>
+<footer class="mp"><a href="ladder-around-corner.html">← 15. Carrying a Ladder Round a Corner</a><a href="./">All problems</a><span></span></footer>
+</main>
+</div>
+<script src="mp.js"></script>
+<script>
+const $=MP.$; let prog=0;
+function dims(){ return ["l","w","h"].map(k=>Math.max(0.1,+$(k).value||1)); }
+function routes(){ const [l,w,h]=dims(); return [
+  {name:"Floor + side wall (pairs width and height)",a:l,b:w,c:h,d:Math.hypot(l,w+h)},
+  {name:"Floor + end wall (pairs length and height)",a:w,b:l,c:h,d:Math.hypot(w,l+h)},
+  {name:"Wall + wall (pairs length and width)",a:h,b:l,c:w,d:Math.hypot(h,l+w)} ]; }
+function table(){ const [l,w,h]=dims(), r=routes(), m=Math.min(...r.map(x=>x.d));
+  let s="<tr><th>Route</th><th>Length</th></tr>"; r.forEach(x=>s+=`<tr><td>${x.name}</td><td class="${x.d===m?"a":""}">${x.d.toFixed(3)} m</td></tr>`);
+  s+=`<tr><td>Floor diagonal, then straight up the corner</td><td>${(Math.hypot(Math.max(l,w,h),[l,w,h].sort((p,q)=>p-q)[1])+Math.min(l,w,h)).toFixed(3)} m (best order)</td></tr>`;
+  s+=`<tr><td>Along the edges</td><td>${(l+w+h).toFixed(3)} m</td></tr><tr><td>Flying through the air</td><td>${Math.hypot(l,w,h).toFixed(3)} m</td></tr>`; $("tbl").innerHTML=s; }
+function nets(){ const r=routes(), m=Math.min(...r.map(x=>x.d)), {g,W,H}=MP.canvas($("nets"),320), cw=(W-40)/3;
+  const big=Math.max(...r.map(x=>Math.max(x.a,x.b+x.c))), s=Math.min((cw-20)/big,(H-60)/big);
+  r.forEach((x,i)=>{ const ox=20+i*cw+10, oy=30; // rectangle width x.a, height x.b + x.c, split at x.b
+    g.fillStyle=MP.css("--code"); g.fillRect(ox,oy,x.a*s,(x.b+x.c)*s); g.strokeStyle=MP.css("--muted"); g.lineWidth=1.5; g.strokeRect(ox,oy,x.a*s,(x.b+x.c)*s);
+    g.setLineDash([4,4]); g.beginPath(); g.moveTo(ox,oy+x.b*s); g.lineTo(ox+x.a*s,oy+x.b*s); g.stroke(); g.setLineDash([]);
+    const sh=x.d===m; g.strokeStyle=sh?MP.css("--a"):MP.css("--b"); g.lineWidth=sh?4:2.5; g.beginPath(); g.moveTo(ox,oy+(x.b+x.c)*s); g.lineTo(ox+x.a*s,oy); g.stroke();
+    const f=Math.min(1,prog), ax=ox+f*x.a*s, ay=oy+(x.b+x.c)*s*(1-f); g.font="18px Segoe UI"; g.textAlign="center"; g.fillText("🐜",ax,ay+6);
+    g.fillStyle=MP.css("--ink"); g.font="13px Segoe UI"; g.fillText(`${x.a} × (${x.b} + ${x.c}) → ${x.d.toFixed(2)} m`,ox+x.a*s/2,oy+(x.b+x.c)*s+20); }); }
+MP.ctl={t:null,play(){ if(this.t) return; if(prog>=1) prog=0; this.t=setInterval(()=>{ prog+=0.01; if(prog>=1){prog=1;this.pause();} nets(); },30); },pause(){clearInterval(this.t);this.t=null;},step(){this.pause(); prog=Math.min(1,prog+0.1); nets();}};
+$("rs").onclick=()=>{MP.ctl.pause();prog=0;nets();}; ["l","w","h"].forEach(k=>$(k).oninput=()=>{table();nets();}); MP.onRedraw(nets); table();
+</script>
+</body>
+</html>

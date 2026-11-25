@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Interesting Math Problems #13 — Buffon's Needle
+FAMILY:  interesting-math-problems
+VERSION: 1.0.0
+DATE:    2026-11-25
+CHAT:    Interesting Math Problems group — build all 25 problems in groups and upload
+CHANGES: 1.0.0 — first release
+STATUS:  public — haivijayanand.github.io/math-problems/buffons-needle.html
+-->
+<html lang="en" data-theme="light">
+<head>
+<script src="/assets/js/site-theme.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buffon's Needle — Interesting Math Problems — K Vijay Anand</title>
+<meta name="description" content="Drop matchsticks on a floor of planks and count how many cross a crack. The answer contains π — so you can measure π by throwing sticks.">
+<link rel="stylesheet" href="mp.css">
+<script type="module" src="/assets/js/site-progress.js"></script>
+</head>
+<body>
+<header class="mp">
+  <button id="btnSide" title="Show / hide contents (M)">☰</button>
+  <h1>Buffon's Needle<br><span class="crumb"><a href="/">Home</a> · <a href="./">Interesting Math Problems</a> · Problem 13 · Geometry & measurement</span></h1>
+  <button id="themeBtn" title="Light / dark theme">◐ Theme</button>
+  <button id="btnFull" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<div class="wrap">
+<nav id="side"></nav>
+<main>
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p>A floor is made of parallel planks of width <i>d</i>. You drop a needle (or matchstick) of length <i>l</i> ≤ <i>d</i> at random. What is the chance it lands across a crack between two planks?</p>
+  <p>Georges-Louis Leclerc, Comte de Buffon, asked this in 1733 — one of the first problems of <b>geometric probability</b>.</p>
+</section>
+<section id="answer">
+  <h2>2. The answer</h2>
+  <div class="answer">
+    <div class="card a"><div class="big">2<i>l</i> / (π<i>d</i>)</div>is the chance of crossing. For a needle as long as the plank is wide, that is 2/π ≈ 63.7 %.</div>
+    <div class="card b"><div class="big">π ≈ 2<i>l</i>·N / (<i>d</i>·C)</div>Drop N needles, count C crossings, and you have an experiment that measures π.</div>
+  </div>
+</section>
+<section id="why">
+  <h2>3. Working it out</h2>
+  <p>Describe a landing by two numbers: the distance <i>x</i> from the needle's centre to the nearest crack (0 to <i>d</i>/2), and the angle θ between needle and cracks (0 to π/2). Both are uniform. The needle crosses when</p>
+  <div class="eq"><i>x</i> ≤ (<i>l</i>/2) sin θ</div>
+  <p>The chance is the area under this curve divided by the area of the whole rectangle of possibilities:</p>
+  <div class="eq">P = [ ∫<sub>0</sub><sup>π/2</sup> (<i>l</i>/2) sin θ dθ ] / [ (<i>d</i>/2)(π/2) ] = (<i>l</i>/2) / (π<i>d</i>/4) = 2<i>l</i> / (π<i>d</i>)</div>
+  <p>Why does π appear in a problem about straight lines? Because the needle's <b>direction</b> is random, and directions live on a circle.</p>
+</section>
+<section id="sim">
+  <h2>4. Drop needles</h2>
+  <div class="row">Needle length / plank width: <input type="range" id="ratio" min="0.1" max="1" step="0.05" value="0.8"> <b id="rv">0.80</b>
+    <button class="primary" onclick="MP.ctl.play()">▶ Play (P)</button><button onclick="MP.ctl.step()">Drop one (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button><button id="rs">Reset</button></div>
+  <canvas id="floor"></canvas>
+  <div class="grid3">
+    <div class="card c"><b>Needles dropped</b><div class="big" id="sN">0</div></div>
+    <div class="card a"><b>Crossing a crack</b><div class="big" id="sC">0</div><span id="sF"></span></div>
+    <div class="card b"><b>Estimate of π</b><div class="big" id="sPi">–</div><span id="sE"></span></div>
+  </div>
+  <h3>The estimate settling down (true π shown dashed)</h3>
+  <canvas id="cv"></canvas>
+</section>
+<section id="fine">
+  <h2>5. Fine print</h2>
+  <ul>
+    <li>The estimate improves only slowly: the error shrinks like 1/√N. To get π right to 3 decimal places you need several million needles. It is a lesson in Monte Carlo methods, not a practical way to compute π.</li>
+    <li>In 1901 Mario Lazzarini reported 3,408 needles giving π ≈ 355/113, correct to six decimal places — a result almost certainly arranged by stopping at a convenient count.</li>
+    <li>"Buffon's noodle": for a curved wire of length <i>l</i> the <b>expected number</b> of crossings is still 2<i>l</i>/(π<i>d</i>), whatever its shape.</li>
+  </ul>
+</section>
+<footer class="mp"><a href="rope-around-earth.html">← 12. A Rope Around the Earth</a><a href="./">All problems</a><a href="coastline-paradox.html">14. The Coastline Paradox →</a></footer>
+</main>
+</div>
+<script src="mp.js"></script>
+<script>
+const $=MP.$, N=6; // planks across the canvas
+let S;
+function r(){ return +$("ratio").value; }
+function reset(){ if(MP.ctl) MP.ctl.pause(); S={n:0,c:0,nd:[],hist:[]}; $("rv").textContent=r().toFixed(2); show(); }
+function drop(){ const d=1, l=r()*d, y=Math.random()*N*d, x=Math.random(), th=Math.random()*Math.PI, dy=l/2*Math.sin(th), dx=l/2*Math.cos(th);
+  const cross=Math.floor(y-dy)!==Math.floor(y+dy); S.n++; if(cross) S.c++; S.nd.push([x,y,dx,dy,cross]); if(S.nd.length>800) S.nd.shift();
+  if(S.n<=50||S.n%Math.ceil(S.n/300)===0) S.hist.push([S.n,S.c?2*l*S.n/(d*S.c):NaN]); }
+function show(){ const {g,W,H}=MP.canvas($("floor"),300), ph=H/N, sx=W;
+  for(let i=0;i<N;i++){ g.fillStyle=i%2?MP.css("--code"):MP.css("--panel"); g.fillRect(0,i*ph,W,ph); }
+  g.strokeStyle=MP.css("--muted"); g.lineWidth=1.5; for(let i=1;i<N;i++){ g.beginPath(); g.moveTo(0,i*ph); g.lineTo(W,i*ph); g.stroke(); }
+  S.nd.forEach(([x,y,dx,dy,c],i)=>{ g.strokeStyle=c?MP.css("--a"):MP.css("--b"); g.lineWidth=i===S.nd.length-1?3.5:1.6; g.beginPath();
+    g.moveTo(x*sx-dx*ph,(y-dy)*ph); g.lineTo(x*sx+dx*ph,(y+dy)*ph); g.stroke(); });
+  const l=r(); $("sN").textContent=S.n.toLocaleString(); $("sC").textContent=S.c.toLocaleString();
+  $("sF").textContent=S.n?`${MP.pct(S.c/S.n)} · exact ${MP.pct(2*l/Math.PI)}`:"";
+  const est=S.c?2*l*S.n/S.c:NaN; $("sPi").textContent=S.c?est.toFixed(4):"–"; $("sE").textContent=S.c?"error "+(est-Math.PI).toFixed(4):"";
+  MP.chart($("cv"),{height:260,x:{min:1,max:Math.max(10,S.n),log:true,label:"Needles dropped (log scale)"},y:{min:2.5,max:4,label:"estimate"},
+    series:[{pts:S.hist,color:"--a"}],hlines:[{y:Math.PI,label:"π",color:"--b"}]}); }
+MP.ctl=MP.loop(drop,{batch:()=>S.n<100?1:Math.max(1,Math.floor(S.n/20)),interval:50,after:show});
+$("ratio").oninput=reset; $("rs").onclick=reset; MP.onRedraw(show); reset();
+</script>
+</body>
+</html>

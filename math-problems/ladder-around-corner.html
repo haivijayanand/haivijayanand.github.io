@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Interesting Math Problems #15 — Carrying a Ladder Round a Corner
+FAMILY:  interesting-math-problems
+VERSION: 1.0.0
+DATE:    2026-11-25
+CHAT:    Interesting Math Problems group — build all 25 problems in groups and upload
+CHANGES: 1.0.0 — first release
+STATUS:  public — haivijayanand.github.io/math-problems/ladder-around-corner.html
+-->
+<html lang="en" data-theme="light">
+<head>
+<script src="/assets/js/site-theme.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carrying a Ladder Round a Corner — Interesting Math Problems — K Vijay Anand</title>
+<meta name="description" content="Two 1.2 m corridors meet at a right angle. The longest ladder you can carry round flat is 3.39 m — and the tightest moment is at 45°.">
+<link rel="stylesheet" href="mp.css">
+<script type="module" src="/assets/js/site-progress.js"></script>
+</head>
+<body>
+<header class="mp">
+  <button id="btnSide" title="Show / hide contents (M)">☰</button>
+  <h1>Carrying a Ladder Round a Corner<br><span class="crumb"><a href="/">Home</a> · <a href="./">Interesting Math Problems</a> · Problem 15 · Geometry & measurement</span></h1>
+  <button id="themeBtn" title="Light / dark theme">◐ Theme</button>
+  <button id="btnFull" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<div class="wrap">
+<nav id="side"></nav>
+<main>
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p>A corridor 1.2 m wide meets another corridor 1.2 m wide at a right-angled corner. You carry a ladder horizontally (kept flat, no tilting). What is the <b>longest ladder</b> that can be taken round the corner?</p>
+  <p>Workshops face this every time a long shaft, pipe or beam must be moved through a building.</p>
+</section>
+<section id="answer">
+  <h2>2. The answer</h2>
+  <div class="answer">
+    <div class="card a"><div class="big">3.39 m</div>for two 1.2 m corridors: (1.2<sup>2/3</sup> + 1.2<sup>2/3</sup>)<sup>3/2</sup> = 2√2 × 1.2.</div>
+    <div class="card b"><div class="big">Min of a max</div>The longest ladder that gets through equals the <b>shortest</b> line that touches the inner corner and both outer walls.</div>
+  </div>
+</section>
+<section id="why">
+  <h2>3. Working it out</h2>
+  <p>Picture the ladder at angle θ to the first corridor, touching the inner corner. The longest straight segment that fits at that angle, from outer wall to outer wall through the inner corner, is</p>
+  <div class="eq"><i>L</i>(θ) = <i>a</i> / sin θ + <i>b</i> / cos θ</div>
+  <p>where <i>a</i> and <i>b</i> are the corridor widths. A ladder gets round only if it fits at <b>every</b> angle, so it must be no longer than the smallest <i>L</i>(θ). Setting d<i>L</i>/dθ = 0 gives tan³θ = <i>a</i>/<i>b</i>, and substituting back:</p>
+  <div class="eq"><i>L</i><sub>max</sub> = ( <i>a</i><sup>2/3</sup> + <i>b</i><sup>2/3</sup> )<sup>3/2</sup></div>
+  <p>For equal corridors the critical angle is 45° and <i>L</i><sub>max</sub> = 2√2·<i>a</i> ≈ 2.83 <i>a</i>.</p>
+</section>
+<section id="sim">
+  <h2>4. Try it</h2>
+  <div class="row">Corridor 1 width <i>a</i> (m) <input type="number" id="a" value="1.2" step="0.05" min="0.2"> · Corridor 2 width <i>b</i> (m) <input type="number" id="b" value="1.2" step="0.05" min="0.2"> · Your ladder (m) <input type="number" id="L" value="3.2" step="0.05" min="0.1"></div>
+  <div class="grid3">
+    <div class="card a"><b>Longest ladder that fits</b><div class="big" id="oL">–</div></div>
+    <div class="card c"><b>Tightest angle</b><div class="big" id="oT">–</div></div>
+    <div class="card b"><b>Your ladder</b><div class="big" id="oY">–</div></div>
+  </div>
+  <div class="row"><button class="primary" onclick="MP.ctl.play()">▶ Carry it round (P)</button><button onclick="MP.ctl.step()">Step 2° (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button><button id="rs">Back to start</button>
+    <span>Angle: <b id="ang">0°</b></span></div>
+  <canvas id="plan"></canvas>
+  <h3>Room available at each angle, <i>L</i>(θ)</h3>
+  <canvas id="cv"></canvas>
+</section>
+<section id="fine">
+  <h2>5. Fine print</h2>
+  <ul>
+    <li>Tilting the ladder upwards uses the ceiling height and lets a longer one through; with a ceiling height <i>h</i> the answer is roughly √(<i>L</i><sub>max</sub>² + <i>h</i>²).</li>
+    <li>A ladder or beam has thickness. A quick, safe check is to reduce both corridor widths by the beam's width and use the calculator.</li>
+    <li>The harder cousin is the <b>moving sofa problem</b>: what is the largest <i>area</i> of a shape that can turn the corner? Gerver's 1992 shape (area ≈ 2.2195) was long believed best; a proof that it is optimal was announced in 2024.</li>
+  </ul>
+</section>
+<footer class="mp"><a href="coastline-paradox.html">← 14. The Coastline Paradox</a><a href="./">All problems</a><a href="ant-on-a-box.html">16. The Ant on the Box →</a></footer>
+</main>
+</div>
+<script src="mp.js"></script>
+<script>
+const $=MP.$; let th=2*Math.PI/180;
+function P(){ return {a:Math.max(0.1,+$("a").value||1), b:Math.max(0.1,+$("b").value||1), L:Math.max(0.05,+$("L").value||1)}; }
+const room=(a,b,t)=>a/Math.sin(t)+b/Math.cos(t);
+function best(a,b){ const t=Math.atan(Math.cbrt(a/b)); return {t,L:Math.pow(Math.pow(a,2/3)+Math.pow(b,2/3),1.5)}; }
+function calc(){ const {a,b,L}=P(), B=best(a,b); $("oL").textContent=B.L.toFixed(3)+" m"; $("oT").textContent=(B.t*180/Math.PI).toFixed(1)+"°";
+  $("oY").innerHTML=L<=B.L?`fits ✓<br><span style="font-size:15px">${(B.L-L).toFixed(2)} m to spare</span>`:`stuck ✗<br><span style="font-size:15px">${(L-B.L).toFixed(2)} m too long</span>`; draw(); chart(); }
+function draw(){ const {a,b,L}=P(), {g,W,H}=MP.canvas($("plan"),380), span=Math.max(L,a+b)*1.15, s=Math.min((W-40)/(span+b),(H-30)/(span*0.75+a));
+  // coordinates: outer corner (b,0); horizontal corridor y in [0,a], x<=b ; vertical corridor x in [0,b], y>=0 ; inner corner (0,a)
+  const ox=W-30-b*s, oy=H-15, X=x=>ox+x*s, Y=y=>oy-y*s;
+  g.fillStyle=MP.css("--code"); g.fillRect(0,Y(a),X(b),a*s); g.fillRect(X(0),0,b*s,Y(0));
+  g.strokeStyle=MP.css("--ink"); g.lineWidth=3; g.beginPath(); g.moveTo(0,Y(0)); g.lineTo(X(b),Y(0)); g.lineTo(X(b),0); g.stroke();
+  g.beginPath(); g.moveTo(0,Y(a)); g.lineTo(X(0),Y(a)); g.lineTo(X(0),0); g.stroke();
+  g.fillStyle=MP.css("--muted"); g.font="13px Segoe UI"; g.textAlign="center"; g.fillText("a = "+a+" m",X(-span*0.4),Y(a/2)+4); g.fillText("b = "+b+" m",X(b/2),Y(span*0.6));
+  // ladder through inner corner at angle th, slid so it touches outer wall of corridor 1 (y=0) when possible
+  const c=Math.cos(th), sn=Math.sin(th), R=room(a,b,th);
+  const tStart=-a/sn, fits=L<=R; // start at floor y=0
+  const t0=Math.max(tStart, -L+ 0), t1=t0+L; // keep ladder through inner corner region
+  const p0=[c*tStart, a+sn*tStart], p1=[c*(tStart+L), a+sn*(tStart+L)];
+  // available segment
+  g.strokeStyle=MP.css("--a"); g.setLineDash([6,5]); g.lineWidth=2; g.beginPath(); g.moveTo(X(c*tStart),Y(0)); g.lineTo(X(b),Y(a+b*Math.tan(th))); g.stroke(); g.setLineDash([]);
+  g.strokeStyle=fits?MP.css("--a"):MP.css("--b"); g.lineWidth=7; g.lineCap="round"; g.beginPath(); g.moveTo(X(p0[0]),Y(p0[1])); g.lineTo(X(p1[0]),Y(p1[1])); g.stroke(); g.lineCap="butt";
+  g.fillStyle=fits?MP.css("--a"):MP.css("--b"); g.font="bold 15px Segoe UI"; g.textAlign="left";
+  g.fillText(fits?"ladder fits at this angle":"stuck! only "+R.toFixed(2)+" m of room here",10,22); $("ang").textContent=(th*180/Math.PI).toFixed(0)+"°"; }
+function chart(){ const {a,b,L}=P(), B=best(a,b), pts=[]; for(let d=3;d<=87;d+=0.5){ const t=d*Math.PI/180; pts.push([d,room(a,b,t)]); }
+  MP.chart($("cv"),{height:260,x:{min:0,max:90,label:"Ladder angle θ (degrees)"},y:{min:0,max:B.L*2.5,label:"room (m)"},series:[{pts,color:"--a"}],
+    hlines:[{y:L,label:"your ladder",color:"--b"}],points:[{x:B.t*180/Math.PI,y:B.L,color:"--a",label:"tightest "+B.L.toFixed(2)+" m",dy:22},{x:th*180/Math.PI,y:room(a,b,th),color:"--b",r:5}]}); }
+function step(){ const {a,b,L}=P(); if(th>=88*Math.PI/180){ MP.ctl.pause(); return; } if(L>room(a,b,th+2*Math.PI/180)){ MP.ctl.pause(); th+=2*Math.PI/180; return; } th+=2*Math.PI/180; }
+MP.ctl=MP.loop(step,{interval:90,after:()=>{draw();chart();}});
+$("rs").onclick=()=>{MP.ctl.pause(); th=2*Math.PI/180; draw(); chart();}; ["a","b","L"].forEach(k=>$(k).oninput=calc); MP.onRedraw(()=>{draw();chart();}); calc();
+</script>
+</body>
+</html>

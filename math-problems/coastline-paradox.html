@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Interesting Math Problems #14 — The Coastline Paradox
+FAMILY:  interesting-math-problems
+VERSION: 1.0.0
+DATE:    2026-11-25
+CHAT:    Interesting Math Problems group — build all 25 problems in groups and upload
+CHANGES: 1.0.0 — first release
+STATUS:  public — haivijayanand.github.io/math-problems/coastline-paradox.html
+-->
+<html lang="en" data-theme="light">
+<head>
+<script src="/assets/js/site-theme.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Coastline Paradox — Interesting Math Problems — K Vijay Anand</title>
+<meta name="description" content="India&#x27;s coastline was 7,517 km; re-measured on finer maps it became 11,099 km. The coast did not grow — the ruler shrank.">
+<link rel="stylesheet" href="mp.css">
+<script type="module" src="/assets/js/site-progress.js"></script>
+</head>
+<body>
+<header class="mp">
+  <button id="btnSide" title="Show / hide contents (M)">☰</button>
+  <h1>The Coastline Paradox<br><span class="crumb"><a href="/">Home</a> · <a href="./">Interesting Math Problems</a> · Problem 14 · Geometry & measurement</span></h1>
+  <button id="themeBtn" title="Light / dark theme">◐ Theme</button>
+  <button id="btnFull" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<div class="wrap">
+<nav id="side"></nav>
+<main>
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p>How long is India's coastline? For fifty years the official figure was <b>7,516.6 km</b>. In 2024–25 the National Hydrographic Office and Survey of India re-assessed it, using far more detailed maps, at <b>11,098.81 km</b> — almost 48 % longer. No land was added.</p>
+  <p>So what is the "true" length of a coastline?</p>
+</section>
+<section id="answer">
+  <h2>2. The answer</h2>
+  <div class="answer">
+    <div class="card a"><div class="big">It has none</div>A coastline is wiggly at every scale. The shorter your ruler, the more bays, rocks and pebbles it follows, and the longer the coast becomes — without limit.</div>
+    <div class="card b"><div class="big">D ≈ 1.25</div>What <i>is</i> fixed is how fast the length grows as the ruler shrinks: the <b>fractal dimension</b>. Britain's west coast has D ≈ 1.25; a smooth curve has D = 1.</div>
+  </div>
+</section>
+<section id="why">
+  <h2>3. Working it out</h2>
+  <p>Walk a pair of dividers of span ε along the coast and count the steps <i>n</i>. The measured length is <i>L</i> = <i>n</i>ε. For a smooth curve <i>L</i> settles to a fixed value as ε → 0. For a coastline, Lewis Fry Richardson found in the 1950s that</p>
+  <div class="eq"><i>L</i>(ε) ≈ <i>F</i> · ε<sup>1 − D</sup></div>
+  <p>so on a log–log plot of length against ruler size the points lie on a straight line of slope 1 − D. Benoît Mandelbrot's 1967 paper "How long is the coast of Britain?" interpreted D as a fractal dimension, between 1 (a line) and 2 (a filled area).</p>
+  <p>With D = 1.25, halving the ruler multiplies the length by 2<sup>0.25</sup> ≈ 1.19. India's re-measurement moved from 1:4,500,000 maps to 1:250,000 maps — a scale 18 times finer — and 18<sup>0.135</sup> ≈ 1.48: a modest dimension of about 1.14 is enough to explain a 48 % increase.</p>
+</section>
+<section id="sim">
+  <h2>4. Measure a coastline yourself</h2>
+  <p>A computer-made coastline with adjustable roughness. Pick a ruler and walk the dividers along it; then measure with every ruler at once.</p>
+  <div class="row">Roughness: <input type="range" id="D" min="1.0" max="1.5" step="0.05" value="1.25"> <b id="Dv">1.25</b> <button id="newC">New coastline</button></div>
+  <div class="row">Ruler: <input type="range" id="eps" min="0" max="8" step="1" value="3"> <b id="ev"></b>
+    <button class="primary" onclick="MP.ctl.play()">▶ Walk (P)</button><button onclick="MP.ctl.step()">One step (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button></div>
+  <canvas id="map"></canvas>
+  <p class="stat">Steps so far: <b id="wn">0</b> · measured length: <b class="cb" id="wl">–</b> (coast is 1 unit wide)</p>
+  <h3>Length against ruler size, log–log</h3>
+  <canvas id="cv"></canvas>
+  <p class="stat">Fitted slope = <b id="sl">–</b> → fractal dimension D = <b class="ca" id="dd">–</b></p>
+</section>
+<section id="fine">
+  <h2>5. Fine print</h2>
+  <ul>
+    <li>Official coastline figures depend on the map scale, whether river mouths and creeks are followed, and whether islands are included. That is why India's figure, and those of many countries, differ between sources.</li>
+    <li>The same idea measures rough surfaces in engineering: the "length" of a machined profile or the area of a porous filter depends on the probe size.</li>
+  </ul>
+</section>
+<footer class="mp"><a href="buffons-needle.html">← 13. Buffon's Needle</a><a href="./">All problems</a><a href="ladder-around-corner.html">15. Carrying a Ladder Round a Corner →</a></footer>
+</main>
+</div>
+<script src="mp.js"></script>
+<script>
+const $=MP.$, RUL=[0.5,0.25,0.125,0.0625,0.03125,0.015625,0.0078125,0.00390625,0.001953125];
+let pts=[], walk=null;
+function make(){ const D=+$("D").value, Hh=2-D, n=12, M=(1<<n); const y=new Float64Array(M+1); let sc=0.6;
+  y[0]=0; y[M]=0; for(let lev=0;lev<n;lev++){ const step=M>>lev, half=step>>1; for(let i=half;i<M;i+=step) y[i]=(y[i-half]+y[i+half])/2+sc*(Math.random()*2-1); sc*=Math.pow(2,-Hh); }
+  pts=[]; for(let i=0;i<=M;i++) pts.push([i/M,y[i]]); $("Dv").textContent=D.toFixed(2); startWalk(); fit(); }
+function ruler(){ return RUL[+$("eps").value]; }
+function startWalk(){ walk={p:pts[0],i:0,n:0,path:[pts[0]],done:false}; $("ev").textContent=ruler().toFixed(4)+" units"; showWalk(); }
+function stepW(){ if(!walk||walk.done) return; const e=ruler(); let [px,py]=walk.p;
+  for(let j=walk.i;j<pts.length-1;j++){ const [ax,ay]=pts[j+1]; if(Math.hypot(ax-px,ay-py)>=e){ // intersect circle with segment j..j+1
+      const [bx,by]=j===walk.i?walk.p:pts[j]; const dx=ax-bx, dy=ay-by, fx=bx-px, fy=by-py, A=dx*dx+dy*dy, B=2*(fx*dx+fy*dy), C=fx*fx+fy*fy-e*e;
+      const t=(-B+Math.sqrt(Math.max(0,B*B-4*A*C)))/(2*A); walk.p=[bx+t*dx,by+t*dy]; walk.i=j; walk.n++; walk.path.push(walk.p); return; } }
+  walk.n+=Math.hypot(pts[pts.length-1][0]-px,pts[pts.length-1][1]-py)/e; walk.path.push(pts[pts.length-1]); walk.done=true; }
+function measure(e){ const w={p:pts[0],i:0,n:0,path:[],done:false}; const save=walk; walk=w; const o=$("eps").value;
+  const k=RUL.indexOf(e); $("eps").value=k; while(!walk.done) stepW(); const L=walk.n*e; walk=save; $("eps").value=o; return L; }
+function fit(){ const xs=[],ys=[]; RUL.forEach(e=>{ xs.push(Math.log10(e)); ys.push(Math.log10(measure(e))); });
+  const n=xs.length, mx=xs.reduce((a,b)=>a+b)/n, my=ys.reduce((a,b)=>a+b)/n; let sxy=0,sxx=0; xs.forEach((x,i)=>{sxy+=(x-mx)*(ys[i]-my); sxx+=(x-mx)**2;});
+  const s=sxy/sxx; $("sl").textContent=s.toFixed(3); $("dd").textContent=(1-s).toFixed(2);
+  MP.chart($("cv"),{height:280,x:{min:0.0015,max:0.7,log:true,label:"Ruler size (log)"},y:{min:Math.pow(10,Math.min(...ys))*0.8,max:Math.pow(10,Math.max(...ys))*1.25,log:true,label:"measured length (log)"},
+    series:[{pts:xs.map((x,i)=>[Math.pow(10,x),Math.pow(10,my+s*(x-mx))]),color:"--b",dash:[7,5],width:2}],
+    points:xs.map((x,i)=>({x:Math.pow(10,x),y:Math.pow(10,ys[i]),color:"--a",r:5}))}); }
+function showWalk(){ const {g,W,H}=MP.canvas($("map"),340), ys=pts.map(p=>p[1]), lo=Math.min(...ys), hi=Math.max(...ys), sc=Math.min((W-20),(H-20)/(hi-lo||1));
+  const X=x=>10+x*(W-20), Y=y=>H/2-(y-(lo+hi)/2)*Math.min((H-30)/(hi-lo||1),(W-20));
+  g.fillStyle=MP.css("--code"); g.beginPath(); g.moveTo(X(0),H); pts.forEach(p=>g.lineTo(X(p[0]),Y(p[1]))); g.lineTo(X(1),H); g.fill();
+  g.strokeStyle=MP.css("--muted"); g.lineWidth=1; g.beginPath(); pts.forEach((p,i)=>i?g.lineTo(X(p[0]),Y(p[1])):g.moveTo(X(p[0]),Y(p[1]))); g.stroke();
+  if(walk){ g.strokeStyle=MP.css("--b"); g.lineWidth=2.5; g.beginPath(); walk.path.forEach((p,i)=>i?g.lineTo(X(p[0]),Y(p[1])):g.moveTo(X(p[0]),Y(p[1]))); g.stroke();
+    g.fillStyle=MP.css("--b"); walk.path.forEach(p=>{ g.beginPath(); g.arc(X(p[0]),Y(p[1]),3,0,7); g.fill(); });
+    $("wn").textContent=walk.done?walk.n.toFixed(2):walk.n; $("wl").textContent=(walk.n*ruler()).toFixed(3)+(walk.done?" units (finished)":" units so far"); } }
+MP.ctl=MP.loop(()=>stepW(),{interval:ruler()<0.01?20:120,batch:()=>Math.max(1,Math.round(0.03/ruler())),after:showWalk});
+$("D").oninput=make; $("newC").onclick=make; $("eps").oninput=startWalk; MP.onRedraw(()=>{showWalk();fit();}); make();
+</script>
+</body>
+</html>

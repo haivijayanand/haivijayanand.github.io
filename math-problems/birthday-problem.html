@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Interesting Math Problems #1 — The Birthday Problem (99.9%)
+FAMILY:  interesting-math-problems
+VERSION: 1.1.0
+DATE:    2026-11-25
+CHAT:    Interesting Math Problems group — first problem: birthday problem at 99.9%
+CHANGES: 1.1.0 — published in /math-problems/: site-wide theme (site-theme.js), sign-in & progress (site-progress.js), Home link
+         1.0.0 — first release: two readings (any pair vs. your birthday), exact maths, live calculator,
+         log-scale chart, Monte Carlo room simulator, light/dark theme, full-screen, keyboard P/S/X/M
+STATUS:  public — haivijayanand.github.io/math-problems/birthday-problem.html
+-->
+<html lang="en" data-theme="light">
+<head>
+<script src="/assets/js/site-theme.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Birthday Problem at 99.9% — Interesting Math Problems</title>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#ffffff; --ink:#1c2430; --muted:#5b6675; --line:#dde2e8;
+  --a:#1f6fd1;   /* any-pair curve: blue  */
+  --b:#e07b00;   /* your-birthday curve: orange */
+  --hl:#fff3d6; --code:#eef2f7;
+}
+[data-theme="dark"]{
+  --bg:#12161c; --panel:#1b212a; --ink:#e6ebf2; --muted:#9aa6b5; --line:#2e3744;
+  --a:#5aa2ff; --b:#ffa53a; --hl:#3a3020; --code:#232b36;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header h1{font-size:18px;margin:0;flex:1}
+header .crumb{color:var(--muted);font-size:13px}
+header a{color:var(--a)}
+button{font:inherit;font-size:14px;padding:6px 12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;cursor:pointer}
+button:hover{border-color:var(--a)}
+button.primary{background:var(--a);color:#fff;border-color:var(--a)}
+kbd{font:12px monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--code)}
+.wrap{display:flex;min-height:calc(100vh - 54px)}
+nav#side{width:250px;flex:0 0 250px;padding:18px;border-right:1px solid var(--line);background:var(--panel);position:sticky;top:54px;height:calc(100vh - 54px);overflow:auto}
+nav#side.hidden{display:none}
+nav#side a{display:block;color:var(--ink);text-decoration:none;padding:5px 8px;border-radius:5px;font-size:14px}
+nav#side a:hover{background:var(--code)}
+nav#side .keys{margin-top:18px;font-size:13px;color:var(--muted)}
+main{flex:1;padding:24px 4vw 60px;max-width:none}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px 26px;margin:0 0 22px}
+h2{margin:0 0 10px;font-size:22px}
+h3{margin:18px 0 6px;font-size:17px}
+.answer{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:12px}
+.card{border:2px solid var(--line);border-radius:10px;padding:16px 18px}
+.card.a{border-color:var(--a)} .card.b{border-color:var(--b)}
+.card .big{font-size:44px;font-weight:700;line-height:1.1}
+.card.a .big{color:var(--a)} .card.b .big{color:var(--b)}
+.eq{background:var(--code);border-radius:8px;padding:10px 14px;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:18px;overflow-x:auto;margin:8px 0}
+.note{background:var(--hl);border-radius:8px;padding:10px 14px}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:center}
+th{background:var(--code)}
+td.a{color:var(--a);font-weight:700} td.b{color:var(--b);font-weight:700}
+.row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+input[type=range]{flex:1;min-width:220px;accent-color:var(--a)}
+input[type=number]{width:110px;font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+canvas{width:100%;display:block;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.legend span{display:inline-flex;align-items:center;gap:6px;margin-right:18px;font-size:14px}
+.sw{width:28px;height:0;border-top:4px solid}
+.stat{font-variant-numeric:tabular-nums}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:900px){nav#side{display:none}.answer,.grid2{grid-template-columns:1fr}}
+</style>
+<script type="module" src="/assets/js/site-progress.js"></script>
+</head>
+<body>
+<header>
+  <button id="btnSide" title="Show / hide contents (M)">☰</button>
+  <h1>The Birthday Problem at 99.9%<br><span class="crumb"><a href="/">Home</a> · <a href="./">Interesting Math Problems</a> · Problem 1</span></h1>
+  <button id="themeBtn" title="Light / dark theme">◐ Theme</button>
+  <button id="btnFull" title="Full screen">⛶ Full screen</button>
+</header>
+
+<div class="wrap">
+<nav id="side">
+  <a href="#problem">1. The problem</a>
+  <a href="#answer">2. The answer (two of them)</a>
+  <a href="#pair">3. Any two people match</a>
+  <a href="#you">4. Someone matches <i>you</i></a>
+  <a href="#why">5. Why so different?</a>
+  <a href="#calc">6. Try any room size</a>
+  <a href="#chart">7. The two curves</a>
+  <a href="#sim">8. Fill a room — simulation</a>
+  <a href="#fine">9. Fine print</a>
+  <div class="keys">
+    <b>Keyboard</b><br>
+    <kbd>P</kbd> play simulation<br>
+    <kbd>S</kbd> one room (step)<br>
+    <kbd>X</kbd> pause<br>
+    <kbd>M</kbd> hide / show contents<br>
+    <kbd>F</kbd> full screen
+  </div>
+</nav>
+
+<main>
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p>How many people must be in a room so that a shared birthday is <b>99.9 % certain</b>?</p>
+  <p>The question hides a trap in its wording. "A common birthday" can mean two quite different things:</p>
+  <ul>
+    <li><b style="color:var(--a)">Any pair</b> — at least two people in the room (any two) were born on the same day.</li>
+    <li><b style="color:var(--b)">Your birthday</b> — at least one other person was born on the same day as <i>you</i>.</li>
+  </ul>
+  <p>Most people's intuition mixes the two up, and that is exactly why the classic answer feels "wrong". We assume 365 equally likely birthdays and ignore 29 February.</p>
+</section>
+
+<section id="answer">
+  <h2>2. The answer (two of them)</h2>
+  <div class="answer">
+    <div class="card a"><div class="big">70</div>people in the room give a <b>99.92 %</b> chance that <b>some two</b> share a birthday. (69 people give only 99.896 %.)</div>
+    <div class="card b"><div class="big">2,518</div>other people (2,519 in the room with you) give a <b>99.900 %</b> chance that <b>someone shares your</b> birthday.</div>
+  </div>
+  <p class="note">Same question, same 99.9 %, but answers that differ by a factor of 36. The "any pair" room fits in a classroom; the "your birthday" room needs a large auditorium.</p>
+</section>
+
+<section id="pair">
+  <h2>3. Any two people match</h2>
+  <p>It is far easier to compute the chance that <b>nobody</b> matches, then subtract from 1. Seat people one at a time:</p>
+  <ul>
+    <li>Person 1 can have any birthday: 365/365.</li>
+    <li>Person 2 must avoid person 1's day: 364/365.</li>
+    <li>Person 3 must avoid two days: 363/365 … and person <i>n</i> must avoid <i>n</i>−1 days.</li>
+  </ul>
+  <div class="eq">P(no match among <i>n</i>) = (365/365)·(364/365)·(363/365)···((365−<i>n</i>+1)/365) = 365! / [ (365−<i>n</i>)! · 365<sup><i>n</i></sup> ]</div>
+  <div class="eq">P(some pair matches) = 1 − P(no match)</div>
+  <p>We need P(no match) ≤ 0.001. Multiplying the factors out: at <i>n</i> = 69 it is still 0.00104, and at <i>n</i> = 70 it falls to 0.00084. So <b>70</b> is the smallest room.</p>
+  <h3>A quick approximation</h3>
+  <p>Each factor (1 − k/365) ≈ e<sup>−k/365</sup>, so P(no match) ≈ e<sup>−n(n−1)/730</sup>. Setting this to 0.001 gives n(n−1) ≈ 730 × ln 1000 = 5043, so <i>n</i> ≈ 71.5. The estimate is slightly high but lands in the right place. The term n(n−1)/2 is simply the <b>number of pairs</b> in the room, and that is the real secret.</p>
+</section>
+
+<section id="you">
+  <h2>4. Someone matches <i>you</i></h2>
+  <p>Now only comparisons with <i>you</i> count. Each other person independently misses your birthday with probability 364/365, so with <i>m</i> others:</p>
+  <div class="eq">P(nobody shares your birthday) = (364/365)<sup><i>m</i></sup></div>
+  <div class="eq">(364/365)<sup><i>m</i></sup> ≤ 0.001 &nbsp;⇒&nbsp; <i>m</i> ≥ ln(0.001) / ln(364/365) = 6.9078 / 0.0027435 = 2517.9</div>
+  <p>So <b>2,518 other people</b> are needed. A handy rule: <i>m</i> ≈ 365 × ln(1000) ≈ 365 × 6.9 ≈ 2,520.</p>
+</section>
+
+<section id="why">
+  <h2>5. Why so different?</h2>
+  <p>In reading A, <b>every pair</b> is a chance for a match. In reading B, only the pairs that <b>include you</b> count.</p>
+  <table>
+    <tr><th>People in room</th><th>Pairs that can match (any pair)</th><th>Pairs that include you</th></tr>
+    <tr><td>23</td><td class="a">253</td><td class="b">22</td></tr>
+    <tr><td>70</td><td class="a">2,415</td><td class="b">69</td></tr>
+    <tr><td>2,519</td><td class="a">3,171,321</td><td class="b">2,518</td></tr>
+  </table>
+  <p>Look at the 70-person room: it holds 2,415 pairs, roughly the same number of chances as the 2,518 strangers you need in reading B. Pairs grow as <i>n</i>², so a modest room has a huge number of them. (The pairs in reading A are not fully independent, which is why the numbers are close but not identical.)</p>
+  <h3>Milestones</h3>
+  <table>
+    <tr><th>Target chance</th><th>Any pair — people in room</th><th>Your birthday — other people</th></tr>
+    <tr><td>50 %</td><td class="a">23</td><td class="b">253</td></tr>
+    <tr><td>90 %</td><td class="a">41</td><td class="b">840</td></tr>
+    <tr><td>99 %</td><td class="a">57</td><td class="b">1,679</td></tr>
+    <tr><td><b>99.9 %</b></td><td class="a">70</td><td class="b">2,518</td></tr>
+  </table>
+</section>
+
+<section id="calc">
+  <h2>6. Try any room size</h2>
+  <div class="row">
+    <label for="nRange">People in the room (including you):</label>
+    <input type="range" id="nRange" min="2" max="3000" value="70">
+    <input type="number" id="nNum" min="2" max="100000" value="70">
+  </div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="card a"><div>Chance some pair shares a birthday</div><div class="big stat" id="outA">–</div></div>
+    <div class="card b"><div>Chance someone shares <i>your</i> birthday</div><div class="big stat" id="outB">–</div></div>
+  </div>
+  <h3>Reverse: what target chance?</h3>
+  <div class="row">
+    <label for="tNum">Target probability (%):</label>
+    <input type="number" id="tNum" value="99.9" step="0.1" min="1" max="99.9999">
+    <span id="outT" class="stat"></span>
+  </div>
+</section>
+
+<section id="chart">
+  <h2>7. The two curves</h2>
+  <div class="legend">
+    <span><i class="sw" style="border-color:var(--a)"></i>Any pair matches (solid)</span>
+    <span><i class="sw" style="border-color:var(--b);border-top-style:dashed"></i>Someone matches you (dashed)</span>
+    <span>Horizontal line: 99.9 %. Horizontal axis is logarithmic.</span>
+  </div>
+  <canvas id="cv" height="420"></canvas>
+</section>
+
+<section id="sim">
+  <h2>8. Fill a room — simulation</h2>
+  <p>Random rooms with the size set in section 6. Each room is tested both ways and the running counts are compared with the exact formula. Watch the estimates settle as more rooms are filled.</p>
+  <div class="row">
+    <button class="primary" id="bPlay">▶ Play (P)</button>
+    <button id="bStep">Step — one room (S)</button>
+    <button id="bPause">❚❚ Pause (X)</button>
+    <button id="bReset">Reset</button>
+    <span class="stat">Room size: <b id="simN">70</b></span>
+  </div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="card a">
+      <b>Any pair</b><br>
+      <span class="stat">Rooms with a match: <b id="sA">0</b> / <b id="sT1">0</b></span><br>
+      <span class="stat">Simulated: <b id="pA">–</b> &nbsp; Exact: <b id="eA">–</b></span>
+    </div>
+    <div class="card b">
+      <b>Your birthday</b><br>
+      <span class="stat">Rooms with a match: <b id="sB">0</b> / <b id="sT2">0</b></span><br>
+      <span class="stat">Simulated: <b id="pB">–</b> &nbsp; Exact: <b id="eB">–</b></span>
+    </div>
+  </div>
+  <p id="lastRoom" class="note" style="margin-top:14px">Press <kbd>S</kbd> to fill one room and see what happened.</p>
+</section>
+
+<section id="fine">
+  <h2>9. Fine print</h2>
+  <ul>
+    <li><b>Leap years:</b> including 29 February (weight ¼ in 366 days) barely moves the answers.</li>
+    <li><b>Real birthdays are not uniform.</b> Births cluster in some months and scheduled deliveries avoid holidays. Any unevenness only <i>raises</i> the chance of a pair match, so 70 is, if anything, a safe upper bound.</li>
+    <li><b>"Exactly one match" ≠ "at least one".</b> All figures here are for <i>at least</i> one shared birthday.</li>
+    <li><b>Where else it appears:</b> hash collisions in computing ("birthday attack"), duplicate serial numbers, and coincidences in large data sets all follow the same n² arithmetic.</li>
+  </ul>
+</section>
+</main>
+</div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const LN364=Math.log(364/365);
+
+/* ---------- exact maths ---------- */
+function pAny(n){ if(n>365) return 1; let q=1; for(let k=0;k<n;k++) q*=(365-k)/365; return 1-q; }
+function pYou(n){ return 1-Math.exp((n-1)*LN364); }          // n = people incl. you
+function fmt(p){
+  if(p>=1) return "100 %";
+  if(p>0.99999) return "> 99.999 %";
+  if(p>=0.99) return (p*100).toFixed(3)+" %";
+  return (p*100).toFixed(2)+" %";
+}
+function needAny(t){ let n=1; while(pAny(n)<t) n++; return n; }
+function needYou(t){ return Math.ceil(Math.log(1-t)/LN364); } // other people
+
+/* ---------- calculator ---------- */
+function setN(n){
+  n=Math.max(2,Math.min(100000,Math.round(n)||2));
+  $("nNum").value=n; $("nRange").value=Math.min(n,3000);
+  $("outA").textContent=fmt(pAny(n));
+  $("outB").textContent=fmt(pYou(n));
+  $("simN").textContent=n;
+  resetSim(); drawChart(n);
+}
+$("nRange").addEventListener("input",e=>setN(+e.target.value));
+$("nNum").addEventListener("change",e=>setN(+e.target.value));
+function reverse(){
+  let t=parseFloat($("tNum").value)/100;
+  if(!(t>0&&t<1)){ $("outT").textContent="Enter a value between 0 and 100."; return; }
+  $("outT").innerHTML=`→ any pair: <b style="color:var(--a)">${needAny(t)}</b> people in room &nbsp;|&nbsp; your birthday: <b style="color:var(--b)">${needYou(t).toLocaleString()}</b> other people`;
+}
+$("tNum").addEventListener("input",reverse);
+
+/* ---------- chart (log x) ---------- */
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function drawChart(curN){
+  const cv=$("cv"), dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth, H=420; cv.width=W*dpr; cv.height=H*dpr;
+  const g=cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  const L=60,R=20,T=20,B=46, xmin=Math.log10(2), xmax=Math.log10(10000);
+  const X=n=>L+(Math.log10(n)-xmin)/(xmax-xmin)*(W-L-R);
+  const Y=p=>T+(1-p)*(H-T-B);
+  g.font="13px Segoe UI, sans-serif"; g.fillStyle=css("--muted"); g.strokeStyle=css("--line"); g.lineWidth=1;
+  [2,5,10,20,50,100,200,500,1000,2000,5000,10000].forEach(n=>{
+    g.beginPath(); g.moveTo(X(n),T); g.lineTo(X(n),H-B); g.stroke();
+    g.textAlign="center"; g.fillText(n>=1000?(n/1000)+"k":n,X(n),H-B+18);
+  });
+  for(let p=0;p<=1.0001;p+=0.25){
+    g.beginPath(); g.moveTo(L,Y(p)); g.lineTo(W-R,Y(p)); g.stroke();
+    g.textAlign="right"; g.fillText((p*100)+" %",L-6,Y(p)+4);
+  }
+  g.textAlign="center"; g.fillText("People in the room (log scale)",(L+W-R)/2,H-6);
+  // 99.9% line
+  g.strokeStyle=css("--ink"); g.setLineDash([2,4]); g.beginPath(); g.moveTo(L,Y(0.999)); g.lineTo(W-R,Y(0.999)); g.stroke(); g.setLineDash([]);
+  g.fillStyle=css("--ink"); g.textAlign="left"; g.fillText("99.9 %",L+4,Y(0.999)-6);
+  // curves
+  function curve(fn,col,dash){
+    g.strokeStyle=col; g.lineWidth=3.5; g.setLineDash(dash); g.beginPath();
+    for(let i=0;i<=600;i++){ const n=Math.pow(10,xmin+(xmax-xmin)*i/600); const x=X(n),y=Y(fn(Math.floor(n)));
+      i?g.lineTo(x,y):g.moveTo(x,y); }
+    g.stroke(); g.setLineDash([]);
+  }
+  curve(pAny,css("--a"),[]); curve(pYou,css("--b"),[10,6]);
+  // markers at answers
+  function mark(n,col,label,dy){ g.fillStyle=col; g.beginPath(); g.arc(X(n),Y(0.999),6,0,7); g.fill();
+    g.font="bold 14px Segoe UI, sans-serif"; g.textAlign="center"; g.fillText(label,X(n),Y(0.999)+dy); g.font="13px Segoe UI, sans-serif"; }
+  mark(70,css("--a"),"70",24); mark(2519,css("--b"),"2,519",24);
+  // current room size
+  if(curN){ const n=Math.min(curN,10000); g.strokeStyle=css("--muted"); g.lineWidth=1.5; g.beginPath(); g.moveTo(X(n),T); g.lineTo(X(n),H-B); g.stroke();
+    g.fillStyle=css("--muted"); g.textAlign="left"; g.fillText("your room: "+curN,X(n)+5,H-B-8); }
+}
+window.addEventListener("resize",()=>drawChart(+$("nNum").value));
+
+/* ---------- simulation ---------- */
+let sim={rooms:0,a:0,b:0,timer:null};
+function resetSim(){ pauseSim(); sim.rooms=sim.a=sim.b=0; showSim(); $("lastRoom").innerHTML="Press <kbd>S</kbd> to fill one room and see what happened."; }
+function oneRoom(detail){
+  const n=+$("nNum").value, seen=new Uint8Array(365), you=Math.floor(Math.random()*365);
+  let pair=false,pairDay=-1,matchYou=0; seen[you]=1;
+  for(let i=1;i<n;i++){ const d=Math.floor(Math.random()*365);
+    if(d===you) matchYou++;
+    if(seen[d]&&!pair){pair=true;pairDay=d;} seen[d]=1; }
+  sim.rooms++; if(pair) sim.a++; if(matchYou) sim.b++;
+  if(detail){
+    const day=d=>new Date(2025,0,1+d).toLocaleDateString("en-IN",{day:"numeric",month:"short"});
+    $("lastRoom").innerHTML=`Room #${sim.rooms}: your birthday is <b>${day(you)}</b>. `+
+      (pair?`First shared birthday found: <b style="color:var(--a)">${day(pairDay)}</b>. `:`<b>No two people</b> share a birthday. `)+
+      (matchYou?`<b style="color:var(--b)">${matchYou}</b> other ${matchYou>1?"people share":"person shares"} your birthday.`:`<b>Nobody</b> shares your birthday.`);
+  }
+}
+function showSim(){
+  const n=+$("nNum").value;
+  $("sA").textContent=sim.a; $("sB").textContent=sim.b; $("sT1").textContent=$("sT2").textContent=sim.rooms;
+  $("pA").textContent=sim.rooms?fmt(sim.a/sim.rooms):"–"; $("pB").textContent=sim.rooms?fmt(sim.b/sim.rooms):"–";
+  $("eA").textContent=fmt(pAny(n)); $("eB").textContent=fmt(pYou(n));
+}
+function stepSim(){ pauseSim(); oneRoom(true); showSim(); }
+function playSim(){ if(sim.timer) return;
+  sim.timer=setInterval(()=>{ const n=+$("nNum").value, batch=Math.max(1,Math.floor(20000/n));
+    for(let i=0;i<batch-1;i++) oneRoom(false); oneRoom(true); showSim(); },60); }
+function pauseSim(){ clearInterval(sim.timer); sim.timer=null; }
+$("bPlay").onclick=playSim; $("bStep").onclick=stepSim; $("bPause").onclick=pauseSim; $("bReset").onclick=resetSim;
+
+/* ---------- theme, sidebar, full screen, keys ---------- */
+function toggleTheme(){
+  if(window.SiteTheme) SiteTheme.toggle();
+  else document.documentElement.dataset.theme=document.documentElement.dataset.theme==="dark"?"light":"dark";
+  setTimeout(()=>drawChart(+$("nNum").value),30);
+}
+$("themeBtn").onclick=toggleTheme;
+window.addEventListener("site-theme",()=>drawChart(+$("nNum").value));
+$("btnSide").onclick=()=>$("side").classList.toggle("hidden");
+function toggleFull(){ document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{}); }
+$("btnFull").onclick=toggleFull;
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT"||e.ctrlKey||e.metaKey||e.altKey) return;
+  const k=e.key.toLowerCase();
+  if(k==="p") playSim(); else if(k==="s") stepSim(); else if(k==="x") pauseSim();
+  else if(k==="m") $("side").classList.toggle("hidden"); else if(k==="f") toggleFull();
+});
+
+reverse(); setN(70);
+</script>
+</body>
+</html>

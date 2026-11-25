@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Interesting Math Problems #21 — Kaprekar's Constant 6174
+FAMILY:  interesting-math-problems
+VERSION: 1.0.0
+DATE:    2026-11-25
+CHAT:    Interesting Math Problems group — build all 25 problems in groups and upload
+CHANGES: 1.0.0 — first release
+STATUS:  public — haivijayanand.github.io/math-problems/kaprekar-6174.html
+-->
+<html lang="en" data-theme="light">
+<head>
+<script src="/assets/js/site-theme.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kaprekar's Constant 6174 — Interesting Math Problems — K Vijay Anand</title>
+<meta name="description" content="Arrange a 4-digit number&#x27;s digits largest-first and smallest-first, subtract, repeat. You always land on 6174 within 7 steps.">
+<link rel="stylesheet" href="mp.css">
+<script type="module" src="/assets/js/site-progress.js"></script>
+</head>
+<body>
+<header class="mp">
+  <button id="btnSide" title="Show / hide contents (M)">☰</button>
+  <h1>Kaprekar's Constant 6174<br><span class="crumb"><a href="/">Home</a> · <a href="./">Interesting Math Problems</a> · Problem 21 · Growth & numbers</span></h1>
+  <button id="themeBtn" title="Light / dark theme">◐ Theme</button>
+  <button id="btnFull" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<div class="wrap">
+<nav id="side"></nav>
+<main>
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p>Take any four-digit number whose digits are not all the same, say <b>3524</b>. Arrange its digits in descending order (5432) and ascending order (2345) and subtract:</p>
+  <div class="eq">5432 − 2345 = 3087 &nbsp;→&nbsp; 8730 − 0378 = 8352 &nbsp;→&nbsp; 8532 − 2358 = 6174 &nbsp;→&nbsp; 7641 − 1467 = 6174 …</div>
+  <p>Try another start. And another. Where do you end up?</p>
+</section>
+<section id="answer">
+  <h2>2. The answer</h2>
+  <div class="answer">
+    <div class="card a"><div class="big">6174</div>Every four-digit number (digits not all equal, leading zeros kept) reaches 6174 and then stays there: 7641 − 1467 = 6174.</div>
+    <div class="card b"><div class="big">≤ 7 steps</div>No start needs more than seven subtractions. For three-digit numbers the same routine ends at <b>495</b> within six steps.</div>
+  </div>
+</section>
+<section id="why">
+  <h2>3. Why it works</h2>
+  <p>Write the digits in order <i>a</i> ≥ <i>b</i> ≥ <i>c</i> ≥ <i>d</i>. Then</p>
+  <div class="eq">abcd − dcba = 999(<i>a</i> − <i>d</i>) + 90(<i>b</i> − <i>c</i>)</div>
+  <p>So the result depends only on two differences, <i>a</i> − <i>d</i> (1 to 9) and <i>b</i> − <i>c</i> (0 to <i>a</i> − <i>d</i>). After the very first step there are only about 50 possible numbers, and one can simply check them all — the map squeezes everything into a tiny set, which funnels into the single fixed point 6174. It is a proof by exhaustion rather than an elegant argument, which is part of its charm.</p>
+  <p>D. R. Kaprekar, a school teacher from Devlali, Maharashtra, found it in 1949. He also discovered Kaprekar numbers (45² = 2025 and 20 + 25 = 45) and self numbers.</p>
+</section>
+<section id="calc">
+  <h2>4. Try it</h2>
+  <div class="row">Digits: <select id="len"><option value="4" selected>4 digits (→ 6174)</option><option value="3">3 digits (→ 495)</option></select>
+    Start <input type="text" id="n" value="3524" style="width:120px"> <button id="rnd">Random</button>
+    <button class="primary" onclick="MP.ctl.play()">▶ Play (P)</button><button onclick="MP.ctl.step()">One step (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button></div>
+  <div class="log" id="log"></div>
+  <h3>How many steps do all starting numbers need?</h3>
+  <canvas id="cv"></canvas>
+  <p class="stat" id="sum"></p>
+</section>
+<section id="fine">
+  <h2>5. Fine print</h2>
+  <ul>
+    <li>Keep leading zeros: 2111 − 1112 = 0999, and the next step uses 9990 − 0999 = 8991.</li>
+    <li>For two digits the routine falls into a loop (63 → 27 → 45 → 09 → 81 → 63) instead of a single number; for five digits there are loops too. Four and three digits are special.</li>
+  </ul>
+</section>
+<footer class="mp"><a href="collatz.html">← 20. The Collatz Conjecture (3n + 1)</a><a href="./">All problems</a><span></span></footer>
+</main>
+</div>
+<script src="mp.js"></script>
+<script>
+const $=MP.$; let cur=null, steps=0, done=false;
+function L(){ return +$("len").value; }
+function kap(x,k){ const d=String(x).padStart(k,"0").split("").sort(); const lo=+d.join(""), hi=+d.slice().reverse().join(""); return {hi,lo,r:hi-lo}; }
+function target(){ return L()===4?6174:495; }
+function start(){ const k=L(); let v=String($("n").value).replace(/\D/g,"").slice(0,k).padStart(k,"0");
+  if(/^(\d)\1*$/.test(v)){ $("log").textContent=`${v}: all digits are the same — the routine gives 0. Pick another number.`; cur=null; return; }
+  cur=+v; steps=0; done=false; $("log").textContent=`Start: ${v}`; }
+function step(){ if(cur==null||done) { MP.ctl.pause(); return; } const k=L(), {hi,lo,r}=kap(cur,k); steps++;
+  $("log").textContent+=`\nStep ${steps}: ${String(hi).padStart(k,"0")} − ${String(lo).padStart(k,"0")} = ${String(r).padStart(k,"0")}`;
+  if(r===cur){ done=true; $("log").textContent+=`   ← fixed point reached`; MP.ctl.pause(); } cur=r; }
+function hist(){ const k=L(), N=Math.pow(10,k), T=target(), cnt=new Array(10).fill(0); let tot=0, mx=0;
+  for(let i=0;i<N;i++){ const s=String(i).padStart(k,"0"); if(/^(\d)\1*$/.test(s)) continue; let x=i,c=0; while(x!==T&&c<20){ x=kap(x,k).r; c++; } cnt[c]++; tot++; mx=Math.max(mx,c); }
+  MP.chart($("cv"),{height:260,x:{min:-0.6,max:mx+0.6,ticks:[...Array(mx+1).keys()],label:"Steps to reach "+T},y:{min:0,max:Math.max(...cnt)*1.15,label:"start numbers"},
+    bars:cnt.slice(0,mx+1).map((v,i)=>({x0:i-0.35,x1:i+0.35,y:v,color:i===mx?"--b":"--a"}))});
+  $("sum").innerHTML=`${tot.toLocaleString()} starting numbers checked · most common: <b>${cnt.indexOf(Math.max(...cnt))} steps</b> · longest: <b>${mx} steps</b> (${cnt[mx].toLocaleString()} numbers).`; }
+MP.ctl=MP.loop(step,{interval:500});
+const autoStart=()=>{ MP.ctl.pause(); start(); };
+$("n").oninput=autoStart; $("len").onchange=()=>{ $("n").value=L()===4?"3524":"352"; autoStart(); hist(); };
+$("rnd").onclick=()=>{ const k=L(); let v; do{ v=String(MP.rand(Math.pow(10,k))).padStart(k,"0"); }while(/^(\d)\1*$/.test(v)); $("n").value=v; autoStart(); };
+MP.onRedraw(hist); start();
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Interesting Math Problems #18 — Fold Paper to the Moon
+FAMILY:  interesting-math-problems
+VERSION: 1.0.0
+DATE:    2026-11-25
+CHAT:    Interesting Math Problems group — build all 25 problems in groups and upload
+CHANGES: 1.0.0 — first release
+STATUS:  public — haivijayanand.github.io/math-problems/paper-folding.html
+-->
+<html lang="en" data-theme="light">
+<head>
+<script src="/assets/js/site-theme.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fold Paper to the Moon — Interesting Math Problems — K Vijay Anand</title>
+<meta name="description" content="Fold a 0.1 mm sheet in half 42 times and the stack would reach past the Moon. But nobody can fold paper more than about 12 times. Why?">
+<link rel="stylesheet" href="mp.css">
+<script type="module" src="/assets/js/site-progress.js"></script>
+</head>
+<body>
+<header class="mp">
+  <button id="btnSide" title="Show / hide contents (M)">☰</button>
+  <h1>Fold Paper to the Moon<br><span class="crumb"><a href="/">Home</a> · <a href="./">Interesting Math Problems</a> · Problem 18 · Growth & numbers</span></h1>
+  <button id="themeBtn" title="Light / dark theme">◐ Theme</button>
+  <button id="btnFull" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<div class="wrap">
+<nav id="side"></nav>
+<main>
+<section id="problem">
+  <h2>1. The problem</h2>
+  <p>A sheet of paper is 0.1 mm thick. Every fold in half doubles the thickness. How many folds would make the stack reach the <b>Moon</b>, 384,400 km away?</p>
+  <p>And a second question: why can nobody fold an ordinary sheet more than 7 or 8 times?</p>
+</section>
+<section id="answer">
+  <h2>2. The answer</h2>
+  <div class="answer">
+    <div class="card a"><div class="big">42 folds</div>0.1 mm × 2<sup>42</sup> ≈ 440,000 km — past the Moon. 41 folds reach only 220,000 km.</div>
+    <div class="card b"><div class="big">≈ 12 folds</div>is the record (Britney Gallivan, 2002). Each fold uses up paper on the curved edge, and that loss grows like 4<sup><i>n</i></sup>.</div>
+  </div>
+</section>
+<section id="why">
+  <h2>3. Working it out</h2>
+  <p>After <i>n</i> folds the thickness is <i>t</i> · 2<sup><i>n</i></sup>. To reach a distance <i>D</i>:</p>
+  <div class="eq"><i>n</i> = log<sub>2</sub>(<i>D</i> / <i>t</i>) = log<sub>2</sub>(384,400,000,000 mm / 0.1 mm) ≈ 41.8 → 42 folds</div>
+  <h3>Why the real limit is so low</h3>
+  <p>At each fold the paper wraps round a curve whose radius is the thickness of the stack, and that curved paper is "lost" from the flat length. As a high-school student, Britney Gallivan worked out the minimum length of a strip needed for <i>n</i> folds in one direction:</p>
+  <div class="eq"><i>L</i> = (π<i>t</i> / 6) · (2<sup><i>n</i></sup> + 4) · (2<sup><i>n</i></sup> − 1)</div>
+  <p>That grows like 4<sup><i>n</i></sup>: every extra fold needs about four times as much paper. With 0.1 mm paper, 12 folds need a strip about 880 m long; she did it with a roll of thin tissue over 1 km long. Forty-two folds would need a strip about 10<sup>18</sup> km long — over 100,000 light-years, the width of the galaxy.</p>
+</section>
+<section id="calc">
+  <h2>4. Fold it</h2>
+  <div class="row">Paper thickness (mm) <input type="number" id="t" value="0.1" step="0.01" min="0.001"></div>
+  <div class="row"><button class="primary" onclick="MP.ctl.play()">▶ Keep folding (P)</button><button onclick="MP.ctl.step()">One fold (S)</button><button onclick="MP.ctl.pause()">❚❚ Pause (X)</button><button id="rs">Unfold</button></div>
+  <div class="grid3">
+    <div class="card a"><b>Folds</b><div class="big" id="oN">0</div></div>
+    <div class="card b"><b>Stack height</b><div class="big" id="oH">–</div><span id="oH2"></span></div>
+    <div class="card c"><b>Strip needed (Gallivan)</b><div class="big" id="oL">–</div></div>
+  </div>
+  <h3>Height against folds, with landmarks</h3>
+  <canvas id="cv"></canvas>
+  <table id="tbl"></table>
+</section>
+<section id="fine">
+  <h2>5. Fine print</h2>
+  <ul>
+    <li>Folding in alternate directions (the usual way) gives a slightly different formula but the same 4<sup><i>n</i></sup> growth.</li>
+    <li>MythBusters reached 11 folds in 2007 with a sheet the size of a football pitch, helped by a steamroller.</li>
+    <li>The same exponential growth is why binary search finds one name among a billion in about 30 steps — it is paper folding run backwards.</li>
+  </ul>
+</section>
+<footer class="mp"><a href="chessboard-rice.html">← 17. Rice on the Chessboard</a><a href="./">All problems</a><a href="benfords-law.html">19. Benford's Law →</a></footer>
+</main>
+</div>
+<script src="mp.js"></script>
+<script>
+const $=MP.$; let n=0;
+const LM=[["Height of a person",1.7],["Qutub Minar",72.5],["Mount Everest",8849],["Edge of space (Kármán line)",100000],["International Space Station",408000],["Moon (average)",384400000],["Sun",149.6e9]];
+function len(m){ if(m<0.01) return (m*1000).toPrecision(3)+" mm"; if(m<1) return (m*100).toPrecision(3)+" cm"; if(m<1000) return m.toPrecision(3)+" m";
+  if(m<9.46e15/1000) return MP.num(m/1000,0)+" km"; return (m/9.46e15).toPrecision(3)+" light-years"; }
+function T(){ return Math.max(1e-6,(+$("t").value||0.1)/1000); }
+function gal(k){ const t=T(); return Math.PI*t/6*(Math.pow(2,k)+4)*(Math.pow(2,k)-1); }
+function show(){ const t=T(), h=t*Math.pow(2,n); $("oN").textContent=n; $("oH").textContent=len(h);
+  const past=LM.filter(l=>l[1]<=h).pop(); $("oH2").textContent=past?"higher than: "+past[0]:""; $("oL").textContent=n?len(gal(n)):"–"; chart(); }
+function table(){ const t=T(); let s="<tr><th>Landmark</th><th>Height / distance</th><th>Folds needed</th></tr>";
+  LM.forEach(([nm,m])=>s+=`<tr><td>${nm}</td><td>${len(m)}</td><td class="a">${Math.ceil(Math.log2(m/t))}</td></tr>`); $("tbl").innerHTML=s; }
+function chart(){ const t=T(), pts=[]; for(let k=0;k<=60;k++) pts.push([k,t*Math.pow(2,k)]);
+  MP.chart($("cv"),{height:320,x:{min:0,max:60,label:"Folds"},y:{min:1e-4,max:1e15,log:true,label:"height (m)",ticks:[1e-3,1,1e3,1e6,1e9,1e12,1e15]},
+    series:[{pts,color:"--a"}],hlines:LM.filter((l,i)=>i>=2).map(([nm,m])=>({y:m,label:nm,color:"--muted"})),points:[{x:n,y:t*Math.pow(2,n),color:"--b",r:7}]}); }
+MP.ctl=MP.loop(()=>{ if(n<60) n++; else MP.ctl.pause(); },{interval:300,after:show});
+$("rs").onclick=()=>{MP.ctl.pause();n=0;show();}; $("t").oninput=()=>{table();show();}; MP.onRedraw(show); table(); show();
+</script>
+</body>
+</html>

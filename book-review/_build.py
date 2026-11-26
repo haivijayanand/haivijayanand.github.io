@@ -2,10 +2,11 @@
 """
 TOOL:    book-review/_build.py
 FAMILY:  SITE
-VERSION: 1.5.0
-DATE:    2026-11-21
+VERSION: 1.6.0
+DATE:    2026-11-26
 CHAT:    Daily management book review on GitHub Pages
-CHANGES: 1.5.0 - every page loads assets/js/site-theme.js (site-wide light / dark)
+CHANGES: 1.6.0 - cover title no longer runs past the frame: line breaks and font size chosen by measured text width (author line too)
+         1.5.0 - every page loads assets/js/site-theme.js (site-wide light / dark)
          1.4.0 - sign-in via assets/js/site-progress.js: quiz completion ticks the review, certificate saved to the reader's account with an ID printed on it, reprint via ?cert=ID; index shows ticks, count and continue line
          1.3.0 - Aa reading settings (light/dark theme, text size, font, line spacing) on every review page (assets/js/reader.js): text size, font, line spacing; text wraps on phones
          1.2.0 - Listen button on every review page (assets/js/read-aloud.js); word count, quiz and certificate are not read out
@@ -22,12 +23,12 @@ Content file (_content/<slug>.json):
   takeaway: one sentence,
   questions: 10 x {q, options: [4 strings], answer: 0-3, why}
 """
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 
 # review page template version; each page's header lists these plus its own first line
-PAGE_VERSION = "1.4.0"
-PAGE_DATE = "2026-11-16"     # date of the last template change
-PAGE_CHANGES = ["v1.4.0  Sign-in: quiz completion ticks the review, certificate saved to the reader's account with an ID, reprint via ?cert=", "v1.3.0  Aa button: theme, text size, font, line spacing; wraps to phone screen", "v1.2.0  Listen button reads the review aloud (summary and takeaway)", "v1.1.0  certificate after the quiz: name remembered on this device, A4 PDF to save or share"]
+PAGE_VERSION = "1.5.0"
+PAGE_DATE = "2026-11-26"     # date of the last template change
+PAGE_CHANGES = ["v1.5.0  cover title fitted inside the frame (measured line breaks and size)", "v1.4.0  Sign-in: quiz completion ticks the review, certificate saved to the reader's account with an ID, reprint via ?cert=", "v1.3.0  Aa button: theme, text size, font, line spacing; wraps to phone screen", "v1.2.0  Listen button reads the review aloud (summary and takeaway)", "v1.1.0  certificate after the quiz: name remembered on this device, A4 PDF to save or share"]
 
 import datetime as dt
 import hashlib
@@ -39,6 +40,10 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 CONTENT = HERE / "_content"
 QUEUE = HERE / "_queue.json"
+
+# per-character advance widths (em) of a bold serif, taken from DejaVu Serif Bold; it runs about 10% wider
+# than Georgia Bold and as wide as the serif fallbacks on phones, so a title sized by it fits every screen
+GLYPH_EM = {' ': 0.348, '!': 0.439, '"': 0.521, '#': 0.838, '$': 0.696, '%': 0.950, '&': 0.903, "'": 0.306, '(': 0.473, ')': 0.473, '*': 0.523, '+': 0.838, ',': 0.348, '-': 0.415, '.': 0.348, '/': 0.365, '0': 0.696, '1': 0.696, '2': 0.696, '3': 0.696, '4': 0.696, '5': 0.696, '6': 0.696, '7': 0.696, '8': 0.696, '9': 0.696, ':': 0.369, ';': 0.369, '<': 0.838, '=': 0.838, '>': 0.838, '?': 0.586, '@': 1.000, 'A': 0.776, 'B': 0.845, 'C': 0.796, 'D': 0.867, 'E': 0.762, 'F': 0.710, 'G': 0.854, 'H': 0.945, 'I': 0.468, 'J': 0.473, 'K': 0.869, 'L': 0.703, 'M': 1.107, 'N': 0.914, 'O': 0.871, 'P': 0.752, 'Q': 0.871, 'R': 0.831, 'S': 0.722, 'T': 0.744, 'U': 0.872, 'V': 0.776, 'W': 1.123, 'X': 0.776, 'Y': 0.714, 'Z': 0.730, '[': 0.473, '\\': 0.365, ']': 0.473, '^': 0.838, '_': 0.500, '`': 0.500, 'a': 0.648, 'b': 0.699, 'c': 0.609, 'd': 0.699, 'e': 0.636, 'f': 0.430, 'g': 0.699, 'h': 0.727, 'i': 0.380, 'j': 0.362, 'k': 0.693, 'l': 0.380, 'm': 1.058, 'n': 0.727, 'o': 0.667, 'p': 0.699, 'q': 0.699, 'r': 0.527, 's': 0.563, 't': 0.462, 'u': 0.727, 'v': 0.581, 'w': 0.861, 'x': 0.596, 'y': 0.581, 'z': 0.568, '{': 0.643, '|': 0.364, '}': 0.643, '~': 0.838, '‘': 0.348, '’': 0.348, '“': 0.575, '”': 0.575, '–': 0.500, '—': 1.000, '…': 1.000, 'é': 0.636, 'è': 0.636, 'á': 0.648, 'à': 0.648, 'ó': 0.667, 'ö': 0.667, 'ü': 0.727, 'ñ': 0.727, 'ç': 0.609, '·': 0.348}
 
 # cover palettes: (background, accent, ink) — picked per book from its slug
 PALETTES = [
@@ -99,13 +104,65 @@ def wrap(text, width):
     return lines
 
 
+def text_em(s):
+    """width of s in em for the bold serif cover face (unknown characters count as 1 em)"""
+    return sum(GLYPH_EM.get(ch, 1.0) for ch in s)
+
+
+def splits(words, n):
+    """every way to cut a word list into n consecutive non-empty lines"""
+    if n == 1:
+        yield [" ".join(words)]
+        return
+    for i in range(1, len(words) - n + 2):
+        for rest in splits(words[i:], n - 1):
+            yield [" ".join(words[:i])] + rest
+
+
+TITLE_W = 316                       # usable width inside the frame: x 40 to 356 (frame inner edge 382)
+TITLE_CAP = {1: 46, 2: 46, 3: 42, 4: 36, 5: 31}
+
+
+def fit_title(title):
+    """choose line breaks and font size so the widest line fits TITLE_W; larger size wins, fewer lines on a tie"""
+    words = title.split()
+    best = None
+    for n in range(1, min(5, len(words)) + 1):
+        cand = None             # best split for n lines; a lone short word ("The", "for") on a line is penalised
+        for lines in splits(words, n):
+            size = min(TITLE_CAP[n], TITLE_W / max(text_em(l) for l in lines))
+            score = size * (0.9 if n > 1 and any(len(l) <= 3 for l in lines) else 1.0)
+            if cand is None or score > cand[2] + 0.5:
+                cand = (lines, size, score)
+        if best is None or cand[2] > best[2] * 1.08:   # one more line only if it buys 8% more size
+            best = cand
+    lines, size, _ = best
+    return lines, int(size)
+
+
+def fit_lines(text, size, width=TITLE_W):
+    """greedy wrap by measured width at a given font size (used for the author line)"""
+    lines, cur = [], ""
+    for w in text.split():
+        t = (cur + " " + w).strip()
+        if cur and text_em(t) * size > width:
+            lines.append(cur)
+            cur = w
+        else:
+            cur = t
+    if cur:
+        lines.append(cur)
+    return lines
+
+
 def cover_svg(c):
     h = int(hashlib.md5(c["slug"].encode()).hexdigest(), 16)
     bg, acc, ink = PALETTES[h % len(PALETTES)]
     motif = (h >> 8) % 3
-    lines = wrap(c["title"], 14)
-    size = 46 if len(lines) <= 2 else (38 if len(lines) == 3 else 32)
-    y0 = 250 - (len(lines) - 1) * size * 0.55
+    lines, size = fit_title(c["title"])
+    # centre the block near y 250, but keep its top rule clear of the motif and its last line above the author rule
+    y0 = max(250 - (len(lines) - 1) * size * 0.55, size + 176)
+    y0 = min(y0, 420 - (len(lines) - 1) * size * 1.12)
     title = "".join(
         f'<text x="40" y="{y0 + i * size * 1.12:.0f}" font-size="{size}" font-weight="700" fill="{ink}">{esc(l)}</text>'
         for i, l in enumerate(lines))
@@ -115,8 +172,9 @@ def cover_svg(c):
         art = "".join(f'<circle cx="300" cy="100" r="{r}" fill="none" stroke="{acc}" stroke-width="3" opacity="{0.35 + k * 0.2:.2f}"/>' for k, r in enumerate((62, 44, 26))) + f'<circle cx="300" cy="100" r="9" fill="{acc}"/>'
     else:               # arrow staircase
         art = f'<path d="M226 150 h30 v-26 h30 v-26 h30 v-26 h30" fill="none" stroke="{acc}" stroke-width="5" stroke-linejoin="round"/><path d="M346 72 l14 0 l-7 -12 z" fill="{acc}"/>'
-    authors = wrap(c["author"], 30)
-    auth = "".join(f'<text x="40" y="{470 + i * 24}" font-size="19" fill="{ink}" opacity=".92">{esc(a)}</text>' for i, a in enumerate(authors))
+    asize = 19 if all(text_em(w) * 19 <= TITLE_W for w in c["author"].split()) else int(TITLE_W / max(text_em(w) for w in c["author"].split()))
+    authors = fit_lines(c["author"], asize)
+    auth = "".join(f'<text x="40" y="{470 + i * 24}" font-size="{asize}" fill="{ink}" opacity=".92">{esc(a)}</text>' for i, a in enumerate(authors))
     return f'''<svg class="cover-art" viewBox="0 0 400 600" role="img" aria-label="Cover for {esc(c['title'])} by {esc(c['author'])}" xmlns="http://www.w3.org/2000/svg" font-family="Georgia, 'Times New Roman', serif">
 <rect width="400" height="600" fill="{bg}"/>
 <rect x="18" y="18" width="364" height="564" fill="none" stroke="{acc}" stroke-width="1.5" opacity=".7"/>

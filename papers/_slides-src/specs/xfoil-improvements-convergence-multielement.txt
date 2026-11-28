@@ -1,0 +1,105 @@
+@sub Why one XFOIL point in ten fails to converge, what it costs, how to fix it, and whether a panel method can handle multi-element airfoils
+@outline XFOIL: history and why it endured | The governing equations | Test set-up: 13 356 operating points | Convergence statistics and the anatomy of a failure | Accuracy, smoothness and surrogates | Proposed improvements | Multi-element airfoils: will a panel method do? | Guidance and conclusions
+@tnotes XFOIL is the tool almost everyone uses for subsonic airfoil analysis, and today it even trains machine-learned surrogates. But every user has watched it fail to converge. In this talk I measure how often, why, what it costs, and what could be fixed, and I answer a second question: is a panel method good enough for multi-element high-lift airfoils?
+
+B: Why XFOIL still matters
+- Written by Mark Drela in 1986; frozen at 6.9 in 2000, last release 6.99
+- Panel method + integral boundary layer + e^N transition, fully coupled by Newton
+- Still the standard for subsonic airfoil design, and the training source for surrogates such as NeuralFoil
+- Known pain points: non-convergence, path dependence, noisy gradients for optimisation
+N: XFOIL took the fully coupled viscous–inviscid Newton method of Drela's ISES code and put it into a fast interactive program. It has barely changed in twenty-five years, yet it is still the reference tool, and its outputs now train neural surrogates. Its weaknesses are well known to users but had never been measured systematically.
+
+T: Forty years of development | tab2 | rows=0-13 | cols=0,1,2
+N: The table traces the milestones from the precursors, through ISES and Daedalus, to XFOIL 1.0 in 1986 and the final 6.99. Notice that the core numerics were settled by the early 1990s; later versions mostly added design modes, plotting and ports.
+
+E: Inviscid part: linear-vorticity panel method | eq1,eq6
+W: Stream function Ψ from vortex sheet γ(s) and source sheet σ(s); the Kutta condition γ₁ + γ_N = 0 closes the system. The solution for any α is a blend of two base solutions (0° and 90°).
+N: The inviscid solver is a linear-vorticity stream-function panel method. Each node's stream function must equal a constant, and the boundary-layer displacement enters as a source sheet. Because the system is linear, XFOIL solves for two base angles once and combines them for any angle of attack, which is part of why it is so fast.
+
+E: Viscous part: integral boundary layer | eq8,eq10,eq12
+W: Mass defect m = u_e δ* couples the boundary layer to the panel solution through a mass-influence matrix. The momentum, kinetic-energy, shear-lag and amplification equations are solved with empirical closures.
+N: The boundary layer is described by integral quantities, momentum thickness, shape factor, a shear-stress coefficient and the amplification factor ñ. The coupling is through the mass defect: the boundary layer changes the edge velocity via a precomputed influence matrix. Transition is predicted by the simplified e to the N envelope method. All of this, panel and boundary layer, goes into one global Newton system.
+
+F: One viscous operating point | fig1
+- Panel solution and mass-influence matrix formed once per geometry
+- Each Newton iteration: block-tridiagonal BL system + mass coupling
+- Under-relaxation limits each step to [−0.5, 1.5] of the variables
+N: This diagram shows the flow of a viscous solution. The expensive parts are done once per geometry. Each Newton iteration assembles the block-tridiagonal boundary-layer system together with the mass-influence coupling, solves it, and under-relaxes the step so that no variable changes by too much. That step limiter will matter later.
+
+B: Test set-up
+- Six NACA sections: 0012, 0018, 2412, 4412, 23012 and thin, cambered 6409
+- Six Reynolds numbers, 5×10⁴ to 3×10⁶; α from −6° to 20° in 0.5° steps
+- 1 908 points per strategy, 160 panels, N_crit = 9, M = 0; 13 356 solutions in all
+- XFOIL 6.99 unmodified, driven through its text interface
+- Continuation (ASEQ), cold starts, adaptive and tight step bounds, and a recovery procedure
+N: To measure XFOIL's behaviour, the unmodified 6.99 program was driven through its own text interface. Six NACA airfoils were run at six Reynolds numbers from fifty thousand to three million and angles from minus six to twenty degrees, giving 1 908 points per strategy. A point counts as converged only when XFOIL itself reports convergence with finite coefficients. Seven strategies were compared: cold starts, standard continuation with 20 and 100 iterations, two step-limiter variants, and continuation with a recovery procedure that restores the last good state after a failure.
+
+T: Convergence over 1 908 points per strategy | tab4
+N: Here are the headline numbers. With XFOIL's default limit of 20 iterations, 10.7 per cent of points fail. Raising it to 100 leaves 3.8 per cent. Cold starts are worse and twice as expensive. Changing the step limiter does not help. What helps is state management: the recovery procedure converts 61 per cent of the remaining failures and converges 98.5 per cent of points.
+
+F: Where failures happen | fig5
+- Clustered at the lowest Re near stall and at negative α
+- Laminar separation bubbles and transition near the leading edge
+- At Re = 10⁶ the default limit fails 15 %
+N: The failures are not random. They cluster at low Reynolds numbers close to stall, and at negative angles, where laminar separation bubbles form and transition sits near the leading edge. These are exactly the conditions where small-UAV and wind-turbine designers need answers.
+
+F: Anatomy of a failure: the transition station | fig7
+- RMS change falls to 8×10⁻³, then stalls for 97 iterations
+- Largest change always at the transition station: the switch between laminar and turbulent equations
+- One failed point in three was within 1 % of the correct C_l and C_d
+N: Looking inside a failure shows why. The residual drops quickly and then sits at a plateau, and XFOIL's diagnostic shows the biggest change is always at the transition station, where the discrete switch from laminar to turbulent equations jumps between nodes. In one third of failed points the answer was already within one per cent of the right one. These are numerical failures, not physical ones.
+
+F: Failure propagation and path dependence | fig8
+- XFOIL keeps the unconverged state as the next starting guess
+- One failure at 22° poisoned the whole downward sweep
+- Where both sweeps converged, results identical to 10⁻³ in C_l: no physical hysteresis
+N: When a point fails, XFOIL quietly uses the bad state to start the next one. An upward then downward sweep shows the damage: one failure at the top of the sweep poisoned every point on the way down. Yet wherever both sweeps converged, they agree to a thousandth in lift. So the hysteresis users see is numerical, and it can be removed by restoring the last good state.
+
+F: Accuracy and smoothness | fig12
+- N_crit uncertainty: drag ±10 %, C_l,max several per cent
+- Drag slope saw-tooth as transition jumps between panel nodes
+- Five-digit output adds noise to finite differences in optimisation
+N: Two further limits matter for design. First, a plausible range of the transition parameter N_crit changes drag by ten per cent, which is as large as the differences XFOIL is used to resolve. Second, the drag curve is smooth but its slope is a saw-tooth, because transition moves in discrete steps between boundary-layer stations. With XFOIL's five-digit output, finite-difference gradients become noisy.
+
+2: Proposed improvements
+L: Robustness and convergence
+- Restore last good state after a failure
+- Residual-based line search instead of a fixed limiter
+- Pseudo-transient continuation
+- Smoothed transition (blended C_f across the switch)
+R: Accuracy, optimisation, software
+- Modern transition criteria (e.g. Tu-dependent)
+- Adjoint sensitivities from the Newton Jacobian
+- Full-precision output; re-entrant library API
+- Open regression tests
+N: The proposals follow directly from the evidence. For robustness: state recovery, a merit-function line search, pseudo-transient continuation, and a smoothed transition so the switch is not discrete. For optimisation: exact adjoint gradients, which cost one extra linear solve because the Jacobian already exists, and full-precision output. For software: a re-entrant library interface and open tests.
+
+F: What the first fixes change in practice | fig17
+- NACA 6409 at Re = 100 000, the classic difficult case
+- Default settings leave gaps exactly where the polar is needed
+- Continuation with recovery fills them for every N_crit
+N: Here is the effect on a real low-Reynolds-number section. With default settings, the polar has holes near stall. With continuation plus recovery, the polar is complete, and the comparison across three N_crit values shows the physical uncertainty clearly instead of mixing it with numerical failure.
+
+F: Multi-element airfoils: what a panel method captures | fig19
+- Two-element study: NACA 4412 main + 30 % flap
+- Panel method reproduces Smith's slat, circulation and dumping effects
+- But inviscid lift keeps rising with deflection: no confluence, no wake bursting
+N: Can a panel method handle slotted high-lift systems? The two-element study shows the inviscid part captures all of Smith's favourable effects: how the slat and flap redistribute load and how the main element dumps its wake at higher velocity. But inviscid lift keeps rising with flap deflection, because there is no wake confluence or bursting. Those need the viscous part.
+
+T: Which method for which multi-element question | tab6
+N: This is the verdict. A panel method is right for load split and early sizing of gap, overlap and deflection, in milliseconds. An extended XFOIL-type method adds transition and drag per element. For the optimum gap and for maximum lift, where wakes merge and burst, you need MSES or RANS.
+
+C: Conclusions
+- One point in ten fails at default settings, one in 26 with 100 iterations; failures are numerical
+- State management, not the step limiter, is what matters: recovery reaches 98.5 %
+- N_crit uncertainty (±10 % drag) is as large as many design differences
+- Gradient noise comes from discrete transition and 5-digit output
+- Panel methods suit the inviscid part of multi-element design, not C_l,max
+FW: Roadmap
+- Weeks: restore last good state, bisection continuation, ITER ≥ 100, full-precision output (≈60 % fewer failures)
+- Months: line search, smooth transition, N_crit from Tu, library + regression suite
+- Longer: adjoint sensitivities, stall and wake physics, MSES-class coupling
+N: XFOIL is not obsolete. Its weaknesses are concentrated in a few places, state management, the transition switch, the step limiter and the program interface, and they can all be fixed without giving up the speed and fidelity that made it the standard.
+
+REF: 1,4,5,9,10
+N: The key references are Drela's original XFOIL paper and user primer, the ISES papers by Drela and Giles, and the NeuralFoil surrogate. Fifty-five references are listed in the paper.

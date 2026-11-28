@@ -1,0 +1,82 @@
+@sub How web tension control evolved from hand-set brakes to electronic line shafts, with guideline tensions by substrate, width and zone, and a troubleshooting guide
+@outline Why tension matters: strain becomes register | Tension zones and disturbances | A century of tension control | Sensing, actuators and control architecture | Taper tension at the rewind | Guideline values by substrate, width and zone | Worked example | Commissioning, troubleshooting and conclusion
+@tnotes In rotogravure, register, print quality and roll quality all depend on holding web tension steady in every zone. This talk explains why, traces how tension control evolved, and gives practical starting values by substrate, web width and zone, with a worked example and a troubleshooting guide.
+
+E: Tension, stress and strain | eq1
+W: σ = T/(hW), ε = σ/E. Tension is quoted per unit width (N/m) and, for films, per µm of thickness: 1 N/m per µm = 1 MPa. Stretchy webs (low E) strain more for the same tension change.
+N: Web tension is a force, but what distorts the web is the stress and strain it produces. Stress is tension divided by thickness times width, and strain is stress divided by the modulus. So tension values are quoted per unit width and, for films, per micron of thickness. A useful identity: one newton per metre per micron is one megapascal.
+
+T: Strain becomes register error | tab1
+N: Here is why it matters. A 10 newton tension step on a one-metre web with four metres between print units shifts the image by about 0.7 millimetres on 12 micron polyester, and by about 4 millimetres on 50 micron LDPE. Both exceed a register tolerance of 0.1 millimetres. Polyethylene, twenty times less stiff than polyester, is the hardest common gravure substrate to hold in register.
+
+T: Units and conversions | tab2
+N: A quick reference for converting between N per metre, PLI, kilogram-force per centimetre, specific tension per micron and shaft torque, since machine manuals and suppliers use all of them.
+
+T: A century of tension control | tab3
+N: Tension control evolved in four eras. On mechanical presses, hand-set friction brakes and a line shaft left tension to drift with roll diameter. Dancers, powder brakes and analog loops brought feedback. DC drives and PLCs isolated the zones. Today, electronic line shafts with AC servo drives and load cells give digital multi-zone control. Each step was driven by a limitation of the one before.
+
+T: Tension sensors | tab4
+N: Two kinds of sensing dominate. Load cells measure the force on an idler directly and are accurate and stiff. Dancers measure position against a set load and also store web to absorb disturbances. Each has watch-outs: load cells need proper wrap angle and calibration, dancers add inertia and friction.
+
+B: Actuators and control architecture
+- Unwind: brake or regenerative motor with diameter compensation
+- Infeed and outfeed: driven nip or S-wrap isolating the print zone
+- Print units: speed ratio sets inter-unit tension on an ELS press
+- Rewind: motor with taper; centre or surface winding
+- Cascaded loops: tension trim over speed control, feed-forward from diameter and inertia
+N: The press is divided into zones by driven nips. The unwind holds tension with a brake or motor whose torque follows roll diameter. The infeed isolates the print section. On an electronic line shaft, small speed ratios between units set the tension between them. The rewind controls roll hardness with taper. Modern controllers cascade a tension trim on top of speed control and use feed-forward from diameter and inertia during accelerations.
+
+F: Tension zones from unwind to rewind | fig1
+- Each zone has its own actuator and sensor
+- Zone tensions set as multiples of unwind tension
+- Disturbances: roll eccentricity, splices, speed changes, dryer heat
+N: This diagram shows the zones of a gravure press, from unwind through infeed, print units and dryers, outfeed and rewind, with the actuators and sensors typical at each. Tensions in each zone are set as multiples of the unwind tension. The control must reject disturbances such as out-of-round rolls, splices, accelerations and the softening of film in the dryers.
+
+E: Taper tension at the rewind | eq2
+W: Tension falls linearly from T₀ at the core diameter D₀ by A % at full diameter. Typical taper 30–50 %, up to ≈80 %; hyperbolic or user curves on modern controllers.
+N: At the rewind, tension is reduced as the roll grows, so the inner layers are not crushed and the roll does not telescope or block. Linear taper of 30 to 50 per cent is typical. Too little taper crushes cores and causes blocking; too much gives soft, telescoping rolls.
+
+T: Specific unwind tension by substrate | tab5
+N: The starting point is specific tension per micron for each substrate. Stiff films like polyester tolerate higher specific tension, about 3.5 to 5 newtons per metre per micron, while LDPE and CPP need only about 0.5 to 1.7. Multiply by thickness and width to get total tension.
+
+T: Unwind tension for paper, board and foil | tab6
+N: For paper, board and aluminium foil, tensions are given by basis weight or caliper rather than per micron of thickness. These values come from the literature and suppliers and are starting points to be refined on the press.
+
+T: Effect of web width | tab7 | rows=0-13
+N: Total tension scales with width. The table gives total unwind tension for common gauges at 600, 1000 and 1300 millimetre web widths, so that the operator can set the controller directly in newtons or kilograms-force.
+
+T: Zone ratios from unwind to rewind | tab8
+N: Zone ratios differ by substrate class. Stiff webs such as polyester, foil and paper can take higher ratios through the print and outfeed zones. Stretchy or heat-sensitive films, LDPE, CPP and shrink films, should run close to unwind tension through the dryers, because they soften with heat.
+
+B: Worked example: 1050 mm, 20 µm heat-seal BOPP
+- Unwind: 1.4–2.4 N/m/µm × 20 µm → choose 36 N/m → 38 N (3.9 kgf)
+- Infeed 1.1× → 42 N; print units and dryers 1.0–1.1× → 38–42 N
+- Rewind: 38 N at the 152 mm core, 40 % taper → 23 N at 800 mm
+- Rewind torque: 2.9 N·m at the core to 9.1 N·m at full roll
+- Repeat short → tension too high; repeat long → raise slightly
+N: For a 1050 millimetre, 20 micron heat-seal BOPP film, the specific tension range gives about 36 newtons per metre, so 38 newtons at the unwind. Infeed and outfeed run about 10 per cent higher, print and dryer zones at 1.0 to 1.1 times. With 40 per cent taper the rewind tension falls from 38 to 23 newtons, and the rewind motor must deliver 2.9 to 9.1 newton-metres. A practical check: if the printed repeat comes out short, tension is too high.
+
+B: Commissioning checklist
+- Calibrate each load cell with a known weight over the real web path and wrap angle
+- Cross-check by hand: spring balance on the web until the unwind turns
+- Check roller parallelism and level: misalignment wrinkles no tension can fix
+- Set inertia and friction compensation with an empty run-up before tuning
+- Tune from the infeed outward; tune register last; save set points as recipes
+N: Good tension control starts at commissioning. Calibrate every load cell with a real weight hung over the actual web path, because wrap angle matters. Check rollers are parallel and level, since no controller can fix a wrinkle caused by misalignment. Set inertia and friction compensation before tuning the loops, tune zone by zone from the infeed outward with register last, and save the proven settings as recipes.
+
+T: Symptom guide | tab9 | rows=0-10
+N: The symptom guide links common defects, register drift, wrinkles, baggy edges, telescoping, blocking, neck-in and repeat-length errors, to their likely tension cause and the first actions to take. Most register problems on extensible films are tension problems first.
+
+C: Conclusion
+- Tension control has moved from operator feel to measured, engineered control
+- Physics unchanged: tension sets strain, strain sets register
+- Start from substrate modulus, thickness and width
+- Guideline tables give starting values and zone ratios
+FW: In practice
+- Calibrate load cells; log tension with register data
+- Refine values per press, ink and dryer setting
+- Store proven settings as job recipes
+N: The register gains of the modern press depend on tension control. Use the guideline tables as starting values, refine them with calibrated sensors and logged register data, and store proven settings as recipes for repeat jobs.
+
+REF: 1,2,5,6,8
+N: Key references are the PSA Desk articles on gravure press units, Walker on choosing the right tension, the Web Tension 101 series, and TAPPI guidelines for web conveyance and winding. Twelve references are listed.

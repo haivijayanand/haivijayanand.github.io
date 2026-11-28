@@ -1,0 +1,116 @@
+@sub A 15-minute review: the theory XROTOR implements, what its source code gets wrong, how it behaves in 2 800 test runs, and two worked designs
+@outline Why review XROTOR | Theory and lineage | The equations the code solves | Code review findings | Numerical experiments | Worked designs: 10-inch UAV propeller and 60 MW turbine | Improvement plan and user guidance | Conclusions
+@tnotes Good morning. XROTOR is the open-source lifting-line program that many of us use to design propellers and wind-turbine blades, yet nobody has ever published a review of what it actually solves. In the next fifteen minutes I will show its equations, the faults found in the source, how it behaves when tested, and two designs made with it.
+@onotes The talk follows the paper: why a review is needed, the theory and history, the equations as coded, the code review, the numerical experiments, two worked designs, and finally what to fix and how to use the code safely today.
+
+B: Why review XROTOR
+- Open-source lifting-line code by Drela and Youngren (MIT) for propellers, wind turbines and lightly loaded rotors
+- Version 7.55 is GPL, but its formulation and code had never been reviewed in print
+- User guide last updated 2003; version notes run 1998–2009
+- This study: trace the theory, write every equation as coded, review 20 000 lines of Fortran 77, and test a double-precision Python port
+N: XROTOR sits between blade-element momentum theory and expensive vortex-particle or CFD methods, so it is the natural choice for preliminary propeller design. But its documentation stops at the level of menus. The aim was to write down exactly what the code solves, read every line of the source, and test its behaviour with an independent port, about 2 800 operating points and 70 designs.
+
+F: A century of vortex theory behind the code | fig1
+- Betz (1919): minimum-loss condition
+- Goldstein (1929): helicoidal potential solution
+- Larrabee (1979): practical MIL design procedure
+- XROTOR 6.6 (before 1998) to 7.55 (2009); Windows build 2022
+- Family: QPROP/QMIL, DFDC, CROTOR and Python, C++, MATLAB ports
+N: XROTOR is a modern implementation of a theory that was essentially complete by 1930. Betz gave the optimum loading, Prandtl the tip-loss factor and Goldstein the exact helicoidal solution; Larrabee turned this into a design recipe in 1979. Most code changes after 2000 concern the duct and the equivalent propeller. Around it a family grew: QPROP and QMIL for motor matching, DFDC for ducted fans, CROTOR for contra-rotation and several ports.
+
+E: Lifting line: velocity triangle and circulation | eq2,eq3
+W: Each blade is a lifting line of N panels (default 30). W_t and W_a are the tangential and axial relative velocities; the residual R_i ties circulation Γ_i to section lift through Kutta–Joukowski, giving N equations for N circulations.
+N: Here is the heart of the analysis. At each radial station the relative velocity is built from rotation, free stream, the self-induced velocities and optional duct or slipstream terms. The Kutta–Joukowski residual says that twice the circulation must equal chord times velocity times lift coefficient. Thrust and power then follow by summing over the stations.
+
+B: Three ways to compute the induced velocity
+- **Graded momentum (GRAD):** each annulus independent with Prandtl's tip factor; cheap, but warned against above λ ≈ 0.5
+- **Potential (POT, default):** Goldstein's helicoidal solution by Fourier harmonics; treats the hub as a solid cylinder
+- **Discrete vortex (VRTX):** Biot–Savart sums over a helical wake; for raked blades, free root vortex
+- Self-deforming wake: wake advance ratio λ_w = λ/η_i ties sheet pitch to loading
+N: The induced velocity is where the three wake models differ. Graded momentum treats every annulus separately, so its influence matrix is diagonal and it converges easily, but it loses accuracy at higher advance ratio. The potential model solves Goldstein's problem exactly and is the default. The vortex model sums Biot–Savart contributions of straight helical segments. All three then set the wake pitch from the induced efficiency.
+
+F: Global Newton solution of the operating point | fig3
+- N + 3 unknowns: Γ_1…Γ_N, λ, λ_w and a pitch change Δβ
+- Hand-coded partial derivatives give quadratic convergence
+- Relaxation ω = 0.2 for two iterations, step limits on Δc_l, ΔΓ and Δβ
+- If ω < 0.2 an implicit filter smooths Γ over 0.2N stations
+N: The analysis is a full Newton system: all circulations plus the advance ratio, the wake advance ratio and a uniform pitch change. Every routine carries its own derivatives, so convergence is quadratic when they are right. On top sit heuristic limits on how far a step may change the loading, and a circulation filter added in version 7.30. Keep this filter in mind; it returns later.
+
+E: Design for minimum induced loss | eq16
+W: The Betz condition: ξ tan φ_w is the same at every radius. The user fixes radius, hub, speed, blade number, thrust or power and a c_l distribution; chord and blade angle follow from c = 2Γ/(W c_l) and β = φ + α(c_l).
+N: In design mode the unknown is the circulation distribution that gives minimum induced loss. The Betz condition says the wake moves as a rigid helix, which is what this equation imposes station by station. Once the circulation is known, the chosen lift coefficient gives the chord, and the inverse lift curve gives the blade angle.
+
+T: Code review: 18 findings, 5 are errors | tab4 | rows=0-6 | cols=0,2,3 | note=Items 1–5: Jacobian errors (two carried into the Python port); 6–9 change results or behaviour; 10–18 dormant faults and limits.
+N: The source is about 20 500 lines of Fortran 77 with implicit typing, single precision and 493 GO TO statements. The review found 18 items. Items 1 to 5 are slips in the hand-derived Jacobian. They never change a converged answer, only the speed and reliability of convergence, which is why nobody noticed. Item 6 is an uninitialised variable in ducted design, and others concern the design consistency and the section look-up.
+
+F: Same circulation, three different swirls | fig4
+N: To compare the wake models fairly, the same circulation was fed to all three. Over mid-span they agree closely, within one per cent between POT and VRTX. Near the root they differ by a factor of seven, because each assumes a different hub: a solid infinite cylinder for POT, nothing for the vortex wake. So the root loading of a design is largely an accident of the chosen formulation.
+
+K: Graded momentum over-predicts thrust | +6 % / +18 % | fig5
+- Two-blade designs at λ = 0.3 and 0.5
+- Error grows with advance ratio, falls with blade number
+- The choice of wake model matters more than the discretisation
+N: Here is the practical consequence. Relative to the potential solution, graded momentum over-predicts thrust by about 6 per cent at an advance ratio of 0.3 and 18 per cent at 0.5 for two blades. With more blades the error drops. Refining from 30 to 100 stations changes far less than switching wake model, so pick the model first and keep 30 stations.
+
+T: Robustness: converged points out of 364 | tab6 | note=Mean Newton iterations per converged point in brackets. NACA 640 blade, J = 0.05–1.4, Δβ = −8° to +16°.
+N: Convergence was mapped over 364 combinations of advance ratio and pitch. Graded momentum converges everywhere. The potential formulation is much harder: plain Newton manages only a quarter of the points, while XROTOR's relaxation rules raise that to 91 per cent. The failures sit in deep stall at low advance ratio with high pitch, and a second group appears when the tip runs near the critical Mach number.
+
+F: The circulation filter traps the solver in cycles | fig9
+- Filter on: rescues 7 POT points, loses 30 others
+- In VRTX and design it causes fixed cycles: filter removes the tip gradient, next Newton step restores it
+- Three-blade GRAD design: never converges with filter; 6–9 iterations without it
+N: The filter is double-edged. For the potential model in stall it is a net help. But in the vortex model and in design it locks the iteration into a cycle: the filter smooths the sharp tip gradient, the next Newton step restores it, and the same steps repeat forever. A three-blade design that never converges with the filter converges in six to nine iterations once it is removed.
+
+F: Worked design 1: 10-inch UAV propeller | fig12
+- 4.5 N at 15 m/s, 7 000 rpm, two blades, Re 10⁴–10⁵
+- Result: a "10 × 7.2" propeller, 95 W, η = 0.71
+- Profile drag costs 11 points of efficiency, more than induced loss (η_i = 0.82)
+- Best design c_l ≈ 0.8 at low Reynolds number
+N: The first worked design is a small drone propeller. XROTOR gives a ten by seven point two inch propeller absorbing 95 watts at an efficiency of 0.71, and all three wake models agree within 0.6 points. The lesson is that at these Reynolds numbers friction and pressure drag cost more than the induced loss, so design near the section's best lift-to-drag ratio, around c_l of 0.8.
+
+F: Worked design 2: a 60 MW wind turbine | fig13
+- Rated 11 m/s, tip speed 90 m/s, three blades
+- Rotor diameter 441 m, 3.9 rpm, peak C_P = 0.51
+- Above rated, pitch feathers 4° to 23°; thrust 7.7 → 2.9 MN
+- Starting each wind speed afresh can jump to a stall-side branch with 14 MN thrust
+N: The same code sizes a 60 megawatt offshore rotor, more than twice the largest machine built. The rotor comes out 441 metres in diameter at 3.9 rpm with a peak power coefficient of 0.51. Above rated wind, XROTOR finds the pitch that holds 60 megawatts. But if each wind speed is started from the design pitch, the solver can fall onto a second, stall-side solution with almost double the thrust. Only continuation from the previous point keeps the right branch.
+
+2: Prioritised improvement plan
+L: Cheap local fixes (A–F)
+- Conditional circulation filter
+- Correct the five Jacobian errors
+- Initialise DEFF; check design consistency
+- Smooth Mach terms in the section model
+- Double precision + residual line search
+- Continuation in sweeps
+R: Larger work (G–O)
+- Re-entrant library API, no COMMON state
+- Adjoint sensitivities from the Newton Jacobian
+- Smooth tabulated polars; rotational augmentation
+- Better hub model and wake contraction
+- Non-axial inflow; DFDC-type duct coupling
+N: Fifteen improvements are proposed, ordered by benefit for effort. The first six are local changes: make the filter conditional, fix the derivatives, initialise the ducted-design variable, smooth the Mach terms, move to double precision with a proper line search, and use continuation in sweeps. The larger items turn XROTOR into a library with exact adjoint gradients for optimisation and add physics such as hub models and non-axial inflow.
+
+B: Practical guidance for present users
+- Use POT for design and analysis; GRAD only for quick estimates at low λ
+- Compare POT and VRTX designs at the root before trusting root loading
+- Keep 30 stations; 60 or 100 do not help
+- Approach stall or transonic-tip points from a converged neighbour
+- Re-initialise after any failed point: the bad Γ seeds the next solution
+- Fit section parameters to XFOIL polars at the right Re and M
+N: Until the fixes are made, these rules keep users out of trouble. Use the potential model. Look hard at the root. Do not refine beyond 30 stations. When a point fails, creep up on it from a converged neighbour, and never trust a result that follows a failed point, because the stored circulation becomes the next starting guess. And fit the section model to real polars, remembering it does not lose lift after stall.
+
+C: Conclusions
+- The method is sound: designs re-analyse to their design power; POT and VRTX agree within 1 % at mid-span
+- Wake-model choice matters more than discretisation
+- Real but small faults: 5 Jacobian errors, an uninitialised variable, a dormant look-up fault
+- Robustness limited by two fixable mechanisms: the filter and Mach terms
+- Practical from a 10-inch UAV propeller to a 441 m wind rotor
+FW: Recommended next steps
+- Conditional filter, corrected derivatives, smooth Mach terms
+- Double precision with residual-based line search
+- Library interface and adjoint sensitivities for optimisation
+N: To conclude: XROTOR's physics is sound and self-consistent, and it remains a fast, practical design tool at both ends of the scale. Its weaknesses are concentrated in a few places, the hand-coded derivatives, the circulation filter, the Mach terms and the program interface, and all of them can be fixed cheaply without changing what makes the code valuable.
+
+REF: 1,2,3,10
+N: These are the key sources: the XROTOR download page and user guide, Betz's original minimum-loss paper, and the companion XFOIL review. The full list of thirty references is in the paper.

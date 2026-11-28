@@ -1,0 +1,87 @@
+@sub From a 1988 MIT teaching code to a de facto standard: how AVL works, how to get trustworthy stability derivatives from it, and two worked UAV examples
+@outline What AVL is and where it came from | Formulation: lattice, forces, trim | From AVL to stability derivatives | Worked example: a 3.2 kg survey UAV | A tailless flying wing for comparison | Limitations and a practitioner's checklist | The way ahead and conclusions
+@tnotes AVL, the Athena Vortex Lattice program, is probably the most used free tool for early stability and control analysis of aircraft and UAVs. This talk explains where it came from, what it solves, how to extract derivatives you can trust, and what two worked UAV examples teach.
+
+B: Why AVL matters
+- Free MIT program: extended vortex lattice + slender-body fuselage
+- Trims the aircraft and returns all stability and control derivatives in seconds
+- Built-in rigid-body eigenmode analysis
+- Used in teaching, student design, UAV development and design frameworks
+- GPL licence → large ecosystem of wrappers and extensions
+N: AVL fills the gap between handbook methods and CFD. In a few seconds it gives a trimmed solution, a complete derivative set in stability and body axes, the neutral point and the dynamic modes. That speed, plus an open licence, is why it is everywhere, from classrooms to UAV companies.
+
+T: From Prandtl to AVL | tab2 | rows=0-19 | cols=0,1 | size=11
+N: The vortex-lattice idea grew out of Prandtl's lifting line and Falkner's lattice in the 1940s, became practical with the NASA and industry codes of the 1970s, and AVL itself began around 1988 on MIT's Project Athena teaching workstations. Drela and Youngren developed it for more than three decades, with a 2022 update by Allmaras.
+
+E: The lattice and its boundary condition | eq1,eq5
+W: Each panel carries a horseshoe vortex Γ_j; at every control point the normal velocity from free stream, rotation and all vortices must vanish. Controls and camber enter by tilting the normal vector n_i rather than moving the geometry.
+N: Lifting surfaces are divided into panels, each with a horseshoe vortex. At each control point we require no flow through the surface, which gives a linear system for the circulations. The second equation is the Biot–Savart law for one straight vortex segment. A key AVL feature is that control deflections and camber are handled by tilting the normal vectors, so the matrix does not change with control settings.
+
+E: Forces, drag and the neutral point | eq2,eq7,eq4
+W: Kutta–Joukowski force on every bound segment; induced drag from the Trefftz plane; neutral point from C_mα/C_Lα. Rates are non-dimensionalised as p̂ = pb/2V, q̂ = qc/2V, r̂ = rb/2V.
+N: Forces come from Kutta–Joukowski on every bound vortex segment. Induced drag is computed far downstream in the Trefftz plane, which is more accurate than summing near-field forces. The neutral point follows directly from the ratio of pitching-moment slope to lift-curve slope. Because the problem is linear, AVL can differentiate exactly with respect to angles, rates and controls.
+
+T: Key AVL derivatives and what they are used for | tab3
+N: This table is the practical heart of the paper. Lift-curve slope and pitch stiffness set the static margin, the rate derivatives set the damping of short period, roll and Dutch roll, and the control derivatives set control power. Each one feeds a specific part of the flight-dynamics model.
+
+F: Worked example: a 3.2 kg survey UAV | fig1
+- 2 m span, AR 9.1, 3° dihedral, washout 2° → 0°
+- V = 18 m/s, CG 0.115 m aft of root LE
+- 388-panel lattice; convergence checked up to 873 panels
+- AVL formulation validated against Helmbold and e = 1 on flat wings
+N: The first worked example is a conventional small survey UAV. Before trusting any numbers, the lattice formulation was validated on flat wings against Helmbold's lift-curve slope, and the UAV lattice was refined until the pitch stiffness, neutral point and induced drag stopped changing.
+
+K: Trim and static margin | 17.0 % | fig3
+- Trim: α = 1.19°, δ_e = 2.72°, C_L = 0.383
+- Neutral point X_np = 0.153 m
+- Trefftz induced drag C_Di = 0.0051
+N: At 18 metres per second the aircraft needs a lift coefficient of 0.383. Trimming with the elevator gives 1.19 degrees angle of attack and 2.7 degrees of elevator. The neutral point is at 0.153 metres, so with the CG at 0.115 the static margin is 17 per cent, comfortably stable for a survey aircraft.
+
+T: Stability and control derivatives at trim | tab8 | rows=0-7 | note=Stability axes; rate derivatives per unit non-dimensional rate; control derivatives per degree; "–" = zero by symmetry.
+N: Here is the full derivative set in AVL's ST format. Check the signs: positive weathercock stability C_nβ, negative dihedral effect C_lβ, strong roll damping C_lp, strong pitch damping C_mq. All are physically consistent. This is what goes to the flight-dynamics team.
+
+T: Rigid-body modes at 18 m/s | tab9
+N: Putting the derivatives into the standard small-perturbation equations gives the modes. The short period is well damped, the phugoid lightly damped as usual, Dutch roll at 0.2 damping, a fast roll subsidence and a mildly divergent spiral with an 18-second doubling time, a classic, acceptable picture. Note one caution: AVL has no alpha-dot term. Adding the downwash-lag estimate raises the short-period damping from 0.76 to about 0.9.
+
+F: Where the modes sit | fig5
+- Short period: ω_n = 12.6 rad/s, ζ = 0.76
+- Phugoid: T = 11.8 s, ζ = 0.09
+- Dutch roll: ω_n = 6.3 rad/s, ζ = 0.20
+- Roll τ = 0.06 s; spiral slowly divergent (T₂ = 18 s)
+N: The same modes on the complex plane: longitudinal modes as circles, lateral-directional as crosses. Everything is in the left half-plane except the spiral, which sits just to the right of the origin, as is typical of aircraft with modest dihedral. Pilots and autopilots handle such a slow divergence easily.
+
+T: Second example: a tailless flying wing | tab12 | rows=0-11 | cols=0,1,2
+N: The flying wing, 1.6 metre span with 25 degrees of sweep, trims at 3.1 degrees with almost neutral elevons thanks to washout. Compare the columns: pitch damping falls from minus 22 to minus 1.5, and directional stability and yaw damping are tiny because the fins are small. The result is a very lightly damped Dutch roll, ζ of 0.089. AVL is particularly valuable here, because the stability depends entirely on sweep, twist and span loading.
+
+T: How far to trust each derivative | tab13 | rows=0-10 | cols=0,1,2
+N: Not all derivatives are equally reliable. Lift and pitch-stiffness derivatives in attached flow are good. Lateral-directional derivatives that depend on the fuselage and fin interaction, and anything driven by viscous effects, are weaker. The right column lists the main error source, which tells you what correction to add.
+
+T: AVL and related low-order codes | tab5 | cols=0,2,3,4
+N: AVL is not alone. Its sister codes ASWING and JVL, Python vortex-lattice packages, differentiable re-implementations and panel codes each trade cost against physics. The table summarises where each sits; AVL's niche is fast, exact linear derivatives for conventional and tailless aircraft.
+
+B: A practitioner's checklist
+- State reference area, chord, span, moment reference, mass, CG, inertias
+- Plot the geometry; show lattice convergence for C_mα, X_np, C_nβ, C_lp, C_Di
+- Record the run case and axis system; declare units
+- List terms not modelled: C_mα̇, fuselage, propeller, profile drag
+- Declare validity: attached flow, |α|, |β| < ~10°, M < 0.6
+- Cross-check against one independent method; record AVL version
+N: The paper recommends attaching this checklist to every AVL derivative set released to a flight-control team. Most AVL mistakes are not in the code, they are in inconsistent reference quantities, a wrong CG, an unconverged lattice, or forgetting terms AVL never models. Moving the CG from 0.115 to 0.14 metres in the example cuts the static margin drastically, so the CG must be stated with the loading case.
+
+T: The way ahead for AVL-class tools | tab14 | cols=0,1,2
+N: The way ahead is not to replace AVL but to surround its fast linear core: automatic differentiation for design sensitivities, unsteady and viscous corrections, better body and propeller models, and quantified uncertainty. Many of the building blocks already exist in the wrappers and sister codes.
+
+C: Conclusions
+- Sound extended VLM with exact linear derivatives, trim and eigenmodes
+- Complete, physically consistent derivative set from a 65-line input in seconds
+- Converge C_mα and induced drag; state reference quantities and CG
+- Add what AVL omits: α̇ changed short-period ζ from 0.76 to ≈0.9
+- Flying wings: AVL is most valuable where stability depends on sweep and twist
+FW: The way ahead
+- Sensitivities and AD-enabled versions
+- Unsteady, viscous and propulsion corrections
+- Uncertainty bands on every derivative
+N: Used within its limits, thin surfaces, small angles, attached subsonic flow, a rigid airframe and low rates, and backed by validation data, AVL remains one of the most cost-effective tools in aircraft design.
+
+REF: 1,2,10,15,17
+N: Key references: Prandtl and Falkner for the origins, Katz and Plotkin's textbook, and the AVL user primer and release page by Drela and Youngren. The paper lists fifty-five references including the AVL documentation itself.

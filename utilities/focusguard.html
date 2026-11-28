@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<!--
+TOOL:    FocusGuard — description, setup and download page
+FAMILY:  utilities
+VERSION: 1.0.0
+DATE:    2026-11-28
+CHAT:    Publish FocusGuard and TV lock under a Utilities section on GitHub
+CHANGES: 1.0.0 — first release: what FocusGuard does, requirements, install, phone home page, TV control, daily use,
+         emergency reset, limits, downloads (FocusGuard 1.6.1 public edition)
+STATUS:  public
+-->
+<html lang="en" data-theme="light">
+<head>
+<script src="/assets/js/site-theme.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FocusGuard: screen time and site blocker for Windows — Utilities for Parents</title>
+<meta name="description" content="FocusGuard: a free Windows 11 tool for parents that blocks videos, social media and games for the children's accounts, limits daily PC time, and lets you give study time from your phone.">
+<link rel="stylesheet" href="util.css">
+<script type="module" src="/assets/js/site-progress.js"></script>
+</head>
+<body>
+<header class="ut">
+  <h1>FocusGuard: screen time and site blocker for Windows<br><span class="crumb"><a href="/">Home</a> › <a href="./">Utilities</a> · version 1.6.1</span></h1>
+  <button id="themeBtn" title="Light / dark theme">◐ Theme</button>
+  <button id="btnFull" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<main>
+  <p class="lead">FocusGuard runs quietly on the family PC. When a child signs in, it blocks distracting sites in every browser and app, counts their minutes, warns them before time ends and signs them out. When you sign in with your own account, the internet is normal. You can give extra study time from your phone without touching the PC.</p>
+
+  <div class="dl">
+    <a href="files/FocusGuard_v1.6.1.zip" download>⬇ Download FocusGuard 1.6.1 (zip)</a>
+    <a href="files/focusguard/README.md">Full README</a>
+    <a href="files/focusguard/focusguard.py">View the source</a>
+  </div>
+  <p><a class="chip" href="#what">What it does</a><a class="chip" href="#need">What you need</a><a class="chip" href="#install">Install</a><a class="chip" href="#phone">Phone control</a><a class="chip" href="#tv">TV lock</a><a class="chip" href="#daily">Day to day</a><a class="chip" href="#help">If the internet stops</a><a class="chip" href="#limits">Limits</a></p>
+
+  <div class="cols">
+  <section id="what">
+    <h2>What it does</h2>
+    <ul>
+      <li><b>Blocks sites for the whole PC</b>, not just one browser. It works as a small DNS filter on the PC, so Chrome, Edge, Firefox and apps are all covered. Allowed lookups go out over encrypted DNS.</li>
+      <li><b>Block lists</b> for video (YouTube, Netflix, Hotstar…), social (Instagram, Facebook, Snapchat, X, Reddit…), music (Spotify, JioSaavn, Gaana…), games (Poki, Roblox, now.gg…) and VPN/proxy sites. SafeSearch is forced on Google, Bing and DuckDuckGo.</li>
+      <li><b>Study mode</b> (the default) is a whitelist: only the sites you list open. Turn it to <i>Filter</i> (block lists only) or <i>Off</i> from the panel.</li>
+      <li><b>Screen time per child:</b> allowed hours and a daily minute limit for each day of the week. A warning comes 5 minutes before the end, then the child is signed out. Windows sign-in hours are set too.</li>
+      <li><b>Always-blocked apps:</b> music players, game launchers, VPN and Tor apps, and portable browsers are closed for the children's accounts.</li>
+      <li><b>Online classes today:</b> one tap opens the PC 07:00–19:00 in Study mode with Meet, Zoom and Teams allowed, without using up the day's minutes.</li>
+      <li><b>Reports</b> (opt-in per child): screen time, most-used sites and blocked attempts for today, 7 or 30 days.</li>
+      <li><b>Phone home page</b> over your home Wi-Fi: give study time to each child, stop it, and lock or unlock the TV.</li>
+    </ul>
+  </section>
+
+  <section id="need">
+    <h2>What you need</h2>
+    <ul>
+      <li>A <b>Windows 11 Pro</b> PC. Each child has their own <b>Standard</b> (not administrator) account; you keep an admin account with a password the children don't know.</li>
+      <li><b>Python 3.9 or newer.</b> A normal python.org install works, and so does a portable or "embeddable" Python on another drive. No pip or virtual environment is needed; the installer fetches its two small libraries itself.</li>
+      <li>An internet connection during install.</li>
+      <li>For phone control: the phone on the same Wi-Fi, and the PC's IP address fixed with a <b>DHCP reservation</b> on your router (see <a href="tv-lock.html#ip">how</a>).</li>
+      <li>For the TV lock: an Android TV / Google TV and the Android <b>platform-tools</b> (adb) folder. See <a href="tv-lock.html">Home TV Lock</a>.</li>
+    </ul>
+    <div class="note info">The default schedule written at install is Mon–Fri 16:00–20:30 (120 min, Study mode 17:00–19:00) and Sat–Sun 09:00–12:30 and 15:00–21:00 (180 min). Change it in the panel's <b>Schedule</b> tab.</div>
+  </section>
+  </div>
+
+  <section id="install">
+    <h2>Install (about 15 minutes)</h2>
+    <ol class="steps">
+      <li><b>Make each child's account Standard.</b> Settings › Accounts › Other users › <i>name</i> › Change account type › Standard user.</li>
+      <li><b>Unzip FocusGuard</b> on the PC, for example to <code>C:\Users\&lt;you&gt;\Downloads\focusguard</code>.</li>
+      <li><b>Open PowerShell as Administrator</b> in that folder (right-click Start › Terminal (Admin), then <code>cd</code> to the folder) and run the installer with the child's account name. Add more accounts the same way, or later in the panel.
+<pre><code>Set-ExecutionPolicy -Scope Process Bypass -Force
+.\install.ps1 -User Kid1</code></pre>
+        If Python is not on the PATH or is portable, add its path: <code>-Python D:\Python312\python.exe</code>. Add <code>-LockExtensions</code> to also block browser extensions such as VPN add-ons.</li>
+      <li><b>Choose the admin panel password</b> when asked. Use your own, not one the children know.</li>
+      <li>The installer <b>tests the filter</b> before it changes any DNS setting. If the test fails, nothing is changed and it prints why.</li>
+      <li><b>Restart the browsers</b>, open the <b>FocusGuard Admin</b> desktop shortcut (<code>http://127.0.0.1:8765/admin</code>) and set each child's hours in the <b>Schedule</b> tab.</li>
+      <li><b>Set up the phone page and TV</b> (optional) with <code>update.ps1</code>, below.</li>
+    </ol>
+  </section>
+
+  <div class="cols">
+  <section id="phone">
+    <h2>Control it from your phone</h2>
+    <p>The panel first answers only on the PC itself. To open it from phones on the home Wi-Fi, run this once in an Administrator PowerShell on the PC:</p>
+<pre><code>&amp; "C:\Program Files\FocusGuard\python\python.exe" "C:\Program Files\FocusGuard\focusguard.py" lan on subnet
+&amp; "C:\Program Files\FocusGuard\python\python.exe" "C:\Program Files\FocusGuard\focusguard.py" pin</code></pre>
+    <p>The first line opens it to your home network and adds the firewall rule (<code>lan on 192.168.1.25</code> allows one phone only; <code>lan off</code> closes it). The second sets a <b>parent PIN</b>: it opens only the simple home page, so you can give it to the other parent without sharing the admin password. If you kept Python in its own folder, use that python.exe path instead.</p>
+    <p>On the phone, open <code>http://&lt;PC address&gt;:8765/</code> (<code>lan status</code> prints it) and add it to the home screen. The page has two parts:</p>
+    <ul>
+      <li><b>Study time on PC:</b> pick 15 / 30 / 45 / 60 minutes or type a number for each child and tap <b>Give time</b>. It always runs in Study mode. <b>Stop</b> ends it early.</li>
+      <li><b>TV: Lock / Unlock</b>, if TV control is set up.</li>
+    </ul>
+    <div class="note">The page is plain HTTP on your own Wi-Fi. Use a strong admin password. Five wrong tries lock sign-in for 5 minutes. Never forward port 8765 on your router to the internet.</div>
+  </section>
+
+  <section id="tv">
+    <h2>Add the TV lock</h2>
+    <p>Prepare the TV first (developer options, USB debugging, fixed IP): see <a href="tv-lock.html#prepare">Home TV Lock › Prepare the TV</a>. Then:</p>
+    <ol class="steps">
+      <li>Download Google's <b>SDK Platform-Tools for Windows</b> and unzip it so that <code>C:\platform-tools\adb.exe</code> exists.</li>
+      <li>In the FocusGuard folder, in an Administrator PowerShell, run with your TV's address:
+<pre><code>Set-ExecutionPolicy -Scope Process Bypass -Force
+.\update.ps1 -TV 192.168.1.8:5555</code></pre></li>
+      <li>It copies adb into a folder only administrators can open, turns TV control on, asks for the parent PIN and restarts FocusGuard.</li>
+      <li>When the TV shows <b>Allow USB debugging?</b> for this PC, tick <b>Always allow</b> and press OK.</li>
+      <li>Delete <code>C:\platform-tools</code> afterwards, so the children's accounts can't use it. FocusGuard also closes <code>adb.exe</code> if a child starts it.</li>
+    </ol>
+    <p>While the TV should be locked, FocusGuard locks it again every 10 minutes. This catches a TV that was off when you pressed Lock. To lock the TV when the PC is off, use <a href="tv-lock.html#termux">Termux on your phone</a>.</p>
+  </section>
+  </div>
+
+  <div class="cols">
+  <section id="daily">
+    <h2>Day to day</h2>
+    <table>
+      <tr><th>Situation</th><th>What to do</th></tr>
+      <tr><td>A study site opens only partly</td><td>Panel › <b>Log</b> › Recently blocked › <b>Study-allow</b> the helper domains it needs.</td></tr>
+      <tr><td>A site is wrongly blocked</td><td><b>Allow</b> it in the Log tab, or add it under Block lists › Always allowed.</td></tr>
+      <tr><td>Child needs more time today</td><td>Phone page › Give time, or <b>+15 / +30 / +1 hour</b> on the child's card in the panel. Works even outside allowed hours.</td></tr>
+      <tr><td>Online classes all day</td><td><b>Online classes today</b> on the child's card. Back to normal next day.</td></tr>
+      <tr><td>You need the PC unrestricted</td><td>Sign in with your own account, or use <b>Pause</b>.</td></tr>
+      <tr><td>Updating to a new version</td><td>Unzip it and run <code>.\update.ps1</code> as Administrator. DNS, firewall and browser settings are left alone.</td></tr>
+    </table>
+  </section>
+
+  <section id="help">
+    <h2>If the internet stops working</h2>
+    <p>The service has probably stopped. It normally restarts within a minute. If not, in an Administrator PowerShell:</p>
+<pre><code>Start-ScheduledTask -TaskName FocusGuard
+# or remove FocusGuard completely and restore normal DNS:
+&amp; "C:\Program Files\FocusGuard\uninstall.ps1"</code></pre>
+    <p>The log is at <code>C:\ProgramData\FocusGuard\focusguard.log</code>. Forgot the panel password? Run <code>focusguard.py passwd</code> as Administrator to set a new one.</p>
+  </section>
+  </div>
+
+  <section id="limits">
+    <h2>Limits: what it cannot do</h2>
+    <ul>
+      <li><b>An administrator account can remove anything.</b> That is why the children's accounts must be Standard and your password private.</li>
+      <li><b>Only this PC is covered.</b> Phones and tablets need router parental controls or a filtering DNS service such as NextDNS.</li>
+      <li><b>Phone hotspot or USB tethering</b> may work for up to about 15 seconds before the adapter guard resets it.</li>
+      <li><b>A determined teenager</b> can sometimes find a proxy site or rename a VPN program. The Log and Events tabs help you notice.</li>
+      <li><b>Videos and music saved on the PC or a pen drive</b> can still play inside a browser.</li>
+      <li>The Windows parts (session detection, sign-out, adapter guard) are written for Windows 11. Watch it on the first day.</li>
+    </ul>
+  </section>
+
+  <footer>FocusGuard is MIT licensed: free to use, change and share, with no warranty. Files: <code>focusguard.py</code> (the service), <code>home.html</code> (phone page), <code>admin.html</code> (full panel), <code>install.ps1</code>, <code>update.ps1</code>, <code>uninstall.ps1</code>. © K Vijay Anand · <a href="./">More utilities</a></footer>
+</main>
+<script src="util.js"></script>
+</body>
+</html>

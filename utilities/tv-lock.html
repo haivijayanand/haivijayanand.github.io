@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Home TV Lock — description, Termux setup and download page
+FAMILY:  utilities
+VERSION: 1.0.0
+DATE:    2026-11-28
+CHAT:    Publish FocusGuard and TV lock under a Utilities section on GitHub
+CHANGES: 1.0.0 — first release: what the lock does, three ways to control it, preparing the TV, fixed IPs, Termux
+         phone setup with widget buttons, commands, outside-home access, Mi TV clean-up, other TV brands, limits,
+         downloads (home_lock.sh 1.1.0, tv_lock.bat 1.0.1, tv_clean.bat 1.0.1)
+STATUS:  public
+-->
+<html lang="en" data-theme="light">
+<head>
+<script src="/assets/js/site-theme.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home TV Lock: lock TV videos from your phone with Termux — Utilities for Parents</title>
+<meta name="description" content="Lock YouTube and other video apps on an Android / Google TV from your phone with one tap, using Termux and ADB over Wi-Fi. Free script for parents, with step-by-step setup.">
+<link rel="stylesheet" href="util.css">
+<script type="module" src="/assets/js/site-progress.js"></script>
+</head>
+<body>
+<header class="ut">
+  <h1>Home TV Lock: lock TV videos from your phone<br><span class="crumb"><a href="/">Home</a> › <a href="./">Utilities</a> · home_lock.sh 1.1.0</span></h1>
+  <button id="themeBtn" title="Light / dark theme">◐ Theme</button>
+  <button id="btnFull" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<main>
+  <p class="lead">The TV works normally until you tap <b>Lock</b> on your phone. Then YouTube, Hotstar, Netflix and the other video apps are paused, casting from phones stops, and the TV goes to its home screen. It stays that way, even after the TV restarts, until you tap <b>Unlock</b>. No app is installed on the TV; the phone talks to it over your Wi-Fi using Android's own debugging link (ADB).</p>
+
+  <div class="dl">
+    <a href="files/home_lock.sh" download>⬇ home_lock.sh (phone, Termux)</a>
+    <a href="files/tv_lock.bat" download>⬇ tv_lock.bat (Windows PC)</a>
+    <a href="files/tv_clean.bat" download>⬇ tv_clean.bat (Mi TV clean-up, optional)</a>
+  </div>
+  <p><a class="chip" href="#what">What Lock does</a><a class="chip" href="#ways">Three ways to control it</a><a class="chip" href="#prepare">Prepare the TV</a><a class="chip" href="#ip">Fix the IP addresses</a><a class="chip" href="#termux">Phone setup with Termux</a><a class="chip" href="#cmds">Commands</a><a class="chip" href="#away">Away from home</a><a class="chip" href="#other">Other TV brands</a><a class="chip" href="#limits">Limits</a></p>
+
+  <div class="cols">
+  <section id="what">
+    <h2>What Lock does</h2>
+    <ul>
+      <li><b>Pauses the video apps:</b> YouTube, Hotstar, SonyLIV, Prime Video, ZEE5, JioCinema, Netflix, MX Player, the TV's own video and USB media players. A paused app shows "app paused" and cannot be switched back on from the TV's Settings.</li>
+      <li><b>Pauses the Play Store,</b> so no new video app can be installed meanwhile.</li>
+      <li><b>Switches off Chromecast and screen mirroring,</b> so nobody can cast from a phone.</li>
+      <li>Stops whatever is playing and returns to the home screen.</li>
+    </ul>
+    <p><b>Unlock</b> brings everything back exactly as it was. Apps the TV doesn't have are skipped. If a TV doesn't allow pausing, the script disables the app instead and says so.</p>
+  </section>
+
+  <section id="ways">
+    <h2>Three ways to control it</h2>
+    <table>
+      <tr><th>From</th><th>How</th><th>Needs</th></tr>
+      <tr><td><b>Phone</b></td><td><code>home_lock.sh</code> in Termux, with one-tap home-screen buttons</td><td>Phone on the home Wi-Fi</td></tr>
+      <tr><td><b>Phone browser</b></td><td>Lock / Unlock on the <a href="focusguard.html#phone">FocusGuard</a> home page</td><td>The children's PC on, with FocusGuard</td></tr>
+      <tr><td><b>Windows PC</b></td><td><code>tv_lock.bat lock</code> or <code>unlock</code></td><td>adb (platform-tools) on that PC</td></tr>
+    </table>
+    <p>If you use FocusGuard too, <code>home_lock.sh</code> goes <i>through</i> the PC when it is on, so the phones and the PC share one lock state. When the PC is off, the phone locks the TV directly. Without FocusGuard, it simply talks to the TV directly every time (TV-only mode).</p>
+  </section>
+  </div>
+
+  <section id="prepare">
+    <h2>1 · Prepare the TV (once)</h2>
+    <ol class="steps">
+      <li>On the TV: <b>Settings › Device Preferences › About</b>, then click <b>Build</b> seven times until it says you are a developer. (On some TVs it is Settings › System › About.)</li>
+      <li>Go back to <b>Device Preferences › Developer options</b> and turn on <b>USB debugging</b>. On some models there is also <b>Network debugging</b> or <b>ADB over network</b>: turn that on too.</li>
+      <li>Note the TV's IP address: Settings › Network & Internet › your Wi-Fi.</li>
+      <li>The first time the phone (or PC) connects, the TV shows <b>Allow USB debugging?</b>. Tick <b>Always allow from this computer</b> and press OK with the remote. Each phone or PC is asked once.</li>
+    </ol>
+    <div class="note">Debugging lets any device on your Wi-Fi that you approve control the TV. Approve only your own phones and PC, keep your Wi-Fi password private, and never forward port 5555 on the router.</div>
+  </section>
+
+  <section id="ip">
+    <h2>2 · Fix the IP addresses on the router</h2>
+    <p>The phone finds the TV (and the children's PC) by IP address, so those must not change after a restart. Instead of setting a static IP on each device, reserve it on the router; nothing changes on the TV or PC.</p>
+    <ol class="steps">
+      <li>Open the router page in a browser, usually <code>192.168.1.1</code> or <code>192.168.0.1</code>. The login is often on a sticker under the router.</li>
+      <li>Find <b>DHCP › Address Reservation</b> (also called Static Lease, DHCP Binding or IP & MAC Binding).</li>
+      <li>Add the TV's MAC address with its current IP, and the same for the children's PC (on the PC, <code>ipconfig /all</code> shows the Physical Address). Save, and reboot the router if it asks.</li>
+    </ol>
+  </section>
+
+  <section id="termux">
+    <h2>3 · Phone setup with Termux (Android)</h2>
+    <p><b>Termux</b> is a free Linux terminal app for Android. It runs <code>adb</code>, the same tool a PC uses to talk to the TV, so your phone can lock the TV directly, even with the PC switched off. <b>Termux:Widget</b> turns the commands into one-tap buttons on the home screen, so day to day you never type anything. Do this on each parent's phone.</p>
+    <ol class="steps">
+      <li><b>Install Termux and Termux:Widget from F-Droid</b> (f-droid.org), or both from GitHub releases. Don't mix sources, and don't use the Play Store Termux: it is outdated and will not work with the widget.</li>
+      <li><b>Download <code>home_lock.sh</code></b> on the phone (the button at the top of this page). It lands in Downloads.</li>
+      <li><b>Open the script</b> in any text editor app, or in Termux with <code>nano</code> after step 4, and change the two lines under <i>CHANGE THESE TWO LINES</i>: <code>TV="&lt;TV-IP&gt;:5555"</code>, and <code>PC="&lt;PC-IP&gt;:8765"</code> if you use FocusGuard.</li>
+      <li><b>Open Termux</b> and run these one at a time. Tap <b>Allow</b> when Android asks for storage access:
+<pre><code>pkg update
+pkg install android-tools curl
+termux-setup-storage
+cp ~/storage/downloads/home_lock.sh ~/
+bash ~/home_lock.sh setup</code></pre>
+        If <code>cp</code> says the file is missing, run <code>ls ~/storage/downloads | grep -i lock</code>. The phone may have renamed it (for example <code>home_lock.sh.txt</code>); use that name in the <code>cp</code> line.</li>
+      <li><b>Setup asks for the FocusGuard parent PIN.</b> With FocusGuard, type it (it is saved in a file only Termux can read). <b>Without FocusGuard, just press Enter</b>: you get TV-only mode.</li>
+      <li><b>Pair with the TV:</b> run <code>bash ~/home_lock.sh status</code>. When it says <i>Look at the TV</i>, tick <b>Always allow</b> on the TV and press OK. It waits up to 60 seconds.</li>
+      <li><b>Add the buttons:</b> long-press an empty spot on the home screen › Widgets › <b>Termux:Widget</b>. If it asks for permission, open Termux:Widget once from the app list, and allow "Display over other apps" for Termux if Android asks.</li>
+    </ol>
+    <table>
+      <tr><th>Button</th><th>What it does</th></tr>
+      <tr><td><b>1_TV_Lock / 2_TV_Unlock</b></td><td>Lock or unlock the TV (through the PC if it is on, otherwise directly). Takes about 30–60 seconds; the TV must be on.</td></tr>
+      <tr><td><b>3_PC_Study_30 / 4_PC_Study_60</b></td><td>Give each child 30 or 60 minutes of study time on the PC (FocusGuard only)</td></tr>
+      <tr><td><b>5_PC_Stop</b></td><td>End the study time now (FocusGuard only)</td></tr>
+      <tr><td><b>6_Status</b></td><td>TV locked or not, and each child: signed in, study time left</td></tr>
+    </table>
+    <div class="note info">The window closes 5 seconds after a button finishes; tap Status if you missed the result. If you unlock from the phone while the PC was off and FocusGuard had last locked the TV, the PC locks it again when it starts. Tap Unlock once more after the PC is on.</div>
+  </section>
+
+  <div class="cols">
+  <section id="cmds">
+    <h2>Typed commands</h2>
+<pre><code>bash ~/home_lock.sh status
+bash ~/home_lock.sh tv lock | tv unlock | tv status
+bash ~/home_lock.sh pc give 45          # 45 min for every child
+bash ~/home_lock.sh pc give 45 kid1     # one child only
+bash ~/home_lock.sh pc stop  |  pc status
+bash ~/home_lock.sh setup               # change the PIN, remake buttons</code></pre>
+    <h3>From a Windows PC</h3>
+    <p>Put <code>tv_lock.bat</code> in <code>C:\platform-tools</code> next to adb.exe, set <code>TV=</code> at the top, and run <code>tv_lock.bat lock</code> or <code>tv_lock.bat unlock</code>.</p>
+  </section>
+
+  <section id="away">
+    <h2>Away from home</h2>
+    <p>Termux reaches the TV on its home-Wi-Fi address, so the buttons work only at home. To use them from outside, install <b>Tailscale</b> (a free private VPN) on the TV and the phones with the same account, while the TV is unlocked. Then put the TV's Tailscale address (<code>100.x.y.z</code>) in the <code>TV=</code> line. Test once from mobile data; some TVs stop background apps in standby.</p>
+    <div class="note"><b>Never</b> open port 5555 (or FocusGuard's 8765) on your router to the internet. Anyone could then control the TV.</div>
+  </section>
+  </div>
+
+  <div class="cols">
+  <section id="other">
+    <h2>Other TV brands</h2>
+    <p>The app list is for a Xiaomi Mi TV in India, but the method works on most Android TV and Google TV sets (Sony, TCL, OnePlus, Realme, Hisense with Google TV and others). To adjust the lists for your TV, connect from a PC and list its apps:</p>
+<pre><code>adb connect &lt;TV-IP&gt;:5555
+adb shell pm list packages | findstr /i "video youtube netflix prime hotstar cast"</code></pre>
+    <p>Add or remove names in the <code>APPS</code> list (video apps) and <code>SERVICES</code> list (casting) near the top of the script. Fire TV sticks also accept adb, but their app names differ. Samsung (Tizen) and LG (webOS) TVs are not Android, so this script does not work on them.</p>
+  </section>
+
+  <section id="clean">
+    <h2>Optional: clean up a Mi TV</h2>
+    <p><code>tv_clean.bat</code> switches off Xiaomi's clutter and tracking apps (Mi TV+, Mi channels, analytics, auto-install, Mi Music, Gallery, recommendations) over Wi-Fi from a PC. Run <code>tv_clean.bat</code>, then reboot the TV. <code>tv_clean.bat restore</code> turns everything back on.</p>
+    <p><b>Leave these alone:</b> <code>com.mi.bluetooth</code> (the remote stops working), <code>mitv.service</code>, <code>droidlogic</code> packages, <code>tv.settings</code>, <code>systemui</code>, and <code>katniss</code> (voice search). A factory reset or big firmware update may bring the clutter back; run it again then.</p>
+  </section>
+  </div>
+
+  <section id="limits">
+    <h2>Limits</h2>
+    <ul>
+      <li>It cannot block a <b>set-top box, game console or anything on HDMI</b>. Only apps on the TV itself.</li>
+      <li>The TV must be on (or in network standby) when you press Lock. Once locked, it stays locked when switched off.</li>
+      <li>A factory reset of the TV removes the lock and the pairing.</li>
+      <li>If your TV falls back to <i>disabled</i> instead of <i>paused</i>, someone who knows where to look could re-enable the apps in Settings › Apps. Status shows which method was used.</li>
+      <li>Tested on a Xiaomi Mi TV with Android TV 11. Test Lock and Unlock once on your own TV before relying on it.</li>
+    </ul>
+  </section>
+
+  <footer>Scripts are MIT licensed: free to use, change and share, with no warranty. © K Vijay Anand · <a href="./">More utilities</a> · <a href="focusguard.html">FocusGuard</a></footer>
+</main>
+<script src="util.js"></script>
+</body>
+</html>

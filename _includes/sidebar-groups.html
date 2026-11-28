@@ -1,0 +1,96 @@
+{%- comment -%}
+TOOL:    _includes/sidebar-groups.html — expandable categories in the Chirpy left sidebar
+FAMILY:  SITE
+VERSION: 1.0.0
+DATE:    2026-11-28
+CHAT:    Publish FocusGuard and TV lock under a Utilities section on GitHub
+CHANGES: 1.0.0 - first release: each main category in the sidebar (the five group tabs) opens and closes a list of its
+                 sections when clicked, with an "Overview" link to the group page first; Engineering Courses shows its
+                 CAD / Engineering science / Operations sub-headings; the group holding the current page opens by
+                 itself; open groups are remembered; the list is drawn from _data/sections.json, so a new section
+                 appears in the sidebar as soon as it is added there
+STATUS:  working
+Loaded from _includes/metadata-hook.html. It only adds to the theme's own sidebar markup (no theme file is copied), so
+Chirpy updates keep working; if the theme ever changes its links, the sidebar simply stays as before.
+{%- endcomment -%}
+<script>
+window.SIDEBAR_GROUPS = [
+{%- for g in site.data.sections.groups -%}
+  {"url": {{ g.url | relative_url | jsonify }}, "title": {{ g.title | jsonify }}, "subs": [
+  {%- if g.subgroups -%}
+    {%- for s in g.subgroups -%}
+    {"title": {{ s.title | jsonify }}, "items": [{%- for i in s.items -%}[{{ i.name | jsonify }}, {{ i.url | relative_url | jsonify }}]{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}]}{%- unless forloop.last -%},{%- endunless -%}
+    {%- endfor -%}
+  {%- else -%}
+    {"title": "", "items": [{%- for i in g.items -%}[{{ i.name | jsonify }}, {{ i.url | relative_url | jsonify }}]{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}]}
+  {%- endif -%}
+  ]}{%- unless forloop.last -%},{%- endunless -%}
+{%- endfor -%}
+];
+</script>
+<style>
+#sidebar nav > ul.nav{height:auto!important;flex-wrap:nowrap}
+#sidebar{overflow-y:auto}
+#sidebar li.vg-has{position:relative}
+#sidebar li.vg-has > a.nav-link{padding-right:2.2rem}
+#sidebar .vg-chev{position:absolute;right:1rem;top:50%;margin-top:-.4rem;font-size:.75rem;line-height:.8rem;opacity:.7;transition:transform .18s}
+#sidebar a.vg-open .vg-chev{transform:rotate(180deg)}
+#sidebar li.vg-sub{list-style:none;width:100%;padding:0 0 .4rem 3.6rem;display:none}
+#sidebar li.vg-sub.vg-show{display:block}
+#sidebar li.vg-sub a{display:block;padding:.28rem .6rem;margin:1px 1rem 1px 0;border-radius:6px;font-size:.88rem;line-height:1.35;
+  color:var(--sidebar-muted-color,#6c757d)!important;text-decoration:none!important;border-left:2px solid transparent}
+#sidebar li.vg-sub a:hover{background:var(--sidebar-hover-bg,rgba(0,0,0,.06));color:var(--sidebar-active-color,#1d1d1d)!important}
+#sidebar li.vg-sub a.vg-here{border-left-color:currentColor;font-weight:600;color:var(--sidebar-active-color,#1d1d1d)!important}
+#sidebar li.vg-sub a.vg-ov{font-style:italic}
+#sidebar li.vg-sub .vg-h{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.55;margin:.5rem 0 .1rem .6rem}
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var nav = document.querySelector("#sidebar nav ul.nav");
+  if (!nav || !window.SIDEBAR_GROUPS) return;
+  var KEY = "sidebar-open", open = {};
+  try { open = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) {}
+  var here = location.pathname.replace(/index\.html$/, "");
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(open)); } catch (e) {} }
+  function link(text, url, cls) {
+    var a = document.createElement("a");
+    a.href = url; a.textContent = text; if (cls) a.className = cls;
+    var u = url.replace(/index\.html$/, "");
+    if (here === u || (u.length > 1 && here.indexOf(u) === 0 && cls !== "vg-ov")) a.classList.add("vg-here");
+    return a;
+  }
+  SIDEBAR_GROUPS.forEach(function (g, n) {
+    var a = nav.querySelector('a.nav-link[href="' + g.url + '"]') ||
+            nav.querySelector('a.nav-link[href="' + g.url.replace(/\/$/, "") + '"]');
+    if (!a) return;
+    var li = a.closest("li"), sub = document.createElement("li"), inside = false;
+    sub.className = "vg-sub"; sub.id = "vg-sub-" + n;
+    sub.appendChild(link("Overview", g.url, "vg-ov"));
+    g.subs.forEach(function (s) {
+      if (s.title) { var h = document.createElement("div"); h.className = "vg-h"; h.textContent = s.title; sub.appendChild(h); }
+      s.items.forEach(function (it) {
+        var l = link(it[0], it[1]);
+        if (l.classList.contains("vg-here")) inside = true;
+        sub.appendChild(l);
+      });
+    });
+    if (here === g.url) inside = true;
+    li.parentNode.insertBefore(sub, li.nextSibling);
+    var chev = document.createElement("i");
+    chev.className = "fas fa-chevron-down vg-chev"; chev.setAttribute("aria-hidden", "true");
+    li.classList.add("vg-has");
+    a.appendChild(chev);
+    a.setAttribute("aria-controls", sub.id);
+    function show(on) {
+      sub.classList.toggle("vg-show", on); a.classList.toggle("vg-open", on);
+      a.setAttribute("aria-expanded", on ? "true" : "false");
+    }
+    show(inside || !!open[g.url]);
+    a.addEventListener("click", function (e) {
+      e.preventDefault();
+      var on = !sub.classList.contains("vg-show");
+      show(on); open[g.url] = on; if (!on) delete open[g.url]; save();
+    });
+  });
+});
+</script>

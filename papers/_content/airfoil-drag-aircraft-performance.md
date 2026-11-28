@@ -1,0 +1,1343 @@
+<style>
+.tcap{font-family:Inter,system-ui,sans-serif;font-size:13.5px;color:var(--ink-soft);margin:22px auto 6px}
+.eqn{text-align:center;font-size:1.05em;margin:14px 0;overflow-x:auto}
+math{font-size:1.02em}
+</style>
+
+## Abstract
+
+<p>The drag characteristics of the two-dimensional airfoil section—its minimum profile drag, the width and position of its low-drag range, its behaviour with Reynolds number, transition, Mach number and surface condition—propagate into every first-order measure of aircraft performance: range, endurance, climb, ceiling, manoeuvre, hover capability and payload. This paper traces that propagation for the main classes of fixed-wing aircraft and rotorcraft: subsonic transports, turboprops, sailplanes and long-endurance unmanned aircraft, small low-Reynolds-number drones, combat aircraft, helicopters, tiltrotors, compounds and multicopters. A common framework is built from a simple but calibrated section-drag model (mixed laminar–turbulent skin friction with a thickness form factor), the parabolic drag polar, the Breguet range and endurance relations, the Korn drag-divergence relation, linear supersonic theory and blade-element momentum theory for rotors and propellers. Ten worked examples (A–J), with supporting turboprop and propeller cases, quantify the sensitivities. For a generic narrow-body transport, a 10 % reduction in wing profile drag reduces cruise fuel by 2.3 % on a 2 500 km sector, and a hybrid-laminar wing that cuts section drag by about 29 % saves 5.3 %. For a utility helicopter in hot-and-high hover, a 10 % lower blade drag polar adds about 47 kg of hover-capable mass, while a 25 % degradation from leading-edge erosion removes about 127 kg. For a small quadcopter, raising the rotor profile drag coefficient from 0.015 to 0.035 lowers figure of merit from 0.69 to 0.59 and endurance by 15 %. The results show that the <i>same</i> section drag change has very different consequences depending on whether the vehicle is range-, endurance-, power- or Mach-limited, and that for rotorcraft and supersonic aircraft it is often the drag <i>rise</i> (with lift coefficient or Mach number), rather than the minimum drag, that sets the performance boundary. The paper closes with a synthesis table, design guidance and a note on the prediction tools—XFOIL-type viscous–inviscid codes, RANS and wind-tunnel data—needed to quantify these effects.</p>
+
+<p><b>Index Terms</b>&mdash;airfoil, profile drag, drag polar, laminar flow, transonic drag divergence, wave drag, Breguet range, endurance, helicopter performance, figure of merit, propeller efficiency, low Reynolds number, UAV.</p>
+
+## Nomenclature
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Symbol</th>
+<th style="text-align: left;">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math></td>
+<td style="text-align: left;">Aspect ratio (wing); disk area <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><msup><mi>R</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\pi R^2</annotation></semantics></math> (rotor)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math></td>
+<td style="text-align: left;">Speed of sound</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math></td>
+<td style="text-align: left;">Chord; thrust-specific fuel consumption (jet)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>p</mi></msub><annotation encoding="application/x-tex">c_p</annotation></semantics></math></td>
+<td style="text-align: left;">Power-specific fuel consumption</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>d</mi></msub><annotation encoding="application/x-tex">c_d</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math></td>
+<td style="text-align: left;">Section drag and lift coefficients</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>D</mi></msub><annotation encoding="application/x-tex">C_D</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>L</mi></msub><annotation encoding="application/x-tex">C_L</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">C_{D0}</annotation></semantics></math></td>
+<td style="text-align: left;">Aircraft drag, lift and zero-lift drag coefficients</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>f</mi></msub><annotation encoding="application/x-tex">C_f</annotation></semantics></math></td>
+<td style="text-align: left;">Mean skin-friction coefficient</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>T</mi></msub><annotation encoding="application/x-tex">C_T</annotation></semantics></math></td>
+<td style="text-align: left;">Rotor thrust coefficient <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>ρ</mi><mi>A</mi><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>Ω</mi><mi>R</mi><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">T/(\rho A(\Omega R)^2)</annotation></semantics></math></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math></td>
+<td style="text-align: left;">Oswald span-efficiency factor</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math></td>
+<td style="text-align: left;">Equivalent flat-plate area</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mi>M</mi></mrow><annotation encoding="application/x-tex">FM</annotation></semantics></math></td>
+<td style="text-align: left;">Rotor figure of merit</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math></td>
+<td style="text-align: left;">Induced-drag factor <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>π</mi><mi>A</mi><mi>e</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">1/(\pi A e)</annotation></semantics></math></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi></mrow></msub><annotation encoding="application/x-tex">M_{cr}</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><annotation encoding="application/x-tex">M_{DD}</annotation></semantics></math></td>
+<td style="text-align: left;">Mach number; critical and drag-divergence Mach numbers</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math></td>
+<td style="text-align: left;">Dynamic pressure <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><mi>ρ</mi><msup><mi>V</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\tfrac12\rho V^2</annotation></semantics></math></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math></td>
+<td style="text-align: left;">Range; rotor radius</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi></mrow><annotation encoding="application/x-tex">Re</annotation></semantics></math></td>
+<td style="text-align: left;">Reynolds number based on chord</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math></td>
+<td style="text-align: left;">Wing reference area</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mi>/</mi><mi>c</mi></mrow><annotation encoding="application/x-tex">t/c</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math></td>
+<td style="text-align: left;">Thickness-to-chord ratio</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math></td>
+<td style="text-align: left;">Thrust, weight, flight speed</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mrow><mi>t</mi><mi>r</mi></mrow></msub><annotation encoding="application/x-tex">x_{tr}</annotation></semantics></math></td>
+<td style="text-align: left;">Transition location</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math></td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msqrt><mrow><msup><mi>M</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow></msqrt><annotation encoding="application/x-tex">\sqrt{M^2-1}</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>η</mi><mi>p</mi></msub><annotation encoding="application/x-tex">\eta_p</annotation></semantics></math></td>
+<td style="text-align: left;">Propulsive efficiency</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>κ</mi><annotation encoding="application/x-tex">\kappa</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>κ</mi><mi>A</mi></msub><annotation encoding="application/x-tex">\kappa_A</annotation></semantics></math></td>
+<td style="text-align: left;">Induced-power factor (rotor); Korn technology factor</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Λ</mi><annotation encoding="application/x-tex">\Lambda</annotation></semantics></math></td>
+<td style="text-align: left;">Sweep angle</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math></td>
+<td style="text-align: left;">Rotor advance ratio <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mi>/</mi><mi>Ω</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">V/\Omega R</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math></td>
+<td style="text-align: left;">Air density</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></td>
+<td style="text-align: left;">Rotor solidity</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math></td>
+<td style="text-align: left;">Blade-element inflow angle</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Ω</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">\Omega R</annotation></semantics></math></td>
+<td style="text-align: left;">Rotor tip speed</td>
+</tr>
+</tbody>
+</table>
+
+## 1. Introduction
+
+<p>Every aircraft converts stored energy into distance, time aloft or useful work against gravity, and drag is the principal tax on that conversion. Within the total drag of an aircraft, the contribution of the lifting surfaces’ <i>sections</i>—the airfoils—occupies a special place. It is the part of the drag that the designer selects early, often from a catalogue or a code such as XFOIL [1], and it then constrains wing or blade thickness, structural weight, maximum lift, buffet margin, propulsive efficiency and operating Mach number for the life of the design.</p>
+
+<p>The influence of airfoil drag is far from uniform across aircraft types. On a jet transport the wing section is chosen chiefly for its <i>drag-divergence Mach number</i> at a given thickness and lift coefficient, and its subsonic profile drag accounts for perhaps a third of zero-lift drag [2], [3]. On a sailplane the profile drag of a laminar airfoil is the dominant single term in the glide polar, and losing laminar flow to insect debris can cost more glide performance than any other operational factor [4]. On a helicopter, profile power is only 10–30 % of the total in hover but it is the term that grows fastest at high forward speed, and the airfoil’s drag rise with Mach number on the advancing blade and with lift coefficient on the retreating blade defines the flight envelope [5], [6], [7]. On small drones the airfoil operates at Reynolds numbers where laminar separation bubbles can double the section drag [8], [9], [10].</p>
+
+<p>This paper asks a simple question: <i>how does a change in airfoil drag characteristics change the performance of the whole vehicle, and why does the answer differ between aircraft types?</i> It does so by:</p>
+
+<ol type="1">
+<li>reviewing the physics of section drag and the parameters that control it (Section&nbsp;2);</li>
+<li>setting out the performance relations that connect section drag to vehicle metrics, and deriving their sensitivities (Section&nbsp;3);</li>
+<li>examining, with worked numerical examples, subsonic jet transports (Section&nbsp;4), turboprops, light aircraft and propellers (Section&nbsp;5), sailplanes and long-endurance aircraft (Section&nbsp;6), small low-Reynolds-number aircraft (Section&nbsp;7), combat aircraft (Section&nbsp;8), helicopters (Section&nbsp;9), and tiltrotors, compounds and multicopters (Section&nbsp;10);</li>
+<li>considering second-order couplings through pitching moment and propulsion integration (Section&nbsp;11) and illustrative case studies (Section&nbsp;12);</li>
+<li>discussing in-service degradation (Section&nbsp;13), prediction methods (Section&nbsp;14) and multi-point airfoil selection (Section&nbsp;15); and</li>
+<li>drawing the results together in a synthesis and design guidance (Section&nbsp;16) and conclusions (Section&nbsp;17), with the example parameters and analytical sensitivities in two appendices.</li>
+</ol>
+
+<p>All numerical examples use generic, representative parameters drawn from open textbook data; they are not models of any specific aircraft. They are intended to show <i>orders of magnitude and trends</i>, and are computed with a single open script so that each number can be reproduced and varied.</p>
+
+### 1.1 Historical perspective
+
+<p>The link between airfoil drag and aircraft performance has driven airfoil development since the earliest days of flight. The thin, highly cambered sections of the first aeroplanes were chosen for lift, not drag; their poor <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>l</mi></msub><mi>/</mi><msub><mi>c</mi><mi>d</mi></msub></mrow><annotation encoding="application/x-tex">c_l/c_d</annotation></semantics></math> and abrupt stall contributed to the low speeds and short ranges of the period. The Göttingen and NACA wind-tunnel programmes of the 1920s and 1930s showed that thicker, rounded-nose sections had <i>lower</i> drag as well as higher maximum lift, and allowed cantilever monoplane wings whose lower parasite drag transformed cruise speed and range. The NACA four- and five-digit families systematised this knowledge [11].</p>
+
+<p>The next step was deliberate control of transition. The NACA 6-series sections of the late 1930s and 1940s were shaped to hold a favourable pressure gradient over a large part of the chord, producing the low-drag bucket described in Section&nbsp;2. In practice the laminar extent achieved on production aircraft of that era was limited by surface quality, and the main lasting benefit was often the sections’ higher critical Mach number—an early example of a drag characteristic other than minimum drag proving decisive [11], [12].</p>
+
+<p>The jet age moved the emphasis to compressibility. Sweep raised drag-divergence Mach numbers but at a cost in structural weight and low-speed handling. Whitcomb’s supercritical airfoil of the mid-1960s [13], [14] showed that careful shaping of the upper-surface supersonic region could raise <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><annotation encoding="application/x-tex">M_{DD}</annotation></semantics></math> at a given thickness, or allow a thicker section at a given <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><annotation encoding="application/x-tex">M_{DD}</annotation></semantics></math>; it is now the basis of every transport wing. In parallel, sailplane designers such as Wortmann and Eppler, using early computer methods, pushed natural laminar flow to its practical limits at moderate Reynolds number [15], [4], and NASA’s NLF programme of the 1980s brought such sections to general aviation [16].</p>
+
+<p>Rotorcraft followed a somewhat separate path. For decades helicopter blades used symmetric NACA 0012-type sections because of their small pitching moment. From the 1970s, dedicated rotorcraft airfoil families were developed to combine high <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mo>max</mo></mrow></msub><annotation encoding="application/x-tex">c_{l,\max}</annotation></semantics></math> at low Mach number (for the retreating blade) with high drag-divergence Mach number at low lift (for the advancing blade) while keeping pitching moments small [17], [5]. Over the same period, the rise of small unmanned aircraft revived interest in the low-Reynolds-number regime that had been studied for model aircraft, and dedicated low-Reynolds-number airfoil data sets were produced [9], [10].</p>
+
+<p>Loftin’s survey of aircraft performance evolution [12] shows the outcome of this history: maximum lift-to-drag ratios rose from below 10 for the biplanes of the First World War to around 15–20 for modern transports and above 40 for modern sailplanes. Airfoil drag reduction was one strand in that progress, together with higher aspect ratio, cleaner configurations and better propulsion. The present paper looks at the same history from the opposite direction: given a change in the airfoil, how much does the vehicle gain?</p>
+
+## 2. Airfoil Drag: Components and Controlling Parameters
+
+### 2.1 Decomposition of section drag
+
+<p>The drag of a two-dimensional airfoil section per unit span is expressed as a coefficient <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>d</mi></msub><mo>=</mo><mi>D</mi><mi>′</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>q</mi><mi>∞</mi></msub><mi>c</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">c_d = D&#39;/(q_\infty c)</annotation></semantics></math>, where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>q</mi><mi>∞</mi></msub><annotation encoding="application/x-tex">q_\infty</annotation></semantics></math> is the dynamic pressure and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math> the chord. It is conventionally divided into three parts:</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>d</mi></msub><mo>=</mo><msub><mi>c</mi><mrow><mi>d</mi><mo>,</mo><mi>f</mi></mrow></msub><mo>+</mo><msub><mi>c</mi><mrow><mi>d</mi><mo>,</mo><mi>p</mi></mrow></msub><mo>+</mo><msub><mi>c</mi><mrow><mi>d</mi><mo>,</mo><mi>w</mi></mrow></msub><mspace width="2.0em"></mspace><mtext mathvariant="normal">(1)</mtext></mrow><annotation encoding="application/x-tex">c_d = c_{d,f} + c_{d,p} + c_{d,w} \qquad\text{(1)}</annotation></semantics></math></p>
+
+<p>The <i>skin-friction drag</i> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>d</mi><mo>,</mo><mi>f</mi></mrow></msub><annotation encoding="application/x-tex">c_{d,f}</annotation></semantics></math> is the integrated wall shear stress. The <i>pressure</i> or <i>form drag</i> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>d</mi><mo>,</mo><mi>p</mi></mrow></msub><annotation encoding="application/x-tex">c_{d,p}</annotation></semantics></math> arises because the boundary layer displaces the outer flow and, near the trailing edge, prevents full pressure recovery; it rises sharply once the flow separates. Together these make up the <i>profile drag</i>. The <i>wave drag</i> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>d</mi><mo>,</mo><mi>w</mi></mrow></msub><annotation encoding="application/x-tex">c_{d,w}</annotation></semantics></math> appears only when the local flow becomes supersonic and shock waves form—above the critical Mach number in transonic flow, and everywhere in supersonic flight [18], [19].</p>
+
+<p>In the language of performance, a “drag count” is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><msub><mi>c</mi><mi>d</mi></msub><mo>=</mo><mn>0.0001</mn></mrow><annotation encoding="application/x-tex">\Delta c_d = 0.0001</annotation></semantics></math>. A modern turbulent transport wing section at cruise has a profile drag of roughly 55–70 counts; a good laminar sailplane section 45–60 counts; a helicopter blade section 80–130 counts averaged over the operating range; and a small-drone airfoil at a Reynolds number of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mn>5</mn></msup><annotation encoding="application/x-tex">10^5</annotation></semantics></math> commonly 120–250 counts [5], [11], [9].</p>
+
+### 2.2 Reynolds number and transition
+
+<p>Skin friction depends first on Reynolds number <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi><mo>=</mo><mi>ρ</mi><mi>V</mi><mi>c</mi><mi>/</mi><mi>μ</mi></mrow><annotation encoding="application/x-tex">Re = \rho V c/\mu</annotation></semantics></math> and on whether the boundary layer is laminar or turbulent. A laminar layer has a skin-friction coefficient several times lower than a turbulent one at the same Reynolds number. A widely used engineering estimate of the mean skin friction of a surface with transition at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mrow><mi>t</mi><mi>r</mi></mrow></msub><mi>/</mi><mi>c</mi></mrow><annotation encoding="application/x-tex">x_{tr}/c</annotation></semantics></math> combines the Blasius laminar and Prandtl–Schlichting turbulent results [19]:</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>C</mi><mo accent="true">‾</mo></mover><mi>f</mi></msub><mo>=</mo><msub><mi>C</mi><mrow><mi>f</mi><mo>,</mo><mi>t</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>R</mi><mi>e</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mfrac><msub><mi>x</mi><mrow><mi>t</mi><mi>r</mi></mrow></msub><mi>c</mi></mfrac><mrow><mo stretchy="true" form="prefix">[</mo><msub><mi>C</mi><mrow><mi>f</mi><mo>,</mo><mi>t</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>R</mi><msub><mi>e</mi><mrow><mi>t</mi><mi>r</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><msub><mi>C</mi><mrow><mi>f</mi><mo>,</mo><mi>l</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>R</mi><msub><mi>e</mi><mrow><mi>t</mi><mi>r</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">]</mo></mrow><mspace width="2.0em"></mspace><mtext mathvariant="normal">(2)</mtext></mrow><annotation encoding="application/x-tex">\bar C_f = C_{f,t}(Re) - \frac{x_{tr}}{c}\left[C_{f,t}(Re_{tr}) - C_{f,l}(Re_{tr})\right] \qquad\text{(2)}</annotation></semantics></math></p>
+
+<p>with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>f</mi><mo>,</mo><mi>l</mi></mrow></msub><mo>=</mo><mn>1.328</mn><mi>/</mi><msqrt><mrow><mi>R</mi><mi>e</mi></mrow></msqrt></mrow><annotation encoding="application/x-tex">C_{f,l}=1.328/\sqrt{Re}</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>f</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>=</mo><mn>0.455</mn><mi>/</mi><msup><mrow><mo stretchy="true" form="prefix">(</mo><msub><mo>log</mo><mn>10</mn></msub><mi>R</mi><mi>e</mi><mo stretchy="true" form="postfix">)</mo></mrow><mn>2.58</mn></msup></mrow><annotation encoding="application/x-tex">C_{f,t}=0.455/(\log_{10}Re)^{2.58}</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><msub><mi>e</mi><mrow><mi>t</mi><mi>r</mi></mrow></msub><mo>=</mo><mi>R</mi><mi>e</mi><mspace width="0.167em"></mspace><msub><mi>x</mi><mrow><mi>t</mi><mi>r</mi></mrow></msub><mi>/</mi><mi>c</mi></mrow><annotation encoding="application/x-tex">Re_{tr}=Re\,x_{tr}/c</annotation></semantics></math>. Pressure drag of an attached-flow section is accounted for by a thickness form factor, giving a section profile drag of [20], [2]</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>d</mi></msub><mo>≈</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>C</mi><mo accent="true">‾</mo></mover><mrow><mi>f</mi><mo>,</mo><mtext mathvariant="normal">upper</mtext></mrow></msub><mo>+</mo><msub><mover><mi>C</mi><mo accent="true">‾</mo></mover><mrow><mi>f</mi><mo>,</mo><mtext mathvariant="normal">lower</mtext></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo stretchy="true" form="prefix">[</mo><mn>1</mn><mo>+</mo><mn>2</mn><mfrac><mi>t</mi><mi>c</mi></mfrac><mo>+</mo><mn>60</mn><msup><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mi>t</mi><mi>c</mi></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mn>4</mn></msup><mo stretchy="true" form="postfix">]</mo></mrow><mspace width="2.0em"></mspace><mtext mathvariant="normal">(3)</mtext></mrow><annotation encoding="application/x-tex">c_d \approx \left(\bar C_{f,\text{upper}}+\bar C_{f,\text{lower}}\right)\left[1+2\frac{t}{c}+60\left(\frac{t}{c}\right)^4\right] \qquad\text{(3)}</annotation></semantics></math></p>
+
+<p>Fig. 1 shows (3) for a 12 % thick section. Two effects dominate. First, at a fixed transition position, drag falls with Reynolds number—by about 45 % between <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi><mo>=</mo><msup><mn>10</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">Re=10^6</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><msup><mn>10</mn><mn>7</mn></msup></mrow><annotation encoding="application/x-tex">3\times10^7</annotation></semantics></math> for a fully turbulent section—so small aircraft and rotor blades pay a scale penalty. Second, moving transition from near the leading edge to 60 % chord reduces drag by 40–55 % at every Reynolds number. This is the prize of <i>natural laminar flow</i> (NLF) airfoils such as the NACA 6-series and the NLF(1)-0416 [11], [16], and of <i>laminar flow control</i> (LFC) [21].</p>
+
+<div class="figrow one"><figure id="fig-1"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f1_cd_transition.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f1_cd_transition.svg" alt="Section profile drag of a 12 % thick airfoil from (2)–(3) as a function of transition location, for Reynolds numbers typical of drones (10610^6), light aircraft" loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 1.</b> Section profile drag of a 12 % thick airfoil from (2)–(3) as a function of transition location, for Reynolds numbers typical of drones (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mn>6</mn></msup><annotation encoding="application/x-tex">10^6</annotation></semantics></math>), light aircraft and rotor blades (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><msup><mn>10</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">3\times10^6</annotation></semantics></math>), and transports (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mn>7</mn></msup><annotation encoding="application/x-tex">10^7</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><msup><mn>10</mn><mn>7</mn></msup></mrow><annotation encoding="application/x-tex">3\times10^7</annotation></semantics></math>).<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+<p>Table&nbsp;1 lists values from the model. The model is deliberately simple: it ignores the pressure-gradient effects that real airfoils exploit, but it reproduces the drag of well-designed attached-flow sections to within 10–15 % and, more importantly, captures the <i>relative</i> effect of Reynolds number and transition that the later examples rely on.</p>
+
+<div class="tcap"><b>Table 1.</b> Model section profile drag <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>d</mi></msub><annotation encoding="application/x-tex">c_d</annotation></semantics></math> (counts) of a 12 % thick section, equations (2)–(3).</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi></mrow><annotation encoding="application/x-tex">Re</annotation></semantics></math></th>
+<th style="text-align: right;">Turbulent (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mrow><mi>t</mi><mi>r</mi></mrow></msub><annotation encoding="application/x-tex">x_{tr}</annotation></semantics></math>=0.05)</th>
+<th style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mrow><mi>t</mi><mi>r</mi></mrow></msub><annotation encoding="application/x-tex">x_{tr}</annotation></semantics></math>=0.40</th>
+<th style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mrow><mi>t</mi><mi>r</mi></mrow></msub><annotation encoding="application/x-tex">x_{tr}</annotation></semantics></math>=0.60</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>×</mo><msup><mn>10</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">1\times10^6</annotation></semantics></math></td>
+<td style="text-align: right;">109</td>
+<td style="text-align: right;">80</td>
+<td style="text-align: right;">64</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><msup><mn>10</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">3\times10^6</annotation></semantics></math></td>
+<td style="text-align: right;">88</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">47</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>×</mo><msup><mn>10</mn><mn>7</mn></msup></mrow><annotation encoding="application/x-tex">1\times10^7</annotation></semantics></math></td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">34</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><msup><mn>10</mn><mn>7</mn></msup></mrow><annotation encoding="application/x-tex">3\times10^7</annotation></semantics></math></td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">27</td>
+</tr>
+</tbody>
+</table>
+
+<p>Whether transition actually occurs late depends on the pressure distribution (a favourable gradient stabilises the layer), on surface waviness, steps, gaps and roughness, on free-stream turbulence, on leading-edge sweep (which introduces crossflow and attachment-line instabilities) and on contamination by insects, rain or ice. In practice, transition is predicted with the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mi>N</mi></msup><annotation encoding="application/x-tex">e^N</annotation></semantics></math> method, in which the amplification of Tollmien–Schlichting waves is tracked until a critical factor—typically <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>9</mn></mrow><annotation encoding="application/x-tex">N=9</annotation></semantics></math> in flight and lower in a turbulent wind tunnel—is reached [1], [19].</p>
+
+### 2.3 Variation with lift coefficient: the drag bucket
+
+<p>The section drag polar <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>d</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>c</mi><mi>l</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">c_d(c_l)</annotation></semantics></math> is not flat. Laminar sections show a <i>drag bucket</i>: a range of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> over which favourable gradients on both surfaces hold transition aft and drag is low. Outside the bucket, transition jumps forward on one surface and drag rises abruptly. Conventional turbulent sections have a broader, shallower minimum. At high <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> all sections show a steep rise as trailing-edge separation develops ahead of stall. For performance, the location of the bucket relative to the vehicle’s operating <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math>—cruise, climb, loiter or, for a rotor, the azimuthally varying blade <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math>—matters as much as the minimum drag itself.</p>
+
+<p>Fig. 2 illustrates the three characteristic shapes. The laminar section has the lowest drag inside its bucket but the sharpest rise outside it; the turbulent section has higher minimum drag but a broader, more forgiving polar; and the low-Reynolds-number section has both higher minimum drag and a narrower useful range, because laminar separation bubbles add drag at the ends of its operating range. Which of these is “best” depends entirely on where the vehicle operates on the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> axis and how widely that operating point moves.</p>
+
+<div class="figrow one"><figure id="fig-2"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f0b_polars.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f0b_polars.svg" alt="Illustrative section drag polars (stylised from published trends) for a natural-laminar-flow section, a conventional turbulent section and a low-Reynolds-number" loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 2.</b> Illustrative section drag polars (stylised from published trends) for a natural-laminar-flow section, a conventional turbulent section and a low-Reynolds-number section.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+### 2.4 Compressibility and wave drag
+
+<p>As free-stream Mach number <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mi>∞</mi></msub><annotation encoding="application/x-tex">M_\infty</annotation></semantics></math> increases, the suction peak on the upper surface reaches sonic speed at the critical Mach number <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi></mrow></msub><annotation encoding="application/x-tex">M_{cr}</annotation></semantics></math>. A little above it, a shock forms, wave drag appears and the shock can trigger boundary-layer separation. The <i>drag-divergence Mach number</i> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><annotation encoding="application/x-tex">M_{DD}</annotation></semantics></math>, usually defined where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><msub><mi>c</mi><mi>d</mi></msub><mi>/</mi><mi>d</mi><mi>M</mi><mo>=</mo><mn>0.1</mn></mrow><annotation encoding="application/x-tex">dc_d/dM = 0.1</annotation></semantics></math>, marks the practical limit for efficient cruise. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><annotation encoding="application/x-tex">M_{DD}</annotation></semantics></math> falls with thickness and lift coefficient and rises with sweep and with <i>supercritical</i> section design, which shapes the upper surface to decelerate the supersonic pocket gently, with a weak or no shock [13], [14]. In supersonic flight wave drag is present at all lift coefficients and scales with the square of thickness ratio (Section&nbsp;8).</p>
+
+### 2.5 Profile drag from the wake: the Squire–Young relation
+
+<p>Profile drag can be obtained from the state of the boundary layer at the trailing edge. Far downstream, the drag per unit span equals the momentum deficit of the wake, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>d</mi></msub><mo>=</mo><mn>2</mn><msub><mi>θ</mi><mi>∞</mi></msub><mi>/</mi><mi>c</mi></mrow><annotation encoding="application/x-tex">c_d = 2\theta_\infty/c</annotation></semantics></math>, where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>∞</mi></msub><annotation encoding="application/x-tex">\theta_\infty</annotation></semantics></math> is the far-wake momentum thickness. Squire and Young related this to the trailing-edge values of momentum thickness <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mrow><mi>T</mi><mi>E</mi></mrow></msub><annotation encoding="application/x-tex">\theta_{TE}</annotation></semantics></math>, shape factor <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mrow><mi>T</mi><mi>E</mi></mrow></msub><annotation encoding="application/x-tex">H_{TE}</annotation></semantics></math> and edge velocity <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mrow><mi>e</mi><mo>,</mo><mi>T</mi><mi>E</mi></mrow></msub><annotation encoding="application/x-tex">U_{e,TE}</annotation></semantics></math> [19]:</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>d</mi></msub><mo>=</mo><mfrac><mrow><mn>2</mn><msub><mi>θ</mi><mrow><mi>T</mi><mi>E</mi></mrow></msub></mrow><mi>c</mi></mfrac><msup><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><msub><mi>U</mi><mrow><mi>e</mi><mo>,</mo><mi>T</mi><mi>E</mi></mrow></msub><msub><mi>U</mi><mi>∞</mi></msub></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>H</mi><mrow><mi>T</mi><mi>E</mi></mrow></msub><mo>+</mo><mn>5</mn><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><mn>2</mn></mrow></msup><mspace width="2.0em"></mspace><mtext mathvariant="normal">(4)</mtext></mrow><annotation encoding="application/x-tex">c_d = \frac{2\theta_{TE}}{c}\left(\frac{U_{e,TE}}{U_\infty}\right)^{(H_{TE}+5)/2} \qquad\text{(4)}</annotation></semantics></math></p>
+
+<p>The relation, or its equivalent, is used by viscous–inviscid codes such as XFOIL [1] to evaluate drag, and it makes the physical levers explicit. Drag rises with the momentum thickness accumulated along each surface—which is small for a laminar layer and large for a turbulent one—and with the shape factor at the trailing edge, which grows as the layer approaches separation. A section that keeps the layer laminar for longer, and brings it to the trailing edge with a moderate adverse gradient so that <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mrow><mi>T</mi><mi>E</mi></mrow></msub><annotation encoding="application/x-tex">H_{TE}</annotation></semantics></math> stays low, has low drag. A section with a steep pressure recovery, or one operating near stall, pays through both <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mrow><mi>T</mi><mi>E</mi></mrow></msub><annotation encoding="application/x-tex">\theta_{TE}</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mrow><mi>T</mi><mi>E</mi></mrow></msub><annotation encoding="application/x-tex">H_{TE}</annotation></semantics></math>.</p>
+
+### 2.6 Transition on swept wings and rotating blades
+
+<p>On an unswept wing in a quiet free stream, transition is governed mainly by Tollmien–Schlichting waves, which a favourable pressure gradient suppresses. Sweep introduces two further mechanisms [21]. <i>Crossflow instability</i> arises because the curved streamlines in a swept boundary layer create a velocity component normal to the inviscid streamline; it is <i>amplified</i> by the strong favourable gradient near the leading edge that stabilises Tollmien–Schlichting waves, so the two must be balanced. <i>Attachment-line contamination</i> occurs when turbulence from the fuselage junction travels along the leading-edge attachment line; above a critical attachment-line Reynolds number it cannot be stopped without devices such as a leading-edge bump or suction. Together these mechanisms make laminar flow increasingly difficult as sweep and Reynolds number increase, which is why natural laminar flow is common on sailplanes and business jets but has not yet entered service on large transport wings.</p>
+
+<p>Rotor blades add rotation and unsteadiness. Each blade section passes through the wake of the preceding blade and sees periodic changes in incidence and Mach number, so transition moves back and forth around the azimuth. In practice, outboard rotor sections are often treated as largely turbulent for performance prediction, although measurable laminar runs exist on smooth composite blades in hover.</p>
+
+### 2.7 From section drag to wing and blade drag
+
+<p>A finite wing adds induced drag, the cost of producing lift with a finite span, and interference and junction drag. The section characteristics enter the three-dimensional drag in two ways: through the <i>zero-lift</i> or <i>parasite</i> contribution of the wing, approximately <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>d</mi></msub><annotation encoding="application/x-tex">c_d</annotation></semantics></math> times the exposed-to-reference area ratio, and through the <i>lift-dependent</i> part of profile drag, which the parabolic polar absorbs into the Oswald factor <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>. For a rotor, the section polar is integrated over radius and azimuth, with each element operating at its own Reynolds number, Mach number and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> (Section&nbsp;9). Table&nbsp;2 summarises which drag mechanism dominates for each vehicle class and therefore which airfoil characteristic matters most. Fig. 3 places the same classes on a Reynolds–Mach map; the spread covers four decades of Reynolds number and two of Mach number, which is why no single airfoil family, and no single drag figure, serves all of them.</p>
+
+<div class="figrow one"><figure id="fig-3"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f0_re_mach_map.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f0_re_mach_map.svg" alt="Approximate operating ranges of chord Reynolds number and Mach number for the vehicle classes considered." loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 3.</b> Approximate operating ranges of chord Reynolds number and Mach number for the vehicle classes considered.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+<div class="tcap"><b>Table 2.</b> Where airfoil drag matters, by vehicle class.</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Vehicle class</th>
+<th style="text-align: left;">Typical <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi></mrow><annotation encoding="application/x-tex">Re</annotation></semantics></math></th>
+<th style="text-align: left;">Typical <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math></th>
+<th style="text-align: left;">Dominant section characteristic</th>
+<th style="text-align: left;">Main performance lever</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Jet transport</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>×</mo><msup><mn>10</mn><mn>7</mn></msup></mrow><annotation encoding="application/x-tex">4\times10^7</annotation></semantics></math></td>
+<td style="text-align: left;">0.75–0.85</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><annotation encoding="application/x-tex">M_{DD}</annotation></semantics></math> at given <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mi>/</mi><mi>c</mi></mrow><annotation encoding="application/x-tex">t/c</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math>; turbulent <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>d</mi><mo>,</mo><mo>min</mo></mrow></msub><annotation encoding="application/x-tex">c_{d,\min}</annotation></semantics></math></td>
+<td style="text-align: left;">Range, fuel burn, wing weight</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Turboprop / GA</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><msup><mn>10</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">3\times10^6</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mn>7</mn></msup><annotation encoding="application/x-tex">10^7</annotation></semantics></math></td>
+<td style="text-align: left;">0.2–0.6</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>d</mi><mo>,</mo><mo>min</mo></mrow></msub><annotation encoding="application/x-tex">c_{d,\min}</annotation></semantics></math>, bucket, NLF extent</td>
+<td style="text-align: left;">Range, climb, prop efficiency</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sailplane / HALE</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>×</mo><msup><mn>10</mn><mn>5</mn></msup></mrow><annotation encoding="application/x-tex">5\times10^5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><msup><mn>10</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">3\times10^6</annotation></semantics></math></td>
+<td style="text-align: left;">&lt;0.2</td>
+<td style="text-align: left;">Laminar bucket, low-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> and high-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> drag</td>
+<td style="text-align: left;">Glide ratio, sink, endurance</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Small UAV</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>×</mo><msup><mn>10</mn><mn>4</mn></msup></mrow><annotation encoding="application/x-tex">5\times10^4</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>×</mo><msup><mn>10</mn><mn>5</mn></msup></mrow><annotation encoding="application/x-tex">5\times10^5</annotation></semantics></math></td>
+<td style="text-align: left;">&lt;0.1</td>
+<td style="text-align: left;">Laminar separation bubble, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>c</mi><mi>l</mi><mrow><mn>3</mn><mi>/</mi><mn>2</mn></mrow></msubsup><mi>/</mi><msub><mi>c</mi><mi>d</mi></msub></mrow><annotation encoding="application/x-tex">c_l^{3/2}/c_d</annotation></semantics></math></td>
+<td style="text-align: left;">Endurance (battery)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Combat aircraft</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><msup><mn>10</mn><mn>7</mn></msup></mrow><annotation encoding="application/x-tex">2\times10^7</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mn>8</mn></msup><annotation encoding="application/x-tex">10^8</annotation></semantics></math></td>
+<td style="text-align: left;">0.6–2.0</td>
+<td style="text-align: left;">Thin-section wave drag, LE suction at high <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math></td>
+<td style="text-align: left;">Sustained turn, supersonic acceleration</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Helicopter</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>2</mn><annotation encoding="application/x-tex">2</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mo>×</mo><msup><mn>10</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">8\times10^6</annotation></semantics></math></td>
+<td style="text-align: left;">0.3–0.85</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>d</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">c_{d0}</annotation></semantics></math>, drag rise with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math> (advancing) and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> (retreating)</td>
+<td style="text-align: left;">Hover payload, speed, range</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Multicopter</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><msup><mn>10</mn><mn>4</mn></msup></mrow><annotation encoding="application/x-tex">3\times10^4</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><msup><mn>10</mn><mn>5</mn></msup></mrow><annotation encoding="application/x-tex">2\times10^5</annotation></semantics></math></td>
+<td style="text-align: left;">&lt;0.35</td>
+<td style="text-align: left;">Low-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi></mrow><annotation encoding="application/x-tex">Re</annotation></semantics></math> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>d</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">c_{d0}</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mo>max</mo></mrow></msub><annotation encoding="application/x-tex">c_{l,\max}</annotation></semantics></math></td>
+<td style="text-align: left;">Hover endurance</td>
+</tr>
+</tbody>
+</table>
+
+## 3. Linking Section Drag to Vehicle Performance
+
+### 3.1 The drag polar and maximum lift-to-drag ratio
+
+<p>For performance analysis the aircraft drag is usually approximated by the parabolic polar</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>D</mi></msub><mo>=</mo><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><mo>+</mo><mi>K</mi><msubsup><mi>C</mi><mi>L</mi><mn>2</mn></msubsup><mo>,</mo><mspace width="2.0em"></mspace><mi>K</mi><mo>=</mo><mfrac><mn>1</mn><mrow><mi>π</mi><mi>A</mi><mi>e</mi></mrow></mfrac><mspace width="2.0em"></mspace><mtext mathvariant="normal">(5)</mtext></mrow><annotation encoding="application/x-tex">C_D = C_{D0} + K C_L^2, \qquad K = \frac{1}{\pi A e} \qquad\text{(5)}</annotation></semantics></math></p>
+
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math> is aspect ratio and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math> the span efficiency (Oswald) factor. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">C_{D0}</annotation></semantics></math> is built up from the parasite drag of each component, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><mo>≈</mo><mo>∑</mo><msub><mi>C</mi><mrow><mi>f</mi><mo>,</mo><mi>i</mi></mrow></msub><mspace width="0.167em"></mspace><mi>F</mi><msub><mi>F</mi><mi>i</mi></msub><mspace width="0.167em"></mspace><msub><mi>Q</mi><mi>i</mi></msub><mspace width="0.167em"></mspace><msub><mi>S</mi><mrow><mi>w</mi><mi>e</mi><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mi>/</mi><msub><mi>S</mi><mrow><mi>r</mi><mi>e</mi><mi>f</mi></mrow></msub></mrow><annotation encoding="application/x-tex">C_{D0}\approx\sum C_{f,i}\,FF_i\,Q_i\,S_{wet,i}/S_{ref}</annotation></semantics></math> [2], [22]; the wing term is the one controlled by the airfoil. The maximum lift-to-drag ratio and the lift coefficient at which it occurs are</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mi>L</mi><mi>D</mi></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>max</mo></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mn>2</mn><msqrt><mrow><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><mi>K</mi></mrow></msqrt></mrow></mfrac><mo>,</mo><mspace width="2.0em"></mspace><msubsup><mi>C</mi><mi>L</mi><mo>*</mo></msubsup><mo>=</mo><msqrt><mfrac><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><mi>K</mi></mfrac></msqrt><mspace width="2.0em"></mspace><mtext mathvariant="normal">(6)</mtext></mrow><annotation encoding="application/x-tex">\left(\frac{L}{D}\right)_{\max} = \frac{1}{2\sqrt{C_{D0}K}}, \qquad C_L^* = \sqrt{\frac{C_{D0}}{K}} \qquad\text{(6)}</annotation></semantics></math></p>
+
+### 3.2 Range
+
+<p>For a jet with thrust-specific fuel consumption <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math> (per unit time, weight basis), the Breguet range at constant <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math> is</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mfrac><mi>V</mi><mi>c</mi></mfrac><mspace width="0.167em"></mspace><mfrac><mi>L</mi><mi>D</mi></mfrac><mspace width="0.167em"></mspace><mo>ln</mo><mfrac><msub><mi>W</mi><mi>i</mi></msub><msub><mi>W</mi><mi>f</mi></msub></mfrac><mspace width="2.0em"></mspace><mtext mathvariant="normal">(7)</mtext></mrow><annotation encoding="application/x-tex">R = \frac{V}{c}\,\frac{L}{D}\,\ln\frac{W_i}{W_f} \qquad\text{(7)}</annotation></semantics></math></p>
+
+<p>and for a propeller aircraft with power-specific fuel consumption <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>p</mi></msub><annotation encoding="application/x-tex">c_p</annotation></semantics></math> and propulsive efficiency <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>η</mi><mi>p</mi></msub><annotation encoding="application/x-tex">\eta_p</annotation></semantics></math>,</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>=</mo><mfrac><msub><mi>η</mi><mi>p</mi></msub><msub><mi>c</mi><mi>p</mi></msub></mfrac><mspace width="0.167em"></mspace><mfrac><mi>L</mi><mi>D</mi></mfrac><mspace width="0.167em"></mspace><mo>ln</mo><mfrac><msub><mi>W</mi><mi>i</mi></msub><msub><mi>W</mi><mi>f</mi></msub></mfrac><mspace width="2.0em"></mspace><mtext mathvariant="normal">(8)</mtext></mrow><annotation encoding="application/x-tex">R = \frac{\eta_p}{c_p}\,\frac{L}{D}\,\ln\frac{W_i}{W_f} \qquad\text{(8)}</annotation></semantics></math></p>
+
+<p>For a fixed mission range <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math> ending at weight <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mi>f</mi></msub><annotation encoding="application/x-tex">W_f</annotation></semantics></math>, the fuel burned is</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mrow><mi>f</mi><mi>u</mi><mi>e</mi><mi>l</mi></mrow></msub><mo>=</mo><msub><mi>W</mi><mi>f</mi></msub><mrow><mo stretchy="true" form="prefix">[</mo><mo>exp</mo><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mi>R</mi><mspace width="0.167em"></mspace><mi>c</mi></mrow><mrow><mi>V</mi><mspace width="0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mi>/</mi><mi>D</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mn>1</mn><mo stretchy="true" form="postfix">]</mo></mrow><mspace width="2.0em"></mspace><mtext mathvariant="normal">(9)</mtext></mrow><annotation encoding="application/x-tex">W_{fuel} = W_f\left[\exp\!\left(\frac{R\,c}{V\,(L/D)}\right)-1\right] \qquad\text{(9)}</annotation></semantics></math></p>
+
+<p>so fuel depends on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math> slightly more than inversely: a 1 % improvement in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math> saves a little more than 1 % of trip fuel because less fuel need be carried to carry the fuel.</p>
+
+### 3.3 Endurance
+
+<p>Endurance for a jet is maximised at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mi>/</mi><mi>D</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>max</mo></msub><annotation encoding="application/x-tex">(L/D)_{\max}</annotation></semantics></math>. For propeller and electric aircraft, where power rather than thrust is consumed, endurance scales with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>C</mi><mi>L</mi><mrow><mn>3</mn><mi>/</mi><mn>2</mn></mrow></msubsup><mi>/</mi><msub><mi>C</mi><mi>D</mi></msub></mrow><annotation encoding="application/x-tex">C_L^{3/2}/C_D</annotation></semantics></math>, whose maximum from (5) is</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><msubsup><mi>C</mi><mi>L</mi><mrow><mn>3</mn><mi>/</mi><mn>2</mn></mrow></msubsup><msub><mi>C</mi><mi>D</mi></msub></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>max</mo></msub><mo>=</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><msup><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mn>3</mn><mi>K</mi></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mn>3</mn><mi>/</mi><mn>4</mn></mrow></msup><msubsup><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow><mrow><mo>−</mo><mn>1</mn><mi>/</mi><mn>4</mn></mrow></msubsup><mspace width="2.0em"></mspace><mtext mathvariant="normal">(10)</mtext></mrow><annotation encoding="application/x-tex">\left(\frac{C_L^{3/2}}{C_D}\right)_{\max} = \frac{1}{4}\left(\frac{3}{K}\right)^{3/4} C_{D0}^{-1/4} \qquad\text{(10)}</annotation></semantics></math></p>
+
+<p>occurring at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>L</mi></msub><mo>=</mo><msqrt><mrow><mn>3</mn><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><mi>/</mi><mi>K</mi></mrow></msqrt></mrow><annotation encoding="application/x-tex">C_L=\sqrt{3C_{D0}/K}</annotation></semantics></math>, where induced drag is three times the parasite drag.</p>
+
+### 3.4 Sensitivity exponents
+
+<p>Equations (6) and (10) give a compact and important result. Near the optimum, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mi>/</mi><mi>D</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>max</mo></msub><mo>∝</mo><msubsup><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow><mrow><mo>−</mo><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msubsup></mrow><annotation encoding="application/x-tex">(L/D)_{\max}\propto C_{D0}^{-1/2}</annotation></semantics></math> but <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>C</mi><mi>L</mi><mrow><mn>3</mn><mi>/</mi><mn>2</mn></mrow></msubsup><mi>/</mi><msub><mi>C</mi><mi>D</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>max</mo></msub><mo>∝</mo><msubsup><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow><mrow><mo>−</mo><mn>1</mn><mi>/</mi><mn>4</mn></mrow></msubsup></mrow><annotation encoding="application/x-tex">(C_L^{3/2}/C_D)_{\max}\propto C_{D0}^{-1/4}</annotation></semantics></math>. A 10 % reduction in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">C_{D0}</annotation></semantics></math> therefore raises the maximum <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math> (and hence range for an aircraft flying at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>C</mi><mi>L</mi><mo>*</mo></msubsup><annotation encoding="application/x-tex">C_L^*</annotation></semantics></math>) by 5.4 %, but raises maximum propeller or electric endurance by only 2.7 %. Endurance aircraft fly at high <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>L</mi></msub><annotation encoding="application/x-tex">C_L</annotation></semantics></math>, where induced drag dominates; the airfoil influences them less through minimum drag and more through the <i>shape</i> of the section polar at high <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math>, and through enabling high aspect ratio. Conversely, an aircraft forced to cruise <i>below</i> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>C</mi><mi>L</mi><mo>*</mo></msubsup><annotation encoding="application/x-tex">C_L^*</annotation></semantics></math>—at high speed or low altitude—is <i>more</i> sensitive to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">C_{D0}</annotation></semantics></math>, because parasite drag then dominates.</p>
+
+### 3.5 Climb, ceiling and manoeuvre
+
+<p>Specific excess power <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mi>s</mi></msub><mo>=</mo><mi>V</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>T</mi><mo>−</mo><mi>D</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><mi>W</mi></mrow><annotation encoding="application/x-tex">P_s = V(T-D)/W</annotation></semantics></math> governs rate of climb, ceiling and energy manoeuvrability. At high speed <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math> is mostly parasite drag; at the ceiling and in a sustained turn, it is mostly lift-dependent drag. For a sustained turn at load factor <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> with thrust <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>:</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mrow><mi>s</mi><mi>u</mi><mi>s</mi></mrow></msub><mo>=</mo><mfrac><mrow><mi>q</mi><mi>S</mi></mrow><mi>W</mi></mfrac><msqrt><mfrac><mrow><mi>T</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>q</mi><mi>S</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub></mrow><mi>K</mi></mfrac></msqrt><mspace width="2.0em"></mspace><mtext mathvariant="normal">(11)</mtext></mrow><annotation encoding="application/x-tex">n_{sus} = \frac{qS}{W}\sqrt{\frac{T/(qS) - C_{D0}}{K}} \qquad\text{(11)}</annotation></semantics></math></p>
+
+<p>In this regime the section characteristic that matters is the lift-dependent part of profile drag—how much <i>leading-edge suction</i> the section can sustain before separation—rather than <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>d</mi><mo>,</mo><mo>min</mo></mrow></msub><annotation encoding="application/x-tex">c_{d,\min}</annotation></semantics></math>.</p>
+
+### 3.6 The airfoil’s share of the drag budget
+
+<p>A useful rule follows from these relations. For small changes, the fractional change in a performance metric is approximately the product of two factors: the <i>share</i> of total drag (or power) that the airfoil’s profile drag represents at the limiting condition, and an <i>exponent</i> of order one that depends on the metric—about 1 for fuel at fixed range, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><annotation encoding="application/x-tex">\tfrac12</annotation></semantics></math> for maximum <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="false"><mn>1</mn><mn>3</mn></mfrac><annotation encoding="application/x-tex">\tfrac13</annotation></semantics></math> for top speed and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac displaystyle="false"><mn>2</mn><mn>3</mn></mfrac><msub><mi>P</mi><mn>0</mn></msub><mi>/</mi><msub><mi>P</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">\tfrac23 P_0/P_i</annotation></semantics></math>-type ratios for hover thrust (Appendix B). Table&nbsp;3 lists the shares for the generic vehicles used in this paper. They range from about 13 % for a fighter in a sustained turn to about 32 % for a sailplane at best glide, which already explains most of the spread in sensitivities found later.</p>
+
+<div class="tcap"><b>Table 3.</b> Share of total drag or rotor power due to wing or blade section profile drag in the generic examples.</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Vehicle and condition</th>
+<th style="text-align: right;">Airfoil profile share</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Jet transport, mid-cruise (A)</td>
+<td style="text-align: right;">22 % of drag</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Regional turboprop, cruise</td>
+<td style="text-align: right;">26 % of drag</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sailplane at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mi>/</mi><mi>D</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>max</mo></msub><annotation encoding="application/x-tex">(L/D)_{\max}</annotation></semantics></math> (D)</td>
+<td style="text-align: right;">32 % of drag</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Mini-UAV at best endurance (E)</td>
+<td style="text-align: right;">16 % of drag</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Light fighter, sustained turn (G)</td>
+<td style="text-align: right;">13 % of drag</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Helicopter hover, 3 000 m ISA+20 (H)</td>
+<td style="text-align: right;">13.5 % of rotor power</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Helicopter hover, sea level</td>
+<td style="text-align: right;">17.6 % of rotor power</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Quadcopter hover (J)</td>
+<td style="text-align: right;">17 % of rotor power</td>
+</tr>
+</tbody>
+</table>
+
+### 3.7 Rotors and propellers
+
+<p>For rotors and propellers the airfoil acts directly on the conversion of shaft power into thrust, through the profile power term and through the blade-element efficiency. These relations are developed in Sections&nbsp;5 and 9. The key point is that the airfoil drag here multiplies the <i>cube</i> of the local blade speed, so it is weighted strongly towards the blade tip, where Mach number and compressibility effects are largest.</p>
+
+## 4. Subsonic Jet Transports
+
+### 4.1 Role of the airfoil
+
+<p>On a jet transport the wing is the largest single contributor to both parasite and wave drag. Its sections are chosen to meet three coupled requirements: low profile drag at cruise <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math>; a drag-divergence Mach number comfortably above the cruise Mach number at that <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> (the buffet boundary sets a further margin above that); and as much thickness as possible, because thickness carries bending loads, houses fuel and reduces structural weight. Raymer’s statistical wing-weight relation for transports, for example, makes wing weight vary roughly as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>t</mi><mi>/</mi><mi>c</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo>−</mo><mn>0.4</mn></mrow></msup><annotation encoding="application/x-tex">(t/c)^{-0.4}</annotation></semantics></math> [2]. The airfoil therefore touches the range equation through <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math> directly, through structural weight (and hence <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mi>i</mi></msub><mi>/</mi><msub><mi>W</mi><mi>f</mi></msub></mrow><annotation encoding="application/x-tex">W_i/W_f</annotation></semantics></math>), and through the aspect ratio that a given thickness permits.</p>
+
+### 4.2 Worked example A: profile drag and fuel burn
+
+<p>Consider a generic single-aisle transport with wing reference area <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mn>122.6</mn></mrow><annotation encoding="application/x-tex">S=122.6</annotation></semantics></math> m², aspect ratio <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mn>9.5</mn></mrow><annotation encoding="application/x-tex">A=9.5</annotation></semantics></math>, Oswald factor <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mo>=</mo><mn>0.82</mn></mrow><annotation encoding="application/x-tex">e=0.82</annotation></semantics></math> and mid-cruise mass 66 t, cruising at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>=</mo><mn>0.78</mn></mrow><annotation encoding="application/x-tex">M=0.78</annotation></semantics></math> at 35 000 ft (10 668 m; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0.380</mn></mrow><annotation encoding="application/x-tex">\rho=0.380</annotation></semantics></math> kg/m³, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo>=</mo><mn>231</mn></mrow><annotation encoding="application/x-tex">V=231</annotation></semantics></math> m/s, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mn>10</mn><mspace width="0.167em"></mspace><mn>154</mn></mrow><annotation encoding="application/x-tex">q=10\,154</annotation></semantics></math> Pa). Its zero-lift drag coefficient is taken as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><mo>=</mo><mn>0.0200</mn></mrow><annotation encoding="application/x-tex">C_{D0}=0.0200</annotation></semantics></math>, of which the wing profile drag is 0.0070 (35 %), plus 10 counts of wave drag at cruise; TSFC is 0.57 h<sup>−1</sup>. Table&nbsp;4 gives the results.</p>
+
+<p>At the mid-cruise <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>L</mi></msub><mo>=</mo><mn>0.520</mn></mrow><annotation encoding="application/x-tex">C_L=0.520</annotation></semantics></math>, induced drag is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>D</mi><mi>i</mi></mrow></msub><mo>=</mo><mn>0.0110</mn></mrow><annotation encoding="application/x-tex">C_{Di}=0.0110</annotation></semantics></math> and total drag <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>D</mi></msub><mo>=</mo><mn>0.0320</mn></mrow><annotation encoding="application/x-tex">C_D=0.0320</annotation></semantics></math>, giving <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi><mo>=</mo><mn>16.2</mn></mrow><annotation encoding="application/x-tex">L/D=16.2</annotation></semantics></math>. A 10 % reduction in wing profile drag (7 counts) raises <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math> to 16.6. For a 2 500 km cruise ending at 62 t, (9) gives a fuel burn of 6 897 kg for the baseline and 6 739 kg for the improved wing: a saving of 159 kg or 2.3 % per flight. Over 1 000 such flights—roughly one year of operation for one aircraft—that is about 159 t of fuel and 500 t of CO<sub>2</sub>, using the standard 3.16 kg CO<sub>2</sub> per kg of jet fuel [23].</p>
+
+<p>The <i>sensitivity</i> is the useful figure: each 1 % of wing profile drag is worth 0.22 % of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math> and slightly more in fuel. Fig. 4 shows that the gain applies across the cruise <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>L</mi></msub><annotation encoding="application/x-tex">C_L</annotation></semantics></math> range but is largest at the low-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>L</mi></msub><annotation encoding="application/x-tex">C_L</annotation></semantics></math> end of the polar, i.e. early in a long flight at high weight it is somewhat smaller, and late in the flight or at higher Mach number it is larger.</p>
+
+<div class="figrow one"><figure id="fig-4"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f2_transport_LD.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f2_transport_LD.svg" alt="Lift-to-drag ratio of the generic transport, baseline and with reduced wing profile drag. The dotted line marks the mid-cruise lift coefficient." loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 4.</b> Lift-to-drag ratio of the generic transport, baseline and with reduced wing profile drag. The dotted line marks the mid-cruise lift coefficient.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+<div class="tcap"><b>Table 4.</b> Worked example A: generic narrow-body transport at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math> 0.78, FL350.</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Quantity</th>
+<th style="text-align: right;">Baseline</th>
+<th style="text-align: right;">Wing <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>d</mi></msub><annotation encoding="application/x-tex">c_d</annotation></semantics></math> −10 %</th>
+<th style="text-align: right;">Laminar wing</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Wing section <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>d</mi></msub><annotation encoding="application/x-tex">c_d</annotation></semantics></math> (counts)</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">44</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">C_{D0}</annotation></semantics></math></td>
+<td style="text-align: right;">0.0200</td>
+<td style="text-align: right;">0.0193</td>
+<td style="text-align: right;">0.0184</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>D</mi></msub><annotation encoding="application/x-tex">C_D</annotation></semantics></math> at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>L</mi></msub><mo>=</mo><mn>0.520</mn></mrow><annotation encoding="application/x-tex">C_L=0.520</annotation></semantics></math></td>
+<td style="text-align: right;">0.0320</td>
+<td style="text-align: right;">0.0313</td>
+<td style="text-align: right;">0.0304</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math></td>
+<td style="text-align: right;">16.22</td>
+<td style="text-align: right;">16.59</td>
+<td style="text-align: right;">17.08</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Fuel, 2 500 km (kg)</td>
+<td style="text-align: right;">6 897</td>
+<td style="text-align: right;">6 739</td>
+<td style="text-align: right;">6 534</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Saving per flight</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">159 kg (2.3 %)</td>
+<td style="text-align: right;">363 kg (5.3 %)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Saving per 1 000 flights</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">159 t fuel, 500 t CO<sub>2</sub></td>
+<td style="text-align: right;">363 t fuel, 1 150 t CO<sub>2</sub></td>
+</tr>
+</tbody>
+</table>
+
+### 4.3 Worked example B: laminar flow
+
+<p>At the wing’s mean-chord Reynolds number of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2.6</mn><mo>×</mo><msup><mn>10</mn><mn>7</mn></msup></mrow><annotation encoding="application/x-tex">2.6\times10^7</annotation></semantics></math>, the section model (3) gives 61 counts for a fully turbulent 12 % section and 44 counts if transition is held at 40 % chord on the upper surface and 25 % on the lower—a 29 % reduction. Applying this to 80 % of the wing area (excluding the root, the fuselage-junction region and areas behind slats and contaminated zones) raises <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math> to 17.1 and reduces trip fuel by 5.3 % (Table&nbsp;4).</p>
+
+<p>That figure explains half a century of effort on transport laminar flow [21], [24]. The obstacles are equally clear. Wing sweep, required for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><annotation encoding="application/x-tex">M_{DD}</annotation></semantics></math>, produces crossflow instability that limits natural laminar flow to leading-edge sweeps below roughly 18–20° at transport Reynolds numbers. Hybrid laminar flow control (HLFC) adds leading-edge suction to damp crossflow and uses a favourable pressure gradient further aft; it was flight tested on a Boeing 757 wing glove in the early 1990s [21]. Airbus’s BLADE demonstrator first flew natural-laminar outer-wing panels on an A340 in September 2017, to study the manufacturing tolerances needed in practice; the project’s stated aims—about half the wing friction drag and up to 5 % lower CO<sub>2</sub>—are consistent with the estimate above [25]. In both cases the aerodynamic benefit has been established; the remaining issues are surface quality, insect contamination at take-off and landing, ice protection integrated with the suction system, maintenance cost and the weight of the system [24].</p>
+
+### 4.4 Transonic drag divergence
+
+<p>For a swept wing the drag-divergence Mach number can be estimated with the Korn equation as extended to sweep [26]:</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><mo>=</mo><mfrac><msub><mi>κ</mi><mi>A</mi></msub><mrow><mo>cos</mo><mi>Λ</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mi>t</mi><mi>/</mi><mi>c</mi></mrow><mrow><msup><mo>cos</mo><mn>2</mn></msup><mi>Λ</mi></mrow></mfrac><mo>−</mo><mfrac><msub><mi>C</mi><mi>L</mi></msub><mrow><mn>10</mn><msup><mo>cos</mo><mn>3</mn></msup><mi>Λ</mi></mrow></mfrac><mspace width="2.0em"></mspace><mtext mathvariant="normal">(12)</mtext></mrow><annotation encoding="application/x-tex">M_{DD} = \frac{\kappa_A}{\cos\Lambda} - \frac{t/c}{\cos^2\Lambda} - \frac{C_L}{10\cos^3\Lambda} \qquad\text{(12)}</annotation></semantics></math></p>
+
+<p>with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>κ</mi><mi>A</mi></msub><mo>≈</mo><mn>0.87</mn></mrow><annotation encoding="application/x-tex">\kappa_A\approx0.87</annotation></semantics></math> for conventional (NACA 6-series type) sections and up to about 0.95 for supercritical sections. The wave-drag rise above the critical Mach number is commonly modelled by Lock’s fourth-power law, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>D</mi><mi>w</mi></mrow></msub><mo>=</mo><mn>20</mn><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>M</mi><mo>−</mo><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mn>4</mn></msup></mrow><annotation encoding="application/x-tex">C_{Dw}=20(M-M_{cr})^4</annotation></semantics></math> with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi></mrow></msub><mo>=</mo><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><mo>−</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mn>0.1</mn><mi>/</mi><mn>80</mn><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mn>1</mn><mi>/</mi><mn>3</mn></mrow></msup></mrow><annotation encoding="application/x-tex">M_{cr}=M_{DD}-(0.1/80)^{1/3}</annotation></semantics></math> [26].</p>
+
+<p>Fig. 5 shows (12) for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>L</mi></msub><mo>=</mo><mn>0.55</mn></mrow><annotation encoding="application/x-tex">C_L=0.55</annotation></semantics></math>. The supercritical airfoil’s benefit can be taken in three ways (worked example C): at a sweep of 25° and a target <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><mo>=</mo><mn>0.80</mn></mrow><annotation encoding="application/x-tex">M_{DD}=0.80</annotation></semantics></math>, the maximum thickness rises from 7.1 % for a conventional section to 14.3 % for a supercritical one; alternatively, at 11 % thickness the sweep required falls from 35° to 13°; or, at fixed sweep and thickness, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><annotation encoding="application/x-tex">M_{DD}</annotation></semantics></math> rises from 0.75 to 0.84. Real designs split the benefit, most often taking thickness (for lighter, higher-aspect-ratio wings with more fuel volume) and a little Mach number. This is the main way in which airfoil <i>drag characteristics</i>—specifically the wave-drag rise—affect transport performance: indirectly, through the wing’s geometry and weight, rather than through a few counts of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>d</mi></msub><annotation encoding="application/x-tex">c_d</annotation></semantics></math> at cruise [13], [14], [3].</p>
+
+<div class="figrow one"><figure id="fig-5"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f3_korn.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f3_korn.svg" alt="Drag-divergence Mach number from the Korn equation (12) at CL=0.55C_L=0.55 for conventional and supercritical sections at two sweep angles. The dotted line mark" loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 5.</b> Drag-divergence Mach number from the Korn equation (12) at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>L</mi></msub><mo>=</mo><mn>0.55</mn></mrow><annotation encoding="application/x-tex">C_L=0.55</annotation></semantics></math> for conventional and supercritical sections at two sweep angles. The dotted line marks <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><mo>=</mo><mn>0.78</mn></mrow><annotation encoding="application/x-tex">M_{DD}=0.78</annotation></semantics></math>.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+### 4.5 Mission-length dependence
+
+<p>Fig. 7 generalises example A. The fuel saving for a given profile-drag reduction grows with mission length, because of the exponential in (9): for a 10 % reduction in wing profile drag the saving is 2.2 % at 800 km and 2.5 % at 6 000 km, and for a 50 % reduction it is 11.1 % and 12.2 % respectively. In practice, on short sectors a larger share of fuel is spent in climb, where higher <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>L</mi></msub><annotation encoding="application/x-tex">C_L</annotation></semantics></math> makes induced drag more important, and the cruise-only figures overstate the benefit; on long-haul sectors they understate it, because the lighter fuel load also reduces induced drag.</p>
+
+### 4.6 Take-off and climb: the high-lift configuration
+
+<p>Cruise is not the only phase in which section drag matters. At take-off, a twin-engined transport must meet a minimum climb gradient of 2.4 % in the second segment with one engine inoperative. The gradient is approximately <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi><mo>=</mo><mi>T</mi><mi>/</mi><mi>W</mi><mo>−</mo><mn>1</mn><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mi>/</mi><mi>D</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\gamma = T/W - 1/(L/D)</annotation></semantics></math>, where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math> is that of the take-off configuration—slats and flaps deployed, at a <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>L</mi></msub><annotation encoding="application/x-tex">C_L</annotation></semantics></math> well above cruise—and is typically only 8–10. On a hot day or at a high airport, this requirement, not runway length, often limits take-off weight. The drag of the multi-element high-lift sections, including slat-cove and flap-gap flows and the confluence of wakes, then enters the payload directly.</p>
+
+<p>For a generic case in which one engine delivers thrust equal to 13.5 % of a 78 t reference weight and the take-off <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math> is 9.0, the gradient requirement limits take-off mass to 77.9 t. Raising take-off <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math> by 1 % allows 640 kg more (0.82 % per 1 %); raising it by 5 %—through lower-drag flap settings, sealed slats or better high-lift sections—allows 3.2 t (4.1 %). The leverage is three to four times larger than in cruise because the climb gradient is the small difference between two larger numbers. This is consistent with the industry rule of thumb, quoted by van Dam [27], that a 1 % improvement in take-off <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math> is worth several thousand pounds of payload on a large twin. Fig. 6 shows the relation for three thrust levels.</p>
+
+<div class="figrow one"><figure id="fig-6"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f4b_takeoff.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f4b_takeoff.svg" alt="One-engine-inoperative climb-limited take-off mass versus take-off L/DL/D for a generic twin at three levels of available thrust (2.4 % second-segment gradient)" loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 6.</b> One-engine-inoperative climb-limited take-off mass versus take-off <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math> for a generic twin at three levels of available thrust (2.4 % second-segment gradient).<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+<div class="figrow one"><figure id="fig-7"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f4_fuel_saving.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f4_fuel_saving.svg" alt="Cruise fuel saving versus reduction in wing profile drag for three cruise ranges (generic transport of example A)." loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 7.</b> Cruise fuel saving versus reduction in wing profile drag for three cruise ranges (generic transport of example A).<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+## 5. Turboprops, General Aviation and Propellers
+
+### 5.1 Airframe
+
+<p>Turboprop and general-aviation aircraft fly at Mach numbers of 0.2–0.6 with little or no sweep. Wave drag is negligible except near propeller tips, so airfoil profile drag and the extent of laminar flow are the dominant section characteristics. Low sweep and moderate Reynolds numbers (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><msup><mn>10</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">3\times10^6</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1.5</mn><mo>×</mo><msup><mn>10</mn><mn>7</mn></msup></mrow><annotation encoding="application/x-tex">1.5\times10^7</annotation></semantics></math>) make natural laminar flow much more attainable than on jets, and NLF sections such as the NLF(1)-0416 were developed specifically for this class [16]. Two practical limits apply: the propeller slipstream, which washes a significant fraction of the span with unsteady, turbulent flow and moves transition forward periodically; and surface quality, particularly rivet heads and joints in metallic structure.</p>
+
+<p>For a generic regional turboprop with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><mo>=</mo><mn>0.026</mn></mrow><annotation encoding="application/x-tex">C_{D0}=0.026</annotation></semantics></math> (wing share 0.009), <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mn>12</mn></mrow><annotation encoding="application/x-tex">A=12</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mo>=</mo><mn>0.80</mn></mrow><annotation encoding="application/x-tex">e=0.80</annotation></semantics></math> and cruise <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>L</mi></msub><mo>=</mo><mn>0.50</mn></mrow><annotation encoding="application/x-tex">C_L=0.50</annotation></semantics></math>, the cruise <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math> is 14.6; a 10 % lower wing profile drag raises it to 15.0, a 2.7 % range improvement from (8) at constant fuel. The sensitivity is <i>larger</i> than for the jet (0.27 % per % versus 0.22 %) because the turboprop cruises further below its <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>C</mi><mi>L</mi><mo>*</mo></msubsup><annotation encoding="application/x-tex">C_L^*</annotation></semantics></math>, where parasite drag is a larger share of the total.</p>
+
+### 5.2 Worked example: speed of a light aircraft
+
+<p>For a piston or turboprop aircraft at full power, the maximum level speed follows from <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><msub><mi>η</mi><mi>p</mi></msub><mo>=</mo><mi>D</mi><mi>V</mi></mrow><annotation encoding="application/x-tex">P\eta_p = DV</annotation></semantics></math>. At high speed, parasite drag dominates and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mo>max</mo></msub><mo>∝</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>P</mi><msub><mi>η</mi><mi>p</mi></msub><mi>/</mi><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mn>1</mn><mi>/</mi><mn>3</mn></mrow></msup></mrow><annotation encoding="application/x-tex">V_{\max}\propto(P\eta_p/C_{D0})^{1/3}</annotation></semantics></math>, so speed responds only to the cube root of drag. A generic four-seat light aircraft (1 150 kg, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mn>16.2</mn></mrow><annotation encoding="application/x-tex">S=16.2</annotation></semantics></math> m², <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mn>7.4</mn></mrow><annotation encoding="application/x-tex">A=7.4</annotation></semantics></math>, 150 kW, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>η</mi><mi>p</mi></msub><mo>=</mo><mn>0.82</mn></mrow><annotation encoding="application/x-tex">\eta_p=0.82</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><mo>=</mo><mn>0.030</mn></mrow><annotation encoding="application/x-tex">C_{D0}=0.030</annotation></semantics></math> of which 0.012 is wing) has a maximum speed of 141 kt. A 10 % lower wing profile drag gives 143 kt; a natural-laminar wing that removes 45 counts of wing drag gives 149 kt (+5.7 %). Because power required rises with the cube of speed, the same drag reduction is worth more as <i>fuel saved at a fixed cruise speed</i> than as <i>speed gained at fixed power</i>, which is how laminar-wing light aircraft and business jets usually express their advantage. Fig. 8 makes the point: at a fixed cruise speed of 130 kt, the laminar wing reduces power and fuel flow by 13 %, more than twice its percentage gain in top speed.</p>
+
+<div class="figrow one"><figure id="fig-8"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f14_ga.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f14_ga.svg" alt="Generic light aircraft: change in maximum level speed at full power, and in power required at 130 kt, as the zero-lift drag coefficient varies around the baseli" loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 8.</b> Generic light aircraft: change in maximum level speed at full power, and in power required at 130 kt, as the zero-lift drag coefficient varies around the baseline of 0.030.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+### 5.3 Propeller blade sections
+
+<p>The propeller is itself a set of rotating airfoils, and the term <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>η</mi><mi>p</mi></msub><annotation encoding="application/x-tex">\eta_p</annotation></semantics></math> in (8) depends directly on blade section drag. For a blade element with inflow angle <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math> and drag-to-lift angle <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi><mo>=</mo><msup><mo>tan</mo><mrow><mo>−</mo><mn>1</mn></mrow></msup><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>c</mi><mi>d</mi></msub><mi>/</mi><msub><mi>c</mi><mi>l</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\gamma=\tan^{-1}(c_d/c_l)</annotation></semantics></math>, the local efficiency, ignoring induced losses, is [28]</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>η</mi><mrow><mi>l</mi><mi>o</mi><mi>c</mi><mi>a</mi><mi>l</mi></mrow></msub><mo>=</mo><mfrac><mrow><mo>tan</mo><mi>ϕ</mi></mrow><mrow><mo>tan</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>ϕ</mi><mo>+</mo><mi>γ</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac><mspace width="2.0em"></mspace><mtext mathvariant="normal">(13)</mtext></mrow><annotation encoding="application/x-tex">\eta_{local} = \frac{\tan\phi}{\tan(\phi+\gamma)} \qquad\text{(13)}</annotation></semantics></math></p>
+
+<p>which is maximised at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϕ</mi><mo>=</mo><msup><mn>45</mn><mo>∘</mo></msup><mo>−</mo><mi>γ</mi><mi>/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">\phi = 45^\circ - \gamma/2</annotation></semantics></math>. Fig. 9 shows (13) for section lift-to-drag ratios of 30–120. At the optimum, raising <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>l</mi></msub><mi>/</mi><msub><mi>c</mi><mi>d</mi></msub></mrow><annotation encoding="application/x-tex">c_l/c_d</annotation></semantics></math> from 50 to 80 raises local efficiency from 0.961 to 0.975; at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϕ</mi><mo>=</mo><msup><mn>20</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">\phi=20^\circ</annotation></semantics></math>—typical of inboard sections in cruise and of the whole blade at climb—the gain from <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>l</mi></msub><mi>/</mi><msub><mi>c</mi><mi>d</mi></msub><mo>=</mo><mn>30</mn></mrow><annotation encoding="application/x-tex">c_l/c_d=30</annotation></semantics></math> to 80 is from 0.905 to 0.962. Profile losses are thus a few per cent at the design point but grow rapidly away from it, which is why propeller sections are chosen for a wide low-drag range and why variable pitch, which keeps each element near its best <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>l</mi></msub><mi>/</mi><msub><mi>c</mi><mi>d</mi></msub></mrow><annotation encoding="application/x-tex">c_l/c_d</annotation></semantics></math>, was such an advance.</p>
+
+<div class="figrow one"><figure id="fig-9"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f8_prop_eta.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f8_prop_eta.svg" alt="Blade-element efficiency (13) versus inflow angle for several section lift-to-drag ratios." loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 9.</b> Blade-element efficiency (13) versus inflow angle for several section lift-to-drag ratios.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+<p>Near the tip the helical Mach number of a turboprop blade reaches 0.7–0.85 in cruise. Thin sections (4–6 % at the tip) and, on advanced propellers, sweep are used to delay drag divergence—the same transonic physics as Section&nbsp;4, appearing on a smaller scale. Because the propeller’s thrust and the airframe’s drag combine multiplicatively in (8), a 3 % gain in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>η</mi><mi>p</mi></msub><annotation encoding="application/x-tex">\eta_p</annotation></semantics></math> from better blade sections is worth as much as a 3 % gain in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math> from the wing; in the generic example the two together would give about 6 %.</p>
+
+## 6. Sailplanes and Long-Endurance Aircraft
+
+### 6.1 Sailplanes
+
+<p>The sailplane is the purest expression of airfoil-driven performance. There is no engine; performance is measured by the glide ratio <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math> and the minimum sink rate, and wing profile drag is typically the largest single drag term at the speeds used for inter-thermal cruise. Sailplane airfoils by Wortmann, Eppler and Althaus, designed with codes in the XFOIL tradition and verified in low-turbulence tunnels, hold laminar flow over 60–95 % of the chord on the lower surface and 50–70 % on the upper, with turbulators to control the laminar separation bubble near transition [4].</p>
+
+<p>Worked example D uses a generic 15 m span sailplane (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mn>10.5</mn></mrow><annotation encoding="application/x-tex">S=10.5</annotation></semantics></math> m², <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mn>21.4</mn></mrow><annotation encoding="application/x-tex">A=21.4</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mo>=</mo><mn>0.92</mn></mrow><annotation encoding="application/x-tex">e=0.92</annotation></semantics></math>, mass 450 kg) with a 15 % thick laminar section operating at a Reynolds number of about <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1.2</mn><mo>×</mo><msup><mn>10</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">1.2\times10^6</annotation></semantics></math>. The section model gives 60 counts with transition at 60 %/70 % chord. If insect debris and rain trip transition to 8 % on the upper surface and 40 % on the lower, the section drag rises to 95 counts. With 35 counts of fuselage and tail drag added, the maximum glide ratio falls from 40.3 to 34.5 (−14 %), the minimum sink rises from 0.65 to 0.70 m/s, and the glide ratio at 100 km/h falls from 39.9 to 34.5 (Fig. 10). For a competition pilot these differences are decisive, which is why competition sailplanes carry bug-wipers and why the laminar bucket of a sailplane section is made as wide as possible: it must cover the high <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> of thermalling <i>and</i> the low <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> of fast cruise, with flaps used to shift the bucket between them.</p>
+
+<div class="figrow one"><figure id="fig-10"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f9_sailplane.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f9_sailplane.svg" alt="Sink polar of the generic 15 m sailplane: clean laminar wing and insect/rain-contaminated wing (worked example D)." loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 10.</b> Sink polar of the generic 15 m sailplane: clean laminar wing and insect/rain-contaminated wing (worked example D).<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+### 6.2 Long-endurance UAVs
+
+<p>Medium- and high-altitude long-endurance (MALE/HALE) unmanned aircraft share the sailplane’s emphasis on high aspect ratio and laminar sections, but they are optimised for endurance, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>C</mi><mi>L</mi><mrow><mn>3</mn><mi>/</mi><mn>2</mn></mrow></msubsup><mi>/</mi><msub><mi>C</mi><mi>D</mi></msub></mrow><annotation encoding="application/x-tex">C_L^{3/2}/C_D</annotation></semantics></math>, rather than glide. As shown in Section&nbsp;3, endurance responds only to the fourth root of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">C_{D0}</annotation></semantics></math>; the gain from lowering minimum section drag is half as large, in percentage terms, as for range. The section characteristics that matter more are the drag at <i>high</i> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> (1.0–1.4 for loiter), the maximum lift coefficient and gentle stall, and adequate thickness for a very slender, flexible, fuel-carrying wing. At high altitude, low density cuts the chord Reynolds number to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>×</mo><msup><mn>10</mn><mn>5</mn></msup></mrow><annotation encoding="application/x-tex">5\times10^5</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><msup><mn>10</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">2\times10^6</annotation></semantics></math>, close to the range in which laminar separation bubbles become significant, so HALE sections must combine sailplane-like low drag with low-Reynolds-number robustness. Fig. 11 shows how quickly this happens. At constant equivalent airspeed, true speed rises as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><msqrt><mi>σ</mi></msqrt></mrow><annotation encoding="application/x-tex">1/\sqrt{\sigma}</annotation></semantics></math> while density falls as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math>, so the Reynolds number falls as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msqrt><mi>σ</mi></msqrt><annotation encoding="application/x-tex">\sqrt{\sigma}</annotation></semantics></math> and also with the rising viscosity-to-density ratio. A 1 m chord flying at 30 m/s equivalent airspeed has <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi><mo>=</mo><mn>2.1</mn><mo>×</mo><msup><mn>10</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">Re=2.1\times10^6</annotation></semantics></math> at sea level but only <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8.1</mn><mo>×</mo><msup><mn>10</mn><mn>5</mn></msup></mrow><annotation encoding="application/x-tex">8.1\times10^5</annotation></semantics></math> at 18 km (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0.121</mn></mrow><annotation encoding="application/x-tex">\rho=0.121</annotation></semantics></math> kg/m³); a 0.5 m chord at the same condition enters the bubble-sensitive range.</p>
+
+<p>For a generic HALE aircraft with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mn>25</mn></mrow><annotation encoding="application/x-tex">A=25</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mo>=</mo><mn>0.9</mn></mrow><annotation encoding="application/x-tex">e=0.9</annotation></semantics></math> and 80 counts of non-wing drag, a 30 % rise in wing section drag at altitude (from 80 to 104 counts, typical of a section designed at too high a Reynolds number) reduces the endurance parameter <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>C</mi><mi>L</mi><mrow><mn>3</mn><mi>/</mi><mn>2</mn></mrow></msubsup><mi>/</mi><msub><mi>C</mi><mi>D</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>max</mo></msub><annotation encoding="application/x-tex">(C_L^{3/2}/C_D)_{\max}</annotation></semantics></math> by 3.4 %. The figure is modest because of the fourth-root dependence in (10), but it is in addition to the loss of maximum lift that usually accompanies the same bubble, which forces the aircraft to loiter at a lower <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>L</mi></msub><annotation encoding="application/x-tex">C_L</annotation></semantics></math> and costs more endurance still.</p>
+
+<div class="figrow one"><figure id="fig-11"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f15_hale_re.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f15_hale_re.svg" alt="Chord Reynolds number versus altitude at constant equivalent airspeed for three combinations of speed and chord (ISA). The shaded band marks the range in which " loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 11.</b> Chord Reynolds number versus altitude at constant equivalent airspeed for three combinations of speed and chord (ISA). The shaded band marks the range in which laminar separation bubbles strongly affect section drag.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+## 7. Small Aircraft and Low-Reynolds-Number Flight
+
+### 7.1 The laminar separation bubble
+
+<p>Below a chord Reynolds number of about <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>×</mo><msup><mn>10</mn><mn>5</mn></msup></mrow><annotation encoding="application/x-tex">5\times10^5</annotation></semantics></math>, the favourable behaviour of laminar boundary layers turns into a liability. A laminar layer cannot withstand much adverse pressure gradient; it separates, transition then occurs in the free shear layer, and the now-turbulent flow may reattach as a <i>laminar separation bubble</i>. The bubble thickens the boundary layer downstream and adds pressure drag. As Reynolds number falls toward <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>×</mo><msup><mn>10</mn><mn>4</mn></msup></mrow><annotation encoding="application/x-tex">5\times10^4</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>7</mn><mo>×</mo><msup><mn>10</mn><mn>4</mn></msup></mrow><annotation encoding="application/x-tex">7\times10^4</annotation></semantics></math> the bubble lengthens and may fail to reattach at all, producing large drag increases, loss of lift and hysteresis [8], [10]. At these Reynolds numbers section drag depends strongly on airfoil shape, surface finish, free-stream turbulence and even propeller noise; thin, cambered sections and trips or turbulators that force transition ahead of laminar separation often outperform “conventional” thick sections [9].</p>
+
+### 7.2 Worked example E: endurance of an electric mini-UAV
+
+<p>Consider an electric fixed-wing UAV of 2.5 kg mass, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">S=0.5</annotation></semantics></math> m², <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">A=8</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mo>=</mo><mn>0.8</mn></mrow><annotation encoding="application/x-tex">e=0.8</annotation></semantics></math> and chord 0.25 m, with 12 counts of non-wing parasite drag, a 100 Wh battery of which 85 % is usable, an overall propulsive efficiency (motor, controller, propeller) of 0.55 and 3 W of avionics. Its endurance is</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo>=</mo><mfrac><mrow><mi>η</mi><mspace width="0.167em"></mspace><msub><mi>E</mi><mrow><mi>b</mi><mi>a</mi><mi>t</mi><mi>t</mi></mrow></msub></mrow><mrow><msub><mi>P</mi><mrow><mi>r</mi><mi>e</mi><mi>q</mi></mrow></msub><mi>/</mi><msub><mi>η</mi><mrow><mi>p</mi><mi>r</mi><mi>o</mi><mi>p</mi></mrow></msub><mo>+</mo><msub><mi>P</mi><mrow><mi>a</mi><mi>v</mi></mrow></msub></mrow></mfrac><mspace width="2.0em"></mspace><mtext mathvariant="normal">(14)</mtext></mrow><annotation encoding="application/x-tex">E = \frac{\eta\,E_{batt}}{P_{req}/\eta_{prop} + P_{av}} \qquad\text{(14)}</annotation></semantics></math></p>
+
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mrow><mi>r</mi><mi>e</mi><mi>q</mi></mrow></msub><mo>=</mo><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><mi>ρ</mi><msup><mi>V</mi><mn>3</mn></msup><mi>S</mi><msub><mi>C</mi><mi>D</mi></msub></mrow><annotation encoding="application/x-tex">P_{req}=\tfrac12\rho V^3 S C_D</annotation></semantics></math>. Two section polars are compared at a Reynolds number of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1.5</mn><mo>×</mo><msup><mn>10</mn><mn>5</mn></msup></mrow><annotation encoding="application/x-tex">1.5\times10^5</annotation></semantics></math>: a well-chosen low-Reynolds-number section with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>d</mi></msub><mo>=</mo><mn>0.010</mn><mo>+</mo><mn>0.012</mn><msup><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>c</mi><mi>l</mi></msub><mo>−</mo><mn>0.6</mn><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">c_d = 0.010 + 0.012(c_l-0.6)^2</annotation></semantics></math>, and a bubble-prone section with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>d</mi></msub><mo>=</mo><mn>0.014</mn><mo>+</mo><mn>0.030</mn><msup><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>c</mi><mi>l</mi></msub><mo>−</mo><mn>0.4</mn><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">c_d = 0.014 + 0.030(c_l-0.4)^2</annotation></semantics></math>, which represents a thicker airfoil designed for higher Reynolds numbers. At the best-endurance condition (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>L</mi></msub><mo>≈</mo><mn>1.0</mn></mrow><annotation encoding="application/x-tex">C_L\approx1.0</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo>≈</mo><mn>9</mn></mrow><annotation encoding="application/x-tex">V\approx9</annotation></semantics></math> m/s), the first section has 121 counts of drag and the aircraft needs 32.4 W, giving 158 min endurance; the second has 226 counts, needs 37.4 W and achieves 136 min—a 14 % loss. Even though endurance responds only to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow><mrow><mo>−</mo><mn>1</mn><mi>/</mi><mn>4</mn></mrow></msubsup><annotation encoding="application/x-tex">C_{D0}^{-1/4}</annotation></semantics></math> for a <i>flat</i> polar, the bubble penalty is concentrated at high <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math>, exactly where an endurance aircraft flies, so the loss is much larger than the minimum-drag figures alone suggest. Fig. 12 shows the power-required curves: the two aircraft differ little at high speed but by 15 % at the slow speeds used for loiter.</p>
+
+<div class="figrow one"><figure id="fig-12"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f11_uav_power.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f11_uav_power.svg" alt="Battery power required by the generic 2.5 kg UAV with a well-chosen low-Reynolds-number section and with a bubble-prone section (worked example E)." loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 12.</b> Battery power required by the generic 2.5 kg UAV with a well-chosen low-Reynolds-number section and with a bubble-prone section (worked example E).<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+<p>The lesson for small aircraft is that the airfoil should be chosen from data at the right Reynolds number and the right <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math>; catalogue polars at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi><mo>=</mo><msup><mn>10</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">Re=10^6</annotation></semantics></math> or above are misleading. XFOIL’s <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mi>N</mi></msup><annotation encoding="application/x-tex">e^N</annotation></semantics></math> transition model with a reduced <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math> factor is generally reliable for bubble prediction down to about <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi><mo>=</mo><msup><mn>10</mn><mn>5</mn></msup></mrow><annotation encoding="application/x-tex">Re=10^5</annotation></semantics></math> when the flow reattaches [1], but wind-tunnel data such as those of Selig and co-workers [9] remain the reference.</p>
+
+## 8. Combat Aircraft
+
+<p>Combat aircraft operate across the widest range of conditions—subsonic cruise, transonic manoeuvre, supersonic dash—and their airfoils are compromises among them. Three section characteristics dominate: wave drag at supersonic speed, which demands very thin sections; the lift-dependent drag at high <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> in transonic manoeuvre, which depends on how much leading-edge suction the section can sustain; and maximum lift and buffet onset.</p>
+
+### 8.1 Worked example F: supersonic wave drag
+
+<p>In linearised supersonic flow the drag of a thin airfoil is [18]</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>d</mi></msub><mo>=</mo><mfrac><mrow><mn>4</mn><msup><mi>α</mi><mn>2</mn></msup></mrow><mi>β</mi></mfrac><mo>+</mo><mfrac><mn>2</mn><mi>β</mi></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mover><msup><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mi>d</mi><msub><mi>y</mi><mi>u</mi></msub></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mo accent="true">¯</mo></mover><mo>+</mo><mover><msup><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mi>d</mi><msub><mi>y</mi><mi>l</mi></msub></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mo accent="true">¯</mo></mover><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>β</mi><mo>=</mo><msqrt><mrow><msubsup><mi>M</mi><mi>∞</mi><mn>2</mn></msubsup><mo>−</mo><mn>1</mn></mrow></msqrt><mspace width="2.0em"></mspace><mtext mathvariant="normal">(15)</mtext></mrow><annotation encoding="application/x-tex">c_d = \frac{4\alpha^2}{\beta} + \frac{2}{\beta}\left(\overline{\left(\frac{dy_u}{dx}\right)^2}+\overline{\left(\frac{dy_l}{dx}\right)^2}\right), \qquad \beta=\sqrt{M_\infty^2-1} \qquad\text{(15)}</annotation></semantics></math></p>
+
+<p>For a symmetric biconvex section of thickness ratio <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> the thickness term is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>16</mn><msup><mi>τ</mi><mn>2</mn></msup><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>3</mn><mi>β</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">16\tau^2/(3\beta)</annotation></semantics></math>. At <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>=</mo><mn>1.6</mn></mrow><annotation encoding="application/x-tex">M=1.6</annotation></semantics></math> (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>1.249</mn></mrow><annotation encoding="application/x-tex">\beta=1.249</annotation></semantics></math>), this gives 38 counts for a 3 % section, 68 counts for 4 %, 107 for 5 % and 154 for 6 % (Fig. 13). For comparison, the turbulent skin friction of both surfaces at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi><mo>=</mo><mn>3</mn><mo>×</mo><msup><mn>10</mn><mn>7</mn></msup></mrow><annotation encoding="application/x-tex">Re=3\times10^7</annotation></semantics></math> is about 51 counts. Above about 4 % thickness, <i>wave drag of the section alone exceeds its skin friction</i>, and it grows with the square of thickness. This is why supersonic wings are thin—typically 3–5 % for fighters—and why the reduction in thickness has to be paid for in structural weight, fuel volume and low-speed maximum lift. The lift-dependent term, which can be written <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><msubsup><mi>C</mi><mi>L</mi><mn>2</mn></msubsup><mi>/</mi><mn>4</mn></mrow><annotation encoding="application/x-tex">\beta C_L^2/4</annotation></semantics></math> for a two-dimensional section, is also large; wings are therefore swept so that the leading edge lies inside the Mach cone (“subsonic leading edge”), allowing some leading-edge suction to be recovered with rounded, cambered leading edges inboard.</p>
+
+<div class="figrow one"><figure id="fig-13"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f5_supersonic.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f5_supersonic.svg" alt="Thickness wave drag of a biconvex section from linear theory (15), compared with turbulent skin friction of both surfaces." loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 13.</b> Thickness wave drag of a biconvex section from linear theory (15), compared with turbulent skin friction of both surfaces.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+### 8.2 Worked example G: sustained turn
+
+<p>Consider a generic light fighter of 10 t mass, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mn>40</mn></mrow><annotation encoding="application/x-tex">S=40</annotation></semantics></math> m² and available thrust 60 kN at 5 000 m and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>=</mo><mn>0.8</mn></mrow><annotation encoding="application/x-tex">M=0.8</annotation></semantics></math> (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mn>24</mn><mspace width="0.167em"></mspace><mn>200</mn></mrow><annotation encoding="application/x-tex">q=24\,200</annotation></semantics></math> Pa), with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><mo>=</mo><mn>0.020</mn></mrow><annotation encoding="application/x-tex">C_{D0}=0.020</annotation></semantics></math> (of which 0.008 is wing profile drag) and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>=</mo><mn>0.21</mn></mrow><annotation encoding="application/x-tex">K=0.21</annotation></semantics></math>. From (11) its sustained load factor is 4.41 at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>L</mi></msub><mo>=</mo><mn>0.447</mn></mrow><annotation encoding="application/x-tex">C_L=0.447</annotation></semantics></math>, a turn rate of 9.42 °/s. A 10 % reduction in wing profile drag raises this to only 4.46 g and 9.51 °/s (+1 %). A 10 % reduction in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>—which a section with better leading-edge suction, a leading-edge flap or variable camber can provide—raises it to 4.65 g and 9.96 °/s (+5.7 %). For manoeuvre, therefore, the airfoil’s <i>drag rise with lift</i> is roughly five times as important as its minimum drag. This is the aerodynamic logic behind manoeuvre flaps, leading-edge root extensions and the automatic camber scheduling of modern fighters. Fig. 14 extends the comparison to reductions of up to 30 %: the turn-rate gain from reducing <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> grows steadily, whereas the gain from wing minimum drag remains small throughout.</p>
+
+<div class="figrow one"><figure id="fig-14"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f12_fighter.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f12_fighter.svg" alt="Sustained turn rate of the generic light fighter at MM 0.8 and 5 000 m as wing profile drag or the induced-drag factor KK is reduced (worked example G)." loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 14.</b> Sustained turn rate of the generic light fighter at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math> 0.8 and 5 000 m as wing profile drag or the induced-drag factor <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> is reduced (worked example G).<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+### 8.3 Transonic buffet and high-incidence drag
+
+<p>Two further section characteristics shape combat aircraft performance. First, in transonic manoeuvre the thin wing section reaches its <i>buffet onset</i> boundary—where shock-induced separation becomes unsteady—at a lift coefficient well below its low-speed maximum. Buffet limits usable <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>L</mi></msub><annotation encoding="application/x-tex">C_L</annotation></semantics></math> for tracking and weapon delivery, and the drag rise that accompanies shock-induced separation cuts specific excess power just as the pilot demands it. Sections and wing twist are therefore tailored to delay buffet onset, and variable leading- and trailing-edge flaps are scheduled with Mach number and incidence to keep the section near its best drag-to-lift characteristic.</p>
+
+<p>Second, at high incidence the drag of a thin section is dominated by the loss of leading-edge suction: once the flow separates at the sharp leading edge, the resultant force acts nearly normal to the chord and the drag becomes roughly <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>L</mi></msub><mo>tan</mo><mi>α</mi></mrow><annotation encoding="application/x-tex">C_L\tan\alpha</annotation></semantics></math>. Combat aircraft with highly swept leading edges turn this into an advantage through vortex lift, but at the price of very high drag—useful for rapid deceleration but costly for sustained turns. The airfoil’s leading-edge radius and camber, together with leading-edge devices, decide how far along this path the aircraft travels before the drag penalty becomes prohibitive.</p>
+
+## 9. Helicopters
+
+### 9.1 Hover
+
+<p>In hover the rotor’s shaft power is the sum of induced and profile power. With the empirical induced-power factor <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>κ</mi><annotation encoding="application/x-tex">\kappa</annotation></semantics></math> and a mean blade drag coefficient <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub><annotation encoding="application/x-tex">\bar c_d</annotation></semantics></math>, momentum and blade-element theory give [5], [6]</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><mi>κ</mi><mfrac><msup><mi>T</mi><mrow><mn>3</mn><mi>/</mi><mn>2</mn></mrow></msup><msqrt><mrow><mn>2</mn><mi>ρ</mi><mi>A</mi></mrow></msqrt></mfrac><mo>+</mo><mfrac><mrow><mi>σ</mi><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub></mrow><mn>8</mn></mfrac><mi>ρ</mi><mi>A</mi><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>Ω</mi><mi>R</mi><mo stretchy="true" form="postfix">)</mo></mrow><mn>3</mn></msup><mspace width="2.0em"></mspace><mtext mathvariant="normal">(16)</mtext></mrow><annotation encoding="application/x-tex">P = \kappa\frac{T^{3/2}}{\sqrt{2\rho A}} + \frac{\sigma\bar c_d}{8}\rho A(\Omega R)^3 \qquad\text{(16)}</annotation></semantics></math></p>
+
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mi>π</mi><msup><mi>R</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">A=\pi R^2</annotation></semantics></math> is disk area, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math> the solidity and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Ω</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">\Omega R</annotation></semantics></math> tip speed. The figure of merit, the ratio of ideal to actual power, is</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mi>M</mi><mo>=</mo><mfrac><mrow><msubsup><mi>C</mi><mi>T</mi><mrow><mn>3</mn><mi>/</mi><mn>2</mn></mrow></msubsup><mi>/</mi><msqrt><mn>2</mn></msqrt></mrow><mrow><mi>κ</mi><msubsup><mi>C</mi><mi>T</mi><mrow><mn>3</mn><mi>/</mi><mn>2</mn></mrow></msubsup><mi>/</mi><msqrt><mn>2</mn></msqrt><mo>+</mo><mi>σ</mi><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub><mi>/</mi><mn>8</mn></mrow></mfrac><mspace width="2.0em"></mspace><mtext mathvariant="normal">(17)</mtext></mrow><annotation encoding="application/x-tex">FM = \frac{C_T^{3/2}/\sqrt2}{\kappa C_T^{3/2}/\sqrt2 + \sigma\bar c_d/8} \qquad\text{(17)}</annotation></semantics></math></p>
+
+<p>The airfoil appears through <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub><annotation encoding="application/x-tex">\bar c_d</annotation></semantics></math> evaluated at the mean blade lift coefficient <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>l</mi></msub><mo>≈</mo><mn>6</mn><msub><mi>C</mi><mi>T</mi></msub><mi>/</mi><mi>σ</mi></mrow><annotation encoding="application/x-tex">\bar c_l\approx6C_T/\sigma</annotation></semantics></math>. Here the classical polar of Bailey for the NACA 0012, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>d</mi></msub><mo>=</mo><mn>0.0087</mn><mo>−</mo><mn>0.0216</mn><mi>α</mi><mo>+</mo><mn>0.4</mn><msup><mi>α</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">c_d = 0.0087 - 0.0216\alpha + 0.4\alpha^2</annotation></semantics></math> [29], is used with an empirical drag-rise term beyond the onset of stall. Fig. 15 shows <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mi>M</mi></mrow><annotation encoding="application/x-tex">FM</annotation></semantics></math> as a function of blade loading for three sections: an advanced rotorcraft section (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mrow><mi>d</mi><mn>0</mn></mrow></msub><mo>=</mo><mn>0.0075</mn></mrow><annotation encoding="application/x-tex">c_{d0}=0.0075</annotation></semantics></math>, later stall), the NACA 0012 baseline and an eroded or rough blade (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mrow><mi>d</mi><mn>0</mn></mrow></msub><mo>=</mo><mn>0.0115</mn></mrow><annotation encoding="application/x-tex">c_{d0}=0.0115</annotation></semantics></math>, earlier stall). At <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>T</mi></msub><mi>/</mi><mi>σ</mi><mo>=</mo><mn>0.08</mn></mrow><annotation encoding="application/x-tex">C_T/\sigma=0.08</annotation></semantics></math> the figures of merit are 0.73, 0.71 and 0.67. The maximum values are 0.78, 0.75 and 0.73, reached at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>T</mi></msub><mi>/</mi><mi>σ</mi></mrow><annotation encoding="application/x-tex">C_T/\sigma</annotation></semantics></math> of 0.14, 0.125 and 0.12 respectively. Better sections thus give a higher peak <i>and</i> move it to higher blade loading, which allows lower solidity or lower tip speed for the same thrust—both of which reduce profile power further and, through tip speed, reduce noise.</p>
+
+<div class="figrow one"><figure id="fig-15"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f6_fm.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f6_fm.svg" alt="Rotor figure of merit versus blade loading for three blade sections (16)–(17). The fall at high CT/σC_T/\sigma represents onset of blade stall." loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 15.</b> Rotor figure of merit versus blade loading for three blade sections (16)–(17). The fall at high <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>T</mi></msub><mi>/</mi><mi>σ</mi></mrow><annotation encoding="application/x-tex">C_T/\sigma</annotation></semantics></math> represents onset of blade stall.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+### 9.2 Worked example H: hot-and-high hover payload
+
+<p>Take a generic 5.5 t utility helicopter with a four-bladed main rotor of 6.6 m radius, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>0.08</mn></mrow><annotation encoding="application/x-tex">\sigma=0.08</annotation></semantics></math> (chord 0.415 m), <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Ω</mi><mi>R</mi><mo>=</mo><mn>215</mn></mrow><annotation encoding="application/x-tex">\Omega R=215</annotation></semantics></math> m/s and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>κ</mi><mo>=</mo><mn>1.15</mn></mrow><annotation encoding="application/x-tex">\kappa=1.15</annotation></semantics></math>, hovering out of ground effect at 3 000 m, ISA+20 °C (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0.846</mn></mrow><annotation encoding="application/x-tex">\rho=0.846</annotation></semantics></math> kg/m³). Table&nbsp;5 gives the results. The blade loading is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>T</mi></msub><mi>/</mi><mi>σ</mi><mo>=</mo><mn>0.126</mn></mrow><annotation encoding="application/x-tex">C_T/\sigma=0.126</annotation></semantics></math>, close to the figure-of-merit peak; induced power is 947 kW and profile power 148 kW, 13.5 % of the main-rotor total of 1 095 kW.</p>
+
+<p>With engine power fixed at this value, the hover-capable gross mass changes as follows: if the whole blade drag polar is 10 % lower, it rises by 47 kg; if it is 25 % higher—typical of moderate leading-edge erosion or sand and dust abrasion—it falls by 127 kg. Against a useful load of perhaps 1.5–2 t, these are 2–3 % and 6–8 % respectively. Small changes in the airfoil’s drag therefore translate into substantial changes in what a helicopter can lift at a hot, high landing site, and erosion protection of the blade leading edge is a performance item as much as a maintenance one.</p>
+
+<p>Fig. 16 generalises the result for blade drag polars between 80 % and 140 % of the baseline. A perhaps surprising feature is that the effect is <i>larger at sea level</i> than at the hot-and-high condition: at sea level the same helicopter hovers at a lower blade loading, profile power is 17.6 % of the total rather than 13.5 %, and a 25 % increase in blade drag costs 182 kg rather than 127 kg. The airfoil’s drag therefore matters most where the rotor is lightly loaded, and its maximum lift and stall drag rise matter most where it is heavily loaded.</p>
+
+<div class="figrow one"><figure id="fig-16"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f13_heli_payload.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f13_heli_payload.svg" alt="Change in hover-capable gross mass of the generic 5.5 t helicopter at constant power as the blade drag polar is scaled, at sea level and at 3 000 m ISA+20 °C." loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 16.</b> Change in hover-capable gross mass of the generic 5.5 t helicopter at constant power as the blade drag polar is scaled, at sea level and at 3 000 m ISA+20 °C.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+<div class="tcap"><b>Table 5.</b> Worked example H: generic 5.5 t helicopter in hot-and-high hover.</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Quantity</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Density, 3 000 m ISA+20 (kg/m³)</td>
+<td style="text-align: right;">0.846</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>T</mi></msub><annotation encoding="application/x-tex">C_T</annotation></semantics></math>; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>T</mi></msub><mi>/</mi><mi>σ</mi></mrow><annotation encoding="application/x-tex">C_T/\sigma</annotation></semantics></math>; mean <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>l</mi></msub><annotation encoding="application/x-tex">\bar c_l</annotation></semantics></math></td>
+<td style="text-align: right;">0.0101; 0.126; 0.76</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Mean blade <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub><annotation encoding="application/x-tex">\bar c_d</annotation></semantics></math></td>
+<td style="text-align: right;">0.0129</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Induced power (kW)</td>
+<td style="text-align: right;">947</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Profile power (kW)</td>
+<td style="text-align: right;">148 (13.5 %)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Main-rotor power (kW)</td>
+<td style="text-align: right;">1 095</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Figure of merit</td>
+<td style="text-align: right;">0.75</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Δ hover mass, blade polar −10 %</td>
+<td style="text-align: right;">+47 kg</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Δ hover mass, blade polar +25 %</td>
+<td style="text-align: right;">−127 kg</td>
+</tr>
+</tbody>
+</table>
+
+### 9.3 Forward flight
+
+<p>In forward flight at advance ratio <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo>=</mo><mi>V</mi><mi>/</mi><mi>Ω</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">\mu=V/\Omega R</annotation></semantics></math>, main-rotor power can be written</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><mi>κ</mi><mi>T</mi><msub><mi>v</mi><mi>i</mi></msub><mo>+</mo><mfrac><mrow><mi>σ</mi><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub></mrow><mn>8</mn></mfrac><mi>ρ</mi><mi>A</mi><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>Ω</mi><mi>R</mi><mo stretchy="true" form="postfix">)</mo></mrow><mn>3</mn></msup><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><mn>4.65</mn><msup><mi>μ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><mi>ρ</mi><msup><mi>V</mi><mn>3</mn></msup><mi>f</mi><mspace width="2.0em"></mspace><mtext mathvariant="normal">(18)</mtext></mrow><annotation encoding="application/x-tex">P = \kappa T v_i + \frac{\sigma\bar c_{d}}{8}\rho A(\Omega R)^3(1+4.65\mu^2) + \tfrac12\rho V^3 f \qquad\text{(18)}</annotation></semantics></math></p>
+
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mi>i</mi></msub><annotation encoding="application/x-tex">v_i</annotation></semantics></math> is the induced velocity and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math> the equivalent flat-plate area of the fuselage and hub [5]. The induced term falls with speed, the parasite term rises with its cube, and the profile term rises with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>μ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\mu^2</annotation></semantics></math>—but (18) hides the most important airfoil effect. On the advancing side the blade tip sees a Mach number</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>M</mi><mrow><mi>A</mi><mi>T</mi></mrow></msub><mo>=</mo><mfrac><mrow><mi>Ω</mi><mi>R</mi><mo>+</mo><mi>V</mi></mrow><mi>a</mi></mfrac><mspace width="2.0em"></mspace><mtext mathvariant="normal">(19)</mtext></mrow><annotation encoding="application/x-tex">M_{AT} = \frac{\Omega R + V}{a} \qquad\text{(19)}</annotation></semantics></math></p>
+
+<p>which at 140 kt and sea level reaches 0.84 for the example rotor. A 12 % thick section with a critical Mach number near 0.64 at zero lift is then deep in its drag rise for a large part of each revolution. Meanwhile, on the retreating side, the blade must generate its share of lift at low dynamic pressure; local <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> climbs towards <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mo>max</mo></mrow></msub><annotation encoding="application/x-tex">c_{l,\max}</annotation></semantics></math> and drag rises with lift until retreating-blade stall sets a hard limit. The helicopter’s maximum speed, its high-speed range and its vibration level are thus set by the airfoil’s drag behaviour at <i>both</i> ends of its operating envelope—high Mach number at low <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math>, and low Mach number at high <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> [7], [17].</p>
+
+### 9.4 Worked example I: tip section and high-speed power
+
+<p>To capture these effects the profile power was integrated over blade radius and azimuth, with each element’s Mach number from (19) and a Lock-law compressibility drag increment. Two tip sections are compared on the same sea-level rotor with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>1.8</mn></mrow><annotation encoding="application/x-tex">f=1.8</annotation></semantics></math> m²: a conventional 12 % thick section (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>κ</mi><mi>A</mi></msub><mo>=</mo><mn>0.87</mn></mrow><annotation encoding="application/x-tex">\kappa_A=0.87</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mrow><mi>d</mi><mn>0</mn></mrow></msub><mo>=</mo><mn>0.0087</mn></mrow><annotation encoding="application/x-tex">c_{d0}=0.0087</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi></mrow></msub><mo>≈</mo><mn>0.64</mn></mrow><annotation encoding="application/x-tex">M_{cr}\approx0.64</annotation></semantics></math>) and a thin advanced tip section of 8 % thickness with supercritical-style design (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>κ</mi><mi>A</mi></msub><mo>=</mo><mn>0.92</mn></mrow><annotation encoding="application/x-tex">\kappa_A=0.92</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mrow><mi>d</mi><mn>0</mn></mrow></msub><mo>=</mo><mn>0.0080</mn></mrow><annotation encoding="application/x-tex">c_{d0}=0.0080</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi></mrow></msub><mo>≈</mo><mn>0.73</mn></mrow><annotation encoding="application/x-tex">M_{cr}\approx0.73</annotation></semantics></math>).</p>
+
+<p>Fig. 17 shows the result. In hover the profile power differs by only 8 % (162 versus 149 kW). At 140 kt, however, it is 261 kW for the conventional tip and 199 kW for the advanced tip—a 24 % difference, almost entirely from compressibility—and total main-rotor power falls from 812 to 750 kW (−7.6 %). Minimum power, at the best-endurance speed of about 78 kt, differs by only 3 %. The best specific range (distance per unit energy) improves by 5.1 %, and the best-range speed rises from 111 to 115 kt, because the advanced tip delays the compressibility penalty that otherwise limits economical cruise. The airfoil’s <i>drag-divergence behaviour</i> therefore buys high-speed capability, while its <i>minimum drag</i> buys hover and endurance.</p>
+
+<div class="figrow one"><figure id="fig-17"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f7_heli_fwd.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f7_heli_fwd.svg" alt="Main-rotor power versus forward speed for two tip sections (worked example I), with induced and parasite components. Dashed lines show profile power." loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 17.</b> Main-rotor power versus forward speed for two tip sections (worked example I), with induced and parasite components. Dashed lines show profile power.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+<p>This is the background to the families of dedicated rotorcraft airfoils developed since the 1970s—the Boeing VR series, Sikorsky SC1095, ONERA OA series and the RAE/Westland sections with the BERP tip, among others [17]. These combine thin, high-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><annotation encoding="application/x-tex">M_{DD}</annotation></semantics></math> outboard sections with thicker, high-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mo>max</mo></mrow></msub><annotation encoding="application/x-tex">c_{l,\max}</annotation></semantics></math> inboard sections, small pitching moments (because blade torsional loads and control loads depend on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>m</mi></msub><annotation encoding="application/x-tex">c_m</annotation></semantics></math>), and tip planforms that further delay compressibility and stall. A Westland Lynx with BERP blades set the absolute helicopter speed record of 400.87 km/h in 1986. Table&nbsp;6 summarises how the requirements change along the blade.</p>
+
+<div class="tcap"><b>Table 6.</b> Typical rotor-blade section requirements by radial station (conventional helicopter at high speed).</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Blade region</th>
+<th style="text-align: left;">Local <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math> (hover / advancing)</th>
+<th style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> range</th>
+<th style="text-align: left;">Section priorities</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Root (0.2–0.5 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math>)</td>
+<td style="text-align: left;">0.15–0.35 / 0.3–0.6</td>
+<td style="text-align: left;">0.4–1.2</td>
+<td style="text-align: left;">Thickness for structure, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mo>max</mo></mrow></msub><annotation encoding="application/x-tex">c_{l,\max}</annotation></semantics></math>, low drag at moderate <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi></mrow><annotation encoding="application/x-tex">Re</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Mid-span (0.5–0.85 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math>)</td>
+<td style="text-align: left;">0.35–0.55 / 0.6–0.8</td>
+<td style="text-align: left;">0.2–1.3</td>
+<td style="text-align: left;">High <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mo>max</mo></mrow></msub><annotation encoding="application/x-tex">c_{l,\max}</annotation></semantics></math> at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>≈</mo><mn>0.4</mn></mrow><annotation encoding="application/x-tex">M\approx0.4</annotation></semantics></math>, low <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>m</mi></msub><annotation encoding="application/x-tex">c_m</annotation></semantics></math>, wide drag bucket</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Tip (0.85–1.0 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math>)</td>
+<td style="text-align: left;">0.55–0.65 / 0.8–0.9</td>
+<td style="text-align: left;">−0.2–1.0</td>
+<td style="text-align: left;">Thin, high <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><annotation encoding="application/x-tex">M_{DD}</annotation></semantics></math> at low <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math>, low <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>m</mi></msub><annotation encoding="application/x-tex">c_m</annotation></semantics></math>, compatible with tip sweep</td>
+</tr>
+</tbody>
+</table>
+
+### 9.5 Dynamic stall and vibration
+
+<p>The retreating blade in high-speed or high-thrust flight undergoes large, rapid incidence changes once per revolution. Under these conditions the section does not stall quasi-statically: a leading-edge vortex forms and is shed, producing transient overshoots in lift and very large excursions in drag and nose-down pitching moment [5]. The resulting torsional loads and vibrations, rather than the mean power, usually limit thrust and speed. Static polars, even good ones, therefore underestimate the drag that a rotor experiences near its envelope boundary; sections with gentle trailing-edge stall and a high static <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mo>max</mo></mrow></msub><annotation encoding="application/x-tex">c_{l,\max}</annotation></semantics></math> also tend to delay dynamic stall, which is a further reason why the drag-rise behaviour of the section matters more for rotorcraft than its minimum drag.</p>
+
+## 10. Tiltrotors, Compounds and Multicopters
+
+### 10.1 Tiltrotors
+
+<p>A tiltrotor’s proprotor must be an efficient rotor in hover and an efficient propeller in cruise. The two requirements pull blade twist and section choice in opposite directions: hover favours moderate twist and sections with low drag at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>l</mi></msub><mo>≈</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">c_l\approx0.5</annotation></semantics></math>–0.7, while high-speed cruise at large inflow angles favours much higher twist and thin, high-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><annotation encoding="application/x-tex">M_{DD}</annotation></semantics></math> tip sections. Equation (13) applies to cruise; Fig. 9 shows that at the large <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math> of a tiltrotor in cruise the efficiency penalty of a modest <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>l</mi></msub><mi>/</mi><msub><mi>c</mi><mi>d</mi></msub></mrow><annotation encoding="application/x-tex">c_l/c_d</annotation></semantics></math> is small <i>if</i> each element is at its best <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math>, so the difficulty is less the minimum drag than keeping every section near its drag bucket in both modes [6], [30].</p>
+
+<p>The tiltrotor’s wing provides a second, less obvious airfoil-drag effect. Because it must be stiff enough to avoid whirl flutter, the wing is very thick (above 20 % on current designs), which raises profile drag and lowers <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><annotation encoding="application/x-tex">M_{DD}</annotation></semantics></math>, contributing to the cruise-speed ceiling of the configuration. In hover the wing sits in the rotor wake and experiences a <i>download</i> of order 10 % of rotor thrust—effectively the drag of the section at about 90° incidence. Deflecting the flaperons to reduce the wing’s projected area in the wake reduces this download, and every percentage point of download recovered adds roughly one percentage point of hover-capable gross mass [30]. For a generic 20 t tiltrotor, reducing download from 10 % to 7 % of rotor thrust raises hover-capable gross mass by about 3.3 %, some 670 kg, which may be 10–15 % of the useful payload. Here the relevant “airfoil drag characteristic” is the drag of the wing section at 90° incidence, with and without flap deflection—far outside any conventional polar, but decisive for this configuration.</p>
+
+### 10.2 Compound helicopters
+
+<p>Compound and lift-offset designs—with auxiliary propulsion and, in some cases, wings—offload the rotor at high speed and slow it to keep the advancing tip below drag divergence. Speeds of 250 kt and above have been demonstrated, for example by the Eurocopter X3, which reached 255 kt in level flight in 2013. Slowing the rotor raises the advance ratio to 0.5–0.8, so a large part of the retreating side lies in reversed flow, where the section meets air from its trailing edge. Airfoil drag characteristics in reverse flow, and at very high and very low local Mach number on the same revolution, therefore become design drivers, and section designs with blunter trailing edges or tailored camber are studied specifically for these rotors.</p>
+
+### 10.3 Multicopters and eVTOL
+
+<p>Small multicopter drones combine low Reynolds number with high blade loading. Blade chords of 15–25 mm at tip speeds of 60–100 m/s give Reynolds numbers of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><msup><mn>10</mn><mn>4</mn></msup></mrow><annotation encoding="application/x-tex">3\times10^4</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1.5</mn><mo>×</mo><msup><mn>10</mn><mn>5</mn></msup></mrow><annotation encoding="application/x-tex">1.5\times10^5</annotation></semantics></math>, where profile drag coefficients of 0.015–0.035 are typical [10].</p>
+
+<p>Worked example J considers a 2 kg quadcopter with four 254 mm (10 in) two-bladed rotors (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>0.10</mn></mrow><annotation encoding="application/x-tex">\sigma=0.10</annotation></semantics></math>, tip speed 80 m/s, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>κ</mi><mo>=</mo><mn>1.25</mn></mrow><annotation encoding="application/x-tex">\kappa=1.25</annotation></semantics></math>, representative Reynolds number <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6.5</mn><mo>×</mo><msup><mn>10</mn><mn>4</mn></msup></mrow><annotation encoding="application/x-tex">6.5\times10^4</annotation></semantics></math>), a 74 Wh battery of which 80 % is usable, motor and controller efficiency 0.75 and 5 W of avionics. Table&nbsp;7 gives the results. As <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub><annotation encoding="application/x-tex">\bar c_d</annotation></semantics></math> rises from 0.015 to 0.035, the profile power of each rotor more than doubles (6.0 to 13.9 W), the figure of merit falls from 0.69 to 0.59 and hover endurance falls from 14.7 to 12.5 min (−15 %). For multicopters, hover is the dominant flight condition and the airfoil’s low-Reynolds-number drag is therefore one of the few aerodynamic parameters with a first-order effect on endurance, beside disk loading.</p>
+
+<div class="tcap"><b>Table 7.</b> Worked example J: 2 kg quadcopter hover.</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Rotor <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub><annotation encoding="application/x-tex">\bar c_d</annotation></semantics></math></th>
+<th style="text-align: right;">Profile power per rotor (W)</th>
+<th style="text-align: right;">FM</th>
+<th style="text-align: right;">Total electrical power (W)</th>
+<th style="text-align: right;">Hover endurance (min)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">0.015</td>
+<td style="text-align: right;">6.0</td>
+<td style="text-align: right;">0.69</td>
+<td style="text-align: right;">242</td>
+<td style="text-align: right;">14.7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.020</td>
+<td style="text-align: right;">8.0</td>
+<td style="text-align: right;">0.66</td>
+<td style="text-align: right;">253</td>
+<td style="text-align: right;">14.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">0.025</td>
+<td style="text-align: right;">9.9</td>
+<td style="text-align: right;">0.64</td>
+<td style="text-align: right;">263</td>
+<td style="text-align: right;">13.5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.035</td>
+<td style="text-align: right;">13.9</td>
+<td style="text-align: right;">0.59</td>
+<td style="text-align: right;">285</td>
+<td style="text-align: right;">12.5</td>
+</tr>
+</tbody>
+</table>
+
+<p>Larger electric VTOL aircraft for urban air mobility add a further trade-off: noise regulations push tip speeds down, raising blade <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> for the same thrust and moving the sections towards the high-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> end of their drag polar. Airfoils that combine low drag at high <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> with benign stall are needed, much as for the endurance UAV of Section&nbsp;7.</p>
+
+<p>Fig. 18 illustrates the trade for a generic six-rotor, 2.2 t lift-plus-cruise vehicle with rotors of 1.6 m radius and solidity 0.15 in hover. As tip speed falls from 230 m/s, profile power falls with its cube and the figure of merit rises; but the blade loading rises at the same time, and once the mean blade lift coefficient approaches stall the drag rise reverses the trend. With a conventional section the best figure of merit, 0.78, occurs at a tip speed of about 135 m/s and performance collapses below about 130 m/s; with an advanced section having lower drag and a later drag rise, the optimum moves to about 124 m/s with a figure of merit of 0.80. Since rotor noise falls steeply with tip speed, the section’s drag behaviour at high <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> translates directly into how quiet the vehicle can be made without a performance penalty—or, alternatively, how much solidity, and therefore blade weight, must be added to reach a noise target.</p>
+
+<div class="figrow one"><figure id="fig-18"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f16_evtol.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f16_evtol.svg" alt="Hover figure of merit versus tip speed for a generic 2.2 t six-rotor eVTOL lift rotor with two blade sections. The fall at low tip speed is caused by blade stal" loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 18.</b> Hover figure of merit versus tip speed for a generic 2.2 t six-rotor eVTOL lift rotor with two blade sections. The fall at low tip speed is caused by blade stall as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>T</mi></msub><mi>/</mi><mi>σ</mi></mrow><annotation encoding="application/x-tex">C_T/\sigma</annotation></semantics></math> rises.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+<div class="figrow one"><figure id="fig-19"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f10_quad.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f10_quad.svg" alt="Hover endurance and figure of merit of the generic 2 kg quadcopter versus rotor mean profile drag coefficient (worked example J)." loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 19.</b> Hover endurance and figure of merit of the generic 2 kg quadcopter versus rotor mean profile drag coefficient (worked example J).<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+<p>Fig. 19 shows the trend continuously: each 0.001 of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub><annotation encoding="application/x-tex">\bar c_d</annotation></semantics></math> costs about 7 s of hover at this size, and the figure of merit falls almost linearly. Small rotor blades are therefore worth making thin, sharp-edged and smooth, and propeller catalogues that quote static thrust at a single rotational speed hide most of this sensitivity.</p>
+
+## 11. Second-Order Couplings: Moment, Trim and Propulsion Integration
+
+### 11.1 Pitching moment and trim drag
+
+<p>An airfoil is not described by its drag polar alone; its pitching moment <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>m</mi></msub><annotation encoding="application/x-tex">c_m</annotation></semantics></math> also carries a drag cost. Supercritical and aft-loaded sections, which obtain much of their lift near the trailing edge, have large nose-down moments. On a conventional aircraft the horizontal tail must balance this with a download, so the wing must carry more lift than the aircraft weight. The result is <i>trim drag</i>: extra induced drag on the wing, plus the induced and profile drag of the loaded tail. Its size depends on centre-of-gravity position and tail arm, and is commonly of the order of one to a few per cent of cruise drag [3]. A section chosen for 2 % lower profile drag can therefore lose part of its advantage at the aircraft level if its moment is much more negative. Fuel-transfer systems that move the centre of gravity aft in cruise are, in effect, a way to recover trim drag created partly by the choice of airfoil.</p>
+
+<p>The constraint is sharper elsewhere. Tailless aircraft and flying wings need sections with near-zero or slightly positive moment (reflexed camber), which generally costs minimum drag and maximum lift. Helicopter blades, as noted in Section&nbsp;9, need small <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>m</mi></msub><annotation encoding="application/x-tex">c_m</annotation></semantics></math> to limit torsional and control loads; for decades this kept rotorcraft on symmetric sections despite their higher drag, and advanced rotor airfoils use trailing-edge tabs or reflex to keep moments small while recovering lift and drag performance [17].</p>
+
+### 11.2 Propulsion integration
+
+<p>Propellers and engines change the flow over the airfoil. A tractor propeller slipstream raises the local dynamic pressure on the washed part of the wing and makes the boundary layer periodically turbulent; the profile drag of that part of the wing therefore rises, and laminar-flow benefits are limited to the unwashed span. Distributed electric propulsion, studied for example in NASA’s X-57 programme, places many small propellers along the leading edge to increase lift at low speed, so that a smaller, more highly loaded wing—with lower wetted area and profile drag in cruise—can be used. The airfoil must then perform well both in a powerful slipstream at take-off and in clean flow at cruise.</p>
+
+<p>Engine placement also interacts with the section’s pressure distribution. Fujino’s over-the-wing nacelle for the HondaJet was positioned so that its interference with the wing’s supersonic region <i>reduced</i> wave drag at cruise, and the same aircraft uses a natural-laminar-flow wing section [31]. Boundary-layer ingestion, in which an engine swallows the low-momentum fluid of a wing or fuselage boundary layer, goes further: part of the energy lost to profile drag is recovered as reduced propulsive power. In such configurations section drag is no longer simply a loss to be minimised but a flow to be managed jointly with the propulsor.</p>
+
+## 12. Case Studies
+
+<p>The worked examples above use generic parameters. The following short case studies show the same principles in real designs; the descriptions are qualitative and drawn from the cited open literature.</p>
+
+### 12.1 Laminar-flow piston fighters
+
+<p>During the Second World War several designs adopted the new laminar-flow sections in the hope of large drag reductions. In service, achieved laminar extent was limited by manufacturing waviness, rivets, paint, insect contamination and combat damage. Nevertheless, the sections’ higher critical Mach number and thinner, more favourable pressure distributions proved valuable at the high diving speeds of the period [11], [12]—an early demonstration that the <i>compressibility</i> characteristics of a section can matter more in practice than its minimum drag.</p>
+
+### 12.2 Natural laminar flow on a business jet
+
+<p>The HondaJet combines a natural-laminar-flow wing section (SHM-1), a natural-laminar-flow fuselage nose and over-the-wing engine mounts [31]. To sustain laminar flow the wing uses an integrally machined metal skin to minimise waviness, steps and gaps. Low sweep, moderate Reynolds number and careful surface engineering—exactly the conditions identified in Sections&nbsp;2 and 4—allowed a laminar wing to reach production on a jet aircraft, where transport-size wings with higher sweep and Reynolds number have not yet done so.</p>
+
+### 12.3 Supersonic transport
+
+<p>Concorde’s wing is a very thin, cambered and twisted ogival delta. Its thinness limits supersonic wave drag, in line with (15); the price is a low-speed regime in which lift comes largely from leading-edge vortices at high incidence, with high induced drag, high take-off power and high noise. The thin section, chosen for its supersonic drag characteristics, effectively sets the aircraft’s low-speed performance and community-noise problem.</p>
+
+### 12.4 High-speed helicopter rotor
+
+<p>The BERP rotor of the Westland Lynx combined advanced rotor sections with a tip planform designed to delay both advancing-blade compressibility and retreating-blade stall. It enabled the 1986 speed record noted in Section&nbsp;9 and illustrates the conclusion of worked example I: for a helicopter, the drag <i>rise</i> of the tip sections with Mach number and lift coefficient sets the speed envelope.</p>
+
+### 12.5 Rotorcraft on Mars
+
+<p>The Ingenuity Mars helicopter flew in an atmosphere with roughly one per cent of Earth’s sea-level density. Its rotor blades operated at chord Reynolds numbers of only <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mn>3</mn></msup><annotation encoding="application/x-tex">10^3</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mn>4</mn></msup><annotation encoding="application/x-tex">10^4</annotation></semantics></math> while the low speed of sound pushed tip Mach numbers towards 0.7 [32], [33]. In this regime viscous drag is a large fraction of rotor power, and studies showed that thin cambered plates can outperform conventional airfoils, giving higher maximum thrust and figure of merit [33]. This is the extreme limit of the low-Reynolds-number trend shown in Sections&nbsp;7 and 10.</p>
+
+### 12.6 Sailplane evolution
+
+<p>The move from wooden to glass-fibre sailplanes in the 1960s allowed exact, smooth wing contours and made the full laminar potential of the Wortmann and Eppler sections attainable. Maximum glide ratios rose from about 30 to above 40 for standard-class gliders and above 60 for open-class gliders, with laminar section drag, aspect ratio and contamination control as the main levers [4], [15]. Worked example D reproduces the sensitivity behind this history.</p>
+
+## 13. In-Service Degradation of Airfoil Drag
+
+<p>The airfoil drag that a vehicle experiences in service is rarely the drag of the clean, as-designed section. Several mechanisms degrade it, and their importance varies with vehicle type in a way that mirrors the sensitivities found above.</p>
+
+<p><i>Contamination and roughness.</i> Insect debris collected near the ground, rain, dust and paint degradation all promote early transition. For laminar sections the effect is large—worked example D showed a 14 % loss of glide ratio—while for sections already turbulent the penalty is the smaller increase of turbulent skin friction with roughness height. The permissible roughness for laminar flow is a small fraction of the local boundary-layer thickness, so surface standards for laminar wings are far tighter than for conventional ones [21], [24].</p>
+
+<p><i>Manufacturing tolerances.</i> Steps, gaps and waviness at panel joints, fastener heads and leading-edge attachments can cause premature transition. Experience from laminar-flow flight programmes shows that achievable production tolerances, rather than aerodynamic design, now limit how much laminar flow can be relied upon [21], [25].</p>
+
+<p><i>Icing.</i> Ice accretion changes the leading-edge geometry. Even thin roughness-type ice raises drag considerably and lowers maximum lift; horn and ridge ice can raise section drag several-fold and cause early stall [34]. For fixed-wing aircraft this reduces climb and stall margins; for helicopters it raises rotor torque and can exhaust the power margin in hover. Ice protection systems are certified against these performance losses.</p>
+
+<p><i>Erosion.</i> Helicopter rotor blades, propellers and fan blades operating in sand, dust and rain suffer leading-edge erosion that roughens and reshapes the section. Worked example H showed that a 25 % increase in blade drag costs about 127 kg of hot-and-high hover capability on a 5.5 t helicopter. Protective erosion strips (nickel, titanium) and polyurethane tapes are therefore performance items as well as maintenance items, and their own effect on section shape near the leading edge must be considered.</p>
+
+<p><i>Aeroelastic deformation.</i> Flexible wings and blades twist and bend under load, changing the local <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> at which each section operates and moving it within or out of its drag bucket. This is significant for very high-aspect-ratio wings and for rotor blades, whose elastic twist varies around the azimuth.</p>
+
+## 14. Predicting Airfoil Drag
+
+<p>Reliable performance prediction depends on reliable section drag, and the methods available differ in cost and fidelity.</p>
+
+<p><i>Handbook and empirical methods</i> such as (2)–(3), Hoerner’s data [20] and component build-up methods [2], [22] are adequate for conceptual design and for trend studies such as those in this paper. They do not capture pressure-gradient effects on transition, laminar separation bubbles or detailed compressibility behaviour.</p>
+
+<p><i>Viscous–inviscid interaction codes</i> couple a panel or Euler solution of the outer flow to an integral boundary-layer formulation with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mi>N</mi></msup><annotation encoding="application/x-tex">e^N</annotation></semantics></math> transition prediction. XFOIL [1] for incompressible and weakly compressible flow, and ISES/MSES [35] for transonic flow, are the standard tools; they predict minimum drag and drag-bucket behaviour of attached-flow sections typically within a few drag counts, and laminar separation bubbles reasonably well down to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi><mo>≈</mo><msup><mn>10</mn><mn>5</mn></msup></mrow><annotation encoding="application/x-tex">Re\approx10^5</annotation></semantics></math>. Their limitations—at and beyond maximum lift, in massive separation, at very low Reynolds number and in unsteady conditions such as the oscillating incidence of a rotor blade—are the regions where performance is often most sensitive to the airfoil (Sections&nbsp;7–9). Extending such codes, for example with roughness and contamination models, improved post-stall correlations or rotor-relevant unsteady corrections, is a productive direction for improvement.</p>
+
+<p><i>RANS CFD with transition models</i> (for example the correlation-based <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><msub><mi>e</mi><mi>θ</mi></msub></mrow><annotation encoding="application/x-tex">Re_\theta</annotation></semantics></math> model [36]) handles complex geometry, shocks and separation, but predicted drag remains sensitive to grid and turbulence modelling, and transition modelling in particular is still under development. <i>Large-eddy and direct simulation</i> resolve bubbles and transition physics but remain research tools for sections.</p>
+
+<p><i>Wind-tunnel and flight measurement</i>, by wake-rake momentum deficit in low-turbulence tunnels and by flight-test wake surveys, remain the reference for section drag, especially at low Reynolds number [9] and for laminar sections whose behaviour depends on free-stream turbulence. A sound design process uses fast codes to explore, higher-fidelity CFD to check, and test data to calibrate. Table&nbsp;8 summarises the trade-offs.</p>
+
+<div class="tcap"><b>Table 8.</b> Methods for obtaining section drag data.</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Method</th>
+<th style="text-align: left;">Cost per polar</th>
+<th style="text-align: left;">Strengths</th>
+<th style="text-align: left;">Weak regimes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Handbook build-up, eqs. (2)–(3)</td>
+<td style="text-align: left;">Negligible</td>
+<td style="text-align: left;">Trends, conceptual sizing</td>
+<td style="text-align: left;">Pressure-gradient effects, bubbles, stall, transonic</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Viscous–inviscid (XFOIL, MSES)</td>
+<td style="text-align: left;">Seconds</td>
+<td style="text-align: left;">Minimum drag, drag bucket, transition, bubbles to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi><mo>≈</mo><msup><mn>10</mn><mn>5</mn></msup></mrow><annotation encoding="application/x-tex">Re\approx10^5</annotation></semantics></math>, optimisation</td>
+<td style="text-align: left;">Post-stall, massive separation, very low <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi></mrow><annotation encoding="application/x-tex">Re</annotation></semantics></math>, unsteady</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">RANS with transition model</td>
+<td style="text-align: left;">Hours</td>
+<td style="text-align: left;">Shocks, separation, 3-D geometry, high-lift systems</td>
+<td style="text-align: left;">Transition and separation sensitivity to models and grids</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LES / DNS</td>
+<td style="text-align: left;">Days to weeks</td>
+<td style="text-align: left;">Bubble and transition physics</td>
+<td style="text-align: left;">Cost; design use limited</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Wind tunnel (wake rake)</td>
+<td style="text-align: left;">Days, high cost</td>
+<td style="text-align: left;">Reference data, real surfaces, low-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi></mrow><annotation encoding="application/x-tex">Re</annotation></semantics></math></td>
+<td style="text-align: left;">Tunnel turbulence, wall corrections, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi></mrow><annotation encoding="application/x-tex">Re</annotation></semantics></math> scaling</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Flight test</td>
+<td style="text-align: left;">Very high</td>
+<td style="text-align: left;">True operating environment, contamination</td>
+<td style="text-align: left;">Limited conditions, instrumentation</td>
+</tr>
+</tbody>
+</table>
+
+## 15. Airfoil Selection and Multi-Point Design
+
+<p>The results above suggest that the classical practice of selecting an airfoil for a single design point—minimum drag at the cruise <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math>, say—is inadequate for most vehicles. A better formulation weights the section drag by the time, energy or power that each operating condition accounts for. For a fixed-wing aircraft a natural objective is</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo>=</mo><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>w</mi><mi>i</mi></msub><mspace width="0.167em"></mspace><msub><mi>c</mi><mi>d</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>,</mo><mi>R</mi><msub><mi>e</mi><mi>i</mi></msub><mo>,</mo><msub><mi>M</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="2.0em"></mspace><mtext mathvariant="normal">(20)</mtext></mrow><annotation encoding="application/x-tex">J = \sum_i w_i\, c_d(c_{l,i}, Re_i, M_i) \qquad\text{(20)}</annotation></semantics></math></p>
+
+<p>where the conditions <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> cover climb, cruise at several weights, loiter and descent, and the weights <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>i</mi></msub><annotation encoding="application/x-tex">w_i</annotation></semantics></math> reflect fuel burned (or energy used) in each, multiplied by the local sensitivity of fuel to drag derived in Section&nbsp;3. For a rotor blade the natural weighting is by the cube of the local velocity, because profile power at a blade element is proportional to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>U</mi><mn>3</mn></msup><msub><mi>c</mi><mi>d</mi></msub></mrow><annotation encoding="application/x-tex">U^3 c_d</annotation></semantics></math>; the objective is then an integral over radius and azimuth,</p>
+
+<p class="eqn"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>J</mi><mrow><mi>r</mi><mi>o</mi><mi>t</mi><mi>o</mi><mi>r</mi></mrow></msub><mo>=</mo><msubsup><mo>∫</mo><mn>0</mn><mrow><mn>2</mn><mi>π</mi></mrow></msubsup><mspace width="-0.167em"></mspace><mspace width="-0.167em"></mspace><msubsup><mo>∫</mo><msub><mi>r</mi><mn>0</mn></msub><mi>R</mi></msubsup><mi>U</mi><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>r</mi><mo>,</mo><mi>ψ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mn>3</mn></msup><mspace width="0.167em"></mspace><msub><mi>c</mi><mi>d</mi></msub><mo minsize="1.2" maxsize="1.2" stretchy="false" form="prefix">(</mo><msub><mi>c</mi><mi>l</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>r</mi><mo>,</mo><mi>ψ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mi>R</mi><mi>e</mi><mo>,</mo><mi>M</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>r</mi><mo>,</mo><mi>ψ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo minsize="1.2" maxsize="1.2" stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>c</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>r</mi><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><mi>d</mi><mi>r</mi><mspace width="0.167em"></mspace><mi>d</mi><mi>ψ</mi><mspace width="2.0em"></mspace><mtext mathvariant="normal">(21)</mtext></mrow><annotation encoding="application/x-tex">J_{rotor} = \int_0^{2\pi}\!\!\int_{r_0}^{R} U(r,\psi)^3\, c_d\big(c_l(r,\psi), Re, M(r,\psi)\big)\, c(r)\,dr\,d\psi \qquad\text{(21)}</annotation></semantics></math></p>
+
+<p>which automatically emphasises the advancing tip and penalises compressibility drag there, as worked example I showed.</p>
+
+<p>Such objectives must be accompanied by constraints that encode the other roles of the section: minimum thickness (for structure, fuel or stiffness), maximum lift and stall behaviour (for take-off, landing, retreating blade or manoeuvre), pitching moment (for trim drag or control loads), buffet margin, and robustness to roughness. The last is particularly important: a section optimised for the clean condition can be fragile, losing much of its advantage when transition is forced. A robust formulation evaluates the drag at both free and fixed transition and penalises the difference, or optimises the expected drag over a distribution of surface conditions.</p>
+
+<p>Viscous–inviscid codes such as XFOIL are well suited to these multi-point formulations because each evaluation takes a fraction of a second, allowing thousands of candidate shapes to be assessed with gradient-based or evolutionary optimisers. The weak points, as noted in Section&nbsp;14, are high-lift, post-stall and strongly unsteady conditions, so multi-point optimisations usually verify the final shapes with RANS or wind-tunnel data in those regions. Extending open codes so that the mission-weighted objectives (20)–(21) and the robustness constraints can be expressed directly would make them considerably more useful for vehicle-level design.</p>
+
+## 16. Synthesis and Design Guidance
+
+<p>Table&nbsp;9 collects the results of the worked examples. The final column normalises each result, where meaningful, to the performance change per 1 % change of section drag.</p>
+
+<div class="tcap"><b>Table 9.</b> Summary of worked examples.</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Ex.</th>
+<th style="text-align: left;">Vehicle</th>
+<th style="text-align: left;">Change in airfoil characteristic</th>
+<th style="text-align: left;">Performance effect</th>
+<th style="text-align: left;">Per 1 % section drag</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">A</td>
+<td style="text-align: left;">Jet transport</td>
+<td style="text-align: left;">Wing profile drag −10 %</td>
+<td style="text-align: left;">Trip fuel −2.3 % (2 500 km)</td>
+<td style="text-align: left;">≈0.23 % fuel</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">B</td>
+<td style="text-align: left;">Jet transport</td>
+<td style="text-align: left;">Laminar wing: section <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>d</mi></msub><annotation encoding="application/x-tex">c_d</annotation></semantics></math> −29 % on 80 % of area</td>
+<td style="text-align: left;">Trip fuel −5.3 %</td>
+<td style="text-align: left;">≈0.23 % fuel</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C</td>
+<td style="text-align: left;">Jet transport</td>
+<td style="text-align: left;">Supercritical vs conventional section</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mi>/</mi><mi>c</mi></mrow><annotation encoding="application/x-tex">t/c</annotation></semantics></math> 7.1 % → 14.3 % at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><annotation encoding="application/x-tex">M_{DD}</annotation></semantics></math> 0.80, or sweep 35° → 13°</td>
+<td style="text-align: left;">Indirect: weight, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">Jet transport, take-off</td>
+<td style="text-align: left;">Take-off <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math> +1 % / +5 % (high-lift sections)</td>
+<td style="text-align: left;">OEI-limited take-off mass +640 kg / +3.2 t</td>
+<td style="text-align: left;">≈0.8 % mass per 1 % <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">Light aircraft</td>
+<td style="text-align: left;">Wing profile drag −10 %; laminar wing (−45 counts)</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>V</mi><mo>max</mo></msub><annotation encoding="application/x-tex">V_{\max}</annotation></semantics></math> +1.4 %; +5.7 %</td>
+<td style="text-align: left;">≈0.14 % speed</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">Turboprop</td>
+<td style="text-align: left;">Wing profile drag −10 %</td>
+<td style="text-align: left;">Range +2.7 %</td>
+<td style="text-align: left;">≈0.27 % range</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">Propeller</td>
+<td style="text-align: left;">Blade <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>l</mi></msub><mi>/</mi><msub><mi>c</mi><mi>d</mi></msub></mrow><annotation encoding="application/x-tex">c_l/c_d</annotation></semantics></math> 50 → 80</td>
+<td style="text-align: left;">Local efficiency +1.5 points at optimum</td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D</td>
+<td style="text-align: left;">Sailplane</td>
+<td style="text-align: left;">Contamination: section <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>d</mi></msub><annotation encoding="application/x-tex">c_d</annotation></semantics></math> +58 %</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mi>/</mi><mi>D</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>max</mo></msub><annotation encoding="application/x-tex">(L/D)_{\max}</annotation></semantics></math> 40.3 → 34.5 (−14 %)</td>
+<td style="text-align: left;">≈0.25 % glide ratio</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E</td>
+<td style="text-align: left;">Mini-UAV</td>
+<td style="text-align: left;">Bubble-prone section (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>d</mi></msub><annotation encoding="application/x-tex">c_d</annotation></semantics></math> +87 % at loiter <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math>)</td>
+<td style="text-align: left;">Endurance −14 %</td>
+<td style="text-align: left;">≈0.16 % endurance</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">Supersonic</td>
+<td style="text-align: left;">Section <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mi>/</mi><mi>c</mi></mrow><annotation encoding="application/x-tex">t/c</annotation></semantics></math> 4 % → 3 % at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math> 1.6</td>
+<td style="text-align: left;">Wave drag 68 → 38 counts</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∝</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>t</mi><mi>/</mi><mi>c</mi><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\propto (t/c)^2</annotation></semantics></math></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">G</td>
+<td style="text-align: left;">Fighter</td>
+<td style="text-align: left;">Wing profile drag −10 %; or <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> −10 %</td>
+<td style="text-align: left;">Turn rate +1.0 %; or +5.7 %</td>
+<td style="text-align: left;">≈0.1 %; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> ≈0.6 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">H</td>
+<td style="text-align: left;">Helicopter, hover</td>
+<td style="text-align: left;">Blade polar −10 % / +25 %</td>
+<td style="text-align: left;">+47 kg / −127 kg hover mass</td>
+<td style="text-align: left;">≈0.09 % of gross mass</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">I</td>
+<td style="text-align: left;">Helicopter, 140 kt</td>
+<td style="text-align: left;">Thin high-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>D</mi><mi>D</mi></mrow></msub><annotation encoding="application/x-tex">M_{DD}</annotation></semantics></math> tip section</td>
+<td style="text-align: left;">Rotor power −7.6 %; best specific range +5.1 %</td>
+<td style="text-align: left;">Mach-driven</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">J</td>
+<td style="text-align: left;">Quadcopter</td>
+<td style="text-align: left;">Rotor <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub><annotation encoding="application/x-tex">\bar c_d</annotation></semantics></math> 0.015 → 0.035</td>
+<td style="text-align: left;">FM 0.69 → 0.59; endurance −15 %</td>
+<td style="text-align: left;">≈0.11 % endurance</td>
+</tr>
+</tbody>
+</table>
+
+<p>A complementary view is the <i>value of one drag count</i>, which designers use to set priorities among competing refinements. Table&nbsp;10 gives it for the generic vehicles.</p>
+
+<div class="tcap"><b>Table 10.</b> Value of one drag count (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><msub><mi>C</mi><mi>D</mi></msub></mrow><annotation encoding="application/x-tex">\Delta C_D</annotation></semantics></math> or <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub></mrow><annotation encoding="application/x-tex">\Delta \bar c_d</annotation></semantics></math> = 0.0001) for the generic vehicles.</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Vehicle (example)</th>
+<th style="text-align: left;">One count of</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Jet transport (A)</td>
+<td style="text-align: left;">Aircraft <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>D</mi></msub><annotation encoding="application/x-tex">C_D</annotation></semantics></math></td>
+<td style="text-align: left;">22.7 kg fuel per 2 500 km flight (0.33 %)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Regional turboprop</td>
+<td style="text-align: left;">Aircraft <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>D</mi></msub><annotation encoding="application/x-tex">C_D</annotation></semantics></math></td>
+<td style="text-align: left;">0.29 % range</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sailplane (D)</td>
+<td style="text-align: left;">Aircraft <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>D</mi></msub><annotation encoding="application/x-tex">C_D</annotation></semantics></math></td>
+<td style="text-align: left;">+0.21 in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mi>/</mi><mi>D</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>max</mo></msub><annotation encoding="application/x-tex">(L/D)_{\max}</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Light fighter (G)</td>
+<td style="text-align: left;">Aircraft <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>D</mi></msub><annotation encoding="application/x-tex">C_D</annotation></semantics></math></td>
+<td style="text-align: left;">+0.005 g sustained load factor</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Helicopter, hot-and-high (H)</td>
+<td style="text-align: left;">Blade mean <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub><annotation encoding="application/x-tex">\bar c_d</annotation></semantics></math></td>
+<td style="text-align: left;">3.7 kg hover-capable mass</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Quadcopter (J)</td>
+<td style="text-align: left;">Rotor mean <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub><annotation encoding="application/x-tex">\bar c_d</annotation></semantics></math></td>
+<td style="text-align: left;">0.7 s hover endurance</td>
+</tr>
+</tbody>
+</table>
+
+<p>Fig. 20 presents the same normalised sensitivities graphically. Only one bar—the fighter’s response to the lift-dependent drag factor <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>—stands well clear of the others, which reinforces the point that for manoeuvre-limited aircraft the <i>shape</i> of the section polar at high lift matters more than its minimum.</p>
+
+<div class="figrow one"><figure id="fig-20"><a class="zoom" href="img/airfoil-drag-aircraft-performance/f17_sens.svg" target="_blank" rel="noopener"><img src="img/airfoil-drag-aircraft-performance/f17_sens.svg" alt="Normalised sensitivity of the main performance metric of each generic vehicle to the drag quantity governed by the airfoil (per cent change in metric per per ce" loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 20.</b> Normalised sensitivity of the main performance metric of each generic vehicle to the drag quantity governed by the airfoil (per cent change in metric per per cent change in drag).<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+### 16.1 Economic interpretation
+
+<p>Sensitivities become decisions when they are converted into value. For the generic transport of example A, one drag count costs 22.7 kg of fuel per 2 500 km flight, or about 23 t of fuel and 72 t of CO<sub>2</sub> per 1 000 flights. At an illustrative fuel price of USD 800 per tonne, that is of the order of USD 18 000 per aircraft per year for each count, and nearly USD 2 million per year for a fleet of 100 aircraft. It is this arithmetic that justifies the engineering effort spent on a few counts of wing drag, and also sets the ceiling on what a laminar-flow system may cost in weight, maintenance and complexity. For the helicopter of example H, the corresponding currency is payload at the hottest and highest landing site in the mission: 3.7 kg per count of blade drag, or 127 kg for the erosion case, may decide whether a mission can be flown with one aircraft or needs two. For small drones the currency is flight time, and a minute of hover endurance can be the difference between completing a survey line and returning early.</p>
+
+### 16.2 Robustness of the results
+
+<p>Because the worked examples use generic parameters, it is worth checking how sensitive the conclusions are to those parameters. Table&nbsp;11 repeats worked example A—the fuel saving from a 10 % reduction in wing profile drag—with the main assumptions varied one at a time. The result ranges from 2.0 % to 2.6 %. The largest single influence is the wing’s share of zero-lift drag, which the airfoil designer does not control; aspect ratio, cruise lift coefficient and TSFC have smaller effects. The <i>magnitude</i> of the sensitivity, about a quarter of a per cent of fuel per per cent of wing profile drag, is therefore robust; its precise value for a particular aircraft needs that aircraft’s drag breakdown. Similar checks on the other examples give the same picture: the numbers move by 10–25 %, but the ranking of what matters for each vehicle class does not change.</p>
+
+<div class="tcap"><b>Table 11.</b> Robustness of worked example A: cruise fuel saving for a 10 % reduction in wing profile drag (2 500 km).</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Assumption varied</th>
+<th style="text-align: left;">Value</th>
+<th style="text-align: right;">Fuel saving (%)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Baseline</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: right;">2.30</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Aspect ratio</td>
+<td style="text-align: left;">8.5 / 10.5</td>
+<td style="text-align: right;">2.21 / 2.37</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Wing share of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">C_{D0}</annotation></semantics></math></td>
+<td style="text-align: left;">30 % / 40 %</td>
+<td style="text-align: right;">1.97 / 2.63</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TSFC (h<sup>−1</sup>)</td>
+<td style="text-align: left;">0.53 / 0.62</td>
+<td style="text-align: right;">2.29 / 2.31</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Cruise <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>L</mi></msub><annotation encoding="application/x-tex">C_L</annotation></semantics></math></td>
+<td style="text-align: left;">−10 % / +10 %</td>
+<td style="text-align: right;">2.46 / 2.14</td>
+</tr>
+</tbody>
+</table>
+
+<p>Five general conclusions follow.</p>
+
+<ol type="1">
+<li><p><b>The limiting performance regime determines which airfoil characteristic matters.</b> Range-limited aircraft cruising below <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>C</mi><mi>L</mi><mo>*</mo></msubsup><annotation encoding="application/x-tex">C_L^*</annotation></semantics></math> (jets, turboprops) respond to minimum profile drag and its extent; endurance-limited aircraft (MALE UAVs, small drones) respond to drag at high <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math>; manoeuvre-limited aircraft respond to the lift-dependent drag rise; Mach-limited aircraft (transports, helicopter advancing blades, supersonic aircraft) respond to drag divergence and wave drag.</p></li>
+<li><p><b>Sensitivities are of similar magnitude—about 0.1–0.3 % of the performance metric per 1 % of section drag—across very different vehicles</b>, because the wing or rotor profile drag is typically 15–40 % of the relevant total. The exceptions are regimes where the airfoil’s drag <i>rise</i> is triggered—transonic, supersonic and stall-limited—where effects are far larger and more abrupt.</p></li>
+<li><p><b>Indirect effects often exceed direct ones.</b> For the transport, the supercritical airfoil’s value lies more in the thicker, lighter, higher-aspect-ratio wing it permits than in the drag counts it saves at cruise. For the helicopter, a better section allows lower solidity or tip speed, saving more profile power and reducing noise.</p></li>
+<li><p><b>Laminar flow is the largest single opportunity and the most fragile.</b> It can halve section skin friction, but its value depends on maintaining it in service against contamination, manufacturing tolerances and sweep.</p></li>
+<li><p><b>Scale matters.</b> As vehicles shrink—small UAVs, multicopters, rotor blade tips at low Reynolds number—the airfoil moves into a regime where drag depends strongly on transition behaviour and laminar separation, and high-Reynolds-number data become misleading.</p></li>
+</ol>
+
+<p>For designers, these conclusions suggest a practical procedure. Identify which regime limits the vehicle’s key mission metric. Determine the section <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi></mrow><annotation encoding="application/x-tex">Re</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math> range actually encountered, including azimuthal variation for rotors and climb and loiter conditions for fixed wings. Select or design sections for that range, not for a single design point. Then estimate the sensitivity of the mission metric to section drag with relations of the kind used here, so that aerodynamic, structural and operational trade-offs—laminar flow versus maintenance, thickness versus weight, tip speed versus noise—can be made on a common basis.</p>
+
+## 17. Conclusions
+
+<p>This paper has traced how the drag characteristics of the two-dimensional airfoil section propagate into the performance of fixed-wing aircraft and rotorcraft. Using a common set of simple, calibrated relations—a mixed-boundary-layer section-drag model, the parabolic polar, the Breguet relations, the Korn and Lock transonic relations, linear supersonic theory and blade-element momentum theory—ten worked examples were evaluated for transports, turboprops and propellers, sailplanes, small UAVs, combat aircraft, helicopters and multicopters.</p>
+
+<p>The main findings are that a 10 % change in airfoil profile drag typically changes range, endurance or hover capability by 1–3 %; that a laminar transport wing could save about 5 % of trip fuel; that in-service contamination and erosion can cost more performance than many design refinements gain; and that, for rotorcraft and high-speed aircraft, the drag <i>rise</i> with Mach number and lift coefficient matters more than minimum drag, because it sets the performance boundary. The analysis also shows where better prediction tools are most valuable: near maximum lift, at low Reynolds number, in transonic flow and in the unsteady environment of a rotor. These are the natural targets for improving open airfoil analysis codes.</p>
+
+<p>Several research directions follow from this analysis. <i>Robust laminar flow</i>—sections and surfaces that retain much of their laminar benefit when contaminated or manufactured to realistic tolerances—would move the transport result of worked example B closer to practice. <i>Passive and active skin-friction reduction</i>, such as riblets for turbulent regions and suction or plasma actuation for transition control, attacks the same term in (2). <i>Variable geometry</i>, from conventional flaps to continuous trailing-edge morphing, allows a section to keep its drag bucket aligned with a moving operating point, which Sections&nbsp;6, 9 and 10 showed to be as valuable as lowering the bucket itself. <i>Rotor-specific design</i>, including sections for reverse flow on slowed compound rotors and for very low Reynolds numbers on small and planetary rotors, remains comparatively immature. Finally, <i>mission-weighted, robust multi-point design tools</i> of the kind outlined in Section&nbsp;15 would make it easier to turn these airfoil-level gains into the vehicle-level benefits that this paper has quantified.</p>
+
+## Acknowledgment
+
+<p>The author acknowledges the use of Claude, a large language model developed by Anthropic, for assistance in drafting the text, organising the literature and preparing the worked-example calculations and figures. The author reviewed and takes responsibility for the content. The worked examples use generic, representative parameters and are not models of any specific aircraft.</p>
+
+## Appendix A: Parameters of the Worked Examples
+
+<div class="tcap"><b>Table 12.</b> Parameters used in the worked examples (all generic and representative).</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Ex.</th>
+<th style="text-align: left;">Main parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">A, B</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>=122.6 m², <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>=9.5, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>=0.82, mid-cruise mass 66 t, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math>=0.78, FL350, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">C_{D0}</annotation></semantics></math>=0.0200 (wing 0.0070), <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>D</mi><mi>w</mi></mrow></msub><annotation encoding="application/x-tex">C_{Dw}</annotation></semantics></math>=0.0010, TSFC 0.57 h<sup>−1</sup>, 2 500 km cruise ending at 62 t; laminar: transition 40 %/25 %, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi></mrow><annotation encoding="application/x-tex">Re</annotation></semantics></math>=2.6×10⁷, 80 % of wing treated</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C</td>
+<td style="text-align: left;">Korn equation, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>L</mi></msub><annotation encoding="application/x-tex">C_L</annotation></semantics></math>=0.55, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Λ</mi><annotation encoding="application/x-tex">\Lambda</annotation></semantics></math>=25°, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>κ</mi><mi>A</mi></msub><annotation encoding="application/x-tex">\kappa_A</annotation></semantics></math>=0.87/0.95</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Turboprop</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">C_{D0}</annotation></semantics></math>=0.026 (wing 0.009), <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>=12, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>=0.80, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>L</mi></msub><annotation encoding="application/x-tex">C_L</annotation></semantics></math>=0.50</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>=15 m, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>=10.5 m², <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>=0.92, 450 kg, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mi>/</mi><mi>c</mi></mrow><annotation encoding="application/x-tex">t/c</annotation></semantics></math>=15 %, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi></mrow><annotation encoding="application/x-tex">Re</annotation></semantics></math>=1.2×10⁶, clean transition 60 %/70 %, contaminated 8 %/40 %, other drag 0.0035</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E</td>
+<td style="text-align: left;">2.5 kg, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>=0.5 m², <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>=8, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>=0.8, other drag 0.012, 100 Wh (85 % usable), <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>η</mi><annotation encoding="application/x-tex">\eta</annotation></semantics></math>=0.55, avionics 3 W</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">Biconvex section, linear theory, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math>=1.6</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">G</td>
+<td style="text-align: left;">10 t, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>=40 m², <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>=60 kN, 5 000 m, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math>=0.8, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">C_{D0}</annotation></semantics></math>=0.020 (wing 0.008), <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>=0.21</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">H</td>
+<td style="text-align: left;">5.5 t, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math>=6.6 m, 4 blades, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math>=0.08, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Ω</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">\Omega R</annotation></semantics></math>=215 m/s, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>κ</mi><annotation encoding="application/x-tex">\kappa</annotation></semantics></math>=1.15, 3 000 m ISA+20, Bailey NACA 0012 polar with stall drag rise</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">I</td>
+<td style="text-align: left;">As H at sea level, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>=1.8 m², blade-element profile power over radius and azimuth, Lock compressibility increment</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">J</td>
+<td style="text-align: left;">2 kg, 4 rotors <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math>=0.127 m, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math>=0.10, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Ω</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">\Omega R</annotation></semantics></math>=80 m/s, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>κ</mi><annotation encoding="application/x-tex">\kappa</annotation></semantics></math>=1.25, 74 Wh (80 % usable), <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>η</mi><annotation encoding="application/x-tex">\eta</annotation></semantics></math>=0.75, avionics 5 W</td>
+</tr>
+</tbody>
+</table>
+
+## Appendix B: Analytical Sensitivities
+
+<p>The numerical results can be checked against simple logarithmic derivatives of the governing relations. Writing <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>ϵ</mi><mi>x</mi><mi>y</mi></msubsup><mo>=</mo><mi>∂</mi><mo>ln</mo><mi>y</mi><mi>/</mi><mi>∂</mi><mo>ln</mo><mi>x</mi></mrow><annotation encoding="application/x-tex">\epsilon_x^y = \partial\ln y/\partial\ln x</annotation></semantics></math> for the sensitivity of a metric <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math> to a drag quantity <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>:</p>
+
+<p><i>Lift-to-drag ratio at fixed <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>L</mi></msub><annotation encoding="application/x-tex">C_L</annotation></semantics></math>.</i> Since <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi><mo>=</mo><msub><mi>C</mi><mi>L</mi></msub><mi>/</mi><msub><mi>C</mi><mi>D</mi></msub></mrow><annotation encoding="application/x-tex">L/D=C_L/C_D</annotation></semantics></math>, a change in the wing profile drag contribution <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>w</mi></mrow></msub><annotation encoding="application/x-tex">C_{D,w}</annotation></semantics></math> gives <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>ϵ</mi><msub><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>w</mi></mrow></msub><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow></msubsup><mo>=</mo><mo>−</mo><msub><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>w</mi></mrow></msub><mi>/</mi><msub><mi>C</mi><mi>D</mi></msub></mrow><annotation encoding="application/x-tex">\epsilon^{L/D}_{C_{D,w}} = -C_{D,w}/C_D</annotation></semantics></math>. For example A this is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mn>0.0070</mn><mi>/</mi><mn>0.0320</mn><mo>=</mo><mo>−</mo><mn>0.22</mn></mrow><annotation encoding="application/x-tex">-0.0070/0.0320 = -0.22</annotation></semantics></math>, matching the numerical result.</p>
+
+<p><i>Fuel at fixed range.</i> From (9), with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mi>R</mi><mi>c</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>V</mi><mspace width="0.167em"></mspace><mi>L</mi><mi>/</mi><mi>D</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">x = Rc/(V\,L/D)</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>ϵ</mi><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><msub><mi>W</mi><mrow><mi>f</mi><mi>u</mi><mi>e</mi><mi>l</mi></mrow></msub></msubsup><mo>=</mo><mo>−</mo><mi>x</mi><msup><mi>e</mi><mi>x</mi></msup><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>e</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\epsilon^{W_{fuel}}_{L/D} = -x e^x/(e^x-1)</annotation></semantics></math>. For example A, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>0.105</mn></mrow><annotation encoding="application/x-tex">x=0.105</annotation></semantics></math> and the factor is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mn>1.05</mn></mrow><annotation encoding="application/x-tex">-1.05</annotation></semantics></math>; combined with the previous result, each 1 % of wing profile drag costs 0.23 % of trip fuel.</p>
+
+<p><i>Optimum-point metrics.</i> From (6) and (10), <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>ϵ</mi><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mi>/</mi><mi>D</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>max</mo></msub></msubsup><mo>=</mo><mo>−</mo><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac></mrow><annotation encoding="application/x-tex">\epsilon^{(L/D)_{\max}}_{C_{D0}} = -\tfrac12</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>ϵ</mi><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><msub><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>C</mi><mi>L</mi><mrow><mn>3</mn><mi>/</mi><mn>2</mn></mrow></msubsup><mi>/</mi><msub><mi>C</mi><mi>D</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>max</mo></msub></msubsup><mo>=</mo><mo>−</mo><mfrac displaystyle="false"><mn>1</mn><mn>4</mn></mfrac></mrow><annotation encoding="application/x-tex">\epsilon^{(C_L^{3/2}/C_D)_{\max}}_{C_{D0}} = -\tfrac14</annotation></semantics></math>; from <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><msub><mi>η</mi><mi>p</mi></msub><mo>=</mo><mi>D</mi><mi>V</mi></mrow><annotation encoding="application/x-tex">P\eta_p = DV</annotation></semantics></math> at high speed, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>ϵ</mi><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><msub><mi>V</mi><mo>max</mo></msub></msubsup><mo>≈</mo><mo>−</mo><mfrac displaystyle="false"><mn>1</mn><mn>3</mn></mfrac></mrow><annotation encoding="application/x-tex">\epsilon^{V_{\max}}_{C_{D0}} \approx -\tfrac13</annotation></semantics></math>.</p>
+
+<p><i>Sustained turn.</i> From (11), <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><msub><mi>n</mi><mrow><mi>s</mi><mi>u</mi><mi>s</mi></mrow></msub><mi>/</mi><mi>∂</mi><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><mo>=</mo><mo>−</mo><msub><mi>n</mi><mrow><mi>s</mi><mi>u</mi><mi>s</mi></mrow></msub><mi>/</mi><mrow><mo stretchy="true" form="prefix">[</mo><mn>2</mn><mrow><mo stretchy="true" form="prefix">(</mo><mi>T</mi><mi>/</mi><mi>q</mi><mi>S</mi><mo>−</mo><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">\partial n_{sus}/\partial C_{D0} = -n_{sus}/[2(T/qS - C_{D0})]</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>ϵ</mi><mi>K</mi><msub><mi>n</mi><mrow><mi>s</mi><mi>u</mi><mi>s</mi></mrow></msub></msubsup><mo>=</mo><mo>−</mo><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac></mrow><annotation encoding="application/x-tex">\epsilon^{n_{sus}}_{K} = -\tfrac12</annotation></semantics></math>. For example G, one drag count changes <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mrow><mi>s</mi><mi>u</mi><mi>s</mi></mrow></msub><annotation encoding="application/x-tex">n_{sus}</annotation></semantics></math> by 0.005, and 10 % of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> changes it by about 5 %, as computed.</p>
+
+<p><i>Climb-limited take-off weight.</i> With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi><mo>=</mo><mi>T</mi><mi>/</mi><mi>W</mi><mo>−</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mi>/</mi><mi>D</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\gamma = T/W - (L/D)^{-1}</annotation></semantics></math> held at the regulatory minimum, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>ϵ</mi><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><mi>W</mi></msubsup><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mi>/</mi><mi>D</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo>−</mo><mn>1</mn></mrow></msup><mi>/</mi><mrow><mo stretchy="true" form="prefix">[</mo><mi>γ</mi><mo>+</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mi>/</mi><mi>D</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">\epsilon^{W}_{L/D} = (L/D)^{-1}/[\gamma + (L/D)^{-1}]</annotation></semantics></math>, which is 0.82 for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi><mo>=</mo><mn>0.024</mn></mrow><annotation encoding="application/x-tex">\gamma=0.024</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi><mo>=</mo><mn>9</mn></mrow><annotation encoding="application/x-tex">L/D=9</annotation></semantics></math>.</p>
+
+<p><i>Hover at fixed power.</i> From (16) with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><mi>a</mi><msup><mi>T</mi><mrow><mn>3</mn><mi>/</mi><mn>2</mn></mrow></msup><mo>+</mo><mi>b</mi><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub></mrow><annotation encoding="application/x-tex">P = aT^{3/2} + b\bar c_d</annotation></semantics></math> held constant, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>ϵ</mi><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub><mi>T</mi></msubsup><mo>=</mo><mo>−</mo><mfrac displaystyle="false"><mn>2</mn><mn>3</mn></mfrac><msub><mi>P</mi><mn>0</mn></msub><mi>/</mi><msub><mi>P</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">\epsilon^{T}_{\bar c_d} = -\tfrac23 P_0/P_i</annotation></semantics></math>. For example H, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mn>0</mn></msub><mi>/</mi><msub><mi>P</mi><mi>i</mi></msub><mo>=</mo><mn>148</mn><mi>/</mi><mn>947</mn></mrow><annotation encoding="application/x-tex">P_0/P_i = 148/947</annotation></semantics></math>, so each 1 % of blade drag costs about 0.10 % of hover thrust; the full calculation gives a slightly smaller figure because <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub><annotation encoding="application/x-tex">\bar c_d</annotation></semantics></math> itself falls as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>T</mi></msub><annotation encoding="application/x-tex">C_T</annotation></semantics></math> falls.</p>
+
+<p><i>Multicopter endurance.</i> With electrical power proportional to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mi>i</mi></msub><mo>+</mo><msub><mi>P</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">P_i + P_0</annotation></semantics></math> plus a fixed avionics load, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>ϵ</mi><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub><mi>E</mi></msubsup><mo>≈</mo><mo>−</mo><msub><mi>P</mi><mn>0</mn></msub><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>P</mi><mi>i</mi></msub><mo>+</mo><msub><mi>P</mi><mn>0</mn></msub><mo>+</mo><msub><mi>P</mi><mrow><mi>a</mi><mi>v</mi></mrow></msub><mi>′</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\epsilon^{E}_{\bar c_d} \approx -P_0/(P_i+P_0+P_{av}&#39;)</annotation></semantics></math>, where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mrow><mi>a</mi><mi>v</mi></mrow></msub><mi>′</mi></mrow><annotation encoding="application/x-tex">P_{av}&#39;</annotation></semantics></math> is the avionics load referred to the shaft. For example J at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>c</mi><mo accent="true">‾</mo></mover><mi>d</mi></msub><mo>=</mo><mn>0.02</mn></mrow><annotation encoding="application/x-tex">\bar c_d=0.02</annotation></semantics></math>, this is about <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mn>0.17</mn></mrow><annotation encoding="application/x-tex">-0.17</annotation></semantics></math> near the baseline, consistent with the 0.7 s per count of Table&nbsp;10.</p>
+
+<p>These expressions show compactly why the sensitivities in Table&nbsp;9 cluster between 0.1 and 0.3: the relevant drag share (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>w</mi></mrow></msub><mi>/</mi><msub><mi>C</mi><mi>D</mi></msub></mrow><annotation encoding="application/x-tex">C_{D,w}/C_D</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mn>0</mn></msub><mi>/</mi><mi>P</mi></mrow><annotation encoding="application/x-tex">P_0/P</annotation></semantics></math>, and so on) is typically 15–35 %, and the exponent multiplying it is of order one.</p>
+
+## Appendix C: Step-by-Step Calculation for Worked Example A
+
+<p>The following steps reproduce the baseline and improved results of Table&nbsp;4.</p>
+
+<ol type="1">
+<li><i>Atmosphere.</i> At 10 668 m in the ISA, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>218.8</mn></mrow><annotation encoding="application/x-tex">T=218.8</annotation></semantics></math> K, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0.3796</mn></mrow><annotation encoding="application/x-tex">\rho=0.3796</annotation></semantics></math> kg/m³ and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mn>296.5</mn></mrow><annotation encoding="application/x-tex">a=296.5</annotation></semantics></math> m/s. At <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>=</mo><mn>0.78</mn></mrow><annotation encoding="application/x-tex">M=0.78</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo>=</mo><mn>231.3</mn></mrow><annotation encoding="application/x-tex">V=231.3</annotation></semantics></math> m/s and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><mi>ρ</mi><msup><mi>V</mi><mn>2</mn></msup><mo>=</mo><mn>10</mn><mspace width="0.167em"></mspace><mn>154</mn></mrow><annotation encoding="application/x-tex">q=\tfrac12\rho V^2=10\,154</annotation></semantics></math> Pa.</li>
+<li><i>Lift coefficient.</i> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>L</mi></msub><mo>=</mo><mi>W</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>q</mi><mi>S</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>66</mn><mspace width="0.167em"></mspace><mn>000</mn><mo>×</mo><mn>9.807</mn><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>10</mn><mspace width="0.167em"></mspace><mn>154</mn><mo>×</mo><mn>122.6</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>0.520</mn></mrow><annotation encoding="application/x-tex">C_L = W/(qS) = 66\,000\times9.807/(10\,154\times122.6) = 0.520</annotation></semantics></math>.</li>
+<li><i>Induced drag.</i> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>=</mo><mn>1</mn><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>π</mi><mo>×</mo><mn>9.5</mn><mo>×</mo><mn>0.82</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>0.0409</mn></mrow><annotation encoding="application/x-tex">K = 1/(\pi\times9.5\times0.82)=0.0409</annotation></semantics></math>, so <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>D</mi><mi>i</mi></mrow></msub><mo>=</mo><mi>K</mi><msubsup><mi>C</mi><mi>L</mi><mn>2</mn></msubsup><mo>=</mo><mn>0.0110</mn></mrow><annotation encoding="application/x-tex">C_{Di}=KC_L^2=0.0110</annotation></semantics></math>.</li>
+<li><i>Total drag and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">L/D</annotation></semantics></math>.</i> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>D</mi></msub><mo>=</mo><mn>0.0200</mn><mo>+</mo><mn>0.0010</mn><mo>+</mo><mn>0.0110</mn><mo>=</mo><mn>0.0320</mn></mrow><annotation encoding="application/x-tex">C_D = 0.0200 + 0.0010 + 0.0110 = 0.0320</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi><mo>=</mo><mn>0.520</mn><mi>/</mi><mn>0.0320</mn><mo>=</mo><mn>16.22</mn></mrow><annotation encoding="application/x-tex">L/D = 0.520/0.0320 = 16.22</annotation></semantics></math>.</li>
+<li><i>Fuel.</i> With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mo>=</mo><mn>0.57</mn><mi>/</mi><mn>3600</mn><mo>=</mo><mn>1.583</mn><mo>×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">c = 0.57/3600 = 1.583\times10^{-4}</annotation></semantics></math> s⁻¹, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mi>R</mi><mi>c</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>V</mi><mspace width="0.167em"></mspace><mi>L</mi><mi>/</mi><mi>D</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>2.5</mn><mo>×</mo><msup><mn>10</mn><mn>6</mn></msup><mo>×</mo><mn>1.583</mn><mo>×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>231.3</mn><mo>×</mo><mn>16.22</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>0.1055</mn></mrow><annotation encoding="application/x-tex">x = Rc/(V\,L/D) = 2.5\times10^6\times1.583\times10^{-4}/(231.3\times16.22) = 0.1055</annotation></semantics></math>, and from (9) <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mrow><mi>f</mi><mi>u</mi><mi>e</mi><mi>l</mi></mrow></msub><mi>/</mi><mi>g</mi><mo>=</mo><mn>62</mn><mspace width="0.167em"></mspace><mn>000</mn><mspace width="0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>e</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>6</mn><mspace width="0.167em"></mspace><mn>897</mn></mrow><annotation encoding="application/x-tex">W_{fuel}/g = 62\,000\,(e^{x}-1) = 6\,897</annotation></semantics></math> kg.</li>
+<li><i>Improved wing.</i> Reducing wing profile drag by 10 % lowers <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">C_{D0}</annotation></semantics></math> by 0.0007 to 0.0193, giving <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>D</mi></msub><mo>=</mo><mn>0.0313</mn></mrow><annotation encoding="application/x-tex">C_D=0.0313</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi><mo>=</mo><mn>16.59</mn></mrow><annotation encoding="application/x-tex">L/D=16.59</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>0.1032</mn></mrow><annotation encoding="application/x-tex">x=0.1032</annotation></semantics></math> and 6 739 kg of fuel: a saving of 159 kg (2.3 %).</li>
+<li><i>Laminar wing.</i> The section model gives 61.1 counts turbulent and 43.6 counts with transition at 40 %/25 % at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi><mo>=</mo><mn>2.6</mn><mo>×</mo><msup><mn>10</mn><mn>7</mn></msup></mrow><annotation encoding="application/x-tex">Re=2.6\times10^7</annotation></semantics></math>, a 28.6 % reduction; applied to 80 % of the wing it lowers <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>D</mi><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">C_{D0}</annotation></semantics></math> by 0.0016 to 0.0184, giving <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mi>/</mi><mi>D</mi><mo>=</mo><mn>17.08</mn></mrow><annotation encoding="application/x-tex">L/D=17.08</annotation></semantics></math> and 6 534 kg of fuel.</li>
+</ol>
+
+## Appendix D: Reproducibility
+
+<p>All numerical results and figures in this paper were produced by a single Python script (calc_figs.py, using NumPy and Matplotlib) that implements equations (1)–(21) and the blade-element integration of worked example I, writes every computed value to a results file, and draws each figure. The paper itself is assembled from Markdown sources by a build script that numbers equations, figures, tables and references and produces both the web version and this two-column PDF. Readers wishing to apply the method to a specific aircraft need only replace the generic parameters of Table&nbsp;12 with that aircraft’s data and drag breakdown.</p>
+
+## References
+
+1. M. Drela, “XFOIL: An analysis and design system for low Reynolds number airfoils,” in <i>Low Reynolds Number Aerodynamics</i>, T. J. Mueller, Ed., Lecture Notes in Engineering, vol. 54. Berlin, Germany: Springer, 1989, pp. 1–12.
+2. D. P. Raymer, <i>Aircraft Design: A Conceptual Approach</i>, 6th ed. Reston, VA, USA: AIAA, 2018.
+3. E. Torenbeek, <i>Advanced Aircraft Design</i>. Chichester, U.K.: Wiley, 2013.
+4. F. Thomas, <i>Fundamentals of Sailplane Design</i>. College Park, MD, USA: College Park Press, 1999.
+5. J. G. Leishman, <i>Principles of Helicopter Aerodynamics</i>, 2nd ed. Cambridge, U.K.: Cambridge Univ. Press, 2006.
+6. W. Johnson, <i>Rotorcraft Aeromechanics</i>. Cambridge, U.K.: Cambridge Univ. Press, 2013.
+7. R. W. Prouty, <i>Helicopter Performance, Stability, and Control</i>. Malabar, FL, USA: Krieger, 1995.
+8. P. B. S. Lissaman, “Low-Reynolds-number airfoils,” <i>Annu. Rev. Fluid Mech.</i>, vol. 15, pp. 223–239, 1983.
+9. M. S. Selig, J. F. Donovan, and D. B. Fraser, <i>Airfoils at Low Speeds</i> (Soartech 8). Virginia Beach, VA, USA: H. A. Stokely, 1989.
+10. T. J. Mueller and J. D. DeLaurier, “Aerodynamics of small vehicles,” <i>Annu. Rev. Fluid Mech.</i>, vol. 35, pp. 89–111, 2003.
+11. I. H. Abbott and A. E. von Doenhoff, <i>Theory of Wing Sections</i>. New York, NY, USA: Dover, 1959.
+12. L. K. Loftin, Jr., <i>Quest for Performance: The Evolution of Modern Aircraft</i>, NASA SP-468, 1985.
+13. R. T. Whitcomb and L. R. Clark, “An airfoil shape for efficient flight at supercritical Mach numbers,” NASA TM X-1109, 1965.
+14. C. D. Harris, “NASA supercritical airfoils: A matrix of family-related airfoils,” NASA TP-2969, 1990.
+15. R. Eppler, <i>Airfoil Design and Data</i>. Berlin, Germany: Springer, 1990.
+16. D. M. Somers, “Design and experimental results for a natural-laminar-flow airfoil for general aviation applications,” NASA TP-1861, 1981.
+17. W. G. Bousman, “Airfoil design and rotorcraft performance,” in <i>Proc. American Helicopter Society 58th Annual Forum</i>, Montréal, QC, Canada, Jun. 2002, pp. 208–232.
+18. J. D. Anderson, Jr., <i>Fundamentals of Aerodynamics</i>, 6th ed. New York, NY, USA: McGraw-Hill, 2017.
+19. H. Schlichting and K. Gersten, <i>Boundary-Layer Theory</i>, 9th ed. Berlin, Germany: Springer, 2017.
+20. S. F. Hoerner, <i>Fluid-Dynamic Drag</i>. Brick Town, NJ, USA: Hoerner Fluid Dynamics, 1965.
+21. R. D. Joslin, “Aircraft laminar flow control,” <i>Annu. Rev. Fluid Mech.</i>, vol. 30, pp. 1–29, 1998.
+22. O. Gur, W. H. Mason, and J. A. Schetz, “Full-configuration drag estimation,” <i>J. Aircraft</i>, vol. 47, no. 4, pp. 1356–1367, 2010.
+23. International Civil Aviation Organization, <i>ICAO Carbon Emissions Calculator Methodology</i>. Montréal, QC, Canada: ICAO.
+24. D. M. Bushnell, “Aircraft drag reduction—A review,” <i>Proc. Inst. Mech. Eng. G, J. Aerosp. Eng.</i>, vol. 217, no. 1, pp. 1–18, 2003.
+25. Airbus, “Airbus’ BLADE laminar flow wing demonstrator makes first flight,” press release, Toulouse, France, 26 Sep. 2017.
+26. W. H. Mason, <i>Configuration Aerodynamics</i>, course notes, ch. 7 (Transonic aerodynamics of airfoils and wings). Blacksburg, VA, USA: Virginia Polytechnic Inst. and State Univ.
+27. C. P. van Dam, “The aerodynamic design of multi-element high-lift systems for transport airplanes,” <i>Prog. Aerosp. Sci.</i>, vol. 38, no. 2, pp. 101–144, 2002.
+28. B. W. McCormick, <i>Aerodynamics, Aeronautics, and Flight Mechanics</i>, 2nd ed. New York, NY, USA: Wiley, 1995.
+29. F. J. Bailey, Jr., “A simplified theoretical method of determining the characteristics of a lifting rotor in forward flight,” NACA Rep. 716, 1941.
+30. M. D. Maisel, D. J. Giulianetti, and D. C. Dugan, <i>The History of the XV-15 Tilt Rotor Research Aircraft: From Concept to Flight</i>, NASA SP-2000-4517, 2000.
+31. M. Fujino, “Design and development of the HondaJet,” <i>J. Aircraft</i>, vol. 42, no. 3, pp. 755–764, 2005.
+32. J. Balaram <i>et al.</i>, “Mars Helicopter technology demonstrator,” in <i>Proc. AIAA Atmospheric Flight Mechanics Conf.</i> (SciTech Forum), Kissimmee, FL, USA, Jan. 2018, AIAA 2018-0023.
+33. W. J. F. Koning, E. A. Romander, and W. Johnson, “Low Reynolds number airfoil evaluation for the Mars Helicopter rotor,” in <i>Proc. AHS International 74th Annual Forum</i>, Phoenix, AZ, USA, May 2018.
+34. M. B. Bragg, A. P. Broeren, and L. A. Blumenthal, “Iced-airfoil aerodynamics,” <i>Prog. Aerosp. Sci.</i>, vol. 41, no. 5, pp. 323–362, 2005.
+35. M. Drela and M. B. Giles, “Viscous-inviscid analysis of transonic and low Reynolds number airfoils,” <i>AIAA J.</i>, vol. 25, no. 10, pp. 1347–1355, 1987.
+36. R. B. Langtry and F. R. Menter, “Correlation-based transition modeling for unstructured parallelized computational fluid dynamics codes,” <i>AIAA J.</i>, vol. 47, no. 12, pp. 2894–2906, 2009.

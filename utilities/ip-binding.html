@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<!--
+TOOL:    Fixed IP addresses for home devices — find IP and MAC, reserve them on the router
+FAMILY:  utilities
+VERSION: 1.0.0
+DATE:    2026-11-28
+CHAT:    Publish FocusGuard and TV lock under a Utilities section on GitHub
+CHANGES: 1.0.0 — first release: why fixed IPs, IP vs MAC, finding both from the router's device list and from each
+         device (Windows, Android TV, phone, printer), telling devices apart, random-MAC trap, DHCP reservation step by
+         step, where the menu sits on common Indian ISP routers, reservation vs static IP vs ARP binding, checking it
+         worked, troubleshooting
+STATUS:  public
+-->
+<html lang="en" data-theme="light">
+<head>
+<script src="/assets/js/site-theme.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fixed IP addresses for home devices: find IP and MAC, reserve on the router — Utilities for Parents</title>
+<meta name="description" content="How to find the IP and MAC address of your PC, TV and other home devices from the router, and how to bind (reserve) a fixed IP for each one with DHCP reservation.">
+<link rel="stylesheet" href="util.css">
+<script type="module" src="/assets/js/site-progress.js"></script>
+</head>
+<body>
+<header class="ut">
+  <h1>Fixed IP addresses for home devices<br><span class="crumb"><a href="/">Home</a> › <a href="./">Utilities</a> · find IP and MAC, then reserve them on the router</span></h1>
+  <button id="themeBtn" title="Light / dark theme">◐ Theme</button>
+  <button id="btnFull" title="Full screen (F)">⛶ Full screen</button>
+</header>
+<main>
+  <p class="lead">Your router hands out addresses to every device on the Wi-Fi, and an address can change after a restart. Tools that control a device over Wi-Fi (the <a href="tv-lock.html">TV lock</a>, <a href="focusguard.html">FocusGuard</a>'s phone page, a network printer, a CCTV recorder) need the address to stay the same. The fix is a few minutes on the router page, and nothing changes on the device itself.</p>
+  <p><a class="chip" href="#terms">IP and MAC in plain words</a><a class="chip" href="#router">Find them on the router</a><a class="chip" href="#device">Find them on the device</a><a class="chip" href="#which">Which device is which</a><a class="chip" href="#random">Random MAC trap</a><a class="chip" href="#bind">Reserve the IP</a><a class="chip" href="#isp">Common routers</a><a class="chip" href="#check">Check it worked</a><a class="chip" href="#trouble">Problems</a></p>
+
+  <div class="cols">
+  <section id="terms">
+    <h2>IP and MAC in plain words</h2>
+    <table>
+      <tr><th></th><th>IP address</th><th>MAC address</th></tr>
+      <tr><td>Looks like</td><td><code>192.168.1.8</code></td><td><code>A4:5E:60:1C:2B:9F</code> (or with dashes)</td></tr>
+      <tr><td>Like a…</td><td>house number on your street</td><td>the device's own serial number</td></tr>
+      <tr><td>Given by</td><td>the router, each time the device joins</td><td>the maker, built into the network chip</td></tr>
+      <tr><td>Can change?</td><td>yes, after restarts or long gaps</td><td>no (except the random-MAC case below)</td></tr>
+    </table>
+    <p><b>Reserving</b> (also called <i>binding</i>) means telling the router: "whenever the device with <i>this MAC</i> joins, always give it <i>this IP</i>".</p>
+    <div class="note info">One device can have two MACs: a PC or TV has one for <b>Wi-Fi</b> and another for its <b>LAN cable</b> port. Reserve the one it actually uses. If you switch it from Wi-Fi to cable later, add a reservation for the cable MAC too.</div>
+  </section>
+
+  <section id="router">
+    <h2>1 · Find IP and MAC on the router</h2>
+    <ol class="steps">
+      <li>Connect a phone or PC to the home Wi-Fi and open a browser.</li>
+      <li>Type the router address in the address bar: usually <code>192.168.1.1</code>, sometimes <code>192.168.0.1</code>, <code>192.168.29.1</code> (JioFiber) or <code>192.168.1.254</code>. The sticker under the router shows the address and the login. On a Windows PC, <code>ipconfig</code> shows it as <b>Default Gateway</b>.</li>
+      <li>Log in. The user is often <code>admin</code>, and the password is on the sticker. Some ISPs (JioFiber, Airtel) let you do the same from their own app.</li>
+      <li>Open the <b>device list</b>. Its name depends on the router: <i>Connected Devices</i>, <i>Attached Devices</i>, <i>DHCP Client List</i>, <i>LAN Host</i>, <i>Device Info › DHCP</i>, or <i>Status › LAN</i>.</li>
+      <li>Each row shows a <b>name</b> (host name), an <b>IP address</b>, a <b>MAC address</b> and often the remaining <b>lease time</b>. Note down the rows for the PC and the TV.</li>
+    </ol>
+    <p>Typical names: a Windows PC shows its computer name (<code>DESKTOP-4K7Q2LM</code> or whatever you named it), an Android TV shows its model or <code>android-…</code>, a phone shows its model or the owner's name.</p>
+  </section>
+  </div>
+
+  <section id="device">
+    <h2>2 · Or find them on the device itself</h2>
+    <p>Do this to be sure which row in the router list is which device.</p>
+    <table>
+      <tr><th>Device</th><th>Where to look</th></tr>
+      <tr><td><b>Windows 10/11 PC</b></td><td>Open Command Prompt and type <code>ipconfig /all</code>. Under the adapter that shows an address (Wi-Fi or Ethernet): <b>IPv4 Address</b> is the IP, <b>Physical Address</b> is the MAC. Or Settings › Network &amp; internet › Wi-Fi (or Ethernet) › Hardware properties.</td></tr>
+      <tr><td><b>Android TV / Google TV</b></td><td>Settings › Network &amp; Internet › click your Wi-Fi name: shows the IP. The MAC is under Settings › Device Preferences › About › Status (Wi-Fi MAC address). Menu names differ slightly by brand.</td></tr>
+      <tr><td><b>Android phone</b></td><td>Settings › Wi-Fi › tap the gear next to your network: IP and MAC (see the random-MAC note).</td></tr>
+      <tr><td><b>iPhone</b></td><td>Settings › Wi-Fi › tap <b>ⓘ</b> next to your network: IP Address and Wi-Fi Address (the MAC).</td></tr>
+      <tr><td><b>Printer, CCTV recorder</b></td><td>Print a network configuration page from the printer's menu, or look in the recorder's Network settings.</td></tr>
+    </table>
+  </section>
+
+  <div class="cols">
+  <section id="which">
+    <h2>3 · Which device is which?</h2>
+    <ul>
+      <li><b>Match the MAC</b> you saw on the device with the router list. This is the surest way.</li>
+      <li><b>Switch it off and refresh</b> the router's device list. The row that disappears is that device.</li>
+      <li><b>Look at the first half of the MAC.</b> The first six characters identify the maker (search "MAC lookup" online and paste them in).</li>
+      <li><b>Rename your PC</b> to something clear (Settings › System › About › Rename this PC) so it is easy to spot.</li>
+    </ul>
+  </section>
+
+  <section id="random">
+    <h2>The random-MAC trap</h2>
+    <p>Phones, and Windows 11 if you turn it on, can use a made-up "private" MAC for privacy. A reservation is tied to the MAC, so it can stop working if the MAC changes.</p>
+    <ul>
+      <li><b>Windows 11:</b> Settings › Network &amp; internet › Wi-Fi › <i>your network</i> › <b>Random hardware addresses: Off</b>.</li>
+      <li><b>Android phone or TV:</b> Wi-Fi network settings › Privacy › <b>Use device MAC</b> (or "Phone MAC").</li>
+      <li><b>iPhone:</b> Wi-Fi › ⓘ › <b>Private Wi-Fi Address: Off</b> (or "Fixed").</li>
+    </ul>
+    <p>Change this <b>before</b> noting the MAC, then reconnect, then reserve. Normally only the PC and TV need a reservation; the phones that control them don't.</p>
+  </section>
+  </div>
+
+  <section id="bind">
+    <h2>4 · Reserve (bind) the IP on the router</h2>
+    <ol class="steps">
+      <li>On the router page, find the reservation screen. It is usually inside <b>LAN</b>, <b>DHCP</b> or <b>Network</b>, and is called one of: <i>Address Reservation</i>, <i>DHCP Reservation</i>, <i>Static Lease</i>, <i>DHCP Binding</i>, <i>DHCP Static IP</i> or <i>IP &amp; MAC Binding</i>.</li>
+      <li>Click <b>Add</b> (or <b>New</b>). Many routers let you pick the device from the connected list; otherwise type the <b>MAC</b> and the <b>IP</b> yourself. The MAC is usually accepted with colons or dashes.</li>
+      <li><b>Choose the IP.</b> Simplest is to keep the address the device has now. If you choose a new one, use an address nobody else has and keep the first three parts the same as the router's (router <code>192.168.1.1</code> → device <code>192.168.1.<i>8</i></code>). Some routers only accept addresses inside their DHCP range (shown on the DHCP page, e.g. <code>.2 – .254</code>); the router will say so if you get it wrong.</li>
+      <li>Give it a clear name ("TV-hall", "Kids-PC") if there is a box for it, then <b>Save</b> or <b>Apply</b>. Repeat for every device you want fixed.</li>
+      <li><b>Reconnect the device</b> so it picks up the reserved address: restart it, or switch its Wi-Fi off and on. A few routers need their own reboot first.</li>
+    </ol>
+    <div class="note">A reservation fixes the address only on <b>your</b> Wi-Fi. A <b>factory reset of the router</b>, or the ISP replacing it, wipes the list. Take a photo of the reservation screen so you can enter it again.</div>
+  </section>
+
+  <div class="cols">
+  <section id="isp">
+    <h2>Where it is on common home routers</h2>
+    <p>Menus change with firmware, so treat these as a starting point. If you can't find it, search for your router's model number (on the sticker) plus "DHCP reservation".</p>
+    <table>
+      <tr><th>Router</th><th>Device list</th><th>Reservation</th></tr>
+      <tr><td>ZTE fibre ONT (BSNL, Airtel and others)</td><td>Local Network › LAN › DHCP Server (allocated addresses)</td><td>Same page, "Static IP / Binding" part, or Network › LAN › DHCP Binding</td></tr>
+      <tr><td>TP-Link</td><td>DHCP › DHCP Client List (or Network Map › Clients)</td><td>DHCP › Address Reservation (newer: Advanced › Network › DHCP Server)</td></tr>
+      <tr><td>JioFiber</td><td>Network › LAN or the JioHome app's device list</td><td>Network › LAN IPv4 › Static Lease / DHCP Reservation</td></tr>
+      <tr><td>Airtel Xstream</td><td>Airtel Thanks app or router Status › LAN</td><td>Network › LAN › DHCP binding / static IP</td></tr>
+      <tr><td>Netgear</td><td>Attached Devices</td><td>Advanced › Setup › LAN Setup › Address Reservation</td></tr>
+      <tr><td>D-Link, Tenda, Syrotech</td><td>Status › Client list, or DHCP list</td><td>DHCP › Static DHCP / IP Reservation</td></tr>
+    </table>
+  </section>
+
+  <section id="kinds">
+    <h2>Three things that sound alike</h2>
+    <table>
+      <tr><th>What</th><th>Where you set it</th><th>Use it?</th></tr>
+      <tr><td><b>DHCP reservation</b> (binding, static lease)</td><td>Router</td><td><b>Yes.</b> One place to manage everything; the device needs no change.</td></tr>
+      <tr><td><b>Static IP</b> typed on the device</td><td>Device's network settings</td><td>Only if the router has no reservation. You must also enter the gateway and DNS, and pick an address outside the router's DHCP range, or two devices may clash.</td></tr>
+      <tr><td><b>ARP / IP-MAC binding</b> (security)</td><td>Router's Security menu</td><td>Not needed at home. It blocks devices whose IP and MAC don't match the list, and can lock out guests.</td></tr>
+    </table>
+  </section>
+  </div>
+
+  <div class="cols">
+  <section id="check">
+    <h2>5 · Check it worked</h2>
+    <ul>
+      <li>The router's device list shows the device at the reserved IP. Some routers show the lease as <b>Infinity</b>, <b>Static</b> or <b>Reserved</b>.</li>
+      <li>Restart the device and check again: same address.</li>
+      <li>From a PC, <code>ping 192.168.1.8</code> (your device's address) gets replies.</li>
+      <li>Now put those addresses into your tools: the <code>TV=</code> and <code>PC=</code> lines of <a href="tv-lock.html#termux">home_lock.sh</a>, and the phone bookmark for <a href="focusguard.html#phone">FocusGuard</a>.</li>
+    </ul>
+  </section>
+
+  <section id="trouble">
+    <h2>Problems</h2>
+    <table>
+      <tr><th>What you see</th><th>Likely cause and fix</th></tr>
+      <tr><td>Device still gets the old IP</td><td>It kept its old lease. Restart the device, or reboot the router.</td></tr>
+      <tr><td>Router says "IP in use" or "conflict"</td><td>Another device has that address. Pick a different number, or reserve that other device somewhere else first.</td></tr>
+      <tr><td>Router says "IP out of range"</td><td>The router only reserves inside its DHCP pool. See the start and end addresses on the DHCP page and choose one between them.</td></tr>
+      <tr><td>Worked, then stopped after a few days</td><td>Random MAC is on (see the trap above), or the device moved between Wi-Fi and cable.</td></tr>
+      <tr><td>Can't open the router page</td><td>Check the Default Gateway with <code>ipconfig</code>. Use the router's Wi-Fi, not mobile data. Some ISP routers only allow changes from their app.</td></tr>
+    </table>
+  </section>
+  </div>
+
+  <footer>Free to share. © K Vijay Anand · <a href="./">More utilities</a> · <a href="tv-lock.html">Home TV Lock</a> · <a href="focusguard.html">FocusGuard</a></footer>
+</main>
+<script src="util.js"></script>
+</body>
+</html>

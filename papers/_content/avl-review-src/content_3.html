@@ -1,0 +1,268 @@
+
+<h2 id="s8">VIII. Worked Example: Stability Derivatives of a Small UAV</h2>
+<h3>A. Configuration</h3>
+<p>A conventional small UAV representative of survey and mapping aircraft was chosen ({{T:t4}}). The wing has 2 m span, root chord 0.26 m, tip chord 0.18 m, 3&deg; dihedral, NACA 2410 camber, 2&deg; root incidence washing out to 0&deg; at the tip, and plain ailerons on the outer half span aft of 75 % chord. The horizontal tail (0.6 m span, set at &minus;1&deg;) carries a 40 %-chord elevator; the vertical tail carries a 40 %-chord rudder. The fuselage is omitted and the wing lattice carried across the centreline, as the AVL primer recommends for a fuselage of small aerodynamic influence [15]. The complete AVL input file is listed in Appendix A, so the case can be rerun in AVL directly.</p>
+<figure id="f1"><img src="{{FIG1}}" alt="Lattice"/><figcaption>Fig. 1. Top view of the 388-panel UAV lattice: bound vortices (blue), control-surface panels (orange), control points (dots), CG and neutral point.</figcaption></figure>
+
+<table class="tbl" id="t4">
+<caption>TABLE IV<br/>Worked-Example UAV Data</caption>
+<thead><tr><th>Quantity</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>Mass m</td><td>3.2 kg</td></tr>
+<tr><td>S<sub>ref</sub>, c<sub>ref</sub>, b<sub>ref</sub></td><td>0.44 m<sup>2</sup>, 0.222 m, 2.0 m</td></tr>
+<tr><td>Aspect ratio</td><td>9.1</td></tr>
+<tr><td>CG (X<sub>ref</sub>, AVL axes)</td><td>0.115 m aft of wing root LE</td></tr>
+<tr><td>I<sub>xx</sub>, I<sub>yy</sub>, I<sub>zz</sub></td><td>0.32, 0.22, 0.52 kg m<sup>2</sup></td></tr>
+<tr><td>Flight condition</td><td>V = 18 m/s, &rho; = 1.15 kg/m<sup>3</sup></td></tr>
+<tr><td>Profile drag (assumed)</td><td>CD<sub>0</sub> = 0.032</td></tr>
+<tr><td>Horizontal tail volume V<sub>H</sub></td><td>&asymp; 0.67</td></tr>
+</tbody></table>
+<h3>B. Computational note</h3>
+<p>The AVL executable could not be run in the environment where this paper was prepared. The numbers below were therefore computed with an independent Python implementation written for this paper (<code>vlm_uav.py</code>) that follows AVL's formulation exactly as described in Section IV: horseshoe vortices with bound legs on the panel quarter-chord and trailing legs parallel to the body x axis; control points at three-quarter chord; camber, incidence and control deflections by normal-vector tilting about the panel spanwise axis; rotation rates in stability axes non-dimensionalised as in (3); Kutta&ndash;Joukowski forces using the full local velocity on each bound leg; Trefftz-plane induced drag; and cosine spacing. Derivatives were obtained by central differences of &plusmn;0.5&deg; in &alpha; and &beta;, &plusmn;0.01 in the non-dimensional rates and &plusmn;1&deg; in controls, which for a linear model reproduces the analytical derivatives to round-off. Readers with AVL 3.40b can run Appendix A and should see differences of the order of the lattice-convergence error in {{T:t5}}; a slender-body fuselage, if added, would shift C<sub>m&alpha;</sub> and C<sub>n&beta;</sub> noticeably in the destabilising direction.</p>
+<h3>C. Validation of the lattice formulation</h3>
+<p>Before trusting derivatives, the solver was checked against classical results for an untwisted flat wing of aspect ratio 6 (Fig. 2). For the elliptic planform the computed lift-curve slope converges from above towards about 4.42 per radian, within 2.5 % of Helmbold's lifting-surface estimate C<sub>L&alpha;</sub> = 2&pi;A/[2 + (A<sup>2</sup> + 4)<sup>1/2</sup>] = 4.53, and the Trefftz span efficiency converges towards the theoretical value e = 1 (1.081, 1.039, 1.018 as panels are doubled and redoubled, halving the error each time). The rectangular planform converges to a lower slope of about 4.27, as expected for a planform with more tip loss. Note that a coarse lattice <i>over-predicts</i> span efficiency&mdash;consistent with the primer's warning that crude spacing overpredicts span efficiency and converges slowly [15]&mdash;so induced-drag estimates from coarse AVL models should be treated with suspicion.</p>
+<figure id="f2"><img src="{{FIG2}}" alt="Validation"/><figcaption>Fig. 2. Convergence of lift-curve slope and Trefftz span efficiency for flat AR 6 wings against Helmbold's estimate and e = 1.</figcaption></figure>
+<h3>D. Lattice convergence for the UAV</h3>
+<p>{{T:t5}} gives the key derivatives for four lattices from 97 to 1552 panels (Fig. 1 shows the 388-panel layout). The neutral point moves by about 1 mm between the second and fourth lattice (3 mm over the whole range), and C<sub>lp</sub> by 2 %. C<sub>m&alpha;</sub> is the most mesh-sensitive term because it is a small difference of large wing and tail contributions; this is a general feature and a reason always to report the static margin together with a convergence check. The 873-panel lattice was used for the results that follow.</p>
+{{TABLE_CONV}}
+<h3>E. Trim and derivative matrix</h3>
+<p>At 18 m/s the required lift coefficient is CL = W/(qS) = {{CLREQ}}. Trimming CL and Cm with the elevator gives &alpha; = {{ALPHA}}&deg; and &delta;<sub>e</sub> = {{DE}}&deg; (trailing edge down), with Trefftz induced drag CDi = {{CDI}}. The neutral point is at X<sub>np</sub> = {{XNP}} m, giving a static margin of {{SM}} % of c<sub>ref</sub>&mdash;a comfortable value for a small UAV. Fig. 3 shows the linear CL and Cm variation (AVL is linear by construction; stall must come from elsewhere), and Fig. 4 shows that the washed-out, tapered wing produces a span load close to elliptic.</p>
+<figure id="f3"><img src="{{FIG3}}" alt="Alpha sweep"/><figcaption>Fig. 3. CL and Cm against &alpha; at the trim elevator setting. The dotted line marks the trim angle.</figcaption></figure>
+<figure id="f4"><img src="{{FIG4}}" alt="Span load"/><figcaption>Fig. 4. Wing span load at trim compared with an elliptic distribution.</figcaption></figure>
+<p>{{T:t6}} lists the derivative set in the format of an AVL <code>ST</code> listing (stability axes; rate derivatives per unit non-dimensional rate; control derivatives per degree). All signs are physically consistent: positive weathercock stability C<sub>n&beta;</sub>, stable dihedral effect C<sub>l&beta;</sub> &lt; 0 from the 3&deg; dihedral, strong roll damping C<sub>lp</sub> from the AR 9 wing, positive C<sub>lr</sub> from the asymmetric lift in a yawing turn, and adverse aileron yaw C<sub>n&delta;a</sub> &gt; 0.</p>
+{{TABLE_DERIV}}
+<h3>F. Dynamic modes</h3>
+<p>The derivatives were inserted into the standard decoupled small-perturbation equations in stability axes (u, w, q, &theta; and v, p, r, &phi;) [54] with CD = CD<sub>0</sub> + CDi. The resulting modes are listed in {{T:t7}} and plotted in Fig. 5. The short-period mode is well damped (&zeta; &asymp; 0.76), the phugoid is lightly damped with a period of about 12 s, the roll mode is very fast (time constant about 0.06 s), the Dutch roll has &zeta; &asymp; 0.20, and the spiral mode is slightly divergent with a time to double of about 18 s. The last is typical of a small aircraft with modest dihedral and a large fin, and is easily handled by an autopilot. Against the spiral-divergence limits commonly quoted from MIL-F-8785C for Class I aircraft, it meets the 12 s Level 1 limit for Category A flight phases but falls just short of the 20 s limit for Categories B and C; a little more dihedral would remedy this.</p>
+{{TABLE_MODES}}
+<figure id="f5"><img src="{{FIG5}}" alt="Eigenvalues"/><figcaption>Fig. 5. Eigenvalues of the longitudinal (circles) and lateral-directional (crosses) modes.</figcaption></figure>
+<p><i>Effect of the missing &alpha;&#775; derivative.</i> To show what the quasi-steady assumption omits, the downwash-lag contribution was estimated with the classical tail formula C<sub>m&alpha;&#775;</sub> &asymp; &minus;2a<sub>t</sub>V<sub>H</sub>(l<sub>t</sub>/c)(d&epsilon;/d&alpha;) [54], with a<sub>t</sub> = {{AT}} /rad (Helmbold, tail AR 4.8), V<sub>H</sub> = {{VH}}, l<sub>t</sub>/c = {{LTC}} and d&epsilon;/d&alpha; &asymp; 2C<sub>L&alpha;w</sub>/(&pi;A) = {{DEDA}}. This gives C<sub>m&alpha;&#775;</sub> &asymp; {{CMAD}}, about 35 % of the AVL value of C<sub>mq</sub>. Adding it raises the short-period damping ratio from 0.76 to {{SPZ}} while leaving the natural frequency almost unchanged. The lesson is general: AVL-based models tend to <i>under-predict</i> pitch damping, and for aircraft with a short tail arm or marginal short-period damping the &alpha;&#775; term must be added from a handbook, an unsteady VLM such as VSPAERO, or tests.</p>
+
+<h3>G. Design sensitivity studies</h3>
+<p>The real power of AVL in a design office is not a single derivative set but the ability to ask &ldquo;what if&rdquo; questions in seconds. Three one-parameter studies were run on the 388-panel lattice (so the baseline values differ slightly from {{T:t6}}); each case was re-trimmed before derivatives and modes were computed. The results are in {{T:t8}}.</p>
+{{TABLE_SENS}}
+<p><i>Wing dihedral.</i> Dihedral has almost no effect on the longitudinal results but changes the dihedral effect C<sub>l&beta;</sub> roughly in proportion: from &minus;0.014 with a flat wing (the residual comes from the high-mounted fin and the wing&ndash;fin interference) to &minus;0.109 at 6&deg;. The spiral mode responds strongly: divergent with a time to double of about 8.5 s at 0&deg;, about 19 s at 3&deg;, and stable at 6&deg;. Dutch-roll damping falls slightly as dihedral increases, the classical trade-off between spiral stability and Dutch-roll damping.</p>
+<p><i>Horizontal tail size.</i> Increasing the tail semi-span from 0.25 m to 0.36 m (tail area +44 %) raises the static margin from about 10 % to 26 % and C<sub>mq</sub> from &minus;17.6 to &minus;29.0, while the elevator angle needed to trim falls. The short-period damping ratio changes little, because frequency and damping both increase.</p>
+<p><i>Vertical tail height.</i> Increasing the fin height from 0.20 m to 0.30 m nearly doubles C<sub>n&beta;</sub> (0.085 to 0.159) and increases yaw damping C<sub>nr</sub> correspondingly. Dutch-roll frequency rises from 5.4 to 7.3 rad/s and damping from 0.17 to 0.23. The spiral mode is almost unchanged here because the fin also adds to C<sub>l&beta;</sub> and C<sub>lr</sub>; in general a larger fin tends to worsen spiral stability, and this coupling is exactly what a quick AVL study exposes.</p>
+<p>Studies of this kind, each costing a few seconds, are how tail volumes, dihedral and control-surface sizes are settled in practice, long before the first wind-tunnel model.</p>
+
+
+<h3>H. Contribution of each surface and a fuselage correction</h3>
+<p>Because the lattice forces are available panel by panel, the derivatives can be split by surface. {{T:t12}} does this for the trimmed 873-panel case. It quantifies the physical picture of Section V-F and is a very useful diagnostic when a derivative looks wrong.</p>
+{{TABLE_BREAK}}
+<p>Several points stand out. The wing alone is longitudinally unstable about this CG (C<sub>m&alpha;,wing</sub> = +0.90), and the horizontal tail, despite carrying only 9 % of the total C<sub>L&alpha;</sub>, provides a stabilising &minus;1.81. The tail provides over 99 % of the pitch damping and the fin essentially all of C<sub>n&beta;</sub> and 99 % of C<sub>nr</sub>. Roll damping is almost entirely a wing property. Most revealing is the wing's tiny yaw damping (C<sub>nr,wing</sub> &asymp; &minus;0.002): in AVL it comes only from induced-drag asymmetry. The classical strip-theory profile-drag contribution for a rectangular wing is about &minus;C<sub>D0,wing</sub>/3 [54]; with a wing profile-drag coefficient of about 0.012 this adds roughly &minus;0.004, i.e. a few per cent of the total. On aircraft with smaller fins, or with large drag devices deployed, this neglected term matters more, and it is one reason AVL tends to under-predict yaw damping.</p>
+<p><i>Fuselage increment.</i> If the UAV has a pod fuselage of length L<sub>f</sub> = 0.9 m and maximum width w<sub>f</sub> = 0.12 m, the classical Multhopp-type estimate C<sub>m&alpha;,fus</sub> = K<sub>f</sub>w<sub>f</sub><sup>2</sup>L<sub>f</sub>/(c S) per degree, with an empirical factor K<sub>f</sub> of about 0.01 for a wing near 25&ndash;30 % of fuselage length [55], gives about +0.0013 per degree, or +0.076 per radian. This moves the neutral point forward by 0.076/5.37 &asymp; 1.4 % of c<sub>ref</sub>&mdash;small for a slender pod, which supports omitting it in AVL. For a transport fuselage, whose w<sub>f</sub><sup>2</sup>L<sub>f</sub> is a much larger fraction of cS, the same formula typically gives a shift of several per cent of MAC, and the body must not be ignored.</p>
+
+
+<h3>I. Second example: a tailless flying wing</h3>
+<p>Flying wings are popular for small UAVs and are a configuration where AVL is particularly useful, because their stability depends entirely on sweep, twist and span loading. A second model was therefore built: span 1.6 m, root chord 0.40 m, tip chord 0.20 m, 25&deg; leading-edge sweep, symmetrical section, 2&deg; root incidence washing out to &minus;3&deg; at the tip, elevons on the outer 60 % of each semi-span aft of 75 % chord, and small vertical winglet fins at the tips (Fig. 6). The elevons are defined, as in AVL, by two control variables on the same panels: &ldquo;elevator&rdquo; with SgnDup = +1 and &ldquo;aileron&rdquo; with SgnDup = &minus;1. The neutral point was computed first and the CG placed for an 8 % static margin; mass 1.6 kg, I<sub>xx</sub>, I<sub>yy</sub>, I<sub>zz</sub> = 0.12, 0.06, 0.17 kg m<sup>2</sup>, V = 16 m/s.</p>
+<figure id="f6"><img src="{{FIG6}}" alt="Flying wing lattice"/><figcaption>Fig. 6. Flying-wing lattice: bound vortices (blue), elevon panels (orange), CG and neutral point (8 % static margin).</figcaption></figure>
+<p>{{T:t14}} compares the two aircraft. The flying wing trims at &alpha; = {{FW_ALPHA}}&deg; with almost neutral elevons, thanks to the washout, and its Trefftz span efficiency is {{FW_E}}. The differences from the conventional aircraft are instructive and entirely as expected physically: pitch damping is about fifteen times smaller because there is no tail arm; directional stability and yaw damping from the small winglet fins are roughly one fifth and one tenth of the conventional values; and the elevon pitch power per degree is less than a third of a dedicated elevator's, while a trailing-edge-down elevon adds lift&mdash;the familiar reason that tailless aircraft lose lift when they trim nose-up. Adverse aileron yaw is comparable in size to the directional stiffness, so coordinated turns need either differential elevons, split-drag rudders or yaw-damping by the autopilot.</p>
+{{TABLE_FW}}
+<p>The modes follow from these derivatives: a well-damped short period ({{FW_SP}}), a very lightly damped Dutch roll ({{FW_DR}}) caused by the small fins and tiny C<sub>nr</sub>, a very fast roll mode, and a slowly divergent spiral. This is a typical flying-wing picture and shows why autopilot yaw damping is almost always used on such UAVs. It also illustrates a caution: on a flying wing the C<sub>m&alpha;</sub> margin is small, so the lattice-convergence check and an honest allowance for any centre-body should be applied before the CG limit is set.</p>
+
+<h3>J. What these examples teach</h3>
+<ul>
+<li>A complete, physically consistent derivative set and mode picture can be produced from a 65-line input file in seconds, for conventional and tailless layouts alike.</li>
+<li>A convergence check is essential, especially for C<sub>m&alpha;</sub> and induced drag.</li>
+<li>The results are only as good as the reference quantities and CG location; changing X<sub>ref</sub> from 0.115 m to 0.14 m in this model reduces the static margin from 17 % to about 6 %.</li>
+<li>Terms outside AVL's model (&alpha;&#775;, fuselage, propeller, viscous drag, stall) must be added explicitly and their source recorded.</li>
+</ul>
+
+<h2 id="s9">IX. Limitations of AVL</h2>
+<p>The limitations below are grouped as a checklist. Items marked [P] are stated in the AVL primer [15]; the others follow from the formulation or from the literature reviewed above.</p>
+<h3>A. Physical model</h3>
+<ol>
+<li><b>Inviscid flow.</b> No boundary layers, no separation, no stall, no viscous drag except what the user supplies through CDCL or CDp. C<sub>L,max</sub>, post-stall behaviour, spin and departure cannot be predicted.</li>
+<li><b>Thin surfaces.</b> Thickness is ignored; thickness effects on lift slope, on C<sub>m0</sub> and on fuselage&ndash;wing interference are lost. Suitability is greatest for configurations made mainly of thin lifting surfaces at small angles of attack and sideslip [P].</li>
+<li><b>Linear, fixed wake.</b> Trailing legs are parallel to the x axis, so the free stream must be at a small angle to x [P]. Wake roll-up, wake deflection at high &alpha; or with flaps, and tail immersion in the deflected wake are not represented; tails close behind and in line with the wing can give unreliable downwash.</li>
+<li><b>Quasi-steady.</b> Unsteady vorticity shedding is neglected, so &alpha;&#775; and &beta;&#775; derivatives are absent and rate derivatives are valid only for small rates (|p&#770;| &lt; 0.10, |q&#770;| &lt; 0.03, |r&#770;| &lt; 0.25) [P]. Gust response, flutter and high-frequency control are outside scope.</li>
+<li><b>Compressibility.</b> Prandtl&ndash;Glauert only: valid to about M 0.6, unreliable above 0.8 (using M cos&Lambda; for swept wings) [P]. No transonic shocks or supersonic flow.</li>
+<li><b>Fuselages and nacelles.</b> Slender-body theory is approximate and experience with it is limited [P]. Fuselage contributions to C<sub>m&alpha;</sub> and C<sub>n&beta;</sub> (destabilising) and to sidewash at the fin are only crudely captured; wing&ndash;body carry-over lift depends on modelling choices.</li>
+<li><b>Propulsion.</b> No propeller slipstream, normal force, swirl or jet effects (JVL addresses jets; slipstream VLMs exist in the literature [52]). For tractor UAVs with tails in the slipstream, power-on and power-off derivatives can differ significantly.</li>
+<li><b>Rigid aircraft.</b> No aeroelastic deformation; ASWING or coupled tools are required for flexible, high-aspect-ratio aircraft.</li>
+<li><b>Control surfaces.</b> Deflection is modelled by normal tilting, which is linear; effectiveness at large deflection, gap and seal effects, and flow separation over the flap are not modelled; the 3.35 update improved but did not remove this limitation.</li>
+</ol>
+<h3>B. Numerical and practical</h3>
+<ol start="10">
+<li><b>Lattice sensitivity.</b> Results depend on spacing; trailing legs passing close to downstream control points give spurious loads unless surfaces share spanwise spacing, use finite cores or the same COMPONENT index [P]. Uniform spacing overpredicts span efficiency [P].</li>
+<li><b>Induced drag.</b> Surface-integrated drag is less reliable than the Trefftz value [P]; even the Trefftz value is sensitive to coarse lattices (Section VIII-C).</li>
+<li><b>Precision and I/O.</b> Text output with about four significant digits limits use in gradient-based optimisation [21]; the menu-driven interface makes large sweeps cumbersome without wrappers.</li>
+<li><b>Legacy code base.</b> Fortran 77-style source, X11 graphics and a small group of maintainers; builds on modern Windows are less convenient than on Linux.</li>
+<li><b>No uncertainty information.</b> AVL returns a single number for each derivative with no indication of confidence, which users must supply from validation experience.</li>
+</ol>
+
+
+<h3>C. Reliability of individual derivatives</h3>
+<p>Not all AVL outputs deserve the same confidence. {{T:t9}} gives the author's assessment, based on the literature reviewed in Section VI and on practical experience, of how much each group of derivatives can be trusted for a conventional small aircraft in attached flow, together with the main source of error and a practical remedy. The ratings are qualitative and should be refined against data for each configuration class.</p>
+<table class="tbl wide" id="t9">
+<caption>TABLE X<br/>Indicative Reliability of AVL Derivatives (Conventional Aircraft, Attached Flow)</caption>
+<thead><tr><th>Derivative group</th><th>Reliability</th><th>Main error source</th><th>Practical remedy</th></tr></thead>
+<tbody>
+<tr><td>C<sub>L&alpha;</sub>, C<sub>L&delta;e</sub></td><td>good</td><td>thickness, viscous decambering near TE</td><td>scale by ratio of measured to thin-aerofoil section slope</td></tr>
+<tr><td>C<sub>m&alpha;</sub>, X<sub>np</sub></td><td>good without fuselage; fair with</td><td>fuselage moment, tail downwash, lattice</td><td>add handbook fuselage increment; converge lattice</td></tr>
+<tr><td>C<sub>mq</sub>, C<sub>Lq</sub></td><td>good (quasi-steady part)</td><td>missing C<sub>m&alpha;&#775;</sub></td><td>add downwash-lag estimate or unsteady VLM result</td></tr>
+<tr><td>C<sub>lp</sub></td><td>good</td><td>tip separation at high &alpha;</td><td>usually none needed in cruise</td></tr>
+<tr><td>C<sub>l&beta;</sub></td><td>fair</td><td>wing&ndash;fuselage height effect not modelled without body</td><td>handbook wing-position increment</td></tr>
+<tr><td>C<sub>Y&beta;</sub>, C<sub>n&beta;</sub></td><td>fair</td><td>fuselage side force and destabilising yaw, fin sidewash, propeller</td><td>handbook fuselage terms; CFD check</td></tr>
+<tr><td>C<sub>nr</sub>, C<sub>np</sub>, C<sub>lr</sub></td><td>fair to poor</td><td>profile-drag contribution absent; fuselage damping</td><td>add strip-theory profile-drag terms; flight identification</td></tr>
+<tr><td>C<sub>l&delta;a</sub>, C<sub>n&delta;r</sub></td><td>good at small &delta;</td><td>gap, viscous effectiveness loss, large &delta;</td><td>effectiveness factors 0.7&ndash;0.9 from data</td></tr>
+<tr><td>C<sub>n&delta;a</sub> (adverse yaw)</td><td>fair</td><td>profile drag of deflected aileron absent</td><td>add viscous drag-due-to-deflection estimate</td></tr>
+<tr><td>CD<sub>i</sub></td><td>good if converged (Trefftz)</td><td>coarse lattice over-predicts e</td><td>convergence study</td></tr>
+<tr><td>CD<sub>0</sub>, C<sub>L,max</sub>, stall</td><td>not predicted</td><td>inviscid model</td><td>XFOIL/handbook/CFD/tests</td></tr>
+</tbody></table>
+
+
+<h3>D. A practitioner's checklist</h3>
+<p>The limitations above translate into a short checklist that the author recommends be attached to every AVL derivative set released to a flight-dynamics or flight-control team:</p>
+<ol>
+<li>Reference area, chord, span and moment reference stated and consistent with the receiving model.</li>
+<li>Mass, CG and inertias stated, with the loading case.</li>
+<li>Geometry file version-controlled and plotted (AVL <code>G</code> command) to check dihedral, incidence and control-surface extents.</li>
+<li>Lattice convergence shown for C<sub>m&alpha;</sub>, X<sub>np</sub>, C<sub>n&beta;</sub>, C<sub>lp</sub> and CD<sub>i</sub>.</li>
+<li>Run case recorded: V, &rho;, Mach, &alpha;, &beta;, control settings, trim constraints.</li>
+<li>Axis system (stability or body) and units of rate and control derivatives declared.</li>
+<li>Terms not modelled (C<sub>m&alpha;&#775;</sub>, C<sub>n&beta;&#775;</sub>, fuselage, propeller, profile drag, speed derivatives) listed, with the sources of any corrections added.</li>
+<li>Validity range declared: attached flow, |&alpha;| and |&beta;| below about 10&deg;, M &lt; 0.6, rates within the primer limits.</li>
+<li>At least one cross-check against an independent method (handbook, panel code, CFD or test).</li>
+<li>Version of AVL and of any wrapper recorded, because output conventions have changed between versions [17].</li>
+</ol>
+
+<h2 id="s10">X. The Way Ahead</h2>
+<p>AVL's longevity shows that a well-chosen low-order model, delivered in a robust and transparent tool, remains valuable even in an age of routine CFD. The following developments would extend that value. Several have already been demonstrated in isolation by the researchers cited in Section VII; the opportunity lies in integrating them while keeping AVL's speed and simplicity.</p>
+<ol>
+<li><b>A modern, library-style core.</b> Double-precision, thread-safe, callable from Python, MATLAB and C, with a stable API&mdash;pyAVL and OptVL show the way [21], [38]&mdash;and with the classic text interface retained for teaching.</li>
+<li><b>Design sensitivities as standard.</b> Algorithmic differentiation or adjoints in the mainline, so that tail sizing, control allocation and stability constraints can be included directly in multidisciplinary optimisation.</li>
+<li><b>Unsteady and &alpha;&#775; derivatives.</b> An optional time-domain wake or a frequency-domain doublet-lattice module to provide C<sub>m&alpha;&#775;</sub>, C<sub>n&beta;&#775;</sub> and gust transfer functions, closing the gap identified in Section VIII-F.</li>
+<li><b>Viscous coupling.</b> Strip-wise coupling with aerofoil polars from XFOIL or a database, using decambering or the &alpha;-method [46]&ndash;[49], to give realistic C<sub>L,max</sub>, profile drag and stall progression for flight-simulation tables over the full envelope.</li>
+<li><b>Better body and propulsion models.</b> Panel or source-sink bodies, empirical fuselage corrections (DATCOM-style C<sub>n&beta;</sub> and C<sub>m&alpha;</sub> increments), and an actuator-disc or slipstream-tube propeller model.</li>
+<li><b>Wake relaxation.</b> Aligning the wake with the local flow at higher &alpha; and with high-lift systems, at modest cost.</li>
+<li><b>Geometry integration.</b> Robust import from parametric CAD and OpenVSP, so that the AVL model is always consistent with the design geometry.</li>
+<li><b>Uncertainty quantification and data fusion.</b> Attaching confidence intervals to each derivative from validation databases, and Bayesian updating with wind-tunnel and flight-identification data, so that the model improves as the programme matures.</li>
+<li><b>Machine-learning corrections.</b> Surrogate models trained on CFD to correct AVL derivatives for fuselage, nonlinear and viscous effects while preserving AVL's speed and physical structure.</li>
+<li><b>Open benchmark set.</b> A public collection of UAV and aircraft geometries with wind-tunnel and flight-identified derivatives, against which AVL and its successors can be tested consistently.</li>
+</ol>
+
+
+<p>These items can be grouped into a phased roadmap ({{T:t10}}). The near-term items are largely engineering work on existing open code; the longer-term items are research problems in their own right.</p>
+<table class="tbl wide" id="t10">
+<caption>TABLE XI<br/>Proposed Roadmap for AVL-Class Tools</caption>
+<thead><tr><th>Horizon</th><th>Development</th><th>Benefit</th><th>Building blocks already available</th></tr></thead>
+<tbody>
+<tr><td>Near term (1&ndash;2 years)</td><td>Python/C library core; double-precision output; standard JSON/HDF5 results; Windows builds</td><td>automation, reproducibility, integration with MDO and simulators</td><td>pyAVL, OptVL, avlwrapper, AeroSandbox interface [21], [36], [38]</td></tr>
+<tr><td>Near term</td><td>Automatic convergence check and derivative uncertainty flag</td><td>avoids unconverged C<sub>m&alpha;</sub> and CDi</td><td>simple lattice doubling as in Section VIII-D</td></tr>
+<tr><td>Medium term (2&ndash;5 years)</td><td>Strip-wise viscous coupling with XFOIL polars; decambering for post-stall</td><td>full-envelope simulator tables; realistic stall and drag</td><td>NCSU decambering, Airbus &alpha;-method [46]&ndash;[49]</td></tr>
+<tr><td>Medium term</td><td>Unsteady wake or DLM module for &alpha;&#775;, &beta;&#775; and gust derivatives</td><td>correct pitch and yaw damping; gust loads</td><td>VSPAERO unsteady, DLM [8], [44]</td></tr>
+<tr><td>Medium term</td><td>Propeller slipstream and body panel models</td><td>power-on stability of tractor UAVs and DEP aircraft</td><td>JVL, slipstream VLMs [19], [52]</td></tr>
+<tr><td>Long term (5+ years)</td><td>Aeroelastic coupling and reduced-order models as standard</td><td>flexible, high-AR UAVs and HALE aircraft</td><td>ASWING [18], [41]</td></tr>
+<tr><td>Long term</td><td>CFD-trained corrections and Bayesian fusion with test data</td><td>low-order speed with quantified, improving accuracy</td><td>system-identification practice [24]</td></tr>
+</tbody></table>
+
+<h2 id="s11">XI. Conclusions</h2>
+<p>AVL began as a modest teaching code on MIT's Athena workstations around 1988 and has grown, through more than three decades of careful development by Drela and Youngren and a 2022 update by Allmaras, into a de facto standard for early stability and control analysis of fixed-wing aircraft and UAVs. Its strengths are a sound extended vortex-lattice formulation, normal-vector-tilting for controls and camber, exact linear derivatives in both stability and body axes, built-in trim and eigenmode analysis, and an open GPL licence that has encouraged a large ecosystem of wrappers, differentiable versions, sister codes and physics extensions.</p>
+<p>The two worked UAV examples show that a validated, converged, physically consistent set of derivatives, neutral point and modes can be obtained in minutes, and also shows where care is needed: convergence of C<sub>m&alpha;</sub> and induced drag, choice of reference quantities and CG, and the explicit addition of terms AVL does not model, of which the &alpha;&#775; derivative alone changed the short-period damping ratio from 0.76 to about 0.9. Used within its limits&mdash;thin surfaces, small angles, subsonic attached flow, rigid airframe, low rates&mdash;and backed by validation data, AVL remains one of the most cost-effective tools in aircraft design. The way ahead lies not in replacing it but in surrounding its fast linear core with sensitivities, unsteady and viscous corrections, better body and propulsion models, and quantified uncertainty.</p>
+
+<h2 class="noroman">Acknowledgement</h2>
+<p>The author acknowledges the use of Claude, a large language model (LLM) assistant from Anthropic, for literature search, drafting assistance, and for writing and running the Python vortex-lattice implementation used in the worked example. All content was reviewed by the author, who remains responsible for it. The author also thanks Mark Drela and Harold Youngren for making AVL freely available.</p>
+
+<h2 class="noroman">References</h2>
+<ol class="refs">
+<li>L. Prandtl, &ldquo;Applications of modern hydrodynamics to aeronautics,&rdquo; NACA Report 116, 1923.</li>
+<li>V. M. Falkner, &ldquo;The calculation of aerodynamic loading on surfaces of any shape,&rdquo; Aeronautical Research Council R&amp;M 1910, 1943.</li>
+<li>S. G. Hedman, &ldquo;Vortex lattice method for calculation of quasi steady state loadings on thin elastic wings in subsonic flow,&rdquo; FFA Report 105, Aeronautical Research Institute of Sweden, 1965.</li>
+<li>J. E. Lamar and B. B. Gloss, &ldquo;Subsonic aerodynamic characteristics of interacting lifting surfaces with separated flow around sharp edges predicted by a vortex-lattice method,&rdquo; NASA TN D-7921, 1975.</li>
+<li>C. E. Lan, &ldquo;A quasi-vortex-lattice method in thin wing theory,&rdquo; <i>J. Aircraft</i>, vol. 11, no. 9, pp. 518&ndash;527, 1974.</li>
+<li>L. R. Miranda, R. D. Elliott and W. M. Baker, &ldquo;A generalized vortex lattice method for subsonic and supersonic flow applications,&rdquo; NASA CR-2865, 1977.</li>
+<li>T. T. Takahashi, AIAA Paper 2020-0276, AIAA SciTech Forum, 2020 [discussion of VORLAX and thickness modelling in vortex-lattice methods]. [Online]. Available: labs.engineering.asu.edu/aircraft-design</li>
+<li>E. Albano and W. P. Rodden, &ldquo;A doublet-lattice method for calculating lift distributions on oscillating surfaces in subsonic flows,&rdquo; <i>AIAA J.</i>, vol. 7, no. 2, pp. 279&ndash;285, 1969.</li>
+<li>NASA Langley Research Center, <i>Vortex-Lattice Utilization</i>, NASA SP-405, 1976.</li>
+<li>J. Katz and A. Plotkin, <i>Low-Speed Aerodynamics</i>, 2nd ed. Cambridge Univ. Press, 2001.</li>
+<li>M. Drela, <i>Flight Vehicle Aerodynamics</i>. MIT Press, 2014.</li>
+<li>&ldquo;Vortex lattice method,&rdquo; Wikipedia. [Online]. Available: https://en.wikipedia.org/wiki/Vortex_lattice_method</li>
+<li>&ldquo;Project Athena,&rdquo; Wikipedia. [Online]. Available: https://en.wikipedia.org/wiki/Project_Athena</li>
+<li>MIT News, &ldquo;Project Athena update,&rdquo; 1992; MIT Museum, &ldquo;Project Athena&rdquo; collection. [Online]. Available: https://mitmuseum.mit.edu/collections/subject/project-athena-628</li>
+<li>M. Drela and H. Youngren, <i>AVL 3.36 User Primer</i>, MIT. [Online]. Available: https://web.mit.edu/drela/Public/web/avl/AVL_User_Primer.pdf</li>
+<li>&ldquo;Mark Drela,&rdquo; Wikipedia. [Online]. Available: https://en.wikipedia.org/wiki/Mark_Drela</li>
+<li>M. Drela and H. Youngren, &ldquo;AVL overview and page revisions,&rdquo; MIT. [Online]. Available: https://web.mit.edu/drela/Public/web/avl/</li>
+<li>M. Drela, &ldquo;ASWING overview,&rdquo; MIT. [Online]. Available: https://web.mit.edu/drela/Public/web/aswing/</li>
+<li>M. Drela and H. Youngren, &ldquo;JVL overview,&rdquo; MIT, 2024. [Online]. Available: https://web.mit.edu/drela/Public/web/jvl/</li>
+<li>C. Courtin, R. J. Hansman and M. Drela, &ldquo;Flight test results of a subscale super-STOL aircraft,&rdquo; AIAA SciTech Forum, 2020; MIT ICAT Report 2020-01.</li>
+<li>J. Anibal, &ldquo;pyAVL: a direct Python interface for AVL.&rdquo; [Online]. Available: https://github.com/joanibal/pyAVL ; https://pypi.org/project/pyavl-wrapper/</li>
+<li>PX4 Autopilot, &ldquo;Advanced Lift Drag (AVL) automation tool,&rdquo; PX4 User Guide. [Online]. Available: https://docs.px4.io/main/en/sim_gazebo_gz/tools_avl_automation</li>
+<li>&ldquo;Stochastic high fidelity autonomous fixed wing aircraft flight simulator,&rdquo; arXiv:2305.02016, 2023.</li>
+<li>D. Reinhardt, K. Gryte and T. A. Johansen, &ldquo;Modeling of the Skywalker X8 fixed-wing UAV: flight tests and system identification,&rdquo; in <i>Proc. Int. Conf. Unmanned Aircraft Systems (ICUAS)</i>, NTNU.</li>
+<li>T. Lukaczyk <i>et al.</i>, &ldquo;SUAVE: an open-source environment for multi-fidelity conceptual vehicle design,&rdquo; AIAA Paper 2015-3087, 2015.</li>
+<li>K. S. Hon, S. Karpuk, D. Yang and A. Elham, &ldquo;Development of a flight simulator for conceptual aircraft design and sizing,&rdquo; <i>Transactions on Aerospace Research</i>, 2022.</li>
+<li>P. D. Sharpe, &ldquo;AeroSandbox,&rdquo; MIT. [Online]. Available: https://github.com/peterdsharpe/AeroSandbox</li>
+<li>AeroSandbox documentation, &ldquo;aerosandbox.aerodynamics.aero_3D.avl.&rdquo; [Online]. Available: https://aerosandbox.readthedocs.io</li>
+<li>&ldquo;Stability analysis of a Boeing 737-800,&rdquo; arXiv:1912.03099, 2019.</li>
+<li>A. K&#305;rkar, &ldquo;An aircraft design and analysis tool for a fifth-generation fighter jet: a flight mechanics perspective,&rdquo; M.S. thesis, Middle East Technical Univ., 2025.</li>
+<li>K. Biber, &ldquo;Wind tunnel and computational stability derivatives for a propeller-driven airplane,&rdquo; <i>Int. J. Sustainable Aviation</i>, vol. 3, no. 3, 2017.</li>
+<li>R. Ritchie, &ldquo;Comparative evaluation of computational techniques for estimating UAV aerodynamic, stability and control derivatives,&rdquo; Univ. of Minnesota, 2013.</li>
+<li>[Comparison of AVL, XFLR5, Tornado, PyTornado, VSPAERO, PAWAT and FlightStream with STAR-CCM+ for the T-FLEX UAV], Technical Univ. of Munich, mediaTUM document 1693069.</li>
+<li>[Comparative investigation of VLM codes for joined-wing configurations]. [Online]. Available: typeset.io.</li>
+<li>S. Asaro <i>et al.</i>, [comparison of wind-tunnel, flight-test, VLM, panel and RANS aerodynamic data for the Flying-V subscale aircraft], TU Delft Repository.</li>
+<li>&ldquo;avlwrapper: Python interface for MIT AVL,&rdquo; PyPI, v0.4.0, 2023. [Online]. Available: https://pypi.org/project/avlwrapper/</li>
+<li>&ldquo;avl-aero-tables,&rdquo; PyPI, v1.0.1. [Online]. Available: https://pypi.org/project/avl-aero-tables/</li>
+<li>J. Anibal, &ldquo;OptVL: AVL + Python + optimization.&rdquo; [Online]. Available: https://github.com/joanibal/OptVL</li>
+<li>J. Anibal, &ldquo;OptVL optimization overview.&rdquo; [Online]. Available: https://joanibal.github.io/OptVL/optimization_overview</li>
+<li>[Review of nonlinear aeroelastic and flight-dynamic solvers for HALE aircraft, including ASWING and the Helios mishap], DTIC report ADA546429.</li>
+<li>L. Avoni, <i>ASWING Extended User Manual</i>, v1.0, ISAE-SUPAERO/ENAC, Sept. 2025.</li>
+<li>T. Melin, &ldquo;A vortex lattice MATLAB implementation for linear aerodynamic wing applications,&rdquo; M.Sc. thesis, KTH, 2000.</li>
+<li>T. Melin, A. A. Gastaldi and M. Zhang, &ldquo;Implementation of a vortex lattice method in a heterogeneous programming language environment,&rdquo; in <i>Proc. 31st ICAS Congress</i>, 2018.</li>
+<li>OpenVSP user forum, &ldquo;VSPAERO stability analysis&rdquo; and &ldquo;Further explanation on dynamic analysis.&rdquo; [Online]. Available: https://groups.google.com/g/openvsp</li>
+<li>V. S. Sarode, &ldquo;Investigating aerodynamic coefficients and stability derivatives for truss-braced wing aircraft using OpenVSP,&rdquo; M.S. thesis, Virginia Tech, 2022.</li>
+<li>R. Mukherjee and A. Gopalarathnam, &ldquo;Poststall prediction of multiple-lifting-surface configurations using a decambering approach,&rdquo; <i>J. Aircraft</i>, vol. 43, no. 3, pp. 660&ndash;668, 2006.</li>
+<li>R. Paul, J. Murua and A. Gopalarathnam, &ldquo;Unsteady and post-stall aerodynamic modeling for flight dynamics simulation,&rdquo; AIAA Paper 2014-0729, 2014.</li>
+<li>&ldquo;A low-order method for prediction of separation and stall on unswept wings,&rdquo; arXiv:2006.00107, 2020.</li>
+<li>H. Goitia and R. Llamas, &ldquo;Nonlinear vortex lattice method for stall prediction,&rdquo; <i>MATEC Web of Conf.</i>, vol. 304, 02006, 2019.</li>
+<li>[Unsteady vortex lattice method coupled with decambering for post-stall aerodynamics], <i>S&#257;dhan&#257;</i>, 2018, doi:10.1007/s12046-018-0894-y.</li>
+<li>T. Melin and A. T. Isikveren, &ldquo;Induced-drag compressibility correction for three-dimensional vortex-lattice methods,&rdquo; <i>J. Aircraft</i>, Engineering Note.</li>
+<li>R. Nederlof <i>et al.</i>, [improved vortex lattice method with slipstream-tube model for propeller&ndash;wing interaction], <i>J. Aircraft</i>, published online Feb. 2025; TU Delft Repository.</li>
+<li>J. Fu and E. Laurendeau, &ldquo;Assessment of a nonlinear unsteady vortex lattice&ndash;vortex particle method for predicting helicopter rotor/multirotor aerodynamics,&rdquo; arXiv:2511.11430, 2025.</li>
+<li>B. Etkin and L. D. Reid, <i>Dynamics of Flight: Stability and Control</i>, 3rd ed. Wiley, 1996.</li>
+<li>D. P. Raymer, <i>Aircraft Design: A Conceptual Approach</i>, 6th ed. AIAA, 2018.</li>
+</ol>
+
+<h2 class="noroman">Appendix A &ndash; AVL Input File for the Worked Example</h2>
+<pre class="code">{{AVLFILE}}</pre>
+<p>Mass file (<code>demo_uav.mass</code>):</p>
+<pre class="code">{{MASSFILE}}</pre>
+<h2 class="noroman">Appendix B &ndash; AVL Session for Trim and Derivatives</h2>
+<p>Control variables are numbered D1, D2, D3 in order of first appearance in the geometry file&mdash;here aileron, elevator, rudder&mdash;so the elevator is D2.</p>
+<pre class="code">avl demo_uav            ! loads demo_uav.avl
+MASS demo_uav.mass      ! load mass file
+MSET 0                  ! apply mass, g and rho to all run cases
+OPER
+ A C 0.383              ! set alpha by the constraint CL = 0.383
+ D2 PM 0                ! elevator (D2) trims pitching moment Cm = 0
+ X                      ! execute run case
+ FT                     ! total forces, Trefftz CDi
+ ST demo_uav.st         ! stability-axis derivatives (+ Xnp) to file
+ SB demo_uav.sb         ! body-axis derivatives to file
+
+MODE
+ N                      ! eigenmodes of the current run case
+ W demo_uav.eig         ! write eigenvalues
+ S                      ! list system matrices A, B</pre>
+
+<h2 class="noroman">Appendix C &ndash; Glossary of Derivatives and Conventions</h2>
+<p>AVL notation is used, with the derivative written as the coefficient followed by the variable (for example Cma = &part;C<sub>m</sub>/&part;&alpha;, per radian).</p>
+<table class="tbl wide" id="t11">
+<caption>TABLE XII<br/>AVL Derivative Notation</caption>
+<thead><tr><th>AVL name</th><th>Symbol</th><th>Per</th><th>Normal sign (stable aircraft)</th></tr></thead>
+<tbody>
+<tr><td>CLa, Cma</td><td>C<sub>L&alpha;</sub>, C<sub>m&alpha;</sub></td><td>rad</td><td>+, &minus;</td></tr>
+<tr><td>CYb, Clb, Cnb</td><td>C<sub>Y&beta;</sub>, C<sub>l&beta;</sub>, C<sub>n&beta;</sub></td><td>rad</td><td>&minus;, &minus;, +</td></tr>
+<tr><td>CYp, Clp, Cnp</td><td>C<sub>Yp</sub>, C<sub>lp</sub>, C<sub>np</sub></td><td>pb/2V</td><td>small, &minus;, usually &minus; at low C<sub>L</sub></td></tr>
+<tr><td>CLq, Cmq</td><td>C<sub>Lq</sub>, C<sub>mq</sub></td><td>qc/2V</td><td>+, &minus;</td></tr>
+<tr><td>CYr, Clr, Cnr</td><td>C<sub>Yr</sub>, C<sub>lr</sub>, C<sub>nr</sub></td><td>rb/2V</td><td>+, +, &minus;</td></tr>
+<tr><td>CLd<i>n</i>, Cmd<i>n</i></td><td>C<sub>L&delta;</sub>, C<sub>m&delta;</sub></td><td>deg</td><td>elevator: +, &minus; (TE down)</td></tr>
+<tr><td>Cld<i>n</i>, Cnd<i>n</i></td><td>C<sub>l&delta;</sub>, C<sub>n&delta;</sub></td><td>deg</td><td>depends on gain and SgnDup</td></tr>
+<tr><td>Xnp</td><td>X<sub>np</sub></td><td>length</td><td>aft of CG for static stability</td></tr>
+<tr><td>e (Trefftz)</td><td>span efficiency</td><td>&ndash;</td><td>0.7&ndash;1.0 for real configurations</td></tr>
+</tbody></table>
+<p><i>Axes.</i> Geometry: x aft, y right, z up. Stability axes: x along the projection of the free stream in the aircraft plane of symmetry. Body axes in the <code>SB</code> output use AVL's geometry orientation; check signs before importing into a simulation that uses x forward, z down.</p>
+
+<h2 class="noroman">Appendix D &ndash; Core of the Python Vortex-Lattice Solver</h2>
+<p>The essential lines of <code>vlm_uav.py</code> used in Section VIII are reproduced below (geometry set-up, plotting and mode routines omitted). Body axes are x forward, y right, z down; &rho; = V = 1.</p>
+<pre class="code">{{VLMCODE}}</pre>

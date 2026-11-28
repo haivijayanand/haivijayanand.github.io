@@ -1,0 +1,128 @@
+<header class="paper-head">
+<h1 class="title">Athena Vortex Lattice (AVL): History, Current Practice, Extensions, Limitations and the Way Ahead</h1>
+<p class="subtitle">A review for engineers who use AVL to obtain stability and control derivatives of aircraft and UAVs, with two fully worked small-UAV examples</p>
+<p class="author">K Vijay Anand</p>
+<p class="date">November 2026</p>
+</header>
+
+<section class="abstract">
+<p><b><i>Abstract</i></b>&mdash;AVL (Athena Vortex Lattice) is a small, free program from MIT that has become one of the most widely used tools for the early aerodynamic and flight-dynamic analysis of fixed-wing aircraft and unmanned air vehicles (UAVs). It was first written by Harold Youngren around 1988 for MIT's Project Athena teaching computers and was then developed for more than three decades by Mark Drela and Youngren. AVL combines an extended vortex-lattice model of the lifting surfaces with a slender-body model of fuselages, trims the aircraft, returns a full set of stability and control derivatives in seconds, and performs a rigid-body eigenmode analysis. This paper traces the lineage of the vortex-lattice method from Prandtl and Falkner to AVL, records the release history of AVL itself, explains its formulation and the practical workflow for derivative extraction, and surveys how the code is used today in teaching, UAV development, open-source autopilot simulation and conceptual-design frameworks. It then reviews the improvements made by other researchers: scripting wrappers, automatic-differentiation versions for gradient-based optimisation, sister codes for blown lift and flexible aircraft, nonlinear post-stall corrections, compressibility and propeller-slipstream extensions. A complete worked example on a 2 m span, 3.2 kg conventional UAV is given, with validation of the lattice formulation against lifting-surface theory, a lattice-convergence study, trim, the derivative matrix, neutral point, dynamic modes, design sensitivities and a surface-by-surface breakdown, followed by a second example on a tailless flying wing. The limitations of AVL are listed in a form that can be used as a checklist, and a research roadmap is proposed.</p>
+<p><b><i>Index Terms</i></b>&mdash;AVL, vortex lattice method, stability derivatives, control derivatives, flight dynamics, UAV, neutral point, eigenmode analysis, conceptual design, low-order aerodynamics.</p>
+</section>
+
+<h2 id="s1">I. Introduction</h2>
+<p>Every aircraft programme needs numbers for lift-curve slope, pitching-moment slope, neutral point, roll and yaw damping, control power and the cross-coupling terms long before a wind-tunnel model exists. The traditional sources were the USAF DATCOM handbook and its digital version, Digital DATCOM, which rely on correlations from conventional configurations. Computational fluid dynamics (CFD) gives far richer information, but each Reynolds-averaged Navier&ndash;Stokes (RANS) case costs hours, and a full stability-derivative set needs many cases with rotating frames or prescribed motion.</p>
+<p>Between these two extremes sit low-order potential-flow methods. Among them, the vortex lattice method (VLM) is the workhorse: it represents each thin lifting surface by a grid of horseshoe vortices, solves a small linear system and integrates the loads. AVL is a particularly capable and robust implementation. Its input is a short, readable text file; it runs in a fraction of a second on any computer; and it directly prints the stability-axis derivative matrix including rate and control derivatives. For these reasons it is the default first tool in many university design courses, student competitions, small-UAV companies and research groups, and it is embedded in several open-source design frameworks.</p>
+<p>The author's own use of AVL has been for determining stability derivatives of aircraft and UAV configurations. Experience shows that the program is easy to run but easy to misuse: the reference quantities, the sign conventions, the treatment of fuselages and the limits of the quasi-steady, inviscid, linear model all need care. The aim of this paper is therefore practical as well as historical. It brings together, in one place:</p>
+<ul>
+<li>the lineage of the vortex lattice method and the history of AVL (Sections II&ndash;III);</li>
+<li>the formulation and the derivative-extraction workflow (Sections IV&ndash;V);</li>
+<li>current usage and published validation experience (Section VI);</li>
+<li>improvements and extensions by other researchers (Section VII);</li>
+<li>two worked UAV examples, conventional and tailless, with validation, convergence, trim, derivatives, modes and sensitivities (Section VIII);</li>
+<li>the limitations, as a usable checklist (Section IX), and a way ahead (Section X).</li>
+</ul>
+
+<h2 id="s2">II. Lineage of the Vortex Lattice Method</h2>
+<h3>A. From lifting line to the lattice</h3>
+<p>The VLM is a discrete form of lifting-surface theory. Prandtl's lifting-line theory (1918&ndash;1923) replaced a high-aspect-ratio wing by a single bound vortex along the quarter-chord line, shedding a sheet of trailing vorticity whose downwash reduces the effective angle of attack and produces induced drag [1]. Lifting-line theory is excellent for straight, high-aspect-ratio wings but cannot capture chordwise loading, sweep effects at low aspect ratio, or interference between several surfaces.</p>
+<p>The step to a lattice was taken in Britain during the Second World War. Falkner used a grid of horseshoe vortices distributed over the wing planform and introduced the name &ldquo;vortex lattice&rdquo; in 1943 [2]; with hand calculation and mechanical desk calculators, solutions with of the order of a hundred vortices were already standard. The arrangement used today&mdash;bound vortex on the panel quarter-chord, control (collocation) point at the panel three-quarter chord, trailing legs to downstream infinity&mdash;was established by Hedman in 1965 for digital computers, with compressibility handled through the Prandtl&ndash;Glauert transformation [3]. The quarter-chord/three-quarter-chord rule (sometimes called the Pistolesi or &ldquo;1/4&ndash;3/4&rdquo; rule) is what makes a single vortex per chordwise panel reproduce the thin-aerofoil lift-curve slope of 2&pi; exactly.</p>
+<h3>B. The NASA and industry codes of the 1970s</h3>
+<p>The 1970s saw an explosion of VLM codes. At NASA Langley, J. E. Lamar developed vortex-lattice programs for interacting lifting surfaces and for the vortex lift of slender, sharp-edged wings using the leading-edge suction analogy [4]. C. Edward Lan introduced the quasi-vortex-lattice method (QVLM), which places vortices and control points using a Chebyshev-type distribution to resolve leading-edge singularities and leading-edge thrust more accurately [5]. At Lockheed, L. R. Miranda, R. D. Elliott and W. M. Baker produced VORLAX, a generalised vortex-lattice code for subsonic and supersonic flow that could also model thickness through a &ldquo;sandwich&rdquo; of two lattices [6], [7]. Albano and Rodden extended the lattice idea to oscillating surfaces in the doublet-lattice method (DLM) [8], which is still the standard unsteady aerodynamic model in flutter analysis. The state of the art of that period was recorded in the 1976 NASA Langley workshop on vortex-lattice utilisation, NASA SP-405 [9]. Textbook accounts appear in Katz and Plotkin [10], Bertin and Smith, Anderson, and Drela's <i>Flight Vehicle Aerodynamics</i> [11].</p>
+<h3>C. What a VLM gives and does not give</h3>
+<p>A VLM solves Laplace's equation for incompressible (or Prandtl&ndash;Glauert-corrected), inviscid, irrotational flow. Lifting surfaces are represented as zero-thickness vortex sheets, and the boundary condition of zero normal velocity is applied on the mean surface. The method therefore yields lift, induced drag, pitching, rolling and yawing moments, span loading and chordwise load distribution, but not viscous drag, thickness effects or flow separation [12]. These properties make it ideal for stability derivatives in the linear range, which depend primarily on the lifting-surface geometry and on the interference of downwash and sidewash between surfaces.</p>
+
+<h2 id="s3">III. History of AVL</h2>
+<h3>A. Project Athena and the original code</h3>
+<p>The name &ldquo;Athena&rdquo; comes from MIT's Project Athena, a joint programme of MIT, Digital Equipment Corporation and IBM, launched in May 1983 and run until 30 June 1991, whose purpose was to put a campus-wide, Unix-based distributed computing environment into undergraduate education [13]. The project cost about US$100 million over eight years and gave the world, among other things, the X Window System and the Kerberos authentication system [14].</p>
+<p>According to the AVL documentation, AVL 1.0 was written by Harold Youngren circa 1988 as part of the &ldquo;MIT Athena TODOR&rdquo; collection of aerodynamic teaching software. The code drew on the classical work of Lamar (NASA), Lan and Miranda (VORLAX) and others. Since then Mark Drela and Harold Youngren have added so many modifications that, in the documentation's words, only &ldquo;stubborn traces&rdquo; of the original Athena code remain [15]. Drela, Professor of Fluid Dynamics at MIT and the author of XFOIL, MSES/MISES and ASWING, was elected to the US National Academy of Engineering in 2009 for aircraft designs and design software that enabled operation in new flight regimes [16]. Youngren was associated with Aerocraft, Inc.</p>
+<h3>B. Release history</h3>
+<p>The public web page for AVL was created on 1 September 2004 with version 3.14. {{T:t1}} summarises the main releases recorded on that page [17]. Two points are notable. First, development has been steady and conservative: most releases fix bugs or clarify output, so results from different 3.xx versions are generally consistent. Second, the 2014 release (3.35) added second-order right-hand-side terms to the vortex-lattice system, improving trim convergence and eigenmode results at large control deflections. The current version, 3.40b, was released on 18 April 2022 by Steven Allmaras; it adds output options and switches the matrix solver to LAPACK.</p>
+
+<table class="tbl" id="t1">
+<caption>TABLE I<br/>Main Public Releases of AVL [17]</caption>
+<thead><tr><th>Date</th><th>Version</th><th>Notable change</th></tr></thead>
+<tbody>
+<tr><td>c. 1988</td><td>1.0</td><td>Written by H. Youngren for MIT Athena TODOR collection</td></tr>
+<tr><td>Sep 2004</td><td>3.14</td><td>Public web page created</td></tr>
+<tr><td>Oct 2004</td><td>3.15&ndash;3.16</td><td>Compilation fixes; first Windows executable</td></tr>
+<tr><td>Aug 2005</td><td>3.18</td><td>Side-force (CY) constraint added</td></tr>
+<tr><td>Oct&ndash;Nov 2005</td><td>3.20&ndash;3.22</td><td>Stability-axis yaw-rate printing and Cl/Cn axis-transformation fixes; derivative output clarified</td></tr>
+<tr><td>Apr 2006</td><td>3.26</td><td>Leading-edge-flap hinge moment fix</td></tr>
+<tr><td>May 2008</td><td>3.27</td><td>CLAF influence removed from zero-lift angle</td></tr>
+<tr><td>Apr 2011</td><td>3.31</td><td>Linux build; run-case directory</td></tr>
+<tr><td>Dec 2012</td><td>3.32</td><td>Strip centre-of-pressure post-processing fixed</td></tr>
+<tr><td>Feb 2014</td><td>3.35</td><td>Second-order RHS: better trim and eigenmodes at large deflections</td></tr>
+<tr><td>Feb 2017</td><td>3.36</td><td>Fixes and tweaks; widely used reference version</td></tr>
+<tr><td>Apr 2022</td><td>3.40b</td><td>S. Allmaras: more output, LAPACK solver</td></tr>
+</tbody></table>
+
+<h3>C. Licence and distribution</h3>
+<p>AVL is distributed as Fortran and C source with executables for Linux, Windows and macOS. The web page allows anyone to copy, modify and redistribute AVL or modified versions, provided redistribution is under the terms of the GNU General Public License [17]. This licence is the reason so many derived codes and wrappers (Section VII) can exist openly.</p>
+<h3>D. The AVL family</h3>
+<p>Two later MIT codes share AVL's structure and file conventions. ASWING analyses aircraft with flexible wings and fuselages of moderate to high aspect ratio, coupling aerodynamics, nonlinear beam structures and control response; it is licensed commercially through the MIT Technology Licensing Office [18]. JVL (Jet Vortex Lattice), whose page was created in May 2024, extends AVL to blown-lift configurations by modelling jet sheets of finite thickness that extend ahead of and contact the wing, together with the forces of the propulsors that create them [19]. JVL grew out of MIT's research on distributed-electric-propulsion super-short take-off and landing aircraft, where subscale flight tests demonstrated lift coefficients above 10 [20].</p>
+
+
+<h3>E. Timeline</h3>
+<p>{{T:t13}} places AVL in the wider chronology of the vortex-lattice method and the tools built around it.</p>
+<table class="tbl" id="t13">
+<caption>TABLE II<br/>Chronology of the Vortex-Lattice Method and the AVL Ecosystem</caption>
+<thead><tr><th>Year</th><th>Event</th></tr></thead>
+<tbody>
+<tr><td>1918&ndash;23</td><td>Prandtl lifting-line theory [1]</td></tr>
+<tr><td>1943</td><td>Falkner names the &ldquo;vortex lattice&rdquo; [2]</td></tr>
+<tr><td>1965</td><td>Hedman: digital VLM with 1/4&ndash;3/4 rule and Prandtl&ndash;Glauert [3]</td></tr>
+<tr><td>1969</td><td>Albano &amp; Rodden doublet-lattice method [8]</td></tr>
+<tr><td>1974&ndash;77</td><td>Lan QVLM [5]; Lamar codes [4]; VORLAX [6]</td></tr>
+<tr><td>1976</td><td>NASA SP-405 vortex-lattice workshop [9]</td></tr>
+<tr><td>1983&ndash;91</td><td>MIT Project Athena [13]</td></tr>
+<tr><td>c. 1988</td><td>AVL 1.0 (Youngren) [15]</td></tr>
+<tr><td>2000</td><td>Tornado VLM (Melin, KTH) [42]</td></tr>
+<tr><td>2004</td><td>AVL 3.14 public web release [17]</td></tr>
+<tr><td>2006</td><td>Decambering for post-stall multi-surface VLM [46]</td></tr>
+<tr><td>2014</td><td>AVL 3.35: second-order RHS [17]</td></tr>
+<tr><td>2015</td><td>SUAVE with AVL stability module [25]</td></tr>
+<tr><td>2017</td><td>AVL 3.36 [17]</td></tr>
+<tr><td>2018</td><td>PyTornado (Airinnova) [43]</td></tr>
+<tr><td>2019&ndash;23</td><td>avlwrapper releases [36]</td></tr>
+<tr><td>2022</td><td>AVL 3.40b (Allmaras, LAPACK) [17]</td></tr>
+<tr><td>2020s</td><td>pyAVL, then OptVL with AD derivatives [21], [38]</td></tr>
+<tr><td>2024</td><td>JVL for blown lift [19]</td></tr>
+<tr><td>2025</td><td>ASWING Extended User Manual (ISAE) [41]</td></tr>
+</tbody></table>
+
+<h2 id="s4">IV. Formulation of AVL</h2>
+<h3>A. Geometry description</h3>
+<p>AVL uses a keyword-driven text file. Each <i>surface</i> is defined by two or more <i>sections</i>, each section giving the leading-edge position (X<sub>le</sub>, Y<sub>le</sub>, Z<sub>le</sub>), chord and incidence. Geometry is interpolated linearly between sections. Camber comes from a NACA four-digit designation or an aerofoil coordinate file. Surfaces can be scaled, translated, rotated, and mirrored about the y = 0 plane with <code>YDUPLICATE</code>. Fuselages and nacelles are entered as <i>bodies</i> with a radius distribution. Panel counts and spacing (uniform, sine, cosine or blended) are given per surface or section [15].</p>
+<p>AVL's geometry axes have x pointing aft, y to the right wing and z up. Derivatives and moments are reported with the usual flight-dynamics sign conventions (positive roll right wing down, positive pitch nose up, positive yaw nose right).</p>
+<h3>B. Singularities and boundary condition</h3>
+<p>Each lifting-surface panel carries a horseshoe vortex: a bound segment along the panel quarter-chord and two trailing legs that run to downstream infinity <i>parallel to the x axis</i>. The flow-tangency condition is imposed at the three-quarter-chord control point of each panel:</p>
+<p class="eq">(<b>V</b><sub>&infin;</sub> + <b>&Omega;</b> &times; <b>r</b> + &Sigma;<sub>j</sub> <b>v</b><sub>ij</sub> &Gamma;<sub>j</sub>) &middot; <b>n</b><sub>i</sub> = 0,&nbsp;&nbsp;&nbsp; i = 1 &hellip; N &nbsp;&nbsp;&nbsp;(1)</p>
+<p>where <b>v</b><sub>ij</sub> is the velocity induced at control point i by a unit-strength horseshoe j (Biot&ndash;Savart law), <b>&Omega;</b> = (p, q, r) is the body rotation rate and <b>n</b><sub>i</sub> the panel normal. Note the sign of the rotation term depends on whether the velocity of the air relative to the aircraft or of the aircraft relative to the air is used; AVL works with the former. A key feature of AVL is that camber, incidence and control deflections are <i>not</i> modelled by moving the panels; instead the normal vector <b>n</b><sub>i</sub> is tilted. This keeps the influence matrix fixed for a given geometry, so control derivatives and trimmed solutions are obtained cheaply. Hinge lines may be placed independently of the panel grid [15].</p>
+<p>Bodies are modelled by source and doublet line singularities along their axes (slender-body theory), and a finite-core option prevents singular velocities when a trailing leg passes close to a control point. Image surfaces, which see only perturbation velocities, are used for ground effect, wind-tunnel walls or a neighbouring aircraft.</p>
+<h3>C. Forces, Trefftz plane and drag</h3>
+<p>Once the circulations &Gamma;<sub>j</sub> are found from the N &times; N linear system (1), forces on each bound segment follow from the Kutta&ndash;Joukowski law,</p>
+<p class="eq"><b>F</b><sub>i</sub> = &rho; &Gamma;<sub>i</sub> (<b>V</b><sub>local,i</sub> &times; <b>l</b><sub>i</sub>)&nbsp;&nbsp;&nbsp;(2)</p>
+<p>where <b>l</b><sub>i</sub> is the bound-segment vector and <b>V</b><sub>local</sub> includes free stream, rotation and all induced velocities. Moments are summed about the reference point (X<sub>ref</sub>, Y<sub>ref</sub>, Z<sub>ref</sub>). Induced drag is also evaluated in the Trefftz plane far downstream, where it depends only on the trailing vorticity; the AVL documentation notes that the Trefftz-plane value CDi is generally more reliable than drag from surface-force integration [15]. Profile drag can be added through a parabolic CD(CL) polar (<code>CDCL</code>) given per section, with rapid drag rise outside the specified CL range to mimic stall, and through a constant CDp.</p>
+<h3>D. Compressibility</h3>
+<p>Subsonic compressibility is handled with the Prandtl&ndash;Glauert transformation: the geometry is stretched in x by 1/&beta;, &beta; = (1 &minus; M<sup>2</sup>)<sup>1/2</sup>, the incompressible problem is solved, and the results are scaled back. The AVL primer rates this treatment as valid up to about Mach 0.6, suspect at 0.7, unreliable at 0.8 and hopeless at 0.9, with the wing-perpendicular Mach number M&nbsp;cos&Lambda; as the relevant parameter for swept wings [15].</p>
+<h3>E. Trim, derivatives and eigenmodes</h3>
+<p>The <code>OPER</code> menu sets operating variables (&alpha;, &beta;, p&#770;, q&#770;, r&#770;, control deflections) directly or through constraints such as CL = value or Cm = 0, so trimmed states, banked turns and steady pull-ups can be computed. The <code>ST</code> command prints the stability-axis derivative matrix; <code>SB</code> prints body-axis derivatives [15]. Rate derivatives use the non-dimensional rates</p>
+<p class="eq">p&#770; = pb/2V,&nbsp;&nbsp; q&#770; = qc/2V,&nbsp;&nbsp; r&#770; = rb/2V&nbsp;&nbsp;&nbsp;(3)</p>
+<p>and control derivatives are given per degree of deflection. Because AVL differentiates its own linear solution analytically, the derivatives are free from finite-difference step error. The neutral point X<sub>np</sub> is printed with the <code>ST</code> output; for a configuration with a single dominant lifting surface it is equivalent to</p>
+<p class="eq">X<sub>np</sub> = X<sub>ref</sub> &minus; c<sub>ref</sub> &middot; C<sub>m&alpha;</sub> / C<sub>L&alpha;</sub>&nbsp;&nbsp;&nbsp;(4)</p>
+<p>and the static margin is (X<sub>np</sub> &minus; X<sub>cg</sub>)/c<sub>ref</sub>. With an optional mass file giving component masses, positions and inertias, the <code>MODE</code> menu linearises the rigid-body equations about the run case as <b>u&#775;</b> = A<b>u</b> + B<b>&delta;</b> with a 12-state vector, computes eigenvalues and eigenvectors, plots root loci against a parameter, animates the modes, and writes the A and B matrices for control-law design [15].</p>
+
+<h3>F. Mathematical details</h3>
+<p><i>Biot&ndash;Savart law for a straight segment.</i> A straight vortex filament of strength &Gamma; running from point <b>P</b><sub>1</sub> to <b>P</b><sub>2</sub> induces at a field point <b>P</b> the velocity</p>
+<p class="eq"><b>v</b> = (&Gamma;/4&pi;) [(<b>r</b><sub>1</sub> &times; <b>r</b><sub>2</sub>)/|<b>r</b><sub>1</sub> &times; <b>r</b><sub>2</sub>|<sup>2</sup>] <b>r</b><sub>0</sub> &middot; (<b>r</b><sub>1</sub>/|<b>r</b><sub>1</sub>| &minus; <b>r</b><sub>2</sub>/|<b>r</b><sub>2</sub>|)&nbsp;&nbsp;&nbsp;(5)</p>
+<p>with <b>r</b><sub>0</sub> = <b>P</b><sub>2</sub> &minus; <b>P</b><sub>1</sub>, <b>r</b><sub>1</sub> = <b>P</b> &minus; <b>P</b><sub>1</sub> and <b>r</b><sub>2</sub> = <b>P</b> &minus; <b>P</b><sub>2</sub> [10]. A horseshoe vortex is the sum of three such segments: a semi-infinite trailing leg arriving at the left end of the bound segment, the bound segment itself, and a semi-infinite trailing leg leaving its right end. The expression is singular on the filament line itself; AVL removes the singularity with a finite vortex core, whose size can be controlled by the user, and evaluates the semi-infinite legs in closed form.</p>
+<p><i>Linear superposition and exact derivatives.</i> Writing the right-hand side of (1) explicitly, the circulation vector satisfies</p>
+<p class="eq">A&Gamma; = &minus;[<b>V</b><sub>&infin;</sub> + <b>&Omega;</b> &times; (<b>r</b><sub>c</sub> &minus; <b>r</b><sub>ref</sub>)] &middot; <b>n</b>(&delta;)&nbsp;&nbsp;&nbsp;(6)</p>
+<p>where A is the N &times; N aerodynamic influence coefficient matrix A<sub>ij</sub> = <b>v</b><sub>ij</sub> &middot; <b>n</b><sub>i</sub>. Because the right-hand side is linear in the three free-stream components and the three rotation components, AVL factors A once and solves for six &ldquo;unit&rdquo; circulation distributions. Any flight state is then a linear combination of these, and derivatives of &Gamma; with respect to &alpha;, &beta;, p, q, r follow by the chain rule without finite differencing. Control deflections enter through the tilted normals <b>n</b>(&delta;); to first order the tilt adds a right-hand-side term proportional to &delta;, so control derivatives are likewise obtained from additional unit solutions. The 2014 change to second-order right-hand sides keeps more terms of this expansion, which matters at large deflections [17].</p>
+<p><i>Trefftz-plane drag.</i> Far downstream the trailing vortex sheet produces only cross-flow velocities. If &Gamma;(s) is the net circulation along the trace of the wake in the Trefftz plane and w<sub>n</sub>(s) the normal velocity it induces there, the induced drag is</p>
+<p class="eq">D<sub>i</sub> = &minus;(&rho;/2) &int; &Gamma;(s) w<sub>n</sub>(s) ds,&nbsp;&nbsp;&nbsp; CD<sub>i</sub> = CL<sup>2</sup>/(&pi;Ae)&nbsp;&nbsp;&nbsp;(7)</p>
+<p>which defines the span efficiency e. The far-field evaluation does not involve the large, nearly cancelling suction and pressure forces of the near field, which explains why it is more reliable than surface integration.</p>
+<p><i>Slender bodies.</i> For a body of local cross-sectional area S<sub>b</sub>(x) in a cross-flow, slender-body theory gives a local normal-force distribution proportional to d(S<sub>b</sub>V<sub>n</sub>)/dx. AVL represents the body by a line of sources (for displacement) and doublets (for cross-flow), and the body influences and is influenced by the lattice. A well-known consequence of slender-body theory is that a closed body produces no net normal force but a destabilising pitching and yawing moment; this is the main reason that adding a fuselage moves the neutral point forward and reduces C<sub>n&beta;</sub>.</p>
+<h3>G. Cost</h3>
+<p>The cost of the method is dominated by forming and factoring A, O(N<sup>2</sup>) and O(N<sup>3</sup>) respectively. For typical UAV and aircraft models with 500&ndash;3000 vortices, a complete run including all derivative unit solutions takes well under a second on a current laptop, which is why AVL is suitable for interactive design and for inner loops of optimisation.</p>

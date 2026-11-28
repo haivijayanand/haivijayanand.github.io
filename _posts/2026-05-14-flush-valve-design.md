@@ -4,7 +4,7 @@ title: "Salt-Resistant Flush Valve Design for Hard-Water Regions"
 date: 2026-05-14
 tags: [mechanical-design, hard-water, materials, python, matplotlib, analysis]
 nav_newer:
-  title: "Exoskeletons: History, Commercialisation, Industry Landscape and Future Outlook"
+  title: "Exoskeletons: From Early Patents to Medical, Industrial and Consumer Markets"
   url: /papers/exoskeletons-history-industry-future.html
 ---
 
@@ -266,6 +266,6 @@ python code/generate_figures.py
 | | |
 |---|---|
 | **← Older** | [The Earth–Jupiter Dance: How Two Planets Draw a Star in Space](/2026/05/07/earth-jupiter-dance.html) — orbital mechanics visualisation |
-| **Newer →** | [Exoskeletons: History, Commercialisation, Industry Landscape and Future Outlook](/papers/exoskeletons-history-industry-future.html) — Technical Papers |
+| **Newer →** | [Exoskeletons: From Early Patents to Medical, Industrial and Consumer Markets](/papers/exoskeletons-history-industry-future.html) — Technical Papers |
 | **All** | [Technical Papers & Articles](/papers/) |
 <!-- /web-only -->

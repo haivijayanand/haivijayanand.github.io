@@ -197,7 +197,7 @@ WEB = f"""<!DOCTYPE html>
 {HEADER}
 <html lang="en"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Athena Vortex Lattice (AVL): History, Current Practice, Extensions, Limitations and the Way Ahead</title>
+<title>AVL in Practice: Strengths, Limits and Extensions of the Athena Vortex Lattice Code</title>
 <style>
 :root{{--bg:#fff;--fg:#1b1b1b;--accent:#1f4e9c;--side:#f3f5f9}}
 body.dark{{--bg:#16181d;--fg:#e6e6e6;--accent:#8fb3ff;--side:#1f232b}}

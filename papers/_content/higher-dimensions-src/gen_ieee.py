@@ -20,7 +20,7 @@ from pathlib import Path
 import markdown
 
 SLUG = "higher-dimensions-physics-review"
-TITLE = "Higher Dimensions in Physics: A Chronological Review of Key Papers, Arguments, Assumptions and Contradictions"
+TITLE = "Beyond Three Dimensions: A Chronological Review of Extra-Dimension Theories"
 DATE = "26 November 2026"
 HERE = Path(__file__).resolve().parent
 PAPERS = HERE.parents[1]

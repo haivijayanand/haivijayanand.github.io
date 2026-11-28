@@ -11,8 +11,8 @@ __version__ = "1.0.0"
 import glob, os, re, subprocess, sys
 
 SLUG = "airfoil-drag-aircraft-performance"
-TITLE = "How Airfoil Drag Characteristics Shape Aircraft and Rotorcraft Performance"
-SUBTITLE = "A Cross-Type Analysis with Worked Examples"
+TITLE = "From Section Drag to Mission Performance"
+SUBTITLE = "Airfoil Choice Across Fixed-Wing and Rotary Aircraft"
 AUTHOR = "K Vijay Anand"
 DATE = "November 2026"
 

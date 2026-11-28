@@ -20,7 +20,7 @@ from pathlib import Path
 import markdown
 
 SLUG = "power-grid-management-worldwide"
-TITLE = "Keeping the Lights On: Power and Grid Management Worldwide \u2014 History, Present Problems and the Road Ahead"
+TITLE = "Keeping the Lights On: Grid Management Worldwide, Blackout Lessons and India's Path"
 DATE = "24 November 2026"
 HERE = Path(__file__).resolve().parent
 PAPERS = HERE.parents[1]

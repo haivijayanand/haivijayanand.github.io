@@ -14,7 +14,7 @@ from pathlib import Path
 import tiers
 
 SLUG = "thirukkural-ulaga-pothu-marai"
-TITLE = "Ulaga Pothu Marai: Testing the Timelessness of the Thirukkural Across Past, Present and Future"
+TITLE = "Is the Thirukkural Timeless? Testing the Ulaga Pothu Marai Against Past, Present and Future"
 DATE_NICE = "22 November 2026"
 HERE = Path(__file__).resolve().parent
 HERE = Path(__file__).resolve().parent

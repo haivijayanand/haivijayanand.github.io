@@ -21,7 +21,7 @@ from pathlib import Path
 import markdown
 
 SLUG = "data-centre-power-demand-efficiency"
-TITLE = "Managing the Data-Centre Power Surge: How Far Better Operation and Efficiency Upgrades Can Offset It"
+TITLE = "Can Efficiency Offset the Data-Centre Power Surge?"
 DATE = "24 November 2026"
 HERE = Path(__file__).resolve().parent
 PAPERS = HERE.parents[1]

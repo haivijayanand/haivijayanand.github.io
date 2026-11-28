@@ -11,8 +11,8 @@ __version__ = "1.0.0"
 import glob, os, re, subprocess, sys
 
 SLUG = "xfoil-improvements-convergence-multielement"
-TITLE = "Improving XFOIL"
-SUBTITLE = "Convergence, Accuracy and Optimization, with Its History, Current Branches and the Multi-Element Question"
+TITLE = "Making XFOIL Converge"
+SUBTITLE = "Accuracy, Optimisation and the Multi-Element Limit"
 AUTHOR = "K Vijay Anand"
 DATE = "November 2026"
 

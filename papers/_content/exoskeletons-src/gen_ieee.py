@@ -21,7 +21,7 @@ from pathlib import Path
 import markdown
 
 SLUG = "exoskeletons-history-industry-future"
-TITLE = "Exoskeletons: History, Commercialisation, Industry Landscape and Future Outlook"
+TITLE = "Exoskeletons: From Early Patents to Medical, Industrial and Consumer Markets"
 DATE = "25 October 2026"
 HERE = Path(__file__).resolve().parent
 PAPERS = HERE.parents[1]

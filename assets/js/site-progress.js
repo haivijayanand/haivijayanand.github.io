@@ -1,10 +1,11 @@
 /*
 TOOL: site-progress.js — Google sign-in, reading progress, resume, completed ticks and certificates for haivijayanand.github.io
 FAMILY: site-progress
-VERSION: 1.6.0
-DATE: 2026-11-22
+VERSION: 1.7.0
+DATE: 2026-11-28
 CHAT: Login, progress & certificates on GitHub Pages with Firebase
-CHANGES: 1.6.0 — Law Study Explorers (/llb/ hub and /tools/llb-*.html course pages) added to the tracked series
+CHANGES: 1.7.0 — 30-Day TallyPrime Course (/tally/) added to the tracked series
+         1.6.0 — Law Study Explorers (/llb/ hub and /tools/llb-*.html course pages) added to the tracked series
          1.5.0 — Differential Equations Part II added to the tracked series
          1.4.0 — Differential Equations Course added to the tracked series
          1.3.0 — Manufacturing, Machine Design and Stock Management courses added to the tracked series
@@ -15,7 +16,7 @@ CHANGES: 1.6.0 — Law Study Explorers (/llb/ hub and /tools/llb-*.html course p
          1.0.0 — first release: Google sign-in, per-page resume, Mark-as-completed, index badges and counts, continue widget, certificate store + PDF reprint, local fallback when signed out
 STATUS: configured for Firebase project haivijayanand-site
 */
-export const SP_VERSION = '1.6.0';
+export const SP_VERSION = '1.7.0';
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {
@@ -62,6 +63,7 @@ const SITE = {
     'machine-design': 'Machine Design Course',
     'manufacturing': 'Manufacturing Course',
     'stock-management': 'Stock Management Course',
+    'tally': 'TallyPrime Course',
     'differential-equations': 'Differential Equations Course',
     'differential-equations-2': 'Differential Equations Part II',
     'finance-economics': 'Finance & Economics',

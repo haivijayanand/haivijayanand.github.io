@@ -2,10 +2,11 @@
 """
 TOOL:    speaks/_build.py
 FAMILY:  SITE
-VERSION: 1.7.0
-DATE:    2026-11-21
+VERSION: 1.7.1
+DATE:    2026-11-28
 CHAT:    Blogger to GitHub migration (Vijay Anand Speaks)
-CHANGES: 1.7.0 - every page loads assets/js/site-theme.js (site-wide light / dark)
+CHANGES: 1.7.1 - page/index headers carry v1.3.1 (site-theme.js) so a rebuild no longer rolls them back to v1.3.0
+         1.7.0 - every page loads assets/js/site-theme.js (site-wide light / dark)
          1.6.0 - every page loads assets/js/site-progress.js (sign-in, reading progress, activity log)
          1.5.0 - Aa reading settings (light/dark theme, text size, font, line spacing) on every essay (assets/js/reader.js): text size, font incl. Tamil, line spacing; text wraps on phones
          1.4.0 - Listen button on every essay (assets/js/read-aloud.js); Tamil essays use a Tamil voice when the device has one
@@ -31,12 +32,12 @@ Topics (_topics.json): { "<content file name without .json>": ["Management", "Ph
   "_topics" lists the allowed topics in the order the filter shows them. Every essay needs at least one.
   Kept apart from _content so running _import_blogger.py again does not wipe them.
 """
-__version__ = "1.7.0"
+__version__ = "1.7.1"
 
-PAGE_VERSION = "1.3.0"
-PAGE_DATE = "2026-11-07"
-INDEX_VERSION = "1.3.0"
-PAGE_CHANGES = ["v1.3.0  Aa button: theme, text size, font, line spacing; wraps to phone screen", "v1.2.0  Listen button reads the essay aloud", "v1.1.0  topic tags that open the list filtered to that topic", "v1.0.0  moved from vijayanandspeaks.blogspot.com"]
+PAGE_VERSION = "1.3.1"
+PAGE_DATE = "2026-11-21"
+INDEX_VERSION = "1.3.1"
+PAGE_CHANGES = ["v1.3.1  loads assets/js/site-theme.js (light by default, one light / dark choice for the whole site)", "v1.3.0  Aa button: theme, text size, font, line spacing; wraps to phone screen", "v1.2.0  Listen button reads the essay aloud", "v1.1.0  topic tags that open the list filtered to that topic", "v1.0.0  moved from vijayanandspeaks.blogspot.com"]
 
 CUSDIS_APP_ID = ""                       # e.g. "a1b2c3d4-...." from cusdis.com → your site → Embed code
 SITE = "https://haivijayanand.github.io"
@@ -321,8 +322,8 @@ def render_index(items, order):
     desc = f"{n} essays by K Vijay Anand on life, family, work and leadership, {first}–{last}, in English and Tamil."
     built = dt.date.today().isoformat()
     return (header("speaks/index.html — list of Vijay Anand Speaks essays", "",
-                   [f"v{INDEX_VERSION}  {n} essays ({ta} Tamil), rebuilt {built}; multi-select language and topic filters (Any/All), sort by date, group by year or topic",
-                    "v1.0.1  English/Tamil filter and search hide essays", "v1.0.0  first list"], version=INDEX_VERSION)
+                   [f"v{INDEX_VERSION}  {n} essays ({ta} Tamil), rebuilt {built}; loads assets/js/site-theme.js",
+                    "v1.3.0  multi-select language and topic filters (Any/All), sort by date, group by year or topic", "v1.0.1  English/Tamil filter and search hide essays", "v1.0.0  first list"], version=INDEX_VERSION)
             + head(f"{BLOG_TITLE} — K Vijay Anand", desc, "/speaks/", items[-1].get("hero", {}).get("card") if items[-1].get("hero") else None, INDEX_CSS, "en")
             + f"""<body>
 <header class="band" id="band"><div class="wrap wide">

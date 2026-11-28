@@ -2,13 +2,14 @@
 """
 TOOL:    build.py - builds the XROTOR review paper as HTML (MathML, light/dark, full screen) and IEEE-style two-column PDF
 FAMILY:  technical-papers / xrotor-propeller-code-review
-VERSION: 1.0.0
+VERSION: 1.1.0
 DATE:    2026-11-28
 CHAT:    XROTOR code review technical paper (2026-11-28)
-CHANGES: 1.0.0 - adapted from the XFOIL paper build: citation numbering, reference list, pandoc to LaTeX (ieee.lua)
+CHANGES: 1.1.0 - reference for the 26 MW Dongfang turbine (worked wind-turbine design)
+         1.0.0 - adapted from the XFOIL paper build: citation numbering, reference list, pandoc to LaTeX (ieee.lua)
          and HTML, pdflatex run
 """
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 import glob, os, re, subprocess, sys
 
 SLUG = "xrotor-propeller-code-review"
@@ -45,6 +46,7 @@ REFS = {
  "koning23": "W. J. F. Koning, B. G. Allan, E. A. Romander, and W. Johnson, \"Comparing 3D and 2D CFD for Mars helicopter Ingenuity rotor performance prediction,\" NASA Ames Research Center, 2023 (NTRS 20230012866).",
  "ning14": "S. A. Ning, \"A simple solution method for the blade element momentum equations with guaranteed convergence,\" *Wind Energy*, vol. 17, no. 9, pp. 1327–1345, 2014.",
  "duselig": "Z. Du and M. S. Selig, \"A 3-D stall-delay model for horizontal axis wind turbine performance prediction,\" AIAA Paper 98-0021, 1998.",
+ "dongfang": "\"Dongfang installs 'world's largest single-capacity' offshore wind turbine for testing,\" *offshoreWIND.biz*, 3 Sep. 2025, and \"Offshore wind turbines in 2025,\" 1 Jan. 2026 (26 MW, 310 m rotor, 153 m blades). [Online]. Available: https://www.offshorewind.biz/2025/09/03/dongfang-installs-worlds-largest-single-capacity-offshore-wind-turbine-for-testing",
  "anandxfoil": "K. V. Anand, \"Making XFOIL converge: Accuracy, optimisation and the multi-element limit,\" Technical paper, Nov. 2026. [Online]. Available: https://haivijayanand.github.io/papers/xfoil-improvements-convergence-multielement.html",
  "anandavl": "K. V. Anand, \"AVL in practice: Strengths, limits and extensions of the Athena Vortex Lattice code,\" Technical paper, Nov. 2026. [Online]. Available: https://haivijayanand.github.io/papers/avl-athena-vortex-lattice-review.html",
 }

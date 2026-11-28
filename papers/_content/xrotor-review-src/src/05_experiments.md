@@ -93,6 +93,63 @@ Re-analysed with POT at the same power, the GRAD blade reaches $\eta=0.843$: low
 
 ![Fig. {f:design}. Minimum-induced-loss designs for two blades, 100 kW, 60 m/s, 2 400 rpm, $c_l = 0.6$, with the three wake models: chord, blade angle and circulation. The dotted line is the initial guess of DESINI (Larrabee's design followed by one Goldstein solve). [wide]](fig/f09_design)
 
+## Worked Design: a 10-Inch UAV Propeller
+
+The first worked example is a small electric propeller of the kind used on fixed-wing drones: 254 mm (10 in) diameter, two blades, 12.7 mm hub radius ($\xi_0=0.10$), designed for 4.5 N of thrust at 15 m/s and 7 000 rpm ($\lambda=0.161$, $J=0.506$, tip Mach 0.27). Its sections work at Reynolds numbers of $10^4$–$10^5$. The section model was therefore set for a thin cambered low-Reynolds-number airfoil: $c_{d,min}=0.020$ at $Re=10^5$ with Reynolds exponent −0.5, $c_{l,max}=1.2$ and a design $c_l$ of 0.6 along the span. These are representative values, not a particular airfoil. Table {t:prop10} and Fig. {f:prop10} give the results.
+
+: TABLE {t:prop10}. Minimum-induced-loss design of a 10-inch two-blade propeller (4.5 N at 15 m/s, 7 000 rpm).
+
+| Quantity | GRAD | POT | VRTX |
+|:---|---:|---:|---:|
+| Shaft power (W) | 94.0 | 94.8 | 94.9 |
+| Efficiency η | 0.718 | 0.712 | 0.712 |
+| Pitch at $0.75R$ (in) | 7.16 | 7.21 | 7.22 |
+| Chord at $0.75R$ (mm) | 17.0 | 16.8 | 17.0 |
+| Iterations | 7 | 5 | 5 |
+
+![Fig. {f:prop10}. 10-inch two-blade UAV propeller designed for 4.5 N at 15 m/s and 7 000 rpm: chord and blade angle from the three wake models (left, centre), and efficiency and thrust of the POT blade at 7 000 rpm over advance ratio (right). [wide]](fig/f12_prop10)
+
+In the usual hobby notation the result is a "10 × 7.2" propeller. It absorbs 95 W at an efficiency of 0.712. With the profile drag removed, the same design condition gives an induced efficiency of 0.821, so friction and pressure drag at these Reynolds numbers cost 11 points, more than the induced loss itself. At this small advance ratio the three wake models agree within 0.6 points, as the map of Fig. {f:formerr} predicts. They again differ only at the root, where POT asks for a 39 mm chord on the hub and GRAD and VRTX for about 35 mm a little further out.
+
+Two design lessons follow from the port. First, efficiency rises with design lift coefficient up to $c_l\approx0.8$ (η = 0.716) and falls slowly beyond. A low-Reynolds-number propeller should be designed near the section's best lift-to-drag ratio, not at the small $c_l$ that suits a large propeller. Second, the off-design curve at fixed rpm peaks at η = 0.746 near $J=0.6$, above the design point, and the static ($J=0.05$) thrust is 8.2 N for 103 W. A propeller that is designed for cruise has margin for climb, but its best efficiency lies at a somewhat higher flight speed than the one it was designed for. This is a general property of MIL blades of fixed pitch.
+
+## Worked Design: a 60 MW Wind Turbine
+
+XROTOR designs windmills with "nearly equal facility". A windmill is a propeller with negative lift coefficients, thrust, torque and power, and with its section data reflected about the origin [#xrotordoc]. The second example uses this to size a three-blade, 60 MW offshore rotor. That is far beyond the largest machine built so far: Dongfang Electric's 26 MW prototype, with a 310 m rotor and 153 m blades, was installed in 2025 and is reported as the world's largest by both capacity and rotor diameter [#dongfang]. The example is therefore an aerodynamic scaling study of what a minimum-loss blade of that power would look like, not a turbine design.
+
+**Assumptions.** Rated power 60 MW at the rotor shaft (before drive-train and generator losses), rated wind speed 11 m/s, tip speed limited to 90 m/s, hub radius 4 % of the tip radius, sea-level air. A single section type represents modern thick wind-turbine airfoils at $Re\approx10^7$: lift-curve slope 6.3 per radian, $c_{l,max}=1.6$, $c_{d,min}=0.0065$ at $c_l=0.6$, a lift-to-drag ratio of about 140 at the design $c_l$ of 1.1, and $M_{cr}=0.75$. The blade was designed with POT at a tip-speed ratio $\Omega R/V=9$.
+
+**Choosing the design loading.** For a windmill the specified power fixes the axial induction, and the user guide warns that specifying a power "near the peak will cause convergence failure" [#xrotordoc]. Designs for power coefficients $C_P=0.40$–0.51 converged; 0.52 did not. Each converged blade was then analysed over tip-speed ratio at fixed pitch. The highest $C_P$ such a blade reaches rises from 0.458 (designed for 0.40) to 0.512 (designed for 0.51), at a tip-speed ratio of 9.5–12, above the design value. The blade designed for $C_P=0.50$ was adopted. It peaks at $C_P=0.509$, 86 % of the Betz limit of 16/27, at a tip-speed ratio of 10 (Fig. {f:wt60}, centre).
+
+**Sizing.** With the tip speed capped at 90 m/s, the rotor runs at a tip-speed ratio of 8.18 at rated wind, where the blade gives $C_P=0.482$. Equating $\tfrac12\rho\pi R^2V^3C_P$ to 60 MW gives the rotor of Table {t:wt60}.
+
+: TABLE {t:wt60}. Aerodynamic sizing of a 60 MW three-blade rotor (POT design; 11 m/s rated, 90 m/s tip speed).
+
+| Quantity | Value |
+|:---|---:|
+| Rotor diameter | 441 m |
+| Swept area | 152 600 m² |
+| Rotor speed at rated | 3.90 rpm |
+| $C_P$ / $C_T$ at rated (TSR 8.18) | 0.482 / 0.683 |
+| Peak $C_P$ (TSR 10) | 0.509 |
+| Rotor thrust at rated | 7.7 MN |
+| Shaft torque at rated | 147 MN·m |
+| Chord: root / maximum / tip | 11.6 / 17.5 / 0.55 m |
+| Section Reynolds number | up to $2.6\times10^7$ |
+| Tip Mach number | 0.27 |
+
+![Fig. {f:wt60}. 60 MW wind turbine: chord and blade angle (XROTOR propeller-sense convention) of the POT minimum-loss blade (left); power coefficient against tip-speed ratio at fixed pitch from POT and GRAD (centre); power curve with variable speed below the tip-speed limit and pitch to feather above rated wind, and rotor thrust (right). [wide]](fig/f13_wt60)
+
+The rotor is 1.42 times the diameter of the 26 MW machine, with about twice its swept area, for 2.3 times the power. The difference comes from the specific rating assumed here, 393 W/m² of swept area against about 340 W/m² for the 26 MW machine. The blade has the classical MIL shape: chord falls from 17.5 m at $0.1R$ to 0.55 m at the tip, and the blade angle spans about 53°.
+
+The POT root chord of 11.6 m on the hub again reflects the solid-hub condition of Section V-B. A real blade would instead run into a cylindrical root and give up the root power. At a tip-speed ratio near 9 and three blades, graded momentum and the potential solution agree within 0.2 % in $C_P$ over the whole curve, consistent with Fig. {f:formerr}. The GRAD design itself, however, converged only without the circulation filter (8 iterations; with it, 60 iterations without convergence), the same trap as in Section V-F. POT and VRTX converged in 7 iterations.
+
+**Power curve.** Below 9 m/s the rotor follows the optimum tip-speed ratio. Between 9 and 11 m/s it runs at the speed limit of 3.9 rpm, and above 11 m/s XROTOR's power specification with free pitch (ISPEC = 3, ICON = 1) gives the pitch that holds 60 MW. The blade feathers by 4.2° at 12 m/s and 23.4° at 25 m/s, and the thrust falls from 7.7 MN at rated to 2.9 MN.
+
+This case also shows the non-uniqueness the guide warns about. When each wind speed was started afresh from the design pitch, as a user typing the case would do, points from 17 m/s upward either failed or converged to the other branch. That branch has the blade pitched about 19° towards stall and carries 13.5–14.4 MN of thrust. Only continuation from the previous wind speed kept the feathering solution. A tool used for load cases must therefore expose which branch it has found.
+
+**What XROTOR cannot say about such a machine.** The disk spans more than 400 m of the atmospheric boundary layer, so wind shear, veer and turbulence vary strongly over it, while XROTOR assumes uniform axial inflow. It has no yaw, tilt, tower shadow or unsteady loads. Its beam model cannot treat 216 m blades whose gravity loads and deflections dominate design, and real roots use 40–100 % thick sections that one section model cannot represent. The result is a credible first aerodynamic sizing, the stage at which XROTOR is most useful, to be followed by aeroelastic codes such as OpenFAST.
+
 ## Limitations of This Study
 
-The tests used the ported algorithm, not the Fortran executable. They covered two blade families, one section type, open rotors and axial inflow. Ducted rotors, nacelle effects, raked blades, the structural and acoustic modules, and validation against wind-tunnel data were outside their scope. For validation, the literature reports comparisons of XROTOR and QPROP with tunnel tests of UAV and model propellers [#lowe15], [#klein17]. The results here characterise the *method*: its internal consistency, its sensitivity to modelling choices and the robustness of its iteration.
+The tests used the ported algorithm, not the Fortran executable. They covered a few blade families and parametric section types, open rotors and axial inflow. Ducted rotors, nacelle effects, raked blades, the structural and acoustic modules, and validation against wind-tunnel data were outside their scope. For validation, the literature reports comparisons of XROTOR and QPROP with tunnel tests of UAV and model propellers [#lowe15], [#klein17]. The results here characterise the *method*: its internal consistency, its sensitivity to modelling choices and the robustness of its iteration.

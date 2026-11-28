@@ -2,14 +2,15 @@
 """
 TOOL:    make_figs.py - figures for the XROTOR review paper (PDF for LaTeX, SVG for the web)
 FAMILY:  technical-papers / xrotor-review
-VERSION: 1.1.0
+VERSION: 1.2.0
 DATE:    2026-11-28
 CHAT:    XROTOR code review technical paper (2026-11-28)
-CHANGES: 1.1.0 - robustness map with three iteration modes; Mach study (f11); J sweep marks filter-only failures
+CHANGES: 1.2.0 - worked designs: 10-inch propeller (f12) and 60 MW wind turbine (f13)
+         1.1.0 - robustness map with three iteration modes; Mach study (f11); J sweep marks filter-only failures
          1.0.0 - timeline, solver flow, swirl models, aero model, J sweep, loading, discretisation, robustness map,
          MIL designs, formulation error map; deutan-safe palette with distinct line styles and markers
 """
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 import json, os, sys
 import numpy as np
 import matplotlib
@@ -286,8 +287,60 @@ def f10():
     fig.tight_layout(); save(fig, "f10_formerr")
 
 
+# ---------------------------------------------------------------- f12 10-inch propeller
+def f12():
+    d = J("prop10")
+    fig, axs = plt.subplots(1, 3, figsize=(7.1, 2.3))
+    for wk in ("grad", "pot", "vrtx"):
+        e = d["designs"][wk]; lab, i = WK[wk]; xi = np.array(e["xi"])
+        axs[0].plot(xi * 127, e["c_mm"], color=C[i], ls=LS[i], label=f"{lab.split(' (')[0]}, η = {e['eta']:.3f}")
+        axs[1].plot(xi * 127, e["beta"], color=C[i], ls=LS[i])
+    axs[0].set_xlabel("Radius (mm)"); axs[0].set_ylabel("Chord (mm)"); axs[0].legend(fontsize=5.6)
+    axs[1].set_xlabel("Radius (mm)"); axs[1].set_ylabel("Blade angle β (deg)")
+    sw = d["sweep"]; Jv = np.array(sw["J"])
+    axs[2].plot(Jv, sw["eta"], color=C[0], marker="o", ms=2.5, label="η")
+    ax2 = axs[2].twinx(); ax2.grid(False)
+    ax2.plot(Jv, sw["T"], color=C[1], ls="--", marker="s", ms=2.5, label="Thrust (N)")
+    axs[2].axvline(d["J"], color=C[3], ls=":", lw=0.8); axs[2].text(d["J"] + 0.01, 0.05, "design", fontsize=6)
+    axs[2].set_xlabel("Advance ratio J (7000 rpm)"); axs[2].set_ylabel("η"); ax2.set_ylabel("Thrust (N)")
+    h1, l1 = axs[2].get_legend_handles_labels(); h2, l2 = ax2.get_legend_handles_labels()
+    axs[2].legend(h1 + h2, l1 + l2, fontsize=6, loc="center left")
+    fig.tight_layout(); save(fig, "f12_prop10")
+
+
+# ---------------------------------------------------------------- f13 60 MW wind turbine
+def f13():
+    d = J("wt60"); r = d["rated"]; R = r["R"]
+    import pickle
+    fig, axs = plt.subplots(1, 3, figsize=(7.1, 2.4))
+    # blade from the POT curves file is not stored; rebuild from design json
+    des = J("wt60_design") if os.path.exists(os.path.join(DATA, "wt60_design.json")) else None
+    if des:
+        xi = np.array(des["xi"]); axs[0].plot(xi, np.array(des["c"]) * R, color=C[0], label="Chord (m)")
+        ax2 = axs[0].twinx(); ax2.grid(False)
+        ax2.plot(xi, des["beta"], color=C[1], ls="--", label="Blade angle (deg)")
+        ax2.set_ylabel("Blade angle β (deg)")
+        h1, l1 = axs[0].get_legend_handles_labels(); h2, l2 = ax2.get_legend_handles_labels()
+        axs[0].legend(h1 + h2, l1 + l2, fontsize=6, loc="upper right")
+    axs[0].set_xlabel("r/R"); axs[0].set_ylabel("Chord (m)")
+    for k, wk in enumerate(("pot", "grad")):
+        cv = [c for c in d["curves"][wk] if c["conv"]]
+        axs[1].plot([c["tsr"] for c in cv], [c["CP"] for c in cv], color=C[WK[wk][1]], ls=LS[WK[wk][1]],
+                    marker=MK[WK[wk][1]], ms=2.3, label=wk.upper())
+    axs[1].axhline(16 / 27, color=C[3], ls=":", lw=0.9); axs[1].text(4.2, 0.57, "Betz 16/27", fontsize=6)
+    axs[1].axvline(r["tsr"], color=C[3], ls=":", lw=0.7); axs[1].text(r["tsr"] - 1.6, 0.12, "rated\n(tip-speed limit)", fontsize=5.6)
+    axs[1].set_xlabel("Tip-speed ratio ΩR/V"); axs[1].set_ylabel("$C_P$"); axs[1].set_ylim(0.1, 0.62); axs[1].legend(fontsize=6, loc="lower right")
+    pc = d["power_curve"]; V = np.array([p["V"] for p in pc]); P = np.array([p["P"] for p in pc]) / 1e6
+    pit = np.array([p.get("pitch", 0.0) for p in pc]); T = np.array([p.get("T", np.nan) for p in pc]) / 1e6
+    axs[2].plot(V, P, color=C[0], marker="o", ms=2.3, label="Power (MW)")
+    axs[2].plot(V, pit, color=C[1], ls="--", marker="s", ms=2.3, label="Pitch to feather (deg)")
+    axs[2].plot(V, T * 10, color=C[2], ls="-.", lw=1.0, label="Thrust (MN × 10)")
+    axs[2].set_xlabel("Wind speed at hub (m/s)"); axs[2].set_ylabel("MW, deg, MN × 10"); axs[2].legend(fontsize=5.8, loc="center right")
+    fig.tight_layout(); save(fig, "f13_wt60")
+
+
 if __name__ == "__main__":
-    for n in (sys.argv[1:] or ["f01", "f02", "f03", "f04", "f05", "f06", "f07", "f08", "f09", "f10", "f11"]):
+    for n in (sys.argv[1:] or ["f01", "f02", "f03", "f04", "f05", "f06", "f07", "f08", "f09", "f10", "f11", "f12", "f13"]):
         try:
             globals()[n](); print("ok", n)
         except Exception as ex:

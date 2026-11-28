@@ -1,0 +1,921 @@
+<style>
+.tcap{font-family:Inter,system-ui,sans-serif;font-size:13.5px;color:var(--ink-soft);margin:22px auto 6px}
+.eqn{text-align:center;font-size:1.05em;margin:14px 0;overflow-x:auto}
+math{font-size:1.02em}
+</style>
+
+## Abstract
+
+<p>XROTOR, by Mark Drela and Harold Youngren of MIT, is one of the most widely used open-source lifting-line codes for designing and analysing propellers, wind turbines and lightly loaded rotors. Its source (version 7.55) is distributed under the GNU General Public License, yet, to the author’s knowledge, its formulation and code have never been reviewed in a published paper. This paper traces the theory behind it, from Betz, Prandtl and Goldstein to Larrabee, and its history from the earliest recorded version (6.6, before 1998) to 7.55 and the 2022 Windows build. It also surveys its family: QPROP and QMIL, DFDC, CROTOR, and the Python, C++ and MATLAB ports. The full set of equations is written out as the code implements them, so that each assumption can be traced to a routine. These include the three induced-velocity models (graded momentum, the helicoidal potential solution and a discrete vortex wake), the wake-pitch correction, the “equivalent propeller” and the parametric section model. A line-by-line review of the 20 000-line Fortran 77 source then lists 18 findings. Five are errors in the hand-coded Newton linearisation, two of which are carried unchanged into the Python fork. Others are an uninitialised variable in ducted-rotor design, an inconsistent minimum-induced-loss condition and a dormant section-lookup fault. To test behaviour rather than only read the code, the analysis and design core was ported to Python in double precision, and about 2 600 operating points and 55 designs were solved. On the same blade, graded momentum and the potential solution agree within 0.1 % at advance ratio 0.1. Graded momentum over-predicts thrust by 6 % at 0.3 and by 18 % at 0.5 for two blades, and the three wake models give root swirls that differ sevenfold because each assumes a different hub. On a 364-point map of advance ratio and pitch, graded momentum converges everywhere. The potential formulation converges 91 % of points with XROTOR’s relaxation rules but only 25 % with plain Newton, and its failures concentrate in deep stall. Two fixable mechanisms limit robustness. The circulation filter, added in version 7.30, helps in stall but traps the vortex-wake solver and a graded-momentum design in cycles that converge in 6–9 iterations once it is removed. The Mach-dependent stall limits of the section model make the potential solution fail when the tip runs near the critical Mach number. Fifteen improvements are proposed, led by a conditional filter, corrected derivatives, smooth Mach terms, double precision with a residual-based line search, a library interface and adjoint sensitivities.</p>
+
+<p><b>Index Terms</b>&mdash;XROTOR, propeller, lifting line, minimum induced loss, Betz condition, Goldstein, helicoidal wake, vortex theory, wind turbine, ducted rotor, Newton method, code review, QPROP, DFDC.</p>
+
+## Nomenclature
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Symbol</th>
+<th style="text-align: left;">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math></td>
+<td style="text-align: left;">Number of blades</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math></td>
+<td style="text-align: left;">Blade chord (scaled by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math>)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>d</mi></msub><annotation encoding="application/x-tex">c_d</annotation></semantics></math></td>
+<td style="text-align: left;">Section lift and drag coefficients</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>T</mi></msub><annotation encoding="application/x-tex">C_T</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>P</mi></msub><annotation encoding="application/x-tex">C_P</annotation></semantics></math></td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>ρ</mi><msup><mi>n</mi><mn>2</mn></msup><msup><mi>D</mi><mn>4</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">T/(\rho n^2 D^4)</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>ρ</mi><msup><mi>n</mi><mn>3</mn></msup><msup><mi>D</mi><mn>5</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">P/(\rho n^3 D^5)</annotation></semantics></math></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math></td>
+<td style="text-align: left;">Rotor diameter and tip radius</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math></td>
+<td style="text-align: left;">Prandtl tip-loss factor</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>J</mi><annotation encoding="application/x-tex">J</annotation></semantics></math></td>
+<td style="text-align: left;">Advance ratio <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>n</mi><mi>D</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>π</mi><mi>λ</mi></mrow><annotation encoding="application/x-tex">V/(nD) = \pi\lambda</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi></mrow></msub><annotation encoding="application/x-tex">M_{cr}</annotation></semantics></math></td>
+<td style="text-align: left;">Section Mach number; critical Mach number</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Ω</mi><annotation encoding="application/x-tex">\Omega</annotation></semantics></math></td>
+<td style="text-align: left;">Shaft speed (rev/s, rad/s)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math></td>
+<td style="text-align: left;">Number of radial stations (II in the code)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Q</mi><annotation encoding="application/x-tex">Q</annotation></semantics></math></td>
+<td style="text-align: left;">Thrust, shaft power, torque</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mi>a</mi></msub><annotation encoding="application/x-tex">v_a</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mi>t</mi></msub><annotation encoding="application/x-tex">v_t</annotation></semantics></math></td>
+<td style="text-align: left;">Induced axial and swirl velocity at the blade (scaled by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math>)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mi>a</mi></msub><annotation encoding="application/x-tex">W_a</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mi>t</mi></msub><annotation encoding="application/x-tex">W_t</annotation></semantics></math></td>
+<td style="text-align: left;">Total, axial and tangential relative velocity (scaled by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math></td>
+<td style="text-align: left;">Angle of attack, blade angle, inflow angle</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Γ</mi><annotation encoding="application/x-tex">\Gamma</annotation></semantics></math></td>
+<td style="text-align: left;">Bound circulation of one blade (scaled by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">VR</annotation></semantics></math>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>η</mi><annotation encoding="application/x-tex">\eta</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>η</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\eta_i</annotation></semantics></math></td>
+<td style="text-align: left;">Propulsive and induced (inviscid) efficiency</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math></td>
+<td style="text-align: left;">Advance ratio <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>Ω</mi><mi>R</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">V/(\Omega R)</annotation></semantics></math> (ADV)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\lambda_w</annotation></semantics></math></td>
+<td style="text-align: left;">Wake advance ratio (ADW)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ξ</mi><annotation encoding="application/x-tex">\xi</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ξ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\xi_w</annotation></semantics></math></td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi><mi>/</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">r/R</annotation></semantics></math> on the real and the equivalent propeller</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ω</mi><annotation encoding="application/x-tex">\omega</annotation></semantics></math></td>
+<td style="text-align: left;">Newton relaxation factor</td>
+</tr>
+</tbody>
+</table>
+
+## 1. Introduction
+
+<p>A propeller designer who wants something better than blade-element momentum theory, but much cheaper than a vortex-particle or RANS solution, usually ends up at XROTOR [1]. The code designs rotors of minimum induced loss for a given thrust or power, analyses arbitrary blades over a wide range of operating points, and adds blade bending, a duct model and a noise footprint. It runs in a fraction of a second per point [2]. Its formulation reaches back to the classical vortex theory of Betz, Prandtl and Goldstein [3], [4]. The same team’s later codes, QPROP/QMIL for parametric sweeps [5] and DFDC for ducted fans [6], share most of its theory, and it is the basis of current Python and C++ ports [7], [8]. It is also the reference against which simpler tools are often checked [9].</p>
+
+<p>Yet XROTOR has no published description of its formulation or code. Its user guide was last updated in 2003, and its version notes run from 1998 to 2009 [2]. Users therefore rely on the QPROP document, which its author recommends as a stand-in [1], and on reading the source. The companion papers on XFOIL [10] and AVL [11] reviewed the other two pillars of Drela’s public toolset. This paper does the same for XROTOR, with three aims.</p>
+
+<ol type="1">
+<li><i>Record where XROTOR came from and where it stands.</i> Section&nbsp;2 traces the classical theory, the version history of the code and its family of related codes and ports.</li>
+<li><i>Write down what the code actually solves.</i> Section&nbsp;3 gives the governing equations in the form the Fortran implements them, routine by routine, because the user guide stops at the level of menus.</li>
+<li><i>Find out where it can mislead or fail, and how to improve it.</i> Section&nbsp;4 reviews the source line by line. Section&nbsp;5 tests its behaviour with a double-precision port of the analysis and design core, solving about 2 600 operating points. Section&nbsp;6 summarises its current use, Section&nbsp;7 sets out limitations and a prioritised improvement plan, and Section&nbsp;8 gives guidance for present users.</li>
+</ol>
+
+<p>All numerical results come from the port described in Section&nbsp;5.1. The original executable was compiled from the 7.55 source, but its interactive menu could not be scripted in the computing environment used for this study. The port follows the Fortran residuals line by line and copies its relaxation rules. Its Jacobian, however, is formed by finite differences rather than by XROTOR’s hand-coded derivatives (Section&nbsp;5.1). The convergence results therefore describe XROTOR’s <i>algorithm</i> rather than every detail of its executable.</p>
+
+## 2. Lineage and History
+
+### 2.1 Classical Vortex Theory of the Propeller
+
+<p>XROTOR is a modern implementation of a theory that was essentially complete by 1930. In 1919 Betz showed that a lightly loaded propeller has minimum induced loss when its trailing vortex sheets leave as rigid helicoidal surfaces moving aft at a uniform “displacement velocity” [3]. In an appendix to the same paper, Prandtl gave the approximate tip-loss factor <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math> that still appears in every blade-element code. Goldstein then solved the potential flow about such a helicoidal sheet exactly for two and four blades [4]. Glauert’s 1935 survey fixed the blade-element and momentum notation [12]. Theodorsen extended the theory to heavy loading through the “mass coefficient” of the contracted wake [13].</p>
+
+<p>Practical design methods followed much later. In 1979 Larrabee recast the Betz–Prandtl theory into a short, explicit procedure for designing propellers of minimum induced loss (MIL) at a given thrust or power. He also showed how to predict their off-design performance [14]. Adkins and Liebeck in 1994 removed his small-angle and light-loading approximations and added the profile-drag terms consistently [15]. Their method, together with Larrabee’s, underlies most spreadsheet-level propeller tools in use today. Wald’s review summarises this classical line [16], and in marine propulsion Kerwin’s lifting-line and lattice codes form a parallel lineage that led to OpenProp [17], [18].</p>
+
+<p>XROTOR’s user guide credits Larrabee for reviving the graded-momentum formulation. It describes its own potential formulation as “an extension of Goldstein’s 2 and 4 blade solution to all blade numbers and arbitrary radial load distributions” [2]. The wake-pitch correction it calls “the core of Theodorsen’s theory” is credited in the same guide to similar work by David Munro on propeller noise at MIT around 1980.</p>
+
+### 2.2 The Code and Its Versions
+
+<p>The early history of XROTOR is not documented publicly. The first dated record is the version-notes file, which opens in June 1998 with version 6.7, “started as the MIT version 6.6” and modified by Harold Youngren to compile on more workstations [2]. MIT’s Industrial Liaison Program listed the code in 2002 as a propeller and windmill design and analysis program with an exact helicoidal-wake potential solution, a first-order correction for the pitch of the trailing sheets and a non-linear beam structural model [19]. The notes then record the changes of Table&nbsp;1.</p>
+
+<div class="tcap"><b>Table 1.</b> XROTOR versions recorded in the version-notes file distributed with 7.55 [2] and on the MIT page [1].</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Version</th>
+<th style="text-align: left;">Date</th>
+<th style="text-align: left;">Main changes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">6.6</td>
+<td style="text-align: left;">before 1998</td>
+<td style="text-align: left;">MIT version (starting point of the notes)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">6.7</td>
+<td style="text-align: left;">Jun 1998</td>
+<td style="text-align: left;">Makefiles for most workstations; cursor input for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math>, chord and blade angle</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">6.80</td>
+<td style="text-align: left;">Mar 1999</td>
+<td style="text-align: left;">New <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> limiter section model; discrete vortex wake; constant blade rake; structure with rake</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">6.9</td>
+<td style="text-align: left;">1999</td>
+<td style="text-align: left;">Several aerodynamic sections along the blade; new relaxation parameters; hover outputs</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">7.0</td>
+<td style="text-align: left;">Jul 2000</td>
+<td style="text-align: left;">Critical Mach number, drag rise and Mach-reduced <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><annotation encoding="application/x-tex">c_{l,max}</annotation></semantics></math> for every section</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">7.10</td>
+<td style="text-align: left;">Mar 2001</td>
+<td style="text-align: left;">Drag-rise correlation readjusted; plot labels; induced-velocity plot scaling fixed</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">7.20</td>
+<td style="text-align: left;">May 2002</td>
+<td style="text-align: left;">Equivalent-prop force bug fixed (mainly ducted rotors); blade-data plots</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">7.30</td>
+<td style="text-align: left;">Jul 2002</td>
+<td style="text-align: left;">Equivalent-prop formulation revised for ducts; circulation filtering added to APINIT and APITER</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">7.42</td>
+<td style="text-align: left;">Jan 2003</td>
+<td style="text-align: left;">Duct design and OPTI initialisation fixed; slipstream velocities include viscous swirl</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">7.5x</td>
+<td style="text-align: left;">Apr 2003</td>
+<td style="text-align: left;">Duct axial velocity from equivalent-prop thrust; momentum and blade thrust found to differ for highly loaded props</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">7.52</td>
+<td style="text-align: left;">Nov 2003</td>
+<td style="text-align: left;">Duct design thrust fixed; ducted design uses constant circulation (free vortex)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">7.53</td>
+<td style="text-align: left;">Feb 2004</td>
+<td style="text-align: left;">Duct free-stream velocity for area ratio ≠ 1 fixed</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">7.54</td>
+<td style="text-align: left;">Apr 2005</td>
+<td style="text-align: left;">Undeclared STALLF fixed; derivative fix in the section model</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">7.55</td>
+<td style="text-align: left;">Nov 2009</td>
+<td style="text-align: left;">Graphics on/off flag (Drela)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">7.69</td>
+<td style="text-align: left;">Feb 2022</td>
+<td style="text-align: left;">Windows executable only (Youngren); no source published</td>
+</tr>
+</tbody>
+</table>
+
+<p>Three features of this history matter for what follows. First, most changes after 2000 concern the duct and the “equivalent propeller”, the device that lets XROTOR treat non-uniform inflow (Section&nbsp;3.5). Second, version 7.30 introduced the circulation filter that Section&nbsp;5.6 identifies as the main cause of non-convergence. Third, the notes themselves admit that momentum and blade thrust disagree for highly loaded free-tip propellers, which Section&nbsp;5.4 quantifies. The present MIT page was created in February 2011 with version 7.54, and 7.55 followed in March 2011, both under the GNU General Public License [1]. The archive on the page is named 7.57 but is described as version 7.55, the version studied here. A 7.69 Windows executable was added in February 2022 without source.</p>
+
+### 2.3 The XROTOR Family
+
+<p><b>QPROP and QMIL</b> (2007) are Drela’s later programs for propeller–motor matching and MIL design. They use almost the same formulation and are intended for large parametric sweeps driven by text files [5]. They are not a replacement for XROTOR’s design-modification, structural and acoustic menus, but their documentation is the best available description of the shared theory, and they have been compared with wind-tunnel data for small UAV propellers [20].</p>
+
+<p><b>DFDC</b> (Ducted Fan Design Code), by Youngren, Drela and Sanders, developed under DARPA sponsorship,, replaces XROTOR’s simple duct model with an axisymmetric panel model of duct and centre-body, coupled to lifting-line rotors and stators [6], [21]. Its theory document states that XROTOR’s duct treatment “ignores the details of the duct velocity field and the effect of losses”. DuctAPE, an optimisation-ready re-implementation of the DFDC approach in Julia, matches DFDC within half a percent [22].</p>
+
+<p><b>CROTOR</b> is a modified XROTOR that automates the design and analysis of contra-rotating pairs, approximately modelling the effect of each rotor on the other. It has been used, for example, to optimise coaxial drone rotors [23].</p>
+
+<p><b>Ports and wrappers.</b> DARcorporation’s <i>xrotor-python</i> (2018 onwards) is a stripped-down Fortran 90 version without design, modification and graphics, compiled as a Python module so that optimisation frameworks can call it without file input and output [7]. It replaces the parametric section model with tabulated polars. A C++ translation of the same stripped-down code [8], an unofficial NumPy port [24], a MATLAB coupling [25] and several scripting wrappers that drive the executable through its text menus [26] complete the family. Fig. 1 places these events on one time line.</p>
+
+<div class="figrow one"><figure id="fig-1"><a class="zoom" href="img/xrotor-propeller-code-review/f01_timeline.svg" target="_blank" rel="noopener"><img src="img/xrotor-propeller-code-review/f01_timeline.svg" alt="Time line of the classical vortex theory of the propeller and of XROTOR and its family. Dates for XROTOR versions are those of the version-notes file; the prese" loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 1.</b> Time line of the classical vortex theory of the propeller and of XROTOR and its family. Dates for XROTOR versions are those of the version-notes file; the present MIT download page dates from 2011.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+## 3. The XROTOR Formulation
+
+<p>This section states the equations that XROTOR 7.55 solves, in the notation of the code. Lengths are scaled by the tip radius <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math>, velocities by the flight speed <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math>, circulation by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">VR</annotation></semantics></math>, thrust by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><msup><mi>V</mi><mn>2</mn></msup><msup><mi>R</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\rho V^2R^2</annotation></semantics></math> and power by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><msup><mi>V</mi><mn>3</mn></msup><msup><mi>R</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\rho V^3R^2</annotation></semantics></math>. The routine that implements each part is named in brackets.</p>
+
+### 3.1 Blade Discretisation and Velocity Triangle
+
+<p>Each blade is a lifting line divided into <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math> panels (default 30, at most 100). Panel edges <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ξ</mi><mrow><mi>v</mi><mo>,</mo><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">\xi_{v,j}</annotation></semantics></math> and control points <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ξ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\xi_i</annotation></semantics></math> follow a sine spacing that crowds points toward the tip and, optionally, a cosine spacing that also crowds them at the root [SETX]: <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtable><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><msub><mi>ξ</mi><mrow><mi>v</mi><mo>,</mo><mi>j</mi></mrow></msub><mo>=</mo><msqrt><mrow><msup><mo>sin</mo><mn>2</mn></msup><msub><mi>t</mi><mi>j</mi></msub><mo>+</mo><msubsup><mi>ξ</mi><mn>0</mn><mn>2</mn></msubsup><msup><mo>cos</mo><mn>2</mn></msup><msub><mi>t</mi><mi>j</mi></msub></mrow></msqrt><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>t</mi><mi>j</mi></msub><mo>=</mo><mfrac><mrow><mi>π</mi><mi>j</mi></mrow><mrow><mn>2</mn><mi>N</mi></mrow></mfrac><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><msub><mi>ξ</mi><mi>i</mi></msub><mo>=</mo><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>ξ</mi><mrow><mi>v</mi><mo>,</mo><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>ξ</mi><mrow><mi>v</mi><mo>,</mo><mi>i</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mtd></mtr></mtable><mspace width="2.0em"></mspace><mtext mathvariant="normal">(1)</mtext></mrow><annotation encoding="application/x-tex">
+\begin{aligned}&amp;\xi_{v,j} = \sqrt{\sin^2 t_j + \xi_0^2\cos^2 t_j},\qquad t_j=\frac{\pi j}{2N},\\ &amp;\xi_i=\tfrac12(\xi_{v,i-1}+\xi_{v,i}).\end{aligned}
+\qquad\text{(1)}
+</annotation></semantics></math> Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ξ</mi><mn>0</mn></msub><annotation encoding="application/x-tex">\xi_0</annotation></semantics></math> is the hub radius. Chord, blade angle and the axial perturbation <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>u</mi><mi>b</mi></msub><annotation encoding="application/x-tex">u_b</annotation></semantics></math> of a nacelle are splined from the input stations onto the control points. At each station the relative velocity has tangential and axial components [CSCALC] <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mi>t</mi></msub><mo>=</mo><mfrac><mi>ξ</mi><mi>λ</mi></mfrac><mo>−</mo><msub><mi>v</mi><mi>t</mi></msub><mo>−</mo><msub><mi>w</mi><mi>t</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>W</mi><mi>a</mi></msub><mo>=</mo><mn>1</mn><mo>+</mo><msub><mi>u</mi><mi>d</mi></msub><mo>+</mo><msub><mi>u</mi><mi>b</mi></msub><mo>+</mo><msub><mi>w</mi><mi>a</mi></msub><mo>+</mo><msub><mi>v</mi><mi>a</mi></msub><mspace width="0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><msub><mi>v</mi><mi>d</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mtext mathvariant="normal">(2)</mtext></mrow><annotation encoding="application/x-tex">
+W_t = \frac{\xi}{\lambda} - v_t - w_t,\qquad W_a = 1 + u_d + u_b + w_a + v_a\,(1+v_d),
+\qquad\text{(2)}
+</annotation></semantics></math> with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo>=</mo><msqrt><mrow><msubsup><mi>W</mi><mi>t</mi><mn>2</mn></msubsup><mo>+</mo><msubsup><mi>W</mi><mi>a</mi><mn>2</mn></msubsup></mrow></msqrt></mrow><annotation encoding="application/x-tex">W=\sqrt{W_t^2+W_a^2}</annotation></semantics></math>, inflow angle <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϕ</mi><mo>=</mo><mo>arctan</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>W</mi><mi>a</mi></msub><mi>/</mi><msub><mi>W</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\phi=\arctan(W_a/W_t)</annotation></semantics></math> and angle of attack <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mi>β</mi><mo>+</mo><mi>Δ</mi><mi>β</mi><mo>−</mo><mi>ϕ</mi></mrow><annotation encoding="application/x-tex">\alpha=\beta+\Delta\beta-\phi</annotation></semantics></math>. Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mi>V</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>Ω</mi><mi>R</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\lambda=V/(\Omega R)</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mi>a</mi></msub><annotation encoding="application/x-tex">v_a</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mi>t</mi></msub><annotation encoding="application/x-tex">v_t</annotation></semantics></math> are the self-induced velocities, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>a</mi></msub><annotation encoding="application/x-tex">w_a</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>t</mi></msub><annotation encoding="application/x-tex">w_t</annotation></semantics></math> are optional prescribed slipstream velocities, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>u</mi><mi>d</mi></msub><annotation encoding="application/x-tex">u_d</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mi>d</mi></msub><annotation encoding="application/x-tex">v_d</annotation></semantics></math> are the duct terms of Section&nbsp;3.6 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>u</mi><mi>d</mi></msub><mo>=</mo><msub><mi>v</mi><mi>d</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">u_d=v_d=0</annotation></semantics></math> for a free-tip rotor).</p>
+
+### 3.2 Circulation and Section Forces
+
+<p>The unknowns are the bound circulations <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Γ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\Gamma_i</annotation></semantics></math> of one blade. They are tied to the section lift by Kutta–Joukowski, which XROTOR writes as a residual [APITER]: <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mi>i</mi></msub><mo>≡</mo><msub><mi>c</mi><mi>i</mi></msub><mspace width="0.167em"></mspace><msub><mi>W</mi><mi>i</mi></msub><mspace width="0.167em"></mspace><msub><mi>c</mi><mi>l</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>α</mi><mi>i</mi></msub><mo>,</mo><msub><mi>M</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.278em"></mspace><mo>−</mo><mspace width="0.278em"></mspace><mn>2</mn><msub><mi>Γ</mi><mi>i</mi></msub><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="2.0em"></mspace><mi>i</mi><mo>=</mo><mn>1</mn><mi>…</mi><mi>N</mi><mi>.</mi><mspace width="2.0em"></mspace><mtext mathvariant="normal">(3)</mtext></mrow><annotation encoding="application/x-tex">
+R_i \equiv c_i\,W_i\,c_l(\alpha_i, M_i)\;-\;2\Gamma_i = 0,\qquad i=1\ldots N.
+\qquad\text{(3)}
+</annotation></semantics></math> Thrust and power are summed over the stations. The inviscid parts on the real blade are [TPQ] <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>T</mi><mrow><mi>i</mi><mi>n</mi><mi>v</mi></mrow></msub><mo>=</mo><mi>B</mi><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>Γ</mi><mi>i</mi></msub><msub><mi>W</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mspace width="0.167em"></mspace><mi>Δ</mi><msub><mi>ξ</mi><mi>i</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>P</mi><mrow><mi>i</mi><mi>n</mi><mi>v</mi></mrow></msub><mo>=</mo><mi>B</mi><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>Γ</mi><mi>i</mi></msub><msub><mi>W</mi><mrow><mi>a</mi><mo>,</mo><mi>i</mi></mrow></msub><mspace width="0.167em"></mspace><mfrac><msub><mi>ξ</mi><mi>i</mi></msub><mi>λ</mi></mfrac><mspace width="0.167em"></mspace><mi>Δ</mi><msub><mi>ξ</mi><mi>i</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><mtext mathvariant="normal">(4)</mtext></mrow><annotation encoding="application/x-tex">
+T_{inv}=B\sum_i \Gamma_i W_{t,i}\,\Delta\xi_i,\qquad P_{inv}=B\sum_i \Gamma_i W_{a,i}\,\frac{\xi_i}{\lambda}\,\Delta\xi_i,
+\qquad\text{(4)}
+</annotation></semantics></math> and the profile-drag parts are <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtable><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>T</mi><mi>v</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><mo>−</mo><mi>B</mi><munder><mo>∑</mo><mi>i</mi></munder><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><msub><mi>W</mi><mi>i</mi></msub><msub><mi>c</mi><mi>i</mi></msub><msub><mi>c</mi><mrow><mi>d</mi><mo>,</mo><mi>i</mi></mrow></msub><msub><mi>W</mi><mrow><mi>a</mi><mo>,</mo><mi>i</mi></mrow></msub><mspace width="0.167em"></mspace><mi>Δ</mi><msub><mi>ξ</mi><mi>i</mi></msub><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>P</mi><mi>v</mi></msub></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><mi>B</mi><munder><mo>∑</mo><mi>i</mi></munder><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><msub><mi>W</mi><mi>i</mi></msub><msub><mi>c</mi><mi>i</mi></msub><msub><mi>c</mi><mrow><mi>d</mi><mo>,</mo><mi>i</mi></mrow></msub><msub><mi>W</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mspace width="0.167em"></mspace><mfrac><msub><mi>ξ</mi><mi>i</mi></msub><mi>λ</mi></mfrac><mspace width="0.167em"></mspace><mi>Δ</mi><msub><mi>ξ</mi><mi>i</mi></msub><mi>.</mi></mtd></mtr></mtable><mspace width="2.0em"></mspace><mtext mathvariant="normal">(5)</mtext></mrow><annotation encoding="application/x-tex">
+\begin{aligned}T_{v}&amp;=-B\sum_i \tfrac12 W_i c_i c_{d,i} W_{a,i}\,\Delta\xi_i,\\ P_{v}&amp;=B\sum_i \tfrac12 W_i c_i c_{d,i} W_{t,i}\,\frac{\xi_i}{\lambda}\,\Delta\xi_i.\end{aligned}
+\qquad\text{(5)}
+</annotation></semantics></math> The reported totals use the “equivalent propeller” for the inviscid part, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><msub><mi>T</mi><mi>w</mi></msub><mo>+</mo><msub><mi>T</mi><mi>v</mi></msub></mrow><annotation encoding="application/x-tex">T=T_w+T_v</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><msub><mi>P</mi><mi>w</mi></msub><mo>+</mo><msub><mi>P</mi><mi>v</mi></msub></mrow><annotation encoding="application/x-tex">P=P_w+P_v</annotation></semantics></math> (Section&nbsp;3.5). Torque is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>=</mo><mi>P</mi><mi>λ</mi></mrow><annotation encoding="application/x-tex">Q=P\lambda</annotation></semantics></math> in units of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><msup><mi>V</mi><mn>2</mn></msup><msup><mi>R</mi><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">\rho V^2R^3</annotation></semantics></math>, and the efficiency is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mi>T</mi><mi>/</mi><mi>P</mi></mrow><annotation encoding="application/x-tex">\eta=T/P</annotation></semantics></math>.</p>
+
+### 3.3 Induced Velocity: Three Wake Models
+
+<p>The induced velocities are linear in the circulations, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><msub><mo>∑</mo><mi>j</mi></msub><msub><mi>A</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>λ</mi><mi>w</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><msub><mi>Γ</mi><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">v_{t,i}=\sum_j A_{ij}(\lambda_w)\,\Gamma_j</annotation></semantics></math>, through an influence matrix that depends only on the wake advance ratio <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\lambda_w</annotation></semantics></math> [VCALC]. In all three models the axial component follows from the swirl by the helix kinematics of the trailing sheet: <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mrow><mi>a</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><msub><mi>v</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mspace width="0.167em"></mspace><mfrac><msub><mi>ξ</mi><mi>i</mi></msub><msub><mi>λ</mi><mi>w</mi></msub></mfrac><mi>.</mi><mspace width="2.0em"></mspace><mtext mathvariant="normal">(6)</mtext></mrow><annotation encoding="application/x-tex">
+v_{a,i} = v_{t,i}\,\frac{\xi_i}{\lambda_w}.
+\qquad\text{(6)}
+</annotation></semantics></math> The user chooses one of three ways to form <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">A_{ij}</annotation></semantics></math>.</p>
+
+<p><b>Graded momentum (GRAD)</b> [GRADMO]. Each annulus is treated independently, with Prandtl’s factor for a finite number of blades: <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtable><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><msub><mi>A</mi><mrow><mi>i</mi><mi>i</mi></mrow></msub><mo>=</mo><mfrac><mi>B</mi><mrow><mn>4</mn><mi>π</mi><msub><mi>F</mi><mi>i</mi></msub><mspace width="0.167em"></mspace><msub><mi>ξ</mi><mi>i</mi></msub></mrow></mfrac><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>F</mi><mi>i</mi></msub><mo>=</mo><mfrac><mn>2</mn><mi>π</mi></mfrac><mo>arccos</mo><msup><mi>e</mi><mrow><mo>−</mo><msub><mi>f</mi><mi>i</mi></msub></mrow></msup><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><msub><mi>f</mi><mi>i</mi></msub><mo>=</mo><mfrac><mi>B</mi><mn>2</mn></mfrac><mo minsize="1.8" maxsize="1.8" stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mfrac><msub><mi>ξ</mi><mi>i</mi></msub><msub><mi>ξ</mi><mrow><mi>t</mi><mi>i</mi><mi>p</mi></mrow></msub></mfrac><mo minsize="1.8" maxsize="1.8" stretchy="false" form="postfix">)</mo><msqrt><mrow><mn>1</mn><mo>+</mo><mfrac><mn>1</mn><msubsup><mi>λ</mi><mi>w</mi><mn>2</mn></msubsup></mfrac></mrow></msqrt><mo>,</mo></mtd></mtr></mtable><mspace width="2.0em"></mspace><mtext mathvariant="normal">(7)</mtext></mrow><annotation encoding="application/x-tex">
+\begin{aligned}&amp;A_{ii}=\frac{B}{4\pi F_i\,\xi_i},\qquad F_i=\frac{2}{\pi}\arccos e^{-f_i},\\ &amp;f_i=\frac{B}{2}\Big(1-\frac{\xi_i}{\xi_{tip}}\Big)\sqrt{1+\frac{1}{\lambda_w^2}},\end{aligned}
+\qquad\text{(7)}
+</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">A_{ij}=0</annotation></semantics></math> for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>≠</mo><mi>j</mi></mrow><annotation encoding="application/x-tex">i\neq j</annotation></semantics></math>. The matrix is diagonal, so the method is very cheap. The user guide warns that it is not suitable for advance ratios above about 0.5 [2].</p>
+
+<p><b>Potential formulation (POT, default)</b> [HELICO]. The perturbation potential of a rigid helicoidal wake with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math> sheets is expanded in Fourier harmonics around the azimuth. For each even harmonic number <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>2</mn><mo>,</mo><mn>4</mn><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>N</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">n=2,4,\ldots,N_n</annotation></semantics></math> (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>n</mi></msub><mo>=</mo><mn>128</mn></mrow><annotation encoding="application/x-tex">N_n=128</annotation></semantics></math>) the radial amplitude <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mi>n</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>ξ</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">A_n(\xi)</annotation></semantics></math> satisfies a modified Bessel equation, <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtable><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><mfrac><mi>d</mi><mrow><mi>d</mi><mi>ξ</mi></mrow></mfrac><mo minsize="1.8" maxsize="1.8" stretchy="false" form="prefix">(</mo><mi>ξ</mi><mfrac><mrow><mi>d</mi><msub><mi>A</mi><mi>n</mi></msub></mrow><mrow><mi>d</mi><mi>ξ</mi></mrow></mfrac><mo minsize="1.8" maxsize="1.8" stretchy="false" form="postfix">)</mo><mo>−</mo><msup><mi>n</mi><mn>2</mn></msup><mi>K</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>ξ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><msub><mi>A</mi><mi>n</mi></msub><mo>=</mo><msup><mi>n</mi><mn>2</mn></msup><mi>K</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>ξ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><mi>Γ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>ξ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><mi>K</mi><mo>=</mo><mo minsize="1.8" maxsize="1.8" stretchy="false" form="prefix">(</mo><mfrac><mi>B</mi><mn>2</mn></mfrac><msup><mo minsize="1.8" maxsize="1.8" stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo minsize="1.8" maxsize="1.8" stretchy="false" form="prefix">(</mo><mfrac><mn>1</mn><mi>ξ</mi></mfrac><mo>+</mo><mfrac><mi>ξ</mi><msubsup><mi>λ</mi><mi>w</mi><mn>2</mn></msubsup></mfrac><mo minsize="1.8" maxsize="1.8" stretchy="false" form="postfix">)</mo><mo>,</mo></mtd></mtr></mtable><mspace width="2.0em"></mspace><mtext mathvariant="normal">(8)</mtext></mrow><annotation encoding="application/x-tex">
+\begin{aligned}&amp;\frac{d}{d\xi}\Big(\xi\frac{dA_n}{d\xi}\Big) - n^2K(\xi)\,A_n = n^2K(\xi)\,\Gamma(\xi),\\ &amp;K=\Big(\frac{B}{2}\Big)^2\Big(\frac1\xi+\frac{\xi}{\lambda_w^2}\Big),\end{aligned}
+\qquad\text{(8)}
+</annotation></semantics></math> with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><msub><mi>A</mi><mi>n</mi></msub><mi>/</mi><mi>d</mi><mi>ξ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">dA_n/d\xi=0</annotation></semantics></math> at the hub, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mi>n</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">A_n=0</annotation></semantics></math> at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ξ</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">\xi=4</annotation></semantics></math> for a free tip and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><msub><mi>A</mi><mi>n</mi></msub><mi>/</mi><mi>d</mi><mi>ξ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">dA_n/d\xi=0</annotation></semantics></math> at the casing for a duct. Each equation is discretised by finite differences on the control points (with mirrored and stretched points outside the tip) and solved as a tridiagonal system for all columns of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">A_{ij}</annotation></semantics></math> at once. The swirl at the blade is then assembled as <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><mfrac><mi>B</mi><mrow><mn>2</mn><mi>π</mi><msub><mi>ξ</mi><mi>i</mi></msub></mrow></mfrac><mo minsize="1.8" maxsize="1.8" stretchy="false" form="prefix">[</mo><munder><mo>∑</mo><mi>n</mi></munder><mo minsize="1.2" maxsize="1.2" stretchy="false" form="prefix">(</mo><msub><mi>A</mi><mi>n</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>ξ</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><msub><mi>Γ</mi><mi>i</mi></msub><mo minsize="1.2" maxsize="1.2" stretchy="false" form="postfix">)</mo><mo>+</mo><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><msub><mi>Γ</mi><mi>i</mi></msub><mo minsize="1.8" maxsize="1.8" stretchy="false" form="postfix">]</mo><mo>,</mo><mspace width="2.0em"></mspace><mtext mathvariant="normal">(9)</mtext></mrow><annotation encoding="application/x-tex">
+v_{t,i}=\frac{B}{2\pi\xi_i}\Big[\sum_{n}\big(A_n(\xi_i)+\Gamma_i\big)+\tfrac12\Gamma_i\Big],
+\qquad\text{(9)}
+</annotation></semantics></math> where the half-circulation term is the “sawtooth” self-influence and the tail of the series beyond <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>N</mi><mi>n</mi></msub><annotation encoding="application/x-tex">N_n</annotation></semantics></math> is added by assuming that <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mi>n</mi></msub><mo>+</mo><mi>Γ</mi></mrow><annotation encoding="application/x-tex">A_n+\Gamma</annotation></semantics></math> decays as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>n</mi><mrow><mo>−</mo><mn>2</mn></mrow></msup><annotation encoding="application/x-tex">n^{-2}</annotation></semantics></math> up to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><msub><mi>N</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">4N_n</annotation></semantics></math>. The hub condition makes the hub a solid, infinitely long cylinder. That is how the formulation “treats finite radius rotor hubs” [2], and Section&nbsp;5.2 shows its large effect on the root swirl.</p>
+
+<p><b>Discrete vortex wake (VRTX)</b> [VRTXCO]. Each of the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">N+1</annotation></semantics></math> trailing legs is a rigid helix of pitch <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\lambda_w</annotation></semantics></math> starting at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ξ</mi><mrow><mi>v</mi><mo>,</mo><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">\xi_{v,j}</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><msub><mi>λ</mi><mi>w</mi></msub><mi>θ</mi></mrow><annotation encoding="application/x-tex">x=\lambda_w\theta</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msub><mi>ξ</mi><mrow><mi>v</mi><mo>,</mo><mi>j</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mo>cos</mo><msub><mi>θ</mi><mi>k</mi></msub><mo>,</mo><mo>sin</mo><msub><mi>θ</mi><mi>k</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">(y,z)=\xi_{v,j}(\cos\theta_k,\sin\theta_k)</annotation></semantics></math> with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mi>k</mi></msub><mo>=</mo><mi>θ</mi><mo>+</mo><mn>2</mn><mi>π</mi><mi>k</mi><mi>/</mi><mi>B</mi></mrow><annotation encoding="application/x-tex">\theta_k=\theta+2\pi k/B</annotation></semantics></math>. It is cut into straight segments, with angular steps growing from <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mi>/</mi><mn>60</mn></mrow><annotation encoding="application/x-tex">\pi/60</annotation></semantics></math> near the blade to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi><mi>/</mi><mn>8</mn></mrow><annotation encoding="application/x-tex">\pi/8</annotation></semantics></math> far downstream, and truncated 50 radii aft. The velocity of each segment comes from the Biot–Savart formula for a straight vortex of unit strength [VORSEGVEL]: <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐮</mi><mo>=</mo><mfrac><mn>1</mn><mrow><mn>4</mn><mi>π</mi></mrow></mfrac><mspace width="0.167em"></mspace><mfrac><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐚</mi><mo>×</mo><mi>𝐛</mi><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mi>/</mi><mrow><mo stretchy="true" form="prefix">|</mo><mi>𝐚</mi><mo stretchy="true" form="postfix">|</mo></mrow><mo>+</mo><mn>1</mn><mi>/</mi><mrow><mo stretchy="true" form="prefix">|</mo><mi>𝐛</mi><mo stretchy="true" form="postfix">|</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mrow><mrow><mo stretchy="true" form="prefix">|</mo><mi>𝐚</mi><mo stretchy="true" form="postfix">|</mo></mrow><mrow><mo stretchy="true" form="prefix">|</mo><mi>𝐛</mi><mo stretchy="true" form="postfix">|</mo></mrow><mo>+</mo><mi>𝐚</mi><mo>⋅</mo><mi>𝐛</mi></mrow></mfrac><mo>,</mo><mspace width="2.0em"></mspace><mtext mathvariant="normal">(10)</mtext></mrow><annotation encoding="application/x-tex">
+\mathbf u=\frac{1}{4\pi}\,\frac{(\mathbf a\times\mathbf b)\,(1/|\mathbf a|+1/|\mathbf b|)}{|\mathbf a||\mathbf b|+\mathbf a\cdot\mathbf b},
+\qquad\text{(10)}
+</annotation></semantics></math> where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>𝐚</mi><annotation encoding="application/x-tex">\mathbf a</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>𝐛</mi><annotation encoding="application/x-tex">\mathbf b</annotation></semantics></math> run from the control point to the segment ends. This model was added for raked blades [2]. It has no hub cylinder, so the root vortex trails freely.</p>
+
+### 3.4 Wake Pitch: the Self-Deforming Wake
+
+<p>In light-loading theory the sheets trail at the blade’s own advance ratio, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mi>w</mi></msub><mo>=</mo><mi>λ</mi></mrow><annotation encoding="application/x-tex">\lambda_w=\lambda</annotation></semantics></math>. XROTOR’s default “self-deforming” wake instead sets the sheet pitch from the induced efficiency, following Theodorsen [13], [2]: <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mi>w</mi></msub><mspace width="0.167em"></mspace><mfrac><msub><mi>T</mi><mi>w</mi></msub><msub><mi>P</mi><mi>w</mi></msub></mfrac><mo>=</mo><mi>λ</mi><mspace width="1.0em"></mspace><mo>⇔</mo><mspace width="1.0em"></mspace><msub><mi>λ</mi><mi>w</mi></msub><mo>=</mo><mfrac><mi>λ</mi><msub><mi>η</mi><mi>i</mi></msub></mfrac><mi>.</mi><mspace width="2.0em"></mspace><mtext mathvariant="normal">(11)</mtext></mrow><annotation encoding="application/x-tex">
+\lambda_w\,\frac{T_w}{P_w}=\lambda\quad\Longleftrightarrow\quad\lambda_w=\frac{\lambda}{\eta_i}.
+\qquad\text{(11)}
+</annotation></semantics></math> The guide notes that this makes the method consistent with the actuator disk at zero advance ratio and zero profile drag. The wake still neither contracts nor rolls up. With the WAKE toggle off (“rigid” wake), <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\lambda_w</annotation></semantics></math> is frozen at its initial value (Section&nbsp;5.4).</p>
+
+### 3.5 The Equivalent Propeller
+
+<p>To handle a nacelle, a duct or a prescribed slipstream, XROTOR maps the real blade onto an <i>equivalent</i> free propeller in uniform flow [SETXW]. For each station the equivalent radius <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ξ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\xi_w</annotation></semantics></math> is found by matching the axial mass flux through the annulus and the angular momentum: <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtable><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><msub><mi>W</mi><mrow><mi>a</mi><mo>,</mo><mi>w</mi></mrow></msub><mspace width="0.167em"></mspace><msub><mi>ξ</mi><mi>w</mi></msub><mspace width="0.167em"></mspace><mi>Δ</mi><msub><mi>ξ</mi><mi>w</mi></msub><mo>=</mo><msub><mi>W</mi><mi>a</mi></msub><mspace width="0.167em"></mspace><mi>ξ</mi><mspace width="0.167em"></mspace><mi>Δ</mi><mi>ξ</mi><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>V</mi><mi>w</mi></msub><mspace width="0.167em"></mspace><msub><mi>ξ</mi><mi>w</mi></msub><mo>=</mo><msub><mi>v</mi><mi>t</mi></msub><mspace width="0.167em"></mspace><mi>ξ</mi><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><msub><mi>W</mi><mrow><mi>a</mi><mo>,</mo><mi>w</mi></mrow></msub><mo>=</mo><msub><mi>u</mi><mi>r</mi></msub><mo>+</mo><msub><mi>V</mi><mi>w</mi></msub><mspace width="0.167em"></mspace><mfrac><msub><mi>ξ</mi><mi>w</mi></msub><msub><mi>λ</mi><mi>w</mi></msub></mfrac><mo>,</mo></mtd></mtr></mtable><mspace width="2.0em"></mspace><mtext mathvariant="normal">(12)</mtext></mrow><annotation encoding="application/x-tex">
+\begin{aligned}&amp;W_{a,w}\,\xi_w\,\Delta\xi_w = W_a\,\xi\,\Delta\xi,\qquad V_w\,\xi_w = v_t\,\xi,\\ &amp;W_{a,w}=u_r + V_w\,\frac{\xi_w}{\lambda_w},\end{aligned}
+\qquad\text{(12)}
+</annotation></semantics></math> solved by a local Newton iteration. The equivalent propeller then supplies the inviscid thrust and power used in the totals and in the wake equation (11): <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>T</mi><mi>w</mi></msub><mo>=</mo><mi>B</mi><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>Γ</mi><mi>i</mi></msub><mo minsize="1.8" maxsize="1.8" stretchy="false" form="prefix">(</mo><mfrac><msub><mi>ξ</mi><mrow><mi>w</mi><mo>,</mo><mi>i</mi></mrow></msub><mi>λ</mi></mfrac><mo>−</mo><msub><mi>V</mi><mrow><mi>w</mi><mo>,</mo><mi>i</mi></mrow></msub><mo minsize="1.8" maxsize="1.8" stretchy="false" form="postfix">)</mo><mi>Δ</mi><msub><mi>ξ</mi><mrow><mi>w</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>P</mi><mi>w</mi></msub><mo>=</mo><msub><mi>P</mi><mrow><mi>i</mi><mi>n</mi><mi>v</mi></mrow></msub><mi>.</mi><mspace width="2.0em"></mspace><mtext mathvariant="normal">(13)</mtext></mrow><annotation encoding="application/x-tex">
+T_w=B\sum_i\Gamma_i\Big(\frac{\xi_{w,i}}{\lambda}-V_{w,i}\Big)\Delta\xi_{w,i},\qquad P_w=P_{inv}.
+\qquad\text{(13)}
+</annotation></semantics></math> For an open rotor without a nacelle <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>T</mi><mi>w</mi></msub><annotation encoding="application/x-tex">T_w</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>T</mi><mrow><mi>i</mi><mi>n</mi><mi>v</mi></mrow></msub><annotation encoding="application/x-tex">T_{inv}</annotation></semantics></math> should agree closely; Section&nbsp;5.4 tests this.</p>
+
+### 3.6 Duct Model
+
+<p>A duct is represented only by a velocity ratio <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>u</mi><mi>r</mi></msub><annotation encoding="application/x-tex">u_r</annotation></semantics></math> (VRAT) between the flow at the rotor disk and the free stream. This sets <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>u</mi><mi>d</mi></msub><mo>=</mo><msub><mi>u</mi><mi>r</mi></msub><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">u_d=u_r-1</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>+</mo><msub><mi>v</mi><mi>d</mi></msub><mo>=</mo><mn>2</mn><msub><mi>u</mi><mi>r</mi></msub></mrow><annotation encoding="application/x-tex">1+v_d=2u_r</annotation></semantics></math> in (2), and switches the outer boundary of (8) to a solid casing. In GRAD and VRTX it reduces the influence to the mean swirl <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mi>Γ</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>4</mn><mi>π</mi><mi>ξ</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">B\Gamma/(4\pi\xi)</annotation></semantics></math>. Duct thrust, losses and the distribution of the duct-induced velocity are not modelled; DFDC was written to do this [6].</p>
+
+### 3.7 Section Aerodynamics
+
+<p>XROTOR does not read airfoil polars. Each of up to 20 radial sections is described by 13 numbers, between which lift and drag are interpolated linearly [GETCLCDCM]. The lift coefficient is a Prandtl–Glauert-scaled straight line, blended smoothly into a stalled slope by a soft limiter [CLCDCM]: <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtable><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><msub><mi>c</mi><mi>l</mi></msub><mo>=</mo><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>a</mi></mrow></msub><mo>−</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>f</mi><mi>s</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><mi>Δ</mi><msub><mi>c</mi><mi>s</mi></msub><mo>ln</mo><mfrac><mrow><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>a</mi></mrow></msub><mo>−</mo><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><mi>Δ</mi><msub><mi>c</mi><mi>s</mi></msub></mrow></msup></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><mo>−</mo><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>a</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><mi>Δ</mi><msub><mi>c</mi><mi>s</mi></msub></mrow></msup></mrow></mfrac><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>a</mi></mrow></msub><mo>=</mo><mfrac><mrow><msub><mi>a</mi><mn>0</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>α</mi><mo>−</mo><msub><mi>α</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>M</mi><mn>2</mn></msup></mrow></msqrt></mfrac><mo>,</mo></mtd></mtr></mtable><mspace width="2.0em"></mspace><mtext mathvariant="normal">(14)</mtext></mrow><annotation encoding="application/x-tex">
+\begin{aligned}&amp;c_{l} = c_{l,a}-(1-f_s)\,\Delta c_s\ln\frac{1+e^{(c_{l,a}-c_{l,max})/\Delta c_s}}{1+e^{(c_{l,min}-c_{l,a})/\Delta c_s}},\\ &amp;c_{l,a}=\frac{a_0(\alpha-\alpha_0)}{\sqrt{1-M^2}},\end{aligned}
+\qquad\text{(14)}
+</annotation></semantics></math> where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>f</mi><mi>s</mi></msub><annotation encoding="application/x-tex">f_s</annotation></semantics></math> is the ratio of the post-stall to the attached lift-curve slope and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><msub><mi>c</mi><mi>s</mi></msub></mrow><annotation encoding="application/x-tex">\Delta c_s</annotation></semantics></math> the width of the stall transition. The drag coefficient is <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtable><mtr><mtd columnalign="right" style="text-align: right"><msub><mi>c</mi><mi>d</mi></msub><mo>=</mo><mrow></mrow></mtd><mtd columnalign="left" style="text-align: left"><mo minsize="1.2" maxsize="1.2" stretchy="false" form="prefix">[</mo><msub><mi>c</mi><mrow><mi>d</mi><mo>,</mo><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><mo>+</mo><mi>k</mi><mspace width="0.167em"></mspace><msup><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>c</mi><mi>l</mi></msub><mo>−</mo><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>d</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mo minsize="1.2" maxsize="1.2" stretchy="false" form="postfix">]</mo><mo minsize="1.8" maxsize="1.8" stretchy="false" form="prefix">(</mo><mfrac><mrow><mi>R</mi><mi>e</mi></mrow><mrow><mi>R</mi><msub><mi>e</mi><mrow><mi>r</mi><mi>e</mi><mi>f</mi></mrow></msub></mrow></mfrac><msup><mo minsize="1.8" maxsize="1.8" stretchy="false" form="postfix">)</mo><mi>e</mi></msup></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><mo>+</mo><mn>2</mn><mo minsize="1.8" maxsize="1.8" stretchy="false" form="prefix">[</mo><mfrac><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>f</mi><mi>s</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>l</mi><mi>i</mi><mi>m</mi></mrow></msub></mrow><mrow><msub><mi>a</mi><mn>0</mn></msub><mi>/</mi><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>M</mi><mn>2</mn></msup></mrow></msqrt></mrow></mfrac><msup><mo minsize="1.8" maxsize="1.8" stretchy="false" form="postfix">]</mo><mn>2</mn></msup><mo>+</mo><mn>10</mn><mspace width="0.167em"></mspace><msubsup><mrow><mo stretchy="true" form="prefix">(</mo><mi>M</mi><mo>−</mo><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi><mo>,</mo><mi>e</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mn>3</mn></msubsup><mo>,</mo></mtd></mtr></mtable><mspace width="2.0em"></mspace><mtext mathvariant="normal">(15)</mtext></mrow><annotation encoding="application/x-tex">
+\begin{aligned}c_d={}&amp;\big[c_{d,min}+k\,(c_l-c_{l,d})^2\big]\Big(\frac{Re}{Re_{ref}}\Big)^{e}\\ &amp;+2\Big[\frac{(1-f_s)\,c_{l,lim}}{a_0/\sqrt{1-M^2}}\Big]^2+10\,(M-M_{cr,e})^3_+,\end{aligned}
+\qquad\text{(15)}
+</annotation></semantics></math> with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi><mo>,</mo><mi>e</mi></mrow></msub><mo>=</mo><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi></mrow></msub><mo>−</mo><mn>0.25</mn><mspace width="0.167em"></mspace><mrow><mo stretchy="true" form="prefix">|</mo><msub><mi>c</mi><mi>l</mi></msub><mo>−</mo><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>d</mi></mrow></msub><mo stretchy="true" form="postfix">|</mo></mrow><mo>−</mo><mn>0.0585</mn></mrow><annotation encoding="application/x-tex">M_{cr,e}=M_{cr}-0.25\,|c_l-c_{l,d}|-0.0585</annotation></semantics></math>. Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>l</mi><mi>i</mi><mi>m</mi></mrow></msub><annotation encoding="application/x-tex">c_{l,lim}</annotation></semantics></math> is the logarithmic limiter term of (14). The three drag terms are a parabolic polar scaled by Reynolds number, a stall drag that grows with the lift lost to the limiter, and a cubic drag rise above an effective critical Mach number. Near and above <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi></mrow></msub><annotation encoding="application/x-tex">M_{cr}</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><annotation encoding="application/x-tex">c_{l,max}</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><annotation encoding="application/x-tex">c_{l,min}</annotation></semantics></math> are also reduced. The pitching moment is a constant scaled by Prandtl–Glauert. Fig. 2 compares the model, fitted to a Clark-Y table at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi><mo>=</mo><msup><mn>10</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">Re=10^6</annotation></semantics></math>, with the table itself.</p>
+
+<div class="figrow one"><figure id="fig-2"><a class="zoom" href="img/xrotor-propeller-code-review/f04_aero.svg" target="_blank" rel="noopener"><img src="img/xrotor-propeller-code-review/f04_aero.svg" alt="XROTOR section model fitted to a tabulated Clark-Y polar at Re=106Re = 10^6: lift curve (left), drag polar (centre) and the built-in drag rise for three lift co" loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 2.</b> XROTOR section model fitted to a tabulated Clark-Y polar at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi><mo>=</mo><msup><mn>10</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">Re = 10^6</annotation></semantics></math>: lift curve (left), drag polar (centre) and the built-in drag rise for three lift coefficients with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi></mrow></msub><mo>=</mo><mn>0.70</mn></mrow><annotation encoding="application/x-tex">M_{cr} = 0.70</annotation></semantics></math> (right). The model holds <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><annotation encoding="application/x-tex">c_{l,max}</annotation></semantics></math> after stall instead of letting it fall.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+### 3.8 Analysis: the Global Newton System
+
+<p>For an operating point XROTOR solves <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>+</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">N+3</annotation></semantics></math> equations for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Γ</mi><mn>1</mn></msub><mi>…</mi><msub><mi>Γ</mi><mi>N</mi></msub></mrow><annotation encoding="application/x-tex">\Gamma_1\ldots\Gamma_N</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\lambda_w</annotation></semantics></math> and a uniform pitch change <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mi>β</mi></mrow><annotation encoding="application/x-tex">\Delta\beta</annotation></semantics></math> [APITER]. These are the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math> residuals (3), one specification equation (thrust, torque, power, advance ratio or an engine power–speed line), the wake equation (11) and one constraint (fixed speed or fixed pitch). The Jacobian is formed analytically. Every routine carries the partial derivatives of its outputs, for example <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><mi>W</mi><mi>/</mi><mi>∂</mi><msub><mi>v</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">\partial W/\partial v_t</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><msub><mi>c</mi><mi>l</mi></msub><mi>/</mi><mi>∂</mi><mi>α</mi></mrow><annotation encoding="application/x-tex">\partial c_l/\partial\alpha</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><msub><mi>T</mi><mi>w</mi></msub><mi>/</mi><mi>∂</mi><msub><mi>λ</mi><mi>w</mi></msub></mrow><annotation encoding="application/x-tex">\partial T_w/\partial\lambda_w</annotation></semantics></math>, and the system is solved by Gaussian elimination [GAUSS]. The update is relaxed by a factor <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ω</mi><annotation encoding="application/x-tex">\omega</annotation></semantics></math>, which is</p>
+
+<ul>
+<li>0.2 on the first two iterations;</li>
+<li>reduced so that no section changes <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> by more than a limit of 0.01–0.5 that tightens near <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><annotation encoding="application/x-tex">c_{l,max}</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><annotation encoding="application/x-tex">c_{l,min}</annotation></semantics></math>;</li>
+<li>reduced to 0.2 if any <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><msub><mi>Γ</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">\Delta\Gamma_i</annotation></semantics></math> reverses sign and exceeds 20 % of its previous value;</li>
+<li>limited so that <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">|</mo><mi>Δ</mi><mi>β</mi><mo stretchy="true" form="postfix">|</mo></mrow><mo>≤</mo><mn>0.05</mn></mrow><annotation encoding="application/x-tex">|\Delta\beta|\le0.05</annotation></semantics></math> rad and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\lambda_w</annotation></semantics></math> change by at most +50 % / −30 %.</li>
+</ul>
+
+<p>If <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ω</mi><mo>&lt;</mo><mn>0.2</mn></mrow><annotation encoding="application/x-tex">\omega&lt;0.2</annotation></semantics></math>, the circulation is smoothed by an implicit filter over <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.2</mn><mi>N</mi></mrow><annotation encoding="application/x-tex">0.2N</annotation></semantics></math> stations [FILTER]. Convergence is declared when the r.m.s. circulation change, weighted by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><msup><mi>λ</mi><mrow><mo>−</mo><mn>2</mn></mrow></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">1/(1+\lambda^{-2})</annotation></semantics></math>, falls below <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mo>−</mo><mn>7</mn></mrow></msup><annotation encoding="application/x-tex">10^{-7}</annotation></semantics></math>; the limit is 40 iterations. The initial guess [APINIT] takes <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Γ</mi><annotation encoding="application/x-tex">\Gamma</annotation></semantics></math> from the blade angles without induction and then performs ten graded-momentum sweeps that also update <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\lambda_w</annotation></semantics></math> from momentum theory. Fig. 3 summarises the procedure.</p>
+
+<div class="figrow one"><figure id="fig-3"><a class="zoom" href="img/xrotor-propeller-code-review/f02_flow.svg" target="_blank" rel="noopener"><img src="img/xrotor-propeller-code-review/f02_flow.svg" alt="Solution procedure of the XROTOR OPER command (routines APER, APINIT and APITER in xoper.f)." loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 3.</b> Solution procedure of the XROTOR OPER command (routines APER, APINIT and APITER in xoper.f).<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+### 3.9 Design: Minimum Induced Loss
+
+<p>For design [DESGEN, DESINI, DEITER] the user fixes the radius, hub, speed, rotation rate, number of blades, thrust or power and a design <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> distribution. The unknowns are <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Γ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\Gamma_i</annotation></semantics></math>, the inverse induced efficiency <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>η</mi><mi>i</mi><mrow><mo>−</mo><mn>1</mn></mrow></msubsup><annotation encoding="application/x-tex">\eta_i^{-1}</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\lambda_w</annotation></semantics></math>. The Betz condition is imposed on the equivalent propeller at every station, <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><msub><mi>W</mi><mrow><mi>a</mi><mo>,</mo><mi>w</mi><mo>,</mo><mi>i</mi></mrow></msub><msub><mi>W</mi><mrow><mi>t</mi><mo>,</mo><mi>w</mi><mo>,</mo><mi>i</mi></mrow></msub></mfrac><mspace width="0.167em"></mspace><mfrac><msub><mi>ξ</mi><mi>i</mi></msub><mi>λ</mi></mfrac><mo>=</mo><msubsup><mi>η</mi><mi>i</mi><mrow><mo>−</mo><mn>1</mn></mrow></msubsup><mo>,</mo><mspace width="2.0em"></mspace><mi>i</mi><mo>=</mo><mn>1</mn><mi>…</mi><mi>N</mi><mo>,</mo><mspace width="2.0em"></mspace><mtext mathvariant="normal">(16)</mtext></mrow><annotation encoding="application/x-tex">
+\frac{W_{a,w,i}}{W_{t,w,i}}\,\frac{\xi_i}{\lambda}=\eta_i^{-1},\qquad i=1\ldots N,
+\qquad\text{(16)}
+</annotation></semantics></math> that is, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ξ</mi><mo>tan</mo><msub><mi>ϕ</mi><mi>w</mi></msub></mrow><annotation encoding="application/x-tex">\xi\tan\phi_w</annotation></semantics></math> is the same at all radii, together with the thrust or power equation and the wake equation (11). Chord and blade angle then follow from <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>i</mi></msub><mo>=</mo><mn>2</mn><msub><mi>Γ</mi><mi>i</mi></msub><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>W</mi><mi>i</mi></msub><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>i</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">c_i=2\Gamma_i/(W_ic_{l,i})</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>β</mi><mi>i</mi></msub><mo>=</mo><msub><mi>ϕ</mi><mi>i</mi></msub><mo>+</mo><mi>α</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>i</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\beta_i=\phi_i+\alpha(c_{l,i})</annotation></semantics></math>, where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>c</mi><mi>l</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\alpha(c_l)</annotation></semantics></math> is found by inverting (14) [GETALF]. The iteration starts from Larrabee’s closed-form design with the Prandtl factor [14]. When POT is selected, this is followed by a Goldstein distribution obtained from one solve with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">A_{ij}</annotation></semantics></math>. For a ducted rotor, (16) is replaced by constant circulation (a free-vortex rotor), as of version 7.52. The same machinery optimises the twist of an existing planform (MODI/OPTI) and designs windmills with negative thrust or power.</p>
+
+### 3.10 Other Modules
+
+<p>BEND solves a non-linear beam for each blade under aerodynamic and centrifugal loads and can correct the blade angles for elastic twist. NOIS computes the acoustic pressure history at chosen observer positions from rotating loading (near and far field) and thickness sources, with its harmonics and a ground decibel footprint, and JMAP produces the classical <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>P</mi></msub><annotation encoding="application/x-tex">C_P</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>J</mi><annotation encoding="application/x-tex">J</annotation></semantics></math> map with efficiency and blade-angle contours. These modules use the converged circulation but do not feed back into the aerodynamic solution, except for the optional twist correction. They are outside the scope of the numerical tests below.</p>
+
+## 4. Code Review
+
+### 4.1 Architecture
+
+<p>XROTOR 7.55 is about 20 500 lines of Fortran 77 in 23 source files and one include file, plus a 10 000-line X11/PostScript plot library shared with XFOIL. Table&nbsp;2 lists the files that carry the physics. About 31 % of the lines are comments; the code is terse but readable, and the long derivative chains are commented step by step. All state lives in one include file, XROTOR.INC, with 27 COMMON blocks and fixed array limits: 100 radial stations, 20 aero sections, 100 stored cases. Variables are typed implicitly, all reals are single precision (REAL*4), and control flow uses 493 GO TO statements. Program structure follows the pattern of XFOIL: a top-level menu dispatches to sub-menus (OPER, DESI, MODI, AERO, BEND, NOIS, PLOT), each reading four-letter commands from the terminal.</p>
+
+<div class="tcap"><b>Table 2.</b> Source files of XROTOR 7.55 that contain the physics (lines including comments).</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">File</th>
+<th style="text-align: right;">Lines</th>
+<th style="text-align: right;">Routines</th>
+<th style="text-align: left;">Content</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">xrotor.f</td>
+<td style="text-align: right;">1672</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: left;">main program, menus, defaults, atmosphere, nacelle, station spacing, output</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">xoper.f</td>
+<td style="text-align: right;">3228</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: left;">OPER menu; APINIT, APITER, CSCALC, SETXW, TPQ, GRADMO, HELICO, FILTER</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">xdesi.f</td>
+<td style="text-align: right;">1234</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: left;">DESI menu; DESGEN, DESINI (Larrabee start), DEITER (MIL Newton)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">xmodi.f</td>
+<td style="text-align: right;">666</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">MODI menu; geometry changes and twist optimisation</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">xaero.f</td>
+<td style="text-align: right;">1354</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: left;">aero sections; CLCDCM section model, GETALF inversion</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">vortex.f</td>
+<td style="text-align: right;">350</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">VRTXCO discrete helical wake, VORSEGVEL Biot–Savart</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">xbend.f</td>
+<td style="text-align: right;">1646</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: left;">non-linear beam: loads, deflections, stresses</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">xnoise.f</td>
+<td style="text-align: right;">1605</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: left;">acoustic pressure histories and footprints</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">xio.f</td>
+<td style="text-align: right;">612</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: left;">save and load files</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">spline.f, xutils.f</td>
+<td style="text-align: right;">1073</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: left;">splines, Gaussian elimination, LU</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">plotting (6 files)</td>
+<td style="text-align: right;">4672</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: left;">rotor, polar, case and map plots</td>
+</tr>
+</tbody>
+</table>
+
+<p>The analysis and design solvers are compact: the routines in Fig. 3 total about 1 800 lines. Each carries the partial derivatives of its outputs with respect to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Γ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\Gamma_j</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\lambda_w</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mi>β</mi></mrow><annotation encoding="application/x-tex">\Delta\beta</annotation></semantics></math>, so the Newton matrix is assembled by the chain rule. This gives fast quadratic convergence when the derivatives are right, but every term must be maintained by hand. Several findings below are errors in such terms.</p>
+
+### 4.2 Findings
+
+<p>Table&nbsp;3 lists what the review found. Each item was traced through the source and, where possible, checked in the port. Items 1–5 are errors in the <i>linearisation</i> only. They do not change a converged answer, but they degrade the Newton direction and therefore convergence. Items 6–9 can change results or behaviour. Items 10–18 are dormant faults, inconsistencies and constraints that a maintainer or a porter should know about.</p>
+
+<div class="tcap"><b>Table 3.</b> Findings of the source review of XROTOR 7.55 (file and line numbers of the 7.55 distribution).</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">No.</th>
+<th style="text-align: left;">Location</th>
+<th style="text-align: left;">Finding</th>
+<th style="text-align: left;">Consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">xoper.f 2575, 2606 (TPQ)</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><msub><mi>T</mi><mi>v</mi></msub><mi>/</mi><mi>∂</mi><msub><mi>λ</mi><mi>w</mi></msub></mrow><annotation encoding="application/x-tex">\partial T_v/\partial\lambda_w</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><msub><mi>P</mi><mi>v</mi></msub><mi>/</mi><mi>∂</mi><msub><mi>λ</mi><mi>w</mi></msub></mrow><annotation encoding="application/x-tex">\partial P_v/\partial\lambda_w</annotation></semantics></math> are assigned inside the station loop instead of accumulated, so only the outermost station contributes</td>
+<td style="text-align: left;">Wrong <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\lambda_w</annotation></semantics></math> column of the Jacobian whenever thrust, torque or power is specified; carried unchanged into xrotor-python</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">xaero.f 1068–1069 (CLCDCM)</td>
+<td style="text-align: left;">Derivative of the drag rise <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>M</mi><mo>−</mo><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi><mo>,</mo><mi>e</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">10(M-M_{cr,e})^3</annotation></semantics></math> divides by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math> and by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi><mo>,</mo><mi>e</mi></mrow></msub><annotation encoding="application/x-tex">M_{cr,e}</annotation></semantics></math> instead of by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>M</mi><mo>−</mo><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi><mo>,</mo><mi>e</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(M-M_{cr,e})</annotation></semantics></math></td>
+<td style="text-align: left;">Wrong <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><msub><mi>c</mi><mi>d</mi></msub><mi>/</mi><mi>∂</mi><mi>W</mi></mrow><annotation encoding="application/x-tex">\partial c_d/\partial W</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><msub><mi>c</mi><mi>d</mi></msub><mi>/</mi><mi>∂</mi><mi>α</mi></mrow><annotation encoding="application/x-tex">\partial c_d/\partial\alpha</annotation></semantics></math> above <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi></mrow></msub><annotation encoding="application/x-tex">M_{cr}</annotation></semantics></math>; carried into the Python and C++ ports</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">xaero.f 1051–1052</td>
+<td style="text-align: left;">In the derivative of the stall drag <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><msup><mi>x</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">2x^2</annotation></semantics></math> the Prandtl–Glauert term is multiplied by the drag <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><msup><mi>x</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">2x^2</annotation></semantics></math> instead of by its argument <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math></td>
+<td style="text-align: left;">Wrong <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><msub><mi>c</mi><mi>d</mi></msub><mi>/</mi><mi>∂</mi><mi>W</mi></mrow><annotation encoding="application/x-tex">\partial c_d/\partial W</annotation></semantics></math> in stall at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">M&gt;0</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">xaero.f 1060–1061</td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi><mo>,</mo><mi>e</mi></mrow></msub><mi>/</mi><mi>∂</mi><mi>α</mi><mo>=</mo><mo>−</mo><mn>0.25</mn><mspace width="0.167em"></mspace><mrow><mo stretchy="true" form="prefix">|</mo><mi>∂</mi><msub><mi>c</mi><mi>l</mi></msub><mi>/</mi><mi>∂</mi><mi>α</mi><mo stretchy="true" form="postfix">|</mo></mrow></mrow><annotation encoding="application/x-tex">\partial M_{cr,e}/\partial\alpha=-0.25\,|\partial c_l/\partial\alpha|</annotation></semantics></math> ignores the sign of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>l</mi></msub><mo>−</mo><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>d</mi></mrow></msub></mrow><annotation encoding="application/x-tex">c_l-c_{l,d}</annotation></semantics></math></td>
+<td style="text-align: left;">Wrong sign for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>l</mi></msub><mo>&lt;</mo><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>d</mi></mrow></msub></mrow><annotation encoding="application/x-tex">c_l&lt;c_{l,d}</annotation></semantics></math></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: left;">xoper.f 3104 (HELICO)</td>
+<td style="text-align: left;">Right-hand side of the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\lambda_w</annotation></semantics></math>-sensitivity problem reads GAM(I) for I &gt; N, outside the blade</td>
+<td style="text-align: left;">Uses whatever is stored there; stale values after the station count is reduced</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6</td>
+<td style="text-align: left;">xdesi.f 1016–1020, 1073–1074 (DEITER)</td>
+<td style="text-align: left;">DEFF is set only for free-tip rotors but tested for convergence in every case</td>
+<td style="text-align: left;">Uninitialised (or stale) variable in the convergence test of ducted designs</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">7</td>
+<td style="text-align: left;">xdesi.f 894 vs xoper.f 2676</td>
+<td style="text-align: left;">Betz condition (16) uses <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ξ</mi><mi>i</mi></msub><mi>/</mi><mi>λ</mi></mrow><annotation encoding="application/x-tex">\xi_i/\lambda</annotation></semantics></math> for the equivalent propeller’s tangential speed, TPQ uses <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ξ</mi><mrow><mi>w</mi><mo>,</mo><mi>i</mi></mrow></msub><mi>/</mi><mi>λ</mi></mrow><annotation encoding="application/x-tex">\xi_{w,i}/\lambda</annotation></semantics></math>; the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ξ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\xi_w</annotation></semantics></math> derivative is commented out</td>
+<td style="text-align: left;">Design condition and analysis forces are not the same propeller; small without nacelle or duct</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8</td>
+<td style="text-align: left;">xdesi.f 587–599 (DESGEN)</td>
+<td style="text-align: left;">Design <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> is checked against the stall limits of section 1 only</td>
+<td style="text-align: left;">Multi-section blades may be rejected or accepted wrongly</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">9</td>
+<td style="text-align: left;">xoper.f 1985–1989, xdesi.f 1067–1070</td>
+<td style="text-align: left;">Circulation filter whenever <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ω</mi><mo>&lt;</mo><mn>0.2</mn></mrow><annotation encoding="application/x-tex">\omega&lt;0.2</annotation></semantics></math>; it fixes the end values and smooths the interior</td>
+<td style="text-align: left;">Can hold the iteration in a cycle (Section&nbsp;5.6)</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10</td>
+<td style="text-align: left;">xaero.f 774–792 (GETCLCDCM)</td>
+<td style="text-align: left;">Fall-back section search jumps out with the index <i>past</i> the bracket; a station outboard of the last section is reset to section 1</td>
+<td style="text-align: left;">Dormant: SETIAERO normally sets the indices first</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">11</td>
+<td style="text-align: left;">xoper.f 1728–1731 (APITER)</td>
+<td style="text-align: left;">Correction factor for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mi>t</mi></msub><annotation encoding="application/x-tex">v_t</annotation></semantics></math> in the wake equation is computed and then overwritten with 1.0 (“for now”)</td>
+<td style="text-align: left;">Dead code; documents an open modelling choice</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">12</td>
+<td style="text-align: left;">xoper.f 1666; xdesi.f 835</td>
+<td style="text-align: left;">Convergence tolerances <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mo>−</mo><mn>7</mn></mrow></msup><annotation encoding="application/x-tex">10^{-7}</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>7</mn></mrow></msup></mrow><annotation encoding="application/x-tex">5\times10^{-7}</annotation></semantics></math> on r.m.s. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mi>Γ</mi></mrow><annotation encoding="application/x-tex">\Delta\Gamma</annotation></semantics></math> in single precision (machine epsilon <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1.2</mn><mo>×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>7</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1.2\times10^{-7}</annotation></semantics></math>)</td>
+<td style="text-align: left;">Can stop just short of convergence on fine grids or large circulations</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">13</td>
+<td style="text-align: left;">xaero.f 870–906 (GETALF)</td>
+<td style="text-align: left;">Newton inversion of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>l</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>α</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">c_l(\alpha)</annotation></semantics></math> starts at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>α</mi><mn>0</mn></msub><annotation encoding="application/x-tex">\alpha_0</annotation></semantics></math> of section 1 with no bracketing; fails for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>l</mi></msub><mo>&gt;</mo><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub></mrow><annotation encoding="application/x-tex">c_l&gt;c_{l,max}</annotation></semantics></math></td>
+<td style="text-align: left;">Design can diverge when Mach-reduced <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><annotation encoding="application/x-tex">c_{l,max}</annotation></semantics></math> falls below the design <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">14</td>
+<td style="text-align: left;">xoper.f 2375, 2551, 2618</td>
+<td style="text-align: left;">Rake: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>cos</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtext mathvariant="normal">rake</mtext><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\cos(\text{rake})</annotation></semantics></math> applied to local efficiencies but set to 1 for viscous and inviscid forces</td>
+<td style="text-align: left;">Inconsistent treatment of raked blades</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">15</td>
+<td style="text-align: left;">vortex.f 73–110</td>
+<td style="text-align: left;">Number of wake segments depends on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\lambda_w</annotation></semantics></math></td>
+<td style="text-align: left;">Residual is discontinuous in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\lambda_w</annotation></semantics></math>; one line printed per call</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">16</td>
+<td style="text-align: left;">xoper.f 2750–2757</td>
+<td style="text-align: left;">“Momentum” thrust and power use the blade-local <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mi>a</mi></msub><annotation encoding="application/x-tex">v_a</annotation></semantics></math></td>
+<td style="text-align: left;">Not a momentum check for finite <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math> (unused, debug only)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">17</td>
+<td style="text-align: left;">xrotor.f 1076 vs 1117</td>
+<td style="text-align: left;">SETX uses <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ξ</mi><mrow><mi>t</mi><mi>i</mi><mi>p</mi></mrow></msub><msup><mo>sin</mo><mn>2</mn></msup><mi>t</mi></mrow><annotation encoding="application/x-tex">\xi_{tip}\sin^2t</annotation></semantics></math>, TINVRT <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>ξ</mi><mrow><mi>t</mi><mi>i</mi><mi>p</mi></mrow></msub><mo>sin</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><annotation encoding="application/x-tex">(\xi_{tip}\sin t)^2</annotation></semantics></math></td>
+<td style="text-align: left;">Harmless while <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ξ</mi><mrow><mi>t</mi><mi>i</mi><mi>p</mi></mrow></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\xi_{tip}=1</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">18</td>
+<td style="text-align: left;">XROTOR.INC; HELICO</td>
+<td style="text-align: left;">Common NN = 32 and XINF = 3 are overridden by local NN = 128 and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ξ</mi><mi>∞</mi></msub><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">\xi_\infty=4</annotation></semantics></math>; fixed IX = 100, IDIM = 150, 5 000 wake segments</td>
+<td style="text-align: left;">Misleading parameters; hard limits for fine discretisations</td>
+</tr>
+</tbody>
+</table>
+
+<p>Three comments put the list in context. First, items 1–5 are typical of hand-derived Jacobians: each is a one-line slip that no converged result can reveal, because the Newton method still converges, only more slowly or less reliably. Automatic differentiation or a finite-difference check during development would catch them. Second, item 6 matters only for ducted designs. A Fortran compiler that keeps local variables in static storage, as many F77 compilers did, would carry DEFF over from an earlier free-tip design, so behaviour depends on the session history. Third, item 7 may be deliberate (the comment “EI_XW” is commented out rather than deleted). Without a nacelle or duct, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ξ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\xi_w</annotation></semantics></math> differs from <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ξ</mi><annotation encoding="application/x-tex">\xi</annotation></semantics></math> only by the small contraction of the equivalent stream tube, which explains why it has gone unnoticed.</p>
+
+### 4.3 Software Engineering
+
+<p>The interactive design is XROTOR’s strength in teaching and exploratory design and its weakness everywhere else. There is no batch input format apart from piping keystrokes, no library interface, and no error status beyond printed text. The circulation and wake state persists between commands, so results depend on what was run before: an unconverged point leaves its <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Γ</mi><annotation encoding="application/x-tex">\Gamma</annotation></semantics></math> as the start of the next. The same pattern caused the failure propagation found in XFOIL [10]. Wrappers such as propeller_design_tools [26] or the xrotor-python module [7] exist to work around this. The Python module replaced the COMMON blocks with a derived type for the same reason. Fixed-size arrays limit the radial resolution to 100 stations. The single-precision arithmetic is adequate for the converged physics but leaves little margin for the convergence test (item 12).</p>
+
+## 5. Numerical Experiments
+
+### 5.1 The Port and Its Checks
+
+<p>The analysis and design core of XROTOR 7.55 was ported to Python with NumPy and SciPy (about 600 lines). The port includes station spacing (SETX), the three wake models (GRADMO, HELICO with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>n</mi></msub><mo>=</mo><mn>128</mn></mrow><annotation encoding="application/x-tex">N_n=128</annotation></semantics></math> and the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>n</mi><mrow><mo>−</mo><mn>2</mn></mrow></msup><annotation encoding="application/x-tex">n^{-2}</annotation></semantics></math> tail, VRTXCO with the same segment spacing), the section model (CLCDCM), the velocity triangle (CSCALC), the equivalent propeller (SETXW), forces (TPQ), the initial guess (APINIT), the analysis iteration with all of APITER’s relaxation limits and the filter (FILTER), and the design start and iteration (DESINI, DEITER). The arithmetic is double precision. The one deliberate difference is the Jacobian: the port differentiates the residuals by finite differences, holding the vortex spacing fixed for the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\lambda_w</annotation></semantics></math> column as XROTOR’s analytic derivative implicitly does. The port therefore has <i>correct</i> derivatives where XROTOR has the slips of Table&nbsp;3, items 1–5. Its convergence results are, if anything, slightly optimistic about XROTOR’s own.</p>
+
+<p>Three checks support the port.</p>
+
+<ol type="1">
+<li><i>Design–analysis consistency.</i> A blade designed for 100 kW and then analysed at the design point absorbs 100.000 kW, with identical efficiency, for all three wake models.</li>
+<li><i>Agreement of independent wake models.</i> For a given circulation, the potential solution (a Fourier–finite-difference method) and the vortex wake (Biot–Savart sums along helices) are entirely different numerical methods. Their swirl at mid-span agrees within 0.3–1 % (Fig. 4).</li>
+<li><i>The actuator-disk limit.</i> With zero profile drag, many blades and a small advance ratio, the self-deforming wake should reproduce the actuator disk [2]. Table&nbsp;4 shows designs at a thrust coefficient <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>T</mi><mi>c</mi></msub><mo>=</mo><mi>T</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><mi>ρ</mi><msup><mi>V</mi><mn>2</mn></msup><mi>π</mi><msup><mi>R</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">T_c=T/(\tfrac12\rho V^2\pi R^2)=1</annotation></semantics></math>, where Froude’s ideal efficiency is 0.828. With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>=</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">B=20</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>0.05</mn></mrow><annotation encoding="application/x-tex">\lambda=0.05</annotation></semantics></math> both formulations give 0.824, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mi>w</mi></msub><mi>/</mi><mi>λ</mi><mo>=</mo><mn>1.213</mn></mrow><annotation encoding="application/x-tex">\lambda_w/\lambda=1.213</annotation></semantics></math> against the momentum value <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>+</mo><mi>a</mi><mo>=</mo><mn>1.207</mn></mrow><annotation encoding="application/x-tex">1+a=1.207</annotation></semantics></math>. The remaining 0.4 points are swirl and hub losses. At <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>0.2</mn></mrow><annotation encoding="application/x-tex">\lambda=0.2</annotation></semantics></math> swirl costs another 3–10 points, more for fewer blades, as classical theory predicts.</li>
+</ol>
+
+<div class="tcap"><b>Table 4.</b> Induced efficiency of minimum-induced-loss designs with zero profile drag at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>T</mi><mi>c</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">T_c = 1</annotation></semantics></math> (Froude limit 0.828), hub radius 0.02.</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math></th>
+<th style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math></th>
+<th style="text-align: right;">GRAD</th>
+<th style="text-align: right;">POT</th>
+<th style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mi>w</mi></msub><mi>/</mi><mi>λ</mi></mrow><annotation encoding="application/x-tex">\lambda_w/\lambda</annotation></semantics></math> (POT)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.815</td>
+<td style="text-align: right;">0.814</td>
+<td style="text-align: right;">1.228</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.20</td>
+<td style="text-align: right;">0.742</td>
+<td style="text-align: right;">0.723</td>
+<td style="text-align: right;">1.384</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.820</td>
+<td style="text-align: right;">0.820</td>
+<td style="text-align: right;">1.219</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.20</td>
+<td style="text-align: right;">0.770</td>
+<td style="text-align: right;">0.766</td>
+<td style="text-align: right;">1.305</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.824</td>
+<td style="text-align: right;">0.824</td>
+<td style="text-align: right;">1.213</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.20</td>
+<td style="text-align: right;">0.794</td>
+<td style="text-align: right;">0.794</td>
+<td style="text-align: right;">1.259</td>
+</tr>
+</tbody>
+</table>
+
+<p>The test cases are the two-blade NACA Report 640 propeller (5868-9 blade, 3.05 m diameter, 25° at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.75</mn><mi>R</mi></mrow><annotation encoding="application/x-tex">0.75R</annotation></semantics></math>, Clark-Y sections), whose geometry is distributed with the xrotor-python tests [7], and a family of MIL designs of 1.8 m diameter. The Clark-Y polar was fitted with XROTOR’s section model (Fig. 2). Unless stated otherwise, advance-ratio sweeps keep the rotational tip speed at 170 m/s (tip Mach 0.5) and vary the flight speed, as in a wind-tunnel test at fixed rpm. All operating points use <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>30</mn></mrow><annotation encoding="application/x-tex">N=30</annotation></semantics></math> stations with sine spacing, the free wake, and XROTOR’s relaxation rules with a 40-iteration limit.</p>
+
+### 5.2 Three Wake Models for the Same Circulation
+
+<p>Fig. 4 applies the three influence matrices to the same circulation, taken from a two- or four-blade POT design. Three differences stand out.</p>
+
+<ul>
+<li><b>Mid-span.</b> POT and VRTX agree closely. GRAD agrees at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>0.1</mn></mrow><annotation encoding="application/x-tex">\lambda=0.1</annotation></semantics></math> but under-predicts the swirl by about 16 % between <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.75</mn><mi>R</mi></mrow><annotation encoding="application/x-tex">0.75R</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.9</mn><mi>R</mi></mrow><annotation encoding="application/x-tex">0.9R</annotation></semantics></math> for two blades at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>0.3</mn></mrow><annotation encoding="application/x-tex">\lambda=0.3</annotation></semantics></math>, and by 6 % for four blades. This is the Prandtl factor’s small-advance-ratio assumption failing, as the user guide warns.</li>
+<li><b>Root.</b> Each model makes a different assumption. GRAD has no hub loss and gives the mean swirl <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mi>Γ</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>4</mn><mi>π</mi><mi>ξ</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">B\Gamma/(4\pi\xi)</annotation></semantics></math>. POT, with its solid-hub condition, cuts the swirl at the first station to 29 % of that value for two blades at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>0.3</mn></mrow><annotation encoding="application/x-tex">\lambda=0.3</annotation></semantics></math>. VRTX trails a free root vortex and more than doubles it. None of these is “right”: a real spinner and nacelle lie between the infinite solid hub and the free root vortex. Root-region loads therefore depend on the user’s choice of model more than on any other input.</li>
+<li><b>Tip.</b> The outermost station sits within <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.0014</mn><mi>R</mi></mrow><annotation encoding="application/x-tex">0.0014R</annotation></semantics></math> of the tip trailing vortex with the default spacing. There, the swirl in VRTX is sensitive to the segment spacing, and in all models it is sensitive to the last few circulations.</li>
+</ul>
+
+<div class="figrow one"><figure id="fig-4"><a class="zoom" href="img/xrotor-propeller-code-review/f03_swirl.svg" target="_blank" rel="noopener"><img src="img/xrotor-propeller-code-review/f03_swirl.svg" alt="Swirl at the blade computed by the three XROTOR wake models from the same circulation (from a POT design with hub radius 0.125). Graded momentum (GRAD), potenti" loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 4.</b> Swirl at the blade computed by the three XROTOR wake models from the same circulation (from a POT design with hub radius 0.125). Graded momentum (GRAD), potential formulation (POT) and discrete vortex wake (VRTX) agree at mid-span for small advance ratios but differ strongly at the root, where they embody different hub models.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+<p>Fig. 5 turns the swirl differences into performance. Each blade was designed with POT at a power coefficient <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mi>c</mi></msub><mo>=</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">P_c=0.5</annotation></semantics></math> and then analysed at its design point with each model. GRAD’s thrust error is below 0.1 % at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>≤</mo><mn>0.1</mn></mrow><annotation encoding="application/x-tex">\lambda\le0.1</annotation></semantics></math> for all blade numbers. It grows to +1.7 % at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>0.2</mn></mrow><annotation encoding="application/x-tex">\lambda=0.2</annotation></semantics></math>, +5.8 % at 0.3 and +17.9 % at 0.5 for two blades, and to +2.6 % at 0.5 for six blades. The efficiency error is smaller, at most +1.7 points, because GRAD over-predicts power as well. VRTX stays within −2 % to +0.4 % of POT where it converges. It failed to converge, with or without the filter, for four heavily loaded cases at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>≥</mo><mn>0.4</mn></mrow><annotation encoding="application/x-tex">\lambda\ge0.4</annotation></semantics></math> (two blades at 0.4 and 0.5, three and four blades at 0.5). The user guide’s warning not to use GRAD above <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>≈</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">\lambda\approx0.5</annotation></semantics></math> is therefore generous for two- and three-blade propellers: a 2 % thrust error is reached at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>≈</mo><mn>0.21</mn></mrow><annotation encoding="application/x-tex">\lambda\approx0.21</annotation></semantics></math> for two blades and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>≈</mo><mn>0.26</mn></mrow><annotation encoding="application/x-tex">\lambda\approx0.26</annotation></semantics></math> for three.</p>
+
+<div class="figrow one"><figure id="fig-5"><a class="zoom" href="img/xrotor-propeller-code-review/f10_formerr.svg" target="_blank" rel="noopener"><img src="img/xrotor-propeller-code-review/f10_formerr.svg" alt="Error of the graded-momentum (lines) and vortex-wake (open symbols) models relative to the potential formulation, for blades designed with POT and re-analysed a" loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 5.</b> Error of the graded-momentum (lines) and vortex-wake (open symbols) models relative to the potential formulation, for blades designed with POT and re-analysed at their design point.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+### 5.3 Off-Design Sweeps
+
+<p>Fig. 6 shows the NACA 640 propeller from <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo>=</mo><mn>0.2</mn></mrow><annotation encoding="application/x-tex">J=0.2</annotation></semantics></math> (deep stall at the root) to windmilling. The three models give the same shape of curve. GRAD is 1–4 % high in thrust and 1–3 % high in power between <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo>=</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">J=0.5</annotation></semantics></math> and 0.9 (more as thrust falls toward zero), and peaks at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mn>0.862</mn></mrow><annotation encoding="application/x-tex">\eta=0.862</annotation></semantics></math> against 0.847 for POT and 0.849 for VRTX. With the parametric section model all GRAD and POT points converge. VRTX fails at six of the 23 advance ratios (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo>≤</mo><mn>0.4</mn></mrow><annotation encoding="application/x-tex">J\le0.4</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo>=</mo><mn>1.2</mn></mrow><annotation encoding="application/x-tex">J=1.2</annotation></semantics></math>) with XROTOR’s relaxation. Without the circulation filter, the five at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo>≤</mo><mn>0.4</mn></mrow><annotation encoding="application/x-tex">J\le0.4</annotation></semantics></math> converge in 6–9 iterations (Section&nbsp;5.6); the sixth, at almost zero thrust, fails either way.</p>
+
+<div class="figrow one"><figure id="fig-6"><a class="zoom" href="img/xrotor-propeller-code-review/f05_jsweep.svg" target="_blank" rel="noopener"><img src="img/xrotor-propeller-code-review/f05_jsweep.svg" alt="NACA Report 640 propeller (two blades, 25° at 0.75R0.75R) at fixed tip speed: thrust and power coefficients and efficiency for the three wake models. Open symbo" loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 6.</b> NACA Report 640 propeller (two blades, 25° at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.75</mn><mi>R</mi></mrow><annotation encoding="application/x-tex">0.75R</annotation></semantics></math>) at fixed tip speed: thrust and power coefficients and efficiency for the three wake models. Open symbols: VRTX points that converge only without the circulation filter. Dotted: POT with the original Clark-Y table instead of the parametric section model.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+<p>The dotted curve repeats the POT sweep with the original Clark-Y table interpolated linearly, as the xrotor-python fork does. Four of the 23 points fail to converge, and the converged curve shows kinks where stations cross the table’s breakpoints near stall. XROTOR’s smooth parametric model is therefore not only a convenience: it keeps <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><msub><mi>c</mi><mi>l</mi></msub><mi>/</mi><mi>∂</mi><mi>α</mi></mrow><annotation encoding="application/x-tex">\partial c_l/\partial\alpha</annotation></semantics></math> continuous, which the Newton method needs. The price is that the model holds <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><annotation encoding="application/x-tex">c_{l,max}</annotation></semantics></math> after stall (Fig. 2). At <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo>=</mo><mn>0.25</mn></mrow><annotation encoding="application/x-tex">J=0.25</annotation></semantics></math>–0.35, where the inner blade is stalled, it gives 3–4 % more thrust than the table.</p>
+
+### 5.4 Loading and the Wake Pitch
+
+<p>The self-deforming wake is XROTOR’s main departure from light-loading theory. Fig. 7 (left) shows that <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mi>w</mi></msub><mi>/</mi><mi>λ</mi></mrow><annotation encoding="application/x-tex">\lambda_w/\lambda</annotation></semantics></math> rises from 1.11 at the peak-efficiency point to 1.42 at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo>=</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">J=0.5</annotation></semantics></math> and 2.39 at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo>=</mo><mn>0.2</mn></mrow><annotation encoding="application/x-tex">J=0.2</annotation></semantics></math>. At such loadings the wake should also contract strongly, which the model ignores. Freezing the wake pitch (WAKE off) at the value from the initial guess changes thrust by less than 1.2 %, because APINIT already estimates <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\lambda_w</annotation></semantics></math> from momentum theory. Setting <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mi>w</mi></msub><mo>=</mo><mi>λ</mi></mrow><annotation encoding="application/x-tex">\lambda_w=\lambda</annotation></semantics></math>, the true light-loading assumption, under-predicts thrust by up to 3.5 %.</p>
+
+<p>The notes for version 7.5x report that momentum and blade thrust disagree for highly loaded propellers [2]. In the port the blade thrust (4) and the equivalent-propeller thrust (13) differ by less than 0.7 % wherever <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>T</mi></msub><mo>&gt;</mo><mn>0.045</mn></mrow><annotation encoding="application/x-tex">C_T&gt;0.045</annotation></semantics></math>, and by 1–3 % only as thrust falls toward zero (Fig. 7, right axis). The disagreement noted by the authors therefore concerns the “momentum” thrust, which item 16 of Table&nbsp;3 shows to be computed from blade-local rather than azimuth-averaged velocities. It does not affect the force used for results.</p>
+
+<div class="figrow one"><figure id="fig-7"><a class="zoom" href="img/xrotor-propeller-code-review/f06_loading.svg" target="_blank" rel="noopener"><img src="img/xrotor-propeller-code-review/f06_loading.svg" alt="Wake pitch and loading for the NACA 640 propeller (POT): ratio of wake to rotor advance ratio and relative difference between blade and equivalent-propeller thr" loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 7.</b> Wake pitch and loading for the NACA 640 propeller (POT): ratio of wake to rotor advance ratio and relative difference between blade and equivalent-propeller thrust (left); thrust change if the wake pitch is frozen at the APINIT estimate or at the rotor advance ratio (right).<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+### 5.5 Radial Resolution and Harmonics
+
+<p>Fig. 8 shows how thrust at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo>=</mo><mn>0.8</mn></mrow><annotation encoding="application/x-tex">J=0.8</annotation></semantics></math> changes with the number of stations. GRAD converges smoothly and monotonically: 30 stations are within 0.05 % of 100. POT is not monotonic. Its thrust falls until about 30 stations and then rises again by 0.2 % up to 100 stations, for both spacings. This drift probably comes from the fixed outer domain and the mirrored points beyond the tip in HELICO, whose spacing changes with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>. VRTX converges slowly, 0.23 % between 30 and 40 stations, because the near-tip segments are coarse compared with the closely spaced tip stations. The default <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>30</mn></mrow><annotation encoding="application/x-tex">N=30</annotation></semantics></math> is therefore adequate to about 0.2 % for POT, but users should not expect refining to 60 or 100 stations to improve the answer.</p>
+
+<p>With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>n</mi></msub><mo>=</mo><mn>128</mn></mrow><annotation encoding="application/x-tex">N_n=128</annotation></semantics></math> harmonics the potential solution is within 0.2 % of 512 harmonics, thanks to the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>n</mi><mrow><mo>−</mo><mn>2</mn></mrow></msup><annotation encoding="application/x-tex">n^{-2}</annotation></semantics></math> tail correction. Using the common-block default of 32 harmonics would cost about 1 % (Fig. 8, right).</p>
+
+<div class="figrow one"><figure id="fig-8"><a class="zoom" href="img/xrotor-propeller-code-review/f07_disc.svg" target="_blank" rel="noopener"><img src="img/xrotor-propeller-code-review/f07_disc.svg" alt="Discretisation at J=0.8J = 0.8: change in thrust coefficient with the number of radial stations for each wake model and spacing (left), and with the number of F" loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 8.</b> Discretisation at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo>=</mo><mn>0.8</mn></mrow><annotation encoding="application/x-tex">J = 0.8</annotation></semantics></math>: change in thrust coefficient with the number of radial stations for each wake model and spacing (left), and with the number of Fourier harmonics in HELICO (right).<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+### 5.6 Robustness and the Circulation Filter
+
+<p>To map convergence, the NACA 640 blade was run at 28 advance ratios (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo>=</mo><mn>0.05</mn></mrow><annotation encoding="application/x-tex">J=0.05</annotation></semantics></math>–1.4) and 13 uniform pitch changes (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mi>β</mi><mo>=</mo><mo>−</mo><mn>8</mn><mi>°</mi></mrow><annotation encoding="application/x-tex">\Delta\beta=-8°</annotation></semantics></math> to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>+</mo><mn>16</mn><mi>°</mi></mrow><annotation encoding="application/x-tex">+16°</annotation></semantics></math>), 364 points per configuration. Each point started from APINIT. Three iteration strategies were compared: XROTOR’s rules, the same rules without the circulation filter, and plain Newton with full steps. Fig. 9 and Table&nbsp;5 give the results.</p>
+
+<div class="tcap"><b>Table 5.</b> Converged points out of 364 (tip speed 170 m/s) and mean iterations per converged point.</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Strategy</th>
+<th style="text-align: right;">GRAD</th>
+<th style="text-align: right;">POT</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">XROTOR relaxation (with filter)</td>
+<td style="text-align: right;">364 (5.5)</td>
+<td style="text-align: right;">332 (9.0)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XROTOR relaxation, no filter</td>
+<td style="text-align: right;">364 (5.5)</td>
+<td style="text-align: right;">309 (7.7)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Plain Newton</td>
+<td style="text-align: right;">364 (3.3)</td>
+<td style="text-align: right;">92 (6.1)</td>
+</tr>
+</tbody>
+</table>
+
+<p>GRAD converges everywhere with any strategy, because its diagonal influence matrix decouples the stations. POT is much harder. Plain Newton converges only 25 % of the points, so XROTOR’s limiters on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><msub><mi>c</mi><mi>l</mi></msub></mrow><annotation encoding="application/x-tex">\Delta c_l</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mi>β</mi></mrow><annotation encoding="application/x-tex">\Delta\beta</annotation></semantics></math> and sign reversal are essential, and with them 91 % converge. Almost all failures lie in one region: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo>≤</mo><mn>0.45</mn></mrow><annotation encoding="application/x-tex">J\le0.45</annotation></semantics></math> combined with pitch increased by 4° or more. There most of the blade is stalled, and the soft <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><annotation encoding="application/x-tex">c_{l,max}</annotation></semantics></math> limiter changes <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><msub><mi>c</mi><mi>l</mi></msub><mi>/</mi><mi>∂</mi><mi>α</mi></mrow><annotation encoding="application/x-tex">\partial c_l/\partial\alpha</annotation></semantics></math> by a factor of 66 (the ratio of attached to stalled slope) within a few degrees.</p>
+
+<p>The filter’s role is double-edged. Switching it off rescues 7 POT points but loses 30 others, so for POT it is a net help in stall. For the other two solvers the balance reverses. In VRTX five of the six filtered failures of Fig. 6 converge without the filter. In design, the three-blade GRAD design of Section&nbsp;5.8 never converges with the filter (60 iterations, r.m.s. change stuck at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1.5</mn><mo>×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1.5\times10^{-2}</annotation></semantics></math>), but converges in 7 iterations without it.</p>
+
+<p>The mechanism is the same each time. The step limits push <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ω</mi><annotation encoding="application/x-tex">\omega</annotation></semantics></math> below 0.2, the filter then smooths <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Γ</mi><annotation encoding="application/x-tex">\Gamma</annotation></semantics></math> over six stations while keeping its end values, and the next Newton step restores the sharp tip gradient that the filter removed. The iteration then repeats a fixed cycle of identical steps.</p>
+
+<div class="figrow one"><figure id="fig-9"><a class="zoom" href="img/xrotor-propeller-code-review/f08_robust.svg" target="_blank" rel="noopener"><img src="img/xrotor-propeller-code-review/f08_robust.svg" alt="Convergence maps for the NACA 640 blade over advance ratio and uniform pitch change: shading shows Newton iterations, orange crosses mark points that did not co" loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 9.</b> Convergence maps for the NACA 640 blade over advance ratio and uniform pitch change: shading shows Newton iterations, orange crosses mark points that did not converge in 40 iterations. Rows: GRAD and POT; columns: XROTOR’s relaxation rules, the same without the circulation filter, and plain Newton.<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+<p>A second, separate failure mechanism appears when the tip runs near the sections’ critical Mach number. Fig. 10 raises the tip speed at fixed <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo>=</mo><mn>0.6</mn></mrow><annotation encoding="application/x-tex">J=0.6</annotation></semantics></math>. GRAD converges at every Mach number. POT fails between tip Mach 0.65 and 0.85, where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi></mrow></msub><mo>=</mo><mn>0.70</mn></mrow><annotation encoding="application/x-tex">M_{cr}=0.70</annotation></semantics></math> lies inside the tip region, and it fails even with plain Newton except at 0.85. With the Mach terms of the section model switched off, every point converges in 8 iterations. In the failing iterates the outermost one or two stations alternate between two states. In a transonic-tip case examined in detail, one of these states put the local Mach number of the last station above 0.99. There the section model clips <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math>, and its Mach-reduced <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><annotation encoding="application/x-tex">c_{l,max}</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><annotation encoding="application/x-tex">c_{l,min}</annotation></semantics></math> collapse onto each other, so that <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> is no longer defined sensibly. The Mach-dependent stall limits of version 7.0 make the residual non-smooth exactly where the potential solution couples the tip stations most strongly. An early sweep in this study, run at constant flight speed so that the tip went transonic at low <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>J</mi><annotation encoding="application/x-tex">J</annotation></semantics></math>, failed for this reason alone in a band <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.35</mn><mo>&lt;</mo><mi>J</mi><mo>&lt;</mo><mn>0.6</mn></mrow><annotation encoding="application/x-tex">0.35&lt;J&lt;0.6</annotation></semantics></math>.</p>
+
+<div class="figrow one"><figure id="fig-10"><a class="zoom" href="img/xrotor-propeller-code-review/f11_mach.svg" target="_blank" rel="noopener"><img src="img/xrotor-propeller-code-review/f11_mach.svg" alt="Effect of tip Mach number at J=0.6J = 0.6 (section Mcr=0.70M_{cr} = 0.70): thrust coefficient and efficiency for GRAD, POT and POT with the Mach terms of the se" loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 10.</b> Effect of tip Mach number at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo>=</mo><mn>0.6</mn></mrow><annotation encoding="application/x-tex">J = 0.6</annotation></semantics></math> (section <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi></mrow></msub><mo>=</mo><mn>0.70</mn></mrow><annotation encoding="application/x-tex">M_{cr} = 0.70</annotation></semantics></math>): thrust coefficient and efficiency for GRAD, POT and POT with the Mach terms of the section model switched off. POT does not converge between tip Mach 0.65 and 0.85 (crosses).<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+### 5.7 Minimum-Induced-Loss Design
+
+<p>Fig. 11 shows two-blade designs for 100 kW at 60 m/s and 2 400 rpm (1.8 m diameter, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>0.265</mn></mrow><annotation encoding="application/x-tex">\lambda=0.265</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>l</mi></msub><mo>=</mo><mn>0.6</mn></mrow><annotation encoding="application/x-tex">c_l=0.6</annotation></semantics></math>). Blade angles agree within 0.25° outboard of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.3</mn><mi>R</mi></mrow><annotation encoding="application/x-tex">0.3R</annotation></semantics></math>, and the three designs differ mainly at the root. POT’s solid hub allows a root circulation ten times GRAD’s, and hence a root chord of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.215</mn><mi>R</mi></mrow><annotation encoding="application/x-tex">0.215R</annotation></semantics></math> instead of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.022</mn><mi>R</mi></mrow><annotation encoding="application/x-tex">0.022R</annotation></semantics></math>. VRTX lies between them. GRAD predicts its own blade to be 0.8 points more efficient (0.846) than POT predicts for its blade (0.838), partly because GRAD under-predicts the outboard induced loss (Section&nbsp;5.2).</p>
+
+<p>Re-analysed with POT at the same power, the GRAD blade reaches <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mn>0.843</mn></mrow><annotation encoding="application/x-tex">\eta=0.843</annotation></semantics></math>: lower than GRAD claims, but 0.5 points <i>above</i> POT’s own design. The reason is profile drag. MIL design minimises only the induced loss, and POT’s solid-hub assumption loads the root heavily, giving a wide root that carries drag but little thrust. The design condition therefore inherits the hub model’s assumption, and a designer using POT should check whether a real spinner justifies that root loading. All designs at the design point re-analyse to exactly 100 kW. POT and VRTX converge in 5 iterations and GRAD in 8. The three-blade GRAD design is the filter failure discussed above.</p>
+
+<div class="figrow one"><figure id="fig-11"><a class="zoom" href="img/xrotor-propeller-code-review/f09_design.svg" target="_blank" rel="noopener"><img src="img/xrotor-propeller-code-review/f09_design.svg" alt="Minimum-induced-loss designs for two blades, 100 kW, 60 m/s, 2 400 rpm, cl=0.6c_l = 0.6, with the three wake models: chord, blade angle and circulation. The dot" loading="lazy" style="background:#fff;width:100%;max-width:640px"></a><figcaption><b>Figure 11.</b> Minimum-induced-loss designs for two blades, 100 kW, 60 m/s, 2 400 rpm, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>l</mi></msub><mo>=</mo><mn>0.6</mn></mrow><annotation encoding="application/x-tex">c_l = 0.6</annotation></semantics></math>, with the three wake models: chord, blade angle and circulation. The dotted line is the initial guess of DESINI (Larrabee’s design followed by one Goldstein solve).<span class="credit">Chart by the author</span></figcaption></figure></div>
+
+### 5.8 Limitations of This Study
+
+<p>The tests used the ported algorithm, not the Fortran executable. They covered two blade families, one section type, open rotors and axial inflow. Ducted rotors, nacelle effects, raked blades, the structural and acoustic modules, and validation against wind-tunnel data were outside their scope. For validation, the literature reports comparisons of XROTOR and QPROP with tunnel tests of UAV and model propellers [20], [9]. The results here characterise the <i>method</i>: its internal consistency, its sensitivity to modelling choices and the robustness of its iteration.</p>
+
+## 6. Current Use and Extensions
+
+<p><b>Design and teaching.</b> XROTOR remains a standard free tool for designing a minimum-induced-loss propeller and checking it off-design, widely used by model-aircraft and UAV designers and in student projects, often with section data from XFOIL. Its interactive menus make it a good teaching tool for the vortex theory of the propeller. QPROP/QMIL serve the same community where sweeps over motor and propeller combinations matter more than the design menus [5], [20].</p>
+
+<p><b>Research and optimisation frameworks.</b> The xrotor-python module was written so that a propeller analysis can be called many times inside optimisation and multidisciplinary design frameworks without file input and output [7]. A TU Delft study that compared XROTOR, JavaProp and the Adkins–Liebeck scheme against low-speed propeller data found the Adkins–Liebeck scheme the least reliable and chose XROTOR for the rest of its parametric optimisation work [9]. NASA’s Mars-helicopter papers cite XROTOR among the tools used in earlier analyses of the Ingenuity rotor [27]. CROTOR has been used for coaxial drone rotors [23].</p>
+
+<p><b>Where it sits among methods.</b> Blade-element momentum codes with Prandtl’s factor, such as CCBlade [28], are faster, more robust (CCBlade has guaranteed convergence) and differentiable, but they correspond to XROTOR’s GRAD option. Section&nbsp;5.2 shows that this option is accurate to about 2 % only for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>≲</mo><mn>0.2</mn></mrow><annotation encoding="application/x-tex">\lambda\lesssim0.2</annotation></semantics></math> with two blades. Free-wake vortex-lattice and vortex-particle methods resolve wake contraction, roll-up and blade–wake interaction, at hundreds to thousands of times the cost. XROTOR’s potential formulation fills the gap between them: an exact rigid-helix solution for any blade number and advance ratio, at the cost of a fraction of a second per point. For ducted rotors DFDC and DuctAPE have superseded its velocity-ratio model [6], [22]. For marine propellers, OpenProp and Kerwin’s codes offer lattice and cavitation features that XROTOR lacks [18], [17].</p>
+
+## 7. Limitations and a Prioritised Improvement Plan
+
+### 7.1 Physical Limitations
+
+<ol type="1">
+<li><b>Rigid, non-contracting helical wake.</b> The wake pitch adapts to loading (11), but contraction, roll-up and the slipstream’s radial velocities do not. At <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>T</mi></msub><mo>≈</mo><mn>0.12</mn></mrow><annotation encoding="application/x-tex">C_T\approx0.12</annotation></semantics></math> (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mi>w</mi></msub><mi>/</mi><mi>λ</mi><mo>&gt;</mo><mn>1.4</mn></mrow><annotation encoding="application/x-tex">\lambda_w/\lambda&gt;1.4</annotation></semantics></math>) this is a strong idealisation.</li>
+<li><b>Axial inflow only.</b> There is no angle of attack, so no in-plane forces, 1P loads or yawed-flow performance, and no unsteady response. Non-uniform inflow can only be axisymmetric (nacelle, slipstream file).</li>
+<li><b>Hub and duct models.</b> POT’s infinite solid hub and the single velocity ratio for a duct are coarse, and Section&nbsp;5.2 shows that the hub model alone decides the root loading of a design.</li>
+<li><b>Section model.</b> Thirteen parameters per section, linear interpolation between sections, no lift drop after stall, no rotational stall delay, a constant pitching moment and a correlation-based drag rise. Tabulated polars (as in xrotor-python) remove the shape restriction but, interpolated linearly, harm convergence (Section&nbsp;5.3).</li>
+<li><b>Compressibility.</b> Prandtl–Glauert scaling and the empirical drag rise are adequate below <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi></mrow></msub><annotation encoding="application/x-tex">M_{cr}</annotation></semantics></math>. Above it, the Mach-dependent stall limits break the potential solution’s convergence (Fig. 10) and transonic tips are not credible.</li>
+<li><b>Lifting-line limits.</b> There is no chordwise loading, sweep (except constant rake with VRTX) or tip-shape effect, and the tip station sits within <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.0014</mn><mi>R</mi></mrow><annotation encoding="application/x-tex">0.0014R</annotation></semantics></math> of the tip vortex.</li>
+</ol>
+
+### 7.2 Prioritised Improvements
+
+<p>The following list is ordered by benefit for effort. Items A–F are local changes to the existing code; G–O are larger.</p>
+
+<p>A. <b>Make the circulation filter conditional.</b> Apply FILTER only when the residual grows, or only in the first few iterations, and never in DEITER. This rescued every VRTX failure at low <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>J</mi><annotation encoding="application/x-tex">J</annotation></semantics></math> and the failed three-blade design (Section&nbsp;5.6) without affecting converged answers.</p>
+
+<p>B. <b>Correct the five Jacobian errors</b> (Table&nbsp;3, items 1–5), and verify the hand derivatives once against finite differences, as the port did. This also applies to the Python and C++ ports.</p>
+
+<p>C. <b>Initialise DEFF and fix the design consistency issues</b> (items 6–8 and 13): use <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ξ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\xi_w</annotation></semantics></math> in the Betz condition or document why not, check every section’s stall limits, and bracket the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>c</mi><mi>l</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\alpha(c_l)</annotation></semantics></math> inversion.</p>
+
+<p>D. <b>Smooth the section model’s Mach terms.</b> Replace the hard clip at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>=</mo><mn>0.99</mn></mrow><annotation encoding="application/x-tex">M=0.99</annotation></semantics></math> and the collapsing <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><annotation encoding="application/x-tex">c_{l,max}</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>l</mi><mo>,</mo><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><annotation encoding="application/x-tex">c_{l,min}</annotation></semantics></math> with smooth, monotone functions, so that transonic-tip points fail physically (large drag) rather than numerically.</p>
+
+<p>E. <b>Double precision and a residual-based globalisation.</b> Promote all reals to REAL*8. Accept a step only if a merit function of the residuals decreases, and back-track otherwise. This replaces the fixed <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ω</mi><mo>=</mo><mn>0.2</mn></mrow><annotation encoding="application/x-tex">\omega=0.2</annotation></semantics></math> start and most of the ad hoc limits.</p>
+
+<p>F. <b>Continuation in sweeps.</b> Start each point of a sweep from the last converged one and, on failure, restore that state and halve the step in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>J</mi><annotation encoding="application/x-tex">J</annotation></semantics></math> or <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>. The same fix cut XFOIL’s failures by 60 % [10].</p>
+
+<p>G. <b>A re-entrant library interface</b> with a documented input file, return codes and no COMMON state, as xrotor-python began. This would make batch and optimisation use safe.</p>
+
+<p>H. <b>Analytic sensitivities.</b> The Newton Jacobian already exists, so the adjoint of the converged system gives exact derivatives of thrust, power and efficiency with respect to chord, twist and operating point at the cost of one extra linear solve. That is what gradient-based optimisation needs.</p>
+
+<p>I. <b>Smooth tabulated polars.</b> Fit splines or monotone cubic curves to XFOIL polars with continuous <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><msub><mi>c</mi><mi>l</mi></msub><mi>/</mi><mi>∂</mi><mi>α</mi></mrow><annotation encoding="application/x-tex">\partial c_l/\partial\alpha</annotation></semantics></math>, keeping XROTOR’s smooth stall limiter as a fallback.</p>
+
+<p>J. <b>Rotational augmentation and post-stall data</b> (Du–Selig or similar corrections [29]) for the inner blade at low <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>J</mi><annotation encoding="application/x-tex">J</annotation></semantics></math> and for wind turbines.</p>
+
+<p>K. <b>A better hub model.</b> Let the user set the hub boundary condition between solid and free, or model a finite spinner, so that root loading is not an accident of the formulation.</p>
+
+<p>L. <b>Wake contraction</b> in the potential formulation, for example by mapping the helicoidal solution onto the momentum-theory slipstream radius, as the equivalent-propeller machinery already does for the nacelle.</p>
+
+<p>M. <b>Non-axial inflow</b> through a harmonic-balance or azimuth-stepping extension, for 1P loads and yawed flow.</p>
+
+<p>N. <b>Coupling with DFDC-type duct models</b> in the same code base.</p>
+
+<p>O. <b>Remove dormant code and fix the documentation</b>: TMOM and PMOM, the unused ADVFACT, the common NN and XINF, and a user guide updated past 2003.</p>
+
+## 8. Practical Guidance for Present Users
+
+<ul>
+<li>Use POT (the default) for design and analysis. Use GRAD only for quick estimates at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>≲</mo><mn>0.2</mn></mrow><annotation encoding="application/x-tex">\lambda\lesssim0.2</annotation></semantics></math> with two blades, or <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>≲</mo><mn>0.3</mn></mrow><annotation encoding="application/x-tex">\lambda\lesssim0.3</annotation></semantics></math> with four or more. Use VRTX only for raked blades, and check it against POT on an unraked equivalent.</li>
+<li>Look at the root. Compare designs from POT and VRTX: if the root chord or loading differs a lot, decide which hub condition your spinner resembles, and do not trust the root efficiency to better than the difference.</li>
+<li>Keep 30 stations. Refining to 60 or 100 does not converge POT further, and the station limit is 100.</li>
+<li>When a point fails, it is usually either deep stall at low <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>J</mi><annotation encoding="application/x-tex">J</annotation></semantics></math> and high pitch or a transonic tip near <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi></mrow></msub><annotation encoding="application/x-tex">M_{cr}</annotation></semantics></math>. Approach such points gradually from a converged neighbour, and if a point still fails, raise <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi>c</mi><mi>r</mi></mrow></msub><annotation encoding="application/x-tex">M_{cr}</annotation></semantics></math> slightly to see whether the section model is the cause.</li>
+<li>Do not trust a point after a failed one. The stored circulation is the start of the next solution; re-initialise (or re-load) after any non-convergence.</li>
+<li>For ducted designs in 7.55, check the convergence history by eye (item 6).</li>
+<li>Fit section parameters to XFOIL polars at the right Reynolds and Mach numbers for each section, and remember that the model does not lose lift after stall.</li>
+</ul>
+
+## 9. Conclusions
+
+<p>XROTOR packages the classical vortex theory of Betz, Prandtl, Goldstein and Theodorsen into a fast, carefully linearised Newton solver for design and analysis. Its core has changed little since 2003. This review traced its history, wrote down its equations and examined its source and its behaviour, and reached five main conclusions.</p>
+
+<ol type="1">
+<li><b>The method is sound and self-consistent.</b> Designs re-analyse to their design power exactly, two independent wake models agree within 1 % at mid-span, and the self-deforming wake reproduces the actuator-disk efficiency to within 0.4 points with many blades.</li>
+<li><b>The choice of wake model matters more than the discretisation.</b> Graded momentum over-predicts thrust by 6 % at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>0.3</mn></mrow><annotation encoding="application/x-tex">\lambda=0.3</annotation></semantics></math> and 18 % at 0.5 for two blades. The three models embody different hub assumptions and give root swirls that differ by a factor of 7. The default of 30 stations and 128 harmonics is accurate to about 0.2 %.</li>
+<li><b>The source contains small but real faults.</b> Five errors in the hand-coded Jacobian, two of which the Python port inherited, an uninitialised variable in ducted design and an inconsistent design condition are among 18 findings. None changes a converged analysis answer, but they affect convergence and design.</li>
+<li><b>Robustness is limited by two mechanisms that can be fixed.</b> First, the circulation filter introduced in 7.30 helps the potential formulation in deep stall but traps vortex-wake analyses and a graded-momentum design in cycles. Second, the Mach-dependent stall limits make the potential solution fail near the sections’ critical Mach number. XROTOR’s limiters are essential: without them only 25 % of a stall-heavy map converges, against 91 % with them.</li>
+<li><b>The best improvements are cheap.</b> A conditional filter, corrected derivatives, smooth Mach terms, double precision with a residual-based line search, and a library interface with adjoint sensitivities would make XROTOR a robust, differentiable component for modern optimisation. Its core formulation would remain unchanged, and that formulation is still the best available at its cost.</li>
+</ol>
+
+## Acknowledgment
+
+<p>The author acknowledges the use of Claude (Anthropic), a large language model, which assisted in the literature survey, the source-code review, the porting of the solver, the scripting and running of the numerical experiments, and the drafting of this paper. The author reviewed and takes responsibility for the content. The author also thanks Mark Drela and Harold Youngren for releasing XROTOR under the GNU General Public License, which made a source-level study possible.</p>
+
+## Appendix A: Equations and Source Routines
+
+<div class="tcap"><b>Table 6.</b> Equations of Section&nbsp;3 and the XROTOR 7.55 routines that implement them.</div>
+
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Equation</th>
+<th style="text-align: left;">Routine (file)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">(1) station spacing</td>
+<td style="text-align: left;">SETX (xrotor.f)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">(2) velocity triangle</td>
+<td style="text-align: left;">CSCALC (xoper.f)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">(3) Γ–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>l</mi></msub><annotation encoding="application/x-tex">c_l</annotation></semantics></math> residual</td>
+<td style="text-align: left;">APITER (xoper.f)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">(4), (5), (13) forces</td>
+<td style="text-align: left;">TPQ (xoper.f)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">(7) graded momentum</td>
+<td style="text-align: left;">GRADMO (xoper.f)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">(8), (9) potential wake</td>
+<td style="text-align: left;">HELICO (xoper.f)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">(10) vortex wake</td>
+<td style="text-align: left;">VRTXCO, VORSEGVEL (vortex.f)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">(11) wake advance ratio</td>
+<td style="text-align: left;">APITER, DEITER</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">(12) equivalent propeller</td>
+<td style="text-align: left;">SETXW, XWINIT (xoper.f)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">(14), (15) section model</td>
+<td style="text-align: left;">CLCDCM, GETCLCDCM, GETALF (xaero.f)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">(16) MIL condition</td>
+<td style="text-align: left;">DEITER, DESINI (xdesi.f)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">relaxation and filter</td>
+<td style="text-align: left;">APITER, FILTER (xoper.f)</td>
+</tr>
+</tbody>
+</table>
+
+## Appendix B: Reproducibility
+
+<p>The port (pyxr.py), the test cases (cases.py), the experiment driver (experiments.py), the figure script (make_figs.py) and all result files (JSON) are kept with the paper sources on the author’s site repository. Every number in Section&nbsp;5 can be regenerated with <code>python3 experiments.py swirl ideal design jsweep disc mach formerr</code> and the robustness map with <code>exp_robust</code>. Together these runs solved about 2 600 operating points and 55 designs. The XROTOR 7.55 source used for the review is the GPL distribution [1], mirrored on GitHub.</p>
+
+## References
+
+1. M. Drela and H. Youngren, “XROTOR download page,” MIT. [Online]. Available: https://web.mit.edu/drela/Public/web/xrotor/ (accessed Nov. 2026).
+2. M. Drela and H. Youngren, <i>XROTOR User Guide</i> (xrotor_doc.txt, last update 13 Nov. 2003) and <i>Version Notes</i> (version_notes.txt, 1998–2009), distributed with XROTOR 7.55. Cambridge, MA, USA: MIT.
+3. A. Betz, “Schraubenpropeller mit geringstem Energieverlust,” with an appendix by L. Prandtl, <i>Nachr. Ges. Wiss. Göttingen, Math.-Phys. Kl.</i>, pp. 193–217, 1919.
+4. S. Goldstein, “On the vortex theory of screw propellers,” <i>Proc. R. Soc. Lond. A</i>, vol. 123, no. 792, pp. 440–465, 1929.
+5. M. Drela, “QPROP and QMIL: propeller and windmill analysis and design,” MIT, 2007, with the documents <i>QPROP Formulation</i> (2006) and <i>DC Motor / Propeller Matching</i>. [Online]. Available: https://web.mit.edu/drela/Public/web/qprop/
+6. M. Drela and H. Youngren, “Axisymmetric analysis and design of ducted rotors,” DFDC theory document, draft, 8 Dec. 2005.
+7. D. de Vries, <i>xrotor-python</i>: stripped-down XROTOR as a compiled Python module (PyPI package “xrotor”), DARcorporation, 2018–. [Online]. Available: https://github.com/DARcorporation/xrotor-python
+8. D. de Vries, <i>xrotor-c</i>: translation of XROTOR into C++. [Online]. Available: https://github.com/daniel-de-vries/xrotor-c
+9. P. C. Klein, “Parametric modeling and optimization of advanced propellers for next-generation aircraft,” M.Sc. thesis, Delft Univ. Technol., Delft, The Netherlands, 2017.
+10. K. V. Anand, “Making XFOIL converge: Accuracy, optimisation and the multi-element limit,” Technical paper, Nov. 2026. [Online]. Available: https://haivijayanand.github.io/papers/xfoil-improvements-convergence-multielement.html
+11. K. V. Anand, “AVL in practice: Strengths, limits and extensions of the Athena Vortex Lattice code,” Technical paper, Nov. 2026. [Online]. Available: https://haivijayanand.github.io/papers/avl-athena-vortex-lattice-review.html
+12. H. Glauert, “Airplane propellers,” in <i>Aerodynamic Theory</i>, vol. IV, W. F. Durand, Ed. Berlin, Germany: Springer, 1935, div. L.
+13. T. Theodorsen, <i>Theory of Propellers</i>. New York, NY, USA: McGraw-Hill, 1948.
+14. E. E. Larrabee, “Design of propellers for motorsoarers,” in <i>Science and Technology of Low Speed and Motorless Flight</i>, NASA CP-2085, 1979 (NTRS 19790015732).
+15. C. N. Adkins and R. H. Liebeck, “Design of optimum propellers,” <i>J. Propuls. Power</i>, vol. 10, no. 5, pp. 676–682, 1994.
+16. Q. R. Wald, “The aerodynamics of propellers,” <i>Prog. Aerosp. Sci.</i>, vol. 42, no. 2, pp. 85–128, 2006.
+17. J. E. Kerwin, <i>Hydrofoils and Propellers</i>, lecture notes for MIT course 2.23. Cambridge, MA, USA: MIT OpenCourseWare, 2007.
+18. B. P. Epps, <i>OpenProp v2.4 Theory Document</i>. Cambridge, MA, USA: MIT, 2010. [Online]. Available: https://openprop.engineering.dartmouth.edu/
+19. MIT Industrial Liaison Program, “XROTOR: Propeller and windmill design/analysis software,” research entry, principal investigator M. Drela, 10 May 2002. [Online]. Available: https://ilp.mit.edu/node/37058
+20. T. E. Lowe, “Development of a Microsoft Excel based UAV propeller design and analysis tool,” M.S. thesis, Oklahoma State Univ., Stillwater, OK, USA, 2015.
+21. M. Drela, H. Youngren et al., “DFDC: Ducted Fan Design Code,” MIT (GPL; developed under DARPA sponsorship). [Online]. Available: https://web.mit.edu/drela/Public/web/dfdc/
+22. J. Mehr, N. Lehnhof, and A. Ning, “DuctAPE: A steady-state, axisymmetric ducted fan analysis code designed for gradient-based optimization,” preprint, BYU FLOW Lab, 2025. [Online]. Available: https://flowlab.groups.et.byu.net/preprints/Mehr2025.pdf
+23. “Aerodynamic optimization of the Donut drone with oriented thrust rotor,” Overleaf preprint (study with XROTOR and CROTOR). [Online]. Available: https://www.overleaf.com/articles/aerodynamic-optimization-of-the-donut-dron-with-oriented-thrust-rotor/xxkqpgbkvtwh
+24. <i>pyxrotor</i>: unofficial port of MIT XROTOR to Python/NumPy, and XROTOR 7.55 source mirror. [Online]. Available: https://github.com/mparadkar225/pyxrotor
+25. D. Mangoni, <i>XRotorMatlab</i>: Drela’s XROTOR modified to operate with MATLAB. [Online]. Available: https://github.com/dariomangoni/XRotorMatlab
+26. <i>propeller_design_tools</i>: Python package automating XFOIL and XROTOR (PyPI). [Online]. Available: https://github.com/Charly-28/propeller_design_tools
+27. W. J. F. Koning, B. G. Allan, E. A. Romander, and W. Johnson, “Comparing 3D and 2D CFD for Mars helicopter Ingenuity rotor performance prediction,” NASA Ames Research Center, 2023 (NTRS 20230012866).
+28. S. A. Ning, “A simple solution method for the blade element momentum equations with guaranteed convergence,” <i>Wind Energy</i>, vol. 17, no. 9, pp. 1327–1345, 2014.
+29. Z. Du and M. S. Selig, “A 3-D stall-delay model for horizontal axis wind turbine performance prediction,” AIAA Paper 98-0021, 1998.
